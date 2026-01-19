@@ -2,23 +2,29 @@
 
 from __future__ import annotations
 
-import contextlib
 import asyncio
+from collections.abc import Callable
+import contextlib
 from enum import Enum
 import inspect
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from elke27_lib import ArmMode, ClientConfig, Elke27Client, LinkKeys
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27PinRequiredError
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 
 from .const import READY_TIMEOUT
 from .identity import build_client_identity
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class Elke27Hub:
     """Manage a single Elke27 client instance."""
@@ -84,8 +90,22 @@ class Elke27Hub:
             # Elke27Client v2 does not expose a public identity setter yet.
             coerce_identity = getattr(client, "_coerce_identity", None)
             if callable(coerce_identity):
-                client._v2_client_identity = coerce_identity(client_identity)
+                setattr(
+                    client,
+                    "_v2_client_identity",
+                    coerce_identity(client_identity),
+                )
             self._client = client
+
+            def _raise_auth_failed(error: object | None) -> None:
+                message = str(error) if error is not None else "Invalid PIN"
+                raise ConfigEntryAuthFailed(message)
+
+            def _raise_not_ready() -> None:
+                raise ConfigEntryNotReady(
+                    "The client did not become ready before timeout"
+                )
+
             try:
                 await client.async_connect(self._host, self._port, link_keys)
                 if self._panel_name is None:
@@ -99,13 +119,10 @@ class Elke27Hub:
                     )
                     if not getattr(auth_result, "ok", False):
                         error = getattr(auth_result, "error", None)
-                        message = str(error) if error is not None else "Invalid PIN"
-                        raise ConfigEntryAuthFailed(message)
+                        _raise_auth_failed(error)
                 ready = await client.wait_ready(timeout_s=READY_TIMEOUT)
                 if not ready:
-                    raise ConfigEntryNotReady(
-                        "The client did not become ready before timeout"
-                    )
+                    _raise_not_ready()
                 self._connection_unsubscribe = client.subscribe(
                     self._handle_connection_event
                 )
@@ -275,9 +292,7 @@ class Elke27Hub:
         #     )
         return True
 
-    async def async_arm_area(
-        self, area_id: int, mode: Any, pin: str | None
-    ) -> bool:
+    async def async_arm_area(self, area_id: int, mode: Any, pin: str | None) -> bool:
         """Request an area arming change if supported."""
         client = self._client
         if client is None:
@@ -312,9 +327,7 @@ class Elke27Hub:
                 error_message or error,
             )
             if error is not None:
-                raise HomeAssistantError(
-                    error_message or str(error)
-                ) from error
+                raise HomeAssistantError(error_message or str(error)) from error
             return False
         return True
 
@@ -323,15 +336,15 @@ class Elke27Hub:
         client = self._client
         if client is None or not self._typed_callbacks:
             return
-        for callback in list(self._typed_callbacks):
-            self._typed_callbacks[callback] = client.subscribe_typed(callback)
+        for cb in list(self._typed_callbacks):
+            self._typed_callbacks[cb] = client.subscribe_typed(cb)
 
     def _clear_typed_subscriptions(self) -> None:
         """Clear typed subscriptions when the client disconnects."""
-        for callback, unsubscribe in list(self._typed_callbacks.items()):
+        for cb, unsubscribe in list(self._typed_callbacks.items()):
             if unsubscribe is not None:
                 unsubscribe()
-            self._typed_callbacks[callback] = None
+            self._typed_callbacks[cb] = None
 
     async def async_disarm_area(self, area_id: int, pin: str | None) -> bool:
         """Request an area disarming change if supported."""
@@ -362,9 +375,7 @@ class Elke27Hub:
                 error_message or error,
             )
             if error is not None:
-                raise HomeAssistantError(
-                    error_message or str(error)
-                ) from error
+                raise HomeAssistantError(error_message or str(error)) from error
             return False
         return True
 
@@ -416,18 +427,22 @@ class Elke27Hub:
             _LOGGER.debug("Reconnect attempt %s starting", self._reconnect_attempts + 1)
             try:
                 await self._async_connect()
-                self._reconnect_attempts = 0
-                return
             except (ConfigEntryAuthFailed, Elke27LinkRequiredError) as err:
                 _LOGGER.error("Reconnect aborted: %s", err)
                 return
             except Exception as err:  # noqa: BLE001
                 _LOGGER.debug("Reconnect attempt failed: %s", err)
+            else:
+                self._reconnect_attempts = 0
+                return
             self._reconnect_attempts += 1
-            delay = min(300, 2 ** self._reconnect_attempts)
-            _LOGGER.debug("Reconnect attempt %s sleeping for %s seconds", self._reconnect_attempts, delay)
+            delay = min(300, 2**self._reconnect_attempts)
+            _LOGGER.debug(
+                "Reconnect attempt %s sleeping for %s seconds",
+                self._reconnect_attempts,
+                delay,
+            )
             await asyncio.sleep(delay)
-
 
 
 def _event_type(event: Any) -> str | None:
@@ -447,8 +462,12 @@ def _event_type(event: Any) -> str | None:
 
 def _connection_state(event: Any) -> bool | None:
     if hasattr(event, "event_type"):
-        event_type = getattr(event, "event_type")
-        value = event_type.value if isinstance(event_type, Enum) else str(event_type).lower()
+        event_type = event.event_type
+        value = (
+            event_type.value
+            if isinstance(event_type, Enum)
+            else str(event_type).lower()
+        )
         if value == "connection":
             data = getattr(event, "data", None)
             if isinstance(data, dict):

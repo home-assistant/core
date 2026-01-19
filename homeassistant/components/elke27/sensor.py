@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,12 +19,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DATA_HUB, DOMAIN
 from .coordinator import Elke27DataUpdateCoordinator
-from .entity import (
-    build_unique_id,
-    device_info_for_entry,
-    get_panel_field,
-    unique_base,
-)
+from .entity import build_unique_id, device_info_for_entry, get_panel_field, unique_base
 from .hub import Elke27Hub
 
 
@@ -41,7 +37,9 @@ SENSORS: tuple[Elke27SensorDescription, ...] = (
         key="panel_name",
         numeric_id=1,
         translation_key="panel_name",
-        value_fn=lambda hub, snapshot: get_panel_field(snapshot, hub.panel_name, "name"),
+        value_fn=lambda hub, snapshot: get_panel_field(
+            snapshot, hub.panel_name, "name"
+        ),
     ),
     Elke27SensorDescription(
         key="panel_ready",

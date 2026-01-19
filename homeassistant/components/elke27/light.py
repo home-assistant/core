@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 import logging
-from collections.abc import Mapping
-from typing import Any, Iterable
+from typing import Any
 
 from elke27_lib.errors import Elke27PinRequiredError
 
@@ -17,12 +17,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DATA_HUB, DOMAIN
 from .coordinator import Elke27DataUpdateCoordinator
-from .entity import (
-    build_unique_id,
-    device_info_for_entry,
-    sanitize_name,
-    unique_base,
-)
+from .entity import build_unique_id, device_info_for_entry, sanitize_name, unique_base
 from .hub import Elke27Hub
 
 _LOGGER = logging.getLogger(__name__)

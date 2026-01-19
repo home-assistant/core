@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+# ruff: noqa: E402
+
 import contextlib
 import logging
-import sys
 from pathlib import Path
+import sys
 
 _VENDOR_PATH = Path(__file__).resolve().parent / "vendor" / "elkm1"
 if _VENDOR_PATH.exists() and str(_VENDOR_PATH) not in sys.path:

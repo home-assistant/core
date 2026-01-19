@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 import logging
-from collections.abc import Mapping
-from typing import Any, Iterable
+from typing import Any
 
 from elke27_lib.errors import Elke27PinRequiredError
 
@@ -17,12 +17,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DATA_HUB, DOMAIN
 from .coordinator import Elke27DataUpdateCoordinator
-from .entity import (
-    build_unique_id,
-    device_info_for_entry,
-    sanitize_name,
-    unique_base,
-)
+from .entity import build_unique_id, device_info_for_entry, sanitize_name, unique_base
 from .hub import Elke27Hub
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,7 +62,9 @@ async def async_setup_entry(
     def _async_add_zones() -> None:
         snapshot = coordinator.data
         if snapshot is None:
-            _LOGGER.debug("Zone bypass entities skipped because snapshot is unavailable")
+            _LOGGER.debug(
+                "Zone bypass entities skipped because snapshot is unavailable"
+            )
             return
         entities: list[Elke27ZoneBypassSwitch] = []
         zones = list(_iter_zones(snapshot))
@@ -117,9 +114,7 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(_async_add_zones))
 
 
-class Elke27OutputSwitch(
-    CoordinatorEntity[Elke27DataUpdateCoordinator], SwitchEntity
-):
+class Elke27OutputSwitch(CoordinatorEntity[Elke27DataUpdateCoordinator], SwitchEntity):
     """Representation of an Elke27 output."""
 
     _attr_has_entity_name = True
@@ -297,7 +292,9 @@ def _get_zone(snapshot: Any, zone_id: int) -> Any | None:
 
 
 def _zone_definition_entry(snapshot: Any | None, zone_id: int) -> Any | None:
-    definitions = getattr(snapshot, "zone_definitions", None) if snapshot is not None else None
+    definitions = (
+        getattr(snapshot, "zone_definitions", None) if snapshot is not None else None
+    )
     if isinstance(definitions, Mapping):
         return definitions.get(zone_id)
     return None

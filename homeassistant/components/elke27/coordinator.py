@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Iterable
 import contextlib
 import logging
-from collections.abc import Callable, Iterable
-from typing import Any, TypeAlias
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -32,7 +32,7 @@ except ModuleNotFoundError:  # pragma: no cover - handled via class name fallbac
 
 _LOGGER = logging.getLogger(__name__)
 
-PanelSnapshot: TypeAlias = Any
+type PanelSnapshot = Any
 
 
 class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):

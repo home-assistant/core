@@ -5,8 +5,6 @@ from __future__ import annotations
 from dataclasses import asdict, is_dataclass
 from typing import Any
 
-import voluptuous as vol
-
 from elke27_lib import ClientConfig, Elke27Client, LinkKeys
 from elke27_lib.errors import (
     AuthorizationRequired,
@@ -23,6 +21,7 @@ from elke27_lib.errors import (
     InvalidPinError,
     MissingPinError,
 )
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -212,7 +211,8 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
 
             snapshot = client.snapshot
             panel_info = _snapshot_to_dict(
-                getattr(snapshot, "panel_info", None) or getattr(snapshot, "panel", None)
+                getattr(snapshot, "panel_info", None)
+                or getattr(snapshot, "panel", None)
             )
             table_info = _snapshot_to_dict(getattr(snapshot, "table_info", None))
         except InvalidCredentials:

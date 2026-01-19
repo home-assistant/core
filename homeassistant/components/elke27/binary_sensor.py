@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 import logging
-from collections.abc import Mapping
-from typing import Any, Iterable
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -17,12 +17,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DATA_HUB, DOMAIN
 from .coordinator import Elke27DataUpdateCoordinator
-from .entity import (
-    build_unique_id,
-    device_info_for_entry,
-    sanitize_name,
-    unique_base,
-)
+from .entity import build_unique_id, device_info_for_entry, sanitize_name, unique_base
 from .hub import Elke27Hub
 
 _LOGGER = logging.getLogger(__name__)
@@ -182,7 +177,9 @@ class Elke27ZoneBinarySensor(
             return None
         is_open = getattr(zone, "open", None)
         if isinstance(is_open, bool) and is_open:
-            return _ZONE_OPEN_ICON_BY_DEFINITION.get(definition) or _ZONE_ICON_BY_DEFINITION.get(definition)
+            return _ZONE_OPEN_ICON_BY_DEFINITION.get(
+                definition
+            ) or _ZONE_ICON_BY_DEFINITION.get(definition)
         return _ZONE_ICON_BY_DEFINITION.get(definition)
 
     @property
@@ -202,7 +199,10 @@ class Elke27ZoneBinarySensor(
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return self._hub.is_ready and _get_zone(self.coordinator.data, self._zone_id) is not None
+        return (
+            self._hub.is_ready
+            and _get_zone(self.coordinator.data, self._zone_id) is not None
+        )
 
     def _log_missing(self) -> None:
         """Log when the zone snapshot is missing."""
@@ -231,7 +231,9 @@ def _get_zone(snapshot: Any, zone_id: int) -> Any | None:
 
 
 def _zone_definition_entry(snapshot: Any | None, zone_id: int) -> Any | None:
-    definitions = getattr(snapshot, "zone_definitions", None) if snapshot is not None else None
+    definitions = (
+        getattr(snapshot, "zone_definitions", None) if snapshot is not None else None
+    )
     if isinstance(definitions, Mapping):
         return definitions.get(zone_id)
     return None

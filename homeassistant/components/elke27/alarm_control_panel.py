@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 import logging
-from collections.abc import Mapping
-from typing import Any, Iterable
+from typing import Any
 
 from elke27_lib import ArmMode
 from elke27_lib.errors import Elke27PinRequiredError
@@ -23,12 +23,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DATA_HUB, DOMAIN
 from .coordinator import Elke27DataUpdateCoordinator
-from .entity import (
-    build_unique_id,
-    device_info_for_entry,
-    sanitize_name,
-    unique_base,
-)
+from .entity import build_unique_id, device_info_for_entry, sanitize_name, unique_base
 from .hub import Elke27Hub
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,9 +58,7 @@ async def async_setup_entry(
                 continue
             known_ids.add(area_id)
             entities.append(
-                Elke27AreaAlarmControlPanel(
-                    coordinator, hub, entry, area_id, area
-                )
+                Elke27AreaAlarmControlPanel(coordinator, hub, entry, area_id, area)
             )
         if entities:
             _LOGGER.debug("Adding %s area entities", len(entities))
@@ -101,7 +94,9 @@ class Elke27AreaAlarmControlPanel(
         self._hub = hub
         self._entry = entry
         self._area_id = area_id
-        self._attr_name = sanitize_name(getattr(area, "name", None)) or f"Area {area_id}"
+        self._attr_name = (
+            sanitize_name(getattr(area, "name", None)) or f"Area {area_id}"
+        )
         self._attr_unique_id = build_unique_id(
             unique_base(hub, coordinator, entry),
             "area",
@@ -133,7 +128,10 @@ class Elke27AreaAlarmControlPanel(
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return self._hub.is_ready and _get_area(self.coordinator.data, self._area_id) is not None
+        return (
+            self._hub.is_ready
+            and _get_area(self.coordinator.data, self._area_id) is not None
+        )
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm the area in away mode."""

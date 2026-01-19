@@ -10,6 +10,7 @@ import psutil_home_assistant as ha_psutil
 
 from homeassistant.components import network
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import INTEGRATION_SERIAL_LENGTH, MANUFACTURER_NUMBER
@@ -25,7 +26,7 @@ async def async_get_integration_serial(
     target_ip = await hass.async_add_executor_job(_resolve_host, host)
     try:
         source_ip = await network.async_get_source_ip(hass, target_ip=target_ip)
-    except Exception:
+    except (HomeAssistantError, OSError):
         return _generate_serial_number()
     if not source_ip:
         return _generate_serial_number()
@@ -46,7 +47,7 @@ def _get_mac_for_source_ip(source_ip: str) -> str | None:
     try:
         psutil_wrapper = ha_psutil.PsutilWrapper()
         addresses = psutil_wrapper.psutil.net_if_addrs()
-    except Exception:
+    except (OSError, RuntimeError):
         return None
 
     for addrs in addresses.values():

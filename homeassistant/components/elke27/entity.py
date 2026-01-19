@@ -17,7 +17,6 @@ from .const import CONF_INTEGRATION_SERIAL, DOMAIN, MANUFACTURER_NUMBER
 from .coordinator import Elke27DataUpdateCoordinator
 from .hub import Elke27Hub
 
-
 _NAME_SAFE_RE = re.compile(r"[^A-Za-z0-9 _-]")
 
 
@@ -29,15 +28,15 @@ def sanitize_name(name: str | None) -> str | None:
     return name
 
 
-def get_panel_field(
-    snapshot: Any | None, panel_name: str | None, field: str
-) -> Any:
+def get_panel_field(snapshot: Any | None, panel_name: str | None, field: str) -> Any:
     """Return a field from the current panel snapshot."""
     if field == "name" and panel_name:
         return sanitize_name(panel_name)
     if snapshot is None:
         return None
-    panel_info = getattr(snapshot, "panel_info", None) or getattr(snapshot, "panel", None)
+    panel_info = getattr(snapshot, "panel_info", None) or getattr(
+        snapshot, "panel", None
+    )
     if panel_info is None:
         return None
     if isinstance(panel_info, dict):

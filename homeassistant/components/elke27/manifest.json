@@ -1,20 +1,14 @@
 {
   "domain": "elke27",
-  "name": "Elk E27",
-  "codeowners": ["@gwww", "@bdraco"],
+  "name": "Elk E27 Alarm Engine Integration",
+  "codeowners": ["@mitchmitchell"],
   "config_flow": true,
   "dependencies": ["network"],
-  "dhcp": [
-    {
-      "registered_devices": true
-    },
-    {
-      "macaddress": "00409D*"
-    }
-  ],
-  "documentation": "https://www.home-assistant.io/integrations/elke27",
+  "documentation": "https://github.com/mitchmitchell/HACS-Elk-E27",
   "integration_type": "hub",
   "iot_class": "local_push",
+  "issue_tracker": "https://github.com/mitchmitchell/HACS-Elk-E27/issues",
   "quality_scale": "bronze",
-  "requirements": []
+  "requirements": [],
+  "version": "0.1.0"
 }
