@@ -59,7 +59,7 @@ class HMBinarySensor(HMDevice, BinarySensorEntity):
     """Representation of a binary HomeMatic device."""
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         if not self.available:
             return False
@@ -73,7 +73,7 @@ class HMBinarySensor(HMDevice, BinarySensorEntity):
             return BinarySensorDeviceClass.MOTION
         return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__)
 
-    def _init_data_struct(self):
+    def _init_data_struct(self) -> None:
         """Generate the data dictionary (self._data) from metadata."""
         # Add state to data struct
         if self._state:
@@ -86,11 +86,11 @@ class HMBatterySensor(HMDevice, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.BATTERY
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if battery is low."""
         return bool(self._hm_get_state())
 
-    def _init_data_struct(self):
+    def _init_data_struct(self) -> None:
         """Generate the data dictionary (self._data) from metadata."""
         # Add state to data struct
         if self._state:
