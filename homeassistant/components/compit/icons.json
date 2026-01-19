@@ -1,16 +1,6 @@
 {
   "entity": {
     "select": {
-      "additional_ventilation_circuit": {
-        "default": "mdi:fan",
-        "state": {
-          "gear_0": "mdi:fan-off",
-          "gear_1": "mdi:fan-speed-1",
-          "gear_2": "mdi:fan-speed-2",
-          "gear_3": "mdi:fan-speed-3",
-          "gear_4": "mdi:fan-plus"
-        }
-      },
       "aero_by_pass": {
         "default": "mdi:valve",
         "state": {
@@ -38,13 +28,6 @@
         "default": "mdi:pump",
         "state": {
           "disabled": "mdi:pump-off",
-          "schedule": "mdi:calendar-clock"
-        }
-      },
-      "dhw_operating_mode": {
-        "default": "mdi:water-boiler",
-        "state": {
-          "disabled": "mdi:water-boiler-off",
           "schedule": "mdi:calendar-clock"
         }
       },
@@ -150,33 +133,6 @@
           "de_icing": "mdi:snowflake-melt",
           "disabled": "mdi:cancel",
           "holiday": "mdi:beach"
-        }
-      },
-      "ventilation_in_the_away_mode": {
-        "default": "mdi:fan",
-        "state": {
-          "gear_0": "mdi:fan-off",
-          "gear_1": "mdi:fan-speed-1",
-          "gear_2": "mdi:fan-speed-2",
-          "gear_3": "mdi:fan-speed-3"
-        }
-      },
-      "ventilation_in_the_comfort_zone": {
-        "default": "mdi:fan",
-        "state": {
-          "gear_0": "mdi:fan-off",
-          "gear_1": "mdi:fan-speed-1",
-          "gear_2": "mdi:fan-speed-2",
-          "gear_3": "mdi:fan-speed-3"
-        }
-      },
-      "ventilation_in_the_eco_zone": {
-        "default": "mdi:fan",
-        "state": {
-          "gear_0": "mdi:fan-off",
-          "gear_1": "mdi:fan-speed-1",
-          "gear_2": "mdi:fan-speed-2",
-          "gear_3": "mdi:fan-speed-3"
         }
       }
     }

@@ -49,17 +49,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
                     "on",
                 ],
             ),
-            CompitParameter.ADDITIONAL_VENTILATION_ZONE: SelectEntityDescription(
-                key=CompitParameter.ADDITIONAL_VENTILATION_ZONE.value,
-                translation_key="additional_ventilation_circuit",
-                options=[
-                    "gear_0",
-                    "gear_1",
-                    "gear_2",
-                    "gear_3",
-                    "gear_4",
-                ],
-            ),
         },
     ),
     12: CompitDeviceDescription(
@@ -80,17 +69,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
                     "off",
                     "auto",
                     "on",
-                ],
-            ),
-            CompitParameter.ADDITIONAL_VENTILATION_ZONE: SelectEntityDescription(
-                key=CompitParameter.ADDITIONAL_VENTILATION_ZONE.value,
-                translation_key="additional_ventilation_circuit",
-                options=[
-                    "gear_0",
-                    "gear_1",
-                    "gear_2",
-                    "gear_3",
-                    "gear_4",
                 ],
             ),
         },
@@ -117,36 +95,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
                     "schedule",
                     "christmas",
                     "out_of_home",
-                ],
-            ),
-            CompitParameter.VENTILATION_COMFORT_ZONE: SelectEntityDescription(
-                key=CompitParameter.VENTILATION_COMFORT_ZONE.value,
-                translation_key="ventilation_in_the_comfort_zone",
-                options=[
-                    "gear_0",
-                    "gear_1",
-                    "gear_2",
-                    "gear_3",
-                ],
-            ),
-            CompitParameter.VENTILATION_ECO_ZONE: SelectEntityDescription(
-                key=CompitParameter.VENTILATION_ECO_ZONE.value,
-                translation_key="ventilation_in_the_eco_zone",
-                options=[
-                    "gear_0",
-                    "gear_1",
-                    "gear_2",
-                    "gear_3",
-                ],
-            ),
-            CompitParameter.VENTILATION_HOLIDAY_MODE: SelectEntityDescription(
-                key=CompitParameter.VENTILATION_HOLIDAY_MODE.value,
-                translation_key="ventilation_in_the_away_mode",
-                options=[
-                    "gear_0",
-                    "gear_1",
-                    "gear_2",
-                    "gear_3",
                 ],
             ),
             CompitParameter.AIRING_PROGRAM_ZONE_3: SelectEntityDescription(
@@ -599,18 +547,9 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
                 ],
                 translation_placeholders={"zone": "2"},
             ),
-            CompitParameter.R770_DHW_OPERATING_MODE: SelectEntityDescription(
-                key=CompitParameter.R770_DHW_OPERATING_MODE.value,
-                translation_key="dhw_operating_mode",
-                options=[
-                    "disabled",
-                    "constant",
-                    "schedule",
-                ],
-            ),
             CompitParameter.R770_DHW_CIRCULATION_MODE: SelectEntityDescription(
                 key=CompitParameter.R770_DHW_CIRCULATION_MODE.value,
-                translation_key="hot_water_circulation",
+                translation_key="dhw_circulation",
                 options=[
                     "disabled",
                     "constant",
@@ -689,15 +628,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
                 ],
                 translation_placeholders={"zone": "2"},
             ),
-            CompitParameter.BIOMAX_DHW_MODE: SelectEntityDescription(
-                key=CompitParameter.BIOMAX_DHW_MODE.value,
-                translation_key="dhw_operating_mode",
-                options=[
-                    "disabled",
-                    "constant",
-                    "schedule",
-                ],
-            ),
             CompitParameter.BIOMAX_DHW_CIRCULATION_MODE: SelectEntityDescription(
                 key=CompitParameter.BIOMAX_DHW_CIRCULATION_MODE.value,
                 translation_key="dhw_circulation",
@@ -740,15 +670,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
                     "nano_nr_3",
                     "nano_nr_4",
                     "nano_nr_5",
-                ],
-            ),
-            CompitParameter.BIOMAX_DHW_MODE: SelectEntityDescription(
-                key=CompitParameter.BIOMAX_DHW_MODE.value,
-                translation_key="dhw_operating_mode",
-                options=[
-                    "disabled",
-                    "constant",
-                    "schedule",
                 ],
             ),
             CompitParameter.BIOMAX_DHW_CIRCULATION_MODE: SelectEntityDescription(
@@ -811,15 +732,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
                     "nano_nr_5",
                 ],
                 translation_placeholders={"zone": "2"},
-            ),
-            CompitParameter.BIOMAX_DHW_MODE: SelectEntityDescription(
-                key=CompitParameter.BIOMAX_DHW_MODE.value,
-                translation_key="dhw_operating_mode",
-                options=[
-                    "disabled",
-                    "constant",
-                    "schedule",
-                ],
             ),
             CompitParameter.BIOMAX_DHW_CIRCULATION_MODE: SelectEntityDescription(
                 key=CompitParameter.BIOMAX_DHW_CIRCULATION_MODE.value,
@@ -884,15 +796,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
                     "disabled",
                     "eco",
                     "hybrid",
-                ],
-            ),
-            CompitParameter.R480_DHW_MODE: SelectEntityDescription(
-                key=CompitParameter.R480_DHW_MODE.value,
-                translation_key="dhw_operating_mode",
-                options=[
-                    "schedule",
-                    "manual",
-                    "disabled",
                 ],
             ),
             CompitParameter.R480_BUFFER_MODE: SelectEntityDescription(

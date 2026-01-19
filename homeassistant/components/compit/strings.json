@@ -34,16 +34,6 @@
   },
   "entity": {
     "select": {
-      "additional_ventilation_circuit": {
-        "name": "Additional ventilation circuit",
-        "state": {
-          "gear_0": "Gear 0",
-          "gear_1": "Gear 1",
-          "gear_2": "Gear 2",
-          "gear_3": "Gear 3",
-          "gear_4": "Boost"
-        }
-      },
       "aero_by_pass": {
         "name": "By pass",
         "state": {
@@ -81,15 +71,6 @@
         "state": {
           "constant": "Constant",
           "disabled": "Disabled",
-          "schedule": "Schedule"
-        }
-      },
-      "dhw_operating_mode": {
-        "name": "Domestic hot water operating mode",
-        "state": {
-          "constant": "Constant",
-          "disabled": "Disabled",
-          "manual": "Manual",
           "schedule": "Schedule"
         }
       },
@@ -220,33 +201,6 @@
           "de_icing": "De-icing",
           "disabled": "Disabled",
           "holiday": "Holiday"
-        }
-      },
-      "ventilation_in_the_away_mode": {
-        "name": "Ventilation in the away mode",
-        "state": {
-          "gear_0": "Gear 0",
-          "gear_1": "Gear 1",
-          "gear_2": "Gear 2",
-          "gear_3": "Gear 3"
-        }
-      },
-      "ventilation_in_the_comfort_zone": {
-        "name": "Ventilation in the comfort zone",
-        "state": {
-          "gear_0": "Gear 0",
-          "gear_1": "Gear 1",
-          "gear_2": "Gear 2",
-          "gear_3": "Gear 3"
-        }
-      },
-      "ventilation_in_the_eco_zone": {
-        "name": "Ventilation in the eco zone",
-        "state": {
-          "gear_0": "Gear 0",
-          "gear_1": "Gear 1",
-          "gear_2": "Gear 2",
-          "gear_3": "Gear 3"
         }
       }
     }
