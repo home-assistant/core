@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from asyncio import sleep
 from collections.abc import AsyncIterator, Callable, Coroutine
 from dataclasses import dataclass
 from functools import wraps
@@ -197,6 +198,8 @@ class OneDriveBackupAgent(BackupAgent):
         except OneDriveException:
             await self._client.delete_drive_item(backup_file.id)
             raise
+
+        await sleep(10)  # wait for metadata file to be available
 
         # add metadata to the metadata file
         metadata_description = {
