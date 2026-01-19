@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 
 import voluptuous as vol
+from wirelesstagpy import SensorTag
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -20,6 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import WirelessTagPlatform
 from .const import DOMAIN, SIGNAL_TAG_UPDATE, WIRELESSTAG_DATA
 from .entity import WirelessTagBaseSensor
 from .util import async_migrate_unique_id
@@ -97,13 +99,18 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
 
     entity_description: SensorEntityDescription
 
-    def __init__(self, api, tag, description):
+    def __init__(
+        self,
+        api: WirelessTagPlatform,
+        tag: SensorTag,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize a WirelessTag sensor."""
         super().__init__(api, tag)
 
         self._sensor_type = description.key
         self.entity_description = description
-        self._name = self._tag.name
+        self._attr_name = self._tag.name
         self._attr_unique_id = f"{self._uuid}_{self._sensor_type}"
 
         # I want to see entity_id as:
