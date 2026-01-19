@@ -90,7 +90,7 @@ class TypeInformation[T]:
                         type_information := cls._from_json(
                             dpcode=dpcode,
                             type_data=current_definition.values,
-                            report_type=current_definition.report_type
+                            report_type=current_definition.report_type,
                         )
                     )
                 ):
