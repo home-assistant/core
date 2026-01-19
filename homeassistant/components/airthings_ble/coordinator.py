@@ -105,7 +105,8 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
 
     async def _check_connectivity_mode_issue(self, data: AirthingsDevice) -> None:
         """Create or remove connectivity mode issue based on device data."""
-        if not (connectivity_mode := data.sensors.get("connectivity_mode")):
+        connectivity_mode = data.sensors.get("connectivity_mode")
+        if connectivity_mode is None:
             return
 
         issue_id = f"smartlink_detected_{data.address}"
