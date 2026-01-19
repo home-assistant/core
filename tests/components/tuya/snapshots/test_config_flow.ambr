@@ -20,6 +20,11 @@
     'entry_id': <ANY>,
     'minor_version': 1,
     'options': dict({
+      'device_options': dict({
+        'jzpap0inhkykqtlwgklc': dict({
+          'cover_position_reversed': False,
+        }),
+      }),
     }),
     'pref_disable_new_entities': False,
     'pref_disable_polling': False,
