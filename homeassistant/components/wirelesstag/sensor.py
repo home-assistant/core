@@ -155,7 +155,7 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         return self._tag.sensor[self._sensor_type]
 
     @callback
-    def _update_tag_info_callback(self, new_tag):
+    def _update_tag_info_callback(self, new_tag: SensorTag) -> None:
         """Handle push notification sent by tag manager."""
         _LOGGER.debug("Entity to update state: %s with new tag: %s", self, new_tag)
         self._tag = new_tag
