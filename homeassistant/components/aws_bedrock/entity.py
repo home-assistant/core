@@ -26,10 +26,8 @@ from .const import (
     DEFAULT,
     DOMAIN,
     LOGGER,
+    MAX_TOOL_ITERATIONS,
 )
-
-# Max number of tool iterations
-MAX_TOOL_ITERATIONS = 10
 
 
 def _clean_schema(schema: dict[str, Any]) -> dict[str, Any]:
@@ -324,6 +322,9 @@ class AWSBedrockBaseLLMEntity(Entity):
     ) -> None:
         """Handle a chat log."""
         options = self.subentry.data
+        model_id = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
+        temperature = options.get(CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE])
+        max_tokens = options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS])
 
         # Extract system message
         system_content = ""
@@ -332,15 +333,15 @@ class AWSBedrockBaseLLMEntity(Entity):
         ):
             system_content = chat_log.content[0].content
 
-        model_id = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
-
         # Detect if using Nova model for model-specific configurations
         is_nova_model = "nova" in model_id.lower()
 
+        # Build tool configuration if LLM API is available
         tools: list[dict[str, Any]] = []
-        ha_to_bedrock_tool_name: dict[str, str] = {}
-        bedrock_to_ha_tool_name: dict[str, str] = {}
-        if chat_log.llm_api:
+        ha_to_bedrock_tool_name: dict[str, str] | None = None
+        bedrock_to_ha_tool_name: dict[str, str] | None = None
+
+        if chat_log.llm_api and chat_log.llm_api.tools:
             ha_to_bedrock_tool_name, bedrock_to_ha_tool_name = _build_tool_name_maps(
                 chat_log.llm_api.tools
             )
@@ -359,18 +360,12 @@ class AWSBedrockBaseLLMEntity(Entity):
         # See: https://docs.aws.amazon.com/nova/latest/userguide/tools-troubleshooting.html
         if tools and is_nova_model:
             temperature = 0
-        else:
-            temperature = options.get(CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE])
 
         # Ensure max tokens is large enough for tool use
         # Tool outputs can be large, minimum recommended is 3000
-        max_tokens = options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS])
         if tools and max_tokens < 3000:
+            LOGGER.debug("Increasing maxTokens to 3000 for tool use")
             max_tokens = 3000
-            LOGGER.debug(
-                "Increased maxTokens from %s to 3000 for tool use",
-                options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
-            )
 
         inference_config = {
             "maxTokens": max_tokens,
@@ -455,74 +450,12 @@ class AWSBedrockBaseLLMEntity(Entity):
             if tools:
                 request_params["toolConfig"] = {"tools": tools}
                 LOGGER.debug(
-                    "Tool config: %d tools registered, model=%s, is_nova=%s, temperature=%s, topK=%s",
+                    "Iteration %d: Sending %d messages with %d tools to Bedrock (model=%s)",
+                    _iteration,
+                    len(messages),
                     len(tools),
                     model_id,
-                    is_nova_model,
-                    inference_config.get("temperature"),
-                    request_params.get("additionalModelRequestFields", {})
-                    .get("inferenceConfig", {})
-                    .get("topK"),
                 )
-                for idx, tool in enumerate(tools):
-                    tool_spec = tool.get("toolSpec", {})
-                    input_schema = tool_spec.get("inputSchema", {}).get("json", {})
-                    LOGGER.debug(
-                        "  Tool %d: name=%s, schema_top_level_keys=%s",
-                        idx,
-                        tool_spec.get("name"),
-                        list(input_schema.keys()),
-                    )
-                    if idx == 0:
-                        LOGGER.debug(
-                            "  Tool %d cleaned schema: %s",
-                            idx,
-                            input_schema,
-                        )
-
-            LOGGER.debug(
-                "Iteration %d: Sending %d messages to Bedrock",
-                _iteration,
-                len(messages),
-            )
-            for idx, msg in enumerate(messages):
-                LOGGER.debug("  Message %d: role=%s", idx, msg.get("role"))
-                if msg.get("role") == "assistant":
-                    has_tool_use = any("toolUse" in c for c in msg.get("content", []))
-                    has_text = any("text" in c for c in msg.get("content", []))
-                    LOGGER.debug(
-                        "    Assistant message: has_text=%s, has_tool_use=%s",
-                        has_text,
-                        has_tool_use,
-                    )
-                elif msg.get("role") == "user":
-                    has_tool_result = any(
-                        "toolResult" in c for c in msg.get("content", [])
-                    )
-                    has_text = any("text" in c for c in msg.get("content", []))
-                    LOGGER.debug(
-                        "    User message: has_text=%s, has_tool_result=%s",
-                        has_text,
-                        has_tool_result,
-                    )
-                    if has_tool_result:
-                        tool_use_ids = [
-                            c.get("toolResult", {}).get("toolUseId")
-                            for c in msg.get("content", [])
-                            if "toolResult" in c
-                        ]
-                        LOGGER.debug("    Tool use IDs: %s", tool_use_ids)
-
-            # Log the full request for debugging
-            LOGGER.debug(
-                "Full request_params: modelId=%s, system_present=%s, "
-                "num_messages=%s, num_tools=%s, inferenceConfig=%s",
-                request_params.get("modelId"),
-                "system" in request_params,
-                len(request_params.get("messages", [])),
-                len(request_params.get("toolConfig", {}).get("tools", [])),
-                request_params.get("inferenceConfig"),
-            )
 
             try:
                 response = await self.hass.async_add_executor_job(
@@ -538,13 +471,13 @@ class AWSBedrockBaseLLMEntity(Entity):
 
             # Process response
             output = response.get("output", {})
-            message = output.get("message", {})
+            message_content = output.get("message", {}).get("content", [])
 
             content_parts = []
             tool_calls = []
             had_thinking = False
 
-            for content_item in message.get("content", []):
+            for content_item in message_content:
                 if "text" in content_item:
                     raw_text = content_item["text"]
                     # Process thinking tags
@@ -583,22 +516,16 @@ class AWSBedrockBaseLLMEntity(Entity):
                 # Don't add message to history, just continue loop
                 continue
 
-            # Add assistant content to chat log and collect any tool results
-            tool_result_contents: list[conversation.ToolResultContent] = [
-                tool_result
-                async for tool_result in chat_log.async_add_assistant_content(
-                    conversation.AssistantContent(
-                        agent_id=self.entity_id,
-                        content=" ".join(content_parts) if content_parts else None,
-                        tool_calls=tool_calls or None,
-                    )
+            # Add assistant content and execute tool calls
+            # Must consume the async generator to trigger tool execution
+            async for _ in chat_log.async_add_assistant_content(
+                conversation.AssistantContent(
+                    agent_id=self.entity_id,
+                    content=" ".join(content_parts) if content_parts else None,
+                    tool_calls=tool_calls or None,
                 )
-            ]
-
-            LOGGER.debug(
-                "Tool results collected: %d",
-                len(tool_result_contents),
-            )
+            ):
+                pass
 
             # Check if we need to continue processing tool results
             if not chat_log.unresponded_tool_results:

@@ -44,16 +44,26 @@ def mock_bedrock_client() -> MagicMock:
                 "modelId": "anthropic.claude-3-sonnet-20240229-v1:0",
                 "modelName": "Claude 3 Sonnet",
                 "providerName": "Anthropic",
+                "inferenceTypesSupported": ["ON_DEMAND"],
             },
             {
                 "modelId": "meta.llama3-2-90b-instruct-v1:0",
                 "modelName": "Llama 3.2 90B Instruct",
                 "providerName": "Meta",
+                "inferenceTypesSupported": ["ON_DEMAND"],
             },
+            {
+                "modelId": "amazon.nova-pro-v1:0",
+                "modelName": "Nova Pro",
+                "providerName": "Amazon",
+                "inferenceTypesSupported": ["ON_DEMAND"],
+            },
+            # This model should be filtered out - doesn't support tool use
             {
                 "modelId": "amazon.titan-text-premier-v1:0",
                 "modelName": "Titan Text Premier",
                 "providerName": "Amazon",
+                "inferenceTypesSupported": ["ON_DEMAND"],
             },
         ]
     }
@@ -85,8 +95,8 @@ async def init_integration(
                     "provider": "Meta",
                 },
                 {
-                    "id": "amazon.titan-text-premier-v1:0",
-                    "name": "Titan Text Premier",
+                    "id": "amazon.nova-pro-v1:0",
+                    "name": "Nova Pro",
                     "provider": "Amazon",
                 },
             ],
