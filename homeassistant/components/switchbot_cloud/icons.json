@@ -35,6 +35,16 @@
       }
     },
     "sensor": {
+      "battery_levels": {
+        "default": "mdi:battery",
+        "state": {
+          "critical": "mdi:battery-10",
+          "high": "mdi:battery",
+          "low": "mdi:battery-20",
+          "medium": "mdi:battery-60",
+          "unknown": "mdi:battery-off"
+        }
+      },
       "light_level": {
         "default": "mdi:brightness-7",
         "state": {

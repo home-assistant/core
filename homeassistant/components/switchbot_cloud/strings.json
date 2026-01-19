@@ -49,6 +49,9 @@
       }
     },
     "sensor": {
+      "battery_levels": {
+        "name": "Battery Levels"
+      },
       "light_level": {
         "name": "Light level"
       }
