@@ -109,9 +109,6 @@ async def test_form_multiple_meters(hass: HomeAssistant) -> None:
             "homeassistant.components.rainforest_eagle.async_setup_entry",
             return_value=True,
         ),
-        patch(
-            "homeassistant.components.rainforest_eagle.EagleDataCoordinator",
-        ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
