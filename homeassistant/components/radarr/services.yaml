@@ -13,3 +13,11 @@ get_queue:
       selector:
         config_entry:
           integration: radarr
+    max_items:
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 500
+          mode: box

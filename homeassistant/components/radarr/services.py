@@ -13,13 +13,18 @@ from homeassistant.helpers import selector
 from .const import (
     ATTR_MOVIES,
     CONF_ENTRY_ID,
-    DEFAULT_MAX_RECORDS,
     DOMAIN,
     SERVICE_GET_MOVIES,
     SERVICE_GET_QUEUE,
 )
 from .coordinator import RadarrConfigEntry
 from .helpers import format_movies, format_queue
+
+# Service parameter constants
+CONF_MAX_ITEMS = "max_items"
+
+# Default values - 0 means no limit
+DEFAULT_MAX_ITEMS = 0
 
 SERVICE_BASE_SCHEMA = vol.Schema(
     {
@@ -30,7 +35,14 @@ SERVICE_BASE_SCHEMA = vol.Schema(
 )
 
 SERVICE_GET_MOVIES_SCHEMA = SERVICE_BASE_SCHEMA
-SERVICE_GET_QUEUE_SCHEMA = SERVICE_BASE_SCHEMA
+
+SERVICE_GET_QUEUE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {
+        vol.Optional(CONF_MAX_ITEMS, default=DEFAULT_MAX_ITEMS): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=500)
+        ),
+    }
+)
 
 
 def _get_config_entry_from_service_data(call: ServiceCall) -> RadarrConfigEntry:
@@ -70,11 +82,18 @@ async def _async_get_movies(service: ServiceCall) -> dict[str, Any]:
 async def _async_get_queue(service: ServiceCall) -> dict[str, Any]:
     """Get Radarr queue."""
     entry = _get_config_entry_from_service_data(service)
+    max_items: int = service.data[CONF_MAX_ITEMS]
 
     api_client = entry.runtime_data.status.api_client
-    queue = await api_client.async_get_queue(
-        page_size=DEFAULT_MAX_RECORDS, include_movie=True
-    )
+
+    if max_items > 0:
+        page_size = max_items
+    else:
+        # Get total count first, then fetch all items
+        total = (await api_client.async_get_queue(page_size=1)).totalRecords
+        page_size = total if total > 0 else 1
+
+    queue = await api_client.async_get_queue(page_size=page_size, include_movie=True)
 
     # Get base URL from config entry for image URLs
     base_url = entry.data[CONF_URL]

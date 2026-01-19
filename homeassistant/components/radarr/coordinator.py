@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 
 @dataclass(kw_only=True, slots=True)
@@ -142,9 +142,8 @@ class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator):
 
     async def _fetch_data(self) -> int:
         """Fetch the movies in queue."""
-        return (
-            await self.api_client.async_get_queue(page_size=DEFAULT_MAX_RECORDS)
-        ).totalRecords
+        # page_size=1 is sufficient since we only need totalRecords count
+        return (await self.api_client.async_get_queue(page_size=1)).totalRecords
 
 
 class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):

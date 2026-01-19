@@ -80,6 +80,10 @@
         "entry_id": {
           "description": "ID of the config entry to use.",
           "name": "Radarr entry"
+        },
+        "max_items": {
+          "description": "Maximum number of queue items to return (0 = no limit).",
+          "name": "Max items"
         }
       },
       "name": "Get queue"
