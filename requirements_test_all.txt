@@ -1779,7 +1779,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==2.2.0
+pyicloud==2.3.0
 
 # homeassistant.components.insteon
 pyinsteon==1.6.4
@@ -2691,7 +2691,7 @@ wsdot==0.0.1
 wyoming==1.7.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.4.3
+xiaomi-ble==1.5.0
 
 # homeassistant.components.knx
 xknx==3.14.0
