@@ -83,7 +83,10 @@ class SonosAlarms(SonosHouseholdCoordinator):
         except SoCoException as err:
             if "Alarm list UID" in str(err):
                 _LOGGER.warning(
-                    "Alarm list mismatch for %s, ignoring: %s",
+                    "Sonos alarms for %s cannot be updated due to a household mismatch. "
+                    "This is a known limitation in setups with multiple households. "
+                    "You can safely ignore this warning, or to silence it, remove the "
+                    "affected household from your Sonos system. Error: %s",
                     soco.player_name,
                     str(err),
                 )
