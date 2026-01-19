@@ -70,7 +70,7 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_nrgkick_api) -> None
         await hass.async_block_till_done()
 
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result2.get("step_id") == "zeroconf_auth"
+    assert result2.get("step_id") == "user_auth"
 
     mock_nrgkick_api.test_connection.side_effect = None
 
@@ -181,7 +181,7 @@ async def test_zeroconf_discovery_invalid_auth(
         result2 = await hass.config_entries.flow.async_configure(flow_id, {})
 
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result2.get("step_id") == "zeroconf_auth"
+    assert result2.get("step_id") == "user_auth"
 
     with patch(
         "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
@@ -428,7 +428,7 @@ async def test_zeroconf_json_api_disabled_auth_required_then_success(
         result2 = await hass.config_entries.flow.async_configure(flow_id, {})
 
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result2.get("step_id") == "zeroconf_enable_json_api_auth"
+    assert result2.get("step_id") == "user_auth"
 
     mock_nrgkick_api.test_connection.side_effect = None
 
@@ -585,7 +585,7 @@ async def test_zeroconf_enable_json_api_auth_errors(
         assert flow_id is not None
         result2 = await hass.config_entries.flow.async_configure(flow_id, {})
 
-    assert result2.get("step_id") == "zeroconf_enable_json_api_auth"
+    assert result2.get("step_id") == "user_auth"
 
     mock_nrgkick_api.test_connection.side_effect = side_effect
 
@@ -648,7 +648,7 @@ async def test_zeroconf_auth_errors(
         assert flow_id is not None
         result2 = await hass.config_entries.flow.async_configure(flow_id, {})
 
-    assert result2.get("step_id") == "zeroconf_auth"
+    assert result2.get("step_id") == "user_auth"
 
     mock_nrgkick_api.test_connection.side_effect = second_side_effect
 
@@ -762,7 +762,7 @@ async def test_zeroconf_auth_reports_cannot_connect(
         assert flow_id is not None
         result2 = await hass.config_entries.flow.async_configure(flow_id, {})
 
-    assert result2.get("step_id") == "zeroconf_auth"
+    assert result2.get("step_id") == "user_auth"
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientCommunicationError
 

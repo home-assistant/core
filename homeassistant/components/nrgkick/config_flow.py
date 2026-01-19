@@ -212,7 +212,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["serial"])
+                await self.async_set_unique_id(info["serial"], raise_on_progress=False)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=info["title"],
@@ -284,7 +284,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "json_api_disabled"
             except NRGkickApiClientAuthenticationError:
                 self._pending_host = host
-                return await self.async_step_zeroconf_enable_json_api_auth()
+                return await self.async_step_user_auth()
             except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
             except NRGkickApiClientError:
@@ -305,55 +305,6 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_zeroconf_enable_json_api_auth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle authentication after JSON API enabling guidance."""
-        errors: dict[str, str] = {}
-
-        if TYPE_CHECKING:
-            assert self._pending_host is not None
-
-        if user_input is not None:
-            username = user_input.get(CONF_USERNAME)
-            password = user_input.get(CONF_PASSWORD)
-
-            try:
-                info = await validate_input(
-                    self.hass,
-                    self._pending_host,
-                    username=username,
-                    password=password,
-                )
-            except NRGkickApiClientApiDisabledError:
-                errors["base"] = "json_api_disabled"
-            except NRGkickApiClientAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except NRGkickApiClientCommunicationError:
-                errors["base"] = "cannot_connect"
-            except NRGkickApiClientError:
-                _LOGGER.exception("Unexpected error")
-                errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(
-                    title=info["title"],
-                    data={
-                        CONF_HOST: self._pending_host,
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                    },
-                )
-
-        return self.async_show_form(
-            step_id="zeroconf_enable_json_api_auth",
-            data_schema=STEP_AUTH_DATA_SCHEMA,
-            description_placeholders={
-                "name": self._discovered_name or "NRGkick",
-                "device_ip": self._pending_host,
-            },
-            errors=errors,
-        )
-
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -369,7 +320,7 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "json_api_disabled"
             except NRGkickApiClientAuthenticationError:
                 self._pending_host = host
-                return await self.async_step_zeroconf_auth()
+                return await self.async_step_user_auth()
             except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
             except NRGkickApiClientError:
@@ -388,53 +339,4 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
                 "device_ip": _normalize_host(self._discovered_host or ""),
             },
             errors=errors,
-        )
-
-    async def async_step_zeroconf_auth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle authentication for zeroconf discovery when needed."""
-        errors: dict[str, str] = {}
-
-        if TYPE_CHECKING:
-            assert self._pending_host is not None
-
-        if user_input is not None:
-            username = user_input.get(CONF_USERNAME)
-            password = user_input.get(CONF_PASSWORD)
-
-            try:
-                info = await validate_input(
-                    self.hass,
-                    self._pending_host,
-                    username=username,
-                    password=password,
-                )
-            except NRGkickApiClientApiDisabledError:
-                errors["base"] = "json_api_disabled"
-            except NRGkickApiClientAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except NRGkickApiClientCommunicationError:
-                errors["base"] = "cannot_connect"
-            except NRGkickApiClientError:
-                _LOGGER.exception("Unexpected error")
-                errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(
-                    title=info["title"],
-                    data={
-                        CONF_HOST: self._pending_host,
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                    },
-                )
-
-        return self.async_show_form(
-            step_id="zeroconf_auth",
-            data_schema=STEP_AUTH_DATA_SCHEMA,
-            errors=errors,
-            description_placeholders={
-                "name": self._discovered_name or "NRGkick",
-                "device_ip": self._pending_host,
-            },
         )
