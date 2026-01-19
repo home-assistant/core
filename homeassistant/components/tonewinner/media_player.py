@@ -199,6 +199,12 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._attr_available = False
         self._source_check_task = None
 
+        # Command timeout tracking
+        self._last_command_time = None
+        self._command_timeout_task = None
+        self._pending_command = None
+        self._command_timeout_seconds = 30
+
         # State tracking
         self._attr_state = MediaPlayerState.OFF
         self._attr_volume_level = 0.5
@@ -229,8 +235,26 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Connect when entity is added."""
         await self.connect()
-        # Query initial state
-        await self._query_all_state()
+        # Query initial state with timeout
+        await self._query_all_state_with_timeout()
+
+    async def _query_all_state_with_timeout(self) -> None:
+        """Query device for current state with timeout handling."""
+        _LOGGER.debug("Querying initial state from device")
+        self._start_command_timeout("POWER_QUERY")
+        await self.send_raw_command(TonewinnerCommands.POWER_QUERY)
+        await asyncio.sleep(0.3)  # Wait for power state response
+        self._start_command_timeout("VOLUME_QUERY")
+        await self.send_raw_command(TonewinnerCommands.VOLUME_QUERY)
+        await asyncio.sleep(0.1)  # Wait for response
+        self._start_command_timeout("MUTE_QUERY")
+        await self.send_raw_command(TonewinnerCommands.MUTE_QUERY)
+        await asyncio.sleep(0.1)  # Wait for response
+        self._start_command_timeout("INPUT_QUERY")
+        await self.send_raw_command(TonewinnerCommands.INPUT_QUERY)
+        await asyncio.sleep(0.1)  # Wait for response
+        self._start_command_timeout("MODE_QUERY")
+        await self.send_raw_command(TonewinnerCommands.MODE_QUERY)
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up when entity is removed."""
@@ -241,28 +265,22 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             with contextlib.suppress(asyncio.CancelledError):
                 await self._source_check_task
 
+        # Cancel command timeout task
+        if self._command_timeout_task:
+            self._command_timeout_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._command_timeout_task
+
     async def _query_input_source(self) -> None:
         """Query device for current input source."""
         if self._attr_state != MediaPlayerState.ON:
             _LOGGER.debug("Device is not ON, skipping input source query")
             return
         _LOGGER.info("Querying input source from device")
+        self._start_command_timeout("INPUT_QUERY")
         await self.send_raw_command(TonewinnerCommands.INPUT_QUERY)
         # Wait a bit for response to be processed
         await asyncio.sleep(0.2)
-
-    async def _query_all_state(self) -> None:
-        """Query device for current state."""
-        _LOGGER.debug("Querying initial state from device")
-        await self.send_raw_command(TonewinnerCommands.POWER_QUERY)
-        await asyncio.sleep(0.3)  # Wait for power state response
-        await self.send_raw_command(TonewinnerCommands.VOLUME_QUERY)
-        await asyncio.sleep(0.1)  # Wait for response
-        await self.send_raw_command(TonewinnerCommands.MUTE_QUERY)
-        await asyncio.sleep(0.1)  # Wait for response
-        await self.send_raw_command(TonewinnerCommands.INPUT_QUERY)
-        await asyncio.sleep(0.1)  # Wait for response
-        await self.send_raw_command(TonewinnerCommands.MODE_QUERY)
 
     async def connect(self):
         """Establish serial connection."""
@@ -303,6 +321,9 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     def handle_response(self, response: str):
         """Parse incoming data."""
         _LOGGER.debug("RX: %s", response)
+
+        # Response received, clear any pending timeout
+        self._cancel_command_timeout()
 
         # Parse power status
         if power := TonewinnerProtocol.parse_power_status(response):
@@ -404,6 +425,10 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         if not self._transport:
             raise TonewinnerError("Not connected")
 
+        # If command is not a query, start timeout tracking
+        if not command.endswith("?"):
+            self._start_command_timeout(f"CMD:{command[:10]}")
+
         # Handle hex strings like "0x21 0x50" or plain ASCII
         if command.startswith("0x"):
             data = bytes([int(x, 16) for x in command.split()])
@@ -416,12 +441,14 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         _LOGGER.debug("TX bytes: %s", data.hex())
         self._transport.write(data)
         _LOGGER.debug("Command sent successfully")
+        _LOGGER.debug("Pending commands: %s", self._pending_command)
 
     # --- Media player controls ---
 
     async def async_turn_on(self):
         """Turn the media player on."""
         _LOGGER.debug("Turning on receiver")
+        self._start_command_timeout("POWER_ON")
         await self.send_raw_command(TonewinnerCommands.POWER_ON)
         # Set optimistic state - command sent successfully, receiver should be turning on
         self._attr_state = MediaPlayerState.ON
@@ -433,6 +460,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     async def async_turn_off(self):
         """Turn the media player off."""
         _LOGGER.debug("Turning off receiver")
+        self._start_command_timeout("POWER_OFF")
         await self.send_raw_command(TonewinnerCommands.POWER_OFF)
         # Set optimistic state - command sent successfully, receiver should be turning off
         self._attr_state = MediaPlayerState.OFF
@@ -485,3 +513,42 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         _LOGGER.debug("Selecting sound mode: %s (command: %s)", sound_mode, command)
         await self.send_raw_command(command)
         self.async_write_ha_state()
+
+    def _start_command_timeout(self, command: str) -> None:
+        """Start timeout tracking for a command."""
+        _LOGGER.debug("Starting timeout for command: %s", command)
+        self._pending_command = command
+        self._last_command_time = asyncio.get_event_loop().time()
+
+        # Cancel existing timeout task
+        if self._command_timeout_task:
+            self._command_timeout_task.cancel()
+
+        # Create new timeout task
+        self._command_timeout_task = asyncio.create_task(
+            self._command_timeout_handler(command)
+        )
+
+    def _cancel_command_timeout(self) -> None:
+        """Cancel pending command timeout."""
+        if self._command_timeout_task:
+            _LOGGER.debug("Cancelling command timeout")
+            self._command_timeout_task.cancel()
+            self._command_timeout_task = None
+        self._pending_command = None
+
+    async def _command_timeout_handler(self, command: str) -> None:
+        """Handle command timeout by marking device unavailable."""
+        await asyncio.sleep(self._command_timeout_seconds)
+
+        # Check if still pending (response may have arrived)
+        if self._pending_command == command:
+            _LOGGER.warning(
+                "Command '%s' timed out after %d seconds, marking unavailable",
+                command,
+                self._command_timeout_seconds,
+            )
+            self._attr_available = False
+            self.async_write_ha_state()
+            self._command_timeout_task = None
+            self._pending_command = None
