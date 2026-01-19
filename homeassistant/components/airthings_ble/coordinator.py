@@ -26,6 +26,7 @@ from .const import (
     DEVICE_MODEL,
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
+    SMARTLINK_ISSUE_PREFIX,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,7 +111,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
         if connectivity_mode is None:
             return
 
-        issue_id = f"smartlink_detected_{data.address}"
+        issue_id = f"{SMARTLINK_ISSUE_PREFIX}{data.address}"
 
         # Find sensors with connectivity mode set to smartlink (hub)
         # or not configured
