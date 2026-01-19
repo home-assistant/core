@@ -389,29 +389,45 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             self._attr_is_volume_muted = mute
 
         # Parse input source
-        if (source_code := TonewinnerProtocol.parse_input_source(response)) is not None:
-            _LOGGER.debug("Source code received from device: '%s'", source_code)
-            _LOGGER.debug("Available mappings: %s", self._source_code_to_custom_name)
+        if (source := TonewinnerProtocol.parse_input_source(response)) is not None:
+            source_name, audio_source = source
+            _LOGGER.debug("Source code received from device: '%s'", source_name)
+            _LOGGER.debug(
+                "Available source code mappings: %s", self._source_code_to_custom_name
+            )
+            _LOGGER.debug(
+                "Available custom name mappings: %s", self._custom_name_to_source_code
+            )
 
             # On startup, "eARC/ARC" is sent rather than eARC/ARC source name
-            if source_code == "eARC/ARC":
+            if source_name == "eARC/ARC":
                 self._attr_source = "ARC"
 
             # Map source code to custom name
-            custom_name = self._source_code_to_custom_name.get(source_code)
-            if custom_name:
-                _LOGGER.info("Source updated: '%s' -> '%s'", source_code, custom_name)
-                self._attr_source = custom_name
+            source_code = self._custom_name_to_source_code.get(source_name)
+            if source_code:
+                _LOGGER.info("Source updated: '%s' -> '%s'", source_code, source_name)
+                self._attr_source = source_name
+            elif audio_source:
+                custom_name_from_audio_source = self._source_code_to_custom_name.get(
+                    audio_source
+                )
+                _LOGGER.info(
+                    "Source updated from audio source: '%s' -> '%s'",
+                    audio_source,
+                    custom_name_from_audio_source,
+                )
+                self._attr_source = custom_name_from_audio_source
             else:
                 _LOGGER.warning(
                     "Unknown source code received: '%s', mapping it directly",
-                    source_code,
+                    source_name,
                 )
                 _LOGGER.warning(
                     "Available source codes: %s",
                     list(self._source_code_to_custom_name.keys()),
                 )
-                self._attr_source = source_code
+                self._attr_source = source_name
 
         # Parse sound mode
         if (mode := TonewinnerProtocol.parse_sound_mode(response)) is not None:
@@ -542,13 +558,13 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             source not in self._custom_name_to_source_code
             or source not in self._source_code_to_custom_name
         ):
-            _LOGGER.warn(
+            _LOGGER.warning(
                 "Unknown source '%s'. Available sources: %s",
                 source,
                 list(self._custom_name_to_source_code.keys()),
             )
             raise ValueError(f"Unknown source: {source}")
-        source_code = self._custom_name_to_source_code[source]
+        source_code = self._custom_name_to_source_code.get(source, source)
         command = f"SI {source_code}"
         _LOGGER.debug(
             "Selecting source: %s -> %s (command: %s)", source, source_code, command

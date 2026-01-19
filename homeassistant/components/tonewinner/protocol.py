@@ -78,7 +78,10 @@ class TonewinnerCommands:
         "DITECT": Mode(command="DIRECT", label="Direct"),
         "PURE": Mode(command="PURE", label="Pure"),
         "STEREO": Mode(command="STEREO", label="Stereo"),
-        "ALLSTREO": Mode(command="ALLSTREO", label="All Stereo"),
+        "ALLSTEREO": Mode(command="ALLSTEREO", label="All Stereo"),
+        # There's a bug in firmware V1.02.0796 where the unit reports "ALLSTREO"
+        # instead of "ALLSTEREO"
+        "ALLSTREO": Mode(command="ALLSTEREO", label="All Stereo"),
         "PLIIMOVIE": Mode(
             command="PLIIMOVIE", label="Pro Logic IIx Movie (Dolby Upmix)"
         ),
@@ -232,7 +235,7 @@ class TonewinnerProtocol:
         return is_muted
 
     @staticmethod
-    def parse_input_source(response: str) -> str | None:
+    def parse_input_source(response: str) -> tuple[str, str | None] | None:
         """Parse current input source from response."""
         _LOGGER.debug("Parsing input source from: '%s'", response)
         if not response or not response.startswith("SI"):
@@ -254,14 +257,14 @@ class TonewinnerProtocol:
                 video_source,
                 audio_source,
             )
-            return audio_source
+            return source_name, audio_source
 
         # If no match for V= A= format, try just returning the source name directly
         # Some responses may just be "SI CO1" or similar
         source_stripped = source.strip()
         if source_stripped:
             _LOGGER.debug("Input source (simple format): %s", source_stripped)
-            return source_stripped
+            return source_stripped, None
 
         _LOGGER.debug("Invalid input source format: %s", source)
         return None
