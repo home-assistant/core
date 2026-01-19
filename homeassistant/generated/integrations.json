@@ -2678,6 +2678,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "hdfury": {
+      "name": "HDFury",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "hdmi_cec": {
       "name": "HDMI-CEC",
       "integration_type": "hub",
@@ -4336,9 +4342,9 @@
       "iot_class": "local_polling"
     },
     "namecheapdns": {
-      "name": "Namecheap FreeDNS",
-      "integration_type": "hub",
-      "config_flow": false,
+      "name": "Namecheap DynamicDNS",
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_push"
     },
     "nanoleaf": {
@@ -4761,8 +4767,8 @@
     },
     "openevse": {
       "name": "OpenEVSE",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "openexchangerates": {
@@ -5239,8 +5245,8 @@
     },
     "proxmoxve": {
       "name": "Proxmox VE",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "proxy": {
@@ -7468,7 +7474,7 @@
     },
     "waterfurnace": {
       "name": "WaterFurnace",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
