@@ -46,7 +46,6 @@ async def test_full_user_flow_implementation(
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
-    # Verify the form schema contains only the user's own channel
     schema = result["data_schema"]
     repositories = schema.schema[CONF_REPOSITORIES].options
     assert len(repositories) == 4
