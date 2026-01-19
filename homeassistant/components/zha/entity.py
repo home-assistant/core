@@ -62,7 +62,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
                 for entity in member.device.platform_entities.values()
                 if platform == entity.PLATFORM
             ]
-            self.group = IntegrationSpecificGroup(unique_ids)
+            self.group = IntegrationSpecificGroup(self, unique_ids)
 
         if meta.entity_category is not None:
             self._attr_entity_category = EntityCategory(meta.entity_category)
