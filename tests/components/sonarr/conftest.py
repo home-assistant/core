@@ -8,6 +8,7 @@ from aiopyarr import (
     Command,
     Diskspace,
     SonarrCalendar,
+    SonarrEpisode,
     SonarrQueue,
     SonarrSeries,
     SonarrWantedMissing,
@@ -77,6 +78,12 @@ def sonarr_wanted() -> SonarrWantedMissing:
     return SonarrWantedMissing(results)
 
 
+def sonarr_episodes() -> list[SonarrEpisode]:
+    """Generate a response for the episodes method."""
+    results = json.loads(load_fixture("sonarr/episodes.json"))
+    return [SonarrEpisode(result) for result in results]
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
@@ -118,6 +125,7 @@ def mock_sonarr_config_flow() -> Generator[MagicMock]:
         client.async_get_calendar.return_value = sonarr_calendar()
         client.async_get_commands.return_value = sonarr_commands()
         client.async_get_diskspace.return_value = sonarr_diskspace()
+        client.async_get_episodes.return_value = sonarr_episodes()
         client.async_get_queue.return_value = sonarr_queue()
         client.async_get_series.return_value = sonarr_series()
         client.async_get_system_status.return_value = sonarr_system_status()
@@ -136,6 +144,7 @@ def mock_sonarr() -> Generator[MagicMock]:
         client.async_get_calendar.return_value = sonarr_calendar()
         client.async_get_commands.return_value = sonarr_commands()
         client.async_get_diskspace.return_value = sonarr_diskspace()
+        client.async_get_episodes.return_value = sonarr_episodes()
         client.async_get_queue.return_value = sonarr_queue()
         client.async_get_series.return_value = sonarr_series()
         client.async_get_system_status.return_value = sonarr_system_status()

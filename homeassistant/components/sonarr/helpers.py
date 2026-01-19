@@ -1,11 +1,15 @@
 """Helper functions for Sonarr."""
 
-import logging
 from typing import Any
 
-from aiopyarr import SonarrQueue, SonarrSeries
-
-_LOGGER = logging.getLogger(__name__)
+from aiopyarr import (
+    Diskspace,
+    SonarrCalendar,
+    SonarrEpisode,
+    SonarrQueue,
+    SonarrSeries,
+    SonarrWantedMissing,
+)
 
 
 def format_queue_item(item: Any, base_url: str | None = None) -> dict[str, Any]:
@@ -156,3 +160,198 @@ def format_series(
             formatted_shows[series_title]["images"] = images_dict
 
     return formatted_shows
+
+
+def format_diskspace(disks: list[Diskspace]) -> dict[str, dict[str, Any]]:
+    """Format diskspace for service response."""
+    result = {}
+
+    for disk in disks:
+        path = disk.path
+        free_bytes = disk.freeSpace
+        total_bytes = disk.totalSpace
+
+        # Convert to GB for readability
+        free_gb = free_bytes / (1024**3)
+        total_gb = total_bytes / (1024**3)
+        used_gb = total_gb - free_gb
+        usage_pct = (used_gb / total_gb * 100) if total_gb > 0 else 0
+
+        result[path] = {
+            "path": path,
+            "label": getattr(disk, "label", None) or "",
+            "free_space_bytes": free_bytes,
+            "total_space_bytes": total_bytes,
+            "free_space_gb": round(free_gb, 2),
+            "total_space_gb": round(total_gb, 2),
+            "used_space_gb": round(used_gb, 2),
+            "usage_percent": round(usage_pct, 2),
+        }
+
+    return result
+
+
+def _format_series_images(series: Any, base_url: str | None = None) -> dict[str, str]:
+    """Format series images."""
+    images_dict: dict[str, str] = {}
+    if images := getattr(series, "images", None):
+        for image in images:
+            cover_type = image.coverType
+            # Prefer remoteUrl (public TVDB URL) over local path
+            if remote_url := getattr(image, "remoteUrl", None):
+                images_dict[cover_type] = remote_url
+            elif base_url and (url := getattr(image, "url", None)):
+                images_dict[cover_type] = f"{base_url.rstrip('/')}{url}"
+    return images_dict
+
+
+def format_upcoming_item(
+    episode: SonarrCalendar, base_url: str | None = None
+) -> dict[str, Any]:
+    """Format a single upcoming episode item."""
+    result: dict[str, Any] = {
+        "id": episode.id,
+        "series_id": episode.seriesId,
+        "season_number": episode.seasonNumber,
+        "episode_number": episode.episodeNumber,
+        "episode_identifier": f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}",
+        "title": episode.title,
+        "air_date": str(getattr(episode, "airDate", None)),
+        "air_date_utc": str(getattr(episode, "airDateUtc", None)),
+        "overview": getattr(episode, "overview", None),
+        "has_file": getattr(episode, "hasFile", False),
+        "monitored": getattr(episode, "monitored", True),
+        "runtime": getattr(episode, "runtime", None),
+        "finale_type": getattr(episode, "finaleType", None),
+    }
+
+    # Add series information
+    if series := getattr(episode, "series", None):
+        result["series_title"] = series.title
+        result["series_year"] = getattr(series, "year", None)
+        result["series_tvdb_id"] = getattr(series, "tvdbId", None)
+        result["series_imdb_id"] = getattr(series, "imdbId", None)
+        result["series_status"] = getattr(series, "status", None)
+        result["network"] = getattr(series, "network", None)
+        result["images"] = _format_series_images(series, base_url)
+
+    return result
+
+
+def format_upcoming(
+    calendar: list[SonarrCalendar], base_url: str | None = None
+) -> dict[str, dict[str, Any]]:
+    """Format upcoming calendar for service response."""
+    episodes = {}
+
+    for episode in calendar:
+        # Create a unique key combining series title and episode identifier
+        series_title = episode.series.title if hasattr(episode, "series") else "Unknown"
+        identifier = f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}"
+        key = f"{series_title} {identifier}"
+        episodes[key] = format_upcoming_item(episode, base_url)
+
+    return episodes
+
+
+def format_wanted_item(item: Any, base_url: str | None = None) -> dict[str, Any]:
+    """Format a single wanted episode item."""
+    result: dict[str, Any] = {
+        "id": item.id,
+        "series_id": item.seriesId,
+        "season_number": item.seasonNumber,
+        "episode_number": item.episodeNumber,
+        "episode_identifier": f"S{item.seasonNumber:02d}E{item.episodeNumber:02d}",
+        "title": item.title,
+        "air_date": str(getattr(item, "airDate", None)),
+        "air_date_utc": str(getattr(item, "airDateUtc", None)),
+        "overview": getattr(item, "overview", None),
+        "has_file": getattr(item, "hasFile", False),
+        "monitored": getattr(item, "monitored", True),
+        "runtime": getattr(item, "runtime", None),
+        "tvdb_id": getattr(item, "tvdbId", None),
+    }
+
+    # Add series information
+    if series := getattr(item, "series", None):
+        result["series_title"] = series.title
+        result["series_year"] = getattr(series, "year", None)
+        result["series_tvdb_id"] = getattr(series, "tvdbId", None)
+        result["series_imdb_id"] = getattr(series, "imdbId", None)
+        result["series_status"] = getattr(series, "status", None)
+        result["network"] = getattr(series, "network", None)
+        result["images"] = _format_series_images(series, base_url)
+
+    return result
+
+
+def format_wanted(
+    wanted: SonarrWantedMissing, base_url: str | None = None
+) -> dict[str, dict[str, Any]]:
+    """Format wanted missing episodes for service response."""
+    episodes = {}
+
+    for item in wanted.records:
+        # Create a unique key combining series title and episode identifier
+        series_title = (
+            item.series.title if hasattr(item, "series") and item.series else "Unknown"
+        )
+        identifier = f"S{item.seasonNumber:02d}E{item.episodeNumber:02d}"
+        key = f"{series_title} {identifier}"
+        episodes[key] = format_wanted_item(item, base_url)
+
+    return episodes
+
+
+def format_episode(episode: SonarrEpisode) -> dict[str, Any]:
+    """Format a single episode from a series."""
+    result: dict[str, Any] = {
+        "id": episode.id,
+        "series_id": episode.seriesId,
+        "tvdb_id": getattr(episode, "tvdbId", None),
+        "season_number": episode.seasonNumber,
+        "episode_number": episode.episodeNumber,
+        "episode_identifier": f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}",
+        "title": episode.title,
+        "air_date": str(getattr(episode, "airDate", None)),
+        "air_date_utc": str(getattr(episode, "airDateUtc", None)),
+        "has_file": getattr(episode, "hasFile", False),
+        "monitored": getattr(episode, "monitored", False),
+        "runtime": getattr(episode, "runtime", 0),
+        "episode_file_id": getattr(episode, "episodeFileId", 0),
+    }
+
+    # Add overview if available (not always present)
+    if overview := getattr(episode, "overview", None):
+        result["overview"] = overview
+
+    # Add finale type if applicable
+    if finale_type := getattr(episode, "finaleType", None):
+        result["finale_type"] = finale_type
+
+    return result
+
+
+def format_episodes(
+    episodes: list[SonarrEpisode], season_number: int | None = None
+) -> dict[str, dict[str, Any]]:
+    """Format episodes list for service response.
+
+    Args:
+        episodes: List of episodes to format.
+        season_number: Optional season number to filter by.
+
+    Returns:
+        Dictionary of episodes keyed by episode identifier (e.g., "S01E01").
+    """
+    result = {}
+
+    for episode in episodes:
+        # Filter by season if specified
+        if season_number is not None and episode.seasonNumber != season_number:
+            continue
+
+        identifier = f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}"
+        result[identifier] = format_episode(episode)
+
+    return result

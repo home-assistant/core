@@ -24,8 +24,14 @@ LOGGER = logging.getLogger(__package__)
 
 # Service names
 SERVICE_GET_SERIES: Final = "get_series"
+SERVICE_GET_EPISODES: Final = "get_episodes"
 SERVICE_GET_QUEUE: Final = "get_queue"
+SERVICE_GET_DISKSPACE: Final = "get_diskspace"
+SERVICE_GET_UPCOMING: Final = "get_upcoming"
+SERVICE_GET_WANTED: Final = "get_wanted"
 
 # Service attributes
 ATTR_SHOWS: Final = "shows"
+ATTR_DISKS: Final = "disks"
+ATTR_EPISODES: Final = "episodes"
 CONF_ENTRY_ID: Final = "entry_id"

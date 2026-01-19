@@ -70,12 +70,44 @@
     }
   },
   "services": {
+    "get_diskspace": {
+      "description": "Get disk space information for all configured paths.",
+      "fields": {
+        "entry_id": {
+          "description": "ID of the config entry to use.",
+          "name": "Sonarr entry"
+        }
+      },
+      "name": "Get disk space"
+    },
+    "get_episodes": {
+      "description": "Get episodes for a specific series.",
+      "fields": {
+        "entry_id": {
+          "description": "ID of the config entry to use.",
+          "name": "Sonarr entry"
+        },
+        "season_number": {
+          "description": "Optional season number to filter episodes by.",
+          "name": "Season number"
+        },
+        "series_id": {
+          "description": "The ID of the series to get episodes for.",
+          "name": "Series ID"
+        }
+      },
+      "name": "Get episodes"
+    },
     "get_queue": {
       "description": "Get all episodes currently in the download queue with their progress and details.",
       "fields": {
         "entry_id": {
           "description": "ID of the config entry to use.",
           "name": "Sonarr entry"
+        },
+        "max_items": {
+          "description": "Maximum number of queue items to return (0 = no limit).",
+          "name": "Max items"
         }
       },
       "name": "Get queue"
@@ -89,6 +121,34 @@
         }
       },
       "name": "Get series"
+    },
+    "get_upcoming": {
+      "description": "Get upcoming episodes from the calendar.",
+      "fields": {
+        "days": {
+          "description": "Number of days to look ahead for upcoming episodes.",
+          "name": "Days"
+        },
+        "entry_id": {
+          "description": "ID of the config entry to use.",
+          "name": "Sonarr entry"
+        }
+      },
+      "name": "Get upcoming"
+    },
+    "get_wanted": {
+      "description": "Get wanted/missing episodes that are being searched for.",
+      "fields": {
+        "entry_id": {
+          "description": "ID of the config entry to use.",
+          "name": "Sonarr entry"
+        },
+        "max_items": {
+          "description": "Maximum number of wanted episodes to return (0 = no limit).",
+          "name": "Max items"
+        }
+      },
+      "name": "Get wanted"
     }
   }
 }
