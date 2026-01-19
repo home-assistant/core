@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
+from homeassistant.const import CONF_REGION
+
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
@@ -19,7 +21,6 @@ DEFAULT_AI_TASK_NAME = "AWS Bedrock AI Task"
 
 CONF_ACCESS_KEY_ID = "access_key_id"
 CONF_SECRET_ACCESS_KEY = "secret_access_key"
-CONF_REGION = "region"
 CONF_RECOMMENDED = "recommended"
 CONF_PROMPT = "prompt"
 CONF_CHAT_MODEL = "chat_model"

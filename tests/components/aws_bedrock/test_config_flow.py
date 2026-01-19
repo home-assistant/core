@@ -28,6 +28,7 @@ from homeassistant.components.aws_bedrock.const import (
     LLM_API_WEB_SEARCH,
     async_get_available_models,
 )
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -538,6 +539,164 @@ async def test_subentry_without_web_search(
 
     # Verify llm_hass_api only includes assist
     assert result2["data"][CONF_LLM_HASS_API] == [llm.LLM_API_ASSIST]
+
+
+async def test_web_search_missing_api_key_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test error when web search enabled but API key missing."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=TEST_CREDENTIALS,
+        state=config_entries.ConfigEntryState.LOADED,
+    )
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = MagicMock()
+
+    with patch(
+        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
+        return_value=[
+            {
+                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
+                "name": "Claude 3 Sonnet",
+                "provider": "Anthropic",
+            }
+        ],
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    # Enable web search but don't provide credentials
+    options_with_missing_creds = TEST_CONVERSATION_USER_INPUT.copy()
+    options_with_missing_creds[CONF_ENABLE_WEB_SEARCH] = True
+    options_with_missing_creds[CONF_GOOGLE_API_KEY] = ""  # Missing
+    options_with_missing_creds[CONF_GOOGLE_CSE_ID] = "valid_cse_id"
+
+    with patch(
+        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
+        return_value=[
+            {
+                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
+                "name": "Claude 3 Sonnet",
+                "provider": "Anthropic",
+            }
+        ],
+    ):
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {CONF_NAME: "Test Agent", **options_with_missing_creds},
+        )
+
+    # Should show form again with error
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"][CONF_GOOGLE_API_KEY] == "google_credentials_required"
+
+
+async def test_web_search_missing_cse_id_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test error when web search enabled but CSE ID missing."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=TEST_CREDENTIALS,
+        state=config_entries.ConfigEntryState.LOADED,
+    )
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = MagicMock()
+
+    with patch(
+        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
+        return_value=[
+            {
+                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
+                "name": "Claude 3 Sonnet",
+                "provider": "Anthropic",
+            }
+        ],
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    # Enable web search but don't provide CSE ID
+    options_with_missing_creds = TEST_CONVERSATION_USER_INPUT.copy()
+    options_with_missing_creds[CONF_ENABLE_WEB_SEARCH] = True
+    options_with_missing_creds[CONF_GOOGLE_API_KEY] = "valid_api_key"
+    options_with_missing_creds[CONF_GOOGLE_CSE_ID] = ""  # Missing
+
+    with patch(
+        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
+        return_value=[
+            {
+                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
+                "name": "Claude 3 Sonnet",
+                "provider": "Anthropic",
+            }
+        ],
+    ):
+        result2 = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {CONF_NAME: "Test Agent", **options_with_missing_creds},
+        )
+
+    # Should show form again with error
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"][CONF_GOOGLE_CSE_ID] == "google_credentials_required"
+
+
+async def test_reconfigure_with_legacy_string_llm_api(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfigure when llm_hass_api is a legacy string value."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=TEST_CREDENTIALS,
+        state=config_entries.ConfigEntryState.LOADED,
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    CONF_PROMPT: "Test prompt",
+                    CONF_CHAT_MODEL: TEST_MODEL_ID,
+                    CONF_MAX_TOKENS: 1024,
+                    CONF_TEMPERATURE: 1.0,
+                    # Legacy format: string instead of list
+                    CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+                },
+                subentry_type="conversation",
+                title="Legacy Conversation",
+                unique_id=None,
+            ),
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = MagicMock()
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+
+    with patch(
+        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
+        return_value=[
+            {
+                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
+                "name": "Claude 3 Sonnet",
+                "provider": "Anthropic",
+            }
+        ],
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={
+                "source": "reconfigure",
+                "subentry_id": subentry.subentry_id,
+            },
+        )
+
+    # Should show form without errors (string was converted to list internally)
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
 
 
 async def test_subentry_invalid_model_selection(
