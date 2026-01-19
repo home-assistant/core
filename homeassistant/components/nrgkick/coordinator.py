@@ -37,7 +37,7 @@ def _coordinator_exception_handler[
     """Handle exceptions within the update handler of a coordinator."""
 
     async def handler(
-        self: _DataUpdateCoordinatorT, *args: _P.args, **kwargs: _P.kwargs
+        self: _DataUpdateCoordinatorT, /, *args: _P.args, **kwargs: _P.kwargs
     ) -> Any:
         try:
             return await func(self, *args, **kwargs)
