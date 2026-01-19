@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -51,3 +52,26 @@ async def test_disabled_by_default_entities(
     assert entry
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+async def test_sensor_unavailable_on_coordinator_timeout(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test sensors become unavailable when coordinator times out."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.openevse_mock_config_charging_status")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    mock_charger.update.side_effect = TimeoutError("Connection timed out")
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.openevse_mock_config_charging_status")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
