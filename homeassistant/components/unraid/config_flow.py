@@ -16,6 +16,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_PORT, DOMAIN
 
@@ -117,12 +118,14 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
             - abort reason string if flow should be aborted
         """
         # Set both ports to user's port to prevent library fallback behavior
+        # Pass HA's session so HA manages session lifecycle (no close() needed)
         api_client = UnraidClient(
             host=host,
             api_key=api_key,
             https_port=port,
             http_port=port,
             verify_ssl=use_ssl,
+            session=async_get_clientsession(self.hass, verify_ssl=use_ssl),
         )
 
         try:
@@ -136,8 +139,6 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
             if result is None and not errors:
                 self._use_ssl = use_ssl
             return result
-        finally:
-            await api_client.close()
 
     async def _validate_connection(
         self, api_client: UnraidClient, errors: dict[str, str]
