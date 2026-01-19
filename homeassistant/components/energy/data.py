@@ -249,7 +249,7 @@ def _validate_power_config(val: dict[str, Any]) -> dict[str, Any]:
     # Ensure only one configuration method is used
     has_single = "stat_rate" in val
     has_inverted = "stat_rate_inverted" in val
-    has_combined = "stat_rate_from" in val or "stat_rate_to" in val
+    has_combined = "stat_rate_from" in val
 
     methods_count = sum([has_single, has_inverted, has_combined])
     if methods_count > 1:
