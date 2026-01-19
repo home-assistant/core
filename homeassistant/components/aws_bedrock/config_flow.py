@@ -27,6 +27,9 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
     TemplateSelector,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 from homeassistant.helpers.typing import VolDictType
 
@@ -316,7 +319,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_GOOGLE_API_KEY,
                 default=self.options.get(CONF_GOOGLE_API_KEY, ""),
             )
-        ] = str
+        ] = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
         step_schema[
             vol.Optional(
                 CONF_GOOGLE_CSE_ID,
