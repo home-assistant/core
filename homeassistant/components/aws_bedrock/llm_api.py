@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import TYPE_CHECKING
 
 import aiohttp
+import trafilatura
 import voluptuous as vol
 
 from homeassistant.helpers import llm
@@ -23,12 +25,7 @@ class WebSearchTool(llm.Tool):
     name = "search"
     description = (
         "Search the web for current information or fetch content from specific URLs. "
-        "Use this tool when you need: "
-        "1. Recent events, news, or current data (e.g., 'What's happening today?', 'Current weather forecast'). "
-        "2. Information that changes frequently (e.g., stock prices, sports scores, election results). "
-        "3. Content from specific websites or URLs. "
-        "4. Facts or data beyond your training cutoff date. "
-        "Use action='search' with a query to search Google, or action='fetch' with a url to retrieve specific webpage content."
+        "Use this tool when the user asks for information not available in your training data or Home Assistant."
     )
 
     parameters = vol.Schema(
@@ -120,17 +117,25 @@ class WebSearchTool(llm.Tool):
                 if not items:
                     return {"result": "No search results found"}
 
-                # Format results
+                # Format results in a structured way for LLM to analyze and fetch
                 results = []
-                for item in items:
+                for idx, item in enumerate(items, 1):
                     title = item.get("title", "")
                     link = item.get("link", "")
                     snippet = item.get("snippet", "")
-                    results.append(f"**{title}**\n{link}\n{snippet}")
+                    results.append(
+                        f"[{idx}] {title}\n    URL: {link}\n    Summary: {snippet}"
+                    )
 
                 formatted_results = "\n\n".join(results)
                 return {
-                    "result": f"Search results for '{query}':\n\n{formatted_results}"
+                    "result": (
+                        f"Search results for '{query}':\n\n"
+                        f"{formatted_results}\n\n"
+                        "---\n"
+                        "To get detailed information, use 'fetch' action with the "
+                        "URL of the most relevant result above."
+                    )
                 }
 
         except aiohttp.ClientError as err:
@@ -141,21 +146,50 @@ class WebSearchTool(llm.Tool):
             return {"error": f"Error during search: {err}"}
 
     async def _async_fetch_url(self, url: str) -> JsonObjectType:
-        """Fetch content from a URL."""
+        """Fetch content from a URL and convert to LLM-friendly markdown."""
         try:
             session = async_get_clientsession(self.hass)
-            timeout = aiohttp.ClientTimeout(total=10)
+            timeout = aiohttp.ClientTimeout(total=15)
 
             async with session.get(url, timeout=timeout) as response:
                 if response.status != 200:
                     return {"error": f"HTTP {response.status} when fetching {url}"}
 
-                text = await response.text()
-                # Limit content size to prevent token overload
-                if len(text) > 5000:
-                    text = text[:5000] + "... (content truncated)"
+                html_content = await response.text()
 
-                return {"result": text}
+                # Use trafilatura to extract clean, LLM-friendly content
+                # Run in executor since trafilatura uses blocking I/O
+                extracted_text = await self.hass.async_add_executor_job(
+                    partial(
+                        trafilatura.extract,
+                        html_content,
+                        output_format="markdown",
+                        include_tables=True,
+                        include_links=True,
+                        include_formatting=True,
+                        include_comments=False,
+                        favor_precision=True,
+                        url=url,
+                    )
+                )
+
+                if not extracted_text:
+                    # Fallback to baseline extraction if main extraction fails
+                    _, extracted_text, _ = await self.hass.async_add_executor_job(
+                        trafilatura.baseline, html_content
+                    )
+
+                if not extracted_text:
+                    return {"error": "Could not extract meaningful content from page"}
+
+                # Limit content size to prevent token overload
+                max_length = 8000
+                if len(extracted_text) > max_length:
+                    extracted_text = (
+                        extracted_text[:max_length] + "\n\n... (content truncated)"
+                    )
+
+                return {"result": extracted_text}
 
         except aiohttp.ClientError as err:
             LOGGER.error("HTTP error fetching URL %s: %s", url, err)
@@ -187,14 +221,16 @@ class AWSBedrockWebSearchAPI(llm.API):
         return llm.APIInstance(
             api=self,
             api_prompt=(
-                "You have access to web search via the web_search tool. "
-                "IMPORTANT: Use this tool whenever questions require:\n"
-                "- Current events, news, or real-time information\n"
-                "- Data that changes frequently (weather, stocks, scores)\n"
-                "- Facts published after your training date\n"
-                "- Content from specific websites or URLs\n\n"
+                "You have access to web search via the 'search' tool. "
+                "Use this tool when the user asks for information not available "
+                "in your training data or Home Assistant.\n\n"
+                "IMPORTANT: Follow this chain-of-thought process:\n"
+                "1. SEARCH: Use action='search' with a specific query to find relevant sources\n"
+                "2. ANALYZE: Review the search results and identify the most relevant URL\n"
+                "3. FETCH: Use action='fetch' with the chosen URL to retrieve detailed content\n"
+                "4. ANSWER: Synthesize the fetched information to answer the user's question\n\n"
                 "Do NOT guess or use outdated information when current data is needed. "
-                "Always use web_search for questions about 'today', 'now', 'current', 'latest', or specific recent dates."
+                "Always complete the full search → fetch cycle before answering."
             ),
             llm_context=llm_context,
             tools=[WebSearchTool(self.hass, self.google_api_key, self.google_cse_id)],

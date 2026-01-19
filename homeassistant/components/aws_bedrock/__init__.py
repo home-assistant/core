@@ -44,18 +44,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: AWSBedrockConfigEntry) -> bool:
     """Set up AWS Bedrock from a config entry."""
 
-    def create_client() -> boto3.client:
-        """Create Bedrock client."""
-        return boto3.client(
-            "bedrock-runtime",
-            aws_access_key_id=entry.data[CONF_ACCESS_KEY_ID],
-            aws_secret_access_key=entry.data[CONF_SECRET_ACCESS_KEY],
-            region_name=entry.data.get(CONF_REGION, DEFAULT[CONF_REGION]),
-        )
-
-    def validate_credentials() -> None:
-        """Validate AWS credentials by listing foundation models."""
-        # Use bedrock client (not bedrock-runtime) to validate credentials
+    def create_and_validate_client() -> boto3.client:
+        """Create and validate Bedrock client."""
+        # Validate credentials using bedrock client
         bedrock_client = boto3.client(
             "bedrock",
             aws_access_key_id=entry.data[CONF_ACCESS_KEY_ID],
@@ -64,11 +55,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: AWSBedrockConfigEntry) -
         )
         bedrock_client.list_foundation_models(byOutputModality="TEXT")
 
+        # Create runtime client for actual inference
+        return boto3.client(
+            "bedrock-runtime",
+            aws_access_key_id=entry.data[CONF_ACCESS_KEY_ID],
+            aws_secret_access_key=entry.data[CONF_SECRET_ACCESS_KEY],
+            region_name=entry.data.get(CONF_REGION, DEFAULT[CONF_REGION]),
+        )
+
     try:
-        # Validate credentials first
-        await hass.async_add_executor_job(validate_credentials)
-        # Create the runtime client for actual inference
-        client = await hass.async_add_executor_job(create_client)
+        client = await hass.async_add_executor_job(create_and_validate_client)
     except ClientError as err:
         error_code = err.response.get("Error", {}).get("Code", "")
         if error_code in ("InvalidSignatureException", "UnrecognizedClientException"):

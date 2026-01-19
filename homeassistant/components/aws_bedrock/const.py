@@ -39,14 +39,90 @@ DEFAULT = {
     CONF_ENABLE_WEB_SEARCH: False,
 }
 
-# Fallback models if API call fails
+# Fallback models if API call fails - only includes models that support tool use
 # Models that only support INFERENCE_PROFILE need the us./eu. prefix
 FALLBACK_MODELS = [
-    "amazon.nova-pro-v1:0",  # Supports ON_DEMAND
-    "amazon.nova-lite-v1:0",  # Supports ON_DEMAND
-    "amazon.nova-micro-v1:0",  # Supports ON_DEMAND
-    "us.anthropic.claude-3-5-sonnet-20241022-v2:0",  # INFERENCE_PROFILE only
+    "amazon.nova-pro-v1:0",  # Supports ON_DEMAND and tool use
+    "amazon.nova-lite-v1:0",  # Supports ON_DEMAND and tool use
+    "amazon.nova-micro-v1:0",  # Supports ON_DEMAND and tool use
+    "us.anthropic.claude-3-5-sonnet-20241022-v2:0",  # INFERENCE_PROFILE only, supports tool use
 ]
+
+# Max number of tool iterations
+MAX_TOOL_ITERATIONS = 10
+
+
+def supports_tool_use(model_id: str) -> bool:
+    """Check if a model supports tool use.
+
+    Based on AWS Bedrock documentation:
+    https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference-supported-models-features.html
+    """
+    # Remove region prefix if present (us., eu.)
+    clean_id = model_id
+    if model_id.startswith(("us.", "eu.")):
+        clean_id = model_id.split(".", 1)[1]
+
+    # Models that DO NOT support tool use (based on AWS documentation)
+    # AI21 Jamba-Instruct (not Jamba 1.5)
+    if clean_id.startswith("ai21.jamba-instruct"):
+        return False
+    # AI21 Labs Jurassic-2
+    if clean_id.startswith("ai21.j2-"):
+        return False
+    # Amazon Titan models
+    if clean_id.startswith("amazon.titan"):
+        return False
+    # Anthropic Claude 2.x and earlier
+    if clean_id.startswith(("anthropic.claude-v2", "anthropic.claude-instant")):
+        return False
+    # Cohere Command (not Command R/R+)
+    if clean_id.startswith(("cohere.command-text", "cohere.command-light")):
+        return False
+    # DeepSeek-R1
+    if "deepseek-r1" in clean_id:
+        return False
+    # Meta Llama 2 and Llama 3 (but not 3.1, 3.2 11b/90b, or 4.x)
+    if clean_id.startswith(("meta.llama2", "meta.llama3-")):
+        # Check if it's Llama 3.1 or later (which support tool use)
+        if not any(
+            x in clean_id
+            for x in (
+                "llama3-1",
+                "llama3-2-11b",
+                "llama3-2-90b",
+                "llama4",
+            )
+        ):
+            return False
+    # Meta Llama 3.2 1b and 3b (smaller versions)
+    if "llama3-2-1b" in clean_id or "llama3-2-3b" in clean_id:
+        return False
+    # Mistral AI Instruct (non-Large/Small/Mixtral versions don't support tool use)
+    # Large, Large 2, Small, and Mixtral DO support tool use
+    if clean_id.startswith("mistral.mistral-"):
+        # Check if it's a tool-capable Mistral variant
+        if any(
+            x in clean_id
+            for x in (
+                "large",
+                "small",
+                "mixtral",
+            )
+        ):
+            return True
+        # Other Mistral variants don't support tool use
+        return False
+
+    # All other models support tool use, including:
+    # - AI21 Jamba 1.5 Large/Mini
+    # - Amazon Nova Premier/Pro/Lite/Micro
+    # - Anthropic Claude 3+
+    # - Cohere Command R/R+
+    # - Meta Llama 3.1, 3.2 11b/90b, 4.x
+    # - Mistral Large/Small
+    # - Writer Palmyra X4/X5
+    return True
 
 
 def get_model_name(model_id: str) -> str:
@@ -104,6 +180,10 @@ async def async_get_available_models(
                 supports_inference_profile = "INFERENCE_PROFILE" in inference_types
 
                 if not supports_on_demand and not supports_inference_profile:
+                    continue
+
+                # Only include models that support tool use
+                if not supports_tool_use(model_id):
                     continue
 
                 seen_ids.add(model_id)

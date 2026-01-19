@@ -26,6 +26,7 @@ from homeassistant.components.aws_bedrock.const import (
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     LLM_API_WEB_SEARCH,
+    async_get_available_models,
 )
 from homeassistant.const import CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -663,3 +664,72 @@ async def test_ai_task_subentry_no_prompt_field(
     schema_keys = result["data_schema"].schema.keys()
     assert CONF_NAME in [str(key) for key in schema_keys]
     assert CONF_PROMPT not in [str(key) for key in schema_keys]
+
+
+async def test_model_filtering_excludes_non_tool_models(
+    hass: HomeAssistant,
+) -> None:
+    """Test that models without tool use support are filtered out."""
+    mock_bedrock_client = MagicMock()
+    # Return a mix of tool-capable and non-tool-capable models
+    mock_bedrock_client.list_foundation_models.return_value = {
+        "modelSummaries": [
+            {
+                "modelId": "amazon.nova-pro-v1:0",
+                "modelName": "Nova Pro",
+                "providerName": "Amazon",
+                "inferenceTypesSupported": ["ON_DEMAND"],
+            },
+            {
+                "modelId": "amazon.titan-text-premier-v1:0",
+                "modelName": "Titan Text Premier",
+                "providerName": "Amazon",
+                "inferenceTypesSupported": ["ON_DEMAND"],
+            },
+            {
+                "modelId": "anthropic.claude-3-sonnet-20240229-v1:0",
+                "modelName": "Claude 3 Sonnet",
+                "providerName": "Anthropic",
+                "inferenceTypesSupported": ["ON_DEMAND"],
+            },
+            {
+                "modelId": "anthropic.claude-v2",
+                "modelName": "Claude 2",
+                "providerName": "Anthropic",
+                "inferenceTypesSupported": ["ON_DEMAND"],
+            },
+            {
+                "modelId": "meta.llama3-2-90b-instruct-v1:0",
+                "modelName": "Llama 3.2 90B",
+                "providerName": "Meta",
+                "inferenceTypesSupported": ["ON_DEMAND"],
+            },
+            {
+                "modelId": "meta.llama2-70b-chat-v1",
+                "modelName": "Llama 2 70B",
+                "providerName": "Meta",
+                "inferenceTypesSupported": ["ON_DEMAND"],
+            },
+        ]
+    }
+
+    with patch("boto3.client", return_value=mock_bedrock_client):
+        models = await async_get_available_models(
+            hass, "test_key", "test_secret", "us-east-1"
+        )
+
+    # Only tool-capable models should be returned
+    model_ids = [m["id"] for m in models]
+
+    # These should be included (support tool use)
+    assert "amazon.nova-pro-v1:0" in model_ids
+    assert "anthropic.claude-3-sonnet-20240229-v1:0" in model_ids
+    assert "meta.llama3-2-90b-instruct-v1:0" in model_ids
+
+    # These should be excluded (don't support tool use)
+    assert "amazon.titan-text-premier-v1:0" not in model_ids
+    assert "anthropic.claude-v2" not in model_ids
+    assert "meta.llama2-70b-chat-v1" not in model_ids
+
+    # Should have exactly 3 models
+    assert len(models) == 3
