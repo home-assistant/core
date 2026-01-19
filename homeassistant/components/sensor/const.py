@@ -68,6 +68,7 @@ from homeassistant.util.unit_conversion import (
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
+    SulphurDioxideConcentrationConverter,
     TemperatureConverter,
     TemperatureDeltaConverter,
     UnitlessRatioConverter,
@@ -409,7 +410,7 @@ class SensorDeviceClass(StrEnum):
     SULPHUR_DIOXIDE = "sulphur_dioxide"
     """Amount of SO2.
 
-    Unit of measurement: `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `μg/m³`
     """
 
     TEMPERATURE = "temperature"
@@ -569,6 +570,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
     SensorDeviceClass.REACTIVE_POWER: ReactivePowerConverter,
+    SensorDeviceClass.SULPHUR_DIOXIDE: SulphurDioxideConcentrationConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
     SensorDeviceClass.TEMPERATURE_DELTA: TemperatureDeltaConverter,
@@ -657,7 +659,10 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     },
     SensorDeviceClass.SOUND_PRESSURE: set(UnitOfSoundPressure),
     SensorDeviceClass.SPEED: {*UnitOfSpeed, *UnitOfVolumetricFlux},
-    SensorDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.SULPHUR_DIOXIDE: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
     SensorDeviceClass.TEMPERATURE: set(UnitOfTemperature),
     SensorDeviceClass.TEMPERATURE_DELTA: set(UnitOfTemperature),
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
