@@ -54,7 +54,9 @@ class TypeInformation[T]:
         return raw_value
 
     @classmethod
-    def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
+    def _from_json(
+        cls, dpcode: str, type_data: str, *, report_type: str | None = None
+    ) -> Self | None:
         """Load JSON string and return a TypeInformation object."""
         return cls(dpcode=dpcode, type_data=type_data)
 
@@ -86,7 +88,11 @@ class TypeInformation[T]:
                     and parse_dptype(current_definition.type) is cls._DPTYPE
                     and (
                         type_information := cls._from_json(
-                            dpcode=dpcode, type_data=current_definition.values
+                            dpcode=dpcode,
+                            type_data=current_definition.values,
+                            report_type=getattr(
+                                current_definition, "report_type", None
+                            ),
                         )
                     )
                 ):
@@ -104,7 +110,9 @@ class BitmapTypeInformation(TypeInformation[int]):
     label: list[str]
 
     @classmethod
-    def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
+    def _from_json(
+        cls, dpcode: str, type_data: str, *, report_type: str | None = None
+    ) -> Self | None:
         """Load JSON string and return a BitmapTypeInformation object."""
         if not (parsed := cast(dict[str, Any] | None, json_loads_object(type_data))):
             return None
@@ -177,7 +185,9 @@ class EnumTypeInformation(TypeInformation[str]):
         return raw_value
 
     @classmethod
-    def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
+    def _from_json(
+        cls, dpcode: str, type_data: str, *, report_type: str | None = None
+    ) -> Self | None:
         """Load JSON string and return an EnumTypeInformation object."""
         if not (parsed := json_loads_object(type_data)):
             return None
@@ -199,6 +209,7 @@ class IntegerTypeInformation(TypeInformation[float]):
     scale: int
     step: int
     unit: str | None = None
+    report_type: str | None = None
 
     def scale_value(self, value: int) -> float:
         """Scale a value."""
@@ -234,7 +245,9 @@ class IntegerTypeInformation(TypeInformation[float]):
         return raw_value / (10**self.scale)
 
     @classmethod
-    def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
+    def _from_json(
+        cls, dpcode: str, type_data: str, *, report_type: str | None = None
+    ) -> Self | None:
         """Load JSON string and return an IntegerTypeInformation object."""
         if not (parsed := cast(dict[str, Any] | None, json_loads_object(type_data))):
             return None
@@ -247,6 +260,7 @@ class IntegerTypeInformation(TypeInformation[float]):
             scale=int(parsed["scale"]),
             step=int(parsed["step"]),
             unit=parsed.get("unit"),
+            report_type=report_type,
         )
 
 

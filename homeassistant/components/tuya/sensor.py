@@ -33,7 +33,6 @@ from .const import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
     LOGGER,
-    REPORT_TYPE_ENABLED_CATEGORIES,
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
     DPCode,
@@ -41,8 +40,8 @@ from .const import (
 from .entity import TuyaEntity
 from .models import (
     DeviceWrapper,
+    DPCodeDeltaIntegerWrapper,
     DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
     DPCodeJsonWrapper,
     DPCodeRawWrapper,
     DPCodeTypeInformationWrapper,
@@ -1749,7 +1748,9 @@ def _get_dpcode_wrapper(
                 return wrapper
         return None
 
-    for cls in (DPCodeIntegerWrapper, DPCodeEnumWrapper):
+    # Use DPCodeDeltaIntegerWrapper to handle delta report types
+    # It will detect if the sensor is a delta report based on report_type
+    for cls in (DPCodeDeltaIntegerWrapper, DPCodeEnumWrapper):
         if wrapper := cls.find_dpcode(device, dpcode):
             return wrapper
 
@@ -1790,9 +1791,6 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     """Tuya Sensor Entity."""
 
     entity_description: TuyaSensorEntityDescription
-    _accumulated_value: float | None = None
-    _is_delta_report: bool = False
-    _last_dp_timestamp: int | None = None
 
     def __init__(
         self,
@@ -1812,28 +1810,16 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         if description.suggested_unit_of_measurement is None:
             self._attr_suggested_unit_of_measurement = dpcode_wrapper.suggested_unit
 
-        self._apply_report_type_state_class(device, description)
+        self._apply_report_type_state_class(dpcode_wrapper, description)
         self._validate_device_class_unit()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity added to Home Assistant."""
         await super().async_added_to_hass()
 
-        if self._is_delta_report:
-            self._initialize_accumulated_value()
-
-    def _initialize_accumulated_value(self) -> None:
-        """Initialize accumulated value from current device state."""
-        raw_value = self._read_wrapper(self._dpcode_wrapper)
-        if raw_value is None:
-            return
-
-        self._accumulated_value = float(raw_value)
-        LOGGER.debug(
-            "Initialized accumulated value from device for %s: %s",
-            self.unique_id,
-            self._accumulated_value,
-        )
+        # Initialize delta wrapper if applicable
+        if isinstance(self._dpcode_wrapper, DPCodeDeltaIntegerWrapper):
+            self._dpcode_wrapper.initialize_accumulated_value(self.device)
 
     async def _handle_state_update(
         self,
@@ -1844,95 +1830,29 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
             return
 
-        if self._is_delta_report:
-            self._process_delta_update(updated_status_properties, dp_timestamps)
+        # Process delta update if applicable
+        if isinstance(self._dpcode_wrapper, DPCodeDeltaIntegerWrapper):
+            self._dpcode_wrapper.process_delta_update(self.device, dp_timestamps)
 
         self.async_write_ha_state()
 
-    def _process_delta_update(
-        self,
-        updated_status_properties: list[str] | None,
-        dp_timestamps: dict | None,
-    ) -> None:
-        """Process delta report update by accumulating the value."""
-        dpcode = self.entity_description.dpcode or self.entity_description.key
-
-        if (
-            updated_status_properties is not None
-            and dpcode not in updated_status_properties
-        ):
-            return
-
-        current_timestamp = dp_timestamps.get(dpcode) if dp_timestamps else None
-
-        # Skip duplicate updates with same timestamp
-        if (
-            current_timestamp is not None
-            and current_timestamp == self._last_dp_timestamp
-        ):
-            LOGGER.debug(
-                "Skipping duplicate update for %s (same timestamp: %s)",
-                self.unique_id,
-                current_timestamp,
-            )
-            return
-
-        raw_value = self._read_wrapper(self._dpcode_wrapper)
-        if raw_value is None:
-            return
-
-        delta = float(raw_value)
-
-        if self._accumulated_value is None:
-            self._accumulated_value = delta
-            LOGGER.debug(
-                "Initialized accumulated value for %s: %s",
-                self.unique_id,
-                self._accumulated_value,
-            )
-        else:
-            self._accumulated_value += delta
-            LOGGER.debug(
-                "Delta update for %s: +%s, total: %s",
-                self.unique_id,
-                delta,
-                self._accumulated_value,
-            )
-
-        self._last_dp_timestamp = current_timestamp
-
     def _apply_report_type_state_class(
-        self, device: CustomerDevice, description: TuyaSensorEntityDescription
+        self, dpcode_wrapper: DeviceWrapper, description: TuyaSensorEntityDescription
     ) -> None:
-        """Apply state class based on device's report_type.
+        """Apply state class based on wrapper's report_type.
 
         This will override the state_class from entity description
-        if report_type is explicitly set from the API.
-        Only applies to device categories in REPORT_TYPE_ENABLED_CATEGORIES.
+        if the wrapper indicates a delta or cumulative report type.
         """
-        # Skip if device category is not enabled for report_type handling
-        if device.category not in REPORT_TYPE_ENABLED_CATEGORIES:
+        # Check if this is a delta integer wrapper with report_type info
+        if not isinstance(dpcode_wrapper, DPCodeDeltaIntegerWrapper):
             return
 
-        dpcode = description.dpcode or description.key
-
-        if dpcode not in device.status_range:
-            return
-
-        status_range = device.status_range[dpcode]
-        report_type = getattr(status_range, "report_type", None)
+        report_type = dpcode_wrapper.type_information.report_type
 
         # Keep original state_class if report_type is not set or unknown
         if not report_type or report_type == "un_known":
             return
-
-        # Mark as delta report for incremental accumulation
-        if report_type == "sum":
-            self._is_delta_report = True
-            LOGGER.debug(
-                "Sensor %s is marked as delta report type, will accumulate values",
-                self.unique_id,
-            )
 
         if state_class := REPORT_TYPE_TO_STATE_CLASS.get(report_type):
             if description.state_class and description.state_class != state_class:
@@ -1993,8 +1913,6 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        if self._is_delta_report:
-            return self._accumulated_value
         return self._read_wrapper(self._dpcode_wrapper)
 
     async def _handle_state_update(

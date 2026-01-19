@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Self
 
 from tuya_sharing import CustomerDevice
@@ -16,6 +17,8 @@ from .type_information import (
     StringTypeInformation,
     TypeInformation,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class DeviceWrapper[T]:
@@ -208,6 +211,97 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeInformation])
             f"Value `{new_value}` (converted from `{value}`) out of range:"
             f" ({self.type_information.min}-{self.type_information.max})"
         )
+
+
+class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
+    """Wrapper for integer values with delta report accumulation.
+
+    This wrapper handles sensors that report incremental (delta) values
+    instead of cumulative totals. It accumulates the delta values locally
+    to provide a running total.
+    """
+
+    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
+        """Init DPCodeDeltaIntegerWrapper."""
+        super().__init__(dpcode, type_information)
+        self._accumulated_value: float | None = None
+        self._last_dp_timestamp: int | None = None
+
+    @property
+    def is_delta_report(self) -> bool:
+        """Return True if this sensor uses delta reporting."""
+        return self.type_information.report_type == "sum"
+
+    def initialize_accumulated_value(self, device: CustomerDevice) -> None:
+        """Initialize accumulated value from current device state.
+
+        Called when the entity is added to Home Assistant.
+        """
+        if not self.is_delta_report:
+            return
+
+        raw_value = super().read_device_status(device)
+        if raw_value is not None:
+            self._accumulated_value = float(raw_value)
+            _LOGGER.debug(
+                "Initialized accumulated value from device for %s: %s",
+                self.dpcode,
+                self._accumulated_value,
+            )
+
+    def process_delta_update(
+        self, device: CustomerDevice, dp_timestamps: dict | None = None
+    ) -> None:
+        """Process a delta update by accumulating the value.
+
+        Called during state updates to accumulate incremental values.
+        """
+        if not self.is_delta_report:
+            return
+
+        current_timestamp = dp_timestamps.get(self.dpcode) if dp_timestamps else None
+
+        # Skip duplicate updates with same timestamp
+        if (
+            current_timestamp is not None
+            and current_timestamp == self._last_dp_timestamp
+        ):
+            _LOGGER.debug(
+                "Skipping duplicate update for %s (same timestamp: %s)",
+                self.dpcode,
+                current_timestamp,
+            )
+            return
+
+        raw_value = super().read_device_status(device)
+        if raw_value is None:
+            return
+
+        delta = float(raw_value)
+
+        if self._accumulated_value is None:
+            self._accumulated_value = delta
+            _LOGGER.debug(
+                "Initialized accumulated value for %s: %s",
+                self.dpcode,
+                self._accumulated_value,
+            )
+        else:
+            self._accumulated_value += delta
+            _LOGGER.debug(
+                "Delta update for %s: +%s, total: %s",
+                self.dpcode,
+                delta,
+                self._accumulated_value,
+            )
+
+        self._last_dp_timestamp = current_timestamp
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read device status, returning accumulated value for delta reports."""
+        if self.is_delta_report:
+            return self._accumulated_value
+        return super().read_device_status(device)
 
 
 class DPCodeRawWrapper(DPCodeTypeInformationWrapper[RawTypeInformation]):
