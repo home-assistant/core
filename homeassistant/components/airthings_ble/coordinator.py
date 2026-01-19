@@ -114,10 +114,10 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
 
         # Find sensors with connectivity mode set to smartlink (hub)
         # or not configured
-        if connectivity_mode in [
+        if connectivity_mode in {
             AirthingsConnectivityMode.SMARTLINK.value,
             AirthingsConnectivityMode.NOT_CONFIGURED.value,
-        ]:
+        }:
             ir.async_create_issue(
                 hass=self.hass,
                 domain=DOMAIN,
