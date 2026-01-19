@@ -332,8 +332,8 @@ async def test_user_options_set_single(
     # Verify that first config step comes back with a selection list of
     # all configurable devices
     # Clear config options to certify functionality when starting from scratch
+    object.__setattr__(mock_config_entry, "options", {})
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    hass.config_entries.async_update_entry(mock_config_entry, options={})
     assert result["type"] is FlowResultType.FORM
     assert result["data_schema"].schema["device_selection"].options == {
         "Roller shutter Living Room": False,
