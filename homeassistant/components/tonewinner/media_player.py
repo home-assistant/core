@@ -182,7 +182,9 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
     def __init__(self, hass, entry, data):
         """Initialize the media player."""
-        _LOGGER.debug("Initializing TonewinnerMediaPlayer")
+        _LOGGER.info("Initializing TonewinnerMediaPlayer for entry: %s", entry.entry_id)
+        _LOGGER.debug("Entry data: %s", entry.data)
+        _LOGGER.debug("Entry options: %s", entry.options)
         self.hass = hass
         self.port = data[CONF_SERIAL_PORT]
         self.baud = data.get(CONF_BAUD_RATE, 9600)
@@ -217,9 +219,21 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._source_code_to_custom_name = {}
         self._custom_name_to_source_code = {}
         source_mappings = entry.options.get(CONF_SOURCE_MAPPINGS, {})
+        _LOGGER.debug(
+            "Building source mappings from entry.options[%s]: %s",
+            CONF_SOURCE_MAPPINGS,
+            source_mappings,
+        )
+        _LOGGER.debug("Available INPUT_SOURCES: %s", INPUT_SOURCES)
         self._attr_source_list = []
         for source_name, source_code in INPUT_SOURCES.items():
             mapping = source_mappings.get(source_code, {})
+            _LOGGER.debug(
+                "Processing source: %s (code: %s), mapping: %s",
+                source_name,
+                source_code,
+                mapping,
+            )
             if not mapping.get("enabled", True):
                 _LOGGER.debug("Source disabled: %s (%s)", source_name, source_code)
                 continue
@@ -230,6 +244,14 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             _LOGGER.debug(
                 "Source mapped: %s -> %s (%s)", source_name, custom_name, source_code
             )
+        _LOGGER.debug(
+            "Final source list: %s",
+            self._attr_source_list,
+        )
+        _LOGGER.debug(
+            "Final _custom_name_to_source_code mapping: %s",
+            self._custom_name_to_source_code,
+        )
         self._attr_sound_mode_list = list(SOUND_MODES.keys())
 
     async def async_added_to_hass(self) -> None:
@@ -507,7 +529,24 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        if source not in self._custom_name_to_source_code:
+        _LOGGER.debug("async_select_source called with: %s", source)
+        _LOGGER.debug(
+            "Available sources in _custom_name_to_source_code: %s",
+            self._custom_name_to_source_code,
+        )
+        _LOGGER.debug(
+            "Available sources in source_list: %s",
+            self._attr_source_list,
+        )
+        if (
+            source not in self._custom_name_to_source_code
+            or source not in self._source_code_to_custom_name
+        ):
+            _LOGGER.warn(
+                "Unknown source '%s'. Available sources: %s",
+                source,
+                list(self._custom_name_to_source_code.keys()),
+            )
             raise ValueError(f"Unknown source: {source}")
         source_code = self._custom_name_to_source_code[source]
         command = f"SI {source_code}"

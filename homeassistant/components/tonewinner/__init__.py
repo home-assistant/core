@@ -13,7 +13,11 @@ _LOGGER.info("Tonewinner integration module loaded!")
 
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
+    _LOGGER.debug("Options updated for entry %s, reloading integration", entry.entry_id)
+    _LOGGER.debug("Current entry data: %s", entry.data)
+    _LOGGER.debug("Current entry options: %s", entry.options)
     await hass.config_entries.async_reload(entry.entry_id)
+    _LOGGER.debug("Integration reload initiated for entry %s", entry.entry_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

@@ -98,6 +98,8 @@ class TonewinnerOptionsFlow(OptionsFlow):
             if CONF_BAUD_RATE in user_input:
                 new_data[CONF_BAUD_RATE] = user_input[CONF_BAUD_RATE]
 
+            _LOGGER.debug("Updating entry data: %s", new_data)
+
             # Update the config entry with new data
             self.hass.config_entries.async_update_entry(
                 self._config_entry, data=new_data
@@ -114,8 +116,14 @@ class TonewinnerOptionsFlow(OptionsFlow):
                         "enabled": user_input[enabled_key],
                         "name": user_input.get(name_key, source_name),
                     }
+                    _LOGGER.debug(
+                        "Source mapping: %s -> enabled=%s, name=%s",
+                        source_code,
+                        user_input[enabled_key],
+                        user_input.get(name_key, source_name),
+                    )
 
-            _LOGGER.debug("Transformed source_mappings: %s", source_mappings)
+            _LOGGER.debug("Final source_mappings to save: %s", source_mappings)
 
             return self.async_create_entry(
                 title="", data={CONF_SOURCE_MAPPINGS: source_mappings}
@@ -123,6 +131,10 @@ class TonewinnerOptionsFlow(OptionsFlow):
 
         # Get current options
         current_mappings = self._config_entry.options.get(CONF_SOURCE_MAPPINGS, {})
+        _LOGGER.debug(
+            "Loading current source_mappings from options: %s", current_mappings
+        )
+        _LOGGER.debug("Full config entry options: %s", self._config_entry.options)
 
         # Build options schema as list to avoid mypy type issues
         schema_items: list[tuple[Any, Any]] = []
@@ -157,6 +169,14 @@ class TonewinnerOptionsFlow(OptionsFlow):
             current_mapping = current_mappings.get(source_code, {})
             enabled = current_mapping.get("enabled", True)
             custom_name = current_mapping.get("name", source_name)
+
+            _LOGGER.debug(
+                "Source %s (%s): enabled=%s, custom_name=%s",
+                source_name,
+                source_code,
+                enabled,
+                custom_name,
+            )
 
             schema_items.append(
                 (vol.Optional(f"{source_code}_enabled", default=enabled), cv.boolean)
