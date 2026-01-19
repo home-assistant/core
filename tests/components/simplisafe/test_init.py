@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from simplipy.errors import InvalidCredentialsError, RequestError, SimplipyError
 
 from homeassistant.components.simplisafe import DOMAIN
@@ -63,7 +62,6 @@ async def _trigger_requesterror_and_refresh(simpli) -> None:
     await simpli.coordinator.async_refresh()
 
 
-@pytest.mark.asyncio
 async def test_requesterror_shuts_down_websocket(
     hass: HomeAssistant, setup_simplisafe_integration, config_entry
 ) -> None:
@@ -74,7 +72,6 @@ async def test_requesterror_shuts_down_websocket(
     assert simpli._websocket_reconnect_task is None
 
 
-@pytest.mark.asyncio
 async def test_websocket_restarts_after_successful_update(
     hass: HomeAssistant, setup_simplisafe_integration, config_entry
 ) -> None:
@@ -92,7 +89,6 @@ async def test_websocket_restarts_after_successful_update(
     assert simpli._websocket_reconnect_task is not None
 
 
-@pytest.mark.asyncio
 async def test_invalid_credentials_raises_configentryauthfailed(
     hass: HomeAssistant, setup_simplisafe_integration, config_entry
 ) -> None:
@@ -107,7 +103,6 @@ async def test_invalid_credentials_raises_configentryauthfailed(
     assert isinstance(simpli.coordinator.last_exception, ConfigEntryAuthFailed)
 
 
-@pytest.mark.asyncio
 async def test_simplipyerror_propagates(
     hass: HomeAssistant, setup_simplisafe_integration, config_entry
 ) -> None:
