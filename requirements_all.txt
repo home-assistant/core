@@ -1683,7 +1683,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.16.3
+opower==0.16.4
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
@@ -1866,7 +1866,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.34.4
+pyTibber==0.35.0
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -2096,7 +2096,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==2.2.0
+pyicloud==2.3.0
 
 # homeassistant.components.insteon
 pyinsteon==1.6.4
@@ -3215,7 +3215,7 @@ wsdot==0.0.1
 wyoming==1.7.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.4.3
+xiaomi-ble==1.5.0
 
 # homeassistant.components.knx
 xknx==3.14.0
