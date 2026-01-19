@@ -83,6 +83,7 @@ async def test_sensor_unavailable_on_coordinator_timeout(
 async def test_yaml_import_success(
     hass: HomeAssistant,
     mock_charger: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test successful YAML import creates deprecated_yaml issue."""
     assert await async_setup_component(
@@ -92,7 +93,6 @@ async def test_yaml_import_success(
     )
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue("homeassistant", "deprecated_yaml")
     assert issue is not None
     assert issue.issue_domain == DOMAIN
@@ -101,6 +101,7 @@ async def test_yaml_import_success(
 async def test_yaml_import_unavailable_host(
     hass: HomeAssistant,
     mock_charger: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test YAML import with unavailable host creates domain-specific issue."""
     mock_charger.test_and_get.side_effect = TimeoutError("Connection timed out")
@@ -112,7 +113,6 @@ async def test_yaml_import_unavailable_host(
     )
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_unavailable_host"
     )
@@ -123,6 +123,7 @@ async def test_yaml_import_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_charger: MagicMock,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test YAML import when already configured creates deprecated_yaml issue."""
     # Only add the entry, don't set it up - this allows the YAML platform setup
@@ -136,7 +137,6 @@ async def test_yaml_import_already_configured(
     )
     await hass.async_block_till_done()
 
-    issue_registry = ir.async_get(hass)
     # When already configured, it should still create deprecated_yaml issue
     issue = issue_registry.async_get_issue("homeassistant", "deprecated_yaml")
     assert issue is not None
