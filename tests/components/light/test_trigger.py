@@ -4,7 +4,7 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light import ATTR_BRIGHTNESS_PCT
 from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 
@@ -120,10 +120,10 @@ async def test_light_state_trigger_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_changed_trigger_states(
-            "light.brightness_changed", STATE_ON, ATTR_BRIGHTNESS
+            "light.brightness_changed", STATE_ON, ATTR_BRIGHTNESS_PCT
         ),
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "light.brightness_crossed_threshold", STATE_ON, ATTR_BRIGHTNESS
+            "light.brightness_crossed_threshold", STATE_ON, ATTR_BRIGHTNESS_PCT
         ),
     ],
 )
@@ -231,7 +231,7 @@ async def test_light_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "light.brightness_crossed_threshold", STATE_ON, ATTR_BRIGHTNESS
+            "light.brightness_crossed_threshold", STATE_ON, ATTR_BRIGHTNESS_PCT
         ),
     ],
 )
@@ -339,7 +339,7 @@ async def test_light_state_trigger_behavior_last(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_numerical_attribute_crossed_threshold_trigger_states(
-            "light.brightness_crossed_threshold", STATE_ON, ATTR_BRIGHTNESS
+            "light.brightness_crossed_threshold", STATE_ON, ATTR_BRIGHTNESS_PCT
         ),
     ],
 )

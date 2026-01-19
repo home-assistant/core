@@ -9,15 +9,15 @@ from homeassistant.helpers.trigger import (
     make_entity_target_state_trigger,
 )
 
-from . import ATTR_BRIGHTNESS
+from . import ATTR_BRIGHTNESS_PCT
 from .const import DOMAIN
 
 TRIGGERS: dict[str, type[Trigger]] = {
     "brightness_changed": make_entity_numerical_state_attribute_changed_trigger(
-        DOMAIN, ATTR_BRIGHTNESS
+        DOMAIN, ATTR_BRIGHTNESS_PCT
     ),
     "brightness_crossed_threshold": make_entity_numerical_state_attribute_crossed_threshold_trigger(
-        DOMAIN, ATTR_BRIGHTNESS
+        DOMAIN, ATTR_BRIGHTNESS_PCT
     ),
     "turned_off": make_entity_target_state_trigger(DOMAIN, STATE_OFF),
     "turned_on": make_entity_target_state_trigger(DOMAIN, STATE_ON),
