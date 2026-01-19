@@ -25,6 +25,7 @@ async def async_setup_entry(
     LOGGER.debug("Available subentries: %s", list(config_entry.subentries.keys()))
 
     conversation_entities = []
+    first_subentry_id = None
     for subentry in config_entry.subentries.values():
         LOGGER.debug(
             "Processing subentry: type=%s, id=%s, title=%s",
@@ -34,6 +35,9 @@ async def async_setup_entry(
         )
         if subentry.subentry_type != "conversation":
             continue
+
+        if first_subentry_id is None:
+            first_subentry_id = subentry.subentry_id
 
         conversation_entities.append(
             AWSBedrockConversationEntity(config_entry, subentry)
@@ -46,9 +50,7 @@ async def async_setup_entry(
         LOGGER.debug("Adding %d conversation entities", len(conversation_entities))
         async_add_entities(
             conversation_entities,
-            config_subentry_id=conversation_entities[0].subentry.subentry_id
-            if conversation_entities
-            else None,
+            config_subentry_id=first_subentry_id,
         )
     else:
         LOGGER.warning("No conversation subentries found to set up")
