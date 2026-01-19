@@ -608,7 +608,7 @@ class TelegramNotificationService:
         chat_id: Any = None,
         context: Context | None = None,
         **kwargs: Any,
-    ) -> dict[int, int]:
+    ) -> list[int]:
         """Send a message to one or multiple pre-allowed chat IDs."""
         chat_id = self.get_target_chat_ids(chat_id)[0]
         params = self._get_msg_kwargs(kwargs)
@@ -652,7 +652,8 @@ class TelegramNotificationService:
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
             parse_mode=params[ATTR_PARSER],
         )
-        return {chat_id: response[-1].id}
+
+        return [message.id for message in response]
 
     async def delete_message(
         self,
