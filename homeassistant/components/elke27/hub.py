@@ -263,16 +263,16 @@ class Elke27Hub:
             if error is not None:
                 raise error
             return False
-        status_result = await client.async_execute(
-            "zone_get_status",
-            zone_id=zone_id,
-        )
-        if not getattr(status_result, "ok", False):
-            _LOGGER.debug(
-                "Zone status refresh failed for zone %s: %s",
-                zone_id,
-                getattr(status_result, "error", None),
-            )
+        # status_result = await client.async_execute(
+        #     "zone_get_status",
+        #     zone_id=zone_id,
+        # )
+        # if not getattr(status_result, "ok", False):
+        #     _LOGGER.debug(
+        #         "Zone status refresh failed for zone %s: %s",
+        #         zone_id,
+        #         getattr(status_result, "error", None),
+        #     )
         return True
 
     async def async_arm_area(
