@@ -3,6 +3,7 @@
 import asyncio
 from http import HTTPStatus
 import logging
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 import voluptuous as vol
@@ -11,6 +12,7 @@ from homeassistant.components.tts import (
     CONF_LANG,
     PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
+    TtsAudioType,
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import config_validation as cv
@@ -182,17 +184,21 @@ class VoiceRSSProvider(Provider):
         }
 
     @property
-    def default_language(self):
+    def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
-    def supported_languages(self):
+    def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
-    async def async_get_tts_audio(self, message, language, options):
+    async def async_get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> TtsAudioType:
         """Load TTS from VoiceRSS."""
+        if TYPE_CHECKING:
+            assert self.hass
         websession = async_get_clientsession(self.hass)
         form_data = self._form_data.copy()
 

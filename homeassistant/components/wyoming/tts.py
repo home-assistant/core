@@ -4,6 +4,7 @@ from collections import defaultdict
 from collections.abc import AsyncGenerator
 import io
 import logging
+from typing import Any
 import wave
 
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
@@ -84,20 +85,20 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         self._attr_unique_id = f"{config_entry.entry_id}-tts"
 
     @property
-    def default_language(self):
+    def default_language(self) -> str:
         """Return default language."""
         if not self._supported_languages:
-            return None
+            return ""
 
         return self._supported_languages[0]
 
     @property
-    def supported_languages(self):
+    def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return self._supported_languages
 
     @property
-    def supported_options(self):
+    def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
         return [
             tts.ATTR_AUDIO_OUTPUT,
@@ -106,7 +107,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         ]
 
     @property
-    def default_options(self):
+    def default_options(self) -> dict[str, Any]:
         """Return a dict include default options."""
         return {}
 
@@ -115,7 +116,9 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         """Return a list of supported voices for a language."""
         return self._voices.get(language)
 
-    async def async_get_tts_audio(self, message, language, options):
+    async def async_get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> tts.TtsAudioType:
         """Load TTS from TCP socket."""
         voice_name: str | None = options.get(tts.ATTR_VOICE)
         voice_speaker: str | None = options.get(ATTR_SPEAKER)
