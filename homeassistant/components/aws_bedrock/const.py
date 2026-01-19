@@ -51,78 +51,47 @@ FALLBACK_MODELS = [
 # Max number of tool iterations
 MAX_TOOL_ITERATIONS = 10
 
+# Model ID prefixes that support tool use
+# Based on: https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference-supported-models-features.html
+TOOL_USE_SUPPORTED_MODEL_PREFIXES = {
+    # AI21 Labs
+    "ai21.jamba-1-5-large",
+    "ai21.jamba-1-5-mini",
+    # Amazon Nova
+    "amazon.nova-premier",
+    "amazon.nova-pro",
+    "amazon.nova-lite",
+    "amazon.nova-micro",
+    # Anthropic Claude 3+
+    "anthropic.claude-3-",
+    "anthropic.claude-3.",
+    "anthropic.claude-4",
+    # Cohere Command R
+    "cohere.command-r-",
+    "cohere.command-r-plus",
+    # Meta Llama 3.1+
+    "meta.llama3-1-",
+    "meta.llama3-2-11b",
+    "meta.llama3-2-90b",
+    "meta.llama4",
+    # Mistral
+    "mistral.mistral-large",
+    "mistral.mistral-small",
+    "mistral.mixtral",
+    "mistral.pixtral-large",
+    # Writer
+    "writer.palmyra-x4",
+    "writer.palmyra-x5",
+}
+
 
 def supports_tool_use(model_id: str) -> bool:
-    """Check if a model supports tool use.
-
-    Based on AWS Bedrock documentation:
-    https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference-supported-models-features.html
-    """
+    """Check if a model supports tool use based on its ID prefix."""
     # Remove region prefix if present (us., eu.)
-    clean_id = model_id
-    if model_id.startswith(("us.", "eu.")):
-        clean_id = model_id.split(".", 1)[1]
-
-    # Models that DO NOT support tool use (based on AWS documentation)
-    # AI21 Jamba-Instruct (not Jamba 1.5)
-    if clean_id.startswith("ai21.jamba-instruct"):
-        return False
-    # AI21 Labs Jurassic-2
-    if clean_id.startswith("ai21.j2-"):
-        return False
-    # Amazon Titan models
-    if clean_id.startswith("amazon.titan"):
-        return False
-    # Anthropic Claude 2.x and earlier
-    if clean_id.startswith(("anthropic.claude-v2", "anthropic.claude-instant")):
-        return False
-    # Cohere Command (not Command R/R+)
-    if clean_id.startswith(("cohere.command-text", "cohere.command-light")):
-        return False
-    # DeepSeek-R1
-    if "deepseek-r1" in clean_id:
-        return False
-    # Meta Llama 2 and Llama 3 (but not 3.1, 3.2 11b/90b, or 4.x)
-    if clean_id.startswith(("meta.llama2", "meta.llama3-")):
-        # Check if it's Llama 3.1 or later (which support tool use)
-        if not any(
-            x in clean_id
-            for x in (
-                "llama3-1",
-                "llama3-2-11b",
-                "llama3-2-90b",
-                "llama4",
-            )
-        ):
-            return False
-    # Meta Llama 3.2 1b and 3b (smaller versions)
-    if "llama3-2-1b" in clean_id or "llama3-2-3b" in clean_id:
-        return False
-    # Mistral AI Instruct (non-Large/Small/Mixtral versions don't support tool use)
-    # Large, Large 2, Small, and Mixtral DO support tool use
-    if clean_id.startswith("mistral.mistral-"):
-        # Check if it's a tool-capable Mistral variant
-        if any(
-            x in clean_id
-            for x in (
-                "large",
-                "small",
-                "mixtral",
-            )
-        ):
-            return True
-        # Other Mistral variants don't support tool use
-        return False
-
-    # All other models support tool use, including:
-    # - AI21 Jamba 1.5 Large/Mini
-    # - Amazon Nova Premier/Pro/Lite/Micro
-    # - Anthropic Claude 3+
-    # - Cohere Command R/R+
-    # - Meta Llama 3.1, 3.2 11b/90b, 4.x
-    # - Mistral Large/Small
-    # - Writer Palmyra X4/X5
-    return True
+    clean_id = model_id.removeprefix("us.").removeprefix("eu.")
+    return any(
+        clean_id.startswith(prefix) for prefix in TOOL_USE_SUPPORTED_MODEL_PREFIXES
+    )
 
 
 def get_model_name(model_id: str) -> str:
