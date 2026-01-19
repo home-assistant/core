@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 # ruff: noqa: E402
-
 import contextlib
 import logging
 from pathlib import Path
