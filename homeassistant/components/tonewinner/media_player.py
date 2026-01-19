@@ -326,7 +326,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._cancel_command_timeout()
 
         # Parse power status
-        if power := TonewinnerProtocol.parse_power_status(response):
+        if (power := TonewinnerProtocol.parse_power_status(response)) is not None:
             new_state = MediaPlayerState.ON if power else MediaPlayerState.OFF
             _LOGGER.debug("State updated: %s", new_state)
 
@@ -344,18 +344,18 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             self._attr_state = new_state
 
         # Parse volume (device returns 0-80, convert to 0.0-1.0 for HA)
-        if volume := TonewinnerProtocol.parse_volume_status(response):
+        if (volume := TonewinnerProtocol.parse_volume_status(response)) is not None:
             ha_volume = volume / 80.0
             _LOGGER.debug("Volume updated: device=%.2f, ha=%.2f", volume, ha_volume)
             self._attr_volume_level = ha_volume
 
         # Parse mute status
-        if mute := TonewinnerProtocol.parse_mute_status(response):
+        if (mute := TonewinnerProtocol.parse_mute_status(response)) is not None:
             _LOGGER.debug("Mute updated: %s", mute)
             self._attr_is_volume_muted = mute
 
         # Parse input source
-        if source_code := TonewinnerProtocol.parse_input_source(response):
+        if (source_code := TonewinnerProtocol.parse_input_source(response)) is not None:
             _LOGGER.debug("Source code received from device: '%s'", source_code)
             _LOGGER.debug("Available mappings: %s", self._source_code_to_custom_name)
 
@@ -380,7 +380,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
                 self._attr_source = source_code
 
         # Parse sound mode
-        if mode := TonewinnerProtocol.parse_sound_mode(response):
+        if (mode := TonewinnerProtocol.parse_sound_mode(response)) is not None:
             _LOGGER.debug("Sound mode updated: %s", mode)
             self._attr_sound_mode = mode
 
