@@ -184,7 +184,7 @@ class EnumTypeInformation(TypeInformation[str]):
 
     @classmethod
     def _from_json(
-        cls, dpcode: str, type_data: str, *, report_type: str | None = None
+        cls, dpcode: str, type_data: str, *, report_type: str | None
     ) -> Self | None:
         """Load JSON string and return an EnumTypeInformation object."""
         if not (parsed := json_loads_object(type_data)):
