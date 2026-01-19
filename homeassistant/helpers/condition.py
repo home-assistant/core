@@ -13,7 +13,17 @@ import inspect
 import logging
 import re
 import sys
-from typing import TYPE_CHECKING, Any, Protocol, TypedDict, Unpack, cast, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    Protocol,
+    TypedDict,
+    Unpack,
+    cast,
+    overload,
+    override,
+)
 
 import voluptuous as vol
 
@@ -43,7 +53,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     WEEKDAYS,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -71,6 +81,7 @@ from .automation import (
 )
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
+from .target import TargetSelection, async_extract_referenced_entity_ids
 from .template import Template, render_complex
 from .trace import (
     TraceElement,
@@ -300,6 +311,112 @@ class Condition(abc.ABC):
     @abc.abstractmethod
     async def async_get_checker(self) -> ConditionChecker:
         """Get the condition checker."""
+
+
+ATTR_BEHAVIOR: Final = "behavior"
+BEHAVIOR_ANY: Final = "any"
+BEHAVIOR_ALL: Final = "all"
+
+STATE_CONDITION_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
+    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+        [BEHAVIOR_ANY, BEHAVIOR_ALL]
+    ),
+}
+ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
+    {
+        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        vol.Required(CONF_OPTIONS): STATE_CONDITION_OPTIONS_SCHEMA,
+    }
+)
+
+
+class EntityStateConditionBase(Condition):
+    """State condition."""
+
+    _domain: str
+    _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
+    _states: set[str]
+
+    @override
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, cls._schema(config))
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize condition."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.target
+            assert config.options
+        self._target_selection = TargetSelection(config.target)
+        self._behavior = config.options[ATTR_BEHAVIOR]
+
+    def entity_filter(self, entities: set[str]) -> set[str]:
+        """Filter entities of this domain."""
+        return {
+            entity_id
+            for entity_id in entities
+            if split_entity_id(entity_id)[0] == self._domain
+        }
+
+    @override
+    async def async_get_checker(self) -> ConditionChecker:
+        """Get the condition checker."""
+
+        def check_any_match_state(states: list[str]) -> bool:
+            """Test if any entity match the state."""
+            return any(state in self._states for state in states)
+
+        def check_all_match_state(states: list[str]) -> bool:
+            """Test if all entities match the state."""
+            return all(state in self._states for state in states)
+
+        matcher: Callable[[list[str]], bool]
+        if self._behavior == BEHAVIOR_ANY:
+            matcher = check_any_match_state
+        elif self._behavior == BEHAVIOR_ALL:
+            matcher = check_all_match_state
+
+        def test_state(**kwargs: Unpack[ConditionCheckParams]) -> bool:
+            """Test state condition."""
+            targeted_entities = async_extract_referenced_entity_ids(
+                self._hass, self._target_selection, expand_group=False
+            )
+            referenced_entity_ids = targeted_entities.referenced.union(
+                targeted_entities.indirectly_referenced
+            )
+            filtered_entity_ids = self.entity_filter(referenced_entity_ids)
+            entity_states = [
+                _state.state
+                for entity_id in filtered_entity_ids
+                if (_state := self._hass.states.get(entity_id))
+                and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+            ]
+            return matcher(entity_states)
+
+        return test_state
+
+
+def make_entity_state_condition(
+    domain: str, states: str | set[str]
+) -> type[EntityStateConditionBase]:
+    """Create a condition for entity state changes to specific state(s)."""
+
+    if isinstance(states, str):
+        states_set = {states}
+    else:
+        states_set = states
+
+    class CustomCondition(EntityStateConditionBase):
+        """Condition for entity state."""
+
+        _domain = domain
+        _states = states_set
+
+    return CustomCondition
 
 
 class ConditionProtocol(Protocol):
