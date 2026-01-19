@@ -254,7 +254,7 @@ class TonewinnerProtocol:
                 video_source,
                 audio_source,
             )
-            return source_name
+            return audio_source
 
         # If no match for V= A= format, try just returning the source name directly
         # Some responses may just be "SI CO1" or similar
