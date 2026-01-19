@@ -13,6 +13,7 @@ from homeassistant.components.airthings_ble.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -330,13 +331,17 @@ async def test_update_data_failed(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # Verify initial setup worked
-    coordinator = entry.runtime_data
-    assert coordinator.last_update_success is True
+    battery_entity_id = "sensor.airthings_wave_123456_battery"
+    state = hass.states.get(battery_entity_id)
+    assert state is not None
+    assert state.state == "85"
 
     # Now make update fail
     with patch_airthings_ble(side_effect=Exception("Update failed")):
-        await coordinator.async_refresh()
+        freezer.tick(DEFAULT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
-    # Coordinator should handle the failure
-    assert coordinator.last_update_success is False
+    state = hass.states.get(battery_entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
