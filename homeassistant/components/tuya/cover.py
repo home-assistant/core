@@ -357,9 +357,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._attr_supported_features = CoverEntityFeature(0)
 
-        self._cover_position_reversed = False
-        if device_options and device_options.get(OPTION_ENTRY_COVER_POSITION_REVERSED):
-            self._cover_position_reversed = True
+        self._cover_position_reversed = device_options and device_options.get(
+            OPTION_ENTRY_COVER_POSITION_REVERSED
+        )
 
         self._current_position = current_position or set_position
         self._current_state_wrapper = current_state_wrapper

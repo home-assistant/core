@@ -10,7 +10,7 @@ from tuya_sharing import Manager
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.tuya.config_flow import (
-    _INPUT_ENTRY_CLEAR_OPTIONS,
+    _INPUT_ENTRY_CLEAR_DEVICE_OPTIONS,
     _INPUT_ENTRY_DEVICE_SELECTION,
 )
 from homeassistant.components.tuya.const import CONF_USER_CODE, DOMAIN
@@ -270,7 +270,7 @@ async def test_user_options_clear(
     # Verify that the clear-input action clears the options dict
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={_INPUT_ENTRY_CLEAR_OPTIONS: True},
+        user_input={_INPUT_ENTRY_CLEAR_DEVICE_OPTIONS: True},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}

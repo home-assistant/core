@@ -42,7 +42,7 @@ from .const import (
     TUYA_SCHEMA,
 )
 
-_INPUT_ENTRY_CLEAR_OPTIONS = "clear_options"
+_INPUT_ENTRY_CLEAR_DEVICE_OPTIONS = "clear_device_options"
 _INPUT_ENTRY_DEVICE_SELECTION = "device_selection"
 
 
@@ -261,7 +261,7 @@ class TuyaOptionsFlowHandler(OptionsFlowWithReload):
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
         self.configurable_devices = {
-            self._get_device_friendly_name(device_entry): self._get_product_id(
+            self._get_device_friendly_name(device_entry): self._get_device_product_id(
                 device_entry
             )
             for device_entry in dr.async_entries_for_config_entry(
@@ -287,7 +287,7 @@ class TuyaOptionsFlowHandler(OptionsFlowWithReload):
         """Select what devices to configure."""
         errors = {}
         if user_input is not None:
-            if user_input.get(_INPUT_ENTRY_CLEAR_OPTIONS):
+            if user_input.get(_INPUT_ENTRY_CLEAR_DEVICE_OPTIONS):
                 # Reset all options
                 return self.async_create_entry(data={})
 
@@ -308,7 +308,7 @@ class TuyaOptionsFlowHandler(OptionsFlowWithReload):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        _INPUT_ENTRY_CLEAR_OPTIONS,
+                        _INPUT_ENTRY_CLEAR_DEVICE_OPTIONS,
                         default=False,
                     ): bool,
                     vol.Optional(
@@ -352,11 +352,10 @@ class TuyaOptionsFlowHandler(OptionsFlowWithReload):
         )
 
     @staticmethod
-    def _get_product_id(entry: dr.DeviceEntry) -> str:
-        for identifier in entry.identifiers:
-            if identifier[0] == DOMAIN:
-                return identifier[1]
-        raise NotImplementedError("Invalid device entry without domain identifier")
+    def _get_device_product_id(entry: dr.DeviceEntry) -> str:
+        return next(
+            identifier[1] for identifier in entry.identifiers if identifier[0] == DOMAIN
+        )
 
     @staticmethod
     def _get_device_friendly_name(entry: dr.DeviceEntry) -> str:

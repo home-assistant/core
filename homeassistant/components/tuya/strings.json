@@ -1114,10 +1114,10 @@
     "step": {
       "configure_device": {
         "data": {
-          "cover_position_reversed": "Cover position reversed"
+          "cover_position_reversed": "Reverse cover position direction"
         },
         "data_description": {
-          "cover_position_reversed": "Set this to True if the cover position is reversed."
+          "cover_position_reversed": "Enable this if your cover shows 100% when fully closed instead of fully open."
         },
         "description": "Select options for {device_id}",
         "title": "Tuya device options"
@@ -1131,7 +1131,7 @@
           "clear_device_options": "Use this to reset all device-specific options to default values.",
           "device_selection": "Customize behavior of individual devices."
         },
-        "description": "Select what configuration steps to process",
+        "description": "Choose how you want to configure your Tuya devices",
         "title": "Tuya device options"
       }
     }
