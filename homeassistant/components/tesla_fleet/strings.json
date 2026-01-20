@@ -633,7 +633,7 @@
       "message": "{endpoint} data request failed: {message}"
     },
     "wake_up_failed": {
-      "message": "Failed to wake up vehicle: {message}"
+      "message": "Failed to wake up vehicle"
     },
     "wake_up_timeout": {
       "message": "Could not wake up vehicle"
