@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from roborock.data import CleanFluidStatus, RoborockStateCode
+from roborock.devices.traits.v1 import PropertiesApi
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -32,6 +33,9 @@ class RoborockBinarySensorDescription(BinarySensorEntityDescription):
 
     is_dock_entity: bool = False
     """Whether this sensor is for the dock."""
+
+    feature_supported: Callable[[PropertiesApi], bool] | None = None
+    """Function to check if the sensor is supported by the device."""
 
 
 BINARY_SENSOR_DESCRIPTIONS = [
@@ -69,12 +73,10 @@ BINARY_SENSOR_DESCRIPTIONS = [
         translation_key="clean_fluid_empty",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: (
-            data.status.clean_fluid_status == CleanFluidStatus.empty_not_installed
-            if data.status.clean_fluid_status is not None
-            else None
-        ),
+        value_fn=lambda data: data.status.clean_fluid_status
+        == CleanFluidStatus.empty_not_installed,
         is_dock_entity=True,
+        feature_supported=lambda api: api.device_features.is_clean_fluid_delivery_supported,
     ),
     RoborockBinarySensorDescription(
         key="in_cleaning",
@@ -106,7 +108,11 @@ async def async_setup_entry(
         )
         for coordinator in config_entry.runtime_data.v1
         for description in BINARY_SENSOR_DESCRIPTIONS
-        if description.value_fn(coordinator.data) is not None
+        if (
+            description.feature_supported is None
+            or description.feature_supported(coordinator.properties_api)
+        )
+        and description.value_fn(coordinator.data) is not None
     )
 
 

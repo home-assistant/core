@@ -33,6 +33,7 @@ from roborock.devices.traits.v1.clean_summary import CleanSummaryTrait
 from roborock.devices.traits.v1.command import CommandTrait
 from roborock.devices.traits.v1.common import V1TraitMixin
 from roborock.devices.traits.v1.consumeable import ConsumableTrait
+from roborock.devices.traits.v1.device_features import DeviceFeaturesTrait
 from roborock.devices.traits.v1.do_not_disturb import DoNotDisturbTrait
 from roborock.devices.traits.v1.dust_collection_mode import DustCollectionModeTrait
 from roborock.devices.traits.v1.home import HomeTrait
@@ -353,6 +354,8 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     v1_properties.routines = make_mock_trait(trait_spec=RoutinesTrait)
     v1_properties.routines.get_routines = AsyncMock(return_value=SCENES)
     v1_properties.routines.execute_routine = AsyncMock()
+    v1_properties.device_features = make_mock_trait(trait_spec=DeviceFeaturesTrait)
+    v1_properties.device_features.is_clean_fluid_delivery_supported = False
     # Mock diagnostics for a subset of properties
     v1_properties.as_dict.return_value = {
         "status": STATUS.as_dict(),
