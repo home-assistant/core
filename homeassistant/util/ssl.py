@@ -134,17 +134,14 @@ def _client_context(
     return _create_client_context(ssl_cipher_list, alpn_protocols)
 
 
-# Pre-warm the cache for common SSL context configurations at module load time.
-# This ensures the most frequently used contexts are ready immediately.
-# Pre-warm PYTHON_DEFAULT (most common) and INSECURE (used by some integrations).
-_client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1)
-_client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_NONE)
-_client_context(SSLCipherList.INSECURE, SSL_ALPN_HTTP1)
-_client_context(SSLCipherList.INSECURE, SSL_ALPN_NONE)
-_client_context_no_verify(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1)
-_client_context_no_verify(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_NONE)
-_client_context_no_verify(SSLCipherList.INSECURE, SSL_ALPN_HTTP1)
-_client_context_no_verify(SSLCipherList.INSECURE, SSL_ALPN_NONE)
+# Pre-warm the cache for ALL SSL context configurations at module load time.
+# This is critical because creating SSL contexts loads certificates from disk,
+# which is blocking I/O that must not happen in the event loop.
+_SSL_ALPN_PROTOCOLS = (SSL_ALPN_NONE, SSL_ALPN_HTTP1, SSL_ALPN_HTTP2)
+for _cipher in SSLCipherList:
+    for _alpn in _SSL_ALPN_PROTOCOLS:
+        _client_context(_cipher, _alpn)
+        _client_context_no_verify(_cipher, _alpn)
 
 
 def get_default_context() -> ssl.SSLContext:
