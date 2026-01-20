@@ -3117,7 +3117,6 @@ def test_device_class_converters_are_complete() -> None:
         SensorDeviceClass.PM4,
         SensorDeviceClass.SIGNAL_STRENGTH,
         SensorDeviceClass.SOUND_PRESSURE,
-        SensorDeviceClass.SULPHUR_DIOXIDE,
         SensorDeviceClass.TIMESTAMP,
         SensorDeviceClass.WIND_DIRECTION,
     }

@@ -39,6 +39,7 @@ from homeassistant.util.unit_conversion import (
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
+    SulphurDioxideConcentrationConverter,
     TemperatureConverter,
     TemperatureDeltaConverter,
     UnitlessRatioConverter,
@@ -98,6 +99,9 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("reactive_energy"): vol.In(ReactiveEnergyConverter.VALID_UNITS),
         vol.Optional("reactive_power"): vol.In(ReactivePowerConverter.VALID_UNITS),
         vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
+        vol.Optional("sulphur_dioxide"): vol.In(
+            SulphurDioxideConcentrationConverter.VALID_UNITS
+        ),
         vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
         vol.Optional("temperature_delta"): vol.In(
             TemperatureDeltaConverter.VALID_UNITS

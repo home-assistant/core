@@ -62,6 +62,7 @@ from homeassistant.util.unit_conversion import (
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
+    SulphurDioxideConcentrationConverter,
     TemperatureConverter,
     TemperatureDeltaConverter,
     UnitlessRatioConverter,
@@ -104,6 +105,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         VolumeConverter,
         VolumeFlowRateConverter,
         NitrogenDioxideConcentrationConverter,
+        SulphurDioxideConcentrationConverter,
     )
 }
 
@@ -181,6 +183,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.MILES_PER_HOUR,
         1.609343,
+    ),
+    SulphurDioxideConcentrationConverter: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        2.6633,
     ),
     TemperatureConverter: (
         UnitOfTemperature.CELSIUS,
@@ -866,6 +873,20 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfSpeed.FEET_PER_SECOND, 1.524, UnitOfSpeed.METERS_PER_SECOND),
         # float(round(((20.7 m/s / 0.836) ** 2) ** (1 / 3))) = 8.0Bft
         (20.7, UnitOfSpeed.METERS_PER_SECOND, 8.0, UnitOfSpeed.BEAUFORT),
+    ],
+    SulphurDioxideConcentrationConverter: [
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            2.6633,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            45.056879,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
     ],
     TemperatureConverter: [
         (100, UnitOfTemperature.CELSIUS, 212, UnitOfTemperature.FAHRENHEIT),

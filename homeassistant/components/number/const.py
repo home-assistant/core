@@ -373,7 +373,7 @@ class NumberDeviceClass(StrEnum):
     SULPHUR_DIOXIDE = "sulphur_dioxide"
     """Amount of SO2.
 
-    Unit of measurement: `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `μg/m³`
     """
 
     TEMPERATURE = "temperature"
@@ -548,7 +548,10 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     },
     NumberDeviceClass.SOUND_PRESSURE: set(UnitOfSoundPressure),
     NumberDeviceClass.SPEED: {*UnitOfSpeed, *UnitOfVolumetricFlux},
-    NumberDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.SULPHUR_DIOXIDE: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
     NumberDeviceClass.TEMPERATURE: set(UnitOfTemperature),
     NumberDeviceClass.TEMPERATURE_DELTA: set(UnitOfTemperature),
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
