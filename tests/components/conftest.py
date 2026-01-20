@@ -109,7 +109,7 @@ def entity_registry_enabled_by_default() -> Generator[None]:
 
 
 # Blueprint test fixtures
-@pytest.fixture(name="stub_blueprint_populate")
+@pytest.fixture(name="stub_blueprint_populate", autouse=True)
 def stub_blueprint_populate_fixture() -> Generator[None]:
     """Stub copying the blueprints to the config folder."""
     from .blueprint.common import (  # noqa: PLC0415
