@@ -1434,7 +1434,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.1.0
+onedrive-personal-sdk==0.1.1
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
