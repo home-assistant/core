@@ -189,6 +189,7 @@ async def async_setup_entry(
                 description.component_translation_key is not None
                 and component in description.component_translation_key
             )
+            or capability == Capability.SWITCH
         )
     )
     entity_registry = er.async_get(hass)

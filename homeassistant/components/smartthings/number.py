@@ -44,6 +44,15 @@ async def async_setup_entry(
         if component in ("cooler", "freezer", "onedoor")
         and Capability.THERMOSTAT_COOLING_SETPOINT in device.status[component]
     )
+    entities.extend(
+        SmartThingsThermostatHeatingSetpointNumberEntity(
+            entry_data.client, device, component
+        )
+        for device in entry_data.devices.values()
+        for component in device.status
+        if Capability.THERMOSTAT_HEATING_SETPOINT in device.status[component]
+        and Capability.THERMOSTAT_MODE not in device.status[component]
+    )
     async_add_entities(entities)
 
 
@@ -216,5 +225,69 @@ class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEn
         await self.execute_device_command(
             Capability.THERMOSTAT_COOLING_SETPOINT,
             Command.SET_COOLING_SETPOINT,
+            int(value),
+        )
+
+
+class SmartThingsThermostatHeatingSetpointNumberEntity(SmartThingsEntity, NumberEntity):
+    """Define a SmartThings number."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_device_class = NumberDeviceClass.TEMPERATURE
+
+    def __init__(self, client: SmartThings, device: FullDevice, component: str) -> None:
+        """Initialize the instance."""
+        super().__init__(
+            client,
+            device,
+            {Capability.THERMOSTAT_HEATING_SETPOINT},
+            component=component,
+        )
+        self._attr_unique_id = f"{device.device.device_id}_{component}_{Capability.THERMOSTAT_HEATING_SETPOINT}_{Attribute.HEATING_SETPOINT}_{Attribute.HEATING_SETPOINT}"
+        unit = self._internal_state[Capability.THERMOSTAT_HEATING_SETPOINT][
+            Attribute.HEATING_SETPOINT
+        ].unit
+        assert unit is not None
+        self._attr_native_unit_of_measurement = UNIT_MAP[unit]
+        self._attr_translation_key = "target_temperature"
+
+    @property
+    def range(self) -> dict[str, int]:
+        """Return the list of options."""
+        return self.get_attribute_value(
+            Capability.THERMOSTAT_HEATING_SETPOINT,
+            Attribute.HEATING_SETPOINT_RANGE,
+        )
+
+    @property
+    def native_value(self) -> int:
+        """Return the current value."""
+        return int(
+            self.get_attribute_value(
+                Capability.THERMOSTAT_HEATING_SETPOINT, Attribute.HEATING_SETPOINT
+            )
+        )
+
+    @property
+    def native_min_value(self) -> float:
+        """Return the minimum value."""
+        return self.range["minimum"]
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the maximum value."""
+        # Range is 28.0 to 45.0 for the device in question
+        return self.range["maximum"]
+
+    @property
+    def native_step(self) -> float:
+        """Return the step value."""
+        return self.range["step"]
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the value."""
+        await self.execute_device_command(
+            Capability.THERMOSTAT_HEATING_SETPOINT,
+            Command.SET_HEATING_SETPOINT,
             int(value),
         )
