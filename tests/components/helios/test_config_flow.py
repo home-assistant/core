@@ -1,15 +1,17 @@
 """Test the Helios config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from helios_websocket_api import HeliosApiException
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.helios.config_flow import InvalidHost, validate_host
 from homeassistant.components.helios.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
@@ -317,3 +319,45 @@ async def test_reconfigure_flow_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     mock_helios_client.fetch_metric_data.assert_not_called()
+
+
+async def test_validate_host_success(hass: HomeAssistant) -> None:
+    """Test validate_host with valid IP address."""
+    with patch(
+        "homeassistant.components.helios.config_flow.Helios"
+    ) as mock_helios_class:
+        mock_client = mock_helios_class.return_value
+        mock_client.fetch_metric_data = AsyncMock()
+
+        # Should not raise any exception
+        await validate_host(hass, "192.168.1.100")
+
+        mock_helios_class.assert_called_once_with("192.168.1.100")
+        mock_client.fetch_metric_data.assert_called_once()
+
+
+async def test_validate_host_invalid_ip(hass: HomeAssistant) -> None:
+    """Test validate_host with invalid IP address."""
+    with pytest.raises(InvalidHost, match="Invalid IP address: invalid-host"):
+        await validate_host(hass, "invalid-host")
+
+
+async def test_validate_host_connection_error(hass: HomeAssistant) -> None:
+    """Test validate_host when connection fails."""
+    with patch(
+        "homeassistant.components.helios.config_flow.Helios"
+    ) as mock_helios_class:
+        mock_client = mock_helios_class.return_value
+        mock_client.fetch_metric_data = AsyncMock(
+            side_effect=HeliosApiException("Connection failed")
+        )
+
+        with pytest.raises(HeliosApiException, match="Connection failed"):
+            await validate_host(hass, "192.168.1.100")
+
+
+def test_invalid_host_exception() -> None:
+    """Test InvalidHost exception is a HomeAssistantError."""
+    exception = InvalidHost("Test error")
+    assert isinstance(exception, HomeAssistantError)
+    assert str(exception) == "Test error"
