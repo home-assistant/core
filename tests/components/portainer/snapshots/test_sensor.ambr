@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -125,6 +127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -184,6 +187,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -243,6 +247,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -305,6 +310,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -364,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -417,6 +424,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -467,6 +475,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -526,6 +535,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -585,6 +595,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -647,6 +658,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -704,6 +716,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'API version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -752,6 +765,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Architecture',
     'options': dict({
     }),
     'original_device_class': None,
@@ -802,6 +816,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Container count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -853,6 +868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers paused',
     'options': dict({
     }),
     'original_device_class': None,
@@ -904,6 +920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers running',
     'options': dict({
     }),
     'original_device_class': None,
@@ -955,6 +972,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers stopped',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1004,6 +1022,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Docker version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1054,6 +1073,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1103,6 +1123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kernel version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1151,6 +1172,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating system',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1199,6 +1221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating system version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1249,6 +1272,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total CPU',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1300,6 +1324,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1359,6 +1384,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1412,6 +1438,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1462,6 +1489,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1521,6 +1549,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1580,6 +1609,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1642,6 +1672,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1701,6 +1732,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1754,6 +1786,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1804,6 +1837,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1863,6 +1897,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1922,6 +1957,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1984,6 +2020,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2043,6 +2080,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2096,6 +2134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2146,6 +2185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2205,6 +2245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2264,6 +2305,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2326,6 +2368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
