@@ -333,8 +333,7 @@ async def test_disabled_translation_keys_corentium_home_2(
     state = hass.states.get(entity_id)
     assert state is not None
 
-    expected_value = CORENTIUM_HOME_2_DEVICE_INFO.sensors["connectivity_mode"]
-    assert state.state == str(expected_value)
+    assert state.state == "bluetooth"
 
     expected_name = "Airthings Corentium Home 2 (123456) Connectivity mode"
     assert state.attributes.get("friendly_name") == expected_name
