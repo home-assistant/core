@@ -231,7 +231,7 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
     to provide a running total.
     """
 
-    _accumulated_value: float | None = None
+    _accumulated_value: float = 0
     _last_dp_timestamp: int | None = None
 
     def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
@@ -239,66 +239,6 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
         super().__init__(dpcode, type_information)
         # Delta reports use TOTAL_INCREASING state class
         self.state_class = SensorStateClass.TOTAL_INCREASING
-
-    def initialize(self, device: CustomerDevice) -> None:
-        """Initialize wrapper with device data.
-
-        Called when the entity is added to Home Assistant.
-        Initializes the accumulated value from the current device state.
-        """
-        raw_value = super().read_device_status(device)
-        if raw_value is not None:
-            self._accumulated_value = float(raw_value)
-            _LOGGER.debug(
-                "Initialized accumulated value from device for %s: %s",
-                self.dpcode,
-                self._accumulated_value,
-            )
-
-    def process_delta_update(
-        self, device: CustomerDevice, dp_timestamps: dict[str, int] | None
-    ) -> None:
-        """Process a delta update by accumulating the value.
-
-        Called during state updates to accumulate incremental values.
-        """
-        current_timestamp = dp_timestamps.get(self.dpcode) if dp_timestamps else None
-
-        # Skip duplicate updates with same timestamp
-        if (
-            current_timestamp is not None
-            and current_timestamp == self._last_dp_timestamp
-        ):
-            _LOGGER.debug(
-                "Skipping duplicate update for %s (same timestamp: %s)",
-                self.dpcode,
-                current_timestamp,
-            )
-            return
-
-        raw_value = super().read_device_status(device)
-        if raw_value is None:
-            return
-
-        delta = float(raw_value)
-
-        if self._accumulated_value is None:
-            self._accumulated_value = delta
-            _LOGGER.debug(
-                "Initialized accumulated value for %s: %s",
-                self.dpcode,
-                self._accumulated_value,
-            )
-        else:
-            self._accumulated_value += delta
-            _LOGGER.debug(
-                "Delta update for %s: +%s, total: %s",
-                self.dpcode,
-                delta,
-                self._accumulated_value,
-            )
-
-        self._last_dp_timestamp = current_timestamp
 
     def skip_update(
         self,
@@ -312,8 +252,36 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
         """
         if super().skip_update(device, updated_status_properties, dp_timestamps):
             return True
+
         # Process delta update when not skipping
-        self.process_delta_update(device, dp_timestamps)
+        current_timestamp = dp_timestamps.get(self.dpcode) if dp_timestamps else None
+
+        # Skip duplicate updates with same timestamp
+        if (
+            current_timestamp is not None
+            and current_timestamp == self._last_dp_timestamp
+        ):
+            _LOGGER.debug(
+                "Skipping duplicate update for %s (same timestamp: %s)",
+                self.dpcode,
+                current_timestamp,
+            )
+            return True
+
+        raw_value = super().read_device_status(device)
+        if raw_value is None:
+            return True
+
+        delta = float(raw_value)
+        self._accumulated_value += delta
+        _LOGGER.debug(
+            "Delta update for %s: +%s, total: %s",
+            self.dpcode,
+            delta,
+            self._accumulated_value,
+        )
+
+        self._last_dp_timestamp = current_timestamp
         return False
 
     def read_device_status(self, device: CustomerDevice) -> float | None:

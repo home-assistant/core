@@ -1806,11 +1806,6 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
         self._validate_device_class_unit()
 
-    async def async_added_to_hass(self) -> None:
-        """Handle entity added to Home Assistant."""
-        await super().async_added_to_hass()
-        self._dpcode_wrapper.initialize(self.device)
-
     def _validate_device_class_unit(self) -> None:
         """Validate device class unit compatibility."""
 

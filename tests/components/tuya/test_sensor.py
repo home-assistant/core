@@ -92,15 +92,15 @@ async def test_delta_report_sensor_initial_state(
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
-    """Test delta report sensor initializes with device status value."""
+    """Test delta report sensor initializes with zero value."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     # The entity_id is generated based on device name and dpcode translation key
     state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
 
     assert state is not None
-    # Initial value is 84 from fixture, scaled by 1000 (scale=3) = 0.084
-    assert state.state == "0.084"
+    # Delta sensors start from zero and accumulate values
+    assert state.state == "0"
     assert state.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
 
 
