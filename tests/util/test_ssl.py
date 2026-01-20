@@ -1,8 +1,8 @@
 """Test Home Assistant ssl utility functions."""
 
 from homeassistant.util.ssl import (
-    SSL_ALPN_HTTP1,
-    SSL_ALPN_HTTP2,
+    SSL_ALPN_HTTP11,
+    SSL_ALPN_HTTP11_HTTP2,
     SSL_ALPN_NONE,
     SSLCipherList,
     client_context,
@@ -72,26 +72,31 @@ def test_ssl_context_alpn_bucketing() -> None:
     contexts with incompatible settings.
     """
     # HTTP/1.1, HTTP/2, and no-ALPN contexts should all be different
-    http1_context = client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1)
-    http2_context = client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP2)
+    http1_context = client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11)
+    http2_context = client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11_HTTP2)
     no_alpn_context = client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_NONE)
     assert http1_context is not http2_context
     assert http1_context is not no_alpn_context
     assert http2_context is not no_alpn_context
 
     # Same parameters should return cached context
-    assert client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1) is http1_context
-    assert client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP2) is http2_context
+    assert (
+        client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11) is http1_context
+    )
+    assert (
+        client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11_HTTP2)
+        is http2_context
+    )
     assert (
         client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_NONE) is no_alpn_context
     )
 
     # No-verify contexts should also be bucketed by ALPN
     http1_no_verify = client_context_no_verify(
-        SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1
+        SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11
     )
     http2_no_verify = client_context_no_verify(
-        SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP2
+        SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11_HTTP2
     )
     no_alpn_no_verify = client_context_no_verify(
         SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_NONE
@@ -102,7 +107,7 @@ def test_ssl_context_alpn_bucketing() -> None:
 
     # create_no_verify_ssl_context should also work with ALPN
     assert (
-        create_no_verify_ssl_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1)
+        create_no_verify_ssl_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11)
         is http1_no_verify
     )
     assert (
@@ -118,21 +123,25 @@ def test_ssl_context_insecure_alpn_bucketing() -> None:
     devices with outdated TLS implementations.
     """
     # HTTP/1.1, HTTP/2, and no-ALPN contexts should all be different
-    http1_context = client_context(SSLCipherList.INSECURE, SSL_ALPN_HTTP1)
-    http2_context = client_context(SSLCipherList.INSECURE, SSL_ALPN_HTTP2)
+    http1_context = client_context(SSLCipherList.INSECURE, SSL_ALPN_HTTP11)
+    http2_context = client_context(SSLCipherList.INSECURE, SSL_ALPN_HTTP11_HTTP2)
     no_alpn_context = client_context(SSLCipherList.INSECURE, SSL_ALPN_NONE)
     assert http1_context is not http2_context
     assert http1_context is not no_alpn_context
     assert http2_context is not no_alpn_context
 
     # Same parameters should return cached context
-    assert client_context(SSLCipherList.INSECURE, SSL_ALPN_HTTP1) is http1_context
-    assert client_context(SSLCipherList.INSECURE, SSL_ALPN_HTTP2) is http2_context
+    assert client_context(SSLCipherList.INSECURE, SSL_ALPN_HTTP11) is http1_context
+    assert (
+        client_context(SSLCipherList.INSECURE, SSL_ALPN_HTTP11_HTTP2) is http2_context
+    )
     assert client_context(SSLCipherList.INSECURE, SSL_ALPN_NONE) is no_alpn_context
 
     # No-verify contexts should also be bucketed by ALPN
-    http1_no_verify = client_context_no_verify(SSLCipherList.INSECURE, SSL_ALPN_HTTP1)
-    http2_no_verify = client_context_no_verify(SSLCipherList.INSECURE, SSL_ALPN_HTTP2)
+    http1_no_verify = client_context_no_verify(SSLCipherList.INSECURE, SSL_ALPN_HTTP11)
+    http2_no_verify = client_context_no_verify(
+        SSLCipherList.INSECURE, SSL_ALPN_HTTP11_HTTP2
+    )
     no_alpn_no_verify = client_context_no_verify(SSLCipherList.INSECURE, SSL_ALPN_NONE)
     assert http1_no_verify is not http2_no_verify
     assert http1_no_verify is not no_alpn_no_verify
@@ -140,7 +149,7 @@ def test_ssl_context_insecure_alpn_bucketing() -> None:
 
     # create_no_verify_ssl_context should also work with ALPN
     assert (
-        create_no_verify_ssl_context(SSLCipherList.INSECURE, SSL_ALPN_HTTP1)
+        create_no_verify_ssl_context(SSLCipherList.INSECURE, SSL_ALPN_HTTP11)
         is http1_no_verify
     )
     assert (
@@ -155,9 +164,9 @@ def test_get_default_context_uses_http1_alpn() -> None:
     default_no_verify_ctx = get_default_no_verify_context()
 
     # Default contexts should be the same as explicitly requesting HTTP1 ALPN
-    assert default_ctx is client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1)
+    assert default_ctx is client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11)
     assert default_no_verify_ctx is client_context_no_verify(
-        SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1
+        SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11
     )
 
 
@@ -165,7 +174,7 @@ def test_client_context_default_no_alpn() -> None:
     """Test that client_context defaults to no ALPN for backward compatibility."""
     # Default (no ALPN) should be different from HTTP1 ALPN
     default_ctx = client_context()
-    http1_ctx = client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1)
+    http1_ctx = client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11)
 
     assert default_ctx is not http1_ctx
     assert default_ctx is client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_NONE)

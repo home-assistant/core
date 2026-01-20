@@ -371,11 +371,11 @@ def _async_get_connector(
 
     if verify_ssl:
         ssl_context: SSLContext = ssl_util.client_context(
-            ssl_cipher, ssl_util.SSL_ALPN_HTTP1
+            ssl_cipher, ssl_util.SSL_ALPN_HTTP11
         )
     else:
         ssl_context = ssl_util.client_context_no_verify(
-            ssl_cipher, ssl_util.SSL_ALPN_HTTP1
+            ssl_cipher, ssl_util.SSL_ALPN_HTTP11
         )
 
     connector = HomeAssistantTCPConnector(

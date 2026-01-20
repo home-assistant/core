@@ -416,27 +416,27 @@ async def test_resolver_is_singleton(hass: HomeAssistant) -> None:
     assert session._connector._resolver is session3._connector._resolver
 
 
-async def test_connector_uses_http1_alpn(hass: HomeAssistant) -> None:
-    """Test that connector uses HTTP1 ALPN protocols."""
+async def test_connector_uses_http11_alpn(hass: HomeAssistant) -> None:
+    """Test that connector uses HTTP/1.1 ALPN protocols."""
     with patch.object(
         ssl_util, "client_context", wraps=ssl_util.client_context
     ) as mock_client_context:
         client.async_get_clientsession(hass)
 
-        # Verify client_context was called with HTTP1 ALPN
+        # Verify client_context was called with HTTP/1.1 ALPN
         mock_client_context.assert_called_once_with(
-            SSLCipherList.PYTHON_DEFAULT, ssl_util.SSL_ALPN_HTTP1
+            SSLCipherList.PYTHON_DEFAULT, ssl_util.SSL_ALPN_HTTP11
         )
 
 
-async def test_connector_no_verify_uses_http1_alpn(hass: HomeAssistant) -> None:
-    """Test that connector without SSL verification uses HTTP1 ALPN protocols."""
+async def test_connector_no_verify_uses_http11_alpn(hass: HomeAssistant) -> None:
+    """Test that connector without SSL verification uses HTTP/1.1 ALPN protocols."""
     with patch.object(
         ssl_util, "client_context_no_verify", wraps=ssl_util.client_context_no_verify
     ) as mock_client_context_no_verify:
         client.async_get_clientsession(hass, verify_ssl=False)
 
-        # Verify client_context_no_verify was called with HTTP1 ALPN
+        # Verify client_context_no_verify was called with HTTP/1.1 ALPN
         mock_client_context_no_verify.assert_called_once_with(
-            SSLCipherList.PYTHON_DEFAULT, ssl_util.SSL_ALPN_HTTP1
+            SSLCipherList.PYTHON_DEFAULT, ssl_util.SSL_ALPN_HTTP11
         )

@@ -28,6 +28,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.util.ssl import ALPNProtocols
 
 from .const import DOMAIN, UPDATE_INTERVAL
 from .entity import AqualinkEntity
@@ -67,7 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     password = entry.data[CONF_PASSWORD]
 
     aqualink = AqualinkClient(
-        username, password, httpx_client=get_async_client(hass, http2=True)
+        username,
+        password,
+        httpx_client=get_async_client(hass, alpn_protocols=ALPNProtocols.HTTP2),
     )
     try:
         await aqualink.login()

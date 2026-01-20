@@ -15,9 +15,9 @@ type SSLALPNProtocols = tuple[str, ...] | None
 # No ALPN protocols - used for libraries that don't support/need ALPN (e.g., aioimap)
 SSL_ALPN_NONE: SSLALPNProtocols = None
 # HTTP/1.1 only - used by default and for aiohttp (which doesn't support HTTP/2)
-SSL_ALPN_HTTP1: SSLALPNProtocols = ("http/1.1",)
+SSL_ALPN_HTTP11: SSLALPNProtocols = ("http/1.1",)
 # HTTP/1.1 with HTTP/2 support - used when httpx http2=True
-SSL_ALPN_HTTP2: SSLALPNProtocols = ("http/1.1", "h2")
+SSL_ALPN_HTTP11_HTTP2: SSLALPNProtocols = ("http/1.1", "h2")
 
 
 class SSLCipherList(StrEnum):
@@ -27,6 +27,20 @@ class SSLCipherList(StrEnum):
     INTERMEDIATE = "intermediate"
     MODERN = "modern"
     INSECURE = "insecure"
+
+
+class ALPNProtocols(StrEnum):
+    """ALPN protocol configurations for HTTP clients."""
+
+    HTTP1 = "http1"  # HTTP/1.1 only
+    HTTP2 = "http2"  # HTTP/2 with HTTP/1.1 fallback
+
+
+# Mapping from ALPNProtocols enum to ALPN protocol tuples
+ALPN_PROTOCOLS: dict[ALPNProtocols, SSLALPNProtocols] = {
+    ALPNProtocols.HTTP1: SSL_ALPN_HTTP11,
+    ALPNProtocols.HTTP2: SSL_ALPN_HTTP11_HTTP2,
+}
 
 
 SSL_CIPHER_LISTS = {
@@ -137,7 +151,7 @@ def _client_context(
 # Pre-warm the cache for ALL SSL context configurations at module load time.
 # This is critical because creating SSL contexts loads certificates from disk,
 # which is blocking I/O that must not happen in the event loop.
-_SSL_ALPN_PROTOCOLS = (SSL_ALPN_NONE, SSL_ALPN_HTTP1, SSL_ALPN_HTTP2)
+_SSL_ALPN_PROTOCOLS = (SSL_ALPN_NONE, SSL_ALPN_HTTP11, SSL_ALPN_HTTP11_HTTP2)
 for _cipher in SSLCipherList:
     for _alpn in _SSL_ALPN_PROTOCOLS:
         _client_context(_cipher, _alpn)
@@ -146,12 +160,12 @@ for _cipher in SSLCipherList:
 
 def get_default_context() -> ssl.SSLContext:
     """Return the default SSL context."""
-    return _client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1)
+    return _client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11)
 
 
 def get_default_no_verify_context() -> ssl.SSLContext:
     """Return the default SSL context that does not verify the server certificate."""
-    return _client_context_no_verify(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1)
+    return _client_context_no_verify(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11)
 
 
 def client_context_no_verify(
