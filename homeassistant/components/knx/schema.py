@@ -82,7 +82,7 @@ from .validation import (
 def _number_limit_sub_validator(config: dict) -> dict:
     """Validate min, max, and step values for a number entity."""
     transcoder = DPTNumeric.parse_transcoder(config[CONF_TYPE])
-    assert transcoder is not None  # already checked in numeric_type_validator
+    assert transcoder is not None  # already checked by numeric_type_validator
     return validate_number_attributes(transcoder, config)
 
 

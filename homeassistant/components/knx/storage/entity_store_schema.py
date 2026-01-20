@@ -437,7 +437,7 @@ def _number_limit_sub_validator(config: dict) -> dict:
     """Validate min, max, and step values for a number entity."""
     dpt = config[CONF_GA_SENSOR][CONF_DPT]
     transcoder = DPTNumeric.parse_transcoder(dpt)
-    assert transcoder is not None  # already checked GASelector
+    assert transcoder is not None  # already checked by GASelector
     return validate_number_attributes(transcoder, config)
 
 
