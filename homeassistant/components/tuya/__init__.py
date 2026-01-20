@@ -165,7 +165,7 @@ class DeviceListener(SharingDeviceListener):
         self,
         device: CustomerDevice,
         updated_status_properties: list[str] | None = None,
-        dp_timestamps: dict | None = None,
+        dp_timestamps: dict[str, int] | None = None,
     ) -> None:
         """Update device status with optional DP timestamps."""
         LOGGER.debug(
