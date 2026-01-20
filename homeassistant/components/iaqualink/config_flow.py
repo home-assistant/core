@@ -36,7 +36,9 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
 
             try:
                 async with AqualinkClient(
-                    username, password, httpx_client=get_async_client(self.hass)
+                    username,
+                    password,
+                    httpx_client=get_async_client(self.hass, http2=True),
                 ):
                     pass
             except AqualinkServiceUnauthorizedException:

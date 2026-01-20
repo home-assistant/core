@@ -66,7 +66,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
 
-    aqualink = AqualinkClient(username, password, httpx_client=get_async_client(hass))
+    aqualink = AqualinkClient(
+        username, password, httpx_client=get_async_client(hass, http2=True)
+    )
     try:
         await aqualink.login()
     except AqualinkServiceException as login_exception:

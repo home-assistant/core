@@ -17,6 +17,8 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ssl import (
+    SSL_ALPN_HTTP1,
+    SSL_ALPN_HTTP2,
     SSLCipherList,
     client_context,
     create_no_verify_ssl_context,
@@ -28,9 +30,9 @@ from .frame import warn_use
 # and we want to keep the connection open for a while so we
 # don't have to reconnect every time so we use 15s to match aiohttp.
 KEEP_ALIVE_TIMEOUT = 15
-DATA_ASYNC_CLIENT: HassKey[httpx.AsyncClient] = HassKey("httpx_async_client")
-DATA_ASYNC_CLIENT_NOVERIFY: HassKey[httpx.AsyncClient] = HassKey(
-    "httpx_async_client_noverify"
+# Shared httpx clients keyed by (verify_ssl, http2)
+DATA_ASYNC_CLIENT: HassKey[dict[tuple[bool, bool], httpx.AsyncClient]] = HassKey(
+    "httpx_async_client"
 )
 DEFAULT_LIMITS = limits = httpx.Limits(keepalive_expiry=KEEP_ALIVE_TIMEOUT)
 SERVER_SOFTWARE = (
@@ -42,15 +44,24 @@ USER_AGENT = "User-Agent"
 
 @callback
 @bind_hass
-def get_async_client(hass: HomeAssistant, verify_ssl: bool = True) -> httpx.AsyncClient:
+def get_async_client(
+    hass: HomeAssistant, verify_ssl: bool = True, http2: bool = False
+) -> httpx.AsyncClient:
     """Return default httpx AsyncClient.
 
     This method must be run in the event loop.
-    """
-    key = DATA_ASYNC_CLIENT if verify_ssl else DATA_ASYNC_CLIENT_NOVERIFY
 
-    if (client := hass.data.get(key)) is None:
-        client = hass.data[key] = create_async_httpx_client(hass, verify_ssl)
+    Pass http2=True to get a client configured for HTTP/2 support.
+    HTTP/1.1 and HTTP/2 clients are cached separately to ensure proper
+    SSL context configuration (ALPN protocols differ between HTTP versions).
+    """
+    client_key = (verify_ssl, http2)
+    clients = hass.data.setdefault(DATA_ASYNC_CLIENT, {})
+
+    if (client := clients.get(client_key)) is None:
+        client = clients[client_key] = create_async_httpx_client(
+            hass, verify_ssl, http2=http2
+        )
 
     return client
 
@@ -86,10 +97,14 @@ def create_async_httpx_client(
 
     This method must be run in the event loop.
     """
+    # Select ALPN protocols based on HTTP/2 support to ensure proper SSL context
+    # bucketing. httpx/httpcore mutates SSL contexts by calling set_alpn_protocols(),
+    # so we pre-set the correct protocols to prevent shared context corruption.
+    alpn_protocols = SSL_ALPN_HTTP2 if kwargs.get("http2") else SSL_ALPN_HTTP1
     ssl_context = (
-        client_context(ssl_cipher_list)
+        client_context(ssl_cipher_list, alpn_protocols)
         if verify_ssl
-        else create_no_verify_ssl_context(ssl_cipher_list)
+        else create_no_verify_ssl_context(ssl_cipher_list, alpn_protocols)
     )
     client = HassHttpXAsyncClient(
         verify=ssl_context,
