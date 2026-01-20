@@ -136,11 +136,15 @@ def _client_context(
 
 # Pre-warm the cache for common SSL context configurations at module load time.
 # This ensures the most frequently used contexts are ready immediately.
-# Only pre-warm PYTHON_DEFAULT cipher list as it's the most commonly used.
+# Pre-warm PYTHON_DEFAULT (most common) and INSECURE (used by some integrations).
 _client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1)
 _client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_NONE)
+_client_context(SSLCipherList.INSECURE, SSL_ALPN_HTTP1)
+_client_context(SSLCipherList.INSECURE, SSL_ALPN_NONE)
 _client_context_no_verify(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1)
 _client_context_no_verify(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_NONE)
+_client_context_no_verify(SSLCipherList.INSECURE, SSL_ALPN_HTTP1)
+_client_context_no_verify(SSLCipherList.INSECURE, SSL_ALPN_NONE)
 
 
 def get_default_context() -> ssl.SSLContext:
