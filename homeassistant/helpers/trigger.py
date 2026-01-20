@@ -594,7 +594,7 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
     _above: None | float | str
     _below: None | float | str
 
-    _convert_attribute: Callable[[Any], float] = staticmethod(float)
+    _converter: Callable[[Any], float] = float
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the state trigger."""
@@ -618,7 +618,7 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
             return False
 
         try:
-            current_value = self._convert_attribute(_attribute_value)
+            current_value = self._converter(_attribute_value)
         except (TypeError, ValueError):
             # Attribute is not a valid number, don't trigger
             return False
@@ -708,7 +708,7 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
     _upper_limit: float | str | None = None
     _threshold_type: ThresholdType
 
-    _convert_attribute: Callable[[Any], float] = float
+    _converter: Callable[[Any], float] = float
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the state trigger."""
@@ -745,7 +745,7 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
             return False
 
         try:
-            current_value = self._convert_attribute(_attribute_value)
+            current_value = self._converter(_attribute_value)
         except (TypeError, ValueError):
             # Attribute is not a valid number, don't trigger
             return False

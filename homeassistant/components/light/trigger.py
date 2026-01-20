@@ -17,10 +17,7 @@ from .const import DOMAIN
 
 def _convert_uint8_to_percentage(value: Any) -> float:
     """Convert a uint8 value (0-255) to a percentage (0-100)."""
-    value_float = float(value)
-    if value_float == 0:
-        return 0.0
-    return (value_float / 255.0) * 100.0
+    return (float(value) / 255.0) * 100.0
 
 
 class BrightnessChangedTrigger(EntityNumericalStateAttributeChangedTriggerBase):
@@ -29,7 +26,7 @@ class BrightnessChangedTrigger(EntityNumericalStateAttributeChangedTriggerBase):
     _domain = DOMAIN
     _attribute = ATTR_BRIGHTNESS
 
-    _convert_attribute = staticmethod(_convert_uint8_to_percentage)
+    _converter = staticmethod(_convert_uint8_to_percentage)
 
 
 class BrightnessCrossedThresholdTrigger(
@@ -39,7 +36,7 @@ class BrightnessCrossedThresholdTrigger(
 
     _domain = DOMAIN
     _attribute = ATTR_BRIGHTNESS
-    _convert_attribute = staticmethod(_convert_uint8_to_percentage)
+    _converter = staticmethod(_convert_uint8_to_percentage)
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
