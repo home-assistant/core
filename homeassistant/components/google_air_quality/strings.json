@@ -217,9 +217,6 @@
       "ozone": {
         "name": "[%key:component::sensor::entity_component::ozone::name%]"
       },
-      "sulphur_dioxide": {
-        "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
-      },
       "uaqi": {
         "name": "Universal Air Quality Index"
       },
