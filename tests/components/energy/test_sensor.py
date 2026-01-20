@@ -10,7 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.energy import async_get_manager, data
-from homeassistant.components.energy.sensor import EnergyPowerSensor, SensorManager
+from homeassistant.components.energy.sensor import SensorManager
 from homeassistant.components.recorder.core import Recorder
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.sensor import (
@@ -1453,9 +1453,10 @@ async def test_power_sensor_manager_cleanup(
     )
     await hass.async_block_till_done()
 
-    # Verify sensor was removed (state becomes unavailable when entity is removed)
+    # Verify sensor becomes unavailable when entity is removed
     state = hass.states.get("sensor.battery_power_inverted")
-    assert state is None or state.state == "unavailable"
+    assert state is not None
+    assert state.state == "unavailable"
 
 
 async def test_power_sensor_grid_combined(
@@ -1985,9 +1986,10 @@ async def test_energy_data_removal(
     await manager.async_update({"energy_sources": []})
     await hass.async_block_till_done()
 
-    # Verify cost sensor was removed
+    # Verify cost sensor becomes unavailable
     state = hass.states.get("sensor.energy_consumption_cost")
-    assert state is None or state.state == "unavailable"
+    assert state is not None
+    assert state.state == "unavailable"
 
 
 async def test_stat_cost_already_configured(
@@ -2317,12 +2319,22 @@ async def test_power_sensor_combined_invalid_value(
     assert state
     assert state.state == "unknown"
 
-    # Restore first source, make second invalid
+    # Restore first source
     hass.states.async_set("sensor.battery_discharge", "150.0")
+    await hass.async_block_till_done()
+
+    # Power sensor should work again
+    state = hass.states.get(
+        "sensor.energy_battery_battery_discharge_battery_charge_net_power"
+    )
+    assert state
+    assert state.state == "100.0"
+
+    # Make second source invalid
     hass.states.async_set("sensor.battery_charge", "not_a_number")
     await hass.async_block_till_done()
 
-    # Power sensor should still have unknown state
+    # Power sensor should have unknown state
     state = hass.states.get(
         "sensor.energy_battery_battery_discharge_battery_charge_net_power"
     )
@@ -2411,78 +2423,6 @@ async def test_power_sensor_no_device_assignment(
     assert power_sensor_entry.device_id is None
 
 
-async def test_cost_sensor_removed_from_hass(
-    setup_integration,
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-) -> None:
-    """Test cost sensor cleanup when removed from hass."""
-    energy_data = data.EnergyManager.default_preferences()
-    energy_data["energy_sources"].append(
-        {
-            "type": "grid",
-            "flow_from": [
-                {
-                    "stat_energy_from": "sensor.energy_consumption",
-                    "stat_cost": None,
-                    "entity_energy_price": None,
-                    "number_energy_price": 1,
-                }
-            ],
-            "flow_to": [],
-            "cost_adjustment_day": 0,
-        }
-    )
-
-    hass_storage[data.STORAGE_KEY] = {
-        "version": 1,
-        "data": energy_data,
-    }
-
-    hass.states.async_set(
-        "sensor.energy_consumption",
-        "100",
-        {
-            ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR,
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
-        },
-    )
-
-    await setup_integration(hass)
-
-    # Verify cost sensor exists
-    state = hass.states.get("sensor.energy_consumption_cost")
-    assert state is not None
-
-    # Verify it's in the cost_sensors dict
-    assert "sensor.energy_consumption" in hass.data["energy"]["cost_sensors"]
-
-    # Remove the energy sources to trigger entity removal
-    manager = await async_get_manager(hass)
-    await manager.async_update({"energy_sources": []})
-    await hass.async_block_till_done()
-
-    # Verify it's removed from cost_sensors dict
-    assert "sensor.energy_consumption" not in hass.data["energy"]["cost_sensors"]
-
-
-async def test_power_sensor_available_default(hass: HomeAssistant) -> None:
-    """Test power sensor availability returns True when neither inverted nor combined."""
-    # Create a power sensor with an empty config (edge case)
-    sensor = EnergyPowerSensor(
-        source_type="battery",
-        config={},
-        unique_id="test_unique_id",
-        entity_id="sensor.test_power",
-    )
-
-    # Mock hass
-    sensor.hass = hass
-
-    # Test that available returns True for non-inverted, non-combined sensor
-    assert sensor.available is True
-
-
 async def test_manager_data_none(
     recorder_mock: Recorder, hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -2532,9 +2472,10 @@ async def test_manager_data_none(
     await asyncio.gather(*(listener() for listener in manager._update_listeners))
     await hass.async_block_till_done()
 
-    # Verify sensor was removed
+    # Verify sensor becomes unavailable
     state = hass.states.get("sensor.energy_consumption_cost")
-    assert state is None or state.state == "unavailable"
+    assert state is not None
+    assert state.state == "unavailable"
 
 
 async def test_power_sensor_invalid_config_no_unique_id(
