@@ -1,5 +1,6 @@
 """Test the Airthings Wave sensor."""
 
+from copy import deepcopy
 from datetime import timedelta
 import logging
 
@@ -337,6 +338,40 @@ async def test_disabled_translation_keys_corentium_home_2(
 
     expected_name = "Airthings Corentium Home 2 (123456) Connectivity mode"
     assert state.attributes.get("friendly_name") == expected_name
+
+
+async def test_connectivity_mode_none_value(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test connectivity mode sensor handles non-string values."""
+    test_device = deepcopy(CORENTIUM_HOME_2_DEVICE_INFO)
+    test_device.sensors["connectivity_mode"] = 123  # Non-string value
+
+    entry = create_entry(hass, CORENTIUM_HOME_2_SERVICE_INFO, test_device)
+    create_device(entry, device_registry, CORENTIUM_HOME_2_SERVICE_INFO, test_device)
+
+    with (
+        patch_async_ble_device_from_address(CORENTIUM_HOME_2_SERVICE_INFO.device),
+        patch_async_discovered_service_info([CORENTIUM_HOME_2_SERVICE_INFO]),
+        patch_airthings_ble(test_device),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    unique_id = f"{test_device.address}_connectivity_mode"
+    entity_id = entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, unique_id)
+    assert entity_id is not None
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_forward_entry_unload(entry, Platform.SENSOR)
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unknown"
 
 
 async def test_scan_interval_migration_corentium_home_2(
