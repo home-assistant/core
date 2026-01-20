@@ -86,6 +86,30 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
 
     _attr_device_class = CoverDeviceClass.SHADE
 
+    def _log_state(self, context: str) -> None:
+        """Log all state properties for debugging."""
+        _LOGGER.debug(
+            "[%s] %s: HA_state=%s, motor.state=%s, is_moving=%s, is_opening=%s, "
+            "is_closing=%s, is_open=%s, is_closed=%s, lastCommand=%s",
+            self.motor.name,
+            context,
+            self.state,
+            self.motor.state,
+            self.is_moving,
+            self.is_opening,
+            self.is_closing,
+            self.is_open,
+            self.is_closed,
+            self.lastCommand,
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._log_state("coordinator_update BEFORE write_ha_state")
+        super()._handle_coordinator_update()
+        self._log_state("coordinator_update AFTER write_ha_state")
+
     @property
     def supported_features(self) -> CoverEntityFeature:
         """Return supported features."""
@@ -149,6 +173,17 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
     # details: https://developers.home-assistant.io/docs/core/entity/cover/
 
     @property
+    def is_open(self) -> bool | None:
+        """Return if the cover is closed, same as position 0."""
+        return (
+            True
+            if self.motor.state == STATE_UP
+            else False
+            if self.motor.state == STATE_DOWN
+            else None
+        )
+
+    @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed, same as position 0."""
         return (
@@ -182,29 +217,49 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
     # the cover to the desired position, or open and close it all the way.
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
+        self._log_state("async_open_cover START")
         self.lastCommand = COMMAND_UP
         self.lastCommandTime = dt_util.utcnow()
+        self._log_state("async_open_cover BEFORE motor.up")
         await self.motor.up(False)
+        self._log_state("async_open_cover AFTER motor.up, BEFORE write_ha_state")
+        self.async_write_ha_state()
+        self._log_state("async_open_cover AFTER write_ha_state")
         self.schedule_refresh_ha_after_motion()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
+        self._log_state("async_close_cover START")
         self.lastCommand = COMMAND_DOWN
         self.lastCommandTime = dt_util.utcnow()
+        self._log_state("async_close_cover BEFORE motor.down")
         await self.motor.down(False)
+        self._log_state("async_close_cover AFTER motor.down, BEFORE write_ha_state")
+        self.async_write_ha_state()
+        self._log_state("async_close_cover AFTER write_ha_state")
         self.schedule_refresh_ha_after_motion()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
+        self._log_state("async_stop_cover START")
         self.lastCommand = COMMAND_STOP
         self.lastCommandTime = dt_util.utcnow()
-        await self.motor.stop(False)
+        self._log_state("async_stop_cover BEFORE motor.stop")
+        # Wait for the backend to confirm STOP state - this ensures motor.state
+        # becomes "STOP" before we update HA, so is_closed/is_open will be None
+        # and the cover will be in an intermediate state with both buttons enabled
+        await self.motor.stop(True)
+        self._log_state("async_stop_cover AFTER motor.stop")
 
-        # For stop commands, we can update the UI immediately
-        # First, get the latest state
+        # Refresh coordinator to propagate the STOP state to all entities
+        self._log_state("async_stop_cover BEFORE coordinator refresh")
         await self.coordinator.async_request_refresh()
-        # Then update the UI
+        self._log_state(
+            "async_stop_cover AFTER coordinator refresh, BEFORE write_ha_state"
+        )
+        # Update HA state
         self.async_write_ha_state()
+        self._log_state("async_stop_cover AFTER write_ha_state")
 
     def schedule_refresh_ha_after_motion(self) -> None:
         """Wait for the cover to stop moving and update HA state."""
@@ -213,10 +268,14 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
     async def refresh_ha_after_motion(self) -> None:
         """Refresh after a delay."""
         await asyncio.sleep(MOTION_DELAY)
-        _LOGGER.debug("Delayed_refresh for %s %s", self.motor.name, self.motor.state)
+        self._log_state("refresh_ha_after_motion AFTER sleep")
 
         # Force fetch the updated state from the API if possible
         await self.coordinator.async_request_refresh()
+        self._log_state(
+            "refresh_ha_after_motion AFTER coordinator refresh, BEFORE write_ha_state"
+        )
 
         # Update HA state to reflect current motor state
         self.async_write_ha_state()
+        self._log_state("refresh_ha_after_motion AFTER write_ha_state")
