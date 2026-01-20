@@ -340,16 +340,21 @@ async def test_disabled_translation_keys_corentium_home_2(
     assert state.attributes.get("friendly_name") == expected_name
 
 
-async def test_connectivity_mode_none_value(
+@pytest.mark.parametrize(
+    "invalid_value",
+    [None, 123, 45.6],
+)
+async def test_connectivity_mode_non_string_value(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    invalid_value: float | None,
 ) -> None:
     """Test connectivity mode sensor handles non-string values."""
     test_device = deepcopy(CORENTIUM_HOME_2_DEVICE_INFO)
 
     # Non-string value, will be mapped to 'unknown' state
-    test_device.sensors["connectivity_mode"] = 123
+    test_device.sensors["connectivity_mode"] = invalid_value
 
     entry = create_entry(hass, CORENTIUM_HOME_2_SERVICE_INFO, test_device)
     create_device(entry, device_registry, CORENTIUM_HOME_2_SERVICE_INFO, test_device)
