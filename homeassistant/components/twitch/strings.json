@@ -10,6 +10,9 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "wrong_account": "Wrong account: Please authenticate with {username}."
     },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
+    },
     "step": {
       "reauth_confirm": {
         "description": "The Twitch integration needs to re-authenticate your account",
