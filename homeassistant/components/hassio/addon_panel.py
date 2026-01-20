@@ -6,7 +6,7 @@ from typing import Any
 
 from aiohttp import web
 
-from homeassistant.components import frontend, panel_custom
+from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
@@ -80,14 +80,12 @@ async def _register_panel(
     hass: HomeAssistant, addon: str, data: dict[str, Any]
 ) -> None:
     """Init coroutine to register the panel."""
-    await panel_custom.async_register_panel(
+    frontend.async_register_built_in_panel(
         hass,
+        "app",
         frontend_url_path=addon,
-        webcomponent_name="hassio-main",
         sidebar_title=data[ATTR_TITLE],
         sidebar_icon=data[ATTR_ICON],
-        js_url="/api/hassio/app/entrypoint.js",
-        embed_iframe=True,
         require_admin=data[ATTR_ADMIN],
-        config={"ingress": addon},
+        config={"addon": addon},
     )
