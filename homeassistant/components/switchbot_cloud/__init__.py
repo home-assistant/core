@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, ENTRY_TITLE
+from .const import CONF_WEBHOOK_DOMAIN, DOMAIN, ENTRY_TITLE
 from .coordinator import SwitchBotCoordinator
 
 _LOGGER = getLogger(__name__)
@@ -385,11 +385,19 @@ async def _initialize_webhook(
                 _create_handle_webhook(coordinators_by_id),
             )
 
-        webhook_url = webhook.async_generate_url(
-            hass,
-            entry.data[CONF_WEBHOOK_ID],
-        )
-
+        webhook_domain = entry.data.get(CONF_WEBHOOK_DOMAIN)
+        if webhook_domain is None or len(webhook_domain) == 0:
+            webhook_url = webhook.async_generate_url(
+                hass,
+                entry.data[CONF_WEBHOOK_ID],
+            )
+        else:
+            webhook_domain = webhook_domain.rstrip("/")
+            if not webhook_domain.startswith("http") or not webhook_domain.startswith(
+                "https"
+            ):
+                raise ValueError("CONF_WEBHOOK_DOMAIN name settings error")
+            webhook_url = f"{webhook_domain}/api/webhook/{entry.data[CONF_WEBHOOK_ID]}"
         # check if webhook is configured in switchbot cloud
         check_webhook_result = None
         with contextlib.suppress(Exception):

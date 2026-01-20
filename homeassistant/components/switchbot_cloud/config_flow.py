@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 
-from .const import DOMAIN, ENTRY_TITLE
+from .const import CONF_WEBHOOK_DOMAIN, DOMAIN, ENTRY_TITLE
 
 _LOGGER = getLogger(__name__)
 
@@ -21,6 +21,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_TOKEN): str,
         vol.Required(CONF_API_KEY): str,
+        vol.Optional(CONF_WEBHOOK_DOMAIN): str,
     }
 )
 
