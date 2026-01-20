@@ -335,11 +335,6 @@ async def caplog_setup_text(caplog: pytest.LogCaptureFixture) -> str:
     return caplog.text
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 async def async_get_flow_preview_state(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
