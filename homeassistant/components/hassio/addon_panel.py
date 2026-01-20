@@ -76,9 +76,7 @@ class HassIOAddonPanel(HomeAssistantView):
         return {}
 
 
-async def _register_panel(
-    hass: HomeAssistant, addon: str, data: dict[str, Any]
-) -> None:
+def _register_panel(hass: HomeAssistant, addon: str, data: dict[str, Any]):
     """Init coroutine to register the panel."""
     frontend.async_register_built_in_panel(
         hass,
