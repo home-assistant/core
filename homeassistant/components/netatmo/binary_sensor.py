@@ -44,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_OPENING_SENSOR_KEY = "opening_sensor"
 
-OPENING_STATUS_TRANSLATIONS: Final[dict[str, bool | None]] = {
+OPENING_STATUS_TO_BINARY_SENSOR_STATE: Final[dict[str, bool | None]] = {
     DOORTAG_STATUS_NO_NEWS: None,
     DOORTAG_STATUS_CALIBRATING: None,
     DOORTAG_STATUS_UNDEFINED: None,
@@ -59,10 +59,10 @@ OPENING_STATUS_TRANSLATIONS: Final[dict[str, bool | None]] = {
 def process_opening_status_string(status: str) -> bool | None:
     """Process opening status and return bool."""
 
-    return OPENING_STATUS_TRANSLATIONS.get(status, None)
+    return OPENING_STATUS_TO_BINARY_SENSOR_STATE.get(status, None)
 
 
-OPENING_CATEGORY_CLASS_TRANSLATIONS: Final[dict[str, BinarySensorDeviceClass]] = {
+OPENING_CATEGORY_TO_DEVICE_CLASS: Final[dict[str, BinarySensorDeviceClass]] = {
     DOORTAG_CATEGORY_DOOR: BinarySensorDeviceClass.DOOR,
     DOORTAG_CATEGORY_FURNITURE: BinarySensorDeviceClass.OPENING,
     DOORTAG_CATEGORY_GARAGE: BinarySensorDeviceClass.GARAGE_DOOR,
@@ -81,7 +81,7 @@ def process_opening_category_string2class(
         return BinarySensorDeviceClass.OPENING
 
     # Use a specific device class if we have a match, otherwise default to OPENING
-    return OPENING_CATEGORY_CLASS_TRANSLATIONS.get(
+    return OPENING_CATEGORY_TO_DEVICE_CLASS.get(
         category, BinarySensorDeviceClass.OPENING
     )
 
@@ -128,7 +128,7 @@ def process_opening_category_string2key(
 
     if category == DOORTAG_CATEGORY_OTHER or category is None:
         key = DEFAULT_OPENING_SENSOR_KEY
-    elif OPENING_CATEGORY_CLASS_TRANSLATIONS.get(category, None) is not None:
+    elif OPENING_CATEGORY_TO_DEVICE_CLASS.get(category, None) is not None:
         key = category
     else:
         key = DEFAULT_OPENING_SENSOR_KEY
@@ -148,7 +148,6 @@ def process_opening_key(netatmo_device: NetatmoDevice) -> str:
 class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Netatmo binary sensor entity."""
 
-    key: str  # The key of the sensor
     netatmo_name: str | None = (
         None  # The name used by Netatmo API for this sensor (exposed feature as attribute) if different than key
     )
