@@ -5,21 +5,73 @@ from __future__ import annotations
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.tuya.const import DOMAIN
+from homeassistant.components.tuya.const import (
+    CONF_ENDPOINT,
+    CONF_TERMINAL_ID,
+    CONF_TOKEN_INFO,
+    CONF_USER_CODE,
+    DOMAIN,
+)
 from homeassistant.components.tuya.diagnostics import _REDACTED_DPCODES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import DEVICE_MOCKS, initialize_entry
+from . import DEVICE_MOCKS, create_device, create_manager, initialize_entry
 
 from tests.common import MockConfigEntry, async_load_json_object_fixture
+
+
+async def test_multiple_entries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Ensure multiple config entries do not remove items from other entries."""
+
+    main_manager = create_manager()
+    main_device = await create_device(hass, "mcs_8yhypbo7")
+    await initialize_entry(hass, main_manager, mock_config_entry, main_device)
+
+    # Ensure initial setup is correct
+    main_entity_id = "sensor.boite_aux_lettres_arriere_battery"
+    assert hass.states.get(main_entity_id)
+    assert (e := entity_registry.async_get(main_entity_id))
+    assert device_registry.async_get(e.device_id)
+
+    # Create a second config entry
+    second_config_entry = MockConfigEntry(
+        title="Test Tuya entry",
+        domain=DOMAIN,
+        data={
+            CONF_ENDPOINT: "test_endpoint",
+            CONF_TERMINAL_ID: "test_terminal",
+            CONF_TOKEN_INFO: "test_token",
+            CONF_USER_CODE: "test_user_code",
+        },
+        unique_id="56789",
+    )
+    second_manager = create_manager()
+    second_device = await create_device(hass, "mcs_oxslv1c9")
+    await initialize_entry(hass, second_manager, second_config_entry, second_device)
+
+    # Ensure second setup is correct
+    second_entity_id = "binary_sensor.door_sensor_1_doorcontact_state"
+    assert hass.states.get(second_entity_id)
+    assert (e := entity_registry.async_get(second_entity_id))
+    assert device_registry.async_get(e.device_id)
+
+    # Ensure main setup is STILL correct
+    assert hass.states.get(main_entity_id)
+    assert (e := entity_registry.async_get(main_entity_id))
+    assert device_registry.async_get(e.device_id)
 
 
 async def test_device_registry(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
-    mock_devices: CustomerDevice,
+    mock_devices: list[CustomerDevice],
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
