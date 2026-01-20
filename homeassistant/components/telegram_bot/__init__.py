@@ -479,17 +479,15 @@ async def _async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
         raise errors[0][0]
 
     if len(errors) > 1:
-        _LOGGER.error("Service %s failed with %s errors:", service.service, len(errors))
-        for error in errors:
-            _LOGGER.error(
-                "Error for chat_id / notify entity %s: %s", error[1], str(error[0])
-            )
+        error_messages: list[str] = []
+        for error, target in errors:
+            target_type = ATTR_CHAT_ID if target.isdigit() else ATTR_ENTITY_ID
+            error_messages.append(f"`{target_type}` {target}: {error}")
 
-        failed_targets = [target for _, target in errors]
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="failed_targets",
-            translation_placeholders={"failed_targets": ", ".join(failed_targets)},
+            translation_key="multiple_errors",
+            translation_placeholders={"errors": "\n".join(error_messages)},
         )
 
     if service.return_response:

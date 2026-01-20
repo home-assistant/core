@@ -181,9 +181,6 @@
     "allowlist_external_dirs_error": {
       "message": "File path has not been configured in allowlist_external_dirs."
     },
-    "failed_targets": {
-      "message": "Failed targets: {failed_targets}. Please check logs for details."
-    },
     "failed_to_load_file": {
       "message": "Failed to load file: {error}"
     },
@@ -210,6 +207,9 @@
     },
     "missing_notify_entities": {
       "message": "Please specify at least 1 notify entity."
+    },
+    "multiple_errors": {
+      "message": "Action failed with multiple errors.\n{errors}"
     }
   },
   "issues": {

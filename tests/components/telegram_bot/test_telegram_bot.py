@@ -348,9 +348,9 @@ async def test_send_sticker_partial_error(
 
     assert mock_load_data.call_count == 2
     assert mock_send_sticker.call_count == 2
-    assert err.value.translation_key == "failed_targets"
+    assert err.value.translation_key == "multiple_errors"
     assert err.value.translation_placeholders == {
-        "failed_targets": "notify.mock_title_mock_chat_1, notify.mock_title_mock_chat_2"
+        "errors": "`entity_id` notify.mock_title_mock_chat_1: Action failed. mock network error\n`entity_id` notify.mock_title_mock_chat_2: Action failed. mock network error"
     }
 
 
