@@ -289,8 +289,8 @@ WAVE_ENHANCE_DEVICE_INFO = AirthingsDevice(
 
 CORENTIUM_HOME_2_DEVICE_INFO = AirthingsDevice(
     manufacturer="Airthings AS",
-    hw_version="REV Y",
-    sw_version="C-HOME-2.3.1-master+0",
+    hw_version="REV X",
+    sw_version="R-SUB-1.3.4-master+0",
     model=AirthingsDeviceType.CORENTIUM_HOME_2,
     name="Airthings Corentium Home 2",
     identifier="123456",

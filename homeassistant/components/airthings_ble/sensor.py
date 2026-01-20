@@ -41,12 +41,6 @@ from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordina
 
 _LOGGER = logging.getLogger(__name__)
 
-# Map library connectivity mode values to HA enum values
-CONNECTIVITY_MODE_MAP = {
-    AirthingsConnectivityMode.BLE.value: "bluetooth",
-    AirthingsConnectivityMode.SMARTLINK.value: "smartlink",
-    AirthingsConnectivityMode.NOT_CONFIGURED.value: "not_configured",
-}
 
 SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     "radon_1day_avg": SensorEntityDescription(
