@@ -11,6 +11,7 @@ from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
     ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
@@ -92,6 +93,18 @@ async def test_platform_setup_and_discovery(
             ],
         ),
         (
+            SERVICE_TURN_ON,
+            {
+                ATTR_BRIGHTNESS: 255,
+                ATTR_HS_COLOR: (10.1, 20.2),
+            },
+            [
+                {"code": "switch_led", "value": True},
+                {"code": "work_mode", "value": "colour"},
+                {"code": "colour_data_v2", "value": '{"h": 10, "s": 202, "v": 1000}'},
+            ],
+        ),
+        (
             SERVICE_TURN_OFF,
             {},
             [{"code": "switch_led", "value": False}],
@@ -107,7 +120,7 @@ async def test_action(
     service_data: dict[str, Any],
     expected_commands: list[dict[str, Any]],
 ) -> None:
-    """Test service action."""
+    """Test light action."""
     entity_id = "light.garage_light"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 

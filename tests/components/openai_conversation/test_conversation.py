@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from freezegun import freeze_time
 import httpx
 from openai import AuthenticationError, RateLimitError
 from openai.types.responses import (
@@ -240,6 +241,7 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
+@freeze_time("2025-10-31 12:00:00")
 async def test_function_call(
     hass: HomeAssistant,
     mock_config_entry_with_reasoning_model: MockConfigEntry,
@@ -299,6 +301,7 @@ async def test_function_call(
     assert mock_create_stream.call_args.kwargs["input"][1:] == snapshot
 
 
+@freeze_time("2025-10-31 18:00:00")
 async def test_function_call_without_reasoning(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,

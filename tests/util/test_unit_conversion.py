@@ -61,6 +61,7 @@ from homeassistant.util.unit_conversion import (
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
+    SulphurDioxideConcentrationConverter,
     TemperatureConverter,
     TemperatureDeltaConverter,
     UnitlessRatioConverter,
@@ -102,6 +103,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         EnergyDistanceConverter,
         VolumeConverter,
         VolumeFlowRateConverter,
+        SulphurDioxideConcentrationConverter,
     )
 }
 
@@ -174,6 +176,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.MILES_PER_HOUR,
         1.609343,
+    ),
+    SulphurDioxideConcentrationConverter: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        2.6633,
     ),
     TemperatureConverter: (
         UnitOfTemperature.CELSIUS,
@@ -846,6 +853,20 @@ _CONVERTED_VALUE: dict[
         # float(round(((20.7 m/s / 0.836) ** 2) ** (1 / 3))) = 8.0Bft
         (20.7, UnitOfSpeed.METERS_PER_SECOND, 8.0, UnitOfSpeed.BEAUFORT),
     ],
+    SulphurDioxideConcentrationConverter: [
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            2.6633,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            45.056879,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+    ],
     TemperatureConverter: [
         (100, UnitOfTemperature.CELSIUS, 212, UnitOfTemperature.FAHRENHEIT),
         (100, UnitOfTemperature.CELSIUS, 373.15, UnitOfTemperature.KELVIN),
@@ -1054,6 +1075,12 @@ _CONVERTED_VALUE: dict[
             10,
             UnitOfVolumeFlowRate.LITERS_PER_SECOND,
         ),
+        (
+            24,
+            UnitOfVolumeFlowRate.GALLONS_PER_DAY,
+            1,
+            UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
+        ),
     ],
 }
 
@@ -1258,6 +1285,58 @@ def test_unit_conversion_factory_allow_none_with_none() -> None:
         )(None)
         is None
     )
+    assert (
+        EnergyDistanceConverter.converter_factory_allow_none(
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+        )(0)
+        is None
+    )
+    assert (
+        EnergyDistanceConverter.converter_factory_allow_none(
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            UnitOfEnergyDistance.WATT_HOUR_PER_KM,
+        )(0)
+        == 0
+    )
+    assert (
+        EnergyDistanceConverter.converter_factory_allow_none(
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+        )(0.0)
+        == 0.0
+    )
+    assert (
+        EnergyDistanceConverter.converter_factory_allow_none(
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+        )(0)
+        == 0.0
+    )
+
+
+def test_unit_conversion_factory_allow_none_with_zero_for_inverse_units() -> None:
+    """Test converter_factory_allow_none returns None for zero with inverse units."""
+    # Test EnergyDistanceConverter with inverse units (kWh/100km <-> km/kWh)
+    assert (
+        EnergyDistanceConverter.converter_factory_allow_none(
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+        )(0)
+        is None
+    )
+    assert (
+        EnergyDistanceConverter.converter_factory_allow_none(
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+        )(0)
+        is None
+    )
+    # Test with non-zero value to ensure normal conversion still works
+    assert EnergyDistanceConverter.converter_factory_allow_none(
+        UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+    )(25) == pytest.approx(4)
 
 
 @pytest.mark.parametrize(

@@ -19,6 +19,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/motion_blinds",
+  "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["motionblinds"],
   "requirements": ["motionblinds==0.6.30"]

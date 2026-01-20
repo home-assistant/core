@@ -1,0 +1,20 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: assist_satellite
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - first
+            - last
+            - any
+          translation_key: trigger_behavior
+
+idle: *trigger_common
+listening: *trigger_common
+processing: *trigger_common
+responding: *trigger_common
