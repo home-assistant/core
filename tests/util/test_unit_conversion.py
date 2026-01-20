@@ -302,7 +302,32 @@ _CONVERTED_VALUE: dict[
         ),
     ],
     CarbonMonoxideConcentrationConverter: [
+        # PPB to other units
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            0.001,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            1.16441,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            0.00116441,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
         # PPM to other units
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            1000,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
         (
             1,
             CONCENTRATION_PARTS_PER_MILLION,
@@ -315,24 +340,17 @@ _CONVERTED_VALUE: dict[
             1164.41,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
-        # MILLIGRAMS_PER_CUBIC_METER to other units
-        (
-            120,
-            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-            103.05655,
-            CONCENTRATION_PARTS_PER_MILLION,
-        ),
-        (
-            120,
-            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-            120000,
-            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        ),
         # MICROGRAMS_PER_CUBIC_METER to other units
         (
             120000,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            103.05655,
+            103056.5,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+        (
+            120000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            103.0565,
             CONCENTRATION_PARTS_PER_MILLION,
         ),
         (
@@ -340,6 +358,25 @@ _CONVERTED_VALUE: dict[
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             120,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
+        # MILLIGRAMS_PER_CUBIC_METER to other units
+        (
+            120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            103056.5,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+        (
+            120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            103.0565,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            120000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
     ],
     ConductivityConverter: [
