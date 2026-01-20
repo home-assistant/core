@@ -347,7 +347,9 @@ async def test_connectivity_mode_none_value(
 ) -> None:
     """Test connectivity mode sensor handles non-string values."""
     test_device = deepcopy(CORENTIUM_HOME_2_DEVICE_INFO)
-    test_device.sensors["connectivity_mode"] = 123  # Non-string value
+
+    # Non-string value, will be mapped to 'unknown' state
+    test_device.sensors["connectivity_mode"] = 123
 
     entry = create_entry(hass, CORENTIUM_HOME_2_SERVICE_INFO, test_device)
     create_device(entry, device_registry, CORENTIUM_HOME_2_SERVICE_INFO, test_device)
