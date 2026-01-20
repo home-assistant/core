@@ -61,6 +61,7 @@ from .const import (
     CoverConf,
     FanConf,
     FanZeroMode,
+    NumberConf,
     SceneConf,
 )
 from .validation import (
@@ -72,18 +73,26 @@ from .validation import (
     sensor_type_validator,
     string_type_validator,
     sync_state_validator,
+    validate_number_attributes,
 )
 
 
 ##################
 # KNX SUB VALIDATORS
 ##################
+def _number_limit_sub_validator(config: dict) -> dict:
+    """Validate min, max, and step values for a number entity."""
+    transcoder = DPTNumeric.parse_transcoder(config[CONF_TYPE])
+    assert transcoder is not None  # already checked in numeric_type_validator
+    return validate_number_attributes(transcoder, config)
+
+
 def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     """Validate a number entity configurations dependent on configured value type."""
     value_type = entity_config[CONF_TYPE]
-    min_config: float | None = entity_config.get(NumberSchema.CONF_MIN)
-    max_config: float | None = entity_config.get(NumberSchema.CONF_MAX)
-    step_config: float | None = entity_config.get(NumberSchema.CONF_STEP)
+    min_config: float | None = entity_config.get(NumberConf.MIN)
+    max_config: float | None = entity_config.get(NumberConf.MAX)
+    step_config: float | None = entity_config.get(NumberConf.STEP)
     dpt_class = DPTNumeric.parse_transcoder(value_type)
 
     if dpt_class is None:
@@ -784,10 +793,6 @@ class NumberSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX numbers."""
 
     PLATFORM = Platform.NUMBER
-
-    CONF_MAX = "max"
-    CONF_MIN = "min"
-    CONF_STEP = "step"
     DEFAULT_NAME = "KNX Number"
 
     ENTITY_SCHEMA = vol.All(
@@ -801,13 +806,13 @@ class NumberSchema(KNXPlatformSchema):
                 vol.Required(CONF_TYPE): numeric_type_validator,
                 vol.Required(KNX_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
-                vol.Optional(CONF_MAX): vol.Coerce(float),
-                vol.Optional(CONF_MIN): vol.Coerce(float),
-                vol.Optional(CONF_STEP): cv.positive_float,
+                vol.Optional(NumberConf.MAX): vol.Coerce(float),
+                vol.Optional(NumberConf.MIN): vol.Coerce(float),
+                vol.Optional(NumberConf.STEP): cv.positive_float,
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
-        number_limit_sub_validator,
+        _number_limit_sub_validator,
     )
 
 
