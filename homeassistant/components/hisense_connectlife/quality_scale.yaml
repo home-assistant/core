@@ -1,16 +1,17 @@
 rules:
-  # Bronze
   action-setup: done
   appropriate-polling:
     status: done
-    comment: |
-      Uses WebSocket for real-time updates with 30-second polling fallback
+    comment: Uses WebSocket for real-time updates with 30-second polling fallback
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: not_relevant
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not register any custom service actions beyond standard climate services.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -21,48 +22,3 @@ rules:
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
-
-  # Silver
-  action-exceptions: pending
-  config-entry-unloading: done
-  docs-configuration-parameters: pending
-  docs-installation-parameters: pending
-  entity-unavailable: done
-  integration-owner: done
-  log-when-unavailable: done
-  parallel-updates: done
-  reauthentication-flow:
-    status: pending
-    comment: |
-      Reauth flow will be added in a follow-up PR
-  test-coverage: pending
-  # Gold
-  devices: done
-  diagnostics:
-    status: pending
-    comment: |
-      Diagnostics support will be added in a follow-up PR
-  discovery-update-info: not_relevant
-  discovery: not_relevant
-  docs-data-update: pending
-  docs-examples: pending
-  docs-known-limitations: pending
-  docs-supported-devices: pending
-  docs-supported-functions: pending
-  docs-troubleshooting: pending
-  docs-use-cases: pending
-  dynamic-devices: done
-  entity-category: pending
-  entity-device-class: pending
-  entity-disabled-by-default: not_relevant
-  entity-translations: pending
-  exception-translations: pending
-  icon-translations: pending
-  reconfiguration-flow: not_relevant
-  repair-issues: not_relevant
-  stale-devices: pending
-
-  # Platinum
-  async-dependency: done
-  inject-websession: done
-  strict-typing: pending

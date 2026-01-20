@@ -48,7 +48,7 @@ class OAuth2Session:
             raise ValueError("No token available")
 
         if self._is_token_expired():
-            _LOGGER.debug("Token has expired, refreshing...")
+            _LOGGER.debug("Token has expired, refreshing")
             token_data = await self.oauth2_implementation.async_refresh_token(
                 self.token
             )
@@ -137,7 +137,7 @@ class HisenseOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementa
 
     async def async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
-        _LOGGER.debug("Refreshing token...")
+        _LOGGER.debug("Refreshing token")
 
         refresh_token = token.get("refresh_token")
         if not refresh_token:

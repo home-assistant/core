@@ -14,7 +14,9 @@ from homeassistant.core import HomeAssistant
 
 
 @pytest.mark.asyncio
-async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry: ConfigEntry):
+async def test_async_setup_entry(
+    hass: HomeAssistant, mock_config_entry: ConfigEntry
+) -> None:
     """Test async_setup_entry."""
     with (
         patch(
@@ -56,7 +58,9 @@ async def test_async_setup_entry(hass: HomeAssistant, mock_config_entry: ConfigE
 
 
 @pytest.mark.asyncio
-async def test_async_unload_entry(hass: HomeAssistant, mock_config_entry: ConfigEntry):
+async def test_async_unload_entry(
+    hass: HomeAssistant, mock_config_entry: ConfigEntry
+) -> None:
     """Test async_unload_entry."""
     # Mock coordinator in entry.runtime_data
     mock_coordinator = AsyncMock()
@@ -77,7 +81,7 @@ async def test_async_unload_entry(hass: HomeAssistant, mock_config_entry: Config
 
 
 @pytest.mark.asyncio
-async def test_async_setup(hass: HomeAssistant):
+async def test_async_setup(hass: HomeAssistant) -> None:
     """Test async_setup."""
     with (
         patch(

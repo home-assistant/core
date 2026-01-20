@@ -8,6 +8,7 @@ import time
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -45,19 +46,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Hisense AC Plugin from a config entry."""
     _LOGGER.debug("Setting up config entry: %s", entry.title)
 
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+    try:
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
-    )
+    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            "OAuth2 implementation temporarily unavailable"
+        ) from err
 
-    # Create Home Assistant's OAuth2Session for token management
     ha_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-
-    # Ensure token is valid
     await ha_session.async_ensure_token_valid()
-    token_info = entry.data.get("token", {})
 
+    token_info = entry.data.get("token", {})
     if "expires_in" in token_info and "expires_at" not in token_info:
         token_info["expires_at"] = time.time() + token_info["expires_in"]
 
@@ -69,32 +72,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         },
     )
 
-    # Get the implementation as HisenseOAuth2Implementation
     hisense_impl = HisenseOAuth2Implementation(hass)
-
-    # Create our custom OAuth2Session that wraps the HA session
     oauth_session = OAuth2Session(
-        hass=hass,
-        oauth2_implementation=hisense_impl,
-        token=token_info,
+        hass=hass, oauth2_implementation=hisense_impl, token=token_info
     )
-
-    # Create API client
     api_client = HisenseApiClient(hass, oauth_session)
 
-    # Create update coordinator
     coordinator = HisenseACPluginDataUpdateCoordinator(hass, api_client, entry)
 
-    # Initialize coordinator and get initial device list
-    if not await coordinator.async_setup():
-        _LOGGER.error("Failed to setup coordinator")
-        return False
+    # 核心测试：直接让 HA 处理异常
+    await coordinator.async_config_entry_first_refresh()
+    # 如果上面没抛异常 → 测试通过
 
-    # Store coordinator in entry.runtime_data
+    # 可选：加一行 log 确认成功
+    _LOGGER.debug("Initial data refresh successful during setup")
+
     entry.runtime_data = coordinator
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
 
 

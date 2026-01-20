@@ -10,7 +10,7 @@ from homeassistant.const import UnitOfTemperature
 
 
 @pytest.mark.asyncio
-async def test_climate_entity_creation(hass, mock_config_entry, mock_coordinator):
+async def test_climate_entity_creation(mock_coordinator) -> None:
     """Test climate entity creation."""
 
     # Mock device data
@@ -50,7 +50,7 @@ async def test_climate_entity_creation(hass, mock_config_entry, mock_coordinator
 
 
 @pytest.mark.asyncio
-async def test_climate_set_temperature(hass, mock_config_entry, mock_coordinator):
+async def test_climate_set_temperature(mock_coordinator) -> None:
     """Test setting temperature."""
 
     device_data = {

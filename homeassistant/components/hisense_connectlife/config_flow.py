@@ -59,7 +59,7 @@ class HisenseOptionsFlowHandler(OptionsFlow):
                         _LOGGER.debug("Token before refresh: ...%s", old_token)
 
                         # Force token refresh
-                        _LOGGER.debug("Forcing token refresh...")
+                        _LOGGER.debug("Forcing token refresh")
                         token_data = coordinator.api_client.oauth_session.token
 
                         # Use our own OAuth2 implementation to refresh token
@@ -172,6 +172,10 @@ class OAuth2FlowHandler(
             return self.async_external_step(step_id="auth", url=url)
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Failed to generate authorize URL: %s", err)
+            return self.async_abort(reason="authorize_url_fail")
+        else:
+            await self.async_set_unique_id(DOMAIN)
+            self._abort_if_unique_id_configured()
             return self.async_abort(reason="authorize_url_fail")
 
     async def async_step_creation(

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
+from typing import Any
 
 from connectlife_cloud.mode_converter import (
     find_device_value_for_ha_fan_mode,
@@ -17,20 +18,18 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    ClimateEntity,
-    ClimateEntityFeature,
-    HVACMode,
-)
-from homeassistant.components.climate.const import (
     SWING_HORIZONTAL,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -77,7 +76,7 @@ HA_FAN_CONST_TO_STR = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hisense AC climate platform."""
     coordinator: HisenseACPluginDataUpdateCoordinator = config_entry.runtime_data
@@ -513,7 +512,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
 
         return ClimateEntityFeature(features)
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         # Check if current mode allows temperature setting
         current_mode = self.hvac_mode

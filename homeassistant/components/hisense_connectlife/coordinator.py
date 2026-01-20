@@ -176,129 +176,148 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
     def _handle_ws_message(self, message: dict[str, Any]) -> None:
         """Handle websocket message."""
         _LOGGER.debug("Starting to handle websocket message: %s", message)
+
         try:
-            msg_type = message.get("msgTypeCode")
-            _LOGGER.debug("Message type: %s", msg_type)
-            if msg_type not in ["status_wifistatus", "status_devicestatus"]:
+            if not self._should_process_message(message):
                 return
 
-            # Parse content field which is a JSON string
-            content = message.get("content", "{}")
-            _LOGGER.debug("Raw content: %s", content)
-            if not isinstance(content, str):
-                _LOGGER.warning("Content is not a string: %s", type(content))
+            content_data = self._parse_content(message)
+            if content_data is None:
                 return
 
-            try:
-                content_data = json.loads(content)
-                _LOGGER.debug("Parsed message content: %s", content_data)
+            device = self._find_device_by_puid(content_data.get("puid"))
+            if not device:
+                _LOGGER.debug("Device with puid %s not found", content_data.get("puid"))
+                return
 
-                device_id = content_data.get("puid")
+            # after found device,begin to update
+            self._update_device_from_message(
+                device, message["msgTypeCode"], content_data
+            )
 
-                _LOGGER.debug("Processing message for device: %s", device_id)
-                _LOGGER.debug(
-                    "Available devices: %s",
-                    [
-                        f"{d.device_id} (puid: {d.puid}, type: {d.type_code}-{d.feature_code})"
-                        for d in self._devices.values()
-                    ],
-                )
-
-                # Find device by puid instead of direct dictionary lookup
-                device = None
-                device_key = None
-                for key, dev in self._devices.items():
-                    if dev.puid == device_id:
-                        device = dev
-                        device_key = key
-                        _LOGGER.debug(
-                            "Found device with puid %s, device_id: %s", device_id, key
-                        )
-                        break
-
-                if device and device_key:
-                    _LOGGER.debug("Found device %s in devices list", device_id)
-                    device_data = device.to_dict()
-                    _LOGGER.debug("Current device data: %s", device_data)
-
-                    # Update device data based on message type
-                    if msg_type == "status_wifistatus":
-                        # Update online status
-                        online_status = content_data.get("onlinestats")
-                        if online_status is not None:
-                            device_data["offlineState"] = (
-                                0 if int(online_status) == 1 else 1
-                            )
-                            _LOGGER.debug(
-                                "Updated device %s online status: %s",
-                                device_id,
-                                "online" if online_status == 1 else "offline",
-                            )
-                    else:  # status_devicestatus
-                        # Update device status attributes
-                        status = content_data.get("status")
-                        properties = content_data.get("properties", {})
-
-                        # Handle base64 encoded status if present
-                        if status and isinstance(status, str):
-                            try:
-                                decoded_status = base64.b64decode(status).decode(
-                                    "utf-8"
-                                )
-                                status_json = json.loads(decoded_status)
-                                _LOGGER.debug("Decoded status: %s", status_json)
-                                if status_json and isinstance(status_json, dict):
-                                    # Update device status with decoded values
-                                    for key, value in status_json.items():
-                                        device_data["statusList"][key] = value
-                            except Exception as e:  # noqa: BLE001
-                                _LOGGER.warning("Failed to decode status: %s", e)
-
-                        # Update with properties if available
-                        if properties and isinstance(properties, dict):
-                            for key, value in properties.items():
-                                device_data["statusList"][key] = value
-                            _LOGGER.debug(
-                                "Updated device status with properties: %s", properties
-                            )
-
-                    # Update device in coordinator
-                    updated_device = DeviceInfo(device_data)
-                    self._devices[device_key] = updated_device
-                    self.data = self._devices
-
-                    # Get device type and parse status using appropriate parser
-                    device_type = updated_device.get_device_type()
-                    if device_type:
-                        try:
-                            get_device_parser(
-                                device_type.type_code, device_type.feature_code
-                            )
-                            _LOGGER.debug(
-                                "Using parser for device type %s-%s",
-                                device_type.type_code,
-                                device_type.feature_code,
-                            )
-
-                            # No need to parse status here, it will be parsed when accessed by climate entity
-                            _LOGGER.debug(
-                                "Device status updated: %s", updated_device.status
-                            )
-                        except Exception as err:  # noqa: BLE001
-                            _LOGGER.error("Failed to get device parser: %s", err)
-
-                    # Notify listeners of the update
-                    self.hass.loop.call_soon_threadsafe(
-                        self.async_set_updated_data, self._devices
-                    )
-                    _LOGGER.debug("Device %s updated via WebSocket", device_id)
-                else:
-                    _LOGGER.debug(
-                        "Device with puid %s not found in devices list", device_id
-                    )
-
-            except json.JSONDecodeError as e:
-                _LOGGER.warning("Failed to parse message content: %s", e)
+            # update and notify
+            self._notify_update()
 
         except Exception:
             _LOGGER.exception("Error handling websocket message")
+
+    def _should_process_message(self, message: dict[str, Any]) -> bool:
+        """Deal with the message if needed."""
+        msg_type = message.get("msgTypeCode")
+        _LOGGER.debug("Message type: %s", msg_type)
+
+        if msg_type not in {"status_wifistatus", "status_devicestatus"}:
+            return False
+        return True
+
+    def _parse_content(self, message: dict[str, Any]) -> dict | None:
+        """Parse 'content' field to 'dict'."""
+        content = message.get("content", "{}")
+        _LOGGER.debug("Raw content: %s", content)
+
+        if not isinstance(content, str):
+            _LOGGER.warning("Content is not a string: %s", type(content))
+            return None
+
+        try:
+            content_data = json.loads(content)
+            _LOGGER.debug("Parsed message content: %s", content_data)
+        except json.JSONDecodeError as e:
+            _LOGGER.warning("Failed to parse message content: %s", e)
+            return None
+        else:
+            return content_data
+
+    def _find_device_by_puid(self, puid: str | None) -> DeviceInfo | None:
+        """Find device with puid."""
+        if not puid:
+            return None
+
+        _LOGGER.debug("Processing message for device puid: %s", puid)
+        _LOGGER.debug(
+            "Available devices: %s",
+            [f"{d.device_id} (puid: {d.puid})" for d in self._devices.values()],
+        )
+
+        for key, dev in self._devices.items():
+            if dev.puid == puid:
+                _LOGGER.debug("Found device with puid %s → key: %s", puid, key)
+                return dev
+
+        return None
+
+    def _update_device_from_message(
+        self, device: DeviceInfo, msg_type: str, content_data: dict
+    ) -> None:
+        """Update device data with message type."""
+        device_data = device.to_dict()
+        _LOGGER.debug("Current device data before update: %s", device_data)
+
+        if msg_type == "status_wifistatus":
+            self._update_wifi_status(device_data, content_data)
+        else:  # status_devicestatus
+            self._update_device_status(device_data, content_data)
+
+        # 写回
+        updated_device = DeviceInfo(device_data)
+        device_key = next(
+            (k for k, v in self._devices.items() if v.puid == device.puid), None
+        )
+        if device_key:
+            self._devices[device_key] = updated_device
+            self.data = self._devices
+
+    def _update_wifi_status(self, device_data: dict, content_data: dict) -> None:
+        """Update wifi online status."""
+        online_status = content_data.get("onlinestats")
+        if online_status is not None:
+            device_data["offlineState"] = 0 if int(online_status) == 1 else 1
+            _LOGGER.debug(
+                "Updated device online status: %s",
+                "online" if online_status == 1 else "offline",
+            )
+
+    def _update_device_status(self, device_data: dict, content_data: dict) -> None:
+        """Update device's status(include base64 decoding and properties)."""
+        status = content_data.get("status")
+        properties = content_data.get("properties", {})
+
+        # 处理 base64 编码的 status
+        if status and isinstance(status, str):
+            try:
+                decoded = base64.b64decode(status).decode("utf-8")
+                status_json = json.loads(decoded)
+                _LOGGER.debug("Decoded status: %s", status_json)
+                if isinstance(status_json, dict):
+                    device_data["statusList"].update(status_json)
+            except Exception as e:  # noqa: BLE001
+                _LOGGER.warning("Failed to decode base64 status: %s", e)
+
+        # 处理 properties
+        if isinstance(properties, dict):
+            device_data["statusList"].update(properties)
+            _LOGGER.debug("Updated with properties: %s", properties)
+
+    def _notify_update(self) -> None:
+        """Notify update(include try get parser and trigger sync update)."""
+        # 为了保持原有日志顺序，这里重新获取一次 updated_device
+        # 但实际可以优化为把 updated_device 传进来
+        for device in self._devices.values():
+            device_type = device.get_device_type()
+            if not device_type:
+                continue
+
+            try:
+                get_device_parser(device_type.type_code, device_type.feature_code)
+                _LOGGER.debug(
+                    "Using parser for device type %s-%s",
+                    device_type.type_code,
+                    device_type.feature_code,
+                )
+                _LOGGER.debug("Device status updated: %s", device.status)
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.error("Failed to get device parser: %s", err)
+
+        # 通知
+        self.hass.loop.call_soon_threadsafe(self.async_set_updated_data, self._devices)
+        _LOGGER.debug("Device(s) updated via WebSocket")

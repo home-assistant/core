@@ -3,13 +3,14 @@
 from dataclasses import dataclass
 from typing import NamedTuple
 
-from homeassistant.components.climate import ClimateEntityFeature, HVACMode
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     SWING_OFF,
     SWING_VERTICAL,
 )
+
+from .climate import ClimateEntityFeature, HVACMode
 
 DOMAIN = "hisense_connectlife"
 DOMAINW = "hisense_we_plugin"
