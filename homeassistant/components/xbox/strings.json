@@ -15,6 +15,9 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
+    },
     "step": {
       "oauth_discovery": {
         "description": "Home Assistant has found an Xbox device on your network. Press **Submit** to continue setting up the Xbox integration.",
