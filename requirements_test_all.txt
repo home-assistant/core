@@ -1041,7 +1041,7 @@ habluetooth==5.8.0
 hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
-hass-nabucasa==1.10.0
+hass-nabucasa==1.11.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1737,7 +1737,7 @@ pyfibaro==0.8.3
 pyfido==2.1.2
 
 # homeassistant.components.firefly_iii
-pyfirefly==0.1.11
+pyfirefly==0.1.12
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.46
@@ -2012,7 +2012,7 @@ pyrympro==0.0.9
 pysabnzbd==1.1.1
 
 # homeassistant.components.saunum
-pysaunum==0.2.0
+pysaunum==0.3.0
 
 # homeassistant.components.schlage
 pyschlage==2025.9.0
