@@ -814,11 +814,11 @@
               "label": "Value"
             },
             "max": {
-              "description": "Override the DPTs maximum value allowed to be set.",
+              "description": "Override the DPT's maximum value allowed to be set.",
               "label": "Maximum value"
             },
             "min": {
-              "description": "Override the DPTs minimum value allowed to be set.",
+              "description": "Override the DPT's minimum value allowed to be set.",
               "label": "Minimum value"
             },
             "mode": {
@@ -835,7 +835,7 @@
               "title": "[%key:component::knx::config_panel::entities::create::sensor::knx::section_advanced_options::title%]"
             },
             "step": {
-              "description": "Override the DPTs smallest step size to change the value.",
+              "description": "Override the DPT's smallest step size to change the value.",
               "label": "Step size"
             },
             "unit_of_measurement": {
@@ -865,7 +865,7 @@
               "label": "Force update"
             },
             "device_class": {
-              "description": "Override the DPTs default device class.",
+              "description": "Override the DPT's default device class.",
               "label": "Device class"
             },
             "ga_sensor": {
@@ -877,11 +877,11 @@
               "title": "Overrides"
             },
             "state_class": {
-              "description": "Override the DPTs default state class.",
+              "description": "Override the DPT's default state class.",
               "label": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]"
             },
             "unit_of_measurement": {
-              "description": "Override the DPTs default unit of measurement.",
+              "description": "Override the DPT's default unit of measurement.",
               "label": "Unit of measurement"
             }
           }
