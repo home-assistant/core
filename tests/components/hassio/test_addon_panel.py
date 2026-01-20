@@ -165,7 +165,7 @@ async def test_hassio_addon_panel_registration(
         mock_register.assert_any_call(
             hass,
             "app",
-            frontend_url_path="app/test_addon",
+            frontend_url_path="test_addon",
             sidebar_title="Test Addon",
             sidebar_icon="mdi:test-tube",
             require_admin=True,

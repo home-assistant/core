@@ -83,7 +83,7 @@ async def _register_panel(
     frontend.async_register_built_in_panel(
         hass,
         "app",
-        frontend_url_path="app/" + addon,
+        frontend_url_path=addon,
         sidebar_title=data[ATTR_TITLE],
         sidebar_icon=data[ATTR_ICON],
         require_admin=data[ATTR_ADMIN],
