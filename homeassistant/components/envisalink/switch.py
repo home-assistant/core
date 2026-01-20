@@ -5,13 +5,21 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pyenvisalink import EnvisalinkAlarmPanel
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_ZONENAME, DATA_EVL, SIGNAL_ZONE_BYPASS_UPDATE, ZONE_SCHEMA
+from . import (
+    CONF_ZONENAME,
+    CONF_ZONES,
+    DATA_EVL,
+    SIGNAL_ZONE_BYPASS_UPDATE,
+    ZONE_SCHEMA,
+)
 from .entity import EnvisalinkEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,16 +34,15 @@ async def async_setup_platform(
     """Set up the Envisalink switch entities."""
     if not discovery_info:
         return
-    configured_zones = discovery_info["zones"]
+    configured_zones: dict[int, dict[str, Any]] = discovery_info[CONF_ZONES]
 
     entities = []
-    for zone_num in configured_zones:
-        entity_config_data = ZONE_SCHEMA(configured_zones[zone_num])
+    for zone_num, zone_data in configured_zones.items():
+        entity_config_data = ZONE_SCHEMA(zone_data)
         zone_name = f"{entity_config_data[CONF_ZONENAME]}_bypass"
         _LOGGER.debug("Setting up zone_bypass switch: %s", zone_name)
 
         entity = EnvisalinkSwitch(
-            hass,
             zone_num,
             zone_name,
             hass.data[DATA_EVL].alarm_state["zone"][zone_num],
@@ -49,7 +56,13 @@ async def async_setup_platform(
 class EnvisalinkSwitch(EnvisalinkEntity, SwitchEntity):
     """Representation of an Envisalink switch."""
 
-    def __init__(self, hass, zone_number, zone_name, info, controller):
+    def __init__(
+        self,
+        zone_number: int,
+        zone_name: str,
+        info: dict[str, Any],
+        controller: EnvisalinkAlarmPanel,
+    ) -> None:
         """Initialize the switch."""
         self._zone_number = zone_number
 
