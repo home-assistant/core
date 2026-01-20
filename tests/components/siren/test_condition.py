@@ -1,4 +1,4 @@
-"""Test fan conditions."""
+"""Test siren conditions."""
 
 from typing import Any
 
@@ -19,10 +19,15 @@ from tests.components import (
 )
 
 
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
+
+
 @pytest.fixture
-async def target_fans(hass: HomeAssistant) -> list[str]:
-    """Create multiple fan entities associated with different targets."""
-    return (await target_entities(hass, "fan"))["included"]
+async def target_sirens(hass: HomeAssistant) -> list[str]:
+    """Create multiple siren entities associated with different targets."""
+    return (await target_entities(hass, "siren"))["included"]
 
 
 @pytest.fixture
@@ -34,40 +39,40 @@ async def target_switches(hass: HomeAssistant) -> list[str]:
 @pytest.mark.parametrize(
     "condition",
     [
-        "fan.is_off",
-        "fan.is_on",
+        "siren.is_off",
+        "siren.is_on",
     ],
 )
-async def test_fan_conditions_gated_by_labs_flag(
+async def test_siren_conditions_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
 ) -> None:
-    """Test the fan conditions are gated by the labs flag."""
+    """Test the siren conditions are gated by the labs flag."""
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("fan"),
+    parametrize_target_entities("siren"),
 )
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
         *parametrize_condition_states_any(
-            condition="fan.is_on",
+            condition="siren.is_on",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
         ),
         *parametrize_condition_states_any(
-            condition="fan.is_off",
+            condition="siren.is_off",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
         ),
     ],
 )
-async def test_fan_state_condition_behavior_any(
+async def test_siren_state_condition_behavior_any(
     hass: HomeAssistant,
-    target_fans: list[str],
+    target_sirens: list[str],
     target_switches: list[str],
     condition_target_config: dict,
     entity_id: str,
@@ -76,11 +81,11 @@ async def test_fan_state_condition_behavior_any(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test the fan state condition with the 'any' behavior."""
-    other_entity_ids = set(target_fans) - {entity_id}
+    """Test the siren state condition with the 'any' behavior."""
+    other_entity_ids = set(target_sirens) - {entity_id}
 
-    # Set all fans, including the tested fan, to the initial state
-    for eid in target_fans:
+    # Set all sirens, including the tested siren, to the initial state
+    for eid in target_sirens:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -104,7 +109,7 @@ async def test_fan_state_condition_behavior_any(
         await hass.async_block_till_done()
         assert condition(hass) == state["condition_true"]
 
-        # Check if changing other fans also passes the condition
+        # Check if changing other sirens also passes the condition
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
@@ -114,26 +119,26 @@ async def test_fan_state_condition_behavior_any(
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("fan"),
+    parametrize_target_entities("siren"),
 )
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
         *parametrize_condition_states_all(
-            condition="fan.is_on",
+            condition="siren.is_on",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
         ),
         *parametrize_condition_states_all(
-            condition="fan.is_off",
+            condition="siren.is_off",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
         ),
     ],
 )
-async def test_fan_state_condition_behavior_all(
+async def test_siren_state_condition_behavior_all(
     hass: HomeAssistant,
-    target_fans: list[str],
+    target_sirens: list[str],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -141,15 +146,14 @@ async def test_fan_state_condition_behavior_all(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test the fan state condition with the 'all' behavior."""
+    """Test the siren state condition with the 'all' behavior."""
     # Set state for two switches to ensure that they don't impact the condition
     hass.states.async_set("switch.label_switch_1", STATE_OFF)
     hass.states.async_set("switch.label_switch_2", STATE_ON)
+    other_entity_ids = set(target_sirens) - {entity_id}
 
-    other_entity_ids = set(target_fans) - {entity_id}
-
-    # Set all fans, including the tested fan, to the initial state
-    for eid in target_fans:
+    # Set all sirens, including the tested siren, to the initial state
+    for eid in target_sirens:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

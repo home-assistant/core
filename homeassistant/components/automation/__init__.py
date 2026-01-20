@@ -128,6 +128,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "fan",
     "humidifier",
     "light",
+    "siren",
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
