@@ -27,7 +27,6 @@ async def wake_up_vehicle(vehicle: TeslaFleetVehicleData) -> None:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="wake_up_failed",
-                    translation_placeholders={"message": e.message},
                 ) from e
             vehicle.coordinator.data["state"] = state
             if state != TeslaFleetState.ONLINE:
