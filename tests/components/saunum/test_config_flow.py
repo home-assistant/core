@@ -7,7 +7,12 @@ from unittest.mock import AsyncMock
 from pysaunum import SaunumConnectionError, SaunumException
 import pytest
 
-from homeassistant.components.saunum.const import DOMAIN
+from homeassistant.components.saunum.const import (
+    DOMAIN,
+    OPT_PRESET_NAME_TYPE_1,
+    OPT_PRESET_NAME_TYPE_2,
+    OPT_PRESET_NAME_TYPE_3,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -201,3 +206,82 @@ async def test_reconfigure_to_existing_host(
 
     # Verify the original entry was not changed
     assert mock_config_entry.data == TEST_USER_INPUT
+
+
+@pytest.mark.usefixtures("mock_saunum_client")
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test options flow for configuring preset names."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Configure custom preset names
+    custom_options = {
+        OPT_PRESET_NAME_TYPE_1: "Finnish Sauna",
+        OPT_PRESET_NAME_TYPE_2: "Turkish Bath",
+        OPT_PRESET_NAME_TYPE_3: "Steam Room",
+    }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=custom_options,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == custom_options
+    assert mock_config_entry.options == custom_options
+
+
+@pytest.mark.usefixtures("mock_saunum_client")
+async def test_options_flow_with_existing_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test options flow with existing custom preset names."""
+    existing_options = {
+        OPT_PRESET_NAME_TYPE_1: "My Custom Type 1",
+        OPT_PRESET_NAME_TYPE_2: "My Custom Type 2",
+        OPT_PRESET_NAME_TYPE_3: "My Custom Type 3",
+    }
+
+    # Set up entry with existing options
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=TEST_USER_INPUT,
+        options=existing_options,
+        title="Saunum",
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Update one option
+    updated_options = {
+        OPT_PRESET_NAME_TYPE_1: "Updated Type 1",
+        OPT_PRESET_NAME_TYPE_2: "My Custom Type 2",
+        OPT_PRESET_NAME_TYPE_3: "My Custom Type 3",
+    }
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=updated_options,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == updated_options
+    assert mock_config_entry.options == updated_options
