@@ -50,7 +50,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         """Check connection to the Mealie API."""
         assert self.host is not None
 
-        if "/hassio/ingress/" in self.host:
+        if "/app/" in self.host:
             return {"base": "ingress_url"}, None
 
         client = MealieClient(

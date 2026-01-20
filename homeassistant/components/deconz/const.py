@@ -10,7 +10,7 @@ LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "deconz"
 
-HASSIO_CONFIGURATION_URL = "homeassistant://hassio/ingress/core_deconz"
+HASSIO_CONFIGURATION_URL = "homeassistant://app/core_deconz"
 
 CONF_BRIDGE_ID = "bridgeid"
 CONF_GROUP_ID_BASE = "group_id_base"
