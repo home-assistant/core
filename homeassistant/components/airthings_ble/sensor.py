@@ -36,11 +36,16 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import CONNECTIVITY_MODE_OPTIONS, DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
+from .const import DOMAIN, VOLUME_BECQUEREL, VOLUME_PICOCURIE
 from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+CONNECTIVITY_MODE_MAP = {
+    AirthingsConnectivityMode.BLE.value: "bluetooth",
+    AirthingsConnectivityMode.SMARTLINK.value: "smartlink",
+    AirthingsConnectivityMode.NOT_CONFIGURED.value: "not_configured",
+}
 
 SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     "radon_1day_avg": SensorEntityDescription(
@@ -134,7 +139,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         key="connectivity_mode",
         translation_key="connectivity_mode",
         device_class=SensorDeviceClass.ENUM,
-        options=CONNECTIVITY_MODE_OPTIONS,
+        options=list(CONNECTIVITY_MODE_MAP.values()),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -271,12 +276,6 @@ class AirthingsSensor(
         if self.entity_description.key == "connectivity_mode":
             if not isinstance(value, str):
                 return None
-
-            mapping = {
-                AirthingsConnectivityMode.BLE.value: "bluetooth",
-                AirthingsConnectivityMode.SMARTLINK.value: "smartlink",
-                AirthingsConnectivityMode.NOT_CONFIGURED.value: "not_configured",
-            }
-            return mapping.get(value)
+            return CONNECTIVITY_MODE_MAP.get(value)
 
         return value
