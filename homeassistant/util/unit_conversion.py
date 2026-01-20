@@ -218,6 +218,14 @@ class NitrogenDioxideConcentrationConverter(BaseUnitConverter):
         CONCENTRATION_PARTS_PER_BILLION: 1e9,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _NITROGEN_DIOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
+        ),
+    }
+    VALID_UNITS = {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    }
+
+
 class SulphurDioxideConcentrationConverter(BaseUnitConverter):
     """Convert sulphur dioxide ratio to mass per volume."""
 
