@@ -16,7 +16,8 @@ from tests.components import (
     assert_condition_gated_by_labs_flag,
     create_target_condition,
     other_states,
-    parametrize_condition_states,
+    parametrize_condition_states_all,
+    parametrize_condition_states_any,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
@@ -59,12 +60,12 @@ async def test_climate_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
-        *parametrize_condition_states(
+        *parametrize_condition_states_any(
             condition="climate.is_off",
             target_states=[HVACMode.OFF],
             other_states=other_states(HVACMode.OFF),
         ),
-        *parametrize_condition_states(
+        *parametrize_condition_states_any(
             condition="climate.is_on",
             target_states=[
                 HVACMode.AUTO,
@@ -124,12 +125,12 @@ async def test_climate_state_condition_behavior_any(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
-        *parametrize_condition_states(
+        *parametrize_condition_states_all(
             condition="climate.is_off",
             target_states=[HVACMode.OFF],
             other_states=other_states(HVACMode.OFF),
         ),
-        *parametrize_condition_states(
+        *parametrize_condition_states_all(
             condition="climate.is_on",
             target_states=[
                 HVACMode.AUTO,
@@ -173,20 +174,13 @@ async def test_climate_state_condition_behavior_all(
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        # The condition passes if all entities are either in a target state or invalid
-        assert condition(hass) == (
-            (not state["state_valid"])
-            or (state["condition_true"] and entities_in_target == 1)
-        )
+        assert condition(hass) == state["condition_true_first_entity"]
 
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
 
-        # The condition passes if all entities are either in a target state or invalid
-        assert condition(hass) == (
-            (not state["state_valid"]) or state["condition_true"]
-        )
+        assert condition(hass) == state["condition_true"]
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -197,17 +191,17 @@ async def test_climate_state_condition_behavior_all(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
-        *parametrize_condition_states(
+        *parametrize_condition_states_any(
             condition="climate.is_cooling",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.COOLING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         ),
-        *parametrize_condition_states(
+        *parametrize_condition_states_any(
             condition="climate.is_drying",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.DRYING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         ),
-        *parametrize_condition_states(
+        *parametrize_condition_states_any(
             condition="climate.is_heating",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
@@ -260,17 +254,17 @@ async def test_climate_attribute_condition_behavior_any(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
-        *parametrize_condition_states(
+        *parametrize_condition_states_all(
             condition="climate.is_cooling",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.COOLING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         ),
-        *parametrize_condition_states(
+        *parametrize_condition_states_all(
             condition="climate.is_drying",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.DRYING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         ),
-        *parametrize_condition_states(
+        *parametrize_condition_states_all(
             condition="climate.is_heating",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
@@ -307,17 +301,10 @@ async def test_climate_attribute_condition_behavior_all(
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        # The condition passes if all entities are either in a target state or invalid
-        assert condition(hass) == (
-            (not state["state_valid"])
-            or (state["condition_true"] and entities_in_target == 1)
-        )
+        assert condition(hass) == state["condition_true_first_entity"]
 
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
 
-        # The condition passes if all entities are either in a target state or invalid
-        assert condition(hass) == (
-            (not state["state_valid"]) or state["condition_true"]
-        )
+        assert condition(hass) == state["condition_true"]
