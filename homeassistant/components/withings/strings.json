@@ -21,6 +21,9 @@
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
+    },
     "step": {
       "oauth_discovery": {
         "description": "Home Assistant has found a Withings device on your network. Be aware that the setup of Withings is more complicated than many other integrations. Press **Submit** to continue setting up Withings."
