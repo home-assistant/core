@@ -168,7 +168,6 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "service_calls": "list[ServiceCall]",
     "snapshot": "SnapshotAssertion",
     "socket_enabled": "None",
-    "stub_blueprint_populate": "None",
     "tmp_path": "Path",
     "tmpdir": "py.path.local",
     "tts_mutagen_mock": "MagicMock",

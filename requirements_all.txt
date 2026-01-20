@@ -1171,7 +1171,7 @@ habluetooth==5.8.0
 hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
-hass-nabucasa==1.9.0
+hass-nabucasa==1.11.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -2045,7 +2045,7 @@ pyfibaro==0.8.3
 pyfido==2.1.2
 
 # homeassistant.components.firefly_iii
-pyfirefly==0.1.11
+pyfirefly==0.1.12
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.46
@@ -2377,7 +2377,7 @@ pysabnzbd==1.1.1
 pysaj==0.0.16
 
 # homeassistant.components.saunum
-pysaunum==0.2.0
+pysaunum==0.3.0
 
 # homeassistant.components.schlage
 pyschlage==2025.9.0
@@ -3170,7 +3170,7 @@ wallbox==0.9.0
 watchdog==6.0.0
 
 # homeassistant.components.waterfurnace
-waterfurnace==1.2.0
+waterfurnace==1.4.0
 
 # homeassistant.components.watergate
 watergate-local-api==2025.1.0
