@@ -49,9 +49,7 @@ INPUT_SOURCES = {
 }
 
 # Map sound mode names to command codes
-SOUND_MODES = {
-    mode.label: command for command, mode in TonewinnerCommands.MODES.items()
-}
+SOUND_MODES = {mode.label: mode.command for mode in TonewinnerCommands.MODES.values()}
 
 
 # Service registration schema
