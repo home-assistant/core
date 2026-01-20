@@ -47,6 +47,9 @@ async def async_setup_entry(
 class WyomingTtsProvider(tts.TextToSpeechEntity):
     """Wyoming text-to-speech provider."""
 
+    _attr_default_options = {}
+    _attr_supported_options = [tts.ATTR_AUDIO_OUTPUT, tts.ATTR_VOICE, ATTR_SPEAKER]
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -82,13 +85,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         if self._attr_supported_languages:
             self._attr_default_language = self._attr_supported_languages[0]
 
-        self._attr_default_options = {}
         self._attr_name = self._tts_service.name
-        self._attr_supported_options = [
-            tts.ATTR_AUDIO_OUTPUT,
-            tts.ATTR_VOICE,
-            ATTR_SPEAKER,
-        ]
         self._attr_unique_id = f"{config_entry.entry_id}-tts"
 
     @callback
