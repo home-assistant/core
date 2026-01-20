@@ -2,7 +2,7 @@
 
 from switchbot_api import Device
 
-from homeassistant.components.switchbot_cloud.const import DOMAIN
+from homeassistant.components.switchbot_cloud.const import CONF_WEBHOOK_DOMAIN, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 
@@ -14,6 +14,44 @@ async def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
     config = {
         CONF_API_TOKEN: "test-token",
         CONF_API_KEY: "test-api-key",
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=config, entry_id="123456", unique_id="123456"
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return entry
+
+
+async def configure_integration_with_custom_webhook1(
+    hass: HomeAssistant,
+) -> MockConfigEntry:
+    """Configure the integration with domain."""
+    config = {
+        CONF_API_TOKEN: "test-token",
+        CONF_API_KEY: "test-api-key",
+        CONF_WEBHOOK_DOMAIN: "http://localhost:8123",
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=config, entry_id="123456", unique_id="123456"
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return entry
+
+
+async def configure_integration_with_custom_webhook2(
+    hass: HomeAssistant,
+) -> MockConfigEntry:
+    """Configure the integration with wrong format domain."""
+    config = {
+        CONF_API_TOKEN: "test-token",
+        CONF_API_KEY: "test-api-key",
+        CONF_WEBHOOK_DOMAIN: "www.switchbot.com",
     }
     entry = MockConfigEntry(
         domain=DOMAIN, data=config, entry_id="123456", unique_id="123456"

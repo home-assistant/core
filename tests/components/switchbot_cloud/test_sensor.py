@@ -82,6 +82,7 @@ async def test_plug_mini_eu(
     [
         "Meter",
         "Plug Mini (EU)",
+        "Climate Panel",
     ],
 )
 async def test_no_coordinator_data(
