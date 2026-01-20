@@ -30,6 +30,12 @@ async def target_sirens(hass: HomeAssistant) -> list[str]:
     return (await target_entities(hass, "siren"))["included"]
 
 
+@pytest.fixture
+async def target_switches(hass: HomeAssistant) -> list[str]:
+    """Create multiple switch entities associated with different targets."""
+    return (await target_entities(hass, "switch"))["included"]
+
+
 @pytest.mark.parametrize(
     "condition",
     [
@@ -67,6 +73,7 @@ async def test_siren_conditions_gated_by_labs_flag(
 async def test_siren_state_condition_behavior_any(
     hass: HomeAssistant,
     target_sirens: list[str],
+    target_switches: list[str],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -88,6 +95,13 @@ async def test_siren_state_condition_behavior_any(
         target=condition_target_config,
         behavior="any",
     )
+
+    # Set state for switches to ensure that they don't impact the condition
+    for state in states:
+        for eid in target_switches:
+            set_or_remove_state(hass, eid, state["included"])
+            await hass.async_block_till_done()
+            assert condition(hass) is False
 
     for state in states:
         included_state = state["included"]
@@ -133,6 +147,9 @@ async def test_siren_state_condition_behavior_all(
     states: list[ConditionStateDescription],
 ) -> None:
     """Test the siren state condition with the 'all' behavior."""
+    # Set state for two switches to ensure that they don't impact the condition
+    hass.states.async_set("switch.label_switch_1", STATE_OFF)
+    hass.states.async_set("switch.label_switch_2", STATE_ON)
     other_entity_ids = set(target_sirens) - {entity_id}
 
     # Set all sirens, including the tested siren, to the initial state
