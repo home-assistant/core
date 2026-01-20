@@ -122,6 +122,30 @@ async def test_create_floor(
         "level": 2,
     }
 
+    # Floor with invalid aliases
+    await client.send_json_auto_id(
+        {
+            "name": "Third floor",
+            "type": "config/floor_registry/create",
+            "aliases": ["", " "],
+            "icon": "mdi:home-floor-2",
+            "level": 3,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert len(floor_registry.floors) == 3
+    assert msg["result"] == {
+        "aliases": [],
+        "created_at": utcnow().timestamp(),
+        "icon": "mdi:home-floor-2",
+        "floor_id": "third_floor",
+        "modified_at": utcnow().timestamp(),
+        "name": "Third floor",
+        "level": 3,
+    }
+
 
 async def test_create_floor_with_name_already_in_use(
     client: MockHAClientWebSocket,
@@ -241,6 +265,60 @@ async def test_update_floor(
     assert len(floor_registry.floors) == 1
     assert msg["result"] == {
         "aliases": [],
+        "created_at": created_at.timestamp(),
+        "icon": None,
+        "floor_id": floor.floor_id,
+        "modified_at": modified_at.timestamp(),
+        "name": "First floor",
+        "level": None,
+    }
+
+    # Add invalid aliases
+    modified_at = datetime.fromisoformat("2024-07-16T13:55:00.900075+00:00")
+    freezer.move_to(modified_at)
+    await client.send_json_auto_id(
+        {
+            "floor_id": floor.floor_id,
+            "name": "First floor",
+            "aliases": ["top floor", "attic", "", " "],
+            "icon": None,
+            "level": None,
+            "type": "config/floor_registry/update",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert len(floor_registry.floors) == 1
+    assert msg["result"] == {
+        "aliases": unordered(["top floor", "attic"]),
+        "created_at": created_at.timestamp(),
+        "icon": None,
+        "floor_id": floor.floor_id,
+        "modified_at": modified_at.timestamp(),
+        "name": "First floor",
+        "level": None,
+    }
+
+    # Add alias with trailing and leading whitespaces
+    modified_at = datetime.fromisoformat("2024-07-16T13:55:00.900075+00:00")
+    freezer.move_to(modified_at)
+    await client.send_json_auto_id(
+        {
+            "floor_id": floor.floor_id,
+            "name": "First floor",
+            "aliases": ["top floor", "attic", "solaio "],
+            "icon": None,
+            "level": None,
+            "type": "config/floor_registry/update",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert len(floor_registry.floors) == 1
+    assert msg["result"] == {
+        "aliases": unordered(["top floor", "attic", "solaio"]),
         "created_at": created_at.timestamp(),
         "icon": None,
         "floor_id": floor.floor_id,

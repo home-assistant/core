@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components import blueprint
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
     CONF_ICON,
@@ -132,6 +133,9 @@ def rewrite_legacy_to_modern_config(
 ) -> dict[str, Any]:
     """Rewrite legacy config."""
     entity_cfg = {**entity_cfg}
+
+    # Remove deprecated entity_id field from legacy syntax
+    entity_cfg.pop(ATTR_ENTITY_ID, None)
 
     for from_key, to_key in itertools.chain(
         LEGACY_FIELDS.items(), extra_legacy_fields.items()
@@ -269,7 +273,9 @@ def create_legacy_template_issue(
     try:
         config.pop(CONF_PLATFORM, None)
         modified_yaml = format_migration_config(config)
-        yaml_config = yaml_util.dump({DOMAIN: [{domain: [modified_yaml]}]})
+        yaml_config = (
+            f"```\n{yaml_util.dump({DOMAIN: [{domain: [modified_yaml]}]})}\n```"
+        )
     except RecursionError:
         yaml_config = f"{DOMAIN}:\n  - {domain}:      - ..."
 

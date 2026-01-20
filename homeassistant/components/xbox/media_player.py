@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .browse_media import build_item_response
@@ -57,15 +57,29 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox media_player from a config entry."""
+    devices_added: set[str] = set()
 
-    coordinator = entry.runtime_data.status
+    status = entry.runtime_data.status
+    consoles = entry.runtime_data.consoles
 
-    async_add_entities(
-        [
-            XboxMediaPlayer(console, coordinator)
-            for console in coordinator.consoles.result
-        ]
-    )
+    @callback
+    def add_entities() -> None:
+        nonlocal devices_added
+
+        new_devices = set(consoles.data) - devices_added
+
+        if new_devices:
+            async_add_entities(
+                [
+                    XboxMediaPlayer(consoles.data[console_id], status)
+                    for console_id in new_devices
+                ]
+            )
+            devices_added |= new_devices
+        devices_added &= set(consoles.data)
+
+    entry.async_on_unload(consoles.async_add_listener(add_entities))
+    add_entities()
 
 
 class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
@@ -143,6 +157,8 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
             await self.client.smartglass.mute(self._console.id)
         else:
             await self.client.smartglass.unmute(self._console.id)
+        self._attr_is_volume_muted = mute
+        self.async_write_ha_state()
 
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""

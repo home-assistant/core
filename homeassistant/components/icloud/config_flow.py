@@ -16,7 +16,7 @@ from pyicloud.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.storage import Store
 
@@ -155,8 +155,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
         }
 
-        # If this is a password update attempt, update the entry instead of creating one
-        if step_id == "user":
+        # If this is a password update attempt, don't try and creating one
+        if self.source == SOURCE_USER:
             return self.async_create_entry(title=self._username, data=data)
 
         entry = await self.async_set_unique_id(self.unique_id)

@@ -74,6 +74,27 @@ UNSUPPORTED_IMAGE_MODELS: list[str] = [
     "gpt-4-turbo",
 ]
 
+UNSUPPORTED_CODE_INTERPRETER_MODELS: list[str] = [
+    "gpt-5-pro",
+    "gpt-5.2-pro",
+    "gpt-5-codex",
+    "gpt-5.1-codex",
+    "gpt-5.2-codex",
+]
+
+UNSUPPORTED_EXTENDED_CACHE_RETENTION_MODELS: list[str] = [
+    "o1",
+    "o3",
+    "o4",
+    "gpt-3.5",
+    "gpt-4-turbo",
+    "gpt-4o",
+    "gpt-4.1-mini",
+    "gpt-4.1-nano",
+    "gpt-5-mini",
+    "gpt-5-nano",
+]
+
 RECOMMENDED_CONVERSATION_OPTIONS = {
     CONF_RECOMMENDED: True,
     CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
