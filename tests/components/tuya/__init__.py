@@ -53,7 +53,7 @@ class MockDeviceListener(DeviceListener):
 
 
 async def create_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
-    """Mock a Tuya CustomerDevice."""
+    """Create a CustomerDevice for testing."""
     details = await async_load_json_object_fixture(
         hass, f"{mock_device_code}.json", DOMAIN
     )

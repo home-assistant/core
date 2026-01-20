@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
@@ -21,10 +23,43 @@ from . import DEVICE_MOCKS, create_device, create_manager, initialize_entry
 from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
-async def test_multiple_entries(
+async def test_registry_cleanup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+) -> None:
+    """Ensure no-longer-present devices are removed from the device registry."""
+    # Initialize with two devices
+    main_manager = create_manager()
+    main_device = await create_device(hass, "mcs_8yhypbo7")
+    second_device = await create_device(hass, "clkg_y7j64p60glp8qpx7")
+    await initialize_entry(
+        hass, main_manager, mock_config_entry, [main_device, second_device]
+    )
+
+    # Initialize should have two devices
+    all_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(all_entries) == 2
+
+    # Now remove the second device from the manager and re-initialize
+    del main_manager.device_map[second_device.id]
+    with patch("homeassistant.components.tuya.Manager", return_value=main_manager):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Only the main device should remain
+    all_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(all_entries) == 1
+    assert all_entries[0].identifiers == {(DOMAIN, main_device.id)}
+
+
+async def test_registry_cleanup_multiple_entries(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Ensure multiple config entries do not remove items from other entries."""
