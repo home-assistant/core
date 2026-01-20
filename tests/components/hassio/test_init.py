@@ -1,7 +1,6 @@
 """The tests for the hassio component."""
 
 from datetime import timedelta
-import logging
 import os
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -13,15 +12,13 @@ import pytest
 from voluptuous import Invalid
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components import frontend, hassio
+from homeassistant.components import frontend
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.hassio import (
     ADDONS_COORDINATOR,
     DOMAIN,
     get_core_info,
-    get_supervisor_ip,
     hostname_from_addon_slug,
-    is_hassio as deprecated_is_hassio,
 )
 from homeassistant.components.hassio.config import STORAGE_KEY
 from homeassistant.components.hassio.const import (
@@ -32,15 +29,10 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.hassio import is_hassio
-from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    import_and_test_deprecated_constant,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
@@ -264,6 +256,27 @@ async def test_setup_api_panel(
         },
         "url_path": "hassio",
         "require_admin": True,
+        "config_panel_domain": None,
+    }
+
+
+async def test_setup_app_panel(hass: HomeAssistant) -> None:
+    """Test app panel is registered."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+        assert result
+
+    panels = hass.data[frontend.DATA_PANELS]
+
+    assert panels.get("app").to_response() == {
+        "component_name": "app",
+        "icon": None,
+        "title": None,
+        "default_visible": True,
+        "config": None,
+        "url_path": "app",
+        "require_admin": False,
         "config_panel_domain": None,
     }
 
@@ -1086,69 +1099,6 @@ def test_hostname_from_addon_slug() -> None:
     assert (
         hostname_from_addon_slug("core_silabs_multiprotocol")
         == "core-silabs-multiprotocol"
-    )
-
-
-def test_deprecated_function_is_hassio(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test calling deprecated_is_hassio function will create log entry."""
-
-    deprecated_is_hassio(hass)
-    assert caplog.record_tuples == [
-        (
-            "homeassistant.components.hassio",
-            logging.WARNING,
-            "The deprecated function is_hassio was called. It will be "
-            "removed in HA Core 2025.11. Use homeassistant.helpers"
-            ".hassio.is_hassio instead",
-        )
-    ]
-
-
-def test_deprecated_function_get_supervisor_ip(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test calling get_supervisor_ip function will create log entry."""
-
-    get_supervisor_ip()
-    assert caplog.record_tuples == [
-        (
-            "homeassistant.helpers.hassio",
-            logging.WARNING,
-            "The deprecated function get_supervisor_ip was called. It will "
-            "be removed in HA Core 2025.11. Use homeassistant.helpers"
-            ".hassio.get_supervisor_ip instead",
-        )
-    ]
-
-
-@pytest.mark.parametrize(
-    ("constant_name", "replacement_name", "replacement"),
-    [
-        (
-            "HassioServiceInfo",
-            "homeassistant.helpers.service_info.hassio.HassioServiceInfo",
-            HassioServiceInfo,
-        ),
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    constant_name: str,
-    replacement_name: str,
-    replacement: Any,
-) -> None:
-    """Test deprecated automation constants."""
-    import_and_test_deprecated_constant(
-        caplog,
-        hassio,
-        constant_name,
-        replacement_name,
-        replacement,
-        "2025.11",
     )
 
 

@@ -1,17 +1,15 @@
 """Test vacuum triggers."""
 
-from collections.abc import Generator
-from unittest.mock import patch
+from typing import Any
 
 import pytest
 
 from homeassistant.components.vacuum import VacuumActivity
 from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     other_states,
     parametrize_target_entities,
@@ -19,21 +17,6 @@ from tests.components import (
     set_or_remove_state,
     target_entities,
 )
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture(name="enable_experimental_triggers_conditions")
-def enable_experimental_triggers_conditions() -> Generator[None]:
-    """Enable experimental triggers and conditions."""
-    with patch(
-        "homeassistant.components.labs.async_is_preview_feature_enabled",
-        return_value=True,
-    ):
-        yield
 
 
 @pytest.fixture
@@ -49,6 +32,7 @@ async def target_vacuums(hass: HomeAssistant) -> list[str]:
         "vacuum.errored",
         "vacuum.paused_cleaning",
         "vacuum.started_cleaning",
+        "vacuum.started_returning",
     ],
 )
 async def test_vacuum_triggers_gated_by_labs_flag(
@@ -64,13 +48,13 @@ async def test_vacuum_triggers_gated_by_labs_flag(
     ) in caplog.text
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("vacuum"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="vacuum.docked",
@@ -92,6 +76,11 @@ async def test_vacuum_triggers_gated_by_labs_flag(
             target_states=[VacuumActivity.CLEANING],
             other_states=other_states(VacuumActivity.CLEANING),
         ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_returning",
+            target_states=[VacuumActivity.RETURNING],
+            other_states=other_states(VacuumActivity.RETURNING),
+        ),
     ],
 )
 async def test_vacuum_state_trigger_behavior_any(
@@ -102,11 +91,10 @@ async def test_vacuum_state_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the vacuum state trigger fires when any vacuum state changes to a specific state."""
-    await async_setup_component(hass, "vacuum", {})
-
     other_entity_ids = set(target_vacuums) - {entity_id}
 
     # Set all vacuums, including the tested one, to the initial state
@@ -133,13 +121,13 @@ async def test_vacuum_state_trigger_behavior_any(
         service_calls.clear()
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("vacuum"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="vacuum.docked",
@@ -161,6 +149,11 @@ async def test_vacuum_state_trigger_behavior_any(
             target_states=[VacuumActivity.CLEANING],
             other_states=other_states(VacuumActivity.CLEANING),
         ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_returning",
+            target_states=[VacuumActivity.RETURNING],
+            other_states=other_states(VacuumActivity.RETURNING),
+        ),
     ],
 )
 async def test_vacuum_state_trigger_behavior_first(
@@ -171,11 +164,10 @@ async def test_vacuum_state_trigger_behavior_first(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the vacuum state trigger fires when the first vacuum changes to a specific state."""
-    await async_setup_component(hass, "vacuum", {})
-
     other_entity_ids = set(target_vacuums) - {entity_id}
 
     # Set all vacuums, including the tested one, to the initial state
@@ -201,13 +193,13 @@ async def test_vacuum_state_trigger_behavior_first(
         assert len(service_calls) == 0
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("vacuum"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="vacuum.docked",
@@ -229,6 +221,11 @@ async def test_vacuum_state_trigger_behavior_first(
             target_states=[VacuumActivity.CLEANING],
             other_states=other_states(VacuumActivity.CLEANING),
         ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_returning",
+            target_states=[VacuumActivity.RETURNING],
+            other_states=other_states(VacuumActivity.RETURNING),
+        ),
     ],
 )
 async def test_vacuum_state_trigger_behavior_last(
@@ -239,11 +236,10 @@ async def test_vacuum_state_trigger_behavior_last(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the vacuum state trigger fires when the last vacuum changes to a specific state."""
-    await async_setup_component(hass, "vacuum", {})
-
     other_entity_ids = set(target_vacuums) - {entity_id}
 
     # Set all vacuums, including the tested one, to the initial state

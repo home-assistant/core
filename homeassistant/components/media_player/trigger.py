@@ -1,7 +1,7 @@
 """Provides triggers for media players."""
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.trigger import Trigger, make_conditional_entity_state_trigger
+from homeassistant.helpers.trigger import Trigger, make_entity_transition_trigger
 
 from . import MediaPlayerState
 from .const import DOMAIN
@@ -28,7 +28,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
             MediaPlayerState.PLAYING,
         },
     ),
-    "stopped_playing": make_conditional_entity_state_trigger(
+    "stopped_playing": make_entity_transition_trigger(
         DOMAIN,
         from_states={
             MediaPlayerState.BUFFERING,

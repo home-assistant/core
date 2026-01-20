@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -37,6 +38,7 @@
 # name: test_state_entity_device_snapshots[device_tracker.fluffy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'entity_picture': 'http://res.cloudinary.com/iot-venture/image/upload/v1717594357/kyaqq7nfitrdvaoakb8s.jpg',
       'friendly_name': 'Fluffy',
       'gps_accuracy': 10.0,
       'latitude': 52.520008,

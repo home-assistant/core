@@ -24,18 +24,14 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: todo
-    comment: Update server URL dropdown to show regional descriptions (e.g., 'China', 'United States') instead of raw URLs.
+  docs-configuration-parameters: done
   docs-installation-parameters: todo
-  entity-unavailable:
-    status: todo
-    comment: Replace bare Exception catches in __init__.py with specific growattServer exceptions.
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: todo
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices:
