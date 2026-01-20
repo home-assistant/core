@@ -144,6 +144,11 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.DOOR,
         value_getter=lambda api: api.isValveOpen(),
     ),
+    ViCareBinarySensorEntityDescription(
+        key="ventilation_frost_protection",
+        translation_key="ventilation_frost_protection",
+        value_getter=lambda api: api.getHeatExchangerFrostProtectionActive(),
+    ),
 )
 
 

@@ -223,6 +223,12 @@
           "0": "mdi:volume-off"
         }
       },
+      "audio_noise_reduction": {
+        "default": "mdi:volume-vibrate",
+        "state": {
+          "0": "mdi:volume-variant-off"
+        }
+      },
       "auto_quick_reply_time": {
         "default": "mdi:message-reply-text-outline"
       },
@@ -310,6 +316,9 @@
       "motion_sensitivity": {
         "default": "mdi:motion-sensor"
       },
+      "pir_interval": {
+        "default": "mdi:motion-sensor"
+      },
       "pir_sensitivity": {
         "default": "mdi:motion-sensor"
       },
@@ -362,6 +371,9 @@
       },
       "day_night_mode": {
         "default": "mdi:theme-light-dark"
+      },
+      "exposure": {
+        "default": "mdi:camera-iris"
       },
       "floodlight_event_mode": {
         "default": "mdi:spotlight-beam"

@@ -38,6 +38,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.deprecation import deprecated_function
 
 # Distance conversion constants
 _MM_TO_M = 0.001  # 1 mm = 0.001 m
@@ -68,7 +69,8 @@ _HECTARE_TO_M2 = 100 * 100  # 1 hectare = 10,000 m²
 _MIN_TO_SEC = 60  # 1 min = 60 seconds
 _HRS_TO_MINUTES = 60  # 1 hr = 60 minutes
 _HRS_TO_SECS = _HRS_TO_MINUTES * _MIN_TO_SEC  # 1 hr = 60 minutes = 3600 seconds
-_DAYS_TO_SECS = 24 * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
+_DAYS_TO_HRS = 24  # 1 day = 24 hours
+_DAYS_TO_SECS = _DAYS_TO_HRS * _HRS_TO_SECS  # 1 day = 24 hours = 86400 seconds
 
 # Energy conversion constants
 _WH_TO_J = 3600  # 1 Wh = 3600 J
@@ -101,6 +103,7 @@ _AMBIENT_IDEAL_GAS_MOLAR_VOLUME = (  # m3⋅mol⁻¹
 )
 # Molar masses in g⋅mol⁻¹
 _CARBON_MONOXIDE_MOLAR_MASS = 28.01
+_SULPHUR_DIOXIDE_MOLAR_MASS = 64.066
 
 
 class BaseUnitConverter:
@@ -153,7 +156,11 @@ class BaseUnitConverter:
             return lambda value: value
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
         if cls._are_unit_inverses(from_unit, to_unit):
-            return lambda val: None if val is None else to_ratio / (val / from_ratio)
+            return (
+                lambda val: None
+                if val is None or val == 0
+                else to_ratio / (val / from_ratio)
+            )
         return lambda val: None if val is None else (val / from_ratio) * to_ratio
 
     @classmethod
@@ -198,6 +205,22 @@ class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    }
+
+
+class SulphurDioxideConcentrationConverter(BaseUnitConverter):
+    """Convert sulphur dioxide ratio to mass per volume."""
+
+    UNIT_CLASS = "sulphur_dioxide"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        CONCENTRATION_PARTS_PER_BILLION: 1e9,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+            _SULPHUR_DIOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
+        ),
+    }
+    VALID_UNITS = {
+        CONCENTRATION_PARTS_PER_BILLION,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
 
@@ -707,6 +730,9 @@ class TemperatureConverter(BaseUnitConverter):
         )
 
     @classmethod
+    @deprecated_function(
+        "TemperatureDeltaConverter.convert", breaks_in_ha_version="2026.12.0"
+    )
     def convert_interval(cls, interval: float, from_unit: str, to_unit: str) -> float:
         """Convert a temperature interval from one unit to another.
 
@@ -848,6 +874,7 @@ class VolumeFlowRateConverter(BaseUnitConverter):
         UnitOfVolumeFlowRate.GALLONS_PER_HOUR: 1 / _GALLON_TO_CUBIC_METER,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 1
         / (_HRS_TO_MINUTES * _GALLON_TO_CUBIC_METER),
+        UnitOfVolumeFlowRate.GALLONS_PER_DAY: _DAYS_TO_HRS / _GALLON_TO_CUBIC_METER,
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 1
         / (_HRS_TO_SECS * _ML_TO_CUBIC_METER),
     }
@@ -861,6 +888,7 @@ class VolumeFlowRateConverter(BaseUnitConverter):
         UnitOfVolumeFlowRate.LITERS_PER_SECOND,
         UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
         UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        UnitOfVolumeFlowRate.GALLONS_PER_DAY,
         UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
     }
 

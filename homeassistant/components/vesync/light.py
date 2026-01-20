@@ -6,6 +6,7 @@ from typing import Any
 from pyvesync.base_devices.bulb_base import VeSyncBulb
 from pyvesync.base_devices.switch_base import VeSyncSwitch
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -13,32 +14,33 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY, VS_MANAGER
-from .coordinator import VeSyncDataCoordinator
+from .const import VS_DEVICES, VS_DISCOVERY
+from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 MAX_MIREDS = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
 MIN_MIREDS = 153  # 1,000,000 divided by 6500 Kelvin = 153 Mireds
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VesyncConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up lights."""
 
-    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+    coordinator = config_entry.runtime_data
 
     @callback
-    def discover(devices):
+    def discover(devices: list[VeSyncBaseDevice]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -47,16 +49,16 @@ async def async_setup_entry(
     )
 
     _setup_entities(
-        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+        config_entry.runtime_data.manager.devices, async_add_entities, coordinator
     )
 
 
 @callback
 def _setup_entities(
-    devices: list[VeSyncBaseDevice],
-    async_add_entities,
+    devices: DeviceContainer | list[VeSyncBaseDevice],
+    async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
-):
+) -> None:
     """Check if device is a light and add entity."""
     entities: list[VeSyncBaseLightHA] = []
     for dev in devices:
@@ -145,10 +147,12 @@ class VeSyncBaseLightHA(VeSyncBaseEntity, LightEntity):
             return
         # send turn_on command to pyvesync api
         await self.device.turn_on()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.device.turn_off()
+        self.async_write_ha_state()
 
 
 class VeSyncDimmableLightHA(VeSyncBaseLightHA, LightEntity):

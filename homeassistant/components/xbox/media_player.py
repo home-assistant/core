@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from xbox.webapi.api.provider.catalog.models import Image
-from xbox.webapi.api.provider.smartglass.models import (
+from pythonxbox.api.provider.catalog.models import Image
+from pythonxbox.api.provider.smartglass.models import (
     PlaybackState,
     PowerState,
     VolumeDirection,
@@ -18,12 +18,14 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .browse_media import build_item_response
 from .coordinator import XboxConfigEntry
 from .entity import XboxConsoleBaseEntity
+
+PARALLEL_UPDATES = 1
 
 SUPPORT_XBOX = (
     MediaPlayerEntityFeature.TURN_ON
@@ -55,15 +57,29 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox media_player from a config entry."""
+    devices_added: set[str] = set()
 
-    coordinator = entry.runtime_data
+    status = entry.runtime_data.status
+    consoles = entry.runtime_data.consoles
 
-    async_add_entities(
-        [
-            XboxMediaPlayer(console, coordinator)
-            for console in coordinator.consoles.result
-        ]
-    )
+    @callback
+    def add_entities() -> None:
+        nonlocal devices_added
+
+        new_devices = set(consoles.data) - devices_added
+
+        if new_devices:
+            async_add_entities(
+                [
+                    XboxMediaPlayer(consoles.data[console_id], status)
+                    for console_id in new_devices
+                ]
+            )
+            devices_added |= new_devices
+        devices_added &= set(consoles.data)
+
+    entry.async_on_unload(consoles.async_add_listener(add_entities))
+    add_entities()
 
 
 class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
@@ -98,6 +114,11 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         if app_details and app_details.product_family == "Games":
             return MediaType.GAME
         return MediaType.APP
+
+    @property
+    def media_content_id(self) -> str | None:
+        """Content ID of current playing media."""
+        return self.data.app_details.product_id if self.data.app_details else None
 
     @property
     def media_title(self) -> str | None:
@@ -136,6 +157,8 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
             await self.client.smartglass.mute(self._console.id)
         else:
             await self.client.smartglass.unmute(self._console.id)
+        self._attr_is_volume_muted = mute
+        self.async_write_ha_state()
 
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
@@ -171,10 +194,9 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         return await build_item_response(
             self.client,
             self._console.id,
-            self.data.status.is_tv_configured,
-            media_content_type or "",
-            media_content_id or "",
-        )  # type: ignore[return-value]
+            media_content_type,
+            media_content_id,
+        )
 
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -182,10 +204,8 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
         """Launch an app on the Xbox."""
         if media_id == "Home":
             await self.client.smartglass.go_home(self._console.id)
-        elif media_id == "TV":
-            await self.client.smartglass.show_tv_guide(self._console.id)
-        else:
-            await self.client.smartglass.launch_app(self._console.id, media_id)
+
+        await self.client.smartglass.launch_app(self._console.id, media_id)
 
 
 def _find_media_image(images: list[Image]) -> Image | None:

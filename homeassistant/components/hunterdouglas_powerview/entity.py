@@ -3,6 +3,7 @@
 import logging
 
 from aiopvapi.resources.shade import BaseShade, ShadePosition
+from aiopvapi.resources.shade_data import PowerviewShadeData
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -11,7 +12,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .model import PowerviewDeviceInfo
-from .shade_data import PowerviewShadeData
 
 _LOGGER = logging.getLogger(__name__)
 

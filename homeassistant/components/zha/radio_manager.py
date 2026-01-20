@@ -78,6 +78,7 @@ HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
         vol.Required("port"): DEVICE_SCHEMA,
         vol.Required("radio_type"): str,
         vol.Optional("flow_strategy"): vol.All(str, vol.Coerce(ZigbeeFlowStrategy)),
+        vol.Optional("tx_power"): vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
     }
 )
 

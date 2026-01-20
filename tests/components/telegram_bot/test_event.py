@@ -37,4 +37,5 @@ async def test_send_message(
     await hass.async_block_till_done()
 
     state = hass.states.get("event.mock_title_update_event")
+    assert state is not None
     assert state.attributes == snapshot(exclude=props("config_entry_id"))

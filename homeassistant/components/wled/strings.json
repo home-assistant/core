@@ -1,11 +1,18 @@
 {
+  "common": {
+    "unsupported_version": "The WLED device's firmware version is not supported."
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "MAC address does not match the configured device. Expected to connect to device with MAC: `{expected_mac}`, but connected to device with MAC: `{actual_mac}`. \n\nPlease ensure you reconfigure against the same device.",
+      "unsupported_version": "[%key:component::wled::common::unsupported_version%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unsupported_version": "[%key:component::wled::common::unsupported_version%]"
     },
     "flow_title": "{name}",
     "step": {
@@ -124,11 +131,31 @@
       }
     }
   },
+  "exceptions": {
+    "connection_error": {
+      "message": "Error communicating with WLED API: {error}"
+    },
+    "invalid_response_github_error": {
+      "message": "Invalid response from GitHub API: {error}"
+    },
+    "invalid_response_wled_error": {
+      "message": "Invalid response from WLED API: {error}"
+    },
+    "mac_address_mismatch": {
+      "message": "MAC address does not match the configured device. Expected to connect to device with MAC: {expected_mac}, but connected to device with MAC: {actual_mac}."
+    },
+    "unsupported_version": {
+      "message": "The WLED device's firmware version is not supported: {error}"
+    }
+  },
   "options": {
     "step": {
       "init": {
         "data": {
           "keep_master_light": "Add 'Main' control even with single LED segment"
+        },
+        "data_description": {
+          "keep_master_light": "Ensures the main light control is always available when you are dynamically adding and removing segments through automation."
         }
       }
     }
