@@ -1,0 +1,74 @@
+{
+    "items": [
+        {
+            "deviceId": "hot_water_mat_id",
+            "name": "Hot Water Mat",
+            "label": "Hot Water Mat",
+            "manufacturerName": "Custom Manufacturer",
+            "presentationId": "custom-presentation-id",
+            "deviceManufacturerCode": "Custom",
+            "locationId": "location_id",
+            "ownerId": "owner_id",
+            "roomId": "room_id",
+            "components": [
+                {
+                    "id": "main",
+                    "label": "main",
+                    "capabilities": [
+                        {
+                            "id": "switch",
+                            "version": 1
+                        },
+                        {
+                            "id": "healthCheck",
+                            "version": 1
+                        }
+                    ],
+                    "categories": []
+                },
+                {
+                    "id": "Left",
+                    "label": "Left Side",
+                    "capabilities": [
+                        {
+                            "id": "switch",
+                            "version": 1
+                        },
+                        {
+                            "id": "thermostatHeatingSetpoint",
+                            "version": 1
+                        },
+                        {
+                            "id": "temperatureMeasurement",
+                            "version": 1
+                        }
+                    ],
+                    "categories": []
+                },
+                {
+                    "id": "Right",
+                    "label": "Right Side",
+                    "capabilities": [
+                        {
+                            "id": "switch",
+                            "version": 1
+                        },
+                        {
+                            "id": "thermostatHeatingSetpoint",
+                            "version": 1
+                        },
+                        {
+                            "id": "temperatureMeasurement",
+                            "version": 1
+                        }
+                    ],
+                    "categories": []
+                }
+            ],
+            "createTime": "2021-04-06T16:43:34.753Z",
+            "type": "DTH",
+            "restrictionTier": 0
+        }
+    ],
+    "_links": {}
+}
