@@ -18,6 +18,17 @@ GITHUB_REPO = "home-assistant/frontend"
 ARTIFACT_NAME = "frontend-build"
 CACHE_WARNING_SIZE_MB = 500
 
+# Error messages
+ERROR_INVALID_TOKEN = (
+    "GitHub token is invalid or expired. "
+    "Please check your github_token in the frontend configuration. "
+    "Generate a new token at https://github.com/settings/tokens"
+)
+ERROR_RATE_LIMIT = (
+    "GitHub API rate limit exceeded or token lacks permissions. "
+    "Ensure your token has 'repo' or 'public_repo' scope"
+)
+
 
 def _get_directory_size_mb(directory: pathlib.Path) -> float:
     """Calculate total size of directory in MB (runs in executor)."""
@@ -39,21 +50,14 @@ def _get_pr_head_sha(pr_number: int, github_token: str) -> str:
         repo = github_client.get_repo(GITHUB_REPO)
         pull_request = repo.get_pull(pr_number)
     except BadCredentialsException:
-        raise HomeAssistantError(
-            "GitHub token is invalid or expired. "
-            "Please check your github_token in the frontend configuration. "
-            "Generate a new token at https://github.com/settings/tokens"
-        ) from None
+        raise HomeAssistantError(ERROR_INVALID_TOKEN) from None
     except UnknownObjectException:
         raise HomeAssistantError(
             f"PR #{pr_number} does not exist in repository {GITHUB_REPO}"
         ) from None
     except GithubException as err:
         if err.status == 403:
-            raise HomeAssistantError(
-                "GitHub API rate limit exceeded or token lacks permissions. "
-                "Ensure your token has 'repo' or 'public_repo' scope"
-            ) from err
+            raise HomeAssistantError(ERROR_RATE_LIMIT) from err
         raise HomeAssistantError(f"GitHub API error: {err}") from err
     else:
         return pull_request.head.sha
@@ -97,24 +101,14 @@ def _download_artifact_data(artifact_url: str, github_token: str) -> bytes:
         "Accept": "application/vnd.github+json",
     }
 
-    error_messages = {
-        401: (
-            "GitHub token is invalid or expired. "
-            "Please check your github_token in the frontend configuration. "
-            "Generate a new token at https://github.com/settings/tokens"
-        ),
-        403: (
-            "GitHub API rate limit exceeded or token lacks permissions. "
-            "Ensure your token has 'repo' or 'public_repo' scope"
-        ),
-    }
-
     try:
         response = requests.get(artifact_url, headers=headers, timeout=60)
         response.raise_for_status()
     except requests.HTTPError as err:
-        if err.response.status_code in error_messages:
-            raise HomeAssistantError(error_messages[err.response.status_code]) from err
+        if err.response.status_code == 401:
+            raise HomeAssistantError(ERROR_INVALID_TOKEN) from err
+        if err.response.status_code == 403:
+            raise HomeAssistantError(ERROR_RATE_LIMIT) from err
         raise HomeAssistantError(
             f"Failed to download artifact: HTTP {err.response.status_code}"
         ) from err
