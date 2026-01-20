@@ -36,6 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.hass_dict import HassKey
 
+from .pr_download import download_pr_artifact
 from .storage import async_setup_frontend_storage
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,6 +53,10 @@ CONF_EXTRA_MODULE_URL = "extra_module_url"
 CONF_EXTRA_JS_URL_ES5 = "extra_js_url_es5"
 CONF_FRONTEND_REPO = "development_repo"
 CONF_JS_VERSION = "javascript_version"
+CONF_DEVELOPMENT_PR = "development_pr"
+CONF_GITHUB_TOKEN = "github_token"
+
+PR_CACHE_DIR = "frontend_development_pr"
 
 DEFAULT_THEME_COLOR = "#2980b9"
 
@@ -129,7 +134,9 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
+                vol.Optional(CONF_FRONTEND_REPO): cv.path,
+                vol.Optional(CONF_DEVELOPMENT_PR): cv.positive_int,
+                vol.Optional(CONF_GITHUB_TOKEN): cv.string,
                 vol.Optional(CONF_THEMES): vol.All(dict, _validate_themes),
                 vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
                     cv.ensure_list, [cv.string]
@@ -394,7 +401,17 @@ def add_manifest_json_key(key: str, val: Any) -> None:
 def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     """Return root path to the frontend files."""
     if dev_repo_path is not None:
-        return pathlib.Path(dev_repo_path) / "hass_frontend"
+        dev_frontend_path = pathlib.Path(dev_repo_path) / "hass_frontend"
+        if dev_frontend_path.exists() and dev_frontend_path.is_dir():
+            _LOGGER.info("Using frontend development repo: %s", dev_repo_path)
+            return dev_frontend_path
+
+        _LOGGER.error(
+            "Frontend development repo path does not exist: %s, "
+            "falling back to the integrated frontend",
+            dev_repo_path,
+        )
+
     # Keep import here so that we can import frontend without installing reqs
     import hass_frontend  # noqa: PLC0415
 
@@ -421,7 +438,40 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 key,
             )
 
+    # Handle development configuration with priority
     repo_path = conf.get(CONF_FRONTEND_REPO)
+    dev_pr_number = conf.get(CONF_DEVELOPMENT_PR)
+
+    # Priority: development_repo > development_pr > integrated
+    if repo_path and dev_pr_number:
+        _LOGGER.warning(
+            "Both development_repo and development_pr are configured. "
+            "Using development_repo (takes precedence). "
+            "Remove development_repo to use automatic PR download"
+        )
+        dev_pr_number = None  # Disable PR download
+
+    if dev_pr_number:
+        pr_cache_dir = pathlib.Path(hass.config.config_dir) / PR_CACHE_DIR
+        github_token = conf.get(CONF_GITHUB_TOKEN)
+
+        # Download PR artifact
+        dev_pr_dir = await download_pr_artifact(
+            hass, dev_pr_number, github_token, pr_cache_dir
+        )
+
+        if dev_pr_dir is None:
+            _LOGGER.error(
+                "Failed to download PR #%s, falling back to the integrated frontend",
+                dev_pr_number,
+            )
+            repo_path = None
+        else:
+            # frontend_dir is .../frontend_development_pr/<pr_number>/hass_frontend
+            # We need to pass .../frontend_development_pr/<pr_number> to _frontend_root
+            repo_path = str(dev_pr_dir.parent)
+            _LOGGER.info("Using frontend from PR #%s", dev_pr_number)
+
     is_dev = repo_path is not None
     root_path = _frontend_root(repo_path)
 

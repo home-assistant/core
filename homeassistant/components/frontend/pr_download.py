@@ -1,0 +1,251 @@
+"""GitHub PR artifact download functionality for frontend development."""
+
+from __future__ import annotations
+
+import io
+import logging
+import pathlib
+import shutil
+from typing import Any
+import zipfile
+
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+
+_LOGGER = logging.getLogger(__name__)
+
+GITHUB_REPO = "home-assistant/frontend"
+ARTIFACT_NAME = "frontend-build"
+CACHE_WARNING_SIZE_MB = 500
+
+
+def _get_directory_size_mb(directory: pathlib.Path) -> float:
+    """Calculate total size of directory in MB (runs in executor)."""
+    total = sum(f.stat().st_size for f in directory.rglob("*") if f.is_file())
+    return total / (1024 * 1024)
+
+
+def _get_pr_head_sha(pr_number: int, github_token: str) -> str:
+    """Get the head SHA for the PR (runs in executor)."""
+    from github import (  # noqa: PLC0415
+        BadCredentialsException,
+        Github,
+        GithubException,
+        UnknownObjectException,
+    )
+
+    try:
+        github_client = Github(github_token)
+        repo = github_client.get_repo(GITHUB_REPO)
+        pull_request = repo.get_pull(pr_number)
+    except BadCredentialsException:
+        raise HomeAssistantError(
+            "GitHub token is invalid or expired. "
+            "Please check your github_token in the frontend configuration. "
+            "Generate a new token at https://github.com/settings/tokens"
+        ) from None
+    except UnknownObjectException:
+        raise HomeAssistantError(
+            f"PR #{pr_number} does not exist in repository {GITHUB_REPO}"
+        ) from None
+    except GithubException as err:
+        if err.status == 403:
+            raise HomeAssistantError(
+                "GitHub API rate limit exceeded or token lacks permissions. "
+                "Ensure your token has 'repo' or 'public_repo' scope"
+            ) from err
+        raise HomeAssistantError(f"GitHub API error: {err}") from err
+    else:
+        return pull_request.head.sha
+
+
+def _find_pr_artifact(pr_number: int, head_sha: str, github_token: str) -> Any:
+    """Find the build artifact for the given PR and commit SHA (runs in executor)."""
+    from github import Github  # noqa: PLC0415
+
+    github_client = Github(github_token)
+    repo = github_client.get_repo(GITHUB_REPO)
+    workflow = repo.get_workflow("ci.yaml")
+
+    # Find the most recent successful run for this commit
+    for run in workflow.get_runs(head_sha=head_sha):
+        if run.status == "completed" and run.conclusion == "success":
+            # Find the frontend-build artifact
+            for artifact in run.get_artifacts():
+                if artifact.name == ARTIFACT_NAME:
+                    _LOGGER.info(
+                        "Found artifact '%s' from CI run #%s",
+                        ARTIFACT_NAME,
+                        run.id,
+                    )
+                    return artifact
+
+    raise HomeAssistantError(
+        f"No '{ARTIFACT_NAME}' artifact found for PR #{pr_number}. "
+        "Possible reasons: CI has not run yet or is running, "
+        "or the build failed, or the PR artifact expired. "
+        f"Check https://github.com/{GITHUB_REPO}/pull/{pr_number}/checks"
+    )
+
+
+def _download_artifact_data(artifact_url: str, github_token: str) -> bytes:
+    """Download artifact data from GitHub (runs in executor)."""
+    import requests  # noqa: PLC0415
+
+    headers = {
+        "Authorization": f"token {github_token}",
+        "Accept": "application/vnd.github+json",
+    }
+
+    error_messages = {
+        401: (
+            "GitHub token is invalid or expired. "
+            "Please check your github_token in the frontend configuration. "
+            "Generate a new token at https://github.com/settings/tokens"
+        ),
+        403: (
+            "GitHub API rate limit exceeded or token lacks permissions. "
+            "Ensure your token has 'repo' or 'public_repo' scope"
+        ),
+    }
+
+    try:
+        response = requests.get(artifact_url, headers=headers, timeout=60)
+        response.raise_for_status()
+    except requests.HTTPError as err:
+        if err.response.status_code in error_messages:
+            raise HomeAssistantError(error_messages[err.response.status_code]) from err
+        raise HomeAssistantError(
+            f"Failed to download artifact: HTTP {err.response.status_code}"
+        ) from err
+    except requests.Timeout:
+        raise HomeAssistantError(
+            "Timeout downloading artifact (>60s). Check your network connection"
+        ) from None
+    except requests.RequestException as err:
+        raise HomeAssistantError(f"Network error downloading artifact: {err}") from err
+    else:
+        return response.content
+
+
+def _extract_artifact(
+    artifact_data: bytes,
+    pr_dir: pathlib.Path,
+    frontend_dir: pathlib.Path,
+    head_sha: str,
+) -> None:
+    """Extract artifact and save SHA (runs in executor)."""
+    if pr_dir.exists():
+        shutil.rmtree(pr_dir)
+    frontend_dir.mkdir(parents=True, exist_ok=True)
+
+    with zipfile.ZipFile(io.BytesIO(artifact_data)) as zip_file:
+        zip_file.extractall(str(frontend_dir))
+
+    # Save the commit SHA for cache validation
+    sha_file = pr_dir / ".sha"
+    sha_file.write_text(head_sha)
+
+
+async def download_pr_artifact(
+    hass: HomeAssistant,
+    pr_number: int,
+    github_token: str | None,
+    cache_dir: pathlib.Path,
+) -> pathlib.Path | None:
+    """Download and extract frontend PR artifact from GitHub.
+
+    Returns the path to the extracted hass_frontend directory, or None on failure.
+    """
+    # GitHub token is required to download artifacts
+    if not github_token:
+        _LOGGER.error(
+            "GitHub token is required to download PR artifacts. "
+            "Add 'github_token' to your frontend configuration"
+        )
+        return None
+
+    # Get the current head SHA for this PR
+    try:
+        head_sha = await hass.async_add_executor_job(
+            _get_pr_head_sha, pr_number, github_token
+        )
+    except HomeAssistantError as err:
+        _LOGGER.error("%s", err)
+        return None
+
+    # Check if we have this exact version cached
+    pr_dir = cache_dir / str(pr_number)
+    frontend_dir = pr_dir / "hass_frontend"
+    sha_file = pr_dir / ".sha"
+
+    # Check if cached version matches current commit
+    if frontend_dir.exists() and sha_file.exists():
+        cached_sha = await hass.async_add_executor_job(sha_file.read_text)
+        if cached_sha.strip() == head_sha:
+            _LOGGER.info(
+                "Using cached PR #%s (commit %s) from %s",
+                pr_number,
+                head_sha[:8],
+                pr_dir,
+            )
+            return frontend_dir
+        _LOGGER.info(
+            "PR #%s has new commits (cached: %s, current: %s), re-downloading",
+            pr_number,
+            cached_sha[:8],
+            head_sha[:8],
+        )
+
+    from github import GithubException  # noqa: PLC0415
+
+    try:
+        # Find the artifact
+        artifact = await hass.async_add_executor_job(
+            _find_pr_artifact, pr_number, head_sha, github_token
+        )
+
+        # Download artifact
+        _LOGGER.info("Downloading frontend PR #%s artifact", pr_number)
+        artifact_data = await hass.async_add_executor_job(
+            _download_artifact_data, artifact.archive_download_url, github_token
+        )
+
+        # Extract artifact
+        await hass.async_add_executor_job(
+            _extract_artifact, artifact_data, pr_dir, frontend_dir, head_sha
+        )
+
+        _LOGGER.info(
+            "Successfully downloaded and extracted PR #%s (commit %s) to %s",
+            pr_number,
+            head_sha[:8],
+            pr_dir,
+        )
+
+        size_mb = await hass.async_add_executor_job(_get_directory_size_mb, pr_dir)
+        _LOGGER.info("PR #%s cache size: %.1f MB", pr_number, size_mb)
+
+        # Warn if total cache size exceeds threshold
+        total_cache_size = await hass.async_add_executor_job(
+            _get_directory_size_mb, cache_dir
+        )
+        if total_cache_size > CACHE_WARNING_SIZE_MB:
+            _LOGGER.warning(
+                "Frontend PR cache directory has grown to %.1f MB (threshold: %d MB). "
+                "Consider manually cleaning up old PR caches in %s",
+                total_cache_size,
+                CACHE_WARNING_SIZE_MB,
+                cache_dir,
+            )
+    except GithubException as err:
+        _LOGGER.error("GitHub API error for PR #%s: %s", pr_number, err)
+        return None
+    except HomeAssistantError as err:
+        _LOGGER.error("%s", err)
+        return None
+    except Exception:
+        _LOGGER.exception("Unexpected error downloading PR #%s", pr_number)
+        return None
+    else:
+        return frontend_dir

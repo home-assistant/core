@@ -55,6 +55,9 @@ PyFlume==0.6.5
 # homeassistant.components.fronius
 PyFronius==0.8.0
 
+# homeassistant.components.frontend
+PyGithub==2.5.0
+
 # homeassistant.components.pyload
 PyLoadAPI==1.4.2
 
