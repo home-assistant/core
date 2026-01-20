@@ -142,10 +142,17 @@ class HeliosSensorEntityDescription(SensorEntityDescription):
 
 
 SENSOR_ENTITIES: tuple[HeliosSensorEntityDescription, ...] = (
+    # Diagnostic sensors for Diagnostics Box
     HeliosSensorEntityDescription(
         key="current_profile",
         translation_key="current_profile",
         entity_type=HeliosProfileSensor,
+    ),
+    HeliosSensorEntityDescription(
+        key="cell_state",
+        translation_key="cell_state",
+        metric_key="A_CYC_CELL_STATE",
+        entity_type=HeliosCellStateSensor,
     ),
     HeliosSensorEntityDescription(
         key="fan_speed",
@@ -156,34 +163,10 @@ SENSOR_ENTITIES: tuple[HeliosSensorEntityDescription, ...] = (
         entity_type=HeliosFanSpeedSensor,
     ),
     HeliosSensorEntityDescription(
-        key="extract_fan_speed",
-        translation_key="extract_fan_speed",
-        metric_key="A_CYC_EXTR_FAN_SPEED",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
-        entity_type=HeliosFanSpeedSensor,
-        entity_registry_enabled_default=False,
-    ),
-    HeliosSensorEntityDescription(
-        key="supply_fan_speed",
-        translation_key="supply_fan_speed",
-        metric_key="A_CYC_SUPP_FAN_SPEED",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
-        entity_type=HeliosFanSpeedSensor,
-        entity_registry_enabled_default=False,
-    ),
-    HeliosSensorEntityDescription(
         key="remaining_time_for_filter",
         translation_key="remaining_time_for_filter",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_type=HeliosFilterRemainingSensor,
-    ),
-    HeliosSensorEntityDescription(
-        key="cell_state",
-        translation_key="cell_state",
-        metric_key="A_CYC_CELL_STATE",
-        entity_type=HeliosCellStateSensor,
     ),
     HeliosSensorEntityDescription(
         key="extract_air",
@@ -226,15 +209,6 @@ SENSOR_ENTITIES: tuple[HeliosSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     HeliosSensorEntityDescription(
-        key="optional_air",
-        translation_key="optional_air",
-        metric_key="A_CYC_TEMP_OPTIONAL",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_registry_enabled_default=False,
-    ),
-    HeliosSensorEntityDescription(
         key="humidity",
         metric_key="A_CYC_RH_VALUE",
         device_class=SensorDeviceClass.HUMIDITY,
@@ -247,24 +221,7 @@ SENSOR_ENTITIES: tuple[HeliosSensorEntityDescription, ...] = (
         metric_key="A_CYC_EXTRACT_EFFICIENCY",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        entity_registry_enabled_default=False,
         round_ndigits=0,
-    ),
-    HeliosSensorEntityDescription(
-        key="co2",
-        metric_key="A_CYC_CO2_VALUE",
-        device_class=SensorDeviceClass.CO2,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        entity_registry_enabled_default=False,
-    ),
-    HeliosSensorEntityDescription(
-        key="profile_duration",
-        translation_key="profile_duration",
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        entity_type=HeliosProfileDurationSensor,
     ),
 )
 

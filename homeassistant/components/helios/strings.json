@@ -59,20 +59,11 @@
       "extract_air" : {
         "name" : "Extract air"
       },
-      "extract_fan_speed" : {
-        "name" : "Extract fan speed"
-      },
       "fan_speed" : {
         "name" : "Fan speed"
       },
-      "optional_air" : {
-        "name" : "Optional air"
-      },
       "outdoor_air" : {
         "name" : "Outdoor air"
-      },
-      "profile_duration" : {
-        "name" : "Profile duration"
       },
       "remaining_time_for_filter" : {
         "name" : "Remaining time for filter"
@@ -82,9 +73,6 @@
       },
       "supply_cell_air" : {
         "name" : "Supply cell air"
-      },
-      "supply_fan_speed" : {
-        "name" : "Supply fan speed"
       }
     },
     "switch" : {
