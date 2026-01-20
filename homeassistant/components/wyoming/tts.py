@@ -82,6 +82,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         if self._attr_supported_languages:
             self._attr_default_language = self._attr_supported_languages[0]
 
+        self._attr_default_options = {}
         self._attr_name = self._tts_service.name
         self._attr_supported_options = [
             tts.ATTR_AUDIO_OUTPUT,
@@ -89,11 +90,6 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
             ATTR_SPEAKER,
         ]
         self._attr_unique_id = f"{config_entry.entry_id}-tts"
-
-    @property
-    def default_options(self):
-        """Return a dict include default options."""
-        return {}
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[tts.Voice] | None:
