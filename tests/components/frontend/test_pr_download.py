@@ -1,62 +1,67 @@
 """Tests for frontend PR download functionality."""
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiogithubapi import GitHubException
 import pytest
 
 from homeassistant.components.frontend import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.test_util.aiohttp import AiohttpClientMocker
+
 
 @pytest.fixture
-def mock_github():
-    """Mock PyGithub."""
-    with patch("github.Github") as mock_gh:
-        # Mock GitHub client
-        mock_client = MagicMock()
-        mock_gh.return_value = mock_client
+def mock_github_api():
+    """Mock aiogithubapi GitHubAPI."""
+    with patch(
+        "homeassistant.components.frontend.pr_download.GitHubAPI"
+    ) as mock_gh_class:
+        mock_client = AsyncMock()
+        mock_gh_class.return_value = mock_client
 
-        # Mock repo
-        mock_repo = MagicMock()
-        mock_client.get_repo.return_value = mock_repo
+        # Mock PR response
+        pr_response = AsyncMock()
+        pr_response.data = {"head": {"sha": "abc123def456"}}
 
-        # Mock PR
-        mock_pr = MagicMock()
-        mock_pr.head.sha = "abc123def456"
-        mock_repo.get_pull.return_value = mock_pr
+        # Mock workflow runs response
+        workflow_response = AsyncMock()
+        workflow_response.data = {
+            "workflow_runs": [
+                {
+                    "id": 12345,
+                    "status": "completed",
+                    "conclusion": "success",
+                }
+            ]
+        }
 
-        # Mock workflow
-        mock_workflow = MagicMock()
-        mock_repo.get_workflow.return_value = mock_workflow
+        # Mock artifacts response
+        artifacts_response = AsyncMock()
+        artifacts_response.data = {
+            "artifacts": [
+                {
+                    "name": "frontend-build",
+                    "archive_download_url": "https://api.github.com/artifact/download",
+                }
+            ]
+        }
 
-        # Mock workflow run
-        mock_run = MagicMock()
-        mock_run.status = "completed"
-        mock_run.conclusion = "success"
-        mock_run.id = 12345
-        mock_workflow.get_runs.return_value = [mock_run]
+        # Setup generic method to return appropriate responses
+        async def generic_side_effect(endpoint, **kwargs):
+            if "pulls" in endpoint:
+                return pr_response
+            if "workflows" in endpoint and "runs" in endpoint:
+                return workflow_response
+            if "artifacts" in endpoint:
+                return artifacts_response
+            raise ValueError(f"Unexpected endpoint: {endpoint}")
 
-        # Mock artifact
-        mock_artifact = MagicMock()
-        mock_artifact.name = "frontend-build"
-        mock_artifact.id = 67890
-        mock_artifact.archive_download_url = "https://api.github.com/artifact/download"
-        mock_run.get_artifacts.return_value = [mock_artifact]
+        mock_client.generic.side_effect = generic_side_effect
 
         yield mock_client
-
-
-@pytest.fixture
-def mock_requests():
-    """Mock requests library."""
-    with patch("requests.get") as mock_req:
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.content = b"fake zip data"
-        mock_req.return_value = mock_response
-        yield mock_req
 
 
 @pytest.fixture
@@ -69,10 +74,20 @@ def mock_zipfile():
 
 
 async def test_pr_download_success(
-    hass: HomeAssistant, tmp_path: Path, mock_github, mock_requests, mock_zipfile
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_github_api,
+    aioclient_mock: AiohttpClientMocker,
+    mock_zipfile,
 ) -> None:
     """Test successful PR artifact download."""
     hass.config.config_dir = str(tmp_path)
+
+    # Mock artifact download
+    aioclient_mock.get(
+        "https://api.github.com/artifact/download",
+        content=b"fake zip data",
+    )
 
     config = {
         DOMAIN: {
@@ -82,22 +97,20 @@ async def test_pr_download_success(
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
-    # Verify GitHub operations happened
-    mock_github.get_repo.assert_called_with("home-assistant/frontend")
-    mock_github.get_repo.return_value.get_pull.assert_called_with(12345)
+    # Verify GitHub API was called
+    assert mock_github_api.generic.call_count >= 2  # PR + workflow runs
 
     # Verify artifact was downloaded
-    mock_requests.assert_called_once()
-    call_args_str = str(mock_requests.call_args)
-    assert "token test_token" in call_args_str or "test_token" in call_args_str
+    assert len(aioclient_mock.mock_calls) == 1
 
     # Verify zip was extracted
     mock_zipfile.extractall.assert_called_once()
 
 
 async def test_pr_download_uses_cache(
-    hass: HomeAssistant, tmp_path: Path, mock_github
+    hass: HomeAssistant, tmp_path: Path, mock_github_api
 ) -> None:
     """Test that cached PR is used when commit hasn't changed."""
     hass.config.config_dir = str(tmp_path)
@@ -116,15 +129,22 @@ async def test_pr_download_uses_cache(
         }
     }
 
-    with patch("requests.get") as mock_req:
-        assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
-        # Should NOT download - cache is valid
-        mock_req.assert_not_called()
+    # Should only call GitHub API to get PR SHA, not download
+    # The generic call should only be for getting the PR
+    calls = list(mock_github_api.generic.call_args_list)
+    assert len(calls) == 1  # Only PR check
+    assert "pulls" in str(calls[0])
 
 
 async def test_pr_download_cache_invalidated(
-    hass: HomeAssistant, tmp_path: Path, mock_github, mock_requests, mock_zipfile
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_github_api,
+    aioclient_mock: AiohttpClientMocker,
+    mock_zipfile,
 ) -> None:
     """Test that cache is invalidated when commit changes."""
     hass.config.config_dir = str(tmp_path)
@@ -136,6 +156,12 @@ async def test_pr_download_cache_invalidated(
     (frontend_dir / "index.html").write_text("test")
     (pr_cache_dir / ".sha").write_text("old_commit_sha")
 
+    # Mock artifact download
+    aioclient_mock.get(
+        "https://api.github.com/artifact/download",
+        content=b"fake zip data",
+    )
+
     config = {
         DOMAIN: {
             "development_pr": 12345,
@@ -144,6 +170,42 @@ async def test_pr_download_cache_invalidated(
     }
 
     assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
     # Should download - commit changed
-    mock_requests.assert_called_once()
+    assert len(aioclient_mock.mock_calls) == 1
+
+
+async def test_pr_download_missing_token(hass: HomeAssistant) -> None:
+    """Test that PR download fails gracefully without token."""
+    config = {
+        DOMAIN: {
+            "development_pr": 12345,
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+
+async def test_pr_download_github_error(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test handling of GitHub API errors."""
+    hass.config.config_dir = str(tmp_path)
+
+    with patch(
+        "homeassistant.components.frontend.pr_download.GitHubAPI"
+    ) as mock_gh_class:
+        mock_client = AsyncMock()
+        mock_gh_class.return_value = mock_client
+        mock_client.generic.side_effect = GitHubException("API error")
+
+        config = {
+            DOMAIN: {
+                "development_pr": 12345,
+                "github_token": "test_token",
+            }
+        }
+
+        # Should not raise, just log error
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()

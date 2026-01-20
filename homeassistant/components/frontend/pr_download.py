@@ -8,7 +8,14 @@ import pathlib
 import shutil
 import zipfile
 
-from aiogithubapi import GitHubAPI, GitHubException
+from aiogithubapi import (
+    GitHubAPI,
+    GitHubAuthenticationException,
+    GitHubException,
+    GitHubNotFoundException,
+    GitHubPermissionException,
+    GitHubRatelimitException,
+)
 from aiohttp import ClientError, ClientResponseError, ClientTimeout
 
 from homeassistant.core import HomeAssistant
@@ -46,15 +53,15 @@ async def _get_pr_head_sha(client: GitHubAPI, pr_number: int) -> str:
             endpoint=f"/repos/home-assistant/frontend/pulls/{pr_number}",
         )
         return str(response.data["head"]["sha"])
+    except GitHubAuthenticationException as err:
+        raise HomeAssistantError(ERROR_INVALID_TOKEN) from err
+    except (GitHubRatelimitException, GitHubPermissionException) as err:
+        raise HomeAssistantError(ERROR_RATE_LIMIT) from err
+    except GitHubNotFoundException as err:
+        raise HomeAssistantError(
+            f"PR #{pr_number} does not exist in repository {GITHUB_REPO}"
+        ) from err
     except GitHubException as err:
-        if err.status == 401:
-            raise HomeAssistantError(ERROR_INVALID_TOKEN) from err
-        if err.status == 403:
-            raise HomeAssistantError(ERROR_RATE_LIMIT) from err
-        if err.status == 404:
-            raise HomeAssistantError(
-                f"PR #{pr_number} does not exist in repository {GITHUB_REPO}"
-            ) from err
         raise HomeAssistantError(f"GitHub API error: {err}") from err
 
 
@@ -94,11 +101,11 @@ async def _find_pr_artifact(client: GitHubAPI, pr_number: int, head_sha: str) ->
             "or the build failed, or the PR artifact expired. "
             f"Check https://github.com/{GITHUB_REPO}/pull/{pr_number}/checks"
         )
+    except GitHubAuthenticationException as err:
+        raise HomeAssistantError(ERROR_INVALID_TOKEN) from err
+    except (GitHubRatelimitException, GitHubPermissionException) as err:
+        raise HomeAssistantError(ERROR_RATE_LIMIT) from err
     except GitHubException as err:
-        if err.status == 401:
-            raise HomeAssistantError(ERROR_INVALID_TOKEN) from err
-        if err.status == 403:
-            raise HomeAssistantError(ERROR_RATE_LIMIT) from err
         raise HomeAssistantError(f"GitHub API error: {err}") from err
 
 
