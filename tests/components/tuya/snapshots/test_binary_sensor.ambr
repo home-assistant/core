@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[binary_sensor.aqi-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.aqi_safety-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.aqi',
+    'entity_id': 'binary_sensor.aqi_safety',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,12 +20,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Safety',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Safety',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -35,21 +35,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.aqi-state]
+# name: test_platform_setup_and_discovery[binary_sensor.aqi_safety-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
-      'friendly_name': 'AQI None',
+      'friendly_name': 'AQI Safety',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.aqi',
+    'entity_id': 'binary_sensor.aqi_safety',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.boite_aux_lettres_arriere-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.boite_aux_lettres_arriere_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -62,7 +62,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.boite_aux_lettres_arriere',
+    'entity_id': 'binary_sensor.boite_aux_lettres_arriere_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -70,12 +70,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Door',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -85,21 +85,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.boite_aux_lettres_arriere-state]
+# name: test_platform_setup_and_discovery[binary_sensor.boite_aux_lettres_arriere_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'Boîte aux lettres - arrière None',
+      'friendly_name': 'Boîte aux lettres - arrière Door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.boite_aux_lettres_arriere',
+    'entity_id': 'binary_sensor.boite_aux_lettres_arriere_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.cat_feeder-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.cat_feeder_feeding-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -112,7 +112,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.cat_feeder',
+    'entity_id': 'binary_sensor.cat_feeder_feeding',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -120,12 +120,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Feeding',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Feeding',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -135,20 +135,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.cat_feeder-state]
+# name: test_platform_setup_and_discovery[binary_sensor.cat_feeder_feeding-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cat Feeder None',
+      'friendly_name': 'Cat Feeder Feeding',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.cat_feeder',
+    'entity_id': 'binary_sensor.cat_feeder_feeding',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.dehumidifer-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_defrost-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -161,7 +161,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifer',
+    'entity_id': 'binary_sensor.dehumidifer_defrost',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -169,62 +169,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Defrost',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': None,
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'tankfull',
-    'unique_id': 'tuya.ifzgvpgoodrfw2aksctankfull',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[binary_sensor.dehumidifer-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Dehumidifer None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifer',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifer_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': None,
+    'original_name': 'Defrost',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -234,21 +184,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_2-state]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_defrost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Dehumidifer None',
+      'friendly_name': 'Dehumidifer Defrost',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifer_2',
+    'entity_id': 'binary_sensor.dehumidifer_defrost',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_tank_full-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -261,7 +211,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifier',
+    'entity_id': 'binary_sensor.dehumidifer_tank_full',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -269,36 +219,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Tank full',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Tank full',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tankfull',
-    'unique_id': 'tuya.2myxayqtud9aqbizsctankfull',
+    'unique_id': 'tuya.ifzgvpgoodrfw2aksctankfull',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier-state]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_tank_full-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Dehumidifier None',
+      'friendly_name': 'Dehumidifer Tank full',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifier',
+    'entity_id': 'binary_sensor.dehumidifer_tank_full',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_2-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_defrost-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -311,7 +261,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifier_2',
+    'entity_id': 'binary_sensor.dehumidifier_defrost',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -319,12 +269,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Defrost',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Defrost',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -334,21 +284,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_2-state]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_defrost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Dehumidifier None',
+      'friendly_name': 'Dehumidifier Defrost',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifier_2',
+    'entity_id': 'binary_sensor.dehumidifier_defrost',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_3-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_tank_full-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -361,7 +311,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.dehumidifier_3',
+    'entity_id': 'binary_sensor.dehumidifier_tank_full',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -369,12 +319,62 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Tank full',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Tank full',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tankfull',
+    'unique_id': 'tuya.2myxayqtud9aqbizsctankfull',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_tank_full-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Dehumidifier Tank full',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dehumidifier_tank_full',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_wet-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.dehumidifier_wet',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wet',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Wet',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -384,21 +384,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_3-state]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_wet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Dehumidifier None',
+      'friendly_name': 'Dehumidifier Wet',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.dehumidifier_3',
+    'entity_id': 'binary_sensor.dehumidifier_wet',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.door_garage-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.door_garage_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -411,7 +411,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.door_garage',
+    'entity_id': 'binary_sensor.door_garage_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -419,12 +419,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Door',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -434,21 +434,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.door_garage-state]
+# name: test_platform_setup_and_discovery[binary_sensor.door_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'Door Garage  None',
+      'friendly_name': 'Door Garage  Door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.door_garage',
+    'entity_id': 'binary_sensor.door_garage_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.fenetre_cuisine-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.fenetre_cuisine_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -461,7 +461,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.fenetre_cuisine',
+    'entity_id': 'binary_sensor.fenetre_cuisine_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -469,12 +469,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Door',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -484,14 +484,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.fenetre_cuisine-state]
+# name: test_platform_setup_and_discovery[binary_sensor.fenetre_cuisine_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'Fenêtre cuisine None',
+      'friendly_name': 'Fenêtre cuisine Door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.fenetre_cuisine',
+    'entity_id': 'binary_sensor.fenetre_cuisine_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -548,7 +548,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.garage_contact_sensor-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.garage_contact_sensor_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -561,7 +561,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.garage_contact_sensor',
+    'entity_id': 'binary_sensor.garage_contact_sensor_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -569,12 +569,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Door',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -584,21 +584,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.garage_contact_sensor-state]
+# name: test_platform_setup_and_discovery[binary_sensor.garage_contact_sensor_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'Garage Contact Sensor None',
+      'friendly_name': 'Garage Contact Sensor Door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.garage_contact_sensor',
+    'entity_id': 'binary_sensor.garage_contact_sensor_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.gas_sensor-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.gas_sensor_gas-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -611,7 +611,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.gas_sensor',
+    'entity_id': 'binary_sensor.gas_sensor_gas',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -619,12 +619,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Gas',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Gas',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -634,21 +634,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.gas_sensor-state]
+# name: test_platform_setup_and_discovery[binary_sensor.gas_sensor_gas-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'gas',
-      'friendly_name': 'Gas sensor None',
+      'friendly_name': 'Gas sensor Gas',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gas_sensor',
+    'entity_id': 'binary_sensor.gas_sensor_gas',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.gateway-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.gateway_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -661,7 +661,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.gateway',
+    'entity_id': 'binary_sensor.gateway_problem',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -669,12 +669,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Problem',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -684,21 +684,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.gateway-state]
+# name: test_platform_setup_and_discovery[binary_sensor.gateway_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Gateway None',
+      'friendly_name': 'Gateway Problem',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.gateway',
+    'entity_id': 'binary_sensor.gateway_problem',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.home_gateway-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.home_gateway_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -711,7 +711,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.home_gateway',
+    'entity_id': 'binary_sensor.home_gateway_problem',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -719,12 +719,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Problem',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -734,21 +734,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.home_gateway-state]
+# name: test_platform_setup_and_discovery[binary_sensor.home_gateway_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Home Gateway None',
+      'friendly_name': 'Home Gateway Problem',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.home_gateway',
+    'entity_id': 'binary_sensor.home_gateway_problem',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.human_presence_office-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.human_presence_office_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -761,7 +761,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.human_presence_office',
+    'entity_id': 'binary_sensor.human_presence_office_occupancy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -769,12 +769,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Occupancy',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Occupancy',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -784,21 +784,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.human_presence_office-state]
+# name: test_platform_setup_and_discovery[binary_sensor.human_presence_office_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
-      'friendly_name': 'Human presence Office None',
+      'friendly_name': 'Human presence Office Occupancy',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.human_presence_office',
+    'entity_id': 'binary_sensor.human_presence_office_occupancy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.inondation-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.inondation_moisture-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -811,7 +811,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.inondation',
+    'entity_id': 'binary_sensor.inondation_moisture',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -819,12 +819,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Moisture',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Moisture',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -834,21 +834,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.inondation-state]
+# name: test_platform_setup_and_discovery[binary_sensor.inondation_moisture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
-      'friendly_name': 'Inondation None',
+      'friendly_name': 'Inondation Moisture',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.inondation',
+    'entity_id': 'binary_sensor.inondation_moisture',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.kattenbak-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.kattenbak_bag_full-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -861,7 +861,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.kattenbak',
+    'entity_id': 'binary_sensor.kattenbak_bag_full',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -869,12 +869,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Bag full',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Bag full',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -884,21 +884,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.kattenbak-state]
+# name: test_platform_setup_and_discovery[binary_sensor.kattenbak_bag_full-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Kattenbak None',
+      'friendly_name': 'Kattenbak Bag full',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.kattenbak',
+    'entity_id': 'binary_sensor.kattenbak_bag_full',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.kattenbak_2-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.kattenbak_cover_off-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -911,7 +911,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.kattenbak_2',
+    'entity_id': 'binary_sensor.kattenbak_cover_off',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -919,12 +919,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Cover off',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Cover off',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -934,21 +934,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.kattenbak_2-state]
+# name: test_platform_setup_and_discovery[binary_sensor.kattenbak_cover_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Kattenbak None',
+      'friendly_name': 'Kattenbak Cover off',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.kattenbak_2',
+    'entity_id': 'binary_sensor.kattenbak_cover_off',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.mesh_gateway-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.mesh_gateway_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -961,7 +961,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.mesh_gateway',
+    'entity_id': 'binary_sensor.mesh_gateway_problem',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -969,12 +969,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Problem',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -984,21 +984,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.mesh_gateway-state]
+# name: test_platform_setup_and_discovery[binary_sensor.mesh_gateway_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Mesh-Gateway None',
+      'friendly_name': 'Mesh-Gateway Problem',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mesh_gateway',
+    'entity_id': 'binary_sensor.mesh_gateway_problem',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee_motion-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1011,7 +1011,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee',
+    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee_motion',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1019,12 +1019,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Motion',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1034,14 +1034,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee-state]
+# name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'motion',
-      'friendly_name': 'Motion sensor lidl zigbee None',
+      'friendly_name': 'Motion sensor lidl zigbee Motion',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee',
+    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee_motion',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1098,7 +1098,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.pir-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.pir_motion-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1111,7 +1111,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.pir',
+    'entity_id': 'binary_sensor.pir_motion',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1119,12 +1119,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Motion',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1134,21 +1134,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.pir-state]
+# name: test_platform_setup_and_discovery[binary_sensor.pir_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'motion',
-      'friendly_name': 'PIR None',
+      'friendly_name': 'PIR Motion',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.pir',
+    'entity_id': 'binary_sensor.pir_motion',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.pir_outside_stairs-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.pir_outside_stairs_motion-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1161,7 +1161,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.pir_outside_stairs',
+    'entity_id': 'binary_sensor.pir_outside_stairs_motion',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1169,12 +1169,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Motion',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1184,21 +1184,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.pir_outside_stairs-state]
+# name: test_platform_setup_and_discovery[binary_sensor.pir_outside_stairs_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'motion',
-      'friendly_name': 'PIR outside stairs None',
+      'friendly_name': 'PIR outside stairs Motion',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.pir_outside_stairs',
+    'entity_id': 'binary_sensor.pir_outside_stairs_motion',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge_motion-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1211,7 +1211,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.rat_trap_hedge',
+    'entity_id': 'binary_sensor.rat_trap_hedge_motion',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1219,12 +1219,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Motion',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Motion',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1234,14 +1234,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge-state]
+# name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'motion',
-      'friendly_name': 'rat trap hedge None',
+      'friendly_name': 'rat trap hedge Motion',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.rat_trap_hedge',
+    'entity_id': 'binary_sensor.rat_trap_hedge_motion',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1298,7 +1298,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_alexsandro-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_alexsandro_smoke-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1311,7 +1311,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.rauchmelder_alexsandro',
+    'entity_id': 'binary_sensor.rauchmelder_alexsandro_smoke',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1319,12 +1319,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Smoke',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Smoke',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1334,21 +1334,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_alexsandro-state]
+# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_alexsandro_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'smoke',
-      'friendly_name': 'Rauchmelder Alexsandro  None',
+      'friendly_name': 'Rauchmelder Alexsandro  Smoke',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.rauchmelder_alexsandro',
+    'entity_id': 'binary_sensor.rauchmelder_alexsandro_smoke',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_drucker-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_drucker_smoke-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1361,7 +1361,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.rauchmelder_drucker',
+    'entity_id': 'binary_sensor.rauchmelder_drucker_smoke',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1369,12 +1369,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Smoke',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Smoke',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1384,21 +1384,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_drucker-state]
+# name: test_platform_setup_and_discovery[binary_sensor.rauchmelder_drucker_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'smoke',
-      'friendly_name': 'Rauchmelder Drucker None',
+      'friendly_name': 'Rauchmelder Drucker Smoke',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.rauchmelder_drucker',
+    'entity_id': 'binary_sensor.rauchmelder_drucker_smoke',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.siren-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.siren_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1411,7 +1411,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.siren',
+    'entity_id': 'binary_sensor.siren_charging',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1419,12 +1419,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Charging',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Charging',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1434,14 +1434,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.siren-state]
+# name: test_platform_setup_and_discovery[binary_sensor.siren_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery_charging',
-      'friendly_name': 'Siren None',
+      'friendly_name': 'Siren Charging',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.siren',
+    'entity_id': 'binary_sensor.siren_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1498,7 +1498,7 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.smart_thermostats-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.smart_thermostats_valve-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1511,7 +1511,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.smart_thermostats',
+    'entity_id': 'binary_sensor.smart_thermostats_valve',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1519,12 +1519,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Valve',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Valve',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1534,20 +1534,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.smart_thermostats-state]
+# name: test_platform_setup_and_discovery[binary_sensor.smart_thermostats_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'smart thermostats None',
+      'friendly_name': 'smart thermostats Valve',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.smart_thermostats',
+    'entity_id': 'binary_sensor.smart_thermostats_valve',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.smogo-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.smogo_safety-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1560,7 +1560,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.smogo',
+    'entity_id': 'binary_sensor.smogo_safety',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1568,12 +1568,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Safety',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Safety',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1583,21 +1583,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.smogo-state]
+# name: test_platform_setup_and_discovery[binary_sensor.smogo_safety-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
-      'friendly_name': 'Smogo None',
+      'friendly_name': 'Smogo Safety',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.smogo',
+    'entity_id': 'binary_sensor.smogo_safety',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.smoke_alarm-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.smoke_alarm_smoke-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1610,7 +1610,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.smoke_alarm',
+    'entity_id': 'binary_sensor.smoke_alarm_smoke',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1618,12 +1618,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Smoke',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Smoke',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1633,21 +1633,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.smoke_alarm-state]
+# name: test_platform_setup_and_discovery[binary_sensor.smoke_alarm_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'smoke',
-      'friendly_name': 'Smoke Alarm None',
+      'friendly_name': 'Smoke Alarm Smoke',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.smoke_alarm',
+    'entity_id': 'binary_sensor.smoke_alarm_smoke',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.smoke_detector_upstairs-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.smoke_detector_upstairs_smoke-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1660,7 +1660,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.smoke_detector_upstairs',
+    'entity_id': 'binary_sensor.smoke_detector_upstairs_smoke',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1668,12 +1668,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Smoke',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Smoke',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1683,21 +1683,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.smoke_detector_upstairs-state]
+# name: test_platform_setup_and_discovery[binary_sensor.smoke_detector_upstairs_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'smoke',
-      'friendly_name': ' Smoke detector upstairs  None',
+      'friendly_name': ' Smoke detector upstairs  Smoke',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.smoke_detector_upstairs',
+    'entity_id': 'binary_sensor.smoke_detector_upstairs_smoke',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.soil_moisture_sensor_1-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.soil_moisture_sensor_1_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1710,7 +1710,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.soil_moisture_sensor_1',
+    'entity_id': 'binary_sensor.soil_moisture_sensor_1_occupancy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1718,12 +1718,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Occupancy',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Occupancy',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1733,21 +1733,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.soil_moisture_sensor_1-state]
+# name: test_platform_setup_and_discovery[binary_sensor.soil_moisture_sensor_1_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'occupancy',
-      'friendly_name': 'Soil moisture sensor #1 None',
+      'friendly_name': 'Soil moisture sensor #1 Occupancy',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.soil_moisture_sensor_1',
+    'entity_id': 'binary_sensor.soil_moisture_sensor_1_occupancy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.steel_cage_door-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.steel_cage_door_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1760,7 +1760,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.steel_cage_door',
+    'entity_id': 'binary_sensor.steel_cage_door_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1768,12 +1768,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Door',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1783,21 +1783,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.steel_cage_door-state]
+# name: test_platform_setup_and_discovery[binary_sensor.steel_cage_door_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'Steel cage door None',
+      'friendly_name': 'Steel cage door Door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.steel_cage_door',
+    'entity_id': 'binary_sensor.steel_cage_door_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.tournesol-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.tournesol_moisture-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1810,7 +1810,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.tournesol',
+    'entity_id': 'binary_sensor.tournesol_moisture',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1818,12 +1818,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Moisture',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Moisture',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1833,21 +1833,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.tournesol-state]
+# name: test_platform_setup_and_discovery[binary_sensor.tournesol_moisture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'moisture',
-      'friendly_name': 'Tournesol None',
+      'friendly_name': 'Tournesol Moisture',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.tournesol',
+    'entity_id': 'binary_sensor.tournesol_moisture',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.wifi_smoke_alarm-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.wifi_smoke_alarm_smoke-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1860,7 +1860,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.wifi_smoke_alarm',
+    'entity_id': 'binary_sensor.wifi_smoke_alarm_smoke',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1868,12 +1868,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Smoke',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Smoke',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1883,21 +1883,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.wifi_smoke_alarm-state]
+# name: test_platform_setup_and_discovery[binary_sensor.wifi_smoke_alarm_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'smoke',
-      'friendly_name': 'WIFI Smoke alarm None',
+      'friendly_name': 'WIFI Smoke alarm Smoke',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.wifi_smoke_alarm',
+    'entity_id': 'binary_sensor.wifi_smoke_alarm_smoke',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.window_downstairs-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.window_downstairs_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1910,7 +1910,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.window_downstairs',
+    'entity_id': 'binary_sensor.window_downstairs_door',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1918,12 +1918,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Door',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1933,21 +1933,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.window_downstairs-state]
+# name: test_platform_setup_and_discovery[binary_sensor.window_downstairs_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
-      'friendly_name': 'Window downstairs None',
+      'friendly_name': 'Window downstairs Door',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.window_downstairs',
+    'entity_id': 'binary_sensor.window_downstairs_door',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.x5_zigbee_gateway-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.x5_zigbee_gateway_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1960,7 +1960,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.x5_zigbee_gateway',
+    'entity_id': 'binary_sensor.x5_zigbee_gateway_problem',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1968,12 +1968,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Problem',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1983,14 +1983,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[binary_sensor.x5_zigbee_gateway-state]
+# name: test_platform_setup_and_discovery[binary_sensor.x5_zigbee_gateway_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'X5 Zigbee Gateway None',
+      'friendly_name': 'X5 Zigbee Gateway Problem',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.x5_zigbee_gateway',
+    'entity_id': 'binary_sensor.x5_zigbee_gateway_problem',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

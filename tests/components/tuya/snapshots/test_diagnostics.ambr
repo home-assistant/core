@@ -101,14 +101,14 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'duration',
-              'friendly_name': 'Multifunction alarm None',
+              'friendly_name': 'Multifunction alarm Arm delay',
               'max': 999.0,
               'min': 0.0,
               'mode': 'auto',
               'step': 1.0,
               'unit_of_measurement': 's',
             }),
-            'entity_id': 'number.multifunction_alarm',
+            'entity_id': 'number.multifunction_alarm_arm_delay',
             'state': '15.0',
           }),
           'unit_of_measurement': 's',
@@ -124,14 +124,14 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'duration',
-              'friendly_name': 'Multifunction alarm None',
+              'friendly_name': 'Multifunction alarm Alarm delay',
               'max': 999.0,
               'min': 0.0,
               'mode': 'auto',
               'step': 1.0,
               'unit_of_measurement': 's',
             }),
-            'entity_id': 'number.multifunction_alarm_2',
+            'entity_id': 'number.multifunction_alarm_alarm_delay',
             'state': '20.0',
           }),
           'unit_of_measurement': 's',
@@ -147,14 +147,14 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'duration',
-              'friendly_name': 'Multifunction alarm None',
+              'friendly_name': 'Multifunction alarm Siren duration',
               'max': 999.0,
               'min': 0.0,
               'mode': 'auto',
               'step': 1.0,
               'unit_of_measurement': 'min',
             }),
-            'entity_id': 'number.multifunction_alarm_3',
+            'entity_id': 'number.multifunction_alarm_siren_duration',
             'state': '3.0',
           }),
           'unit_of_measurement': 'min',
@@ -169,9 +169,9 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Multifunction alarm None',
+              'friendly_name': 'Multifunction alarm Arm beep',
             }),
-            'entity_id': 'switch.multifunction_alarm',
+            'entity_id': 'switch.multifunction_alarm_arm_beep',
             'state': 'on',
           }),
           'unit_of_measurement': None,
@@ -186,9 +186,9 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Multifunction alarm None',
+              'friendly_name': 'Multifunction alarm Siren',
             }),
-            'entity_id': 'switch.multifunction_alarm_2',
+            'entity_id': 'switch.multifunction_alarm_siren',
             'state': 'on',
           }),
           'unit_of_measurement': None,
@@ -356,9 +356,9 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'gas',
-              'friendly_name': 'Gas sensor None',
+              'friendly_name': 'Gas sensor Gas',
             }),
-            'entity_id': 'binary_sensor.gas_sensor',
+            'entity_id': 'binary_sensor.gas_sensor_gas',
             'state': 'off',
           }),
           'unit_of_measurement': None,
@@ -373,11 +373,11 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Gas sensor',
+              'friendly_name': 'Gas sensor Gas',
               'state_class': 'measurement',
               'unit_of_measurement': 'ppm',
             }),
-            'entity_id': 'sensor.gas_sensor',
+            'entity_id': 'sensor.gas_sensor_gas',
             'state': '0.0',
           }),
           'unit_of_measurement': 'ppm',
@@ -502,14 +502,14 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Framboisiers None',
+              'friendly_name': 'Framboisiers Power on behavior',
               'options': list([
                 '0',
                 '1',
                 '2',
               ]),
             }),
-            'entity_id': 'select.framboisiers',
+            'entity_id': 'select.framboisiers_power_on_behavior',
             'state': 'unknown',
           }),
           'unit_of_measurement': None,
@@ -525,9 +525,9 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'outlet',
-              'friendly_name': 'Framboisiers None',
+              'friendly_name': 'Framboisiers Switch 1',
             }),
-            'entity_id': 'switch.framboisiers',
+            'entity_id': 'switch.framboisiers_switch_1',
             'state': 'off',
           }),
           'unit_of_measurement': None,
@@ -648,9 +648,9 @@
               'state': dict({
                 'attributes': dict({
                   'device_class': 'gas',
-                  'friendly_name': 'Gas sensor None',
+                  'friendly_name': 'Gas sensor Gas',
                 }),
-                'entity_id': 'binary_sensor.gas_sensor',
+                'entity_id': 'binary_sensor.gas_sensor_gas',
                 'state': 'off',
               }),
               'unit_of_measurement': None,
@@ -665,11 +665,11 @@
               'original_icon': None,
               'state': dict({
                 'attributes': dict({
-                  'friendly_name': 'Gas sensor',
+                  'friendly_name': 'Gas sensor Gas',
                   'state_class': 'measurement',
                   'unit_of_measurement': 'ppm',
                 }),
-                'entity_id': 'sensor.gas_sensor',
+                'entity_id': 'sensor.gas_sensor_gas',
                 'state': '0.0',
               }),
               'unit_of_measurement': 'ppm',
