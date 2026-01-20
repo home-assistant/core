@@ -17,14 +17,17 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
     ConfigurationStyle,
+    TemplatePlatformSetup,
     async_get_flow_preview_state,
-    async_setup_modern_state_format,
-    async_setup_modern_trigger_format,
     make_test_trigger,
+    setup_and_test_nested_unique_id,
+    setup_and_test_unique_id,
+    setup_entity,
 )
 
 from tests.common import (
@@ -34,24 +37,22 @@ from tests.common import (
 )
 from tests.conftest import WebSocketGenerator
 
-TEST_OBJECT_ID = "template_update"
-TEST_ENTITY_ID = f"update.{TEST_OBJECT_ID}"
 TEST_INSTALLED_SENSOR = "sensor.installed_update"
 TEST_LATEST_SENSOR = "sensor.latest_update"
 TEST_SENSOR_ID = "sensor.test_update"
-TEST_STATE_TRIGGER = make_test_trigger(
-    TEST_INSTALLED_SENSOR, TEST_LATEST_SENSOR, TEST_SENSOR_ID
-)
 TEST_INSTALLED_TEMPLATE = "{{ '1.0' }}"
 TEST_LATEST_TEMPLATE = "{{ '2.0' }}"
+
+TEST_UPDATE = TemplatePlatformSetup(
+    update.DOMAIN,
+    None,
+    "template_update",
+    make_test_trigger(TEST_INSTALLED_SENSOR, TEST_LATEST_SENSOR, TEST_SENSOR_ID),
+)
 
 TEST_UPDATE_CONFIG = {
     "installed_version": TEST_INSTALLED_TEMPLATE,
     "latest_version": TEST_LATEST_TEMPLATE,
-}
-TEST_UNIQUE_ID_CONFIG = {
-    **TEST_UPDATE_CONFIG,
-    "unique_id": "not-so-unique-anymore",
 }
 
 INSTALL_ACTION = {
@@ -67,23 +68,6 @@ INSTALL_ACTION = {
 }
 
 
-async def async_setup_config(
-    hass: HomeAssistant,
-    count: int,
-    style: ConfigurationStyle,
-    config: dict[str, Any],
-    extra_config: dict[str, Any] | None,
-) -> None:
-    """Do setup of update integration."""
-    config = {**config, **extra_config} if extra_config else config
-    if style == ConfigurationStyle.MODERN:
-        await async_setup_modern_state_format(hass, update.DOMAIN, count, config)
-    elif style == ConfigurationStyle.TRIGGER:
-        await async_setup_modern_trigger_format(
-            hass, update.DOMAIN, TEST_STATE_TRIGGER, count, config
-        )
-
-
 @pytest.fixture
 async def setup_base(
     hass: HomeAssistant,
@@ -92,13 +76,7 @@ async def setup_base(
     config: dict[str, Any],
 ) -> None:
     """Do setup of update integration."""
-    await async_setup_config(
-        hass,
-        count,
-        style,
-        config,
-        None,
-    )
+    await setup_entity(hass, TEST_UPDATE, style, count, config)
 
 
 @pytest.fixture
@@ -111,16 +89,16 @@ async def setup_update(
     extra_config: dict[str, Any] | None,
 ) -> None:
     """Do setup of update integration."""
-    await async_setup_config(
+    await setup_entity(
         hass,
-        count,
+        TEST_UPDATE,
         style,
+        count,
         {
-            "name": TEST_OBJECT_ID,
             "installed_version": installed_template,
             "latest_version": latest_template,
         },
-        extra_config,
+        extra_config=extra_config,
     )
 
 
@@ -134,16 +112,18 @@ async def setup_single_attribute_update(
     attribute_template: str,
 ) -> None:
     """Do setup of update platform testing a single attribute."""
-    await async_setup_config(
+    await setup_entity(
         hass,
-        1,
+        TEST_UPDATE,
         style,
+        1,
         {
-            "name": TEST_OBJECT_ID,
             "installed_version": installed_template,
             "latest_version": latest_template,
         },
-        {attribute: attribute_template} if attribute and attribute_template else {},
+        extra_config=(
+            {attribute: attribute_template} if attribute and attribute_template else {}
+        ),
     )
 
 
@@ -153,7 +133,7 @@ async def test_legacy_platform_config(hass: HomeAssistant) -> None:
         assert await async_setup_component(
             hass,
             update.DOMAIN,
-            {"update": {"platform": "template", "updates": {TEST_OBJECT_ID: {}}}},
+            {"update": {"platform": "template", "updates": {"anything": {}}}},
         )
 
     await hass.async_block_till_done()
@@ -172,7 +152,7 @@ async def test_setup_config_entry(
         data={},
         domain=template.DOMAIN,
         options={
-            "name": TEST_OBJECT_ID,
+            "name": TEST_UPDATE.object_id,
             "template_type": update.DOMAIN,
             **TEST_UPDATE_CONFIG,
         },
@@ -183,7 +163,7 @@ async def test_setup_config_entry(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state is not None
     assert state == snapshot
 
@@ -210,7 +190,7 @@ async def test_device_id(
         data={},
         domain=template.DOMAIN,
         options={
-            "name": TEST_OBJECT_ID,
+            "name": TEST_UPDATE.object_id,
             "template_type": update.DOMAIN,
             **TEST_UPDATE_CONFIG,
             "device_id": device_entry.id,
@@ -222,7 +202,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity = entity_registry.async_get(TEST_ENTITY_ID)
+    template_entity = entity_registry.async_get(TEST_UPDATE.entity_id)
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
 
@@ -249,7 +229,7 @@ async def test_syntax_error(
     expected_state: str,
 ) -> None:
     """Test template update with render error."""
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.state == expected_state
 
 
@@ -283,7 +263,7 @@ async def test_update_templates(
     hass.states.async_set(TEST_LATEST_SENSOR, latest)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state is not None
     assert state.state == expected
     assert state.attributes["installed_version"] == installed
@@ -319,7 +299,7 @@ async def test_installed_and_latest_template_updates_from_entity(
     hass.states.async_set(TEST_LATEST_SENSOR, "2.0")
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes["installed_version"] == "1.0"
@@ -329,7 +309,7 @@ async def test_installed_and_latest_template_updates_from_entity(
     hass.states.async_set(TEST_LATEST_SENSOR, "2.0")
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state is not None
     assert state.state == STATE_OFF
     assert state.attributes["installed_version"] == "2.0"
@@ -339,7 +319,7 @@ async def test_installed_and_latest_template_updates_from_entity(
     hass.states.async_set(TEST_LATEST_SENSOR, "3.0")
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes["installed_version"] == "2.0"
@@ -374,7 +354,7 @@ async def test_installed_version_template(
     hass.states.async_set(TEST_INSTALLED_SENSOR, STATE_ON)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state is not None
     assert state.state == expected
     assert state.attributes["installed_version"] == expected_attr
@@ -408,7 +388,7 @@ async def test_latest_version_template(
     hass.states.async_set(TEST_INSTALLED_SENSOR, STATE_ON)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state is not None
     assert state.state == expected
     assert state.attributes["latest_version"] == expected_attr
@@ -439,7 +419,7 @@ async def test_install_action(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     await hass.services.async_call(
         update.DOMAIN,
         update.SERVICE_INSTALL,
-        {"entity_id": TEST_ENTITY_ID},
+        {"entity_id": TEST_UPDATE.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -447,7 +427,7 @@ async def test_install_action(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     # verify
     assert len(calls) == 1
     assert calls[-1].data["action"] == "install"
-    assert calls[-1].data["caller"] == TEST_ENTITY_ID
+    assert calls[-1].data["caller"] == TEST_UPDATE.entity_id
 
     hass.states.async_set(TEST_INSTALLED_SENSOR, "2.0")
     hass.states.async_set(TEST_LATEST_SENSOR, "2.0")
@@ -458,7 +438,7 @@ async def test_install_action(hass: HomeAssistant, calls: list[ServiceCall]) -> 
         await hass.services.async_call(
             update.DOMAIN,
             update.SERVICE_INSTALL,
-            {"entity_id": TEST_ENTITY_ID},
+            {"entity_id": TEST_UPDATE.entity_id},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -466,7 +446,7 @@ async def test_install_action(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     # verify
     assert len(calls) == 1
     assert calls[-1].data["action"] == "install"
-    assert calls[-1].data["caller"] == TEST_ENTITY_ID
+    assert calls[-1].data["caller"] == TEST_UPDATE.entity_id
 
 
 @pytest.mark.parametrize(
@@ -501,13 +481,13 @@ async def test_entity_picture_and_icon_templates(
     state = hass.states.async_set(TEST_INSTALLED_SENSOR, STATE_OFF)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.attributes.get(key) in ("", None)
 
     state = hass.states.async_set(TEST_INSTALLED_SENSOR, STATE_ON)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
 
     assert state.attributes[key] == expected
 
@@ -534,13 +514,13 @@ async def test_entity_picture_uses_default(hass: HomeAssistant) -> None:
     state = hass.states.async_set(TEST_INSTALLED_SENSOR, STATE_ON)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.attributes[ATTR_ENTITY_PICTURE] == "foo.png"
 
     state = hass.states.async_set(TEST_INSTALLED_SENSOR, STATE_OFF)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
 
     assert (
         state.attributes[ATTR_ENTITY_PICTURE]
@@ -582,7 +562,7 @@ async def test_in_process_template(
     state = hass.states.async_set(TEST_INSTALLED_SENSOR, STATE_OFF)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.attributes.get(attribute) == expected
 
     assert error is None or error in caplog_setup_text or error in caplog.text
@@ -621,7 +601,7 @@ async def test_release_summary_and_title_templates(
     state = hass.states.async_set(TEST_INSTALLED_SENSOR, STATE_OFF)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.attributes.get(attribute) == expected
 
 
@@ -674,7 +654,7 @@ async def test_release_url_template(
     state = hass.states.async_set(TEST_INSTALLED_SENSOR, STATE_OFF)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.attributes.get(attribute) == expected
 
     assert error is None or error in caplog_setup_text or error in caplog.text
@@ -714,7 +694,7 @@ async def test_update_percent_template(
     state = hass.states.async_set(TEST_INSTALLED_SENSOR, STATE_OFF)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.attributes.get(attribute) == expected
 
     assert error is None or error in caplog_setup_text or error in caplog.text
@@ -740,7 +720,7 @@ async def test_optimistic_in_progress_with_update_percent_template(
 ) -> None:
     """Test optimistic in_progress attribute with update percent templates."""
     # Ensure trigger entities trigger.
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.attributes["in_progress"] is False
     assert state.attributes["update_percentage"] is None
 
@@ -748,14 +728,14 @@ async def test_optimistic_in_progress_with_update_percent_template(
         state = hass.states.async_set(TEST_SENSOR_ID, i)
         await hass.async_block_till_done()
 
-        state = hass.states.get(TEST_ENTITY_ID)
+        state = hass.states.get(TEST_UPDATE.entity_id)
         assert state.attributes["in_progress"] is True
         assert state.attributes["update_percentage"] == i
 
     state = hass.states.async_set(TEST_SENSOR_ID, STATE_UNAVAILABLE)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.attributes["in_progress"] is False
     assert state.attributes["update_percentage"] is None
 
@@ -821,13 +801,13 @@ async def test_supported_features(
     state = hass.states.async_set(TEST_INSTALLED_SENSOR, STATE_OFF)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.attributes["supported_features"] == supported_feature
 
     await hass.services.async_call(
         update.DOMAIN,
         update.SERVICE_INSTALL,
-        {"entity_id": TEST_ENTITY_ID, **action_data},
+        {"entity_id": TEST_UPDATE.entity_id, **action_data},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -836,7 +816,7 @@ async def test_supported_features(
     assert len(calls) == 1
     data = calls[-1].data
     assert data["action"] == "install"
-    assert data["caller"] == TEST_ENTITY_ID
+    assert data["caller"] == TEST_UPDATE.entity_id
     assert data["backup"] == expected_backup
     assert data["specific_version"] == expected_version
 
@@ -861,19 +841,19 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     hass.states.async_set(TEST_SENSOR_ID, STATE_ON)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.state != STATE_UNAVAILABLE
 
     hass.states.async_set(TEST_SENSOR_ID, STATE_UNAVAILABLE)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.state == STATE_UNAVAILABLE
 
     hass.states.async_set(TEST_SENSOR_ID, STATE_OFF)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.state != STATE_UNAVAILABLE
 
 
@@ -902,7 +882,7 @@ async def test_invalid_availability_template_keeps_component_available(
     hass.states.async_set(TEST_SENSOR_ID, "anything")
     await hass.async_block_till_done()
 
-    assert hass.states.get(TEST_ENTITY_ID).state != STATE_UNAVAILABLE
+    assert hass.states.get(TEST_UPDATE.entity_id).state != STATE_UNAVAILABLE
 
     error = "UndefinedError: 'x' is undefined"
     assert error in caplog_setup_text or error in caplog.text
@@ -916,7 +896,7 @@ async def test_invalid_availability_template_keeps_component_available(
             "template": {
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "update": {
-                    "name": TEST_OBJECT_ID,
+                    "name": TEST_UPDATE.object_id,
                     "installed_version": "{{ trigger.event.data.action }}",
                     "latest_version": "{{ '1.0.2' }}",
                     "picture": "{{ '/local/dogs.png' }}",
@@ -941,7 +921,7 @@ async def test_trigger_entity_restore_state(
         "skipped_version": "1.0.1",
     }
     fake_state = State(
-        TEST_ENTITY_ID,
+        TEST_UPDATE.entity_id,
         STATE_OFF,
         restored_attributes,
     )
@@ -957,7 +937,7 @@ async def test_trigger_entity_restore_state(
         await hass.async_start()
         await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.state == STATE_OFF
     for attr, value in restored_attributes.items():
         assert state.attributes[attr] == value
@@ -965,106 +945,37 @@ async def test_trigger_entity_restore_state(
     hass.bus.async_fire("test_event", {"action": "1.0.0"})
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_UPDATE.entity_id)
     assert state.state == STATE_ON
     assert state.attributes["icon"] == "mdi:pirate"
     assert state.attributes["entity_picture"] == "/local/dogs.png"
 
 
-@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize("config", [TEST_UPDATE_CONFIG])
 @pytest.mark.parametrize(
-    ("updates", "style"),
-    [
-        (
-            [
-                {
-                    "name": "test_template_event_01",
-                    **TEST_UNIQUE_ID_CONFIG,
-                },
-                {
-                    "name": "test_template_event_02",
-                    **TEST_UNIQUE_ID_CONFIG,
-                },
-            ],
-            ConfigurationStyle.MODERN,
-        ),
-        (
-            [
-                {
-                    "name": "test_template_event_01",
-                    **TEST_UNIQUE_ID_CONFIG,
-                },
-                {
-                    "name": "test_template_event_02",
-                    **TEST_UNIQUE_ID_CONFIG,
-                },
-            ],
-            ConfigurationStyle.TRIGGER,
-        ),
-    ],
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
 async def test_unique_id(
-    hass: HomeAssistant, count: int, updates: list[dict], style: ConfigurationStyle
+    hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
 ) -> None:
     """Test unique_id option only creates one update entity per id."""
-    config = {"update": updates}
-    if style == ConfigurationStyle.TRIGGER:
-        config = {**config, **TEST_STATE_TRIGGER}
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            {"template": config},
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all("update")) == 1
+    await setup_and_test_unique_id(hass, TEST_UPDATE, style, config)
 
 
+@pytest.mark.parametrize("config", [TEST_UPDATE_CONFIG])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_nested_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test unique_id option creates one update entity per nested id."""
-
-    with assert_setup_component(1, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            {
-                "template": {
-                    "unique_id": "x",
-                    "update": [
-                        {
-                            "name": "test_a",
-                            **TEST_UPDATE_CONFIG,
-                            "unique_id": "a",
-                        },
-                        {
-                            "name": "test_b",
-                            **TEST_UPDATE_CONFIG,
-                            "unique_id": "b",
-                        },
-                    ],
-                }
-            },
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all("update")) == 2
-
-    entry = entity_registry.async_get("update.test_a")
-    assert entry
-    assert entry.unique_id == "x-a"
-
-    entry = entity_registry.async_get("update.test_b")
-    assert entry
-    assert entry.unique_id == "x-b"
+    await setup_and_test_nested_unique_id(
+        hass, TEST_UPDATE, style, entity_registry, config
+    )
 
 
 async def test_flow_preview(

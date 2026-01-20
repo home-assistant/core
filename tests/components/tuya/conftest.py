@@ -176,6 +176,7 @@ async def _create_device(hass: HomeAssistant, mock_device_code: str) -> Customer
     if device.update_time:
         device.update_time = int(dt_util.as_timestamp(device.update_time))
     device.support_local = details.get("support_local")
+    device.local_strategy = details.get("local_strategy")
     device.mqtt_connected = details.get("mqtt_connected")
 
     device.function = {
@@ -193,6 +194,7 @@ async def _create_device(hass: HomeAssistant, mock_device_code: str) -> Customer
     device.status_range = {
         key: DeviceStatusRange(
             code=key,
+            report_type=value.get("report_type"),
             type=value["type"],
             values=(
                 values

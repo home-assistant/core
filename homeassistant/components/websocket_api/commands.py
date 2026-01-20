@@ -865,9 +865,9 @@ def handle_extract_from_target(
 ) -> None:
     """Handle extract from target command."""
 
-    selector_data = target_helpers.TargetSelectorData(msg["target"])
+    target_selection = target_helpers.TargetSelection(msg["target"])
     extracted = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group=msg["expand_group"]
+        hass, target_selection, expand_group=msg["expand_group"]
     )
 
     extracted_dict = {

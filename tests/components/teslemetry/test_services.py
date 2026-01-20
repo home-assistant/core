@@ -63,6 +63,40 @@ async def test_services(
         "sensor.energy_site_battery_power"
     ).device_id
 
+    # Test set_scheduled_charging with enable=False (time should default to 0)
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.set_scheduled_charging",
+        return_value=COMMAND_OK,
+    ) as set_scheduled_charging_off:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_CHARGING,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ENABLE: False,
+            },
+            blocking=True,
+        )
+        set_scheduled_charging_off.assert_called_once_with(enable=False, time=0)
+
+    # Test set_scheduled_departure with enable=False (times should default to 0)
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.set_scheduled_departure",
+        return_value=COMMAND_OK,
+    ) as set_scheduled_departure_off:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_DEPARTURE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ENABLE: False,
+            },
+            blocking=True,
+        )
+        set_scheduled_departure_off.assert_called_once_with(
+            False, False, False, 0, False, False, 0
+        )
+
     with patch(
         "tesla_fleet_api.teslemetry.Vehicle.navigation_gps_request",
         return_value=COMMAND_OK,
@@ -308,6 +342,8 @@ async def test_service_validation_errors(
     """Tests that the custom services handle bad data."""
 
     await setup_platform(hass)
+    entity_registry = er.async_get(hass)
+    vehicle_device = entity_registry.async_get("sensor.test_charging").device_id
 
     # Bad device ID
     with pytest.raises(ServiceValidationError):
@@ -317,6 +353,42 @@ async def test_service_validation_errors(
             {
                 CONF_DEVICE_ID: "nope",
                 ATTR_GPS: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
+            },
+            blocking=True,
+        )
+
+    # Test set_scheduled_charging validation error (enable=True but no time)
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_CHARGING,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_ENABLE: True,
+            },
+            blocking=True,
+        )
+
+    # Test set_scheduled_departure validation error (preconditioning_enabled=True but no departure_time)
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_DEPARTURE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_PRECONDITIONING_ENABLED: True,
+            },
+            blocking=True,
+        )
+
+    # Test set_scheduled_departure validation error (off_peak_charging_enabled=True but no end_off_peak_time)
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SCHEDULED_DEPARTURE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_OFF_PEAK_CHARGING_ENABLED: True,
             },
             blocking=True,
         )

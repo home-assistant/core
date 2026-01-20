@@ -13,6 +13,7 @@ import pytest
 from homeassistant.components.braviatv.const import (
     CONF_NICKNAME,
     CONF_USE_PSK,
+    CONF_USE_SSL,
     DOMAIN,
     NICKNAME_PREFIX,
 )
@@ -131,7 +132,7 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
         assert result["step_id"] == "authorize"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_USE_PSK: False}
+            result["flow_id"], user_input={CONF_USE_PSK: False, CONF_USE_SSL: False}
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -148,6 +149,7 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
             CONF_HOST: "bravia-host",
             CONF_PIN: "1234",
             CONF_USE_PSK: False,
+            CONF_USE_SSL: False,
             CONF_MAC: "AA:BB:CC:DD:EE:FF",
             CONF_CLIENT_ID: uuid,
             CONF_NICKNAME: f"{NICKNAME_PREFIX} {uuid[:6]}",
@@ -307,8 +309,17 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
         assert result["reason"] == "already_configured"
 
 
-async def test_create_entry(hass: HomeAssistant) -> None:
-    """Test that entry is added correctly with PIN auth."""
+@pytest.mark.parametrize(
+    ("use_psk", "use_ssl"),
+    [
+        (True, False),
+        (False, False),
+        (True, True),
+        (False, True),
+    ],
+)
+async def test_create_entry(hass: HomeAssistant, use_psk, use_ssl) -> None:
+    """Test that entry is added correctly."""
     uuid = await instance_id.async_get(hass)
 
     with (
@@ -328,14 +339,14 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         assert result["step_id"] == "authorize"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_USE_PSK: False}
+            result["flow_id"], user_input={CONF_USE_PSK: use_psk, CONF_USE_SSL: use_ssl}
         )
 
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "pin"
+        assert result["step_id"] == "psk" if use_psk else "pin"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_PIN: "1234"}
+            result["flow_id"], user_input={CONF_PIN: "secret"}
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -343,50 +354,18 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         assert result["title"] == "BRAVIA TV-Model"
         assert result["data"] == {
             CONF_HOST: "bravia-host",
-            CONF_PIN: "1234",
-            CONF_USE_PSK: False,
+            CONF_PIN: "secret",
+            CONF_USE_PSK: use_psk,
+            CONF_USE_SSL: use_ssl,
             CONF_MAC: "AA:BB:CC:DD:EE:FF",
-            CONF_CLIENT_ID: uuid,
-            CONF_NICKNAME: f"{NICKNAME_PREFIX} {uuid[:6]}",
-        }
-
-
-async def test_create_entry_psk(hass: HomeAssistant) -> None:
-    """Test that entry is added correctly with PSK auth."""
-    with (
-        patch("pybravia.BraviaClient.connect"),
-        patch("pybravia.BraviaClient.set_wol_mode"),
-        patch(
-            "pybravia.BraviaClient.get_system_info",
-            return_value=BRAVIA_SYSTEM_INFO,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "bravia-host"}
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "authorize"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_USE_PSK: True}
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "psk"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_PIN: "mypsk"}
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["result"].unique_id == "very_unique_string"
-        assert result["title"] == "BRAVIA TV-Model"
-        assert result["data"] == {
-            CONF_HOST: "bravia-host",
-            CONF_PIN: "mypsk",
-            CONF_USE_PSK: True,
-            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            **(
+                {
+                    CONF_CLIENT_ID: uuid,
+                    CONF_NICKNAME: f"{NICKNAME_PREFIX} {uuid[:6]}",
+                }
+                if not use_psk
+                else {}
+            ),
         }
 
 
