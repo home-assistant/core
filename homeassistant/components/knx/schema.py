@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from abc import ABC
 from collections import OrderedDict
-import math
 from typing import ClassVar, Final
 
 import voluptuous as vol
@@ -85,43 +84,6 @@ def _number_limit_sub_validator(config: dict) -> dict:
     transcoder = DPTNumeric.parse_transcoder(config[CONF_TYPE])
     assert transcoder is not None  # already checked in numeric_type_validator
     return validate_number_attributes(transcoder, config)
-
-
-def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
-    """Validate a number entity configurations dependent on configured value type."""
-    value_type = entity_config[CONF_TYPE]
-    min_config: float | None = entity_config.get(NumberConf.MIN)
-    max_config: float | None = entity_config.get(NumberConf.MAX)
-    step_config: float | None = entity_config.get(NumberConf.STEP)
-    dpt_class = DPTNumeric.parse_transcoder(value_type)
-
-    if dpt_class is None:
-        raise vol.Invalid(f"'type: {value_type}' is not a valid numeric sensor type.")
-    # Infinity is not supported by Home Assistant frontend so user defined
-    # config is required if if xknx DPTNumeric subclass defines it as limit.
-    if min_config is None and dpt_class.value_min == -math.inf:
-        raise vol.Invalid(f"'min' key required for value type '{value_type}'")
-    if min_config is not None and min_config < dpt_class.value_min:
-        raise vol.Invalid(
-            f"'min: {min_config}' undercuts possible minimum"
-            f" of value type '{value_type}': {dpt_class.value_min}"
-        )
-
-    if max_config is None and dpt_class.value_max == math.inf:
-        raise vol.Invalid(f"'max' key required for value type '{value_type}'")
-    if max_config is not None and max_config > dpt_class.value_max:
-        raise vol.Invalid(
-            f"'max: {max_config}' exceeds possible maximum"
-            f" of value type '{value_type}': {dpt_class.value_max}"
-        )
-
-    if step_config is not None and step_config < dpt_class.resolution:
-        raise vol.Invalid(
-            f"'step: {step_config}' undercuts possible minimum step"
-            f" of value type '{value_type}': {dpt_class.resolution}"
-        )
-
-    return entity_config
 
 
 def _max_payload_value(payload_length: int) -> int:
