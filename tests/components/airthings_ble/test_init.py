@@ -195,14 +195,22 @@ async def test_coordinator_default_scan_interval(
         assert hass.states.get(battery_entity_id).state == "84"
 
 
-async def test_connectivity_issue_smartlink(
+@pytest.mark.parametrize(
+    ("connectivity_mode", "translation_key"),
+    [
+        ("SmartLink", "smartlink_detected"),
+        ("Not configured", "not_configured"),
+    ],
+)
+async def test_connectivity_issue_created(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    connectivity_mode: str,
+    translation_key: str,
 ) -> None:
-    """Test that connectivity mode issue is created for SmartLink devices."""
-    # Create a copy with SmartLink connectivity mode
+    """Test that connectivity mode issue is created for SmartLink and NotConfigured devices."""
     device = deepcopy(CORENTIUM_HOME_2_DEVICE_INFO)
-    device.sensors["connectivity_mode"] = "SmartLink"
+    device.sensors["connectivity_mode"] = connectivity_mode
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -220,11 +228,10 @@ async def test_connectivity_issue_smartlink(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # Check that the issue was created
-    issue_id = f"smartlink_detected_{device.address}"
+    issue_id = f"connectivity_issue_{device.address}"
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
-    assert issue.issue_id == issue_id
+    assert issue.translation_key == translation_key
 
 
 @pytest.mark.parametrize(
@@ -258,7 +265,7 @@ async def test_connectivity_issue_no_trigger(
         await hass.async_block_till_done()
 
     # Check that no issue was created
-    issue_id = f"smartlink_detected_{device.address}"
+    issue_id = f"connectivity_issue_{device.address}"
     issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is None
 
@@ -287,13 +294,50 @@ async def test_connectivity_issue_removed_on_entry_remove(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    issue_id = f"smartlink_detected_{device.address}"
+    issue_id = f"connectivity_issue_{device.address}"
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
 
+    # Issue should be removed
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_connectivity_mode_transition_clears_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test that issue is removed when connectivity mode changes to BLE."""
+    device = deepcopy(CORENTIUM_HOME_2_DEVICE_INFO)
+    device.sensors["connectivity_mode"] = "SmartLink"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=CORENTIUM_HOME_2_SERVICE_INFO.address,
+        data={DEVICE_MODEL: device.model.value},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, CORENTIUM_HOME_2_SERVICE_INFO)
+
+    with (
+        patch_async_ble_device_from_address(CORENTIUM_HOME_2_SERVICE_INFO.device),
+        patch_airthings_ble(device),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        issue_id = f"connectivity_issue_{device.address}"
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+        device.sensors["connectivity_mode"] = "Bluetooth"
+        coordinator = entry.runtime_data
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+        # Issue should be removed
+        assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_setup_ble_device_not_found(

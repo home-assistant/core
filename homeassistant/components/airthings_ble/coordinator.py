@@ -22,11 +22,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
+    CONNECTIVITY_ISSUE_PREFIX,
     DEFAULT_SCAN_INTERVAL,
     DEVICE_MODEL,
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
-    SMARTLINK_ISSUE_PREFIX,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,15 +111,10 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
         if connectivity_mode is None:
             return
 
-        issue_id = f"{SMARTLINK_ISSUE_PREFIX}{data.address}"
+        issue_id = f"{CONNECTIVITY_ISSUE_PREFIX}{data.address}"
+        serial_number = f"{data.model.value}{data.identifier}"
 
-        # Find sensors with connectivity mode set to smartlink (hub)
-        # or not configured
-        if connectivity_mode in {
-            AirthingsConnectivityMode.SMARTLINK.value,
-            AirthingsConnectivityMode.NOT_CONFIGURED.value,
-        }:
-            serial_number = f"{data.model.value}{data.identifier}"
+        if connectivity_mode == AirthingsConnectivityMode.SMARTLINK.value:
             ir.async_create_issue(
                 hass=self.hass,
                 domain=DOMAIN,
@@ -132,7 +127,20 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
                     "serial_number": serial_number,
                 },
             )
-        elif connectivity_mode == AirthingsConnectivityMode.BLE.value:
+        elif connectivity_mode == AirthingsConnectivityMode.NOT_CONFIGURED.value:
+            ir.async_create_issue(
+                hass=self.hass,
+                domain=DOMAIN,
+                issue_id=issue_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="not_configured",
+                translation_placeholders={
+                    "device_name": data.friendly_name(),
+                    "serial_number": serial_number,
+                },
+            )
+        else:
             ir.async_delete_issue(
                 hass=self.hass,
                 domain=DOMAIN,

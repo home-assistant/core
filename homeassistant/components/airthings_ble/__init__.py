@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
-from .const import DOMAIN, MAX_RETRIES_AFTER_STARTUP, SMARTLINK_ISSUE_PREFIX
+from .const import CONNECTIVITY_ISSUE_PREFIX, DOMAIN, MAX_RETRIES_AFTER_STARTUP
 from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -44,4 +44,4 @@ async def async_remove_entry(
 ) -> None:
     """Remove an Airthings BLE config entry."""
     if unique_id := entry.unique_id:
-        ir.async_delete_issue(hass, DOMAIN, f"{SMARTLINK_ISSUE_PREFIX}{unique_id}")
+        ir.async_delete_issue(hass, DOMAIN, f"{CONNECTIVITY_ISSUE_PREFIX}{unique_id}")
