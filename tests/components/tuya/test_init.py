@@ -28,16 +28,18 @@ async def test_multiple_entries(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Ensure multiple config entries do not remove items from other entries."""
+    main_entity_id = "sensor.boite_aux_lettres_arriere_battery"
+    second_entity_id = "binary_sensor.window_downstairs_door"
 
     main_manager = create_manager()
     main_device = await create_device(hass, "mcs_8yhypbo7")
     await initialize_entry(hass, main_manager, mock_config_entry, main_device)
 
-    # Ensure initial setup is correct
-    main_entity_id = "sensor.boite_aux_lettres_arriere_battery"
+    # Ensure initial setup is correct (main present, second absent)
     assert hass.states.get(main_entity_id)
-    assert (e := entity_registry.async_get(main_entity_id))
-    assert device_registry.async_get(e.device_id)
+    assert entity_registry.async_get(main_entity_id)
+    assert not hass.states.get(second_entity_id)
+    assert not entity_registry.async_get(second_entity_id)
 
     # Create a second config entry
     second_config_entry = MockConfigEntry(
@@ -55,16 +57,11 @@ async def test_multiple_entries(
     second_device = await create_device(hass, "mcs_oxslv1c9")
     await initialize_entry(hass, second_manager, second_config_entry, second_device)
 
-    # Ensure second setup is correct
-    second_entity_id = "binary_sensor.door_sensor_1_doorcontact_state"
-    assert hass.states.get(second_entity_id)
-    assert (e := entity_registry.async_get(second_entity_id))
-    assert device_registry.async_get(e.device_id)
-
-    # Ensure main setup is STILL correct
+    # Ensure setup is correct (both present)
     assert hass.states.get(main_entity_id)
-    assert (e := entity_registry.async_get(main_entity_id))
-    assert device_registry.async_get(e.device_id)
+    assert entity_registry.async_get(main_entity_id)
+    assert hass.states.get(second_entity_id)
+    assert entity_registry.async_get(second_entity_id)
 
 
 async def test_device_registry(
