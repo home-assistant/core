@@ -304,11 +304,16 @@ async def test_connectivity_issue_removed_on_entry_remove(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
+@pytest.mark.parametrize(
+    "new_mode",
+    ["Bluetooth", "Unknown"],
+)
 async def test_connectivity_mode_transition_clears_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    new_mode: str,
 ) -> None:
-    """Test that issue is removed when connectivity mode changes to BLE."""
+    """Test that issue is removed when connectivity mode changes to BLE or unknown mode."""
     device = deepcopy(CORENTIUM_HOME_2_DEVICE_INFO)
     device.sensors["connectivity_mode"] = "SmartLink"
 
@@ -331,7 +336,7 @@ async def test_connectivity_mode_transition_clears_issue(
         issue_id = f"connectivity_issue_{device.address}"
         assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
-        device.sensors["connectivity_mode"] = "Bluetooth"
+        device.sensors["connectivity_mode"] = new_mode
         coordinator = entry.runtime_data
         await coordinator.async_refresh()
         await hass.async_block_till_done()
