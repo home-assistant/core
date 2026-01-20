@@ -1424,8 +1424,8 @@ def _async_extract_targets(
             to_process.extend(config["conditions"])
             continue
 
-        if target_labels := _get_targets_from_condition_config(config, target_type):
-            referenced.update(target_labels)
+        if targets := _get_targets_from_condition_config(config, target_type):
+            referenced.update(targets)
 
     return referenced
 
