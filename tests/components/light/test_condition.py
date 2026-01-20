@@ -11,7 +11,8 @@ from tests.components import (
     ConditionStateDescription,
     assert_condition_gated_by_labs_flag,
     create_target_condition,
-    parametrize_condition_states,
+    parametrize_condition_states_all,
+    parametrize_condition_states_any,
     parametrize_target_entities,
     set_or_remove_state,
     target_entities,
@@ -57,12 +58,12 @@ async def test_light_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
-        *parametrize_condition_states(
+        *parametrize_condition_states_any(
             condition="light.is_on",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
         ),
-        *parametrize_condition_states(
+        *parametrize_condition_states_any(
             condition="light.is_off",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
@@ -123,12 +124,12 @@ async def test_light_state_condition_behavior_any(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
-        *parametrize_condition_states(
+        *parametrize_condition_states_all(
             condition="light.is_on",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
         ),
-        *parametrize_condition_states(
+        *parametrize_condition_states_all(
             condition="light.is_off",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
@@ -169,17 +170,10 @@ async def test_light_state_condition_behavior_all(
 
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
-        # The condition passes if all entities are either in a target state or invalid
-        assert condition(hass) == (
-            (not state["state_valid"])
-            or (state["condition_true"] and entities_in_target == 1)
-        )
+        assert condition(hass) == state["condition_true_first_entity"]
 
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
 
-        # The condition passes if all entities are either in a target state or invalid
-        assert condition(hass) == (
-            (not state["state_valid"]) or state["condition_true"]
-        )
+        assert condition(hass) == state["condition_true"]
