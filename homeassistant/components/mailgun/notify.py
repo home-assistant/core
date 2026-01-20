@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pymailgunner import (
     Client,
@@ -91,7 +92,7 @@ class MailgunNotificationService(BaseNotificationService):
             return False
         return True
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a mail to the recipient."""
 
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
