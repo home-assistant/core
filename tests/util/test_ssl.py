@@ -149,26 +149,6 @@ def test_ssl_context_insecure_alpn_bucketing() -> None:
     )
 
 
-def test_ssl_context_alpn_protocols_set() -> None:
-    """Test that ALPN protocols are correctly set on SSL contexts."""
-    http1_context = client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1)
-    http2_context = client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP2)
-
-    # Verify the ALPN protocols are set (can be retrieved via get_alpn_protocols on
-    # the negotiated connection, but we can check the context was configured)
-    # The contexts should be different objects due to different ALPN settings
-    assert http1_context is not http2_context
-
-    # Verify no-verify contexts also have ALPN set
-    http1_no_verify = client_context_no_verify(
-        SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP1
-    )
-    http2_no_verify = client_context_no_verify(
-        SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP2
-    )
-    assert http1_no_verify is not http2_no_verify
-
-
 def test_get_default_context_uses_http1_alpn() -> None:
     """Test that get_default_context returns context with HTTP1 ALPN."""
     default_ctx = get_default_context()

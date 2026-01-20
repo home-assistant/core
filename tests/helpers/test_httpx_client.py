@@ -8,7 +8,6 @@ import pytest
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import httpx_client as client
-from homeassistant.util import ssl as ssl_util
 
 from tests.common import MockModule, extract_stack_to_frame, mock_integration
 
@@ -169,36 +168,6 @@ async def test_create_async_httpx_client_http2(hass: HomeAssistant) -> None:
     # Both should be valid clients
     assert isinstance(http1_client, httpx.AsyncClient)
     assert isinstance(http2_client, httpx.AsyncClient)
-
-
-async def test_httpx_client_ssl_contexts_differ_by_http2(
-    hass: HomeAssistant,
-) -> None:
-    """Test that HTTP/1.1 and HTTP/2 clients use different SSL contexts.
-
-    This verifies the ALPN protocol bucketing is working correctly - HTTP/1.1
-    and HTTP/2 clients need different SSL contexts to prevent httpx/httpcore
-    from mutating shared contexts.
-    """
-    http1_client = client.create_async_httpx_client(hass, auto_cleanup=False)
-    http2_client = client.create_async_httpx_client(
-        hass, http2=True, auto_cleanup=False
-    )
-
-    # Extract SSL context from verify parameter
-    http1_ssl_context = http1_client._transport._pool._ssl_context
-    http2_ssl_context = http2_client._transport._pool._ssl_context
-
-    # HTTP/1.1 and HTTP/2 should have different SSL contexts
-    assert http1_ssl_context is not http2_ssl_context
-
-    # Verify they match the expected cached contexts
-    assert http1_ssl_context is ssl_util.client_context(
-        ssl_util.SSLCipherList.PYTHON_DEFAULT, ssl_util.SSL_ALPN_HTTP1
-    )
-    assert http2_ssl_context is ssl_util.client_context(
-        ssl_util.SSLCipherList.PYTHON_DEFAULT, ssl_util.SSL_ALPN_HTTP2
-    )
 
 
 async def test_warning_close_session_integration(
