@@ -1790,6 +1790,7 @@ async def test_migrate_chat_id(
         "action": "telegram_bot.send_message",
         "action_origin": expected_action_origin,
         "chat_ids": "654321",
+        "telegram_bot_entities_url": "/config/entities?domain=telegram_bot",
     }
 
     # fix the issue via repair flow
@@ -1816,6 +1817,7 @@ async def test_migrate_chat_id(
             "action": "telegram_bot.send_message",
             "action_origin": expected_action_origin,
             "chat_ids": "654321",
+            "telegram_bot_entities_url": "/config/entities?domain=telegram_bot",
         },
         "last_step": None,
         "preview": None,

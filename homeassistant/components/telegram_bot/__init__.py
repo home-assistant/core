@@ -757,6 +757,7 @@ def _warn_chat_id_migration(service: ServiceCall) -> set[int]:
             "action": f"{DOMAIN}.{service.service}",
             "chat_ids": ", ".join(str(chat_id) for chat_id in chat_ids),
             "action_origin": service_call_origin,
+            "telegram_bot_entities_url": "/config/entities?domain=telegram_bot",
         },
         learn_more_url="https://github.com/home-assistant/core/pull/154868",
     )
