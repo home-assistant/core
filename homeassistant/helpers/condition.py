@@ -1407,7 +1407,7 @@ def async_extract_labels(config: ConfigType | Template) -> set[str]:
 @callback
 def _async_extract_targets(
     config: ConfigType | Template,
-    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+    target_type: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
 ) -> set[str]:
     """Extract targets from a condition."""
     referenced: set[str] = set()
@@ -1424,7 +1424,7 @@ def _async_extract_targets(
             to_process.extend(config["conditions"])
             continue
 
-        if target_labels := _get_targets_from_condition_config(config, target):
+        if target_labels := _get_targets_from_condition_config(config, target_type):
             referenced.update(target_labels)
 
     return referenced
