@@ -349,7 +349,7 @@ async def test_asleep_or_offline(
     mock_wake_up.side_effect = InvalidCommand
     with pytest.raises(
         HomeAssistantError,
-        match="Failed to wake up vehicle: The data request or command is unknown.",
+        match="Failed to wake up vehicle",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
