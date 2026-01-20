@@ -6,11 +6,14 @@ import io
 import logging
 import pathlib
 import shutil
-from typing import Any
 import zipfile
+
+from aiogithubapi import GitHubAPI, GitHubException
+from aiohttp import ClientError, ClientResponseError, ClientTimeout
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,90 +39,99 @@ def _get_directory_size_mb(directory: pathlib.Path) -> float:
     return total / (1024 * 1024)
 
 
-def _get_pr_head_sha(pr_number: int, github_token: str) -> str:
-    """Get the head SHA for the PR (runs in executor)."""
-    from github import (  # noqa: PLC0415
-        BadCredentialsException,
-        Github,
-        GithubException,
-        UnknownObjectException,
-    )
-
+async def _get_pr_head_sha(client: GitHubAPI, pr_number: int) -> str:
+    """Get the head SHA for the PR."""
     try:
-        github_client = Github(github_token)
-        repo = github_client.get_repo(GITHUB_REPO)
-        pull_request = repo.get_pull(pr_number)
-    except BadCredentialsException:
-        raise HomeAssistantError(ERROR_INVALID_TOKEN) from None
-    except UnknownObjectException:
+        response = await client.generic(
+            endpoint=f"/repos/home-assistant/frontend/pulls/{pr_number}",
+        )
+        return str(response.data["head"]["sha"])
+    except GitHubException as err:
+        if err.status == 401:
+            raise HomeAssistantError(ERROR_INVALID_TOKEN) from err
+        if err.status == 403:
+            raise HomeAssistantError(ERROR_RATE_LIMIT) from err
+        if err.status == 404:
+            raise HomeAssistantError(
+                f"PR #{pr_number} does not exist in repository {GITHUB_REPO}"
+            ) from err
+        raise HomeAssistantError(f"GitHub API error: {err}") from err
+
+
+async def _find_pr_artifact(client: GitHubAPI, pr_number: int, head_sha: str) -> str:
+    """Find the build artifact for the given PR and commit SHA.
+
+    Returns the artifact download URL.
+    """
+    try:
+        # Get workflow runs for the commit
+        response = await client.generic(
+            endpoint="/repos/home-assistant/frontend/actions/workflows/ci.yaml/runs",
+            params={"head_sha": head_sha, "per_page": 10},
+        )
+
+        # Find the most recent successful run for this commit
+        for run in response.data.get("workflow_runs", []):
+            if run["status"] == "completed" and run["conclusion"] == "success":
+                # Get artifacts for this run
+                artifacts_response = await client.generic(
+                    endpoint=f"/repos/home-assistant/frontend/actions/runs/{run['id']}/artifacts",
+                )
+
+                # Find the frontend-build artifact
+                for artifact in artifacts_response.data.get("artifacts", []):
+                    if artifact["name"] == ARTIFACT_NAME:
+                        _LOGGER.info(
+                            "Found artifact '%s' from CI run #%s",
+                            ARTIFACT_NAME,
+                            run["id"],
+                        )
+                        return str(artifact["archive_download_url"])
+
         raise HomeAssistantError(
-            f"PR #{pr_number} does not exist in repository {GITHUB_REPO}"
-        ) from None
-    except GithubException as err:
+            f"No '{ARTIFACT_NAME}' artifact found for PR #{pr_number}. "
+            "Possible reasons: CI has not run yet or is running, "
+            "or the build failed, or the PR artifact expired. "
+            f"Check https://github.com/{GITHUB_REPO}/pull/{pr_number}/checks"
+        )
+    except GitHubException as err:
+        if err.status == 401:
+            raise HomeAssistantError(ERROR_INVALID_TOKEN) from err
         if err.status == 403:
             raise HomeAssistantError(ERROR_RATE_LIMIT) from err
         raise HomeAssistantError(f"GitHub API error: {err}") from err
-    else:
-        return pull_request.head.sha
 
 
-def _find_pr_artifact(pr_number: int, head_sha: str, github_token: str) -> Any:
-    """Find the build artifact for the given PR and commit SHA (runs in executor)."""
-    from github import Github  # noqa: PLC0415
-
-    github_client = Github(github_token)
-    repo = github_client.get_repo(GITHUB_REPO)
-    workflow = repo.get_workflow("ci.yaml")
-
-    # Find the most recent successful run for this commit
-    for run in workflow.get_runs(head_sha=head_sha):
-        if run.status == "completed" and run.conclusion == "success":
-            # Find the frontend-build artifact
-            for artifact in run.get_artifacts():
-                if artifact.name == ARTIFACT_NAME:
-                    _LOGGER.info(
-                        "Found artifact '%s' from CI run #%s",
-                        ARTIFACT_NAME,
-                        run.id,
-                    )
-                    return artifact
-
-    raise HomeAssistantError(
-        f"No '{ARTIFACT_NAME}' artifact found for PR #{pr_number}. "
-        "Possible reasons: CI has not run yet or is running, "
-        "or the build failed, or the PR artifact expired. "
-        f"Check https://github.com/{GITHUB_REPO}/pull/{pr_number}/checks"
-    )
-
-
-def _download_artifact_data(artifact_url: str, github_token: str) -> bytes:
-    """Download artifact data from GitHub (runs in executor)."""
-    import requests  # noqa: PLC0415
-
+async def _download_artifact_data(
+    hass: HomeAssistant, artifact_url: str, github_token: str
+) -> bytes:
+    """Download artifact data from GitHub."""
+    session = async_get_clientsession(hass)
     headers = {
         "Authorization": f"token {github_token}",
         "Accept": "application/vnd.github+json",
     }
 
     try:
-        response = requests.get(artifact_url, headers=headers, timeout=60)
+        response = await session.get(
+            artifact_url, headers=headers, timeout=ClientTimeout(total=60)
+        )
         response.raise_for_status()
-    except requests.HTTPError as err:
-        if err.response.status_code == 401:
+        return await response.read()
+    except ClientResponseError as err:
+        if err.status == 401:
             raise HomeAssistantError(ERROR_INVALID_TOKEN) from err
-        if err.response.status_code == 403:
+        if err.status == 403:
             raise HomeAssistantError(ERROR_RATE_LIMIT) from err
         raise HomeAssistantError(
-            f"Failed to download artifact: HTTP {err.response.status_code}"
+            f"Failed to download artifact: HTTP {err.status}"
         ) from err
-    except requests.Timeout:
+    except TimeoutError as err:
         raise HomeAssistantError(
             "Timeout downloading artifact (>60s). Check your network connection"
-        ) from None
-    except requests.RequestException as err:
+        ) from err
+    except ClientError as err:
         raise HomeAssistantError(f"Network error downloading artifact: {err}") from err
-    else:
-        return response.content
 
 
 def _extract_artifact(
@@ -159,11 +171,15 @@ async def download_pr_artifact(
         )
         return None
 
+    # Create GitHub API client
+    client = GitHubAPI(
+        token=github_token,
+        session=async_get_clientsession(hass),
+    )
+
     # Get the current head SHA for this PR
     try:
-        head_sha = await hass.async_add_executor_job(
-            _get_pr_head_sha, pr_number, github_token
-        )
+        head_sha = await _get_pr_head_sha(client, pr_number)
     except HomeAssistantError as err:
         _LOGGER.error("%s", err)
         return None
@@ -191,19 +207,13 @@ async def download_pr_artifact(
             head_sha[:8],
         )
 
-    from github import GithubException  # noqa: PLC0415
-
     try:
         # Find the artifact
-        artifact = await hass.async_add_executor_job(
-            _find_pr_artifact, pr_number, head_sha, github_token
-        )
+        artifact_url = await _find_pr_artifact(client, pr_number, head_sha)
 
         # Download artifact
         _LOGGER.info("Downloading frontend PR #%s artifact", pr_number)
-        artifact_data = await hass.async_add_executor_job(
-            _download_artifact_data, artifact.archive_download_url, github_token
-        )
+        artifact_data = await _download_artifact_data(hass, artifact_url, github_token)
 
         # Extract artifact
         await hass.async_add_executor_job(
@@ -232,9 +242,6 @@ async def download_pr_artifact(
                 CACHE_WARNING_SIZE_MB,
                 cache_dir,
             )
-    except GithubException as err:
-        _LOGGER.error("GitHub API error for PR #%s: %s", pr_number, err)
-        return None
     except HomeAssistantError as err:
         _LOGGER.error("%s", err)
         return None
