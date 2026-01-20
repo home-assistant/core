@@ -4,9 +4,9 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device Battery group mode',
       'options': list([
-        <Mode.ZERO: 'zero'>,
-        <Mode.STANDBY: 'standby'>,
-        <Mode.TO_FULL: 'to_full'>,
+        'standby',
+        'to_full',
+        'zero',
       ]),
     }),
     'context': <ANY>,
@@ -24,9 +24,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        <Mode.ZERO: 'zero'>,
-        <Mode.STANDBY: 'standby'>,
-        <Mode.TO_FULL: 'to_full'>,
+        'standby',
+        'to_full',
+        'zero',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -44,6 +44,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery group mode',
     'options': dict({
     }),
     'original_device_class': None,

@@ -11,6 +11,7 @@ from homeassistant.components.template.config import (
     async_validate_config_section,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
@@ -99,6 +100,120 @@ async def test_invalid_default_entity_id(
     }
     with pytest.raises(vol.Invalid):
         CONFIG_SECTION_SCHEMA(config)
+
+
+@pytest.mark.parametrize(
+    ("config", "expected_error"),
+    [
+        (
+            {
+                "trigger": {"trigger": "event", "event_type": "my_event"},
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "unique_id": "test",
+                    "name": "test",
+                    "auto_off": "00:00:01",
+                },
+            },
+            None,
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "name": "test",
+                },
+            },
+            None,
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: name: Template Binary Sensor",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "name": "test",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: name: test",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "unique_id": "test_unique_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: unique_id: test_unique_id",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "name": "test",
+                    "unique_id": "test_unique_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: name: test",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "default_entity_id": "binary_sensor.test_entity_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: default_entity_id: binary_sensor.test_entity_id",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "name": "test",
+                    "unique_id": "test_unique_id",
+                    "default_entity_id": "binary_sensor.test_entity_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: name: test",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "unique_id": "test_unique_id",
+                    "default_entity_id": "binary_sensor.test_entity_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: default_entity_id: binary_sensor.test_entity_id",
+        ),
+    ],
+)
+async def test_invalid_binary_sensor_schema_with_auto_off(
+    hass: HomeAssistant,
+    config: dict,
+    expected_error: str | None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config schemas create issue and log warning."""
+
+    await async_setup_component(hass, "template", {"template": [config]})
+
+    assert (
+        expected_error is None and "ERROR" not in caplog.text
+    ) or expected_error in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -314,3 +429,118 @@ async def test_state_init_attribute_variables(
     assert sensor.attributes["icon"] == "mdi:lightbulb-off"
     assert sensor.attributes["entity_picture"] == "off.png"
     assert sensor.attributes["friendly_name"] == "Foo"
+
+
+@pytest.mark.parametrize(
+    ("config", "expected_warning"),
+    [
+        (
+            {
+                "trigger": {"trigger": "event", "event_type": "my_event"},
+            },
+            "Invalid template configuration found, trigger option is missing matching domain",
+        ),
+        (
+            {
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"caller": "{{ this.entity_id }}"},
+                },
+                "sensor": {
+                    "state": "{{ states('sensor.test') }}",
+                    "unique_id": "test",
+                    "name": "test",
+                    "icon": "mdi:test",
+                },
+            },
+            "Invalid template configuration found, action option requires a trigger",
+        ),
+    ],
+)
+async def test_invalid_schema_raises_issue(
+    hass: HomeAssistant,
+    config: dict,
+    expected_warning: str,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config schemas create issue and log warning."""
+
+    await async_setup_component(hass, "template", {"template": [config]})
+
+    assert expected_warning in caplog.text
+
+    assert len(issue_registry.issues) == 1
+    issue = next(iter(issue_registry.issues.values()))
+
+    assert issue.domain == "template"
+    assert issue.severity == ir.IssueSeverity.WARNING
+
+
+async def test_multiple_configuration_keys(
+    hass: HomeAssistant,
+) -> None:
+    """Test multiple configurations keys create entities."""
+    await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [{"binary_sensor": [{"name": "Foo", "state": "{{ True }}"}]}],
+            "template mytemplates": [
+                {
+                    "sensor": [
+                        {"name": "Foo", "state": "{{ 'bar' }}"},
+                        {"name": "Bar", "state": "{{ 'foo' }}"},
+                    ]
+                }
+            ],
+            "template y": [
+                {
+                    "cover": [
+                        {
+                            "name": "Shades Curtain",
+                            "unique_id": "shades_curtain",
+                            "open_cover": [],
+                            "close_cover": [],
+                            "stop_cover": [],
+                        }
+                    ]
+                },
+                {
+                    "cover": [
+                        {
+                            "open_cover": {
+                                "target": {"entity_id": ["cover.shades_curtain"]},
+                                "action": "cover.close_cover",
+                            },
+                            "close_cover": {
+                                "target": {"entity_id": ["cover.shades_curtain"]},
+                                "action": "cover.open_cover",
+                            },
+                            "stop_cover": {
+                                "target": {"entity_id": ["cover.shades_curtain"]},
+                                "action": "cover.stop_cover",
+                            },
+                            "default_entity_id": "cover.shades_reversed",
+                            "icon": "{% set s = states('cover.shades_curtain') %}\n{% if s == 'open' %}\n   mdi:curtains-closed\n{% else %}\n   mdi:curtains\n{% endif %}",
+                            "name": "Shades Reversed",
+                            "unique_id": "c0223bcb-32c6-430e-a2c1-3545f8031796",
+                            "state": "{% set s = states('cover.shades_curtain') %}\n{% if s == 'open' %}\n  closed\n{% elif s == 'closed' %}\n  open\n{% elif s == 'opening' %}\n  closing\n{% elif s == 'closing' %}\n  opening\n{% else %}\n  unknown\n{% endif %}",
+                        }
+                    ]
+                },
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    for entity_id, expected in (
+        ("binary_sensor.foo", "on"),
+        ("sensor.foo", "bar"),
+        ("sensor.bar", "foo"),
+        ("cover.shades_curtain", "unknown"),
+        ("cover.shades_reversed", "unknown"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == expected

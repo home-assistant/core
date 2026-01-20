@@ -1,4 +1,4 @@
-"""Fixtures for testing RuuviTag BLE."""
+"""Fixtures for testing Ruuvi BLE."""
 
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
@@ -34,5 +34,19 @@ RUUVI_V6_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
+RUUVI_E1_SERVICE_INFO = BluetoothServiceInfo(
+    name="Ruuvi Air 1234",
+    address="01:03:05:07:12:34",  # Ignored (the payload encodes the correct MAC)
+    rssi=-60,
+    manufacturer_data={
+        1177: bytes.fromhex(
+            "E1170C5668C79E0065007004BD11CA00C90A0213E0AC000000DECDEE110000000000CBB8334C884F"
+        ),
+    },
+    service_data={},
+    service_uuids=[],
+    source="local",
+)
+
 CONFIGURED_NAME = "RuuviTag EFAF"
 CONFIGURED_PREFIX = "ruuvitag_efaf"

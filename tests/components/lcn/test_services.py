@@ -35,7 +35,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import (
     MockConfigEntry,
-    MockModuleConnection,
+    MockDeviceConnection,
     get_device,
     init_integration,
 )
@@ -49,7 +49,7 @@ async def test_service_output_abs(
     await async_setup_component(hass, "persistent_notification", {})
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "dim_output") as dim_output:
+    with patch.object(MockDeviceConnection, "dim_output") as dim_output:
         await hass.services.async_call(
             DOMAIN,
             LcnService.OUTPUT_ABS,
@@ -73,7 +73,7 @@ async def test_service_output_rel(
     await async_setup_component(hass, "persistent_notification", {})
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "rel_output") as rel_output:
+    with patch.object(MockDeviceConnection, "rel_output") as rel_output:
         await hass.services.async_call(
             DOMAIN,
             LcnService.OUTPUT_REL,
@@ -96,7 +96,7 @@ async def test_service_output_toggle(
     await async_setup_component(hass, "persistent_notification", {})
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "toggle_output") as toggle_output:
+    with patch.object(MockDeviceConnection, "toggle_output") as toggle_output:
         await hass.services.async_call(
             DOMAIN,
             LcnService.OUTPUT_TOGGLE,
@@ -119,7 +119,7 @@ async def test_service_relays(
     await async_setup_component(hass, "persistent_notification", {})
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "control_relays") as control_relays:
+    with patch.object(MockDeviceConnection, "control_relays") as control_relays:
         await hass.services.async_call(
             DOMAIN,
             LcnService.RELAYS,
@@ -137,7 +137,7 @@ async def test_service_relays(
 
     # wrong states string
     with (
-        patch.object(MockModuleConnection, "control_relays") as control_relays,
+        patch.object(MockDeviceConnection, "control_relays") as control_relays,
         pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
@@ -161,7 +161,7 @@ async def test_service_led(
     await async_setup_component(hass, "persistent_notification", {})
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "control_led") as control_led:
+    with patch.object(MockDeviceConnection, "control_led") as control_led:
         await hass.services.async_call(
             DOMAIN,
             LcnService.LED,
@@ -187,7 +187,7 @@ async def test_service_var_abs(
     await async_setup_component(hass, "persistent_notification", {})
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "var_abs") as var_abs:
+    with patch.object(MockDeviceConnection, "var_abs") as var_abs:
         await hass.services.async_call(
             DOMAIN,
             LcnService.VAR_ABS,
@@ -213,7 +213,7 @@ async def test_service_var_rel(
     await async_setup_component(hass, "persistent_notification", {})
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "var_rel") as var_rel:
+    with patch.object(MockDeviceConnection, "var_rel") as var_rel:
         await hass.services.async_call(
             DOMAIN,
             LcnService.VAR_REL,
@@ -243,7 +243,7 @@ async def test_service_var_reset(
     await async_setup_component(hass, "persistent_notification", {})
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "var_reset") as var_reset:
+    with patch.object(MockDeviceConnection, "var_reset") as var_reset:
         await hass.services.async_call(
             DOMAIN,
             LcnService.VAR_RESET,
@@ -265,7 +265,7 @@ async def test_service_lock_regulator(
     await async_setup_component(hass, "persistent_notification", {})
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "lock_regulator") as lock_regulator:
+    with patch.object(MockDeviceConnection, "lock_regulator") as lock_regulator:
         await hass.services.async_call(
             DOMAIN,
             LcnService.LOCK_REGULATOR,
@@ -288,7 +288,7 @@ async def test_service_send_keys(
     await async_setup_component(hass, "persistent_notification", {})
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "send_keys") as send_keys:
+    with patch.object(MockDeviceConnection, "send_keys") as send_keys:
         await hass.services.async_call(
             DOMAIN,
             LcnService.SEND_KEYS,
@@ -323,7 +323,7 @@ async def test_service_send_keys_hit_deferred(
 
     # success
     with patch.object(
-        MockModuleConnection, "send_keys_hit_deferred"
+        MockDeviceConnection, "send_keys_hit_deferred"
     ) as send_keys_hit_deferred:
         await hass.services.async_call(
             DOMAIN,
@@ -344,7 +344,7 @@ async def test_service_send_keys_hit_deferred(
     # wrong key action
     with (
         patch.object(
-            MockModuleConnection, "send_keys_hit_deferred"
+            MockDeviceConnection, "send_keys_hit_deferred"
         ) as send_keys_hit_deferred,
         pytest.raises(ServiceValidationError) as exc_info,
     ):
@@ -372,7 +372,7 @@ async def test_service_lock_keys(
     await async_setup_component(hass, "persistent_notification", {})
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "lock_keys") as lock_keys:
+    with patch.object(MockDeviceConnection, "lock_keys") as lock_keys:
         await hass.services.async_call(
             DOMAIN,
             LcnService.LOCK_KEYS,
@@ -391,7 +391,7 @@ async def test_service_lock_keys(
 
     # wrong states string
     with (
-        patch.object(MockModuleConnection, "lock_keys") as lock_keys,
+        patch.object(MockDeviceConnection, "lock_keys") as lock_keys,
         pytest.raises(HomeAssistantError) as exc_info,
     ):
         await hass.services.async_call(
@@ -418,7 +418,7 @@ async def test_service_lock_keys_tab_a_temporary(
 
     # success
     with patch.object(
-        MockModuleConnection, "lock_keys_tab_a_temporary"
+        MockDeviceConnection, "lock_keys_tab_a_temporary"
     ) as lock_keys_tab_a_temporary:
         await hass.services.async_call(
             DOMAIN,
@@ -442,7 +442,7 @@ async def test_service_lock_keys_tab_a_temporary(
     # wrong table
     with (
         patch.object(
-            MockModuleConnection, "lock_keys_tab_a_temporary"
+            MockDeviceConnection, "lock_keys_tab_a_temporary"
         ) as lock_keys_tab_a_temporary,
         pytest.raises(ServiceValidationError) as exc_info,
     ):
@@ -470,7 +470,7 @@ async def test_service_dyn_text(
     await async_setup_component(hass, "persistent_notification", {})
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "dyn_text") as dyn_text:
+    with patch.object(MockDeviceConnection, "dyn_text") as dyn_text:
         await hass.services.async_call(
             DOMAIN,
             LcnService.DYN_TEXT,
@@ -493,7 +493,7 @@ async def test_service_pck(
     await async_setup_component(hass, "persistent_notification", {})
     await init_integration(hass, entry)
 
-    with patch.object(MockModuleConnection, "pck") as pck:
+    with patch.object(MockDeviceConnection, "pck") as pck:
         await hass.services.async_call(
             DOMAIN,
             LcnService.PCK,

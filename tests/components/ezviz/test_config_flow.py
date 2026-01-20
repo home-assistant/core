@@ -218,6 +218,7 @@ async def test_async_step_integration_discovery(
     assert result["result"].unique_id == "C666666"
 
 
+@pytest.mark.usefixtures("mock_ezviz_client")
 async def test_options_flow(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

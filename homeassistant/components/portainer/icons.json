@@ -1,23 +1,20 @@
 {
   "entity": {
     "sensor": {
-      "image": {
-        "default": "mdi:docker"
-      },
-      "operating_system": {
-        "default": "mdi:chip"
-      },
-      "operating_system_version": {
-        "default": "mdi:alpha-v-box"
-      },
       "api_version": {
         "default": "mdi:api"
       },
-      "kernel_version": {
-        "default": "mdi:memory"
-      },
       "architecture": {
         "default": "mdi:cpu-64-bit"
+      },
+      "container_state": {
+        "default": "mdi:state-machine"
+      },
+      "containers_count": {
+        "default": "mdi:database"
+      },
+      "containers_paused": {
+        "default": "mdi:pause-circle"
       },
       "containers_running": {
         "default": "mdi:play-circle-outline"
@@ -25,23 +22,41 @@
       "containers_stopped": {
         "default": "mdi:stop-circle-outline"
       },
-      "containers_paused": {
-        "default": "mdi:pause-circle"
+      "cpu_total": {
+        "default": "mdi:cpu-64-bit"
       },
-      "images_count": {
-        "default": "mdi:image-multiple"
-      },
-      "containers_count": {
-        "default": "mdi:database"
-      },
-      "memory_total": {
-        "default": "mdi:memory"
+      "cpu_usage_total": {
+        "default": "mdi:cpu-64-bit"
       },
       "docker_version": {
         "default": "mdi:docker"
       },
-      "cpu_total": {
-        "default": "mdi:cpu-64-bit"
+      "image": {
+        "default": "mdi:docker"
+      },
+      "images_count": {
+        "default": "mdi:image-multiple"
+      },
+      "kernel_version": {
+        "default": "mdi:memory"
+      },
+      "memory_limit": {
+        "default": "mdi:memory"
+      },
+      "memory_total": {
+        "default": "mdi:memory"
+      },
+      "memory_usage": {
+        "default": "mdi:memory"
+      },
+      "memory_usage_percentage": {
+        "default": "mdi:memory"
+      },
+      "operating_system": {
+        "default": "mdi:chip"
+      },
+      "operating_system_version": {
+        "default": "mdi:alpha-v-box"
       }
     },
     "switch": {

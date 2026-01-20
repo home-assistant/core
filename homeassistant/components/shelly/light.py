@@ -44,13 +44,15 @@ from .entity import (
     RpcEntityDescription,
     ShellyBlockAttributeEntity,
     ShellyRpcAttributeEntity,
-    async_setup_entry_attribute_entities,
+    async_setup_entry_block,
     async_setup_entry_rpc,
 )
 from .utils import (
     async_remove_orphaned_entities,
     brightness_to_percentage,
     get_device_entry_gen,
+    get_rpc_channel_name,
+    get_rpc_key_id,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
     percentage_to_brightness,
@@ -99,7 +101,7 @@ def _async_setup_block_entry(
     coordinator = config_entry.runtime_data.block
     assert coordinator
 
-    async_setup_entry_attribute_entities(
+    async_setup_entry_block(
         hass, config_entry, async_add_entities, BLOCK_LIGHTS, BlockShellyLight
     )
 
@@ -120,6 +122,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
         """Initialize block light."""
         super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
+        self._attr_name = None  # Main device entity
         self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
         self._attr_supported_color_modes = set()
         self._attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
@@ -377,6 +380,7 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
     ) -> None:
         """Initialize light."""
         super().__init__(coordinator, key, attribute, description)
+        self._attr_name = get_rpc_channel_name(coordinator.device, key)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
 
     @property
@@ -399,6 +403,11 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
         """Return the rgbw color value [int, int, int, int]."""
         return (*self.status["rgb"], self.status["white"])
 
+    @property
+    def color_temp_kelvin(self) -> int:
+        """Return the CT color value in Kelvin."""
+        return cast(int, self.status["ct"])
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         params: dict[str, Any] = {"id": self._id, "on": True}
@@ -420,6 +429,12 @@ class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
         if ATTR_RGBW_COLOR in kwargs:
             params["rgb"] = list(kwargs[ATTR_RGBW_COLOR][:-1])
             params["white"] = kwargs[ATTR_RGBW_COLOR][-1]
+
+        if self.status.get("mode") is not None:
+            if ATTR_COLOR_TEMP_KELVIN in kwargs:
+                params["mode"] = "cct"
+            elif ATTR_RGB_COLOR in kwargs:
+                params["mode"] = "rgb"
 
         await self.call_rpc(f"{self._component}.Set", params)
 
@@ -479,10 +494,24 @@ class RpcShellyCctLight(RpcShellyLightBase):
             self._attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
             self._attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
 
+
+class RpcShellyRgbCctLight(RpcShellyLightBase):
+    """Entity that controls a RGBCCT light on RPC based Shelly devices."""
+
+    _component = "RGBCCT"
+
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.RGB}
+    _attr_supported_features = LightEntityFeature.TRANSITION
+    _attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
+    _attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
+
     @property
-    def color_temp_kelvin(self) -> int:
-        """Return the CT color value in Kelvin."""
-        return cast(int, self.status["ct"])
+    def color_mode(self) -> ColorMode:
+        """Return the color mode."""
+        if self.status["mode"] == "cct":
+            return ColorMode.COLOR_TEMP
+
+        return ColorMode.RGB
 
 
 class RpcShellyRgbLight(RpcShellyLightBase):
@@ -510,7 +539,7 @@ LIGHTS: Final = {
         key="switch",
         sub_key="output",
         removal_condition=lambda config, _status, key: not is_rpc_channel_type_light(
-            config, int(key.split(":")[-1])
+            config, get_rpc_key_id(key)
         ),
         entity_class=RpcShellySwitchAsLight,
     ),
@@ -528,6 +557,11 @@ LIGHTS: Final = {
         key="rgb",
         sub_key="output",
         entity_class=RpcShellyRgbLight,
+    ),
+    "rgbcct": RpcEntityDescription(
+        key="rgbcct",
+        sub_key="output",
+        entity_class=RpcShellyRgbCctLight,
     ),
     "rgbw": RpcEntityDescription(
         key="rgbw",

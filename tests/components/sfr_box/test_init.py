@@ -5,10 +5,12 @@ from unittest.mock import patch
 
 import pytest
 from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sfr_box.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 
 @pytest.fixture(autouse=True)
@@ -48,7 +50,6 @@ async def test_setup_entry_exception(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert not hass.data.get(DOMAIN)
 
 
 async def test_setup_entry_auth_exception(
@@ -64,7 +65,6 @@ async def test_setup_entry_auth_exception(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry_with_auth.state is ConfigEntryState.SETUP_RETRY
-    assert not hass.data.get(DOMAIN)
 
 
 async def test_setup_entry_invalid_auth(
@@ -80,4 +80,21 @@ async def test_setup_entry_invalid_auth(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry_with_auth.state is ConfigEntryState.SETUP_ERROR
-    assert not hass.data.get(DOMAIN)
+
+
+@pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get_info")
+async def test_device_registry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Ensure devices are correctly registered."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Ensure devices are correctly registered
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert device_entries == snapshot

@@ -9,10 +9,11 @@ import pytest
 from pythonkuma import MonitorStatus, UptimeKumaMonitor, UptimeKumaVersion
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.uptime_kuma.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -53,6 +54,7 @@ async def test_migrate_unique_id(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Snapshot test states of sensor platform."""
     mock_pythonkuma.metrics.return_value = {
@@ -87,7 +89,7 @@ async def test_migrate_unique_id(
         )
     }
     mock_pythonkuma.version = UptimeKumaVersion(
-        version="2.0.0-beta.3", major="2", minor="0", patch="0-beta.3"
+        version="2.0.2", major="2", minor="0", patch="2"
     )
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
@@ -95,3 +97,10 @@ async def test_migrate_unique_id(
 
     assert (entity := entity_registry.async_get("sensor.monitor_status"))
     assert entity.unique_id == "123456789_1_status"
+
+    assert (
+        device := device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{entity.config_entry_id}_1")}
+        )
+    )
+    assert device.sw_version == "2.0.2"

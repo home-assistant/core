@@ -6,11 +6,11 @@
     "download": {
       "service": "mdi:download"
     },
-    "upload": {
-      "service": "mdi:upload"
-    },
     "learn_sendevent": {
       "service": "mdi:remote"
+    },
+    "upload": {
+      "service": "mdi:upload"
     }
   }
 }

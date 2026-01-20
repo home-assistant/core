@@ -72,7 +72,7 @@ class Brand:
     @property
     def domain(self) -> str:
         """Integration domain."""
-        return self.path.stem
+        return self.brand["domain"]
 
     @property
     def name(self) -> str | None:

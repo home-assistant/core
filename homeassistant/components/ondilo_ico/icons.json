@@ -4,13 +4,13 @@
       "oxydo_reduction_potential": {
         "default": "mdi:pool"
       },
-      "tds": {
-        "default": "mdi:pool"
-      },
       "rssi": {
         "default": "mdi:wifi"
       },
       "salt": {
+        "default": "mdi:pool"
+      },
+      "tds": {
         "default": "mdi:pool"
       }
     }

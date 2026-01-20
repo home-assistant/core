@@ -1,4 +1,58 @@
 # serializer version: 1
+# name: test_all_entities[sensor.bills_budget-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bills_budget',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Budget',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Budget',
+    'platform': 'firefly_iii',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'budget',
+    'unique_id': 'test_api_key_budget_2_budget',
+    'unit_of_measurement': 'AMS',
+  })
+# ---
+# name: test_all_entities[sensor.bills_budget-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'monetary',
+      'friendly_name': 'Bills Budget',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'AMS',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bills_budget',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '123.45',
+  })
+# ---
 # name: test_all_entities[sensor.credit_card_account_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -22,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -32,7 +87,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_balance',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_4_account_balance',
+    'unique_id': 'test_api_key_account_4_account_balance',
     'unit_of_measurement': 'AMS',
   })
 # ---
@@ -73,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Role',
     'options': dict({
     }),
     'original_device_class': None,
@@ -83,7 +139,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_role',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_4_account_role',
+    'unique_id': 'test_api_key_account_4_account_role',
     'unit_of_measurement': None,
   })
 # ---
@@ -121,6 +177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -131,7 +188,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_type',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_4_account_type',
+    'unique_id': 'test_api_key_account_4_account_type',
     'unit_of_measurement': None,
   })
 # ---
@@ -172,6 +229,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Earned/Spent',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -182,7 +240,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'category',
-    'unique_id': 'firefly_iii_test_unique_id_123_category_2_category',
+    'unique_id': 'test_api_key_category_2_category',
     'unit_of_measurement': 'AMS',
   })
 # ---
@@ -225,6 +283,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -235,7 +294,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_balance',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_2_account_balance',
+    'unique_id': 'test_api_key_account_2_account_balance',
     'unit_of_measurement': 'AMS',
   })
 # ---
@@ -276,6 +335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Role',
     'options': dict({
     }),
     'original_device_class': None,
@@ -286,7 +346,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_role',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_2_account_role',
+    'unique_id': 'test_api_key_account_2_account_role',
     'unit_of_measurement': None,
   })
 # ---
@@ -324,6 +384,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -334,7 +395,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_type',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_2_account_type',
+    'unique_id': 'test_api_key_account_2_account_type',
     'unit_of_measurement': None,
   })
 # ---
@@ -375,6 +436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -385,7 +447,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_balance',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_3_account_balance',
+    'unique_id': 'test_api_key_account_3_account_balance',
     'unit_of_measurement': 'AMS',
   })
 # ---
@@ -426,6 +488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Role',
     'options': dict({
     }),
     'original_device_class': None,
@@ -436,7 +499,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_role',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_3_account_role',
+    'unique_id': 'test_api_key_account_3_account_role',
     'unit_of_measurement': None,
   })
 # ---
@@ -474,6 +537,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Account Type',
     'options': dict({
     }),
     'original_device_class': None,
@@ -484,7 +548,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'account_type',
-    'unique_id': 'firefly_iii_test_unique_id_123_account_3_account_type',
+    'unique_id': 'test_api_key_account_3_account_type',
     'unit_of_measurement': None,
   })
 # ---
