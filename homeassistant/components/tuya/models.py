@@ -234,21 +234,11 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
     _accumulated_value: float | None = None
     _last_dp_timestamp: int | None = None
 
-    # Mapping from Tuya API report_type to Home Assistant SensorStateClass.
-    # - "sum": Delta/incremental reports, accumulated locally to form a total
-    # - "minux": Cumulative total that only increases
-    _REPORT_TYPE_TO_STATE_CLASS: dict[str, SensorStateClass] = {
-        "sum": SensorStateClass.TOTAL_INCREASING,
-        "minux": SensorStateClass.TOTAL_INCREASING,
-    }
-
     def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
         """Init DPCodeDeltaIntegerWrapper."""
         super().__init__(dpcode, type_information)
-
-        # Set state_class based on report_type
-        if report_type := type_information.report_type:
-            self.state_class = self._REPORT_TYPE_TO_STATE_CLASS.get(report_type)
+        # Delta reports use TOTAL_INCREASING state class
+        self.state_class = SensorStateClass.TOTAL_INCREASING
 
     def initialize(self, device: CustomerDevice) -> None:
         """Initialize wrapper with device data.
@@ -266,7 +256,7 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
             )
 
     def process_delta_update(
-        self, device: CustomerDevice, dp_timestamps: dict | None = None
+        self, device: CustomerDevice, dp_timestamps: dict[str, int] | None
     ) -> None:
         """Process a delta update by accumulating the value.
 
@@ -314,7 +304,7 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
         self,
         device: CustomerDevice,
         updated_status_properties: list[str] | None,
-        dp_timestamps: dict | None = None,
+        dp_timestamps: dict[str, int] | None,
     ) -> bool:
         """Override skip_update to process delta updates.
 

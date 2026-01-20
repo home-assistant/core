@@ -1801,46 +1801,15 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._attr_native_unit_of_measurement = dpcode_wrapper.native_unit
         if description.suggested_unit_of_measurement is None:
             self._attr_suggested_unit_of_measurement = dpcode_wrapper.suggested_unit
+        if description.state_class is None:
+            self._attr_state_class = dpcode_wrapper.state_class
 
-        self._apply_report_type_state_class(dpcode_wrapper, description)
         self._validate_device_class_unit()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity added to Home Assistant."""
         await super().async_added_to_hass()
         self._dpcode_wrapper.initialize(self.device)
-
-    async def _handle_state_update(
-        self,
-        updated_status_properties: list[str] | None,
-        dp_timestamps: dict | None = None,
-    ) -> None:
-        """Handle state update from device."""
-        if self._dpcode_wrapper.skip_update(
-            self.device, updated_status_properties, dp_timestamps
-        ):
-            return
-
-        self.async_write_ha_state()
-
-    def _apply_report_type_state_class(
-        self, dpcode_wrapper: DeviceWrapper, description: TuyaSensorEntityDescription
-    ) -> None:
-        """Apply state class based on wrapper's state_class.
-
-        This will override the state_class from entity description
-        if the wrapper provides a state_class (e.g., based on report_type).
-        """
-        if state_class := dpcode_wrapper.state_class:
-            if description.state_class and description.state_class != state_class:
-                LOGGER.debug(
-                    "Overriding state_class from %s to %s for %s",
-                    description.state_class,
-                    state_class,
-                    self.unique_id,
-                )
-
-            self._attr_state_class = state_class
 
     def _validate_device_class_unit(self) -> None:
         """Validate device class unit compatibility."""
