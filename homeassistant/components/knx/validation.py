@@ -162,7 +162,7 @@ def validate_number_attributes(
     _dpt_error_str = f"DPT {transcoder.dpt_number_str()} '{transcoder.value_type}'"
 
     # Infinity is not supported by Home Assistant frontend so user defined
-    # config is required if if xknx DPTNumeric subclass defines it as limit.
+    # config is required if xknx DPTNumeric subclass defines it as limit.
     if min_config is None and transcoder.value_min == -math.inf:
         raise vol.Invalid(
             f"'min' key required for {_dpt_error_str}",

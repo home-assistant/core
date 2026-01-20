@@ -48,7 +48,7 @@ async def async_setup_entry(
     config_entry: config_entries.ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up text(s) for KNX platform."""
+    """Set up number(s) for KNX platform."""
     knx_module = hass.data[KNX_MODULE_KEY]
     platform = async_get_current_platform()
     knx_module.config_store.add_platform(
