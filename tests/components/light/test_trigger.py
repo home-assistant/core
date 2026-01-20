@@ -45,7 +45,11 @@ async def target_lights(hass: HomeAssistant) -> list[str]:
 def parametrize_brightness_changed_trigger_states(
     trigger: str, state: str, attribute: str
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for numerical changed triggers."""
+    """Parametrize states and expected service call counts for brightness changed triggers.
+
+    Note: The brightness in the trigger configuration is in percentage (0-100) scale,
+    the underlying attribute in the state is in uint8 (0-255) scale.
+    """
     return [
         *parametrize_trigger_states(
             trigger=trigger,
@@ -90,7 +94,11 @@ def parametrize_brightness_changed_trigger_states(
 def parametrize_brightness_crossed_threshold_trigger_states(
     trigger: str, state: str, attribute: str
 ) -> list[tuple[str, dict[str, Any], list[TriggerStateDescription]]]:
-    """Parametrize states and expected service call counts for numerical crossed threshold triggers."""
+    """Parametrize states and expected service call counts for brightness crossed threshold triggers.
+
+    Note: The brightness in the trigger configuration is in percentage (0-100) scale,
+    the underlying attribute in the state is in uint8 (0-255) scale.
+    """
     return [
         *parametrize_trigger_states(
             trigger=trigger,
