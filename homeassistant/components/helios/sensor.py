@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -25,8 +24,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
+from . import HeliosConfigEntry
 from .const import (
-    DOMAIN,
     METRIC_KEY_MODE,
     MODE_ON,
     HELIOS_CELL_STATE_TO_STR,
@@ -44,12 +43,11 @@ class HeliosSensorEntity(HeliosEntity, SensorEntity):
 
     def __init__(
         self,
-        name: str,
         coordinator: HeliosDataUpdateCoordinator,
         description: HeliosSensorEntityDescription,
     ) -> None:
         """Initialize the Helios sensor."""
-        super().__init__(name, coordinator)
+        super().__init__(coordinator)
 
         self.entity_description = description
 
@@ -81,12 +79,6 @@ class HeliosProfileSensor(HeliosSensorEntity):
         return HELIOS_PROFILE_TO_PRESET_MODE.get(helios_profile)
 
 
-# There is a quirk with respect to the fan speed reporting. The device keeps on reporting the last
-# valid fan speed from when the device was in regular operation mode, even if it left that state and
-# has been shut off in the meantime.
-#
-# Therefore, first query the overall state of the device, and report zero percent fan speed in case
-# it is not in regular operation mode.
 class HeliosFanSpeedSensor(HeliosSensorEntity):
     """Child class for fan speed reporting."""
 
@@ -279,14 +271,13 @@ SENSOR_ENTITIES: tuple[HeliosSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HeliosConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    name = hass.data[DOMAIN][entry.entry_id]["name"]
-    coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        description.entity_type(name, coordinator, description)
+        description.entity_type(coordinator, description)
         for description in SENSOR_ENTITIES
     )

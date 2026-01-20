@@ -8,12 +8,11 @@ from typing import Any
 from helios_websocket_api import Helios
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import HeliosConfigEntry
 from .coordinator import HeliosDataUpdateCoordinator
 from .entity import HeliosEntity
 
@@ -26,13 +25,12 @@ class HeliosSwitchEntity(HeliosEntity, SwitchEntity):
 
     def __init__(
         self,
-        name: str,
         coordinator: HeliosDataUpdateCoordinator,
         description: HeliosSwitchEntityDescription,
         client: Helios,
     ) -> None:
         """Initialize the Helios switch."""
-        super().__init__(name, coordinator)
+        super().__init__(coordinator)
 
         self.entity_description = description
 
@@ -81,16 +79,14 @@ SWITCH_ENTITIES: tuple[HeliosSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HeliosConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switches."""
-
-    data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
+    client = coordinator.client
 
     async_add_entities(
-        HeliosSwitchEntity(
-            data["name"], data["coordinator"], description, data["client"]
-        )
+        HeliosSwitchEntity(coordinator, description, client)
         for description in SWITCH_ENTITIES
     )

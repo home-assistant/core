@@ -32,16 +32,6 @@
     }
   },
   "entity" : {
-    "binary_sensor" : {
-      "post_heater" : {
-        "name" : "Post-heater"
-      }
-    },
-    "date" : {
-      "filter_change_date" : {
-        "name" : "Filter change date"
-      }
-    },
     "number" : {
       "supply_air_target_away" : {
         "name" : "Supply air temperature (Away)"

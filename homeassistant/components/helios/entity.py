@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -15,7 +15,7 @@ class HeliosEntity(CoordinatorEntity[HeliosDataUpdateCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, name: str, coordinator: HeliosDataUpdateCoordinator) -> None:
+    def __init__(self, coordinator: HeliosDataUpdateCoordinator) -> None:
         """Initialize a Helios entity."""
         super().__init__(coordinator)
 
@@ -25,7 +25,7 @@ class HeliosEntity(CoordinatorEntity[HeliosDataUpdateCoordinator]):
             identifiers={(DOMAIN, str(self._device_uuid))},
             manufacturer=DEFAULT_NAME,
             model=self.coordinator.data.model,
-            name=name,
+            name=self.coordinator.config_entry.data[CONF_NAME],
             sw_version=self.coordinator.data.sw_version,
             configuration_url=f"http://{self.coordinator.config_entry.data[CONF_HOST]}",
         )

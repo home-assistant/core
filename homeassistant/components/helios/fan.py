@@ -8,14 +8,13 @@ from typing import Any, NamedTuple
 from helios_websocket_api import Helios, HeliosApiException, HeliosInvalidInputException
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from . import HeliosConfigEntry
 from .const import (
-    DOMAIN,
     METRIC_KEY_MODE,
     METRIC_KEY_PROFILE_FAN_SPEED_AWAY,
     METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
@@ -58,21 +57,14 @@ def _convert_to_int(value: StateType) -> int | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HeliosConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the fan device."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
+    client = coordinator.client
 
-    client = data["client"]
-
-    device = HeliosFanEntity(
-        data["name"],
-        client,
-        data["coordinator"],
-    )
-
-    async_add_entities([device])
+    async_add_entities([HeliosFanEntity(client, coordinator)])
 
 
 class HeliosFanEntity(HeliosEntity, FanEntity):
@@ -88,12 +80,11 @@ class HeliosFanEntity(HeliosEntity, FanEntity):
 
     def __init__(
         self,
-        name: str,
         client: Helios,
         coordinator: HeliosDataUpdateCoordinator,
     ) -> None:
         """Initialize the fan."""
-        super().__init__(name, coordinator)
+        super().__init__(coordinator)
 
         self._client = client
 

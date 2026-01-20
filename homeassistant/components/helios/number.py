@@ -11,12 +11,11 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import HeliosConfigEntry
 from .coordinator import HeliosDataUpdateCoordinator
 from .entity import HeliosEntity
 
@@ -29,13 +28,12 @@ class HeliosNumberEntity(HeliosEntity, NumberEntity):
 
     def __init__(
         self,
-        name: str,
         coordinator: HeliosDataUpdateCoordinator,
         description: HeliosNumberEntityDescription,
         client: Helios,
     ) -> None:
         """Initialize the Helios number entity."""
-        super().__init__(name, coordinator)
+        super().__init__(coordinator)
 
         self.entity_description = description
 
@@ -103,15 +101,14 @@ NUMBER_ENTITIES: tuple[HeliosNumberEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HeliosConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
+    client = coordinator.client
 
     async_add_entities(
-        HeliosNumberEntity(
-            data["name"], data["coordinator"], description, data["client"]
-        )
+        HeliosNumberEntity(coordinator, description, client)
         for description in NUMBER_ENTITIES
     )

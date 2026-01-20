@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import ipaddress
 import logging
-from typing import NamedTuple
 
 from helios_websocket_api import Profile, Helios, HeliosApiException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -23,6 +23,8 @@ from .const import (
     I18N_KEY_TO_HELIOS_PROFILE,
 )
 from .coordinator import HeliosDataUpdateCoordinator
+
+type HeliosConfigEntry = ConfigEntry[HeliosDataUpdateCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,14 +43,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS: list[str] = [
-    Platform.BINARY_SENSOR,
-    Platform.DATE,
-    Platform.FAN,
-    Platform.NUMBER,
-    Platform.SENSOR,
-    Platform.SWITCH,
-]
+PLATFORMS: list[Platform] = [Platform.FAN, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 ATTR_PROFILE_FAN_SPEED = "fan_speed"
 
@@ -73,163 +68,120 @@ SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
 )
 
 
-class ServiceMethodDetails(NamedTuple):
-    """Details for SERVICE_TO_METHOD mapping."""
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Set up the Helios integration."""
 
-    method: str
-    schema: vol.Schema
+    async def async_set_profile_fan_speed(
+        call: ServiceCall, profile: Profile
+    ) -> None:
+        """Set the fan speed for a specific profile."""
+        fan_speed = call.data[ATTR_PROFILE_FAN_SPEED]
 
+        # Get the first loaded config entry (single-platform integration)
+        entries = hass.config_entries.async_loaded_entries(DOMAIN)
+        if not entries:
+            raise ServiceValidationError("No Helios device configured")
 
-SERVICE_SET_PROFILE_FAN_SPEED_HOME = "set_profile_fan_speed_home"
-SERVICE_SET_PROFILE_FAN_SPEED_AWAY = "set_profile_fan_speed_away"
-SERVICE_SET_PROFILE_FAN_SPEED_BOOST = "set_profile_fan_speed_boost"
-SERVICE_SET_PROFILE = "set_profile"
+        entry: HeliosConfigEntry = entries[0]
+        coordinator = entry.runtime_data
+        client = coordinator.client
 
-SERVICE_TO_METHOD = {
-    SERVICE_SET_PROFILE_FAN_SPEED_HOME: ServiceMethodDetails(
-        method="async_set_profile_fan_speed_home",
+        _LOGGER.debug("Setting %s fan speed to: %d%%", profile.name, fan_speed)
+
+        try:
+            await client.set_fan_speed(profile, fan_speed)
+        except HeliosApiException as err:
+            raise HomeAssistantError(
+                f"Failed to set fan speed for {profile.name} profile"
+            ) from err
+
+        await coordinator.async_request_refresh()
+
+    async def async_set_profile_fan_speed_home(call: ServiceCall) -> None:
+        """Set the fan speed for the Home profile."""
+        await async_set_profile_fan_speed(call, Profile.HOME)
+
+    async def async_set_profile_fan_speed_away(call: ServiceCall) -> None:
+        """Set the fan speed for the Away profile."""
+        await async_set_profile_fan_speed(call, Profile.AWAY)
+
+    async def async_set_profile_fan_speed_boost(call: ServiceCall) -> None:
+        """Set the fan speed for the Boost profile."""
+        await async_set_profile_fan_speed(call, Profile.BOOST)
+
+    async def async_set_profile(call: ServiceCall) -> None:
+        """Activate a profile with optional duration."""
+        profile = call.data[ATTR_PROFILE]
+        duration = call.data.get(ATTR_DURATION)
+
+        # Get the first loaded config entry (single-platform integration)
+        entries = hass.config_entries.async_loaded_entries(DOMAIN)
+        if not entries:
+            raise ServiceValidationError("No Helios device configured")
+
+        entry: HeliosConfigEntry = entries[0]
+        coordinator = entry.runtime_data
+        client = coordinator.client
+
+        _LOGGER.debug("Activating profile %s for %s min", profile, duration)
+
+        try:
+            await client.set_profile(I18N_KEY_TO_HELIOS_PROFILE[profile], duration)
+        except HeliosApiException as err:
+            raise HomeAssistantError(
+                f"Failed to set profile {profile}"
+            ) from err
+
+        await coordinator.async_request_refresh()
+
+    # Register services
+    hass.services.async_register(
+        DOMAIN,
+        "set_profile_fan_speed_home",
+        async_set_profile_fan_speed_home,
         schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
-    ),
-    SERVICE_SET_PROFILE_FAN_SPEED_AWAY: ServiceMethodDetails(
-        method="async_set_profile_fan_speed_away",
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        "set_profile_fan_speed_away",
+        async_set_profile_fan_speed_away,
         schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
-    ),
-    SERVICE_SET_PROFILE_FAN_SPEED_BOOST: ServiceMethodDetails(
-        method="async_set_profile_fan_speed_boost",
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        "set_profile_fan_speed_boost",
+        async_set_profile_fan_speed_boost,
         schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
-    ),
-    SERVICE_SET_PROFILE: ServiceMethodDetails(
-        method="async_set_profile", schema=SERVICE_SCHEMA_SET_PROFILE
-    ),
-}
+    )
 
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the client and boot the platforms."""
-    host = entry.data[CONF_HOST]
-    name = entry.data[CONF_NAME]
-
-    client = Helios(host)
-
-    coordinator = HeliosDataUpdateCoordinator(hass, entry, client)
-
-    await coordinator.async_config_entry_first_refresh()
-
-    service_handler = HeliosServiceHandler(client, coordinator)
-    for helios_service, service_details in SERVICE_TO_METHOD.items():
-        hass.services.async_register(
-            DOMAIN,
-            helios_service,
-            service_handler.async_handle,
-            schema=service_details.schema,
-        )
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "client": client,
-        "coordinator": coordinator,
-        "name": name,
-    }
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.runtime_data = coordinator
+    hass.services.async_register(
+        DOMAIN,
+        "set_profile",
+        async_set_profile,
+        schema=SERVICE_SCHEMA_SET_PROFILE,
+    )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HeliosConfigEntry) -> bool:
+    """Set up Helios from a config entry."""
+    host = entry.data[CONF_HOST]
+
+    client = Helios(host)
+    coordinator = HeliosDataUpdateCoordinator(hass, entry, client)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: HeliosConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-        if hass.data[DOMAIN]:
-            return unload_ok
-
-        for service in SERVICE_TO_METHOD:
-            hass.services.async_remove(DOMAIN, service)
-
-    return unload_ok
-
-
-class HeliosServiceHandler:
-    """Services implementation."""
-
-    def __init__(
-        self, client: Helios, coordinator: HeliosDataUpdateCoordinator
-    ) -> None:
-        """Initialize the proxy."""
-        self._client = client
-        self._coordinator = coordinator
-
-    async def async_set_profile_fan_speed_home(
-        self, fan_speed: int = DEFAULT_FAN_SPEED_HOME
-    ) -> bool:
-        """Set the fan speed in percent for the Home profile."""
-        _LOGGER.debug("Setting Home fan speed to: %d%%", fan_speed)
-
-        try:
-            await self._client.set_fan_speed(Profile.HOME, fan_speed)
-        except HeliosApiException as err:
-            _LOGGER.error("Error setting fan speed for Home profile: %s", err)
-            return False
-        return True
-
-    async def async_set_profile_fan_speed_away(
-        self, fan_speed: int = DEFAULT_FAN_SPEED_AWAY
-    ) -> bool:
-        """Set the fan speed in percent for the Away profile."""
-        _LOGGER.debug("Setting Away fan speed to: %d%%", fan_speed)
-
-        try:
-            await self._client.set_fan_speed(Profile.AWAY, fan_speed)
-        except HeliosApiException as err:
-            _LOGGER.error("Error setting fan speed for Away profile: %s", err)
-            return False
-        return True
-
-    async def async_set_profile_fan_speed_boost(
-        self, fan_speed: int = DEFAULT_FAN_SPEED_BOOST
-    ) -> bool:
-        """Set the fan speed in percent for the Boost profile."""
-        _LOGGER.debug("Setting Boost fan speed to: %d%%", fan_speed)
-
-        try:
-            await self._client.set_fan_speed(Profile.BOOST, fan_speed)
-        except HeliosApiException as err:
-            _LOGGER.error("Error setting fan speed for Boost profile: %s", err)
-            return False
-        return True
-
-    async def async_set_profile(
-        self, profile: str, duration: int | None = None
-    ) -> bool:
-        """Activate profile for given duration."""
-        _LOGGER.debug("Activating profile %s for %s min", profile, duration)
-        try:
-            await self._client.set_profile(
-                I18N_KEY_TO_HELIOS_PROFILE[profile], duration
-            )
-        except HeliosApiException as err:
-            _LOGGER.error(
-                "Error setting profile %d for duration %s: %s", profile, duration, err
-            )
-            return False
-        return True
-
-    async def async_handle(self, call: ServiceCall) -> None:
-        """Dispatch a service call."""
-        service_details = SERVICE_TO_METHOD.get(call.service)
-        params = call.data.copy()
-
-        if service_details is None:
-            return
-
-        if not hasattr(self, service_details.method):
-            _LOGGER.error("Service not implemented: %s", service_details.method)
-            return
-
-        result = await getattr(self, service_details.method)(**params)
-
-        # This state change affects other entities like sensors. Force an immediate update that can
-        # be observed by all parties involved.
-        if result:
-            await self._coordinator.async_request_refresh()
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
