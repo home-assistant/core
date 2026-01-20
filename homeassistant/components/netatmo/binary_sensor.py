@@ -81,9 +81,8 @@ def process_opening_category_string2class(
         return BinarySensorDeviceClass.OPENING
 
     # Use a specific device class if we have a match, otherwise default to OPENING
-    return (
-        OPENING_CATEGORY_CLASS_TRANSLATIONS.get(category)
-        or BinarySensorDeviceClass.OPENING
+    return OPENING_CATEGORY_CLASS_TRANSLATIONS.get(
+        category, BinarySensorDeviceClass.OPENING
     )
 
 
@@ -127,11 +126,13 @@ def process_opening_category_string2key(
 ) -> str:
     """Helper function to map Netatmo opening category to Component keys."""
 
-    if category == DOORTAG_CATEGORY_OTHER:
+    if category == DOORTAG_CATEGORY_OTHER or category is None:
         key = DEFAULT_OPENING_SENSOR_KEY
+    elif OPENING_CATEGORY_CLASS_TRANSLATIONS.get(category, None) is not None:
+        key = category
     else:
-        key = category if category is not None else DEFAULT_OPENING_SENSOR_KEY
-    # Manipulate class name to create a more user-friendly name
+        key = DEFAULT_OPENING_SENSOR_KEY
+
     return key
 
 
