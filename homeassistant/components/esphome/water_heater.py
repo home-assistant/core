@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from aioesphomeapi import WaterHeaterInfo, WaterHeaterMode, WaterHeaterState
 
@@ -10,28 +10,27 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import EsphomeEntity, EsphomeEnumMapper, platform_async_setup_entry
+from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: ESPHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ESPHome water heaters based on a config entry."""
     await platform_async_setup_entry(
         hass,
         entry,
         async_add_entities,
-        component_key="water_heater",
         info_type=WaterHeaterInfo,
         entity_type=EsphomeWaterHeater,
-        converter=lambda obj, info: obj,
+        state_type=WaterHeaterState,
     )
 
 
@@ -45,24 +44,23 @@ class EsphomeWaterHeater(
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        entry_id: str,
-        component_key: str,
-        key: int,
-        info: WaterHeaterInfo,
+        entry_data: RuntimeEntryData,
+        entity_info: WaterHeaterInfo,
+        state_type: type[WaterHeaterState],
     ) -> None:
         """Initialize the water heater."""
-        super().__init__(hass, entry_id, component_key, key, info)
+        super().__init__(entry_data, entity_info, state_type)
 
+        mode = cast(Any, WaterHeaterMode)
         self._mode_selector = EsphomeEnumMapper(
             {
-                WaterHeaterMode.WATER_HEATER_MODE_OFF: "off",
-                WaterHeaterMode.WATER_HEATER_MODE_ECO: "eco",
-                WaterHeaterMode.WATER_HEATER_MODE_ELECTRIC: "electric",
-                WaterHeaterMode.WATER_HEATER_MODE_PERFORMANCE: "performance",
-                WaterHeaterMode.WATER_HEATER_MODE_HIGH_DEMAND: "high_demand",
-                WaterHeaterMode.WATER_HEATER_MODE_HEAT_PUMP: "heat_pump",
-                WaterHeaterMode.WATER_HEATER_MODE_GAS: "gas",
+                mode.OFF: "off",
+                mode.ECO: "eco",
+                mode.ELECTRIC: "electric",
+                mode.PERFORMANCE: "performance",
+                mode.HIGH_DEMAND: "high_demand",
+                mode.HEAT_PUMP: "heat_pump",
+                mode.GAS: "gas",
             }
         )
 
@@ -70,10 +68,8 @@ class EsphomeWaterHeater(
     def supported_features(self) -> WaterHeaterEntityFeature:
         """Return the list of supported features."""
         features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
-
         if self._static_info.supported_modes:
             features |= WaterHeaterEntityFeature.OPERATION_MODE
-
         return features
 
     @property
@@ -116,7 +112,6 @@ class EsphomeWaterHeater(
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             return
-
         await self._client.water_heater_command(
             key=self._key,
             target_temperature=kwargs[ATTR_TEMPERATURE],
