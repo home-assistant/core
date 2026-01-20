@@ -98,6 +98,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._attr_is_closing = False
         self.gateway.set_cover_position(self.enocean_entity_id, 100)
         self.restart_watchdog()
+        self.schedule_update_ha_state()
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
@@ -105,12 +106,14 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._attr_is_closing = True
         self.gateway.set_cover_position(self.enocean_entity_id, 0)
         self.restart_watchdog()
+        self.schedule_update_ha_state()
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
-        if not kwargs.get(ATTR_POSITION):
+        if ATTR_POSITION not in kwargs:
             return
 
+        # determine opening/closing state
         if not self._attr_current_cover_position:
             self._attr_is_opening = None
             self._attr_is_closing = None
@@ -126,6 +129,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
         self.gateway.set_cover_position(self.enocean_entity_id, kwargs[ATTR_POSITION])
         self.restart_watchdog()
+        self.schedule_update_ha_state()
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop any cover movement."""
@@ -136,16 +140,16 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def update(self, new_position: int) -> None:
         """Update the cover state."""
-        if self._attr_current_cover_position is not None:
-            # upon receiving fully open/closed position, we assume the cover has stopped (without further querying)
-            if new_position in (0, 100):
-                self._attr_is_opening = False
-                self._attr_is_closing = False
-                self.stop_watchdog()
+        # upon receiving fully open/closed position, we assume the cover has stopped (without further querying)
+        if new_position in (0, 100):
+            self._attr_is_opening = False
+            self._attr_is_closing = False
+            self.stop_watchdog()
 
+        elif self._attr_current_cover_position is not None:
             # upon receiving the same position as known, we suspect the cover has stopped and verify this by querying the status again (via watchdog)
             # upon receiving the same position again, we confirm the stop
-            elif new_position == self._attr_current_cover_position:
+            if new_position == self._attr_current_cover_position:
                 if self.__stop_suspected:
                     self.__stop_suspected = False
                     self._attr_is_opening = False
