@@ -9,7 +9,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfPower, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,89 +24,128 @@ from homeassistant.util import slugify
 from . import DOMAIN, UPDATE_TOPIC, WaterFurnaceData
 
 SENSORS = [
-    SensorEntityDescription(name="Furnace Mode", key="mode", icon="mdi:gauge"),
+    SensorEntityDescription(key="mode", icon="mdi:gauge", translation_key="mode"),
     SensorEntityDescription(
-        name="Total Power",
         key="totalunitpower",
+        translation_key="totalunitpower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        name="Active Setpoint",
         key="tstatactivesetpoint",
+        translation_key="tstatactivesetpoint",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        name="Leaving Air",
         key="leavingairtemp",
+        translation_key="leavingairtemp",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        name="Room Temp",
         key="tstatroomtemp",
+        translation_key="tstatroomtemp",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        name="Loop Temp",
         key="enteringwatertemp",
+        translation_key="enteringwatertemp",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        name="Humidity Set Point",
         key="tstathumidsetpoint",
+        translation_key="tstathumidsetpoint",
         icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        name="Humidity",
         key="tstatrelativehumidity",
+        translation_key="tstatrelativehumidity",
         icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        name="Compressor Power",
         key="compressorpower",
+        translation_key="compressorpower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        name="Fan Power",
         key="fanpower",
+        translation_key="fanpower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        name="Aux Power",
         key="auxpower",
+        translation_key="auxpower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        name="Loop Pump Power",
         key="looppumppower",
+        translation_key="looppumppower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        name="Compressor Speed", key="actualcompressorspeed", icon="mdi:speedometer"
+        key="actualcompressorspeed",
+        translation_key="actualcompressorspeed",
+        icon="mdi:speedometer",
     ),
     SensorEntityDescription(
-        name="Fan Speed", key="airflowcurrentspeed", icon="mdi:fan"
+        key="airflowcurrentspeed",
+        translation_key="fancurrentspeed",
+        icon="mdi:fan",
+    ),
+    SensorEntityDescription(
+        key="tstatdehumidsetpoint",
+        translation_key="tstatdehumidsetpoint",
+        icon="mdi:water-percent",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="tstatheatingsetpoint",
+        translation_key="tstatheatingsetpoint",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="tstatcoolingsetpoint",
+        translation_key="tstatcoolingsetpoint",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="leavingwatertemp",
+        translation_key="leavingwatertemp",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="waterflowrate",
+        translation_key="waterflowrate",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        icon="mdi:waves-arrow-right",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
 
@@ -124,6 +168,7 @@ def setup_platform(
 class WaterFurnaceSensor(SensorEntity):
     """Implementing the Waterfurnace sensor."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(

@@ -1,0 +1,63 @@
+{
+  "entity": {
+    "sensor": {
+      "actualcompressorspeed": {
+        "name": "Compressor speed"
+      },
+      "auxpower": {
+        "name": "Aux power"
+      },
+      "compressorpower": {
+        "name": "Compressor power"
+      },
+      "enteringwatertemp": {
+        "name": "Entering water temperature"
+      },
+      "fancurrentspeed": {
+        "name": "Fan speed"
+      },
+      "fanpower": {
+        "name": "Fan power"
+      },
+      "leavingairtemp": {
+        "name": "Leaving air temperature"
+      },
+      "leavingwatertemp": {
+        "name": "Leaving water temperature"
+      },
+      "looppumppower": {
+        "name": "Loop pump power"
+      },
+      "mode": {
+        "name": "Mode"
+      },
+      "totalunitpower": {
+        "name": "Total power"
+      },
+      "tstatactivesetpoint": {
+        "name": "Active setpoint"
+      },
+      "tstatcoolingsetpoint": {
+        "name": "Cooling setpoint"
+      },
+      "tstatdehumidsetpoint": {
+        "name": "Dehumidification setpoint"
+      },
+      "tstatheatingsetpoint": {
+        "name": "Heating setpoint"
+      },
+      "tstathumidsetpoint": {
+        "name": "Humidity setpoint"
+      },
+      "tstatrelativehumidity": {
+        "name": "Humidity"
+      },
+      "tstatroomtemp": {
+        "name": "Room temperature"
+      },
+      "waterflowrate": {
+        "name": "Water flow rate"
+      }
+    }
+  }
+}
