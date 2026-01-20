@@ -1791,6 +1791,9 @@ async def test_migrate_chat_id(
         "action_origin": expected_action_origin,
         "chat_ids": "654321",
         "telegram_bot_entities_url": "/config/entities?domain=telegram_bot",
+        "example_old": "```\naction: send_message\ndata:\n  target:  # to be updated\n    - 1234567890\n...\n```",
+        "example_new_entity_id": "```\naction: send_message\ndata:\n  entity_id:\n    - notify.telegram_bot_1234567890_1234567890  # replace with your notify entity\n...\n```",
+        "example_new_chat_id": "```\naction: send_message\ndata:\n  chat_id:\n    - 1234567890  # replace with your chat_id\n...\n```",
     }
 
     # fix the issue via repair flow
@@ -1818,6 +1821,9 @@ async def test_migrate_chat_id(
             "action_origin": expected_action_origin,
             "chat_ids": "654321",
             "telegram_bot_entities_url": "/config/entities?domain=telegram_bot",
+            "example_old": "```\naction: send_message\ndata:\n  target:  # to be updated\n    - 1234567890\n...\n```",
+            "example_new_entity_id": "```\naction: send_message\ndata:\n  entity_id:\n    - notify.telegram_bot_1234567890_1234567890  # replace with your notify entity\n...\n```",
+            "example_new_chat_id": "```\naction: send_message\ndata:\n  chat_id:\n    - 1234567890  # replace with your chat_id\n...\n```",
         },
         "last_step": None,
         "preview": None,
