@@ -78,32 +78,17 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
                 self._voices[language], key=lambda v: v.name
             )
 
-        self._supported_languages: list[str] = list(voice_languages)
+        self._attr_supported_languages = list(voice_languages)
+        if self._attr_supported_languages:
+            self._attr_default_language = self._attr_supported_languages[0]
 
         self._attr_name = self._tts_service.name
-        self._attr_unique_id = f"{config_entry.entry_id}-tts"
-
-    @property
-    def default_language(self) -> str:
-        """Return default language."""
-        if not self._supported_languages:
-            return ""
-
-        return self._supported_languages[0]
-
-    @property
-    def supported_languages(self):
-        """Return list of supported languages."""
-        return self._supported_languages
-
-    @property
-    def supported_options(self):
-        """Return list of supported options like voice, emotion."""
-        return [
+        self._attr_supported_options = [
             tts.ATTR_AUDIO_OUTPUT,
             tts.ATTR_VOICE,
             ATTR_SPEAKER,
         ]
+        self._attr_unique_id = f"{config_entry.entry_id}-tts"
 
     @property
     def default_options(self):
