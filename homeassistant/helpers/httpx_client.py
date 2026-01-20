@@ -17,8 +17,9 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ssl import (
-    ALPN_PROTOCOLS,
-    ALPNProtocols,
+    SSL_ALPN_HTTP11,
+    SSL_ALPN_HTTP11_HTTP2,
+    SSLALPNProtocols,
     SSLCipherList,
     client_context,
     create_no_verify_ssl_context,
@@ -31,7 +32,7 @@ from .frame import warn_use
 # don't have to reconnect every time so we use 15s to match aiohttp.
 KEEP_ALIVE_TIMEOUT = 15
 # Shared httpx clients keyed by (verify_ssl, alpn_protocols)
-DATA_ASYNC_CLIENT: HassKey[dict[tuple[bool, ALPNProtocols], httpx.AsyncClient]] = (
+DATA_ASYNC_CLIENT: HassKey[dict[tuple[bool, SSLALPNProtocols], httpx.AsyncClient]] = (
     HassKey("httpx_async_client")
 )
 DEFAULT_LIMITS = limits = httpx.Limits(keepalive_expiry=KEEP_ALIVE_TIMEOUT)
@@ -47,13 +48,13 @@ USER_AGENT = "User-Agent"
 def get_async_client(
     hass: HomeAssistant,
     verify_ssl: bool = True,
-    alpn_protocols: ALPNProtocols = ALPNProtocols.HTTP1,
+    alpn_protocols: SSLALPNProtocols = SSL_ALPN_HTTP11,
 ) -> httpx.AsyncClient:
     """Return default httpx AsyncClient.
 
     This method must be run in the event loop.
 
-    Pass alpn_protocols=ALPNProtocols.HTTP2 to get a client configured for HTTP/2.
+    Pass alpn_protocols=SSL_ALPN_HTTP11_HTTP2 to get a client configured for HTTP/2.
     Clients are cached separately by ALPN protocol to ensure proper SSL context
     configuration (ALPN protocols differ between HTTP versions).
     """
@@ -90,7 +91,7 @@ def create_async_httpx_client(
     verify_ssl: bool = True,
     auto_cleanup: bool = True,
     ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
-    alpn_protocols: ALPNProtocols = ALPNProtocols.HTTP1,
+    alpn_protocols: SSLALPNProtocols = SSL_ALPN_HTTP11,
     **kwargs: Any,
 ) -> httpx.AsyncClient:
     """Create a new httpx.AsyncClient with kwargs, i.e. for cookies.
@@ -98,22 +99,21 @@ def create_async_httpx_client(
     If auto_cleanup is False, the client will be
     automatically closed on homeassistant_stop.
 
-    Pass alpn_protocols=ALPNProtocols.HTTP2 for HTTP/2 support (automatically
+    Pass alpn_protocols=SSL_ALPN_HTTP11_HTTP2 for HTTP/2 support (automatically
     enables httpx http2 mode).
 
     This method must be run in the event loop.
     """
-    # Select ALPN protocols based on requested protocol to ensure proper SSL context
+    # Use the requested ALPN protocols directly to ensure proper SSL context
     # bucketing. httpx/httpcore mutates SSL contexts by calling set_alpn_protocols(),
     # so we pre-set the correct protocols to prevent shared context corruption.
-    alpn = ALPN_PROTOCOLS[alpn_protocols]
     ssl_context = (
-        client_context(ssl_cipher_list, alpn)
+        client_context(ssl_cipher_list, alpn_protocols)
         if verify_ssl
-        else create_no_verify_ssl_context(ssl_cipher_list, alpn)
+        else create_no_verify_ssl_context(ssl_cipher_list, alpn_protocols)
     )
-    # Enable httpx HTTP/2 mode when HTTP2 protocol is requested
-    if alpn_protocols == ALPNProtocols.HTTP2:
+    # Enable httpx HTTP/2 mode when HTTP/2 protocol is requested
+    if alpn_protocols == SSL_ALPN_HTTP11_HTTP2:
         kwargs.setdefault("http2", True)
     client = HassHttpXAsyncClient(
         verify=ssl_context,

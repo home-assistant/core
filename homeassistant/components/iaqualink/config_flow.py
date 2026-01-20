@@ -15,7 +15,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.util.ssl import ALPNProtocols
+from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
 from .const import DOMAIN
 
@@ -40,7 +40,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     username,
                     password,
                     httpx_client=get_async_client(
-                        self.hass, alpn_protocols=ALPNProtocols.HTTP2
+                        self.hass, alpn_protocols=SSL_ALPN_HTTP11_HTTP2
                     ),
                 ):
                     pass

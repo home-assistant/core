@@ -29,20 +29,6 @@ class SSLCipherList(StrEnum):
     INSECURE = "insecure"
 
 
-class ALPNProtocols(StrEnum):
-    """ALPN protocol configurations for HTTP clients."""
-
-    HTTP1 = "http1"  # HTTP/1.1 only
-    HTTP2 = "http2"  # HTTP/2 with HTTP/1.1 fallback
-
-
-# Mapping from ALPNProtocols enum to ALPN protocol tuples
-ALPN_PROTOCOLS: dict[ALPNProtocols, SSLALPNProtocols] = {
-    ALPNProtocols.HTTP1: SSL_ALPN_HTTP11,
-    ALPNProtocols.HTTP2: SSL_ALPN_HTTP11_HTTP2,
-}
-
-
 SSL_CIPHER_LISTS = {
     SSLCipherList.INTERMEDIATE: (
         "ECDHE-ECDSA-CHACHA20-POLY1305:"
