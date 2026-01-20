@@ -1,7 +1,0 @@
-{
-  "services": {
-    "get_alerts_for_location": {
-      "service": "mdi:alert-circle-outline"
-    }
-  }
-}
