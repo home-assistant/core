@@ -1,0 +1,12 @@
+{
+  "domain": "solarwatt",
+  "name": "Solarwatt",
+  "codeowners": ["@ChristianGeie"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/solarwatt",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["solarwatt"],
+  "quality_scale": "bronze",
+  "requirements": []
+}
