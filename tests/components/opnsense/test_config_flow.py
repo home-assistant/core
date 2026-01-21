@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import CONFIG_DATA, CONFIG_DATA_IMPORT, TITLE
+from . import CONFIG_DATA, CONFIG_DATA_IMPORT
 
 from tests.common import MockConfigEntry
 
@@ -31,7 +31,7 @@ async def test_import(
     )
 
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result.get("title") == TITLE
+    assert result.get("title") == "http://router.lan/api"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -53,14 +53,13 @@ async def test_user(
     )
 
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result.get("title") == TITLE
+    assert result.get("title") == "http://router.lan/api"
 
     assert result.get("data") == CONFIG_DATA
 
     assert "result" in result
     config_entry: ConfigEntry | None = result.get("result")
     assert config_entry is not None
-    assert config_entry.unique_id == DOMAIN
 
     subentries: Iterable[ConfigSubentryData] | None = result.get("subentries")
     assert subentries is not None

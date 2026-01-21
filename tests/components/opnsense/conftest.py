@@ -3,9 +3,14 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from pyopnsense import diagnostics
 import pytest
 
-from homeassistant.components.opnsense.const import DOMAIN
+from homeassistant.components.opnsense.const import (
+    CONF_INTERFACE_CLIENT,
+    CONF_TRACKER_INTERFACES,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 
 from . import CONFIG_DATA, setup_mock_diagnostics
@@ -20,6 +25,16 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data=CONFIG_DATA,
     )
+    interfaces_client = diagnostics.InterfaceClient(
+        api_key="key",
+        api_secret="secret",
+        base_url="http://router.lan/api",
+        verify_cert=False,
+    )
+    mock_config_entry.runtime_data = {
+        CONF_INTERFACE_CLIENT: interfaces_client,
+        CONF_TRACKER_INTERFACES: [],
+    }
     mock_config_entry.add_to_hass(hass)
     return mock_config_entry
 

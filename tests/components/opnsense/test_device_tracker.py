@@ -15,9 +15,7 @@ async def test_get_scanner(
 ) -> None:
     """Test creating an opnsense scanner."""
 
-    with patch(
-        "homeassistant.components.opnsense.device_tracker.diagnostics"
-    ) as mock_diagnostics:
+    with patch("homeassistant.components.opnsense.diagnostics") as mock_diagnostics:
         setup_mock_diagnostics(mock_diagnostics)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
