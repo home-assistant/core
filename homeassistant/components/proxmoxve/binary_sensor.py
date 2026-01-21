@@ -83,6 +83,40 @@ async def async_setup_entry(
     """Set up Proxmox VE binary sensors."""
     coordinator = entry.runtime_data
 
+    def _async_add_new_nodes(nodes: list[ProxmoxNodeData]) -> None:
+        """Add new node binary sensors."""
+        async_add_entities(
+            ProxmoxNodeBinarySensor(coordinator, entity_description, node)
+            for node in nodes
+            for entity_description in NODE_SENSORS
+        )
+
+    def _async_add_new_vms(
+        vms: list[tuple[ProxmoxNodeData, dict[str, Any]]],
+    ) -> None:
+        """Add new VM binary sensors."""
+        async_add_entities(
+            ProxmoxVMBinarySensor(coordinator, entity_description, vm, node_data)
+            for (node_data, vm) in vms
+            for entity_description in VM_SENSORS
+        )
+
+    def _async_add_new_containers(
+        containers: list[tuple[ProxmoxNodeData, dict[str, Any]]],
+    ) -> None:
+        """Add new container binary sensors."""
+        async_add_entities(
+            ProxmoxContainerBinarySensor(
+                coordinator, entity_description, container, node_data
+            )
+            for (node_data, container) in containers
+            for entity_description in CONTAINER_SENSORS
+        )
+
+    coordinator.new_nodes_callbacks.append(_async_add_new_nodes)
+    coordinator.new_vms_callbacks.append(_async_add_new_vms)
+    coordinator.new_containers_callbacks.append(_async_add_new_containers)
+
     async_add_entities(
         ProxmoxNodeBinarySensor(
             coordinator,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
@@ -72,6 +73,14 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
         self.known_nodes: set[str] = set()
         self.known_vms: set[tuple[str, int]] = set()
         self.known_containers: set[tuple[str, int]] = set()
+
+        self.new_nodes_callbacks: list[Callable[[list[ProxmoxNodeData]], None]] = []
+        self.new_vms_callbacks: list[
+            Callable[[list[tuple[ProxmoxNodeData, dict[str, Any]]]], None]
+        ] = []
+        self.new_containers_callbacks: list[
+            Callable[[list[tuple[ProxmoxNodeData, dict[str, Any]]]], None]
+        ] = []
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
