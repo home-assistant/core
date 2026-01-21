@@ -92,7 +92,7 @@ class SonosAlarms(SonosHouseholdCoordinator):
                 )
                 return False
             raise
-            
+
         if update_id and self.alarms.last_id < update_id:
             # Skip updates if latest query result is outdated or lagging
             return False

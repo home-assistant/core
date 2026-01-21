@@ -4,10 +4,7 @@ from copy import copy
 from datetime import timedelta
 from unittest.mock import patch
 
-import logging
-
 import pytest
-
 from soco.exceptions import SoCoException
 
 from homeassistant.components.sonos import DOMAIN
