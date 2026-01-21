@@ -60,6 +60,7 @@ from homeassistant.util.unit_conversion import (
     MassConverter,
     MassVolumeConcentrationConverter,
     NitrogenDioxideConcentrationConverter,
+    OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
@@ -228,6 +229,7 @@ _SECONDARY_UNIT_CONVERTERS: list[type[BaseUnitConverter]] = [
     CarbonMonoxideConcentrationConverter,
     NitrogenDioxideConcentrationConverter,
     TemperatureDeltaConverter,
+    OzoneConcentrationConverter,
     SulphurDioxideConcentrationConverter,
 ]
 
