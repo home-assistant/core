@@ -126,6 +126,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "alarm_control_panel",
     "assist_satellite",
     "fan",
+    "lawn_mower",
     "light",
     "siren",
 }
