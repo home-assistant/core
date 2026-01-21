@@ -334,7 +334,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.6.1
+aiontfy==0.7.0
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -1104,7 +1104,7 @@ google-nest-sdm==9.1.2
 google-photos-library-api==0.12.1
 
 # homeassistant.components.google_air_quality
-google_air_quality_api==2.1.2
+google_air_quality_api==3.0.0
 
 # homeassistant.components.slide
 # homeassistant.components.slide_local
@@ -1281,7 +1281,7 @@ ihcsdk==2.8.5
 imeon_inverter_api==0.4.0
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.6.0
+imgw_pib==2.0.1
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.11
