@@ -1,0 +1,17 @@
+.condition_common: &condition_common
+  target:
+    entity:
+      domain: person
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - all
+            - any
+          translation_key: condition_behavior
+
+is_home: *condition_common
+is_not_home: *condition_common

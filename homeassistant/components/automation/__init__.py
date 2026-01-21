@@ -127,6 +127,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "assist_satellite",
     "fan",
     "light",
+    "person",
     "siren",
 }
 
