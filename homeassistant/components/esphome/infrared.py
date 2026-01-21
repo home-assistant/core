@@ -5,12 +5,7 @@ from __future__ import annotations
 from functools import partial
 import logging
 
-from aioesphomeapi import (
-    EntityInfo,
-    EntityState,
-    InfraredProxyCapability,
-    InfraredProxyInfo,
-)
+from aioesphomeapi import EntityInfo, EntityState, InfraredCapability, InfraredInfo
 
 from homeassistant.components.infrared import (
     InfraredCommand,
@@ -28,9 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-class EsphomeInfraredEntity(
-    EsphomeEntity[InfraredProxyInfo, EntityState], InfraredEntity
-):
+class EsphomeInfraredEntity(EsphomeEntity[InfraredInfo, EntityState], InfraredEntity):
     """ESPHome infrared entity using native API."""
 
     _attr_has_entity_name = True
@@ -43,9 +36,9 @@ class EsphomeInfraredEntity(
         capabilities = static_info.capabilities
 
         features = InfraredEntityFeature(0)
-        if capabilities & InfraredProxyCapability.TRANSMITTER:
+        if capabilities & InfraredCapability.TRANSMITTER:
             features |= InfraredEntityFeature.TRANSMIT
-        if capabilities & InfraredProxyCapability.RECEIVER:
+        if capabilities & InfraredCapability.RECEIVER:
             features |= InfraredEntityFeature.RECEIVE
         self._attr_supported_features = features
 
@@ -76,7 +69,7 @@ class EsphomeInfraredEntity(
         Raises:
             HomeAssistantError: If transmission fails or not supported.
         """
-        if not self._static_info.capabilities & InfraredProxyCapability.TRANSMITTER:
+        if not self._static_info.capabilities & InfraredCapability.TRANSMITTER:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="infrared_proxy_transmitter_not_supported",
@@ -90,7 +83,7 @@ class EsphomeInfraredEntity(
         _LOGGER.debug("Sending command: %s", timings)
 
         try:
-            self._client.infrared_proxy_transmit_raw_timings(
+            self._client.infrared_rf_transmit_raw_timings(
                 self._static_info.key, carrier_frequency=38000, timings=timings
             )
         except Exception as err:
@@ -106,7 +99,7 @@ class EsphomeInfraredEntity(
 
 async_setup_entry = partial(
     platform_async_setup_entry,
-    info_type=InfraredProxyInfo,
+    info_type=InfraredInfo,
     entity_type=EsphomeInfraredEntity,
     state_type=EntityState,
 )

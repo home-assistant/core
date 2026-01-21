@@ -17,6 +17,8 @@ from aioesphomeapi import (
     EncryptionPlaintextAPIError,
     ExecuteServiceResponse,
     HomeassistantServiceCall,
+    InfraredCapability,
+    InfraredInfo,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
     LogLevel,
@@ -692,9 +694,13 @@ class ESPHomeManager:
                 cli.subscribe_zwave_proxy_request(self._async_zwave_proxy_request)
             )
 
-        if device_info.infrared_proxy_feature_flags:
+        if any(
+            isinstance(info, InfraredInfo)
+            and info.capabilities & InfraredCapability.RECEIVER
+            for info in entity_infos
+        ):
             entry_data.disconnect_callbacks.add(
-                cli.subscribe_infrared_proxy_receive(self._async_infrared_proxy_receive)
+                cli.subscribe_infrared_rf_receive(self._async_infrared_proxy_receive)
             )
 
         cli.subscribe_home_assistant_states_and_services(
