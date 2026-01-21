@@ -18,6 +18,9 @@
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
+    },
     "step": {
       "pick_implementation": {
         "data": {
@@ -138,6 +141,17 @@
         }
       }
     },
+    "fan": {
+      "hood": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "smart": "Smart"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "cool_select_plus_temperature": {
         "name": "CoolSelect+ temperature"
@@ -150,6 +164,9 @@
       },
       "hood_fan_speed": {
         "name": "Fan speed"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
       },
       "washer_rinse_cycles": {
         "name": "Rinse cycles",
