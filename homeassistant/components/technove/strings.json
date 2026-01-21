@@ -1,27 +1,27 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "Set up your TechnoVE station to integrate with Home Assistant.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "Hostname or IP address of your TechnoVE station."
-        }
+        },
+        "description": "Set up your TechnoVE station to integrate with Home Assistant."
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the TechnoVE Station named `{name}` to Home Assistant?",
         "title": "Discovered TechnoVE station"
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
@@ -45,20 +45,14 @@
       }
     },
     "sensor": {
-      "voltage_in": {
-        "name": "Input voltage"
-      },
-      "voltage_out": {
-        "name": "Output voltage"
-      },
-      "max_station_current": {
-        "name": "Max station current"
+      "energy_session": {
+        "name": "Last session energy usage"
       },
       "energy_total": {
         "name": "Total energy usage"
       },
-      "energy_session": {
-        "name": "Last session energy usage"
+      "max_station_current": {
+        "name": "Max station current"
       },
       "ssid": {
         "name": "Wi-Fi network name"
@@ -66,12 +60,18 @@
       "status": {
         "name": "Status",
         "state": {
-          "unplugged": "Unplugged",
-          "plugged_waiting": "Plugged, waiting",
-          "plugged_charging": "Plugged, charging",
+          "high_tariff_period": "High tariff period",
           "out_of_activation_period": "Out of activation period",
-          "high_tariff_period": "High tariff period"
+          "plugged_charging": "Plugged, charging",
+          "plugged_waiting": "Plugged, waiting",
+          "unplugged": "Unplugged"
         }
+      },
+      "voltage_in": {
+        "name": "Input voltage"
+      },
+      "voltage_out": {
+        "name": "Output voltage"
       }
     },
     "switch": {

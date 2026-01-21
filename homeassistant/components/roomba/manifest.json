@@ -22,17 +22,18 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/roomba",
+  "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["paho_mqtt", "roombapy"],
   "requirements": ["roombapy==1.9.0"],
   "zeroconf": [
     {
-      "type": "_amzn-alexa._tcp.local.",
-      "name": "irobot-*"
+      "name": "irobot-*",
+      "type": "_amzn-alexa._tcp.local."
     },
     {
-      "type": "_amzn-alexa._tcp.local.",
-      "name": "roomba-*"
+      "name": "roomba-*",
+      "type": "_amzn-alexa._tcp.local."
     }
   ]
 }

@@ -4,9 +4,9 @@
       "season": {
         "default": "mdi:cloud",
         "state": {
+          "autumn": "mdi:leaf",
           "spring": "mdi:flower",
           "summer": "mdi:sunglasses",
-          "autumn": "mdi:leaf",
           "winter": "mdi:snowflake"
         }
       }

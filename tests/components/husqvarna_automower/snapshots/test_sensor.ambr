@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutting blade usage time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -134,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Downtime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -324,6 +327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -505,6 +509,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn last time completed',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -556,6 +561,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn progress',
     'options': dict({
     }),
     'original_device_class': None,
@@ -612,6 +618,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inactive reason',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -656,6 +663,7 @@
         <MowerModes.DEMO: 'demo'>,
         <MowerModes.SECONDARY_AREA: 'secondary_area'>,
         <MowerModes.HOME: 'home'>,
+        <MowerModes.POI: 'poi'>,
         <MowerModes.UNKNOWN: 'unknown'>,
       ]),
     }),
@@ -674,6 +682,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -698,6 +707,7 @@
         <MowerModes.DEMO: 'demo'>,
         <MowerModes.SECONDARY_AREA: 'secondary_area'>,
         <MowerModes.HOME: 'home'>,
+        <MowerModes.POI: 'poi'>,
         <MowerModes.UNKNOWN: 'unknown'>,
       ]),
     }),
@@ -730,6 +740,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn last time completed',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -781,6 +792,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn progress',
     'options': dict({
     }),
     'original_device_class': None,
@@ -831,6 +843,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -882,6 +895,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Number of charging cycles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -933,6 +947,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Number of collisions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -959,6 +974,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '11396',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_remaining_charging_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_1_remaining_charging_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Remaining charging time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Remaining charging time',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remaining_charging_time',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_remaining_charging_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_1_remaining_charging_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Test Mower 1 Remaining charging time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_remaining_charging_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.15',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_1_restricted_reason-entry]
@@ -1007,6 +1079,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restricted reason',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1082,6 +1155,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1141,6 +1215,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cutting time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1200,6 +1275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total drive distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1259,6 +1335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total running time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1318,6 +1395,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total searching time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1377,6 +1455,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1441,6 +1520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Work area',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1503,6 +1583,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1687,6 +1768,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1858,6 +1940,7 @@
         <MowerModes.DEMO: 'demo'>,
         <MowerModes.SECONDARY_AREA: 'secondary_area'>,
         <MowerModes.HOME: 'home'>,
+        <MowerModes.POI: 'poi'>,
         <MowerModes.UNKNOWN: 'unknown'>,
       ]),
     }),
@@ -1876,6 +1959,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1900,6 +1984,7 @@
         <MowerModes.DEMO: 'demo'>,
         <MowerModes.SECONDARY_AREA: 'secondary_area'>,
         <MowerModes.HOME: 'home'>,
+        <MowerModes.POI: 'poi'>,
         <MowerModes.UNKNOWN: 'unknown'>,
       ]),
     }),
@@ -1932,6 +2017,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1958,6 +2044,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2023-06-05T17:00:00+00:00',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_2_remaining_charging_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_mower_2_remaining_charging_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Remaining charging time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Remaining charging time',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remaining_charging_time',
+    'unique_id': '1234_remaining_charging_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.test_mower_2_remaining_charging_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Test Mower 2 Remaining charging time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_2_remaining_charging_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensor_snapshot[sensor.test_mower_2_restricted_reason-entry]
@@ -2006,6 +2149,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restricted reason',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,

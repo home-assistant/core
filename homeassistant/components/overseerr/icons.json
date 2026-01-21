@@ -1,31 +1,31 @@
 {
   "entity": {
+    "event": {
+      "last_media_event": {
+        "default": "mdi:multimedia"
+      }
+    },
     "sensor": {
-      "total_requests": {
-        "default": "mdi:forum"
-      },
-      "movie_requests": {
-        "default": "mdi:movie-open"
-      },
-      "tv_requests": {
-        "default": "mdi:television-box"
-      },
-      "pending_requests": {
-        "default": "mdi:clock"
+      "available_requests": {
+        "default": "mdi:message-bulleted"
       },
       "declined_requests": {
         "default": "mdi:movie-open-off"
       },
+      "movie_requests": {
+        "default": "mdi:movie-open"
+      },
+      "pending_requests": {
+        "default": "mdi:clock"
+      },
       "processing_requests": {
         "default": "mdi:sync"
       },
-      "available_requests": {
-        "default": "mdi:message-bulleted"
-      }
-    },
-    "event": {
-      "last_media_event": {
-        "default": "mdi:multimedia"
+      "total_requests": {
+        "default": "mdi:forum"
+      },
+      "tv_requests": {
+        "default": "mdi:television-box"
       }
     }
   },

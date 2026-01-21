@@ -12,7 +12,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.freeze_time("2024-11-05T10:00:00+00:00")
+@pytest.mark.freeze_time("2025-10-01T10:00:00+00:00")
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

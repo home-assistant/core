@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Absolute pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -66,7 +67,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -83,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -110,7 +112,7 @@
       'device_class': 'precipitation',
       'friendly_name': 'Station A Daily rain',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -144,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -202,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feels like',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -260,6 +264,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hourly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -321,6 +326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -379,6 +385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irradiance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -435,6 +442,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last rain',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -488,6 +496,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max daily gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -532,7 +541,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -549,6 +558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -576,7 +586,7 @@
       'device_class': 'precipitation',
       'friendly_name': 'Station A Monthly rain',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -610,6 +620,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -671,6 +682,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -729,6 +741,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -769,7 +782,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -786,6 +799,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -813,7 +827,7 @@
       'device_class': 'precipitation',
       'friendly_name': 'Station A Weekly rain',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -847,6 +861,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -905,6 +920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -966,6 +982,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1027,6 +1044,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Absolute pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1071,7 +1089,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1088,6 +1106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1115,7 +1134,7 @@
       'device_class': 'precipitation',
       'friendly_name': 'Station C Daily rain',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -1149,6 +1168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1207,6 +1227,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feels like',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1265,6 +1286,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hourly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1326,6 +1348,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1384,6 +1407,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irradiance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1440,6 +1464,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last rain',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1493,6 +1518,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max daily gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1537,7 +1563,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1554,6 +1580,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1581,7 +1608,7 @@
       'device_class': 'precipitation',
       'friendly_name': 'Station C Monthly rain',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -1615,6 +1642,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1676,6 +1704,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1734,6 +1763,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1774,7 +1804,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1791,6 +1821,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1818,7 +1849,7 @@
       'device_class': 'precipitation',
       'friendly_name': 'Station C Weekly rain',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -1852,6 +1883,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1910,6 +1942,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1971,6 +2004,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2032,6 +2066,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Absolute pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2075,7 +2110,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2092,6 +2127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2118,7 +2154,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'precipitation',
       'friendly_name': 'Station D Daily rain',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -2152,6 +2188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2209,6 +2246,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feels like',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2266,6 +2304,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hourly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2326,6 +2365,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2383,6 +2423,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irradiance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2440,6 +2481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max daily gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2483,7 +2525,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2500,6 +2542,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2526,7 +2569,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'precipitation',
       'friendly_name': 'Station D Monthly rain',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -2560,6 +2603,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2620,6 +2664,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2677,6 +2722,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2716,7 +2762,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2733,6 +2779,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2759,7 +2806,7 @@
       'attribution': 'Data provided by ambientnetwork.net',
       'device_class': 'precipitation',
       'friendly_name': 'Station D Weekly rain',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
@@ -2793,6 +2840,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2850,6 +2898,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2910,6 +2959,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

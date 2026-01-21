@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy
+from homeassistant.const import UnitOfEnergy, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -20,44 +22,74 @@ from .const import CONNECTION_TYPE, DOMAIN, LOCAL
 from .coordinator import AdaxCloudCoordinator
 
 
+@dataclass(kw_only=True, frozen=True)
+class AdaxSensorDescription(SensorEntityDescription):
+    """Describes Adax sensor entity."""
+
+    data_key: str
+
+
+SENSORS: tuple[AdaxSensorDescription, ...] = (
+    AdaxSensorDescription(
+        key="temperature",
+        data_key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    AdaxSensorDescription(
+        key="energy",
+        data_key="energyWh",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=3,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AdaxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Adax energy sensors with config flow."""
+    """Set up the Adax sensors with config flow."""
     if entry.data.get(CONNECTION_TYPE) != LOCAL:
         cloud_coordinator = cast(AdaxCloudCoordinator, entry.runtime_data)
 
         # Create individual energy sensors for each device
         async_add_entities(
-            AdaxEnergySensor(cloud_coordinator, device_id)
-            for device_id in cloud_coordinator.data
+            [
+                AdaxSensor(cloud_coordinator, entity_description, device_id)
+                for device_id in cloud_coordinator.data
+                for entity_description in SENSORS
+            ]
         )
 
 
-class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
-    """Representation of an Adax energy sensor."""
+class AdaxSensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
+    """Representation of an Adax sensor."""
 
+    entity_description: AdaxSensorDescription
     _attr_has_entity_name = True
-    _attr_translation_key = "energy"
-    _attr_device_class = SensorDeviceClass.ENERGY
-    _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
-    _attr_suggested_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_suggested_display_precision = 3
 
     def __init__(
         self,
         coordinator: AdaxCloudCoordinator,
+        entity_description: AdaxSensorDescription,
         device_id: str,
     ) -> None:
-        """Initialize the energy sensor."""
+        """Initialize the sensor."""
         super().__init__(coordinator)
+        self.entity_description = entity_description
         self._device_id = device_id
         room = coordinator.data[device_id]
 
-        self._attr_unique_id = f"{room['homeId']}_{device_id}_energy"
+        self._attr_unique_id = (
+            f"{room['homeId']}_{device_id}_{self.entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=room["name"],
@@ -68,10 +100,14 @@ class AdaxEnergySensor(CoordinatorEntity[AdaxCloudCoordinator], SensorEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            super().available and "energyWh" in self.coordinator.data[self._device_id]
+            super().available
+            and self.entity_description.data_key
+            in self.coordinator.data[self._device_id]
         )
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | float | None:
         """Return the native value of the sensor."""
-        return int(self.coordinator.data[self._device_id]["energyWh"])
+        return self.coordinator.data[self._device_id].get(
+            self.entity_description.data_key
+        )

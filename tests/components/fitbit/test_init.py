@@ -4,7 +4,6 @@ from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 
 import pytest
-from requests_mock.mocker import Mocker
 
 from homeassistant.components.fitbit.const import (
     CONF_CLIENT_ID,
@@ -90,14 +89,18 @@ async def test_token_refresh_success(
     assert await integration_setup()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    # Verify token request
-    assert len(aioclient_mock.mock_calls) == 1
+    # Verify token request and that the device API is called with new token
+    assert len(aioclient_mock.mock_calls) == 2
     assert aioclient_mock.mock_calls[0][2] == {
         CONF_CLIENT_ID: CLIENT_ID,
         CONF_CLIENT_SECRET: CLIENT_SECRET,
         "grant_type": "refresh_token",
         "refresh_token": FAKE_REFRESH_TOKEN,
     }
+    assert str(aioclient_mock.mock_calls[1][1]) == DEVICES_API_URL
+    assert aioclient_mock.mock_calls[1][3].get("Authorization") == (
+        "Bearer server-access-token"
+    )
 
     # Verify updated token
     assert (
@@ -144,15 +147,15 @@ async def test_device_update_coordinator_failure(
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
     setup_credentials: None,
-    requests_mock: Mocker,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test case where the device update coordinator fails on the first request."""
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
-    requests_mock.register_uri(
-        "GET",
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
         DEVICES_API_URL,
-        status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
     )
 
     assert not await integration_setup()
@@ -164,15 +167,15 @@ async def test_device_update_coordinator_reauth(
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
     setup_credentials: None,
-    requests_mock: Mocker,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test case where the device update coordinator fails on the first request."""
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
-    requests_mock.register_uri(
-        "GET",
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
         DEVICES_API_URL,
-        status_code=HTTPStatus.UNAUTHORIZED,
+        status=HTTPStatus.UNAUTHORIZED,
         json={
             "errors": [{"errorType": "invalid_grant"}],
         },

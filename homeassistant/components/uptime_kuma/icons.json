@@ -4,6 +4,12 @@
       "cert_days_remaining": {
         "default": "mdi:certificate"
       },
+      "hostname": {
+        "default": "mdi:ip-outline"
+      },
+      "port": {
+        "default": "mdi:ip-outline"
+      },
       "response_time": {
         "default": "mdi:timeline-clock-outline"
       },
@@ -11,8 +17,8 @@
         "default": "mdi:lan-connect",
         "state": {
           "down": "mdi:lan-disconnect",
-          "pending": "mdi:lan-pending",
-          "maintenance": "mdi:account-hard-hat-outline"
+          "maintenance": "mdi:account-hard-hat-outline",
+          "pending": "mdi:lan-pending"
         }
       },
       "type": {
@@ -20,12 +26,6 @@
       },
       "url": {
         "default": "mdi:web"
-      },
-      "hostname": {
-        "default": "mdi:ip-outline"
-      },
-      "port": {
-        "default": "mdi:ip-outline"
       }
     }
   }

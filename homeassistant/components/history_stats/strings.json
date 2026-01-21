@@ -1,5 +1,4 @@
 {
-  "title": "History Stats",
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
@@ -8,20 +7,24 @@
       "only_two_keys_allowed": "The sensor configuration must provide two out of 'start', 'end', 'duration'"
     },
     "step": {
-      "user": {
-        "description": "Create a history stats sensor",
+      "options": {
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "entity_id": "Entity",
-          "state": "State",
-          "type": "Type"
+          "duration": "Duration",
+          "end": "End",
+          "entity_id": "[%key:component::history_stats::config::step::user::data::entity_id%]",
+          "start": "Start",
+          "state": "[%key:component::history_stats::config::step::user::data::state%]",
+          "type": "[%key:component::history_stats::config::step::user::data::type%]"
         },
         "data_description": {
-          "name": "Name for the created entity.",
-          "entity_id": "Entity to get statistics from.",
-          "state": "The states you want to track from the entity.",
-          "type": "The type of sensor, one of 'time', 'ratio' or 'count'"
-        }
+          "duration": "Duration of the measure.",
+          "end": "When to stop the measure (timestamp or datetime). Can be a template",
+          "entity_id": "[%key:component::history_stats::config::step::user::data_description::entity_id%]",
+          "start": "When to start the measure (timestamp or datetime). Can be a template.",
+          "state": "[%key:component::history_stats::config::step::user::data_description::state%]",
+          "type": "[%key:component::history_stats::config::step::user::data_description::type%]"
+        },
+        "description": "Read the documentation for further details on how to configure the history stats sensor using these options."
       },
       "state": {
         "data": {
@@ -33,24 +36,20 @@
           "state": "[%key:component::history_stats::config::step::user::data_description::state%]"
         }
       },
-      "options": {
-        "description": "Read the documentation for further details on how to configure the history stats sensor using these options.",
+      "user": {
         "data": {
-          "entity_id": "[%key:component::history_stats::config::step::user::data::entity_id%]",
-          "state": "[%key:component::history_stats::config::step::user::data::state%]",
-          "type": "[%key:component::history_stats::config::step::user::data::type%]",
-          "start": "Start",
-          "end": "End",
-          "duration": "Duration"
+          "entity_id": "Entity",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "State",
+          "type": "Type"
         },
         "data_description": {
-          "entity_id": "[%key:component::history_stats::config::step::user::data_description::entity_id%]",
-          "state": "[%key:component::history_stats::config::step::user::data_description::state%]",
-          "type": "[%key:component::history_stats::config::step::user::data_description::type%]",
-          "start": "When to start the measure (timestamp or datetime). Can be a template.",
-          "end": "When to stop the measure (timestamp or datetime). Can be a template",
-          "duration": "Duration of the measure."
-        }
+          "entity_id": "Entity to get statistics from.",
+          "name": "Name for the created entity.",
+          "state": "The states you want to track from the entity.",
+          "type": "The type of sensor, one of 'time', 'ratio' or 'count'"
+        },
+        "description": "Create a history stats sensor"
       }
     }
   },
@@ -63,39 +62,40 @@
     },
     "step": {
       "init": {
-        "description": "[%key:component::history_stats::config::step::options::description%]",
         "data": {
-          "entity_id": "[%key:component::history_stats::config::step::user::data::entity_id%]",
-          "state": "[%key:component::history_stats::config::step::user::data::state%]",
-          "type": "[%key:component::history_stats::config::step::user::data::type%]",
-          "start": "[%key:component::history_stats::config::step::options::data::start%]",
+          "duration": "[%key:component::history_stats::config::step::options::data::duration%]",
           "end": "[%key:component::history_stats::config::step::options::data::end%]",
-          "duration": "[%key:component::history_stats::config::step::options::data::duration%]"
+          "entity_id": "[%key:component::history_stats::config::step::user::data::entity_id%]",
+          "start": "[%key:component::history_stats::config::step::options::data::start%]",
+          "state": "[%key:component::history_stats::config::step::user::data::state%]",
+          "type": "[%key:component::history_stats::config::step::user::data::type%]"
         },
         "data_description": {
-          "entity_id": "[%key:component::history_stats::config::step::user::data_description::entity_id%]",
-          "state": "[%key:component::history_stats::config::step::user::data_description::state%]",
-          "type": "[%key:component::history_stats::config::step::user::data_description::type%]",
-          "start": "[%key:component::history_stats::config::step::options::data_description::start%]",
+          "duration": "[%key:component::history_stats::config::step::options::data_description::duration%]",
           "end": "[%key:component::history_stats::config::step::options::data_description::end%]",
-          "duration": "[%key:component::history_stats::config::step::options::data_description::duration%]"
-        }
+          "entity_id": "[%key:component::history_stats::config::step::user::data_description::entity_id%]",
+          "start": "[%key:component::history_stats::config::step::options::data_description::start%]",
+          "state": "[%key:component::history_stats::config::step::user::data_description::state%]",
+          "type": "[%key:component::history_stats::config::step::user::data_description::type%]"
+        },
+        "description": "[%key:component::history_stats::config::step::options::description%]"
       }
     }
   },
   "selector": {
     "type": {
       "options": {
-        "time": "Time",
+        "count": "Count",
         "ratio": "Ratio",
-        "count": "Count"
+        "time": "Time"
       }
     }
   },
   "services": {
     "reload": {
-      "name": "[%key:common::action::reload%]",
-      "description": "Reloads history stats sensors from the YAML-configuration."
+      "description": "Reloads history stats sensors from the YAML-configuration.",
+      "name": "[%key:common::action::reload%]"
     }
-  }
+  },
+  "title": "History Stats"
 }

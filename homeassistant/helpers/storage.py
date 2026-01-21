@@ -31,7 +31,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, json as json_util
-from homeassistant.util.file import WriteError
+from homeassistant.util.file import WriteError, write_utf8_file, write_utf8_file_atomic
 from homeassistant.util.hass_dict import HassKey
 
 from . import json as json_helper
@@ -241,8 +241,25 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         encoder: type[JSONEncoder] | None = None,
         minor_version: int = 1,
         read_only: bool = False,
+        serialize_in_event_loop: bool = True,
     ) -> None:
-        """Initialize storage class."""
+        """Initialize storage class.
+
+        Args:
+            serialize_in_event_loop: Whether to serialize data in the event loop.
+            Set to True (default) if data passed to async_save and data produced by
+            data_func passed to async_delay_save needs to be serialized in the event
+            loop because it is not thread safe.
+
+            Set to False if the data passed to async_save and data produced by
+            data_func passed to async_delay_save can safely be accessed from a
+            separate thread, i.e. the data is thread safe and not mutated by other
+            code while serialization is in progress.
+
+            Users should support serializing in a separate thread for stores which
+            are expected to store large amounts of data to avoid blocking the event
+            loop during serialization.
+        """
         self.version = version
         self.minor_version = minor_version
         self.key = key
@@ -258,6 +275,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         self._read_only = read_only
         self._next_write_time = 0.0
         self._manager = get_internal_store_manager(hass)
+        self._serialize_in_event_loop = serialize_in_event_loop
 
     @cached_property
     def path(self):
@@ -441,7 +459,13 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         data_func: Callable[[], _T],
         delay: float = 0,
     ) -> None:
-        """Save data with an optional delay."""
+        """Save data with an optional delay.
+
+        data_func: A function that returns the data to save. If serialize_in_event_loop
+        is True, it will be called from and the returned data will be serialized in the
+        in the event loop. If serialize_in_event_loop is False, it will be called from
+        and the returned data will be serialized by a separate thread.
+        """
         self._data = {
             "version": self.version,
             "minor_version": self.minor_version,
@@ -537,28 +561,38 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
                 return
 
             try:
-                await self._async_write_data(self.path, data)
+                await self._async_write_data(data)
             except (json_util.SerializationError, WriteError) as err:
                 _LOGGER.error("Error writing config for %s: %s", self.key, err)
 
-    async def _async_write_data(self, path: str, data: dict) -> None:
-        await self.hass.async_add_executor_job(self._write_data, self.path, data)
+    async def _async_write_data(self, data: dict) -> None:
+        if self._serialize_in_event_loop:
+            if "data_func" in data:
+                data["data"] = data.pop("data_func")()
+            mode, json_data = json_helper.prepare_save_json(data, encoder=self._encoder)
+            await self.hass.async_add_executor_job(
+                self._write_prepared_data, mode, json_data
+            )
+            return
+        await self.hass.async_add_executor_job(self._write_data, data)
 
-    def _write_data(self, path: str, data: dict) -> None:
+    def _write_data(self, data: dict) -> None:
         """Write the data."""
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-
         if "data_func" in data:
             data["data"] = data.pop("data_func")()
+        mode, json_data = json_helper.prepare_save_json(data, encoder=self._encoder)
+        self._write_prepared_data(mode, json_data)
+
+    def _write_prepared_data(self, mode: str, json_data: str | bytes) -> None:
+        """Write the data."""
+        path = self.path
+        os.makedirs(os.path.dirname(path), exist_ok=True)
 
         _LOGGER.debug("Writing data for %s to %s", self.key, path)
-        json_helper.save_json(
-            path,
-            data,
-            self._private,
-            encoder=self._encoder,
-            atomic_writes=self._atomic_writes,
+        write_method = (
+            write_utf8_file_atomic if self._atomic_writes else write_utf8_file
         )
+        write_method(path, json_data, self._private, mode=mode)
 
     async def _async_migrate_func(self, old_major_version, old_minor_version, old_data):
         """Migrate to the new version."""

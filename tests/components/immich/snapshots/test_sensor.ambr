@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk available',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -81,6 +82,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -140,6 +142,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -192,6 +195,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -251,6 +255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used by photos',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -310,6 +315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used by videos',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -369,6 +375,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Photos count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -421,6 +428,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Videos count',
     'options': dict({
     }),
     'original_device_class': None,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pyuptimerobot import UptimeRobotMonitor
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -12,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
+from .utils import new_device_listener
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -25,29 +28,23 @@ async def async_setup_entry(
     """Set up the UptimeRobot binary_sensors."""
     coordinator = entry.runtime_data
 
-    known_devices: set[int] = set()
-
-    def _check_device() -> None:
-        entities: list[UptimeRobotBinarySensor] = []
-        for monitor in coordinator.data:
-            if monitor.id in known_devices:
-                continue
-            known_devices.add(monitor.id)
-            entities.append(
-                UptimeRobotBinarySensor(
-                    coordinator,
-                    BinarySensorEntityDescription(
-                        key=str(monitor.id),
-                        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-                    ),
-                    monitor=monitor,
-                )
+    def _add_new_entities(new_monitors: list[UptimeRobotMonitor]) -> None:
+        """Add entities for new monitors."""
+        entities = [
+            UptimeRobotBinarySensor(
+                coordinator,
+                BinarySensorEntityDescription(
+                    key=str(monitor.id),
+                    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+                ),
+                monitor=monitor,
             )
+            for monitor in new_monitors
+        ]
         if entities:
             async_add_entities(entities)
 
-    _check_device()
-    entry.async_on_unload(coordinator.async_add_listener(_check_device))
+    entry.async_on_unload(new_device_listener(coordinator, _add_new_entities))
 
 
 class UptimeRobotBinarySensor(UptimeRobotEntity, BinarySensorEntity):

@@ -1,29 +1,47 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Configure Daikin AC",
-        "description": "Enter the IP address of your Daikin AC.\n\nNote that API key and password are only used by BRP072Cxx and SKYFi devices respectively.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "error": {
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "api_password": "Invalid authentication, use either API Key or Password.",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Enter the IP address of your Daikin AC.\nIf your device is set up with a password or API-key, please use that, in all other cases leave the fields blank.",
+        "title": "Configure Daikin AC"
+      }
     }
   },
   "entity": {
     "sensor": {
+      "compressor_energy_consumption": {
+        "name": "Compressor energy consumption"
+      },
+      "compressor_estimated_power_consumption": {
+        "name": "Compressor estimated power consumption"
+      },
+      "compressor_frequency": {
+        "name": "Compressor frequency"
+      },
+      "cool_energy_consumption": {
+        "name": "Cool energy consumption"
+      },
+      "energy_consumption": {
+        "name": "Energy consumption"
+      },
+      "heat_energy_consumption": {
+        "name": "Heat energy consumption"
+      },
       "inside_temperature": {
         "name": "Inside temperature"
       },
@@ -32,24 +50,6 @@
       },
       "target_humidity": {
         "name": "Target humidity"
-      },
-      "compressor_estimated_power_consumption": {
-        "name": "Compressor estimated power consumption"
-      },
-      "cool_energy_consumption": {
-        "name": "Cool energy consumption"
-      },
-      "heat_energy_consumption": {
-        "name": "Heat energy consumption"
-      },
-      "energy_consumption": {
-        "name": "Energy consumption"
-      },
-      "compressor_frequency": {
-        "name": "Compressor frequency"
-      },
-      "compressor_energy_consumption": {
-        "name": "Compressor energy consumption"
       }
     },
     "switch": {

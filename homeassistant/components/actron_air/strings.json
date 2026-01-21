@@ -1,0 +1,59 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "oauth2_error": "Failed to start authentication flow",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "You must reauthenticate with the same Actron Air account that was originally configured."
+    },
+    "error": {
+      "oauth2_error": "Failed to start authentication flow. Please try again later."
+    },
+    "progress": {
+      "wait_for_authorization": "To authenticate, open the following URL and login at Actron Air:\n{verification_uri}\nIf the code is not automatically copied, paste the following code to authorize the integration:\n\n```{user_code}```\n\n\nThe login attempt will time out after {expires_minutes} minutes."
+    },
+    "step": {
+      "connection_error": {
+        "data": {},
+        "description": "Failed to connect to Actron Air. Please check your internet connection and try again.",
+        "title": "Connection error"
+      },
+      "reauth_confirm": {
+        "description": "Your Actron Air authentication has expired. Select continue to reauthenticate with your Actron Air account. You will be prompted to log in again to restore the connection.",
+        "title": "Authentication expired"
+      },
+      "timeout": {
+        "data": {},
+        "description": "The authentication process timed out. Please try again.",
+        "title": "Authentication timeout"
+      },
+      "user": {
+        "title": "Actron Air Authentication"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "away_mode": {
+        "name": "Away mode"
+      },
+      "continuous_fan": {
+        "name": "Continuous fan"
+      },
+      "quiet_mode": {
+        "name": "Quiet mode"
+      },
+      "turbo_mode": {
+        "name": "Turbo mode"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed, please reauthenticate"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from the Actron Air API: {error}"
+    }
+  }
+}

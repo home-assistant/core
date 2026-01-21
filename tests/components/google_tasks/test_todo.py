@@ -222,6 +222,7 @@ def setup_http_response(mock_http_response: Mock) -> None:
                         "status": "needsAction",
                         "position": "0000000000000001",
                         "due": "2023-11-18T00:00:00Z",
+                        "updated": "2023-11-10T23:00:00.333Z",
                     },
                     {
                         "id": "task-2",
@@ -229,6 +230,8 @@ def setup_http_response(mock_http_response: Mock) -> None:
                         "status": "completed",
                         "position": "0000000000000002",
                         "notes": "long description",
+                        "updated": "2023-11-12T12:31:04.132Z",
+                        "completed": "2023-11-12T12:31:04.132Z",
                     },
                 ],
             },
@@ -262,6 +265,7 @@ async def test_get_items(
             "uid": "task-2",
             "summary": "Task 2",
             "status": "completed",
+            "completed": "2023-11-12T12:31:04.132000+00:00",
             "description": "long description",
         },
     ]
