@@ -72,20 +72,6 @@ OPENING_CATEGORY_TO_DEVICE_CLASS: Final[dict[str, BinarySensorDeviceClass]] = {
 }
 
 
-def process_opening_category_string2class(
-    category: str | None,
-) -> BinarySensorDeviceClass:
-    """Helper function to map Netatmo opening category to Home Assistant device class."""
-
-    if category is None:
-        return BinarySensorDeviceClass.OPENING
-
-    # Use a specific device class if we have a match, otherwise default to OPENING
-    return OPENING_CATEGORY_TO_DEVICE_CLASS.get(
-        category, BinarySensorDeviceClass.OPENING
-    )
-
-
 def get_opening_category(netatmo_device: NetatmoDevice) -> str | None:
     """Helper function to get opening category from Netatmo API raw data."""
 
@@ -115,16 +101,20 @@ def get_opening_category(netatmo_device: NetatmoDevice) -> str | None:
 def process_opening_category(netatmo_device: NetatmoDevice) -> BinarySensorDeviceClass:
     """Helper function to map Netatmo device opening category to Home Assistant device class."""
     category = get_opening_category(netatmo_device)
-    module_binary_sensor_class: BinarySensorDeviceClass = (
-        process_opening_category_string2class(category)
+
+    if category is None:
+        return BinarySensorDeviceClass.OPENING
+
+    # Use a specific device class if we have a match, otherwise default to OPENING
+    return OPENING_CATEGORY_TO_DEVICE_CLASS.get(
+        category, BinarySensorDeviceClass.OPENING
     )
-    return module_binary_sensor_class
 
 
-def process_opening_category_string2key(
-    category: str | None,
-) -> str:
-    """Helper function to map Netatmo opening category to Component keys."""
+def process_opening_key(netatmo_device: NetatmoDevice) -> str:
+    """Helper function to map Netatmo device opening category to Component keys."""
+
+    category = get_opening_category(netatmo_device)
 
     if category == DOORTAG_CATEGORY_OTHER or category is None:
         key = DEFAULT_OPENING_SENSOR_KEY
@@ -134,14 +124,6 @@ def process_opening_category_string2key(
         key = DEFAULT_OPENING_SENSOR_KEY
 
     return key
-
-
-def process_opening_key(netatmo_device: NetatmoDevice) -> str:
-    """Helper function to map Netatmo device opening category to Component keys."""
-
-    category = get_opening_category(netatmo_device)
-
-    return process_opening_category_string2key(category)
 
 
 @dataclass(frozen=True, kw_only=True)
