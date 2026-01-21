@@ -603,6 +603,10 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Return a set of referenced labels."""
         referenced = self.action_script.referenced_labels
 
+        if self._cond_func is not None:
+            for conf in self._cond_func.config:
+                referenced |= condition.async_extract_labels(conf)
+
         for conf in self._trigger_config:
             referenced |= set(_get_targets_from_trigger_config(conf, ATTR_LABEL_ID))
         return referenced
@@ -612,6 +616,10 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Return a set of referenced floors."""
         referenced = self.action_script.referenced_floors
 
+        if self._cond_func is not None:
+            for conf in self._cond_func.config:
+                referenced |= condition.async_extract_floors(conf)
+
         for conf in self._trigger_config:
             referenced |= set(_get_targets_from_trigger_config(conf, ATTR_FLOOR_ID))
         return referenced
@@ -620,6 +628,10 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         referenced = self.action_script.referenced_areas
+
+        if self._cond_func is not None:
+            for conf in self._cond_func.config:
+                referenced |= condition.async_extract_areas(conf)
 
         for conf in self._trigger_config:
             referenced |= set(_get_targets_from_trigger_config(conf, ATTR_AREA_ID))

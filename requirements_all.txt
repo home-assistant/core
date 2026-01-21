@@ -1646,7 +1646,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.1.0
+onedrive-personal-sdk==0.1.1
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -2147,7 +2147,7 @@ pykmtronic==0.3.0
 pykodi==0.2.7
 
 # homeassistant.components.kostal_plenticore
-pykoplenti==1.3.0
+pykoplenti==1.5.0
 
 # homeassistant.components.kraken
 pykrakenapi==0.1.8
@@ -3080,7 +3080,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==8.1.1
+uiprotect==10.0.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
