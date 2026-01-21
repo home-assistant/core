@@ -123,45 +123,6 @@ class TonewinnerCommands:
     INPUT_DOWN = "SI DN"
     INPUT_QUERY = "SI ?"
 
-    # # Sound Mode Commands
-    # SOUND_MODE_STEREO = "LMD00"
-    # SOUND_MODE_DIRECT = "LMD01"
-    # SOUND_MODE_SURROUND = "LMD02"
-    # SOUND_MODE_FILM = "LMD03"
-    # SOUND_MODE_MUSIC = "LMD04"
-    # SOUND_MODE_GAME = "LMD05"
-    # SOUND_MODE_QUERY = "LMDQSTN"
-
-    # # Tone Control
-    # BASS_UP = "TBU01"
-    # BASS_DOWN = "TBD01"
-    # BASS_QUERY = "TBQSTN"
-    # TREBLE_UP = "TTU01"
-    # TREBLE_DOWN = "TTD01"
-    # TREBLE_QUERY = "TTQSTN"
-
-    # # Balance
-    # BALANCE_LEFT = "BLT01"
-    # BALANCE_RIGHT = "BLR01"
-    # BALANCE_CENTER = "BLC01"
-    # BALANCE_QUERY = "BLQSTN"
-
-    # # Display/Led Control
-    # LED_BRIGHTNESS_UP = "LUU01"
-    # LED_BRIGHTNESS_DOWN = "LUD01"
-    # LED_BRIGHTNESS_QUERY = "LUQSTN"
-
-    # # Status Queries
-    # ALL_STATUS_QUERY = "IFVQTN"  # Returns multiple values
-
-    # # Preset Commands
-    # PRESET_LOAD_1 = "PRM01"
-    # PRESET_LOAD_2 = "PRM02"
-    # PRESET_LOAD_3 = "PRM03"
-    # PRESET_SAVE_1 = "PRM11"
-    # PRESET_SAVE_2 = "PRM12"
-    # PRESET_SAVE_3 = "PRM13"
-
 
 class TonewinnerProtocol:
     """Protocol handler for Tonewinner RS232 communication."""
