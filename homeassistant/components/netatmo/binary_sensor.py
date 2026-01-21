@@ -62,13 +62,13 @@ def process_opening_status_string(status: str) -> bool | None:
     return OPENING_STATUS_TO_BINARY_SENSOR_STATE.get(status, None)
 
 
-OPENING_CATEGORY_TO_DEVICE_CLASS: Final[dict[str, BinarySensorDeviceClass | None]] = {
-    DOORTAG_CATEGORY_DOOR: None,
+OPENING_CATEGORY_TO_DEVICE_CLASS: Final[dict[str, BinarySensorDeviceClass]] = {
+    DOORTAG_CATEGORY_DOOR: BinarySensorDeviceClass.DOOR,
     DOORTAG_CATEGORY_FURNITURE: BinarySensorDeviceClass.OPENING,
     DOORTAG_CATEGORY_GARAGE: BinarySensorDeviceClass.GARAGE_DOOR,
     DOORTAG_CATEGORY_GATE: BinarySensorDeviceClass.OPENING,
     DOORTAG_CATEGORY_OTHER: BinarySensorDeviceClass.OPENING,
-    DOORTAG_CATEGORY_WINDOW: None,
+    DOORTAG_CATEGORY_WINDOW: BinarySensorDeviceClass.WINDOW,
 }
 
 
@@ -104,36 +104,36 @@ def process_opening_category(
     """Helper function to map Netatmo device opening category to Home Assistant device class exceptions."""
     category = get_opening_category(netatmo_device)
 
-    if category is None:
-        return BinarySensorDeviceClass.OPENING
-
     # Use a specific device class if we have a match, otherwise default to OPENING
-    return OPENING_CATEGORY_TO_DEVICE_CLASS.get(
-        category, BinarySensorDeviceClass.OPENING
-    )
+    if category is None:
+        device_class = BinarySensorDeviceClass.OPENING
+    else:
+        device_class = OPENING_CATEGORY_TO_DEVICE_CLASS.get(
+            category, BinarySensorDeviceClass.OPENING
+        )
+
+    return device_class
 
 
-OPENING_CATEGORY_LIST: Final[set[str]] = {
-    DOORTAG_CATEGORY_DOOR,
-    DOORTAG_CATEGORY_FURNITURE,
-    DOORTAG_CATEGORY_GARAGE,
-    DOORTAG_CATEGORY_GATE,
-    DOORTAG_CATEGORY_OTHER,
-    DOORTAG_CATEGORY_WINDOW,
+OPENING_CATEGORY_TO_KEY: Final[dict[str, str | None]] = {
+    DOORTAG_CATEGORY_DOOR: None,
+    DOORTAG_CATEGORY_FURNITURE: DOORTAG_CATEGORY_FURNITURE,
+    DOORTAG_CATEGORY_GARAGE: None,
+    DOORTAG_CATEGORY_GATE: DOORTAG_CATEGORY_GATE,
+    DOORTAG_CATEGORY_OTHER: DEFAULT_OPENING_SENSOR_KEY,
+    DOORTAG_CATEGORY_WINDOW: None,
 }
 
 
-def process_opening_key(netatmo_device: NetatmoDevice) -> str:
-    """Helper function to map Netatmo device opening category to Component keys."""
+def process_opening_key(netatmo_device: NetatmoDevice) -> str | None:
+    """Helper function to map Netatmo device opening category to Component key exceptions."""
 
     category = get_opening_category(netatmo_device)
+    key: str | None = DEFAULT_OPENING_SENSOR_KEY
 
-    if category == DOORTAG_CATEGORY_OTHER or category is None:
-        key = DEFAULT_OPENING_SENSOR_KEY
-    elif category in OPENING_CATEGORY_LIST:
-        key = category
-    else:
-        key = DEFAULT_OPENING_SENSOR_KEY
+    # Use a specific key if we have a match, where None to force class, otherwise default
+    if category is not None:
+        key = OPENING_CATEGORY_TO_KEY.get(category, DEFAULT_OPENING_SENSOR_KEY)
 
     return key
 
@@ -147,8 +147,8 @@ class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
     )
     device_class_fn: (
         Callable[[NetatmoDevice], BinarySensorDeviceClass | None] | None
-    ) = None  # This is a value_fn variant to calculate device_class
-    device_key_fn: Callable[[NetatmoDevice], str] | None = (
+    ) = None  # This is a value_fn variant to calculate device_class exceptions
+    device_key_fn: Callable[[NetatmoDevice], str | None] | None = (
         None  # This is a value_fn variant to calculate key
     )
     value_fn: Callable[[str], str | bool | None] = lambda x: x
@@ -193,7 +193,6 @@ NETATMO_OPENING_BINARY_SENSOR_DESCRIPTIONS: Final[
     ),
     NetatmoBinarySensorEntityDescription(
         key="opening",
-        device_class=BinarySensorDeviceClass.OPENING,
         netatmo_name="status",
         device_class_fn=process_opening_category,
         device_key_fn=process_opening_key,
@@ -312,15 +311,15 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
 
-        # Apply Dynamic Device Class if available
+        # Apply Dynamic Device Class override if available
         if description.device_class_fn:
-            device_class = description.device_class_fn(netatmo_device)
-            if device_class is not None:
-                self._attr_device_class = device_class
+            self._attr_device_class = description.device_class_fn(netatmo_device)
 
-        # Apply Dynamic Translation Key if available
+        # Apply Dynamic Translation Key if available and needed
         if description.device_key_fn:
-            self._attr_translation_key = description.device_key_fn(netatmo_device)
+            device_key = description.device_key_fn(netatmo_device)
+            if device_key is not None:
+                self._attr_translation_key = device_key
 
     @callback
     def async_update_callback(self) -> None:
@@ -357,11 +356,11 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         else:
             value = None
 
+        # The device is reachable if we are here
+        self._attr_available = True
         if value is None:
-            self._attr_available = False
-            self._attr_is_on = False
+            self._attr_is_on = None
         else:
-            self._attr_available = True
             self._attr_is_on = cast(bool, value)
 
         self.async_write_ha_state()
