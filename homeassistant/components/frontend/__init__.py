@@ -55,7 +55,7 @@ CONF_JS_VERSION = "javascript_version"
 CONF_DEVELOPMENT_PR = "development_pr"
 CONF_GITHUB_TOKEN = "github_token"
 
-PR_CACHE_DIR = "frontend_development_pr"
+PR_CACHE_DIR = "frontend_development_artifacts"
 
 DEFAULT_THEME_COLOR = "#2980b9"
 
@@ -469,8 +469,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
             repo_path = None
         else:
-            # frontend_dir is .../frontend_development_pr/<pr_number>/hass_frontend
-            # We need to pass .../frontend_development_pr/<pr_number> to _frontend_root
+            # frontend_dir is .../frontend_development_artifacts/<pr_number>/hass_frontend
+            # We need to pass .../frontend_development_artifacts/<pr_number> to _frontend_root
             repo_path = str(dev_pr_dir.parent)
             _LOGGER.info("Using frontend from PR #%s", dev_pr_number)
 
