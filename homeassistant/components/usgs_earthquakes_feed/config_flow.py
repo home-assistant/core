@@ -147,7 +147,7 @@ class UsgsEarthquakesFeedFlowHandler(ConfigFlow, domain=DOMAIN):
             # Only check for duplicate if the unique ID changed
             if new_identifier != entry.unique_id:
                 await self.async_set_unique_id(new_identifier)
-                self._abort_if_unique_id_mismatch()
+                self._abort_if_unique_id_configured()
 
             return self.async_update_reload_and_abort(
                 entry,
