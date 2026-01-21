@@ -15,9 +15,17 @@ import pytest
 
 from homeassistant.components.dexcom.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .conftest import init_integration
+from .conftest import (
+    CONFIG_V1,
+    TEST_ACCOUNT_ID,
+    TEST_PASSWORD,
+    TEST_REGION,
+    TEST_USERNAME,
+    init_integration,
+)
 
 from tests.common import MockConfigEntry
 
@@ -82,3 +90,22 @@ async def test_unload_entry(
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
+
+
+async def test_migrate_entry(hass: HomeAssistant, mock_dexcom: MagicMock) -> None:
+    """Test entry migration to major version 2."""
+
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=TEST_USERNAME,
+        unique_id=TEST_ACCOUNT_ID,
+        data=CONFIG_V1,
+        version=1,
+    )
+
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.version == 2
+    assert mock_config_entry.data[CONF_USERNAME] == TEST_USERNAME
+    assert mock_config_entry.data[CONF_PASSWORD] == TEST_PASSWORD
+    assert mock_config_entry.data[CONF_REGION] == TEST_REGION
