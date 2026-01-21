@@ -86,199 +86,102 @@ async def test_selective_state_update(
 
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
 @pytest.mark.parametrize("mock_device_code", ["cz_guitoc9iylae4axs"])
-async def test_delta_report_sensor_initial_state(
+async def test_delta_report_sensor(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    mock_listener: MockDeviceListener,
 ) -> None:
-    """Test delta report sensor initializes with zero value."""
+    """Test delta report sensor behavior."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    entity_id = "sensor.ha_socket_delta_test_total_energy"
+    timestamp = 1000
 
-    # The entity_id is generated based on device name and dpcode translation key
-    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
-
-    assert state is not None
     # Delta sensors start from zero and accumulate values
+    state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state == "0"
     assert state.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
 
-
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
-@pytest.mark.parametrize("mock_device_code", ["cz_guitoc9iylae4axs"])
-async def test_delta_report_sensor_accumulates_values(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
-) -> None:
-    """Test delta report sensor accumulates incremental values."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    # Initial state from fixture
-    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
+    # Send delta update
+    await mock_listener.async_send_device_update(
+        hass,
+        mock_device,
+        {"add_ele": 200},
+        {"add_ele": timestamp},
+    )
+    state = hass.states.get(entity_id)
     assert state is not None
-    initial_value = float(state.state)
+    assert float(state.state) == pytest.approx(0.2)
 
-    # Send delta update: device reports 200 (0.2 kWh after scaling)
+    # Send delta update (multiple dpcode)
+    timestamp += 100
     await mock_listener.async_send_device_update(
         hass,
         mock_device,
-        {"add_ele": 200},
-        {"add_ele": 1000},  # timestamp
+        {"add_ele": 300, "switch_1": True},
+        {"add_ele": timestamp, "switch_1": timestamp},
     )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == pytest.approx(0.5)
 
-    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
-    # Should accumulate: 0.1 + 0.2 = 0.3
-    assert float(state.state) == pytest.approx(initial_value + 0.2)
-
-    # Send another delta update: device reports 300 (0.3 kWh after scaling)
-    await mock_listener.async_send_device_update(
-        hass,
-        mock_device,
-        {"add_ele": 300},
-        {"add_ele": 2000},  # new timestamp
-    )
-
-    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
-    # Should accumulate: 0.3 + 0.3 = 0.6
-    assert float(state.state) == pytest.approx(initial_value + 0.2 + 0.3)
-
-
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
-@pytest.mark.parametrize("mock_device_code", ["cz_guitoc9iylae4axs"])
-async def test_delta_report_sensor_skips_duplicate_timestamp(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
-) -> None:
-    """Test delta report sensor skips updates with duplicate timestamps."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
-    initial_value = float(state.state)
-
-    # First update
-    await mock_listener.async_send_device_update(
-        hass,
-        mock_device,
-        {"add_ele": 200},
-        {"add_ele": 1000},
-    )
-
-    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
-    value_after_first = float(state.state)
-    assert value_after_first == pytest.approx(initial_value + 0.2)
-
-    # Duplicate timestamp - should be ignored
+    # Send delta update (timestamp not incremented)
     await mock_listener.async_send_device_update(
         hass,
         mock_device,
         {"add_ele": 500},
-        {"add_ele": 1000},  # Same timestamp
+        {"add_ele": timestamp},  # same timestamp
     )
-
-    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
-    # Value should remain unchanged
-    assert float(state.state) == pytest.approx(value_after_first)
-
-
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
-@pytest.mark.parametrize("mock_device_code", ["cz_guitoc9iylae4axs"])
-async def test_delta_report_sensor_handles_none_raw_value(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
-) -> None:
-    """Test delta report sensor handles None raw value gracefully."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
+    state = hass.states.get(entity_id)
     assert state is not None
-    initial_value = float(state.state)
+    assert float(state.state) == pytest.approx(0.5)  # unchanged
 
+    # Send delta update (unrelated dpcode)
     await mock_listener.async_send_device_update(
         hass,
         mock_device,
-        {"add_ele": 200},
-        {"add_ele": 1000},
+        {"switch_1": False},
+        {"switch_1": timestamp + 100},
     )
-
-    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
+    state = hass.states.get(entity_id)
     assert state is not None
-    value_after_first = float(state.state)
-    assert value_after_first == pytest.approx(initial_value + 0.2)
+    assert float(state.state) == pytest.approx(0.5)  # unchanged
 
+    # Send delta update
+    timestamp += 100
+    await mock_listener.async_send_device_update(
+        hass,
+        mock_device,
+        {"add_ele": 100},
+        {"add_ele": timestamp},
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == pytest.approx(0.6)
+
+    # Send delta update (None value)
+    timestamp += 100
     mock_device.status["add_ele"] = None
-
     await mock_listener.async_send_device_update(
         hass,
         mock_device,
         {"add_ele": None},
-        {"add_ele": 2000},
+        {"add_ele": timestamp},
     )
-
-    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
+    state = hass.states.get(entity_id)
     assert state is not None
-    assert float(state.state) == pytest.approx(value_after_first)
+    assert float(state.state) == pytest.approx(0.6)  # unchanged
 
-
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
-@pytest.mark.parametrize("mock_device_code", ["cz_guitoc9iylae4axs"])
-async def test_delta_report_sensor_without_timestamp(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
-) -> None:
-    """Test delta report sensor handles updates without timestamps."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
-    assert state is not None
-    initial_value = float(state.state)
-
+    # Send delta update (no timestamp)
+    mock_device.status["add_ele"] = 200
     await mock_listener.async_send_device_update(
         hass,
         mock_device,
         {"add_ele": 200},
         None,
     )
-
-    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
+    state = hass.states.get(entity_id)
     assert state is not None
-    assert float(state.state) == pytest.approx(initial_value + 0.2)
-
-
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
-@pytest.mark.parametrize("mock_device_code", ["cz_guitoc9iylae4axs"])
-async def test_delta_report_update_skipped_for_unrelated_property(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    mock_listener: MockDeviceListener,
-) -> None:
-    """Test delta report sensor skips update when dpcode is not in updated properties."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
-    assert state is not None
-    initial_value = float(state.state)
-
-    await mock_listener.async_send_device_update(
-        hass,
-        mock_device,
-        {"switch_1": False},
-        {"switch_1": 1000},
-    )
-
-    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
-    assert state is not None
-    assert float(state.state) == pytest.approx(initial_value)
+    assert float(state.state) == pytest.approx(0.8)  # 0.6 + 0.2
