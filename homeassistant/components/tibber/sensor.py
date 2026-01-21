@@ -605,7 +605,7 @@ async def _async_setup_graphql_sensors(
 ) -> None:
     """Set up the Tibber sensor."""
 
-    tibber_connection = entry.runtime_data.tibber_connection
+    tibber_connection = await entry.runtime_data.async_get_client(hass)
 
     entity_registry = er.async_get(hass)
 
