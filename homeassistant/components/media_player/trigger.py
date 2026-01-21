@@ -7,7 +7,7 @@ from . import MediaPlayerState
 from .const import DOMAIN
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "paused_playing": make_conditional_entity_state_trigger(
+    "paused_playing": make_entity_transition_trigger(
         DOMAIN,
         from_states={
             MediaPlayerState.PLAYING,
@@ -16,7 +16,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
             MediaPlayerState.PAUSED,
         },
     ),
-    "started_playing": make_conditional_entity_state_trigger(
+    "started_playing": make_entity_transition_trigger(
         DOMAIN,
         from_states={
             MediaPlayerState.IDLE,
@@ -41,7 +41,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
             MediaPlayerState.ON,
         },
     ),
-    "turned_off": make_conditional_entity_state_trigger(
+    "turned_off": make_entity_transition_trigger(
         DOMAIN,
         from_states={
             MediaPlayerState.BUFFERING,
@@ -54,7 +54,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
             MediaPlayerState.OFF,
         },
     ),
-    "turned_on": make_conditional_entity_state_trigger(
+    "turned_on": make_entity_transition_trigger(
         DOMAIN,
         from_states={
             MediaPlayerState.OFF,
