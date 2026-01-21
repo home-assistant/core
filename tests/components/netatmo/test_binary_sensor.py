@@ -6,9 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.netatmo import binary_sensor
-from homeassistant.const import CONF_WEBHOOK_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -57,7 +55,10 @@ def get_netatmo_entity_instance(
 
 
 async def set_netatmo_entity_state(
-    hass: HomeAssistant, config_entry: MockConfigEntry, entity_id: str, ha_state: str
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+    pyatmo_status: str,
 ) -> None:
     """Sets the HA state and synchronizes the underlying mocked Pyatmo data."""
     # Get the actual entity object instance
@@ -66,20 +67,13 @@ async def set_netatmo_entity_state(
     if entity_instance is None:
         raise ValueError(f"Entity instance with ID {entity_id} not found.")
 
-    # Modify the underlying Pyatmo data to reflect the new state
-    if ha_state == STATE_ON:
-        pyatmo_status = "open"
-    elif ha_state == STATE_OFF:
-        pyatmo_status = "closed"
-    else:
-        pyatmo_status = "undefined"
-
     # Update the entity's state and ensure Home Assistant is aware of the change
     setattr(entity_instance.device, "status", pyatmo_status)
-    entity_instance.async_update_callback()
     entity_instance.async_write_ha_state()
+    await hass.async_block_till_done()
 
     # Wait for the state to be fully processed
+    entity_instance.async_update_callback()
     await hass.async_block_till_done()
 
 
@@ -99,64 +93,6 @@ async def test_entity(
         entity_registry,
         snapshot,
     )
-
-
-@pytest.mark.parametrize(
-    ("status", "expected"),
-    [
-        ("no_news", None),
-        ("calibrating", None),
-        ("undefined", None),
-        ("closed", False),
-        ("open", True),
-        ("calibration_failed", None),
-        ("maintenance", None),
-        ("weak_signal", None),
-        ("invalid_value", None),
-    ],
-)
-async def test_process_opening_status(status: str, expected: bool | None) -> None:
-    """Test opening status translation."""
-    assert binary_sensor.process_opening_status_string(status) == expected
-
-
-@pytest.mark.parametrize(
-    ("category", "expected"),
-    [
-        ("door", BinarySensorDeviceClass.DOOR),
-        ("window", BinarySensorDeviceClass.WINDOW),
-        ("garage", BinarySensorDeviceClass.GARAGE_DOOR),
-        ("gate", BinarySensorDeviceClass.OPENING),
-        ("furniture", BinarySensorDeviceClass.OPENING),
-        ("other", BinarySensorDeviceClass.OPENING),
-        ("invalid_value", BinarySensorDeviceClass.OPENING),
-    ],
-)
-async def test_process_opening_category2class(
-    category: str, expected: BinarySensorDeviceClass | None
-) -> None:
-    """Test opening category translation to class."""
-    assert binary_sensor.process_opening_category_string2class(category) == expected
-
-
-@pytest.mark.parametrize(
-    ("category", "expected"),
-    [
-        ("door", "door"),
-        ("window", "window"),
-        ("garage", "garage"),
-        ("gate", "gate"),
-        ("furniture", "furniture"),
-        ("other", "opening_sensor"),
-        ("invalid_value", "opening_sensor"),
-        (None, "opening_sensor"),
-    ],
-)
-async def test_process_opening_category2key(
-    category: str | None, expected: str
-) -> None:
-    """Test opening category translation to key."""
-    assert binary_sensor.process_opening_category_string2key(category) == expected
 
 
 async def test_doortag_setup(
@@ -217,8 +153,26 @@ async def test_doortag_setup(
     assert hass.states.get(_doortag_entity_connectivity).state == "off"
 
 
+@pytest.mark.parametrize(
+    ("doortag_status", "expected"),
+    [
+        ("no_news", "unknown"),
+        ("calibrating", "unknown"),
+        ("undefined", "unknown"),
+        ("closed", "off"),
+        ("open", "on"),
+        ("calibration_failed", "unknown"),
+        ("maintenance", "unknown"),
+        ("weak_signal", "unknown"),
+        ("invalid_value", "unknown"),
+    ],
+)
 async def test_doortag_opening_status_change(
-    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    doortag_status: str,
+    expected: str,
 ) -> None:
     """Test doortag opening status changes."""
     fake_post_hits = 0
@@ -276,28 +230,20 @@ async def test_doortag_opening_status_change(
 
     # Initial state should be unavailable, need to connect first
     hass.states.async_set(_doortag_entity_connectivity, "on")
+    await hass.async_block_till_done()
     assert hass.states.get(_doortag_entity_connectivity).state == "on"
 
     # Check if became available (this indicated as unknown state, not as unavailable)
     # NEED TO BE CORRECTED IN THE FUTURE
     assert hass.states.get(_doortag_entity_opening).state == "unavailable"
-
-    # Set state to closed
-    await set_netatmo_entity_state(
-        hass, config_entry, _doortag_entity_opening, STATE_OFF
-    )
-    hass.states.async_set(_doortag_entity_opening, STATE_OFF)
+    hass.states.async_set(_doortag_entity_opening, "unknown")
     await hass.async_block_till_done()
+    assert hass.states.get(_doortag_entity_opening).state == "unknown"
 
-    # State should be closed
-    assert hass.states.get(_doortag_entity_opening).state == "off"
-
-    # Set state to open
+    # Set state as parameterized
     await set_netatmo_entity_state(
-        hass, config_entry, _doortag_entity_opening, STATE_ON
+        hass, config_entry, _doortag_entity_opening, doortag_status
     )
-    hass.states.async_set(_doortag_entity_opening, STATE_ON)
-    await hass.async_block_till_done()
 
-    # State should change to open (as it was closed before)
-    assert hass.states.get(_doortag_entity_opening).state == "on"
+    # State should be as expected
+    assert hass.states.get(_doortag_entity_opening).state == expected
