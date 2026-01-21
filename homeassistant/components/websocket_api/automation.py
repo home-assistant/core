@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 import logging
 from typing import Any, Self
 
@@ -34,8 +35,19 @@ FLATTENED_SERVICE_DESCRIPTIONS_CACHE: HassKey[
 ] = HassKey("websocket_automation_flat_service_description_cache")
 
 AUTOMATION_COMPONENT_LOOKUP_CACHE: HassKey[
-    dict[str, tuple[Mapping[str, Any], _AutomationComponentLookupTable]]
+    dict[
+        AutomationComponentType,
+        tuple[Mapping[str, Any], _AutomationComponentLookupTable],
+    ]
 ] = HassKey("websocket_automation_component_lookup_cache")
+
+
+class AutomationComponentType(StrEnum):
+    """Types of automation components."""
+
+    TRIGGERS = "triggers"
+    CONDITIONS = "conditions"
+    SERVICES = "services"
 
 
 @dataclass(slots=True, kw_only=True)
@@ -152,7 +164,7 @@ def _get_automation_component_domains(
 
 def _get_automation_component_lookup_table(
     hass: HomeAssistant,
-    component_type: str,
+    component_type: AutomationComponentType,
     component_descriptions: Mapping[str, Mapping[str, Any] | None],
 ) -> _AutomationComponentLookupTable:
     """Get a dict of automation components keyed by domain, along with the total number of components.
@@ -168,10 +180,11 @@ def _get_automation_component_lookup_table(
     if (cached := cache.get(component_type)) is not None:
         cached_descriptions, cached_lookup = cached
         if cached_descriptions is component_descriptions:
-            _LOGGER.debug(
-                "Using cached automation component lookup data for %s", component_type
-            )
             return cached_lookup
+
+    _LOGGER.debug(
+        "Automation component lookup data for %s has no cache yet", component_type
+    )
 
     lookup_table = _AutomationComponentLookupTable(
         domain_components={}, component_count=0
@@ -194,7 +207,7 @@ def _get_automation_component_lookup_table(
 
 def _async_get_automation_components_for_target(
     hass: HomeAssistant,
-    component_type: str,
+    component_type: AutomationComponentType,
     target_selection: ConfigType,
     expand_group: bool,
     component_descriptions: Mapping[str, Mapping[str, Any] | None],
@@ -253,7 +266,11 @@ async def async_get_triggers_for_target(
     """Get triggers for a target."""
     descriptions = await async_get_all_trigger_descriptions(hass)
     return _async_get_automation_components_for_target(
-        hass, "triggers", target_selector, expand_group, descriptions
+        hass,
+        AutomationComponentType.TRIGGERS,
+        target_selector,
+        expand_group,
+        descriptions,
     )
 
 
@@ -263,7 +280,11 @@ async def async_get_conditions_for_target(
     """Get conditions for a target."""
     descriptions = await async_get_all_condition_descriptions(hass)
     return _async_get_automation_components_for_target(
-        hass, "conditions", target_selector, expand_group, descriptions
+        hass,
+        AutomationComponentType.CONDITIONS,
+        target_selector,
+        expand_group,
+        descriptions,
     )
 
 
@@ -297,7 +318,7 @@ async def async_get_services_for_target(
 
     return _async_get_automation_components_for_target(
         hass,
-        "services",
+        AutomationComponentType.SERVICES,
         target_selector,
         expand_group,
         get_flattened_service_descriptions(),

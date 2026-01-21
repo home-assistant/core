@@ -1,7 +1,81 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted alarms.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted alarms to trigger on.",
     "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_armed": {
+      "description": "Tests if one or more alarms are armed.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::common::condition_behavior_description%]",
+          "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Alarm is armed"
+    },
+    "is_armed_away": {
+      "description": "Tests if one or more alarms are armed in away mode.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::common::condition_behavior_description%]",
+          "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Alarm is armed away"
+    },
+    "is_armed_home": {
+      "description": "Tests if one or more alarms are armed in home mode.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::common::condition_behavior_description%]",
+          "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Alarm is armed home"
+    },
+    "is_armed_night": {
+      "description": "Tests if one or more alarms are armed in night mode.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::common::condition_behavior_description%]",
+          "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Alarm is armed night"
+    },
+    "is_armed_vacation": {
+      "description": "Tests if one or more alarms are armed in vacation mode.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::common::condition_behavior_description%]",
+          "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Alarm is armed vacation"
+    },
+    "is_disarmed": {
+      "description": "Tests if one or more alarms are disarmed.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::common::condition_behavior_description%]",
+          "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Alarm is disarmed"
+    },
+    "is_triggered": {
+      "description": "Tests if one or more alarms are triggered.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::alarm_control_panel::common::condition_behavior_description%]",
+          "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Alarm is triggered"
+    }
   },
   "device_automation": {
     "action_type": {
@@ -76,6 +150,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",

@@ -1,0 +1,22 @@
+{
+  "entity": {
+    "button": {
+      "recalibrate_co2": {
+        "default": "mdi:molecule-co2"
+      }
+    },
+    "number": {
+      "hysteresis_band": {
+        "default": "mdi:delta"
+      }
+    },
+    "switch": {
+      "actuator_exercise_disabled": {
+        "default": "mdi:valve"
+      },
+      "child_lock": {
+        "default": "mdi:lock"
+      }
+    }
+  }
+}
