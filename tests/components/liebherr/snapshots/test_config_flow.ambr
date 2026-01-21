@@ -269,22 +269,10 @@
 # ---
 # name: test_form_no_devices
   FlowResultSnapshot({
-    'data_schema': list([
-      dict({
-        'name': 'api_key',
-        'required': True,
-        'type': 'string',
-      }),
-    ]),
     'description_placeholders': None,
-    'errors': dict({
-      'base': 'no_devices',
-    }),
     'flow_id': <ANY>,
     'handler': 'liebherr',
-    'last_step': None,
-    'preview': None,
-    'step_id': 'user',
-    'type': <FlowResultType.FORM: 'form'>,
+    'reason': 'no_devices',
+    'type': <FlowResultType.ABORT: 'abort'>,
   })
 # ---

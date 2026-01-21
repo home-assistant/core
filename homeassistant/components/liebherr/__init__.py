@@ -13,20 +13,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .coordinator import LiebherrCoordinator
-from .models import LiebherrConfigEntry, LiebherrData
+from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> bool:
     """Set up Liebherr from a config entry."""
+    # Create shared API client
     client = LiebherrClient(
         api_key=entry.data[CONF_API_KEY],
         session=async_get_clientsession(hass),
     )
 
-    # Validate the API connection and get devices
+    # Fetch device list to create coordinators
     try:
         devices = await client.get_devices()
     except LiebherrAuthenticationError as err:
@@ -37,19 +37,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
     if not devices:
         raise ConfigEntryNotReady("No devices found for this API key")
 
-    # Create a single coordinator for all devices to avoid rate limits
-    coordinator = LiebherrCoordinator(
-        hass=hass,
-        client=client,
-        config_entry=entry,
-    )
-    coordinator.device_ids = [device.device_id for device in devices]
+    # Create a coordinator for each device
+    coordinators: dict[str, LiebherrCoordinator] = {}
+    for device in devices:
+        coordinator = LiebherrCoordinator(
+            hass=hass,
+            config_entry=entry,
+            client=client,
+            device_id=device.device_id,
+        )
+        await coordinator.async_setup()
+        await coordinator.async_config_entry_first_refresh()
+        coordinators[device.device_id] = coordinator
 
-    # Fetch initial data
-    await coordinator.async_config_entry_first_refresh()
-
-    # Store runtime data
-    entry.runtime_data = LiebherrData(coordinator=coordinator)
+    # Store coordinators in runtime data
+    entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

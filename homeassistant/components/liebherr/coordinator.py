@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 
 from pyliebherrhomeapi import (
     DeviceState,
+    LiebherrAuthenticationError,
     LiebherrClient,
     LiebherrConnectionError,
     LiebherrTimeoutError,
@@ -15,47 +15,59 @@ from pyliebherrhomeapi import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+
+type LiebherrConfigEntry = ConfigEntry[dict[str, "LiebherrCoordinator"]]
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-class LiebherrCoordinator(DataUpdateCoordinator[dict[str, DeviceState]]):
-    """Class to manage fetching Liebherr data from the API for all devices."""
+class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
+    """Class to manage fetching Liebherr data from the API for a single device."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        client: LiebherrClient,
         config_entry: ConfigEntry,
+        client: LiebherrClient,
+        device_id: str,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             logger=_LOGGER,
-            name=DOMAIN,
+            name=f"{DOMAIN}_{device_id}",
             update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
         )
         self.client = client
-        self.device_ids: list[str] = []
+        self.device_id = device_id
 
-    async def _async_update_data(self) -> dict[str, DeviceState]:
-        """Fetch data from API for all devices."""
+    async def async_setup(self) -> None:
+        """Set up the coordinator by validating device access."""
         try:
-            # Fetch all device states in parallel to minimize API calls
-            results = await asyncio.gather(
-                *(
-                    self.client.get_device_state(device_id)
-                    for device_id in self.device_ids
-                )
-            )
-            return dict(zip(self.device_ids, results, strict=False))
-        except LiebherrTimeoutError as err:
-            raise UpdateFailed(f"Timeout communicating with API: {err}") from err
+            await self.client.get_device(self.device_id)
+        except LiebherrAuthenticationError as err:
+            raise ConfigEntryAuthFailed("Invalid API key") from err
         except LiebherrConnectionError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise ConfigEntryNotReady(
+                f"Failed to connect to device {self.device_id}: {err}"
+            ) from err
+
+    async def _async_update_data(self) -> DeviceState:
+        """Fetch data from API for this device."""
+        try:
+            return await self.client.get_device_state(self.device_id)
+        except LiebherrTimeoutError as err:
+            raise UpdateFailed(
+                f"Timeout communicating with device {self.device_id}"
+            ) from err
+        except LiebherrConnectionError as err:
+            raise UpdateFailed(
+                f"Error communicating with device {self.device_id}"
+            ) from err

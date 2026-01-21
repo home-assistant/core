@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices": "No devices found for this API key"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -12,7 +13,7 @@
     "step": {
       "user": {
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "The API key from the Liebherr SmartDevice app. Note: The API key can only be copied once from the app."
@@ -22,7 +23,7 @@
     }
   },
   "entity": {
-    "climate": {
+    "sensor": {
       "bottom_zone": {
         "name": "Bottom zone"
       },
@@ -32,14 +33,6 @@
       "top_zone": {
         "name": "Top zone"
       }
-    }
-  },
-  "exceptions": {
-    "invalid_temperature": {
-      "message": "Invalid temperature value provided."
-    },
-    "set_temperature_failed": {
-      "message": "Failed to set temperature. Please check your connection and try again."
     }
   }
 }

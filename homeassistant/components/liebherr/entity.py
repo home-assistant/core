@@ -26,21 +26,19 @@ class LiebherrEntity(CoordinatorEntity[LiebherrCoordinator]):
     def __init__(
         self,
         coordinator: LiebherrCoordinator,
-        device_id: str,
     ) -> None:
         """Initialize the Liebherr entity."""
         super().__init__(coordinator)
-        self._device_id = device_id
 
-        device = coordinator.data[device_id].device
+        device = coordinator.data.device
 
         model = None
         if device.device_type:
             model = device.device_type.title()
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=device.nickname or device_id,
+            identifiers={(DOMAIN, coordinator.device_id)},
+            name=device.nickname or coordinator.device_id,
             manufacturer=MANUFACTURER,
             model=model,
             model_id=device.device_name,
@@ -57,20 +55,16 @@ class LiebherrZoneEntity(LiebherrEntity):
     def __init__(
         self,
         coordinator: LiebherrCoordinator,
-        device_id: str,
         zone_id: int,
     ) -> None:
         """Initialize the zone entity."""
-        super().__init__(coordinator, device_id)
+        super().__init__(coordinator)
         self._zone_id = zone_id
 
     @property
     def temperature_control(self) -> TemperatureControl | None:
         """Get the temperature control for this zone."""
-        device_state = self.coordinator.data.get(self._device_id)
-        if device_state is None:
-            return None
-        for control in device_state.get_temperature_controls():
+        for control in self.coordinator.data.get_temperature_controls():
             if control.zone_id == self._zone_id:
                 return control
         return None

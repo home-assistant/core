@@ -14,7 +14,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -31,9 +30,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for liebherr."""
 
-    VERSION = 1
-    MINOR_VERSION = 1
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -41,6 +37,10 @@ class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             user_input[CONF_API_KEY] = user_input[CONF_API_KEY].strip()
+
+            # Set unique ID and prevent duplicates
+            await self.async_set_unique_id(user_input[CONF_API_KEY])
+            self._abort_if_unique_id_configured()
 
             try:
                 # Create a client and test the connection
@@ -51,18 +51,12 @@ class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 devices = await client.get_devices()
                 if not devices:
-                    errors["base"] = "no_devices"
-                else:
-                    # Create config entry
-                    await self.async_set_unique_id(user_input[CONF_API_KEY])
-                    self._abort_if_unique_id_configured()
+                    return self.async_abort(reason="no_devices")
 
-                    return self.async_create_entry(
-                        title="Liebherr",
-                        data=user_input,
-                    )
-            except AbortFlow:
-                raise
+                return self.async_create_entry(
+                    title="Liebherr",
+                    data=user_input,
+                )
             except LiebherrAuthenticationError:
                 errors["base"] = "invalid_auth"
             except LiebherrConnectionError:

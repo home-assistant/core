@@ -2,43 +2,96 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from pyliebherrhomeapi import LiebherrConnectionError, LiebherrTimeoutError
+from pyliebherrhomeapi import (
+    LiebherrAuthenticationError,
+    LiebherrConnectionError,
+    LiebherrTimeoutError,
+)
 import pytest
 
 from homeassistant.components.liebherr.coordinator import LiebherrCoordinator
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
 
-async def test_coordinator_timeout_error(hass: HomeAssistant) -> None:
-    """Test coordinator handles timeout errors."""
-    mock_client = MagicMock()
-    mock_client.get_device_state = AsyncMock(
-        side_effect=LiebherrTimeoutError("Timeout")
+@pytest.fixture
+def mock_client() -> MagicMock:
+    """Return a mock Liebherr client."""
+    return MagicMock()
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mock config entry."""
+    return MockConfigEntry(domain="liebherr")
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_error", "expected_match"),
+    [
+        (
+            LiebherrTimeoutError("Timeout"),
+            UpdateFailed,
+            "Timeout communicating with device",
+        ),
+        (
+            LiebherrConnectionError("Connection failed"),
+            UpdateFailed,
+            "Error communicating with device",
+        ),
+    ],
+)
+async def test_coordinator_update_errors(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    expected_error: type[Exception],
+    expected_match: str,
+) -> None:
+    """Test coordinator handles update errors."""
+    mock_client.get_device_state = AsyncMock(side_effect=exception)
+
+    coordinator = LiebherrCoordinator(
+        hass, mock_config_entry, mock_client, "test_device"
     )
 
-    mock_config_entry = MockConfigEntry(domain="liebherr")
-
-    coordinator = LiebherrCoordinator(hass, mock_client, mock_config_entry)
-    coordinator.device_ids = ["test_device"]
-
-    with pytest.raises(UpdateFailed, match="Timeout communicating with API"):
+    with pytest.raises(expected_error, match=expected_match):
         await coordinator._async_update_data()
 
 
-async def test_coordinator_connection_error(hass: HomeAssistant) -> None:
-    """Test coordinator handles connection errors."""
-    mock_client = MagicMock()
-    mock_client.get_device_state = AsyncMock(
-        side_effect=LiebherrConnectionError("Connection failed")
+@pytest.mark.parametrize(
+    ("exception", "expected_error", "expected_match"),
+    [
+        (
+            LiebherrAuthenticationError("Invalid API key"),
+            ConfigEntryAuthFailed,
+            "Invalid API key",
+        ),
+        (
+            LiebherrConnectionError("Connection failed"),
+            ConfigEntryNotReady,
+            "Failed to connect to device",
+        ),
+    ],
+)
+async def test_coordinator_setup_errors(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    expected_error: type[Exception],
+    expected_match: str,
+) -> None:
+    """Test coordinator handles setup errors."""
+    mock_client.get_device = AsyncMock(side_effect=exception)
+
+    coordinator = LiebherrCoordinator(
+        hass, mock_config_entry, mock_client, "test_device"
     )
 
-    mock_config_entry = MockConfigEntry(domain="liebherr")
-
-    coordinator = LiebherrCoordinator(hass, mock_client, mock_config_entry)
-    coordinator.device_ids = ["test_device"]
-
-    with pytest.raises(UpdateFailed, match="Error communicating with API"):
-        await coordinator._async_update_data()
+    with pytest.raises(expected_error, match=expected_match):
+        await coordinator.async_setup()
