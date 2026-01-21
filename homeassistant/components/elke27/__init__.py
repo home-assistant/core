@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+# ruff: noqa: E402
 import contextlib
 import logging
 import sys
@@ -22,14 +23,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_INTEGRATION_SERIAL,
     CONF_LINK_KEYS_JSON,
     CONF_PANEL,
     CONF_PIN,
+    DATA_COORDINATOR,
+    DATA_HUB,
     DOMAIN,
 )
+from .coordinator import Elke27DataUpdateCoordinator
+from .entity import unique_base
 from .hub import Elke27Hub
 from .identity import async_get_integration_serial
 
@@ -71,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         panel_name,
     )
     try:
-        await hub.async_start()
+        await hub.async_connect()
     except Elke27LinkRequiredError as err:
         raise ConfigEntryAuthFailed(
             "Linking credentials are invalid; relink required"
@@ -79,12 +85,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (Elke27ConnectionError, Elke27TimeoutError, Elke27DisconnectedError) as err:
         _LOGGER.exception("Failed to set up connection to %s:%s", host, port)
         with contextlib.suppress(Exception):
-            await hub.async_stop()
+            await hub.async_disconnect()
         raise ConfigEntryNotReady(
             "The client did not become ready; check host and port"
         ) from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hub
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
+    await coordinator.async_start()
+    await coordinator.async_refresh_now()
+    await _async_migrate_unique_ids(hass, entry, unique_base(hub, coordinator, entry))
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        DATA_HUB: hub,
+        DATA_COORDINATOR: coordinator,
+    }
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -92,9 +105,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an Elke27 config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    hub: Elke27Hub | None = hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
-    if hub is not None:
-        await hub.async_stop()
+    data = hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+    if data is not None:
+        coordinator: Elke27DataUpdateCoordinator | None = data.get(DATA_COORDINATOR)
+        hub: Elke27Hub | None = data.get(DATA_HUB)
+        if coordinator is not None:
+            await coordinator.async_stop()
+        if hub is not None:
+            await hub.async_disconnect()
     return unload_ok
 
 
@@ -102,3 +120,32 @@ def _panel_name_from_entry(panel: object | None) -> str | None:
     if isinstance(panel, dict):
         return panel.get("panel_name") or panel.get("name")
     return None
+
+
+async def _async_migrate_unique_ids(
+    hass: HomeAssistant, entry: ConfigEntry, base: str
+) -> None:
+    """Migrate legacy unique IDs to the <base>:<domain>:<id> format."""
+    registry = er.async_get(hass)
+    prefix = f"{base}_"
+    for entity in registry.entities.values():
+        if entity.platform != DOMAIN:
+            continue
+        if entity.config_entry_id != entry.entry_id:
+            continue
+        unique_id = entity.unique_id
+        if not unique_id.startswith(prefix):
+            continue
+        rest = unique_id[len(prefix) :]
+        if "_" not in rest:
+            continue
+        domain, numeric_id = rest.rsplit("_", 1)
+        new_unique_id = f"{base}:{domain}:{numeric_id}"
+        if registry.async_get_entity_id(entity.domain, DOMAIN, new_unique_id):
+            _LOGGER.debug(
+                "Unique ID migration skipped for %s; %s already exists",
+                entity.entity_id,
+                new_unique_id,
+            )
+            continue
+        registry.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)

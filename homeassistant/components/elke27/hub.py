@@ -2,29 +2,32 @@
 
 from __future__ import annotations
 
-import contextlib
 import asyncio
+from collections.abc import Callable
+import contextlib
 from enum import Enum
 import inspect
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from elke27_lib import ArmMode, ClientConfig, Elke27Client, LinkKeys
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27PinRequiredError
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 
 from .const import READY_TIMEOUT
 from .identity import build_client_identity
 
 _LOGGER = logging.getLogger(__name__)
 
-_SYSTEM_EVENT_TYPES = {"SYSTEM", "PANEL", "PANEL_INFO", "TABLE_INFO"}
-
 
 class Elke27Hub:
-    """Manage a single Elke27 client instance and its snapshots."""
+    """Manage a single Elke27 client instance."""
 
     def __init__(
         self,
@@ -45,18 +48,15 @@ class Elke27Hub:
         self._pin = pin
         self._panel_name = panel_name
         self._client: Elke27Client | None = None
-        self._unsubscribe: Callable[[], None] | None = None
-        self._listeners: list[Callable[[], None]] = []
-        self._area_listeners: list[Callable[[], None]] = []
-        self._zone_listeners: list[Callable[[], None]] = []
-        self._output_listeners: list[Callable[[], None]] = []
-        self._system_listeners: list[Callable[[], None]] = []
-        self.snapshot: Any | None = None
+        self._connection_unsubscribe: Callable[[], None] | None = None
         self._connect_lock = asyncio.Lock()
         self._reconnect_task: asyncio.Task[None] | None = None
         self._reconnect_attempts = 0
         self._stopping = False
         self._unavailable_logged = False
+        self._typed_callbacks: dict[
+            Callable[[Any], None], Callable[[], None] | None
+        ] = {}
 
     @property
     def client(self) -> Elke27Client | None:
@@ -71,68 +71,11 @@ class Elke27Hub:
         return bool(getattr(self._client, "is_ready", False))
 
     @property
-    def panel_info(self) -> Any | None:
-        """Return the latest panel info snapshot."""
-        snapshot = self.snapshot
-        if snapshot is None:
-            return None
-        return getattr(snapshot, "panel_info", None) or getattr(snapshot, "panel", None)
-
-    @property
     def panel_name(self) -> str | None:
         """Return the discovered panel name if available."""
         return self._panel_name
 
-    @property
-    def table_info(self) -> Any | None:
-        """Return the latest table info snapshot."""
-        snapshot = self.snapshot
-        return getattr(snapshot, "table_info", None) if snapshot is not None else None
-
-    @property
-    def areas(self) -> Any | None:
-        """Return the latest areas snapshot."""
-        snapshot = self.snapshot
-        return getattr(snapshot, "areas", None) if snapshot is not None else None
-
-    @property
-    def zones(self) -> Any | None:
-        """Return the latest zones snapshot."""
-        snapshot = self.snapshot
-        return getattr(snapshot, "zones", None) if snapshot is not None else None
-
-    @property
-    def outputs(self) -> Any | None:
-        """Return the latest outputs snapshot."""
-        snapshot = self.snapshot
-        return getattr(snapshot, "outputs", None) if snapshot is not None else None
-
-    @callback
-    def async_add_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
-        """Register a listener for any hub updates."""
-        return self._add_listener(self._listeners, listener)
-
-    @callback
-    def async_add_area_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
-        """Register a listener for area updates."""
-        return self._add_listener(self._area_listeners, listener)
-
-    @callback
-    def async_add_zone_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
-        """Register a listener for zone updates."""
-        return self._add_listener(self._zone_listeners, listener)
-
-    @callback
-    def async_add_output_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
-        """Register a listener for output updates."""
-        return self._add_listener(self._output_listeners, listener)
-
-    @callback
-    def async_add_system_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
-        """Register a listener for system updates."""
-        return self._add_listener(self._system_listeners, listener)
-
-    async def async_start(self) -> None:
+    async def async_connect(self) -> None:
         """Connect the client, then await readiness."""
         self._stopping = False
         await self._async_connect()
@@ -147,8 +90,22 @@ class Elke27Hub:
             # Elke27Client v2 does not expose a public identity setter yet.
             coerce_identity = getattr(client, "_coerce_identity", None)
             if callable(coerce_identity):
-                client._v2_client_identity = coerce_identity(client_identity)
+                setattr(
+                    client,
+                    "_v2_client_identity",
+                    coerce_identity(client_identity),
+                )
             self._client = client
+
+            def _raise_auth_failed(error: object | None) -> None:
+                message = str(error) if error is not None else "Invalid PIN"
+                raise ConfigEntryAuthFailed(message)
+
+            def _raise_not_ready() -> None:
+                raise ConfigEntryNotReady(
+                    "The client did not become ready before timeout"
+                )
+
             try:
                 await client.async_connect(self._host, self._port, link_keys)
                 if self._panel_name is None:
@@ -162,15 +119,14 @@ class Elke27Hub:
                     )
                     if not getattr(auth_result, "ok", False):
                         error = getattr(auth_result, "error", None)
-                        message = str(error) if error is not None else "Invalid PIN"
-                        raise ConfigEntryAuthFailed(message)
+                        _raise_auth_failed(error)
                 ready = await client.wait_ready(timeout_s=READY_TIMEOUT)
                 if not ready:
-                    raise ConfigEntryNotReady(
-                        "The client did not become ready before timeout"
-                    )
-                self._unsubscribe = client.subscribe(self._handle_event)
-                self.snapshot = client.snapshot
+                    _raise_not_ready()
+                self._connection_unsubscribe = client.subscribe(
+                    self._handle_connection_event
+                )
+                self._resubscribe_typed_callbacks()
                 if self._unavailable_logged:
                     _LOGGER.info("Panel connection restored")
                     self._unavailable_logged = False
@@ -180,7 +136,7 @@ class Elke27Hub:
                 self._client = None
                 raise
 
-    async def async_stop(self) -> None:
+    async def async_disconnect(self) -> None:
         """Disconnect the client and unregister event handlers."""
         self._stopping = True
         if self._reconnect_task is not None:
@@ -192,14 +148,14 @@ class Elke27Hub:
 
     async def _async_disconnect(self) -> None:
         """Disconnect the client and unregister event handlers."""
-        was_connected = self._client is not None or self.snapshot is not None
-        if self._unsubscribe is not None:
-            self._unsubscribe()
-            self._unsubscribe = None
+        was_connected = self._client is not None
+        if self._connection_unsubscribe is not None:
+            self._connection_unsubscribe()
+            self._connection_unsubscribe = None
         if self._client is not None:
             await self._client.async_disconnect()
         self._client = None
-        self.snapshot = None
+        self._clear_typed_subscriptions()
         if was_connected:
             self._log_unavailable()
 
@@ -210,6 +166,55 @@ class Elke27Hub:
             return None
         panel = panels[0]
         return getattr(panel, "panel_name", None)
+
+    def get_snapshot(self) -> Any | None:
+        """Return the latest client snapshot."""
+        client = self._client
+        if client is None:
+            return None
+        return getattr(client, "snapshot", None)
+
+    async def refresh_csm(self) -> Any:
+        """Refresh the panel CSM snapshot."""
+        client = self._client
+        if client is None:
+            raise HomeAssistantError("Client is not connected.")
+        return await client.async_refresh_csm()
+
+    async def refresh_domain_config(self, domain: str) -> None:
+        """Refresh a domain configuration snapshot."""
+        client = self._client
+        if client is None:
+            raise HomeAssistantError("Client is not connected.")
+        await client.async_refresh_domain_config(domain)
+
+    def subscribe(self, callback: Callable[[Any], None]) -> Callable[[], None]:
+        """Subscribe to client events."""
+        client = self._client
+        if client is None:
+            raise HomeAssistantError("Client is not connected.")
+        return client.subscribe(callback)
+
+    def subscribe_typed(self, callback: Callable[[Any], None]) -> Callable[[], None]:
+        """Subscribe to typed client events."""
+        if callback not in self._typed_callbacks:
+            self._typed_callbacks[callback] = None
+        client = self._client
+        if client is not None:
+            self._typed_callbacks[callback] = client.subscribe_typed(callback)
+        return lambda: self.unsubscribe_typed(callback)
+
+    def unsubscribe_typed(self, callback: Callable[[Any], None]) -> bool:
+        """Unsubscribe from typed client events."""
+        if callback in self._typed_callbacks:
+            unsubscribe = self._typed_callbacks.pop(callback)
+            if unsubscribe is not None:
+                unsubscribe()
+            return True
+        client = self._client
+        if client is None:
+            return False
+        return client.unsubscribe_typed(callback)
 
     async def async_set_output(self, output_id: int, state: bool) -> bool:
         """Request an output state change if supported."""
@@ -275,21 +280,19 @@ class Elke27Hub:
             if error is not None:
                 raise error
             return False
-        status_result = await client.async_execute(
-            "zone_get_status",
-            zone_id=zone_id,
-        )
-        if not getattr(status_result, "ok", False):
-            _LOGGER.debug(
-                "Zone status refresh failed for zone %s: %s",
-                zone_id,
-                getattr(status_result, "error", None),
-            )
+        # status_result = await client.async_execute(
+        #     "zone_get_status",
+        #     zone_id=zone_id,
+        # )
+        # if not getattr(status_result, "ok", False):
+        #     _LOGGER.debug(
+        #         "Zone status refresh failed for zone %s: %s",
+        #         zone_id,
+        #         getattr(status_result, "error", None),
+        #     )
         return True
 
-    async def async_arm_area(
-        self, area_id: int, mode: Any, pin: str | None
-    ) -> bool:
+    async def async_arm_area(self, area_id: int, mode: Any, pin: str | None) -> bool:
         """Request an area arming change if supported."""
         client = self._client
         if client is None:
@@ -324,11 +327,24 @@ class Elke27Hub:
                 error_message or error,
             )
             if error is not None:
-                raise HomeAssistantError(
-                    error_message or str(error)
-                ) from error
+                raise HomeAssistantError(error_message or str(error)) from error
             return False
         return True
+
+    def _resubscribe_typed_callbacks(self) -> None:
+        """Re-register typed callbacks on a new client connection."""
+        client = self._client
+        if client is None or not self._typed_callbacks:
+            return
+        for cb in list(self._typed_callbacks):
+            self._typed_callbacks[cb] = client.subscribe_typed(cb)
+
+    def _clear_typed_subscriptions(self) -> None:
+        """Clear typed subscriptions when the client disconnects."""
+        for cb, unsubscribe in list(self._typed_callbacks.items()):
+            if unsubscribe is not None:
+                unsubscribe()
+            self._typed_callbacks[cb] = None
 
     async def async_disarm_area(self, area_id: int, pin: str | None) -> bool:
         """Request an area disarming change if supported."""
@@ -359,17 +375,14 @@ class Elke27Hub:
                 error_message or error,
             )
             if error is not None:
-                raise HomeAssistantError(
-                    error_message or str(error)
-                ) from error
+                raise HomeAssistantError(error_message or str(error)) from error
             return False
         return True
 
-    def _handle_event(self, event: Any) -> None:
-        """Handle events from the client."""
+    def _handle_connection_event(self, event: Any) -> None:
+        """Handle connection lifecycle events from the client."""
         if self._client is None:
             return
-        self.snapshot = self._client.snapshot
         connection_state = _connection_state(event)
         event_type = _event_type(event)
         if connection_state is False or event_type == "DISCONNECTED":
@@ -378,24 +391,6 @@ class Elke27Hub:
             self._hass.loop.call_soon_threadsafe(self._schedule_reconnect)
         elif connection_state is True or event_type == "READY":
             self._hass.loop.call_soon_threadsafe(self._cancel_reconnect)
-        if event_type == "ZONE":
-            zone_id = _event_zone_id(event)
-            if zone_id is not None:
-                zone = _zone_from_snapshot(self.snapshot, zone_id)
-                _LOGGER.debug(
-                    "Zone %s snapshot bypassed=%s",
-                    zone_id,
-                    getattr(zone, "bypassed", None) if zone is not None else None,
-                )
-        self._dispatch(self._listeners)
-        if event_type == "AREA":
-            self._dispatch(self._area_listeners)
-        elif event_type == "ZONE":
-            self._dispatch(self._zone_listeners)
-        elif event_type == "OUTPUT":
-            self._dispatch(self._output_listeners)
-        elif event_type in _SYSTEM_EVENT_TYPES:
-            self._dispatch(self._system_listeners)
 
     @callback
     def _schedule_reconnect(self) -> None:
@@ -432,36 +427,22 @@ class Elke27Hub:
             _LOGGER.debug("Reconnect attempt %s starting", self._reconnect_attempts + 1)
             try:
                 await self._async_connect()
-                self._reconnect_attempts = 0
-                return
             except (ConfigEntryAuthFailed, Elke27LinkRequiredError) as err:
                 _LOGGER.error("Reconnect aborted: %s", err)
                 return
             except Exception as err:  # noqa: BLE001
                 _LOGGER.debug("Reconnect attempt failed: %s", err)
+            else:
+                self._reconnect_attempts = 0
+                return
             self._reconnect_attempts += 1
-            delay = min(300, 2 ** self._reconnect_attempts)
-            _LOGGER.debug("Reconnect attempt %s sleeping for %s seconds", self._reconnect_attempts, delay)
+            delay = min(300, 2**self._reconnect_attempts)
+            _LOGGER.debug(
+                "Reconnect attempt %s sleeping for %s seconds",
+                self._reconnect_attempts,
+                delay,
+            )
             await asyncio.sleep(delay)
-
-    @callback
-    def _dispatch(self, listeners: list[Callable[[], None]]) -> None:
-        """Schedule listener callbacks without blocking."""
-        for listener in list(listeners):
-            self._hass.loop.call_soon_threadsafe(listener)
-
-    @callback
-    def _add_listener(
-        self, listeners: list[Callable[[], None]], listener: Callable[[], None]
-    ) -> Callable[[], None]:
-        """Add a listener and return its unsubscribe callback."""
-        listeners.append(listener)
-
-        def _remove() -> None:
-            if listener in listeners:
-                listeners.remove(listener)
-
-        return _remove
 
 
 def _event_type(event: Any) -> str | None:
@@ -481,8 +462,12 @@ def _event_type(event: Any) -> str | None:
 
 def _connection_state(event: Any) -> bool | None:
     if hasattr(event, "event_type"):
-        event_type = getattr(event, "event_type")
-        value = event_type.value if isinstance(event_type, Enum) else str(event_type).lower()
+        event_type = event.event_type
+        value = (
+            event_type.value
+            if isinstance(event_type, Enum)
+            else str(event_type).lower()
+        )
         if value == "connection":
             data = getattr(event, "data", None)
             if isinstance(data, dict):
@@ -496,26 +481,3 @@ def _connection_state(event: Any) -> bool | None:
         return None
     connected = getattr(event, "connected", None)
     return connected if isinstance(connected, bool) else None
-
-
-def _event_zone_id(event: Any) -> int | None:
-    if isinstance(event, dict):
-        for key in ("zone_id", "id"):
-            value = event.get(key)
-            if isinstance(value, int):
-                return value
-        return None
-    return getattr(event, "zone_id", None)
-
-
-def _zone_from_snapshot(snapshot: Any, zone_id: int) -> Any | None:
-    if snapshot is None:
-        return None
-    zones = getattr(snapshot, "zones", None)
-    if isinstance(zones, dict):
-        return zones.get(zone_id)
-    if isinstance(zones, list | tuple):
-        for zone in zones:
-            if getattr(zone, "zone_id", None) == zone_id:
-                return zone
-    return None

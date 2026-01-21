@@ -3,78 +3,27 @@
 from __future__ import annotations
 
 import json
-import sys
 from dataclasses import dataclass
-from enum import Enum
-from types import ModuleType
-from unittest.mock import Mock
+from datetime import UTC, datetime
 
-_elke27_lib = ModuleType("elke27_lib")
-_elke27_lib_errors = ModuleType("elke27_lib.errors")
+import pytest
 
+from homeassistant.components.elke27.const import (
+    CONF_INTEGRATION_SERIAL,
+    CONF_LINK_KEYS_JSON,
+    DATA_COORDINATOR,
+    DATA_HUB,
+    DOMAIN,
+    MANUFACTURER_NUMBER,
+)
+from homeassistant.components.elke27 import diagnostics as diagnostics_module
+from homeassistant.components.elke27.diagnostics import (
+    async_get_config_entry_diagnostics,
+)
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 
-class Elke27Error(Exception):
-    """Base Elke27 error."""
-
-
-class Elke27ConnectionError(Elke27Error):
-    """Connection error stub."""
-
-
-class Elke27AuthError(Elke27Error):
-    """Auth error stub."""
-
-
-class Elke27TimeoutError(Elke27Error):
-    """Timeout error stub."""
-
-
-class Elke27DisconnectedError(Elke27Error):
-    """Disconnected error stub."""
-
-
-class Elke27LinkRequiredError(Elke27Error):
-    """Link required stub."""
-
-
-class Elke27PinRequiredError(Elke27Error):
-    """PIN required stub."""
-
-
-_elke27_lib_errors.Elke27Error = Elke27Error
-_elke27_lib_errors.Elke27ConnectionError = Elke27ConnectionError
-_elke27_lib_errors.Elke27AuthError = Elke27AuthError
-_elke27_lib_errors.Elke27TimeoutError = Elke27TimeoutError
-_elke27_lib_errors.Elke27DisconnectedError = Elke27DisconnectedError
-_elke27_lib_errors.Elke27LinkRequiredError = Elke27LinkRequiredError
-_elke27_lib_errors.Elke27PinRequiredError = Elke27PinRequiredError
-
-
-class ArmMode(Enum):
-    """Stub arm modes."""
-
-    AWAY = "away"
-    STAY = "stay"
-    NIGHT = "night"
-    VACATION = "vacation"
-    INSTANT = "instant"
-
-
-@dataclass(frozen=True, slots=True)
-class FakeClientConfig:
-    """Minimal config stub."""
-
-
-@dataclass(frozen=True, slots=True)
-class FakeLinkKeys:
-    """Minimal link keys stub."""
-
-    payload: str
-
-    @classmethod
-    def from_json(cls, payload: str) -> "FakeLinkKeys":
-        """Return stub link keys from JSON."""
-        return cls(payload)
+from tests.common import MockConfigEntry
 
 
 def redact_for_diagnostics(data: dict) -> dict:
@@ -95,31 +44,6 @@ def redact_for_diagnostics(data: dict) -> dict:
         else:
             redacted[key] = value
     return redacted
-
-
-_elke27_lib.ClientConfig = FakeClientConfig
-_elke27_lib.LinkKeys = FakeLinkKeys
-_elke27_lib.Elke27Client = object
-_elke27_lib.DiscoveredPanel = object
-_elke27_lib.ArmMode = ArmMode
-_elke27_lib.redact_for_diagnostics = redact_for_diagnostics
-
-sys.modules["elke27_lib"] = _elke27_lib
-sys.modules["elke27_lib.errors"] = _elke27_lib_errors
-
-from homeassistant.components.elke27.const import (
-    CONF_INTEGRATION_SERIAL,
-    CONF_LINK_KEYS_JSON,
-    DOMAIN,
-    MANUFACTURER_NUMBER,
-)
-from homeassistant.components.elke27.diagnostics import (
-    async_get_config_entry_diagnostics,
-)
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @dataclass(frozen=True, slots=True)
@@ -149,28 +73,32 @@ class Snapshot:
     panel_info: PanelInfo
     table_info: TableInfo
     version: str
-    updated_at: str
+    updated_at: datetime
     access_code: str
     passphrase: str
     pin: str
     link_keys_json: str
 
 
-async def test_diagnostics_redacts_sensitive_data(hass: HomeAssistant) -> None:
+async def test_diagnostics_redacts_sensitive_data(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test diagnostics redacts sensitive data and is JSON-safe."""
+    monkeypatch.setattr(
+        diagnostics_module, "redact_for_diagnostics", redact_for_diagnostics
+    )
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.50",
             CONF_PORT: 2101,
-            CONF_LINK_KEYS_JSON: "secret",
+            CONF_LINK_KEYS_JSON: {"tempkey_hex": "tk"},
             CONF_INTEGRATION_SERIAL: "112233445566",
         },
     )
     entry.add_to_hass(hass)
 
-    hub = Mock()
-    hub.snapshot = Snapshot(
+    snapshot = Snapshot(
         panel_info=PanelInfo(
             mac="aa:bb:cc:dd:ee:ff",
             name="Panel A",
@@ -180,14 +108,19 @@ async def test_diagnostics_redacts_sensitive_data(hass: HomeAssistant) -> None:
         ),
         table_info=TableInfo(areas=2, zones=4, outputs=2),
         version="2.0",
-        updated_at="2024-01-01T00:00:00Z",
+        updated_at=datetime(2024, 1, 1, tzinfo=UTC),
         access_code="1234",
         passphrase="secret",
         pin="9999",
         link_keys_json="raw",
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hub
+    coordinator = type("Coordinator", (), {"data": snapshot})()
+    hub = object()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        DATA_HUB: hub,
+        DATA_COORDINATOR: coordinator,
+    }
 
     diagnostics = await async_get_config_entry_diagnostics(hass, entry)
 
@@ -196,7 +129,7 @@ async def test_diagnostics_redacts_sensitive_data(hass: HomeAssistant) -> None:
     assert diagnostics["integration_serial"] == "112233445566"
     assert diagnostics["link_keys_present"] is True
     assert diagnostics["snapshot_meta"]["version"] == "2.0"
-    assert diagnostics["snapshot_meta"]["updated_at"] == "2024-01-01T00:00:00Z"
+    assert diagnostics["snapshot_meta"]["updated_at"] == "2024-01-01T00:00:00+00:00"
     assert diagnostics["snapshot"]["panel_info"]["name"] == "Panel A"
     assert "access_code" not in json.dumps(diagnostics)
     assert "passphrase" not in json.dumps(diagnostics)
