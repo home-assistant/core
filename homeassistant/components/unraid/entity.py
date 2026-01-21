@@ -35,8 +35,8 @@ class UnraidSystemEntity(CoordinatorEntity[UnraidSystemCoordinator]):
         self._attr_unique_id = f"{server_info.uuid}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, server_info.uuid or "unknown")},
-            name=server_info.hostname
-            or coordinator.config_entry.data.get("host", "Unraid"),
+            name=(server_info.hostname
+            or coordinator.config_entry.data[CONF_HOST]),
             manufacturer=server_info.manufacturer or MANUFACTURER,
             model=server_info.model,
             serial_number=server_info.serial_number,
