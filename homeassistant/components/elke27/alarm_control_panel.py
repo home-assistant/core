@@ -122,13 +122,22 @@ class Elke27AreaAlarmControlPanel(
         if area is None:
             return {
                 "ready": None,
+                "ready_status": None,
+                "ready_status_display": None,
                 "trouble": None,
                 "faulted_zone_ids": None,
                 "faulted_zones": None,
             }
         faulted_zones = _faulted_zones(self.coordinator.data)
+        ready_status_display = (
+            _ready_status_display(area)
+            if self.state == AlarmControlPanelState.DISARMED
+            else None
+        )
         return {
             "ready": getattr(area, "ready", None),
+            "ready_status": _ready_status_value(area),
+            "ready_status_display": ready_status_display,
             "trouble": getattr(area, "trouble", None),
             "faulted_zone_ids": [zone_id for zone_id, _ in faulted_zones],
             "faulted_zones": [name for _, name in faulted_zones],
@@ -240,6 +249,29 @@ def _area_state_to_ha(area: Any) -> AlarmControlPanelState:
 
 def _custom_bypass_mode() -> ArmMode | str:
     return getattr(ArmMode, "ARMED_CUSTOM_BYPASS", "ARMED_CUSTOM_BYPASS")
+
+
+def _ready_status_value(area: Any) -> str | None:
+    ready_status = getattr(area, "ready_status", None)
+    if ready_status is None and isinstance(area, Mapping):
+        ready_status = area.get("ready_status")
+    return str(ready_status) if isinstance(ready_status, str) else None
+
+
+def _ready_status_display(area: Any) -> str | None:
+    ready_status = _ready_status_value(area)
+    if ready_status is None:
+        return None
+    status = ready_status.upper()
+    if status == "RDY_AWAY":
+        return "Ready away"
+    if status == "RDY_STAY":
+        return "Ready stay"
+    if status == "RDY_NOT":
+        return "Not ready"
+    return None
+
+
 
 
 def _faulted_zones(snapshot: Any) -> list[tuple[int, str]]:
