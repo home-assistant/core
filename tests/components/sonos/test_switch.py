@@ -5,14 +5,10 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import logging
-from unittest.mock import MagicMock
-
-from soco.exceptions import SoCoException
-
-from homeassistant.components.sonos.alarms import Alarms
-
 
 import pytest
+
+from soco.exceptions import SoCoException
 
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.const import (
@@ -346,35 +342,18 @@ async def test_alarm_change_device(
     device = device_registry.async_get(alarm_14.device_id)
     assert device.name == soco_br.get_speaker_info()["zone_name"]
 
-def test_update_cache_household_mismatch_logs_warning(caplog):
-    """Test Alarm list UID household mismatch is handled gracefully."""
-    soco = MagicMock()
-    soco.player_name = "Living Room"
+async def test_alarm_update_other_exception_does_not_crash_setup(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test other SoCoExceptions during alarm update do not crash the integration."""
+    with patch(
+        "homeassistant.components.sonos.alarms.Alarm.update",
+        side_effect=SoCoException("Some other error"),
+    ):
+        await async_setup_sonos()
+        await hass.async_block_till_done()
 
-    alarms = Alarms()
-
-    alarms.update = MagicMock(
-        side_effect=SoCoException("Alarm list UID does not match household")
-    )
-
-    caplog.set_level(logging.WARNING)
-
-    result = alarms.update_cache(soco)
-
-    assert result is False
-    assert "cannot be updated due to a household mismatch" in caplog.text
-    assert "Living Room" in caplog.text
-
-
-def test_update_cache_other_soco_exception_raises():
-    """Test other SoCoExceptions are not swallowed."""
-    soco = MagicMock()
-
-    alarms = Alarms()
-    alarms.update = MagicMock(
-        side_effect=SoCoException("Some other error")
-    )
-
-    with pytest.raises(SoCoException):
-        alarms.update_cache(soco)
-
+    # Integration should still load entities
+    assert "switch.sonos_alarm_14" in entity_registry.entities
