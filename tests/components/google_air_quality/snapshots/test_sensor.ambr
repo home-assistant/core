@@ -481,14 +481,14 @@
     'object_id_base': 'Ozone',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.OZONE: 'ozone'>,
     'original_icon': None,
     'original_name': 'Ozone',
     'platform': 'google_air_quality',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'ozone',
+    'translation_key': None,
     'unique_id': 'o3_10.1_20.1',
     'unit_of_measurement': 'ppb',
   })
@@ -497,6 +497,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'ozone',
       'friendly_name': 'Home Ozone',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppb',

@@ -149,8 +149,8 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
     ),
     AirQualitySensorEntityDescription(
         key="o3",
-        translation_key="ozone",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.OZONE,
         native_unit_of_measurement_fn=lambda x: x.pollutants.o3.concentration.units,
         exists_fn=lambda x: "o3" in {p.code for p in x.pollutants},
         value_fn=lambda x: x.pollutants.o3.concentration.value,
