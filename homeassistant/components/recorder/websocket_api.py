@@ -87,7 +87,6 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
         vol.Optional("duration"): vol.In(DurationConverter.VALID_UNITS),
         vol.Optional("electric_current"): vol.In(ElectricCurrentConverter.VALID_UNITS),
-        vol.Optional("voltage"): vol.In(ElectricPotentialConverter.VALID_UNITS),
         vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
         vol.Optional("energy_distance"): vol.In(EnergyDistanceConverter.VALID_UNITS),
         vol.Optional("information"): vol.In(InformationConverter.VALID_UNITS),
@@ -109,6 +108,7 @@ UNIT_SCHEMA = vol.Schema(
             TemperatureDeltaConverter.VALID_UNITS
         ),
         vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),
+        vol.Optional("voltage"): vol.In(ElectricPotentialConverter.VALID_UNITS),
         vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
         vol.Optional("volume_flow_rate"): vol.In(VolumeFlowRateConverter.VALID_UNITS),
     }
