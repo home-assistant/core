@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button lock on device',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Button lock via UI',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
@@ -216,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Holiday mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -264,6 +269,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Open window detected',
     'options': dict({
     }),
     'original_device_class': None,
@@ -312,6 +318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Summer mode',
     'options': dict({
     }),
     'original_device_class': None,
