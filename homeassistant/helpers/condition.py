@@ -29,10 +29,7 @@ from typing import (
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_AREA_ID,
     ATTR_DEVICE_CLASS,
-    ATTR_FLOOR_ID,
-    ATTR_LABEL_ID,
     CONF_ABOVE,
     CONF_AFTER,
     CONF_ATTRIBUTE,
@@ -1387,27 +1384,9 @@ def async_extract_devices(config: ConfigType | Template) -> set[str]:
 
 
 @callback
-def async_extract_areas(config: ConfigType | Template) -> set[str]:
-    """Extract areas from a condition."""
-    return _async_extract_targets(config, ATTR_AREA_ID)
-
-
-@callback
-def async_extract_floors(config: ConfigType | Template) -> set[str]:
-    """Extract floors from a condition."""
-    return _async_extract_targets(config, ATTR_FLOOR_ID)
-
-
-@callback
-def async_extract_labels(config: ConfigType | Template) -> set[str]:
-    """Extract labels from a condition."""
-    return _async_extract_targets(config, ATTR_LABEL_ID)
-
-
-@callback
-def _async_extract_targets(
+def async_extract_targets(
     config: ConfigType | Template,
-    target_type: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+    target_type: Literal["area_id", "floor_id", "label_id"],
 ) -> set[str]:
     """Extract targets from a condition."""
     referenced: set[str] = set()
