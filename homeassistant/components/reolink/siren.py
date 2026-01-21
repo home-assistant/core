@@ -43,6 +43,7 @@ class ReolinkHostSirenEntityDescription(
 SIREN_ENTITIES = (
     ReolinkSirenEntityDescription(
         key="siren",
+        cmd_id=547,
         translation_key="siren",
         supported=lambda api, ch: api.supported(ch, "siren_play"),
     ),
@@ -99,6 +100,11 @@ class ReolinkSirenEntity(ReolinkChannelCoordinatorEntity, SirenEntity):
         """Initialize Reolink siren entity."""
         self.entity_description = entity_description
         super().__init__(reolink_data, channel)
+
+    @property
+    def is_on(self) -> bool | None:
+        """State of the siren."""
+        return self._host.api.baichuan.siren_state(self._channel)
 
     @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:

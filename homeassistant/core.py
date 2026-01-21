@@ -84,13 +84,6 @@ from .exceptions import (
     ServiceValidationError,
     Unauthorized,
 )
-from .helpers.deprecation import (
-    DeferredDeprecatedAlias,
-    EnumWithDeprecatedMembers,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from .helpers.json import json_bytes, json_fragment
 from .helpers.typing import VolSchemaType
 from .util import dt as dt_util
@@ -135,24 +128,6 @@ type ServiceResponse = JsonObjectType | None
 type EntityServiceResponse = dict[str, ServiceResponse]
 
 
-class ConfigSource(
-    enum.StrEnum,
-    metaclass=EnumWithDeprecatedMembers,
-    deprecated={
-        "DEFAULT": ("core_config.ConfigSource.DEFAULT", "2025.11.0"),
-        "DISCOVERED": ("core_config.ConfigSource.DISCOVERED", "2025.11.0"),
-        "STORAGE": ("core_config.ConfigSource.STORAGE", "2025.11.0"),
-        "YAML": ("core_config.ConfigSource.YAML", "2025.11.0"),
-    },
-):
-    """Source of core configuration."""
-
-    DEFAULT = "default"
-    DISCOVERED = "discovered"
-    STORAGE = "storage"
-    YAML = "yaml"
-
-
 class EventStateEventData(TypedDict):
     """Base class for EVENT_STATE_CHANGED and EVENT_STATE_REPORTED data."""
 
@@ -178,18 +153,6 @@ class EventStateReportedData(EventStateEventData):
     last_reported: datetime.datetime
     new_state: State
     old_last_reported: datetime.datetime
-
-
-def _deprecated_core_config() -> Any:
-    from . import core_config  # noqa: PLC0415
-
-    return core_config.Config
-
-
-# The Config class was moved to core_config in Home Assistant 2024.11
-_DEPRECATED_Config = DeferredDeprecatedAlias(
-    _deprecated_core_config, "homeassistant.core_config.Config", "2025.11"
-)
 
 
 # How long to wait until things that run on startup have to finish.
@@ -299,6 +262,8 @@ def async_get_hass_or_none() -> HomeAssistant | None:
 
 
 class ReleaseChannel(enum.StrEnum):
+    """Release channel."""
+
     BETA = "beta"
     DEV = "dev"
     NIGHTLY = "nightly"
@@ -2445,7 +2410,12 @@ class SupportsResponse(enum.StrEnum):
 class Service:
     """Representation of a callable service."""
 
-    __slots__ = ["domain", "job", "schema", "service", "supports_response"]
+    __slots__ = [
+        "description_placeholders",
+        "job",
+        "schema",
+        "supports_response",
+    ]
 
     def __init__(
         self,
@@ -2462,11 +2432,13 @@ class Service:
         context: Context | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Initialize a service."""
         self.job = HassJob(func, f"service {domain}.{service}", job_type=job_type)
         self.schema = schema
         self.supports_response = supports_response
+        self.description_placeholders = description_placeholders
 
 
 class ServiceCall:
@@ -2609,6 +2581,8 @@ class ServiceRegistry:
         schema: VolSchemaType | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
+        *,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Register a service.
 
@@ -2618,7 +2592,13 @@ class ServiceRegistry:
         """
         self._hass.verify_event_loop_thread("hass.services.async_register")
         self._async_register(
-            domain, service, service_func, schema, supports_response, job_type
+            domain,
+            service,
+            service_func,
+            schema,
+            supports_response,
+            job_type,
+            description_placeholders,
         )
 
     @callback
@@ -2636,6 +2616,7 @@ class ServiceRegistry:
         schema: VolSchemaType | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
         job_type: HassJobType | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Register a service.
 
@@ -2652,6 +2633,7 @@ class ServiceRegistry:
             service,
             supports_response=supports_response,
             job_type=job_type,
+            description_placeholders=description_placeholders,
         )
 
         if domain in self._services:
@@ -2883,11 +2865,3 @@ class ServiceRegistry:
         if TYPE_CHECKING:
             target = cast(Callable[..., ServiceResponse], target)
         return await self._hass.async_add_executor_job(target, service_call)
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = functools.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = functools.partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

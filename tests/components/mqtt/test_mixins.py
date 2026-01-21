@@ -22,7 +22,7 @@ from homeassistant.helpers import (
 from homeassistant.util import slugify
 
 from .common import (
-    MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
+    MOCK_NOTIFY_SUBENTRY_DATA,
     MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA,
     MOCK_SUBENTRY_DATA_SET_MIX,
 )
@@ -592,7 +592,7 @@ async def test_loading_subentry_with_bad_component_schema(
     [
         (
             ConfigSubentryData(
-                data=MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
+                data=MOCK_NOTIFY_SUBENTRY_DATA,
                 subentry_type="device",
                 title="Mock subentry",
             ),

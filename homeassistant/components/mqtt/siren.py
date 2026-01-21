@@ -39,10 +39,18 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
 from . import subscription
 from .config import MQTT_RW_SCHEMA
 from .const import (
+    CONF_AVAILABLE_TONES,
+    CONF_COMMAND_OFF_TEMPLATE,
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
+    CONF_STATE_OFF,
+    CONF_STATE_ON,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
+    CONF_SUPPORT_DURATION,
+    CONF_SUPPORT_VOLUME_SET,
+    DEFAULT_PAYLOAD_OFF,
+    DEFAULT_PAYLOAD_ON,
     PAYLOAD_EMPTY_JSON,
     PAYLOAD_NONE,
 )
@@ -58,17 +66,8 @@ from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT Siren"
-DEFAULT_PAYLOAD_ON = "ON"
-DEFAULT_PAYLOAD_OFF = "OFF"
 
 ENTITY_ID_FORMAT = siren.DOMAIN + ".{}"
-
-CONF_AVAILABLE_TONES = "available_tones"
-CONF_COMMAND_OFF_TEMPLATE = "command_off_template"
-CONF_STATE_ON = "state_on"
-CONF_STATE_OFF = "state_off"
-CONF_SUPPORT_DURATION = "support_duration"
-CONF_SUPPORT_VOLUME_SET = "support_volume_set"
 
 STATE = "state"
 

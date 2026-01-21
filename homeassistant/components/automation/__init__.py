@@ -7,15 +7,19 @@ import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any, Protocol, cast
+from typing import Any, Literal, Protocol, cast
 
 from propcache.api import cached_property
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import labs, websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
+from homeassistant.components.labs import async_listen as async_labs_listen
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
     ATTR_MODE,
     ATTR_NAME,
     CONF_ACTIONS,
@@ -26,8 +30,10 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_ID,
     CONF_MODE,
+    CONF_OPTIONS,
     CONF_PATH,
     CONF_PLATFORM,
+    CONF_TARGET,
     CONF_TRIGGERS,
     CONF_VARIABLES,
     CONF_ZONE,
@@ -113,6 +119,65 @@ ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
+
+NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
+
+_EXPERIMENTAL_CONDITION_PLATFORMS = {
+    "alarm_control_panel",
+    "assist_satellite",
+    "fan",
+    "light",
+    "siren",
+}
+
+_EXPERIMENTAL_TRIGGER_PLATFORMS = {
+    "alarm_control_panel",
+    "assist_satellite",
+    "binary_sensor",
+    "button",
+    "climate",
+    "cover",
+    "device_tracker",
+    "fan",
+    "humidifier",
+    "lawn_mower",
+    "light",
+    "lock",
+    "media_player",
+    "person",
+    "scene",
+    "siren",
+    "switch",
+    "text",
+    "update",
+    "vacuum",
+}
+
+
+@callback
+def is_disabled_experimental_condition(hass: HomeAssistant, platform: str) -> bool:
+    """Check if the platform is a disabled experimental condition platform."""
+    return (
+        platform in _EXPERIMENTAL_CONDITION_PLATFORMS
+        and not labs.async_is_preview_feature_enabled(
+            hass,
+            DOMAIN,
+            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        )
+    )
+
+
+@callback
+def is_disabled_experimental_trigger(hass: HomeAssistant, platform: str) -> bool:
+    """Check if the platform is a disabled experimental trigger platform."""
+    return (
+        platform in _EXPERIMENTAL_TRIGGER_PLATFORMS
+        and not labs.async_is_preview_feature_enabled(
+            hass,
+            DOMAIN,
+            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        )
+    )
 
 
 class IfAction(Protocol):
@@ -317,6 +382,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=vol.Schema({vol.Optional(CONF_ID): str}),
     )
 
+    @callback
+    def new_triggers_conditions_listener() -> None:
+        """Handle new_triggers_conditions flag change."""
+        hass.async_create_task(
+            reload_helper.execute_service(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
+        )
+
+    async_labs_listen(
+        hass,
+        DOMAIN,
+        NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        new_triggers_conditions_listener,
+    )
+
     websocket_api.async_register_command(hass, websocket_config)
 
     return True
@@ -518,20 +597,44 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Return True if entity is on."""
         return self._async_detach_triggers is not None or self._is_enabled
 
-    @property
+    @cached_property
     def referenced_labels(self) -> set[str]:
         """Return a set of referenced labels."""
-        return self.action_script.referenced_labels
+        referenced = self.action_script.referenced_labels
 
-    @property
+        if self._cond_func is not None:
+            for conf in self._cond_func.config:
+                referenced |= condition.async_extract_targets(conf, ATTR_LABEL_ID)
+
+        for conf in self._trigger_config:
+            referenced |= set(_get_targets_from_trigger_config(conf, ATTR_LABEL_ID))
+        return referenced
+
+    @cached_property
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced floors."""
-        return self.action_script.referenced_floors
+        referenced = self.action_script.referenced_floors
+
+        if self._cond_func is not None:
+            for conf in self._cond_func.config:
+                referenced |= condition.async_extract_targets(conf, ATTR_FLOOR_ID)
+
+        for conf in self._trigger_config:
+            referenced |= set(_get_targets_from_trigger_config(conf, ATTR_FLOOR_ID))
+        return referenced
 
     @cached_property
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
-        return self.action_script.referenced_areas
+        referenced = self.action_script.referenced_areas
+
+        if self._cond_func is not None:
+            for conf in self._cond_func.config:
+                referenced |= condition.async_extract_targets(conf, ATTR_AREA_ID)
+
+        for conf in self._trigger_config:
+            referenced |= set(_get_targets_from_trigger_config(conf, ATTR_AREA_ID))
+        return referenced
 
     @property
     def referenced_blueprint(self) -> str | None:
@@ -1139,6 +1242,9 @@ def _trigger_extract_devices(trigger_conf: dict) -> list[str]:
     if trigger_conf[CONF_PLATFORM] == "tag" and CONF_DEVICE_ID in trigger_conf:
         return trigger_conf[CONF_DEVICE_ID]  # type: ignore[no-any-return]
 
+    if target_devices := _get_targets_from_trigger_config(trigger_conf, CONF_DEVICE_ID):
+        return target_devices
+
     return []
 
 
@@ -1149,7 +1255,7 @@ def _trigger_extract_entities(trigger_conf: dict) -> list[str]:
         return trigger_conf[CONF_ENTITY_ID]  # type: ignore[no-any-return]
 
     if trigger_conf[CONF_PLATFORM] == "calendar":
-        return [trigger_conf[CONF_ENTITY_ID]]
+        return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]
 
     if trigger_conf[CONF_PLATFORM] == "zone":
         return trigger_conf[CONF_ENTITY_ID] + [trigger_conf[CONF_ZONE]]  # type: ignore[no-any-return]
@@ -1169,7 +1275,26 @@ def _trigger_extract_entities(trigger_conf: dict) -> list[str]:
     ):
         return [trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID]]
 
+    if target_entities := _get_targets_from_trigger_config(
+        trigger_conf, CONF_ENTITY_ID
+    ):
+        return target_entities
+
     return []
+
+
+@callback
+def _get_targets_from_trigger_config(
+    config: dict,
+    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+) -> list[str]:
+    """Extract targets from a target config."""
+    if not (target_conf := config.get(CONF_TARGET)):
+        return []
+    if not (targets := target_conf.get(target)):
+        return []
+
+    return [targets] if isinstance(targets, str) else targets
 
 
 @websocket_api.websocket_command({"type": "automation/config", "entity_id": str})

@@ -1,14 +1,20 @@
 """Fixtures for component."""
 
 from collections.abc import Generator
+import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyatv import conf
-from pyatv.const import PairingRequirement, Protocol
-from pyatv.support import http
 import pytest
 
-from .common import MockPairingHandler, airplay_service, create_conf, mrp_service
+if sys.version_info < (3, 14):
+    from pyatv import conf
+    from pyatv.const import PairingRequirement, Protocol
+    from pyatv.support import http
+
+    from .common import MockPairingHandler, airplay_service, create_conf, mrp_service
+
+if sys.version_info >= (3, 14):
+    collect_ignore_glob = ["test_*.py"]
 
 
 @pytest.fixture(autouse=True, name="mock_scan")

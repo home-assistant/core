@@ -9,8 +9,8 @@ import voluptuous as vol
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_UNIQUE_ID, Platform
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
     discovery,
@@ -20,7 +20,6 @@ from homeassistant.helpers.device import (
     async_entity_id_to_device_id,
     async_remove_stale_devices_links_keep_entity_device,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
     async_remove_helper_config_entry_from_source_device,
@@ -44,9 +43,8 @@ from .const import (
     DATA_UTILITY,
     DOMAIN,
     METER_TYPES,
-    SERVICE_RESET,
-    SIGNAL_RESET_METER,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,27 +118,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an Utility Meter."""
     hass.data[DATA_UTILITY] = {}
 
-    async def async_reset_meters(service_call):
-        """Reset all sensors of a meter."""
-        meters = service_call.data["entity_id"]
-
-        for meter in meters:
-            _LOGGER.debug("resetting meter %s", meter)
-            domain, entity = split_entity_id(meter)
-            # backward compatibility up to 2022.07:
-            if domain == DOMAIN:
-                async_dispatcher_send(
-                    hass, SIGNAL_RESET_METER, f"{SELECT_DOMAIN}.{entity}"
-                )
-            else:
-                async_dispatcher_send(hass, SIGNAL_RESET_METER, meter)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_RESET,
-        async_reset_meters,
-        vol.Schema({ATTR_ENTITY_ID: vol.All(cv.ensure_list, [cv.entity_id])}),
-    )
+    async_setup_services(hass)
 
     if DOMAIN not in config:
         return True
@@ -228,6 +206,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             options={**entry.options, CONF_SOURCE_SENSOR: source_entity_id},
         )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(
         async_handle_source_entity_changes(
@@ -249,7 +228,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         # Create tariff selection + one meter sensor for each tariff
         entity_entry = entity_registry.async_get_or_create(
-            Platform.SELECT, DOMAIN, entry.entry_id, suggested_object_id=entry.title
+            Platform.SELECT, DOMAIN, entry.entry_id, object_id_base=entry.title
         )
         hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = (
             entity_entry.entity_id
@@ -258,15 +237,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, (Platform.SELECT, Platform.SENSOR)
         )
 
-    entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
-
     return True
-
-
-async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener, called when the config entry options are changed."""
-
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

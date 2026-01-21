@@ -2277,11 +2277,11 @@ async def test_live_stream_with_one_second_commit_interval(
 
     hass.bus.async_fire("mock_event", {"device_id": device.id, "message": "5"})
 
-    recieved_rows = []
+    received_rows = []
     msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
     assert msg["id"] == 7
     assert msg["type"] == "event"
-    recieved_rows.extend(msg["event"]["events"])
+    received_rows.extend(msg["event"]["events"])
 
     hass.bus.async_fire("mock_event", {"device_id": device.id, "message": "6"})
 
@@ -2289,14 +2289,14 @@ async def test_live_stream_with_one_second_commit_interval(
 
     hass.bus.async_fire("mock_event", {"device_id": device.id, "message": "7"})
 
-    while len(recieved_rows) < 7:
+    while len(received_rows) < 7:
         msg = await asyncio.wait_for(websocket_client.receive_json(), 2.5)
         assert msg["id"] == 7
         assert msg["type"] == "event"
-        recieved_rows.extend(msg["event"]["events"])
+        received_rows.extend(msg["event"]["events"])
 
     # Make sure we get rows back in order
-    assert recieved_rows == [
+    assert received_rows == [
         {"domain": "test", "message": "1", "name": "device name", "when": ANY},
         {"domain": "test", "message": "2", "name": "device name", "when": ANY},
         {"domain": "test", "message": "3", "name": "device name", "when": ANY},
@@ -3018,15 +3018,15 @@ async def test_live_stream_with_changed_state_change(
     await hass.async_block_till_done()
     hass.states.async_set("binary_sensor.is_light", STATE_ON)
 
-    recieved_rows = []
-    while len(recieved_rows) < 3:
+    received_rows = []
+    while len(received_rows) < 3:
         msg = await asyncio.wait_for(websocket_client.receive_json(), 2.5)
         assert msg["id"] == 7
         assert msg["type"] == "event"
-        recieved_rows.extend(msg["event"]["events"])
+        received_rows.extend(msg["event"]["events"])
 
     # Make sure we get rows back in order
-    assert recieved_rows == [
+    assert received_rows == [
         {"entity_id": "binary_sensor.is_light", "state": "unknown", "when": ANY},
         {"entity_id": "binary_sensor.is_light", "state": "on", "when": ANY},
         {"entity_id": "binary_sensor.is_light", "state": "off", "when": ANY},

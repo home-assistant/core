@@ -22,40 +22,40 @@
       }
     }
   },
-  "services": {
-    "get_forecasts": {
-      "name": "Get price forecasts",
-      "description": "Retrieves price forecasts from Amber Electric for a site.",
-      "fields": {
-        "config_entry_id": {
-          "description": "The config entry of the site to get forecasts for.",
-          "name": "Config entry"
-        },
-        "channel_type": {
-          "name": "Channel type",
-          "description": "The channel to get forecasts for."
-        }
-      }
-    }
-  },
   "exceptions": {
+    "channel_not_found": {
+      "message": "There is no {channel_type} channel at this site."
+    },
     "integration_not_found": {
       "message": "Config entry \"{target}\" not found in registry."
     },
     "not_loaded": {
       "message": "{target} is not loaded."
-    },
-    "channel_not_found": {
-      "message": "There is no {channel_type} channel at this site."
     }
   },
   "selector": {
     "channel_type": {
       "options": {
-        "general": "General",
         "controlled_load": "Controlled load",
-        "feed_in": "Feed-in"
+        "feed_in": "Feed-in",
+        "general": "General"
       }
+    }
+  },
+  "services": {
+    "get_forecasts": {
+      "description": "Retrieves price forecasts from Amber Electric for a site.",
+      "fields": {
+        "channel_type": {
+          "description": "The channel to get forecasts for.",
+          "name": "Channel type"
+        },
+        "config_entry_id": {
+          "description": "The config entry of the site to get forecasts for.",
+          "name": "Config entry"
+        }
+      },
+      "name": "Get price forecasts"
     }
   }
 }

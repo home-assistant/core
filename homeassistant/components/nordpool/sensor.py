@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from homeassistant.components.sensor import (
     EntityCategory,
@@ -54,10 +54,11 @@ def get_prices(
     current_price_entries: dict[str, float] = {}
     next_price_entries: dict[str, float] = {}
     current_time = dt_util.utcnow()
-    previous_time = current_time - timedelta(hours=1)
-    next_time = current_time + timedelta(hours=1)
     LOGGER.debug("Price data: %s", data)
     for entry in data:
+        resolution = entry.end - entry.start
+        previous_time = current_time - resolution
+        next_time = current_time + resolution
         if entry.start <= current_time <= entry.end:
             current_price_entries = entry.entry
         if entry.start <= previous_time <= entry.end:

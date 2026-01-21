@@ -26,3 +26,6 @@ COUNTRY_DOMAINS = {
     "us": DEFAULT_DOMAIN,
     "za": "co.za",
 }
+
+CATEGORY_SENSORS = "sensors"
+CATEGORY_NOTIFICATIONS = "notifications"
