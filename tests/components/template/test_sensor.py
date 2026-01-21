@@ -4,6 +4,7 @@ from asyncio import Event
 from datetime import datetime
 from unittest.mock import ANY, patch
 
+from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -2095,3 +2096,104 @@ async def test_flow_preview(
     )
 
     assert state["state"] == "0.0"
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, template.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Enough Name",
+                            "unique_id": "enough-id",
+                            "state": "{{ trigger.event.data.val }}",
+                            "expire_after": 4,
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_trigger_expire_after(hass: HomeAssistant) -> None:
+    """Test trigger binary sensor with expire_after configuration."""
+    state = hass.states.get("sensor.enough_name")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.bus.async_fire("test_event", {"val": 42})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.enough_name")
+    assert state.state == "42"
+
+    realnow = dt_util.utcnow()
+    now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
+    with freeze_time(now) as freezer:
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        hass.bus.async_fire("test_event", {"val": 100})
+        await hass.async_block_till_done()
+
+        # Value was set correctly.
+        state = hass.states.get("sensor.enough_name")
+        assert state.state == "100"
+
+        # Time jump +3s
+        now += timedelta(seconds=3)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+        # Value is not yet expired
+        state = hass.states.get("sensor.enough_name")
+        assert state.state == "100"
+
+        # Next message resets timer
+        now += timedelta(seconds=0.5)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        hass.bus.async_fire("test_event", {"val": 101})
+        await hass.async_block_till_done()
+
+        # Value was updated correctly.
+        state = hass.states.get("sensor.enough_name")
+        assert state.state == "101"
+
+        # Time jump +3s
+        now += timedelta(seconds=3)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+        # Value is not yet expired
+        state = hass.states.get("sensor.enough_name")
+        assert state.state == "101"
+
+        # Time jump +2s
+        now += timedelta(seconds=2)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+        # Value is expired now
+        state = hass.states.get("sensor.enough_name")
+        assert state.state == STATE_UNAVAILABLE
+
+        # Send the last message again
+        # Time jump 0.5s
+        now += timedelta(seconds=0.5)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        hass.bus.async_fire("test_event", {"val": 101})
+        await hass.async_block_till_done()
+
+        # Value was updated correctly.
+        state = hass.states.get("sensor.enough_name")
+        assert state.state == "101"
