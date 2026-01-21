@@ -62,13 +62,13 @@ def process_opening_status_string(status: str) -> bool | None:
     return OPENING_STATUS_TO_BINARY_SENSOR_STATE.get(status, None)
 
 
-OPENING_CATEGORY_TO_DEVICE_CLASS: Final[dict[str, BinarySensorDeviceClass]] = {
-    DOORTAG_CATEGORY_DOOR: BinarySensorDeviceClass.DOOR,
+OPENING_CATEGORY_TO_DEVICE_CLASS: Final[dict[str, BinarySensorDeviceClass | None]] = {
+    DOORTAG_CATEGORY_DOOR: None,
     DOORTAG_CATEGORY_FURNITURE: BinarySensorDeviceClass.OPENING,
     DOORTAG_CATEGORY_GARAGE: BinarySensorDeviceClass.GARAGE_DOOR,
     DOORTAG_CATEGORY_GATE: BinarySensorDeviceClass.OPENING,
     DOORTAG_CATEGORY_OTHER: BinarySensorDeviceClass.OPENING,
-    DOORTAG_CATEGORY_WINDOW: BinarySensorDeviceClass.WINDOW,
+    DOORTAG_CATEGORY_WINDOW: None,
 }
 
 
@@ -98,8 +98,10 @@ def get_opening_category(netatmo_device: NetatmoDevice) -> str | None:
     return category
 
 
-def process_opening_category(netatmo_device: NetatmoDevice) -> BinarySensorDeviceClass:
-    """Helper function to map Netatmo device opening category to Home Assistant device class."""
+def process_opening_category(
+    netatmo_device: NetatmoDevice,
+) -> BinarySensorDeviceClass | None:
+    """Helper function to map Netatmo device opening category to Home Assistant device class exceptions."""
     category = get_opening_category(netatmo_device)
 
     if category is None:
@@ -111,6 +113,16 @@ def process_opening_category(netatmo_device: NetatmoDevice) -> BinarySensorDevic
     )
 
 
+OPENING_CATEGORY_LIST: Final[set[str]] = {
+    DOORTAG_CATEGORY_DOOR,
+    DOORTAG_CATEGORY_FURNITURE,
+    DOORTAG_CATEGORY_GARAGE,
+    DOORTAG_CATEGORY_GATE,
+    DOORTAG_CATEGORY_OTHER,
+    DOORTAG_CATEGORY_WINDOW,
+}
+
+
 def process_opening_key(netatmo_device: NetatmoDevice) -> str:
     """Helper function to map Netatmo device opening category to Component keys."""
 
@@ -118,7 +130,7 @@ def process_opening_key(netatmo_device: NetatmoDevice) -> str:
 
     if category == DOORTAG_CATEGORY_OTHER or category is None:
         key = DEFAULT_OPENING_SENSOR_KEY
-    elif OPENING_CATEGORY_TO_DEVICE_CLASS.get(category, None) is not None:
+    elif category in OPENING_CATEGORY_LIST:
         key = category
     else:
         key = DEFAULT_OPENING_SENSOR_KEY
@@ -133,9 +145,9 @@ class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
     netatmo_name: str | None = (
         None  # The name used by Netatmo API for this sensor (exposed feature as attribute) if different than key
     )
-    device_class_fn: Callable[[NetatmoDevice], BinarySensorDeviceClass] | None = (
-        None  # This is a value_fn variant to calculate device_class
-    )
+    device_class_fn: (
+        Callable[[NetatmoDevice], BinarySensorDeviceClass | None] | None
+    ) = None  # This is a value_fn variant to calculate device_class
     device_key_fn: Callable[[NetatmoDevice], str] | None = (
         None  # This is a value_fn variant to calculate key
     )
@@ -302,9 +314,9 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
 
         # Apply Dynamic Device Class if available
         if description.device_class_fn:
-            self._attr_device_class = description.device_class_fn(netatmo_device)
-        else:
-            self._attr_device_class = description.device_class
+            device_class = description.device_class_fn(netatmo_device)
+            if device_class is not None:
+                self._attr_device_class = device_class
 
         # Apply Dynamic Translation Key if available
         if description.device_key_fn:
