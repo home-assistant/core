@@ -36,7 +36,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.hass_dict import HassKey
 
-from .pr_download import download_pr_artifact
 from .storage import async_setup_frontend_storage
 
 _LOGGER = logging.getLogger(__name__)
@@ -454,6 +453,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if dev_pr_number:
         pr_cache_dir = pathlib.Path(hass.config.config_dir) / PR_CACHE_DIR
         github_token = conf.get(CONF_GITHUB_TOKEN)
+
+        # Keep import here so that we can import frontend without installing reqs
+        from .pr_download import download_pr_artifact  # noqa: PLC0415
 
         # Download PR artifact
         dev_pr_dir = await download_pr_artifact(
