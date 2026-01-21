@@ -154,7 +154,7 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
     hub.async_set_zone_bypass.assert_awaited_once_with(1, True, pin="1234")
     hub.async_arm_area.assert_awaited_once_with(
         1,
-        alarm_module._custom_bypass_mode(),
+        alarm_module.ArmMode.ARMED_AWAY,
         "1234",
     )
 

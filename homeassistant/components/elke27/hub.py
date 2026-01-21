@@ -293,13 +293,12 @@ class Elke27Hub:
 
         if mode is ArmMode.ARMED_STAY:
             arm_state = "ARMED_STAY"
-        elif mode is ArmMode.ARMED_AWAY:
-            arm_state = "ARMED_AWAY"
         elif (
-            (isinstance(mode, str) and mode.upper() == "ARMED_CUSTOM_BYPASS")
+            mode is ArmMode.ARMED_AWAY
+            or (isinstance(mode, str) and mode.upper() == "ARMED_CUSTOM_BYPASS")
             or getattr(ArmMode, "ARMED_CUSTOM_BYPASS", None) is mode
         ):
-            arm_state = "ARMED_CUSTOM_BYPASS"
+            arm_state = "ARMED_AWAY"
         else:
             raise HomeAssistantError("Arm mode is not supported.")
         result = await client.async_execute(
