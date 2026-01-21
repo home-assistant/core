@@ -254,6 +254,7 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
             super().skip_update(device, updated_status_properties, dp_timestamps)
             or dp_timestamps is None
             or (current_timestamp := dp_timestamps.get(self.dpcode)) is None
+            or current_timestamp == self._last_dp_timestamp
             or (raw_value := super().read_device_status(device)) is None
         ):
             return True
