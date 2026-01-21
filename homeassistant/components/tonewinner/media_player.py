@@ -552,9 +552,8 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             "Available sources in source_list: %s",
             self._attr_source_list,
         )
-        if (
-            source not in self._custom_name_to_source_code
-            or source not in self._source_code_to_custom_name
+        if (source not in self._custom_name_to_source_code) or (
+            source not in self._source_code_to_custom_name
         ):
             _LOGGER.warning(
                 "Unknown source '%s'. Available sources: %s",
