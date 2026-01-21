@@ -578,7 +578,7 @@ autarco==3.2.0
 automower-ble==0.2.8
 
 # homeassistant.components.autoskope
-autoskope_client==1.3.0
+autoskope_client==1.3.1
 
 # homeassistant.components.generic
 # homeassistant.components.stream
