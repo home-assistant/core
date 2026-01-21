@@ -1,6 +1,7 @@
 """Script to install/uninstall HA into OS X."""
 
 import os
+import subprocess
 import time
 
 # mypy: allow-untyped-calls, allow-untyped-defs
@@ -8,11 +9,11 @@ import time
 
 def install_osx():
     """Set up to run via launchd on OS X."""
-    with os.popen("which hass") as inp:
-        hass_path = inp.read().strip()
+    p = subprocess.run(["which", "hass"], check=False, text=True, capture_output=True)
+    hass_path = p.stdout.strip()
 
-    with os.popen("whoami") as inp:
-        user = inp.read().strip()
+    p = subprocess.run(["whoami"], check=False, text=True, capture_output=True)
+    user = p.stdout.strip()
 
     template_path = os.path.join(os.path.dirname(__file__), "launchd.plist")
 
@@ -31,7 +32,7 @@ def install_osx():
         print(f"Unable to write to {path}", err)
         return
 
-    os.popen(f"launchctl load -w -F {path}")
+    subprocess.run(["launchctl", "load", "-w", "-F", path], check=True)
 
     print("Home Assistant has been installed. Open it here: http://localhost:8123")
 
@@ -39,7 +40,7 @@ def install_osx():
 def uninstall_osx():
     """Unload from launchd on OS X."""
     path = os.path.expanduser("~/Library/LaunchAgents/org.homeassistant.plist")
-    os.popen(f"launchctl unload {path}")
+    subprocess.run(["launchctl", "unload", path], check=True)
 
     print("Home Assistant has been uninstalled.")
 
