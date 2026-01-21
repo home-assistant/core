@@ -58,7 +58,8 @@ async def set_netatmo_entity_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     entity_id: str,
-    pyatmo_status: str,
+    pyatmo_key: str,
+    pyatmo_status: str | bool,
 ) -> None:
     """Sets the HA state and synchronizes the underlying mocked Pyatmo data."""
     # Get the actual entity object instance
@@ -68,7 +69,7 @@ async def set_netatmo_entity_state(
         raise ValueError(f"Entity instance with ID {entity_id} not found.")
 
     # Update the entity's state and ensure Home Assistant is aware of the change
-    setattr(entity_instance.device, "status", pyatmo_status)
+    setattr(entity_instance.device, pyatmo_key, pyatmo_status)
     entity_instance.async_write_ha_state()
     await hass.async_block_till_done()
 
@@ -229,7 +230,9 @@ async def test_doortag_opening_status_change(
     assert hass.states.get(_doortag_entity_connectivity).state == "off"
 
     # Initial state should be unavailable, need to connect first
-    hass.states.async_set(_doortag_entity_connectivity, "on")
+    await set_netatmo_entity_state(
+        hass, config_entry, _doortag_entity_connectivity, "reachable", True
+    )
     await hass.async_block_till_done()
     assert hass.states.get(_doortag_entity_connectivity).state == "on"
 
@@ -242,7 +245,7 @@ async def test_doortag_opening_status_change(
 
     # Set state as parameterized
     await set_netatmo_entity_state(
-        hass, config_entry, _doortag_entity_opening, doortag_status
+        hass, config_entry, _doortag_entity_opening, "status", doortag_status
     )
 
     # State should be as expected

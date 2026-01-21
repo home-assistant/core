@@ -339,29 +339,30 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
             self.async_write_ha_state()
             return
 
-        # We setting other sensor than reachable, so we reuse reachable to set availability, and clear is_on
-        if self.device.reachable is False:
+        # We setting other sensor than reachable
+
+        if not self.device.reachable:
+            # If reachable is None or False we set availability to False
             self._attr_available = False
             self._attr_is_on = None
-            self.async_write_ha_state()
-            return
 
-        if self.entity_description.netatmo_name is None:
-            raw_value = getattr(self.device, self.entity_description.key, None)
         else:
-            raw_value = getattr(self.device, self.entity_description.netatmo_name, None)
+            # If reachable is True, we get the actual value
+            if self.entity_description.netatmo_name is None:
+                raw_value = getattr(self.device, self.entity_description.key, None)
+            else:
+                raw_value = getattr(
+                    self.device, self.entity_description.netatmo_name, None
+                )
 
-        if raw_value is not None:
-            value = self.entity_description.value_fn(raw_value)
-        else:
-            value = None
+            if raw_value is not None:
+                value = self.entity_description.value_fn(raw_value)
+            else:
+                value = None
 
-        # The device is reachable if we are here
-        self._attr_available = True
-        if value is None:
-            self._attr_is_on = None
-        else:
-            self._attr_is_on = cast(bool, value)
+            # Set sensor state
+            self._attr_available = True
+            self._attr_is_on = cast(bool, value) if value is not None else None
 
         self.async_write_ha_state()
 
