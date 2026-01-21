@@ -56,6 +56,7 @@ from homeassistant.util.unit_conversion import (
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
+    NitrogenDioxideConcentrationConverter,
     OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
@@ -105,6 +106,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         EnergyDistanceConverter,
         VolumeConverter,
         VolumeFlowRateConverter,
+        NitrogenDioxideConcentrationConverter,
         SulphurDioxideConcentrationConverter,
     )
 }
@@ -161,6 +163,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         1000,
+    ),
+    NitrogenDioxideConcentrationConverter: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        1.912503,
     ),
     OzoneConcentrationConverter: (
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -384,6 +391,20 @@ _CONVERTED_VALUE: dict[
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
             120000,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+    ],
+    NitrogenDioxideConcentrationConverter: [
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            1.912503,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            62.744976,
+            CONCENTRATION_PARTS_PER_BILLION,
         ),
     ],
     ConductivityConverter: [
