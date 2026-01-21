@@ -37,7 +37,7 @@
     },
     "abort": {
       "already_configured": "This location and feed type is already configured.",
-      "reconfigure_successful": "Reconfiguration successful"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {
