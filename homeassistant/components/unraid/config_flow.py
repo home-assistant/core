@@ -69,7 +69,7 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.All(
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
                         vol.Coerce(int), vol.Range(min=1, max=65535)
                     ),
                     vol.Required(CONF_API_KEY): str,
