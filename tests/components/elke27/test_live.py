@@ -14,8 +14,8 @@ from homeassistant.components.elke27.const import (
     CONF_PIN,
     DATA_COORDINATOR,
     DATA_HUB,
-    DOMAIN,
     DEFAULT_PORT,
+    DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant

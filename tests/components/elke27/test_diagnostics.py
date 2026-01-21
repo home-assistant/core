@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
+import json
 
 import pytest
 
+from homeassistant.components.elke27 import diagnostics as diagnostics_module
 from homeassistant.components.elke27.const import (
     CONF_INTEGRATION_SERIAL,
     CONF_LINK_KEYS_JSON,
@@ -16,7 +17,6 @@ from homeassistant.components.elke27.const import (
     DOMAIN,
     MANUFACTURER_NUMBER,
 )
-from homeassistant.components.elke27 import diagnostics as diagnostics_module
 from homeassistant.components.elke27.diagnostics import (
     async_get_config_entry_diagnostics,
 )

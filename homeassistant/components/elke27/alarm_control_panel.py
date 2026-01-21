@@ -79,6 +79,7 @@ class Elke27AreaAlarmControlPanel(
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
     )
 
     def __init__(
@@ -119,10 +120,18 @@ class Elke27AreaAlarmControlPanel(
         """Return additional state attributes."""
         area = _get_area(self.coordinator.data, self._area_id)
         if area is None:
-            return {}
+            return {
+                "ready": None,
+                "trouble": None,
+                "faulted_zone_ids": None,
+                "faulted_zones": None,
+            }
+        faulted_zones = _faulted_zones(self.coordinator.data)
         return {
             "ready": getattr(area, "ready", None),
             "trouble": getattr(area, "trouble", None),
+            "faulted_zone_ids": [zone_id for zone_id, _ in faulted_zones],
+            "faulted_zones": [name for _, name in faulted_zones],
         }
 
     @property
@@ -144,6 +153,18 @@ class Elke27AreaAlarmControlPanel(
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Arm the area in night mode."""
         await self._async_arm(ArmMode.ARMED_NIGHT, code)
+
+    async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
+        """Arm the area with a custom bypass."""
+        code = _normalize_code(code)
+        for zone_id, _ in _faulted_zones(self.coordinator.data):
+            try:
+                await self._hub.async_set_zone_bypass(
+                    zone_id, True, pin=code
+                )
+            except Elke27PinRequiredError as err:
+                raise HomeAssistantError("PIN required to perform this action.") from err
+        await self._async_arm(_custom_bypass_mode(), code)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the area."""
@@ -194,6 +215,9 @@ def _area_state_to_ha(area: Any) -> AlarmControlPanelState:
     if arm_mode is None:
         return AlarmControlPanelState.DISARMED
     if isinstance(arm_mode, ArmMode):
+        custom_mode = _custom_bypass_mode()
+        if arm_mode is custom_mode:
+            return AlarmControlPanelState.ARMED_CUSTOM_BYPASS
         if arm_mode is ArmMode.DISARMED:
             return AlarmControlPanelState.DISARMED
         if arm_mode is ArmMode.ARMED_STAY:
@@ -211,8 +235,55 @@ def _area_state_to_ha(area: Any) -> AlarmControlPanelState:
         return AlarmControlPanelState.ARMED_NIGHT
     if "away" in mode_value:
         return AlarmControlPanelState.ARMED_AWAY
+    if "bypass" in mode_value:
+        return AlarmControlPanelState.ARMED_CUSTOM_BYPASS
     return AlarmControlPanelState.ARMED_AWAY
-    return AlarmControlPanelState.DISARMED
+
+
+def _custom_bypass_mode() -> ArmMode | str:
+    return getattr(ArmMode, "ARMED_CUSTOM_BYPASS", "ARMED_CUSTOM_BYPASS")
+
+
+def _faulted_zones(snapshot: Any) -> list[tuple[int, str]]:
+    zones = getattr(snapshot, "zones", None) if snapshot is not None else None
+    if zones is None:
+        return []
+    if isinstance(zones, Mapping):
+        zone_values = list(zones.values())
+    elif isinstance(zones, list | tuple):
+        zone_values = list(zones)
+    else:
+        return []
+    definitions = getattr(snapshot, "zone_definitions", None)
+    results: list[tuple[int, str]] = []
+    for zone in zone_values:
+        zone_id = getattr(zone, "zone_id", None)
+        if not isinstance(zone_id, int):
+            continue
+        is_open = getattr(zone, "open", None)
+        if not isinstance(is_open, bool) or not is_open:
+            continue
+        bypassed = getattr(zone, "bypassed", None)
+        if isinstance(bypassed, bool) and bypassed:
+            continue
+        name = _zone_display_name(zone, definitions)
+        results.append((zone_id, name))
+    return results
+
+
+def _zone_display_name(zone: Any, definitions: Any | None) -> str:
+    zone_id = getattr(zone, "zone_id", None)
+    if isinstance(definitions, Mapping) and isinstance(zone_id, int):
+        entry = definitions.get(zone_id)
+        name = getattr(entry, "name", None)
+        if name:
+            return sanitize_name(name) or f"Zone {zone_id}"
+    name = sanitize_name(getattr(zone, "name", None))
+    if name:
+        return name
+    if isinstance(zone_id, int):
+        return f"Zone {zone_id}"
+    return "Zone"
 
 
 def _normalize_code(code: str | None) -> str | None:

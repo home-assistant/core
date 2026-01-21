@@ -5,9 +5,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
-import pytest
-
 from elke27_lib import LinkKeys
+import pytest
 
 from homeassistant.components.elke27.const import READY_TIMEOUT
 from homeassistant.components.elke27.hub import Elke27Hub

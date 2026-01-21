@@ -244,15 +244,23 @@ class Elke27Hub:
             result = await self._hass.async_add_executor_job(method, *args, **kwargs)
         return bool(result) if isinstance(result, bool) else True
 
-    async def async_set_zone_bypass(self, zone_id: int, bypassed: bool) -> bool:
+    async def async_set_zone_bypass(
+        self, zone_id: int, bypassed: bool, *, pin: str | None = None
+    ) -> bool:
         """Request a zone bypass change."""
         client = self._client
         if client is None:
             return False
-        pin = self._pin
-        if not pin:
+        pin_value: int | None = None
+        if pin is not None:
+            try:
+                pin_value = int(pin)
+            except (TypeError, ValueError) as err:
+                raise HomeAssistantError("Code must be numeric.") from err
+        elif self._pin:
+            pin_value = int(self._pin)
+        if pin_value is None:
             raise Elke27PinRequiredError("PIN required to bypass zones.")
-        pin_value = int(pin)
         _LOGGER.debug(
             "Sending zone bypass request: zone_id=%s bypassed=%s pin=%s",
             zone_id,
@@ -308,6 +316,11 @@ class Elke27Hub:
             arm_state = "ARMED_STAY"
         elif mode is ArmMode.ARMED_AWAY:
             arm_state = "ARMED_AWAY"
+        elif (
+            (isinstance(mode, str) and mode.upper() == "ARMED_CUSTOM_BYPASS")
+            or getattr(ArmMode, "ARMED_CUSTOM_BYPASS", None) is mode
+        ):
+            arm_state = "ARMED_CUSTOM_BYPASS"
         else:
             raise HomeAssistantError("Arm mode is not supported.")
         result = await client.async_execute(

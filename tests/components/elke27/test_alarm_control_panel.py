@@ -5,9 +5,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
-import pytest
-
 from elke27_lib import ArmMode
+import pytest
 
 from homeassistant.components.elke27 import alarm_control_panel as alarm_module
 from homeassistant.components.elke27.alarm_control_panel import async_setup_entry
@@ -26,6 +25,7 @@ class _Hub:
         self.panel_name = None
         self.async_arm_area = AsyncMock()
         self.async_disarm_area = AsyncMock()
+        self.async_set_zone_bypass = AsyncMock()
 
 
 async def test_area_entities_and_updates(hass: HomeAssistant) -> None:
@@ -108,6 +108,27 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
                 alarm_active=False,
             )
         ],
+        zones=[
+            SimpleNamespace(
+                zone_id=1,
+                name="Front Door",
+                open=True,
+                bypassed=False,
+            ),
+            SimpleNamespace(
+                zone_id=2,
+                name="Window",
+                open=False,
+                bypassed=False,
+            ),
+            SimpleNamespace(
+                zone_id=3,
+                name="Garage",
+                open=True,
+                bypassed=True,
+            ),
+        ],
+        zone_definitions={},
     )
     coordinator.async_set_updated_data(snapshot)
     hass.data[DOMAIN] = {
@@ -126,6 +147,16 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
 
     await area_1.async_alarm_arm_away(code="1234")
     hub.async_arm_area.assert_awaited_once_with(1, alarm_module.ArmMode.ARMED_AWAY, "1234")
+
+    hub.async_arm_area.reset_mock()
+    hub.async_set_zone_bypass.reset_mock()
+    await area_1.async_alarm_arm_custom_bypass(code="1234")
+    hub.async_set_zone_bypass.assert_awaited_once_with(1, True, pin="1234")
+    hub.async_arm_area.assert_awaited_once_with(
+        1,
+        alarm_module._custom_bypass_mode(),
+        "1234",
+    )
 
     hub.async_disarm_area.reset_mock()
     hub.async_disarm_area.side_effect = alarm_module.Elke27PinRequiredError

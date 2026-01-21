@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import builtins
-import importlib
 from dataclasses import dataclass
+import importlib
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 

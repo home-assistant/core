@@ -7,24 +7,22 @@ from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any
 
-import pytest
-
 from elke27_lib.events import (
-    CsmSnapshotUpdated,
-    DomainCsmChanged,
-    TableCsmChanged,
     UNSET_AT,
     UNSET_CLASSIFICATION,
     UNSET_ROUTE,
     UNSET_SEQ,
     UNSET_SESSION_ID,
+    CsmSnapshotUpdated,
+    DomainCsmChanged,
+    TableCsmChanged,
 )
 from elke27_lib.types import CsmSnapshot
 
-from homeassistant.core import HomeAssistant
-
 from homeassistant.components.elke27.const import DOMAIN
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
+from homeassistant.core import HomeAssistant
+
 from tests.common import MockConfigEntry
 
 

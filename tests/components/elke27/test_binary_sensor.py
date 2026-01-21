@@ -5,14 +5,12 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Any
 
-import pytest
-
 from homeassistant.components.elke27.binary_sensor import async_setup_entry
 from homeassistant.components.elke27.const import DATA_COORDINATOR, DATA_HUB, DOMAIN
+from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
 from tests.common import MockConfigEntry
 
 
