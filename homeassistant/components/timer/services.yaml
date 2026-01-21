@@ -35,6 +35,7 @@ change:
       required: true
       example: "00:01:00, 60 or -60"
       selector:
-        text:
+        duration:
+          allow_negative: true
 
 reload:
