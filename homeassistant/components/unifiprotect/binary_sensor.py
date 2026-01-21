@@ -660,9 +660,13 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
 
         # Check known active event IDs from camera first (fast path)
         for event_id in device.last_smart_detect_event_ids.values():
-            if event_id and (event := self.data.api.bootstrap.events.get(event_id)):
-                if event.end is None and obj_type in event.smart_detect_types:
-                    return event
+            if (
+                event_id
+                and (event := self.data.api.bootstrap.events.get(event_id))
+                and event.end is None
+                and obj_type in event.smart_detect_types
+            ):
+                return event
 
         return None
 
