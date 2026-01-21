@@ -177,17 +177,8 @@ class UsgsEarthquakesFeedOptionsFlowHandler(OptionsFlow):
             scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
             user_input[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()
 
-            # Update config entry data
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                data={**self.config_entry.data, **user_input},
-            )
-
-            # Reload the entry
-            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-
-            return self.async_create_entry(title="", data={})
-
+            # Store updated options; entry reload (if needed) is handled by options listener
+            return self.async_create_entry(title="", data=user_input)
         return self.async_show_form(
             step_id="init",
             data_schema=_get_data_schema(self.hass, self.config_entry.data),
