@@ -61,9 +61,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user step."""
-        # Check if already configured. Only one instance allowed for now.
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
 
         errors = {}
 
