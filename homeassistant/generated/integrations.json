@@ -1472,7 +1472,7 @@
     },
     "duckdns": {
       "name": "Duck DNS",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2009,6 +2009,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "fish_audio": {
+      "name": "Fish Audio",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "fitbit": {
       "name": "Fitbit",
@@ -2670,6 +2676,12 @@
       "name": "hddtemp",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "hdfury": {
+      "name": "HDFury",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "hdmi_cec": {
@@ -4330,9 +4342,9 @@
       "iot_class": "local_polling"
     },
     "namecheapdns": {
-      "name": "Namecheap FreeDNS",
-      "integration_type": "hub",
-      "config_flow": false,
+      "name": "Namecheap DynamicDNS",
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_push"
     },
     "nanoleaf": {
@@ -4402,7 +4414,7 @@
           "name": "NETGEAR"
         },
         "netgear_lte": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "NETGEAR LTE"
@@ -4433,7 +4445,7 @@
       "supported_by": "overkiz"
     },
     "nextbus": {
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4457,7 +4469,7 @@
     },
     "nibe_heatpump": {
       "name": "Nibe Heat Pump",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4469,7 +4481,7 @@
     },
     "nightscout": {
       "name": "Nightscout",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4487,14 +4499,14 @@
     },
     "nina": {
       "name": "NINA",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
     "nintendo_parental_controls": {
       "name": "Nintendo Switch parental controls",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4511,7 +4523,7 @@
     },
     "nmbs": {
       "name": "NMBS",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4578,7 +4590,7 @@
     },
     "nuheat": {
       "name": "NuHeat",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4615,7 +4627,7 @@
     },
     "nws": {
       "name": "National Weather Service (NWS)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4633,7 +4645,7 @@
     },
     "nzbget": {
       "name": "NZBGet",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling",
       "single_config_entry": true
@@ -4646,13 +4658,13 @@
     },
     "obihai": {
       "name": "Obihai",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "octoprint": {
       "name": "OctoPrint",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4719,7 +4731,7 @@
     },
     "onvif": {
       "name": "ONVIF",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -4755,19 +4767,19 @@
     },
     "openevse": {
       "name": "OpenEVSE",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "openexchangerates": {
       "name": "Open Exchange Rates",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "opengarage": {
       "name": "OpenGarage",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4779,7 +4791,7 @@
     },
     "openhome": {
       "name": "Linn / OpenHome",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4797,13 +4809,13 @@
     },
     "opensky": {
       "name": "OpenSky Network",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "opentherm_gw": {
       "name": "OpenTherm Gateway",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -4815,7 +4827,7 @@
     },
     "openweathermap": {
       "name": "OpenWeatherMap",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4844,7 +4856,7 @@
     },
     "opower": {
       "name": "Opower",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4903,7 +4915,7 @@
     },
     "ourgroceries": {
       "name": "OurGroceries",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4927,14 +4939,14 @@
     },
     "owntracks": {
       "name": "OwnTracks",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push",
       "single_config_entry": true
     },
     "p1_monitor": {
       "name": "P1 Monitor",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4954,7 +4966,7 @@
           "name": "Panasonic Blu-Ray Player"
         },
         "panasonic_viera": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Panasonic Viera"
@@ -4980,7 +4992,7 @@
     },
     "peco": {
       "name": "PECO Outage Counter",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5008,7 +5020,7 @@
     },
     "permobil": {
       "name": "MyPermobil",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5046,7 +5058,7 @@
           "name": "Philips Hue BLE"
         },
         "philips_js": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Philips TV"
@@ -5055,13 +5067,13 @@
     },
     "pi_hole": {
       "name": "Pi-hole",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "picnic": {
       "name": "Picnic",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5122,7 +5134,7 @@
     },
     "plex": {
       "name": "Plex Media Server",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5146,13 +5158,13 @@
     },
     "pooldose": {
       "name": "SEKO PoolDose",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "poolsense": {
       "name": "PoolSense",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5175,7 +5187,7 @@
     },
     "private_ble_device": {
       "name": "Private BLE Device",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5198,7 +5210,7 @@
     },
     "progettihwsw": {
       "name": "ProgettiHWSW Automation",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5233,8 +5245,8 @@
     },
     "proxmoxve": {
       "name": "Proxmox VE",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "proxy": {
@@ -5244,7 +5256,7 @@
     },
     "prusalink": {
       "name": "PrusaLink",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5260,7 +5272,7 @@
     },
     "pterodactyl": {
       "name": "Pterodactyl",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5272,13 +5284,13 @@
     },
     "pure_energie": {
       "name": "Pure Energie",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "purpleair": {
       "name": "PurpleAir",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5290,13 +5302,13 @@
     },
     "pushbullet": {
       "name": "Pushbullet",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "pushover": {
       "name": "Pushover",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -5314,7 +5326,7 @@
     },
     "pvpc_hourly_pricing": {
       "name": "Spain electricity hourly pricing (PVPC)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5343,7 +5355,7 @@
     },
     "qingping": {
       "name": "Qingping",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5363,7 +5375,7 @@
           "name": "QNAP"
         },
         "qnap_qsw": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "QNAP QSW"
@@ -5401,7 +5413,7 @@
     },
     "rabbitair": {
       "name": "Rabbit Air",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5426,7 +5438,7 @@
     },
     "radiotherm": {
       "name": "Radio Thermostat",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5461,7 +5473,7 @@
     },
     "rapt_ble": {
       "name": "RAPT Bluetooth",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5559,7 +5571,7 @@
     },
     "renson": {
       "name": "Renson",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5667,13 +5679,13 @@
     },
     "romy": {
       "name": "ROMY Vacuum Cleaner",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "roomba": {
       "name": "iRobot Roomba and Braava",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5708,7 +5720,7 @@
     },
     "rova": {
       "name": "ROVA",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5751,13 +5763,13 @@
       "name": "Ruuvi",
       "integrations": {
         "ruuvi_gateway": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Ruuvi Gateway"
         },
         "ruuvitag_ble": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Ruuvi BLE"
@@ -5772,7 +5784,7 @@
     },
     "sabnzbd": {
       "name": "SABnzbd",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6757,7 +6769,7 @@
       "name": "Tesla",
       "integrations": {
         "powerwall": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Tesla Powerwall"
@@ -7462,7 +7474,7 @@
     },
     "waterfurnace": {
       "name": "WaterFurnace",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -7632,8 +7644,8 @@
     },
     "wsdot": {
       "name": "Washington State Department of Transportation (WSDOT)",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "wyoming": {

@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -83,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -141,6 +143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -199,6 +202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Doorbell volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -257,6 +261,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mic volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -315,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voice volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -373,6 +379,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume',
     'options': dict({
     }),
     'original_device_class': None,

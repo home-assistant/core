@@ -1,5 +1,6 @@
 """Tests for the Anthropic integration."""
 
+import datetime
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -317,7 +318,7 @@ async def test_function_exception(
         "role": "user",
         "content": [
             {
-                "content": '{"error": "HomeAssistantError", "error_text": "Test tool exception"}',
+                "content": '{"error":"HomeAssistantError","error_text":"Test tool exception"}',
                 "tool_use_id": "toolu_0123456789AbCdEfGhIjKlM",
                 "type": "tool_result",
             }
@@ -891,6 +892,34 @@ async def test_web_search(
                         ),
                     ],
                 ),
+            ),
+        ],
+        [
+            conversation.chat_log.SystemContent("You are a helpful assistant."),
+            conversation.chat_log.UserContent("What time is it?"),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation",
+                content="Let me check the time for you.",
+                tool_calls=[
+                    llm.ToolInput(
+                        id="mock-tool-call-id",
+                        tool_name="GetCurrentTime",
+                        tool_args={},
+                    ),
+                ],
+            ),
+            conversation.chat_log.ToolResultContent(
+                agent_id="conversation.claude_conversation",
+                tool_call_id="mock-tool-call-id",
+                tool_name="GetCurrentTime",
+                tool_result={
+                    "speech_slots": {"time": datetime.time(14, 30, 0)},
+                    "message": "Current time retrieved",
+                },
+            ),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation",
+                content="It is currently 2:30 PM.",
             ),
         ],
     ],

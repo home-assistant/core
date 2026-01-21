@@ -223,6 +223,10 @@ def gen_data_entry_schema(
             vol.Required("user"): translation_value_validator,
             str: translation_value_validator,
         }
+    else:
+        schema[vol.Optional("initiate_flow")] = {
+            vol.Required("user"): translation_value_validator,
+        }
     if flow_title == REQUIRED:
         schema[vol.Required("title")] = translation_value_validator
     elif flow_title == REMOVED:
