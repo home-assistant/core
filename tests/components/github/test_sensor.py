@@ -1,50 +1,36 @@
 """Test GitHub sensor."""
 
-import json
+from unittest.mock import AsyncMock
 
-import pytest
+from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.github.const import DOMAIN, FALLBACK_UPDATE_INTERVAL
+from homeassistant.components.github.const import FALLBACK_UPDATE_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
-from .common import TEST_REPOSITORY
+from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_SENSOR_ENTITY = "sensor.octocat_hello_world_latest_release"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_sensor_updates_with_empty_release_array(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
+    github_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the sensor updates by default GitHub sensors."""
+    await setup_integration(hass, mock_config_entry)
     state = hass.states.get(TEST_SENSOR_ENTITY)
     assert state.state == "v1.0.0"
 
-    response_json = json.loads(await async_load_fixture(hass, "graphql.json", DOMAIN))
-    response_json["data"]["repository"]["release"] = None
-    headers = json.loads(await async_load_fixture(hass, "base_headers.json", DOMAIN))
+    github_client.graphql.return_value.data["data"]["repository"]["release"] = None
 
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        f"https://api.github.com/repos/{TEST_REPOSITORY}/events",
-        json=[],
-        headers=headers,
-    )
-    aioclient_mock.post(
-        "https://api.github.com/graphql",
-        json=response_json,
-        headers=headers,
-    )
-
-    async_fire_time_changed(hass, dt_util.utcnow() + FALLBACK_UPDATE_INTERVAL)
+    freezer.tick(FALLBACK_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     new_state = hass.states.get(TEST_SENSOR_ENTITY)
-    assert new_state.state == "unavailable"
+    assert new_state.state == STATE_UNAVAILABLE
