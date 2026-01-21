@@ -132,6 +132,9 @@
     'name': None,
     'object_id_base': 'Carbon monoxide',
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': 'ppm',
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
     'original_icon': None,
