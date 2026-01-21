@@ -1187,6 +1187,8 @@ jobs:
       - pytest-postgres
       - pytest-mariadb
     timeout-minutes: 10
+    permissions:
+      id-token: write
     # codecov/test-results-action currently doesn't support tokenless uploads
     # therefore we can't run it on forks
     if: |
@@ -1198,8 +1200,9 @@ jobs:
         with:
           pattern: test-results-*
       - name: Upload test results to Codecov
-        uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
+          report_type: test_results
           fail_ci_if_error: true
           verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
