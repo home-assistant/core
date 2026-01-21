@@ -3,23 +3,12 @@
 from typing import Any, NewType
 
 from pyopnsense import diagnostics
-from pyopnsense.exceptions import APIException
 
 from homeassistant.components.device_tracker import DeviceScanner
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_API_SECRET,
-    CONF_INTERFACE_CLIENT,
-    CONF_TRACKER_INTERFACES,
-    DOMAIN,
-)
-from .types import APIData
+from .const import CONF_INTERFACE_CLIENT, CONF_TRACKER_INTERFACES, DOMAIN
 
 DeviceDetails = NewType("DeviceDetails", dict[str, Any])
 DeviceDetailsByMAC = NewType("DeviceDetailsByMAC", dict[str, DeviceDetails])
@@ -36,35 +25,6 @@ async def async_get_scanner(
         config_entry.runtime_data.get(CONF_TRACKER_INTERFACES, []),
     )
     return scanner if scanner.success_init else None
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up device tracker for OPNsense integration."""
-    api_data: APIData = {
-        "api_key": config_entry.data[CONF_API_KEY],
-        "api_secret": config_entry.data[CONF_API_SECRET],
-        "base_url": config_entry.data[CONF_URL],
-        "verify_cert": config_entry.data[CONF_VERIFY_SSL],
-    }
-
-    tracker_interfaces = config_entry.data.get(CONF_TRACKER_INTERFACES)
-
-    interfaces_client = diagnostics.InterfaceClient(**api_data)
-
-    # Test connection
-    try:
-        await hass.async_add_executor_job(interfaces_client.get_arp)
-    except APIException as err:
-        raise ConfigEntryNotReady(f"Unable to connect to OPNsense API: {err}") from err
-
-    config_entry.runtime_data = {
-        CONF_INTERFACE_CLIENT: interfaces_client,
-        CONF_TRACKER_INTERFACES: tracker_interfaces,
-    }
 
 
 class OPNsenseDeviceScanner(DeviceScanner):
