@@ -14,7 +14,7 @@
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
         }
       },
-      "name": "If an alarm is armed"
+      "name": "Alarm is armed"
     },
     "is_armed_away": {
       "description": "Tests if one or more alarms are armed in away mode.",
@@ -24,7 +24,7 @@
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
         }
       },
-      "name": "If an alarm is armed away"
+      "name": "Alarm is armed away"
     },
     "is_armed_home": {
       "description": "Tests if one or more alarms are armed in home mode.",
@@ -34,7 +34,7 @@
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
         }
       },
-      "name": "If an alarm is armed home"
+      "name": "Alarm is armed home"
     },
     "is_armed_night": {
       "description": "Tests if one or more alarms are armed in night mode.",
@@ -44,7 +44,7 @@
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
         }
       },
-      "name": "If an alarm is armed night"
+      "name": "Alarm is armed night"
     },
     "is_armed_vacation": {
       "description": "Tests if one or more alarms are armed in vacation mode.",
@@ -54,7 +54,7 @@
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
         }
       },
-      "name": "If an alarm is armed vacation"
+      "name": "Alarm is armed vacation"
     },
     "is_disarmed": {
       "description": "Tests if one or more alarms are disarmed.",
@@ -64,7 +64,7 @@
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
         }
       },
-      "name": "If an alarm is disarmed"
+      "name": "Alarm is disarmed"
     },
     "is_triggered": {
       "description": "Tests if one or more alarms are triggered.",
@@ -74,7 +74,7 @@
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
         }
       },
-      "name": "If an alarm is triggered"
+      "name": "Alarm is triggered"
     }
   },
   "device_automation": {

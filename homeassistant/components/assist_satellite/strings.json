@@ -14,7 +14,7 @@
           "name": "[%key:component::assist_satellite::common::condition_behavior_name%]"
         }
       },
-      "name": "If a satellite is idle"
+      "name": "Satellite is idle"
     },
     "is_listening": {
       "description": "Tests if one or more Assist satellites are listening.",
@@ -24,7 +24,7 @@
           "name": "[%key:component::assist_satellite::common::condition_behavior_name%]"
         }
       },
-      "name": "If a satellite is listening"
+      "name": "Satellite is listening"
     },
     "is_processing": {
       "description": "Tests if one or more Assist satellites are processing.",
@@ -34,7 +34,7 @@
           "name": "[%key:component::assist_satellite::common::condition_behavior_name%]"
         }
       },
-      "name": "If a satellite is processing"
+      "name": "Satellite is processing"
     },
     "is_responding": {
       "description": "Tests if one or more Assist satellites are responding.",
@@ -44,7 +44,7 @@
           "name": "[%key:component::assist_satellite::common::condition_behavior_name%]"
         }
       },
-      "name": "If a satellite is responding"
+      "name": "Satellite is responding"
     }
   },
   "entity_component": {
