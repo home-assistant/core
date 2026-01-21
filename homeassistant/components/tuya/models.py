@@ -250,7 +250,12 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
 
         Processes delta accumulation before determining if update should be skipped.
         """
-        if super().skip_update(device, updated_status_properties, dp_timestamps):
+        if (
+            super().skip_update(device, updated_status_properties, dp_timestamps)
+            or dp_timestamps is None
+            or (current_timestamp := dp_timestamps.get(self.dpcode) is None)
+            or (raw_value := super().read_device_status(device)) is None
+        ):
             return True
 
         # Process delta update when not skipping
