@@ -15,6 +15,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
 
     runtime = config_entry.runtime_data
+    tibber_connection = await runtime.async_get_client(hass)
     result: dict[str, Any] = {
         "homes": [
             {
@@ -24,7 +25,7 @@ async def async_get_config_entry_diagnostics(
                 "last_cons_data_timestamp": home.last_cons_data_timestamp,
                 "country": home.country,
             }
-            for home in runtime.tibber_connection.get_homes(only_active=False)
+            for home in tibber_connection.get_homes(only_active=False)
         ]
     }
 

@@ -1,13 +1,16 @@
 {
   "entity": {
     "sensor": {
-      "nitrogen_dioxide": {
+      "ammonia": {
         "default": "mdi:molecule"
       },
-      "ozone": {
+      "benzene": {
         "default": "mdi:molecule"
       },
-      "sulphur_dioxide": {
+      "nitrogen_monoxide": {
+        "default": "mdi:molecule"
+      },
+      "non_methane_hydrocarbons": {
         "default": "mdi:molecule"
       }
     }
