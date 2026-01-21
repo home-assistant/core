@@ -111,6 +111,12 @@ def test_ssl_context_alpn_bucketing() -> None:
         is http1_no_verify
     )
     assert (
+        create_no_verify_ssl_context(
+            SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_HTTP11_HTTP2
+        )
+        is http2_no_verify
+    )
+    assert (
         create_no_verify_ssl_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_NONE)
         is no_alpn_no_verify
     )
@@ -151,6 +157,10 @@ def test_ssl_context_insecure_alpn_bucketing() -> None:
     assert (
         create_no_verify_ssl_context(SSLCipherList.INSECURE, SSL_ALPN_HTTP11)
         is http1_no_verify
+    )
+    assert (
+        create_no_verify_ssl_context(SSLCipherList.INSECURE, SSL_ALPN_HTTP11_HTTP2)
+        is http2_no_verify
     )
     assert (
         create_no_verify_ssl_context(SSLCipherList.INSECURE, SSL_ALPN_NONE)
