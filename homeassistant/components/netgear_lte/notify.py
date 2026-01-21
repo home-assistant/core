@@ -40,7 +40,7 @@ class NetgearNotifyService(BaseNotificationService):
         self.modem: Modem = discovery_info["modem"]
         discovery_info["entry"].async_on_unload(self.async_unregister_services)
 
-    async def async_send_message(self, message="", **kwargs):
+    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 
         if not self.modem.token:
