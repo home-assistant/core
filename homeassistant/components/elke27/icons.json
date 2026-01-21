@@ -19,12 +19,6 @@
     "alarm_arm_vacation": {
       "service": "mdi:beach"
     },
-    "alarm_bypass": {
-      "service": "mdi:shield-off"
-    },
-    "alarm_clear_bypass": {
-      "service": "mdi:shield"
-    },
     "alarm_display_message": {
       "service": "mdi:message-alert"
     },
@@ -33,9 +27,6 @@
     },
     "sensor_counter_set": {
       "service": "mdi:counter"
-    },
-    "sensor_zone_bypass": {
-      "service": "mdi:shield-off"
     },
     "sensor_zone_trigger": {
       "service": "mdi:shield"

@@ -1,27 +1,3 @@
-alarm_bypass:
-  target:
-    entity:
-      integration: elke27
-      domain: alarm_control_panel
-  fields:
-    code:
-      required: true
-      example: 4242
-      selector:
-        text:
-
-alarm_clear_bypass:
-  target:
-    entity:
-      integration: elke27
-      domain: alarm_control_panel
-  fields:
-    code:
-      required: true
-      example: 4242
-      selector:
-        text:
-
 alarm_arm_home_instant:
   target:
     entity:
@@ -55,18 +31,6 @@ alarm_arm_vacation:
     code:
       required: true
       example: 1234
-      selector:
-        text:
-
-sensor_zone_bypass:
-  target:
-    entity:
-      integration: elke27
-      domain: sensor
-  fields:
-    code:
-      required: true
-      example: 4242
       selector:
         text:
 

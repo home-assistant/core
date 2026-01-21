@@ -77,9 +77,6 @@
     "switch": {
       "output": {
         "name": "Output"
-      },
-      "zone_bypass": {
-        "name": "Bypass {zone}"
       }
     },
     "sensor": {
@@ -92,26 +89,6 @@
     }
   },
   "services": {
-    "alarm_bypass": {
-      "name": "Bypass alarm",
-      "description": "Bypass all zones on the selected alarm panel.",
-      "fields": {
-        "code": {
-          "name": "User code",
-          "description": "User code required to authorize the bypass."
-        }
-      }
-    },
-    "alarm_clear_bypass": {
-      "name": "Clear alarm bypass",
-      "description": "Clear bypassed zones on the selected alarm panel.",
-      "fields": {
-        "code": {
-          "name": "User code",
-          "description": "User code required to authorize clearing bypasses."
-        }
-      }
-    },
     "alarm_arm_home_instant": {
       "name": "Arm home instant",
       "description": "Arm the panel in home mode without entry delay.",
@@ -139,16 +116,6 @@
         "code": {
           "name": "User code",
           "description": "User code required to arm the panel."
-        }
-      }
-    },
-    "sensor_zone_bypass": {
-      "name": "Bypass zone",
-      "description": "Bypass the selected zone sensor.",
-      "fields": {
-        "code": {
-          "name": "User code",
-          "description": "User code required to authorize the bypass."
         }
       }
     },
