@@ -63,11 +63,13 @@ from homeassistant.util.unit_conversion import (
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
+    NitrogenDioxideConcentrationConverter,
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
+    SulphurDioxideConcentrationConverter,
     TemperatureConverter,
     TemperatureDeltaConverter,
     UnitlessRatioConverter,
@@ -158,7 +160,7 @@ class SensorDeviceClass(StrEnum):
     CO = "carbon_monoxide"
     """Carbon Monoxide gas concentration.
 
-    Unit of measurement: `ppm` (parts per million), `mg/m³`, `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `ppm` (parts per million), `mg/m³`, `μg/m³`
     """
 
     CO2 = "carbon_dioxide"
@@ -282,7 +284,7 @@ class SensorDeviceClass(StrEnum):
     NITROGEN_DIOXIDE = "nitrogen_dioxide"
     """Amount of NO2.
 
-    Unit of measurement: `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `μg/m³`
     """
 
     NITROGEN_MONOXIDE = "nitrogen_monoxide"
@@ -409,7 +411,7 @@ class SensorDeviceClass(StrEnum):
     SULPHUR_DIOXIDE = "sulphur_dioxide"
     """Amount of SO2.
 
-    Unit of measurement: `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `μg/m³`
     """
 
     TEMPERATURE = "temperature"
@@ -562,6 +564,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.ENERGY_DISTANCE: EnergyDistanceConverter,
     SensorDeviceClass.ENERGY_STORAGE: EnergyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
+    SensorDeviceClass.NITROGEN_DIOXIDE: NitrogenDioxideConcentrationConverter,
     SensorDeviceClass.POWER: PowerConverter,
     SensorDeviceClass.POWER_FACTOR: UnitlessRatioConverter,
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
@@ -569,6 +572,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
     SensorDeviceClass.REACTIVE_POWER: ReactivePowerConverter,
+    SensorDeviceClass.SULPHUR_DIOXIDE: SulphurDioxideConcentrationConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
     SensorDeviceClass.TEMPERATURE_DELTA: TemperatureDeltaConverter,
@@ -595,6 +599,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.BATTERY: {PERCENTAGE},
     SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: set(UnitOfBloodGlucoseConcentration),
     SensorDeviceClass.CO: {
+        CONCENTRATION_PARTS_PER_BILLION,
         CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -628,7 +633,10 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.ILLUMINANCE: {LIGHT_LUX},
     SensorDeviceClass.IRRADIANCE: set(UnitOfIrradiance),
     SensorDeviceClass.MOISTURE: {PERCENTAGE},
-    SensorDeviceClass.NITROGEN_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.NITROGEN_DIOXIDE: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
     SensorDeviceClass.NITROGEN_MONOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.OZONE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
@@ -657,7 +665,10 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     },
     SensorDeviceClass.SOUND_PRESSURE: set(UnitOfSoundPressure),
     SensorDeviceClass.SPEED: {*UnitOfSpeed, *UnitOfVolumetricFlux},
-    SensorDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    SensorDeviceClass.SULPHUR_DIOXIDE: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
     SensorDeviceClass.TEMPERATURE: set(UnitOfTemperature),
     SensorDeviceClass.TEMPERATURE_DELTA: set(UnitOfTemperature),
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {

@@ -103,6 +103,8 @@ _AMBIENT_IDEAL_GAS_MOLAR_VOLUME = (  # m3⋅mol⁻¹
 )
 # Molar masses in g⋅mol⁻¹
 _CARBON_MONOXIDE_MOLAR_MASS = 28.01
+_NITROGEN_DIOXIDE_MOLAR_MASS = 46.0055
+_SULPHUR_DIOXIDE_MOLAR_MASS = 64.066
 
 
 class BaseUnitConverter:
@@ -193,6 +195,7 @@ class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "carbon_monoxide"
     _UNIT_CONVERSION: dict[str | None, float] = {
+        CONCENTRATION_PARTS_PER_BILLION: 1e9,
         CONCENTRATION_PARTS_PER_MILLION: 1e6,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: (
             _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e3
@@ -202,8 +205,41 @@ class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
         ),
     }
     VALID_UNITS = {
+        CONCENTRATION_PARTS_PER_BILLION,
         CONCENTRATION_PARTS_PER_MILLION,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    }
+
+
+class NitrogenDioxideConcentrationConverter(BaseUnitConverter):
+    """Convert nitrogen dioxide ratio to mass per volume."""
+
+    UNIT_CLASS = "nitrogen_dioxide"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        CONCENTRATION_PARTS_PER_BILLION: 1e9,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+            _NITROGEN_DIOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
+        ),
+    }
+    VALID_UNITS = {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    }
+
+
+class SulphurDioxideConcentrationConverter(BaseUnitConverter):
+    """Convert sulphur dioxide ratio to mass per volume."""
+
+    UNIT_CLASS = "sulphur_dioxide"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        CONCENTRATION_PARTS_PER_BILLION: 1e9,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+            _SULPHUR_DIOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
+        ),
+    }
+    VALID_UNITS = {
+        CONCENTRATION_PARTS_PER_BILLION,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
 
