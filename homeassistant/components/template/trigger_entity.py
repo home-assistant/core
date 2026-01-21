@@ -57,10 +57,9 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
-        on_cancel: Callable[[], None] | None = None,
     ) -> None:
         """Set up a template that manages the main state of the entity."""
-        if self.add_template(option, attribute, validator, on_update, on_cancel):
+        if self.add_template(option, attribute, validator, on_update):
             self._to_render_simple.append(option)
             self._parse_result.add(option)
 
@@ -70,7 +69,6 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
-        on_cancel: Callable[[], None] | None = None,
     ) -> None:
         """Set up a template that manages any property or attribute of the entity.
 
@@ -86,10 +84,8 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         on_update:
             Called to store the template result rather than storing it
             the supplied attribute. Passed the result of the validator.
-        on_cancel:
-            Called when the template entity renders unknown or unavailable.
         """
-        self.setup_state_template(option, attribute, validator, on_update, on_cancel)
+        self.setup_state_template(option, attribute, validator, on_update)
 
     @property
     def referenced_blueprint(self) -> str | None:
@@ -198,14 +194,6 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
             if write_state:
                 self.async_write_ha_state()
         else:
-            # While transitioning platforms to the new framework, this
-            # if-statement is necessary for backward compatibility with existing
-            # trigger based platforms.
-            if self._templates:
-                # Cancel anything associated with any template when unavailable.
-                for entity_template in self._templates.values():
-                    if entity_template.on_cancel:
-                        entity_template.on_cancel()
             self.async_write_ha_state()
 
     @callback

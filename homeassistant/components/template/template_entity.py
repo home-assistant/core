@@ -282,7 +282,6 @@ class TemplateEntity(AbstractTemplateEntity):
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
-        on_cancel: Callable[[], None] | None = None,
     ) -> None:
         """Set up a template that manages the main state of the entity."""
 
@@ -302,9 +301,7 @@ class TemplateEntity(AbstractTemplateEntity):
             else:
                 setattr(self, attribute, state)
 
-        self.add_template(
-            option, attribute, on_update=_update_state, on_cancel=on_cancel
-        )
+        self.add_template(option, attribute, on_update=_update_state)
 
     def setup_template(
         self,
@@ -312,7 +309,6 @@ class TemplateEntity(AbstractTemplateEntity):
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
-        on_cancel: Callable[[], None] | None = None,
     ):
         """Set up a template that manages any property or attribute of the entity.
 
@@ -328,10 +324,8 @@ class TemplateEntity(AbstractTemplateEntity):
         on_update:
             Called to store the template result rather than storing it
             the supplied attribute. Passed the result of the validator.
-        on_cancel:
-            Called when the template entity renders unknown or unavailable.
         """
-        self.add_template(option, attribute, validator, on_update, on_cancel, True)
+        self.add_template(option, attribute, validator, on_update, True)
 
     def add_template_attribute(
         self,

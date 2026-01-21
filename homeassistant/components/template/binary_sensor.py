@@ -192,7 +192,6 @@ class AbstractTemplateBinarySensor(
             CONF_STATE,
             "_attr_is_on",
             on_update=self._update_state,
-            on_cancel=self._cancel_delays,
         )
         self._delay_on = None
         try:
@@ -210,10 +209,6 @@ class AbstractTemplateBinarySensor(
     @abstractmethod
     def _update_state(self, result: Any) -> None:
         """Update the state."""
-
-    @callback
-    def _cancel_delays(self) -> None:
-        """Cancel the state update."""
 
 
 class StateBinarySensorEntity(TemplateEntity, AbstractTemplateBinarySensor):
@@ -411,6 +406,12 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
 
         auto_off_time = dt_util.utcnow() + auto_off_delay
         self._set_auto_off(auto_off_time)
+
+    def _render_availability_template(self, variables):
+        available = super()._render_availability_template(variables)
+        if not available:
+            self._cancel_delays()
+        return available
 
     def _set_auto_off(self, auto_off_time: datetime) -> None:
         @callback
