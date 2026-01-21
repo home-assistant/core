@@ -59,11 +59,14 @@ from homeassistant.util.unit_conversion import (
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
+    NitrogenDioxideConcentrationConverter,
+    OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
+    SulphurDioxideConcentrationConverter,
     TemperatureConverter,
     TemperatureDeltaConverter,
     UnitlessRatioConverter,
@@ -224,7 +227,10 @@ _PRIMARY_UNIT_CONVERTERS: list[type[BaseUnitConverter]] = [
 
 _SECONDARY_UNIT_CONVERTERS: list[type[BaseUnitConverter]] = [
     CarbonMonoxideConcentrationConverter,
+    NitrogenDioxideConcentrationConverter,
     TemperatureDeltaConverter,
+    OzoneConcentrationConverter,
+    SulphurDioxideConcentrationConverter,
 ]
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
