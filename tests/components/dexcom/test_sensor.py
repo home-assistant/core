@@ -1,55 +1,106 @@
-"""The sensor tests for the griddy platform."""
+"""The sensor tests for the Dexcom platform."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
-from pydexcom import SessionError
+from pydexcom import GlucoseReading
+from pydexcom.errors import (
+    AccountError,
+    AccountErrorEnum,
+    ServerError,
+    ServerErrorEnum,
+    SessionError,
+    SessionErrorEnum,
+)
+import pytest
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.components.dexcom.sensor import TRENDS
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import async_update_entity
 
-from . import GLUCOSE_READING, init_integration
+from .conftest import TEST_USERNAME, init_integration
+
+from tests.common import MockConfigEntry
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+async def test_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_dexcom: MagicMock,
+    mock_glucose_reading: GlucoseReading,
+) -> None:
     """Test we get sensor data."""
-    await init_integration(hass)
+    mock_dexcom.get_current_glucose_reading.return_value = mock_glucose_reading
 
-    test_username_glucose_value = hass.states.get("sensor.test_username_glucose_value")
-    assert test_username_glucose_value.state == str(GLUCOSE_READING.value)
-    test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
-    assert test_username_glucose_trend.state == GLUCOSE_READING.trend_description
+    await init_integration(hass, mock_config_entry)
 
+    glucose_value = hass.states.get(f"sensor.{TEST_USERNAME}_glucose_value")
+    assert glucose_value is not None
+    assert glucose_value.state == str(mock_glucose_reading.mg_dl)
 
-async def test_sensors_unknown(hass: HomeAssistant) -> None:
-    """Test we handle sensor state unknown."""
-    await init_integration(hass)
-
-    with patch(
-        "homeassistant.components.dexcom.Dexcom.get_current_glucose_reading",
-        return_value=None,
-    ):
-        await async_update_entity(hass, "sensor.test_username_glucose_value")
-        await async_update_entity(hass, "sensor.test_username_glucose_trend")
-
-    test_username_glucose_value = hass.states.get("sensor.test_username_glucose_value")
-    assert test_username_glucose_value.state == STATE_UNKNOWN
-    test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
-    assert test_username_glucose_trend.state == STATE_UNKNOWN
+    glucose_trend = hass.states.get(f"sensor.{TEST_USERNAME}_glucose_trend")
+    assert glucose_trend is not None
+    assert glucose_trend.state == TRENDS.get(mock_glucose_reading.trend)
 
 
-async def test_sensors_update_failed(hass: HomeAssistant) -> None:
-    """Test we handle sensor update failed."""
-    await init_integration(hass)
+async def test_sensor_none(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_dexcom: MagicMock,
+) -> None:
+    """Test we get sensor data."""
+    mock_dexcom.get_current_glucose_reading.return_value = None
 
-    with patch(
-        "homeassistant.components.dexcom.Dexcom.get_current_glucose_reading",
-        side_effect=SessionError,
-    ):
-        await async_update_entity(hass, "sensor.test_username_glucose_value")
-        await async_update_entity(hass, "sensor.test_username_glucose_trend")
+    await init_integration(hass, mock_config_entry)
 
-    test_username_glucose_value = hass.states.get("sensor.test_username_glucose_value")
-    assert test_username_glucose_value.state == STATE_UNAVAILABLE
-    test_username_glucose_trend = hass.states.get("sensor.test_username_glucose_trend")
-    assert test_username_glucose_trend.state == STATE_UNAVAILABLE
+    glucose_value = hass.states.get(f"sensor.{TEST_USERNAME}_glucose_value")
+    assert glucose_value is not None
+    assert glucose_value.state == STATE_UNKNOWN
+
+    glucose_trend = hass.states.get(f"sensor.{TEST_USERNAME}_glucose_trend")
+    assert glucose_trend is not None
+    assert glucose_trend.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        SessionError(SessionErrorEnum.INVALID),
+        ServerError(ServerErrorEnum.UNEXPECTED),
+        Exception,
+    ],
+)
+async def test_sensor_update_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_dexcom: MagicMock,
+    error: Exception,
+) -> None:
+    """Test we get sensor data."""
+    mock_dexcom.get_current_glucose_reading.side_effect = error
+
+    await init_integration(hass, mock_config_entry)
+
+    glucose_value = hass.states.get(f"sensor.{TEST_USERNAME}_glucose_value")
+    assert glucose_value is None
+
+    glucose_trend = hass.states.get(f"sensor.{TEST_USERNAME}_glucose_trend")
+    assert glucose_trend is None
+
+
+async def test_sensor_auth_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_dexcom: MagicMock,
+) -> None:
+    """Test we get sensor data."""
+    mock_dexcom.get_current_glucose_reading.side_effect = AccountError(
+        AccountErrorEnum.FAILED_AUTHENTICATION
+    )
+
+    await init_integration(hass, mock_config_entry)
+
+    glucose_value = hass.states.get(f"sensor.{TEST_USERNAME}_glucose_value")
+    assert glucose_value is None
+
+    glucose_trend = hass.states.get(f"sensor.{TEST_USERNAME}_glucose_trend")
+    assert glucose_trend is None
