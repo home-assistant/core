@@ -1390,7 +1390,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "freebox",
     "freedns",
     "freedompro",
-    "fritz",
     "fritzbox",
     "fritzbox_callmonitor",
     "frontier_silicon",

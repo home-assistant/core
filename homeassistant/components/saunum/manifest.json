@@ -7,6 +7,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pysaunum"],
-  "quality_scale": "gold",
-  "requirements": ["pysaunum==0.2.0"]
+  "quality_scale": "platinum",
+  "requirements": ["pysaunum==0.3.0"]
 }
