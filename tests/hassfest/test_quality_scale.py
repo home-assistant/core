@@ -29,11 +29,29 @@ def test_validate_no_quality_scale_key(config: Config, mock_core_integration) ->
     assert integration.quality_scale is None
 
     # Mock that it's not in exemption list
-    with patch("script.hassfest.quality_scale.INTEGRATIONS_WITHOUT_SCALE", set()):
+    with patch("script.hassfest.quality_scale.INTEGRATIONS_WITHOUT_SCALE", []):
         quality_scale.validate_iqs_file(config, integration)
 
-    assert len(integration.errors) == 1
+    assert len(integration.errors) == 1, integration.errors
     assert "Quality scale definition not found" in integration.errors[0].error
+
+
+def test_validate_no_quality_scale_key_exempt(
+    config: Config, mock_core_integration
+) -> None:
+    """Test integration with no quality_scale key in manifest."""
+    integration = get_integration("test_integration", config)
+    # Ensure quality_scale is None (default in get_integration is just basic manifest)
+    assert integration.quality_scale is None
+
+    # Mock that it IS in exemption list
+    with patch(
+        "script.hassfest.quality_scale.INTEGRATIONS_WITHOUT_SCALE",
+        ["test_integration"],
+    ):
+        quality_scale.validate_iqs_file(config, integration)
+
+    assert len(integration.errors) == 0, integration.errors
 
 
 def test_validate_quality_scale_internal_no_file(
@@ -48,7 +66,7 @@ def test_validate_quality_scale_internal_no_file(
         quality_scale.validate_iqs_file(config, integration)
 
     # Internal integrations don't require a quality scale file, so this should pass.
-    assert len(integration.errors) == 0
+    assert len(integration.errors) == 0, integration.errors
 
 
 def test_validate_quality_scale_bronze_no_file(
@@ -61,8 +79,24 @@ def test_validate_quality_scale_bronze_no_file(
     with patch("pathlib.Path.is_file", return_value=False):
         quality_scale.validate_iqs_file(config, integration)
 
-    assert len(integration.errors) == 1
+    assert len(integration.errors) == 1, integration.errors
     assert "Quality scale definition YAML not found" in integration.errors[0].error
+
+
+def test_validate_quality_scale_bronze_no_file_exempt(
+    config: Config, mock_core_integration
+) -> None:
+    """Test bronze integration with no quality_scale file and an exemption."""
+    integration = get_integration("test_integration", config)
+    integration._manifest["quality_scale"] = "bronze"
+
+    with patch("pathlib.Path.is_file", return_value=False) and patch(
+        "script.hassfest.quality_scale.INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE",
+        ["test_integration"],
+    ):
+        quality_scale.validate_iqs_file(config, integration)
+
+    assert len(integration.errors) == 0, integration.errors
 
 
 def test_validate_quality_scale_file_present(
@@ -86,4 +120,4 @@ def test_validate_quality_scale_file_present(
 
     # Check that we didn't get the "Quality scale definition YAML not found" error
     for error in integration.errors:
-        assert "Quality scale definition YAML not found" not in error.error
+        assert "Quality scale definition YAML not found" not in error.error, error

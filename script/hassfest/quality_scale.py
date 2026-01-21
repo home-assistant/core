@@ -2237,7 +2237,10 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     iqs_file = integration.path / "quality_scale.yaml"
     has_file = iqs_file.is_file()
     if not has_file:
-        if declared_quality_scale:
+        if (
+            declared_quality_scale
+            and integration.domain not in INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE
+        ):
             integration.add_error(
                 "quality_scale",
                 "Quality scale definition YAML not found. Integrations that set a manifest quality scale must have a quality scale definition.",
