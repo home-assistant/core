@@ -1,5 +1,7 @@
 """Config flow to configure the USGS Earthquakes Feed integration."""
 
+from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -17,7 +19,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -34,12 +36,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _get_data_schema(
-    hass, user_input: dict[str, Any] | None = None
+    hass: HomeAssistant, user_input: dict[str, Any] | None = None
 ) -> vol.Schema:
     """Return the data schema for config flow."""
     if user_input is None:
         user_input = {}
-    
+
     return vol.Schema(
         {
             vol.Optional(
@@ -55,12 +57,14 @@ def _get_data_schema(
                 default=user_input.get(CONF_FEED_TYPE, "past_day_all_earthquakes"),
             ): vol.In(VALID_FEED_TYPES),
             vol.Optional(
-                CONF_RADIUS, 
-                default=user_input.get(CONF_RADIUS, DEFAULT_RADIUS)
+                CONF_RADIUS,
+                default=user_input.get(CONF_RADIUS, DEFAULT_RADIUS),
             ): cv.positive_float,
             vol.Optional(
                 CONF_MINIMUM_MAGNITUDE,
-                default=user_input.get(CONF_MINIMUM_MAGNITUDE, DEFAULT_MINIMUM_MAGNITUDE),
+                default=user_input.get(
+                    CONF_MINIMUM_MAGNITUDE, DEFAULT_MINIMUM_MAGNITUDE
+                ),
             ): cv.positive_float,
         }
     )
@@ -81,15 +85,15 @@ class UsgsEarthquakesFeedFlowHandler(ConfigFlow, domain=DOMAIN):
         return UsgsEarthquakesFeedOptionsFlowHandler(config_entry)
 
     async def _show_form(
-        self, 
+        self,
         errors: dict[str, str] | None = None,
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Show the form to the user."""
         return self.async_show_form(
-            step_id="user", 
-            data_schema=_get_data_schema(self.hass, user_input), 
-            errors=errors or {}
+            step_id="user",
+            data_schema=_get_data_schema(self.hass, user_input),
+            errors=errors or {},
         )
 
     async def async_step_import(
@@ -118,7 +122,7 @@ class UsgsEarthquakesFeedFlowHandler(ConfigFlow, domain=DOMAIN):
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         user_input[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()
 
-        title = f"{user_input[CONF_FEED_TYPE]}"
+        title = user_input[CONF_FEED_TYPE]
 
         return self.async_create_entry(title=title, data=user_input)
 
@@ -126,9 +130,7 @@ class UsgsEarthquakesFeedFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
-        entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry
 
         if user_input is not None:
@@ -141,7 +143,7 @@ class UsgsEarthquakesFeedFlowHandler(ConfigFlow, domain=DOMAIN):
                 f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}, "
                 f"{user_input[CONF_FEED_TYPE]}"
             )
-            
+
             # Only check for duplicate if the unique ID changed
             if new_identifier != entry.unique_id:
                 await self.async_set_unique_id(new_identifier)
@@ -180,10 +182,10 @@ class UsgsEarthquakesFeedOptionsFlowHandler(OptionsFlow):
                 self.config_entry,
                 data={**self.config_entry.data, **user_input},
             )
-            
+
             # Reload the entry
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            
+
             return self.async_create_entry(title="", data={})
 
         return self.async_show_form(

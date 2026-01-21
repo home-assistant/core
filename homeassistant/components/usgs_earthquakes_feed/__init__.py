@@ -135,7 +135,7 @@ class UsgsEarthquakesFeedEntityManager:
         self._config_entry_id = config_entry.entry_id
         self._scan_interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
         self._track_time_remove_callback = None
-        self.listeners: list[callback] = []
+        self.listeners: list = []
 
     async def async_init(self) -> None:
         """Schedule initial and regular updates based on configured time interval."""
