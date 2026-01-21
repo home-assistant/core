@@ -512,7 +512,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     async def async_turn_off(self):
         """Turn the media player off."""
         _LOGGER.debug("Turning off receiver")
-        self._start_command_timeout("POWER_OFF")
         await self.send_raw_command(TonewinnerCommands.POWER_OFF)
         # Set optimistic state - command sent successfully, receiver should be turning off
         self._attr_state = MediaPlayerState.OFF
