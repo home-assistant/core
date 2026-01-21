@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from velbusaio.channels import ButtonCounter, LightSensor, SensorNumber, Temperature
+from velbusaio.channels import ButtonCounter, SensorNumber, Temperature
+from velbusaio.properties import LightValue
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,7 +22,7 @@ from .entity import VelbusEntity
 
 PARALLEL_UPDATES = 0
 
-type VelbusSensorChannel = ButtonCounter | Temperature | LightSensor | SensorNumber
+type VelbusSensorChannel = ButtonCounter | Temperature | LightValue | SensorNumber
 
 
 @dataclass(frozen=True, kw_only=True)
