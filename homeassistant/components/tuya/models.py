@@ -259,15 +259,6 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
         ):
             return True
 
-        # Skip duplicate updates with same timestamp
-        if current_timestamp == self._last_dp_timestamp:
-            _LOGGER.debug(
-                "Skipping duplicate update for %s (same timestamp: %s)",
-                self.dpcode,
-                current_timestamp,
-            )
-            return True
-
         delta = float(raw_value)
         self._accumulated_value += delta
         _LOGGER.debug(
