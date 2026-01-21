@@ -187,8 +187,8 @@ async def test_coordinator_update_unexpected_error(
     mock_autoskope_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test coordinator update with unexpected error."""
-    mock_autoskope_api.get_vehicles.side_effect = Exception("Unexpected error")
+    """Test coordinator update with CannotConnect error."""
+    mock_autoskope_api.get_vehicles.side_effect = CannotConnect("Connection error")
 
     coordinator = AutoskopeDataUpdateCoordinator(
         hass, api=mock_autoskope_api, entry=mock_config_entry

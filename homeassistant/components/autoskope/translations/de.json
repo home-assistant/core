@@ -25,6 +25,30 @@
       "already_configured": "Gerät ist bereits konfiguriert"
     }
   },
+  "entity": {
+    "sensor": {
+      "battery_voltage": {
+        "name": "Batteriespannung"
+      },
+      "external_voltage": {
+        "name": "Externe Spannung"
+      },
+      "speed": {
+        "name": "Geschwindigkeit"
+      },
+      "gps_quality": {
+        "name": "GPS-Qualität"
+      },
+      "gps_accuracy": {
+        "name": "GPS-Genauigkeit"
+      }
+    },
+    "binary_sensor": {
+      "park_mode": {
+        "name": "Bewegung"
+      }
+    }
+  },
   "issues": {
     "cannot_connect": {
       "title": "Verbindung zu Autoskope fehlgeschlagen",

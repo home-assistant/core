@@ -15,15 +15,16 @@ async def test_device_tracker_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vehicles_list,
+    mock_autoskope_api,
 ) -> None:
     """Test device tracker setup."""
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch("autoskope_client.api.AutoskopeApi.authenticate", return_value=True),
-        patch("autoskope_client.api.AutoskopeApi.get_vehicles") as mock_get_vehicles,
+    with patch(
+        "homeassistant.components.autoskope.AutoskopeApi",
+        return_value=mock_autoskope_api,
     ):
-        mock_get_vehicles.return_value = mock_vehicles_list
+        mock_autoskope_api.get_vehicles.return_value = mock_vehicles_list
 
         # Setup entry
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -35,25 +36,27 @@ async def test_device_tracker_setup(
             entity_registry, mock_config_entry.entry_id
         )
 
-        assert len(entries) == 1
-        entity = entries[0]
-        assert entity.domain == DEVICE_TRACKER_DOMAIN
-        assert entity.unique_id == f"autoskope_{mock_vehicles_list[0].id}"
+        # Now we should have multiple entities (device_tracker, sensors, binary_sensor)
+        tracker_entries = [e for e in entries if e.domain == DEVICE_TRACKER_DOMAIN]
+        assert len(tracker_entries) == 1
+        entity = tracker_entries[0]
+        assert entity.unique_id == f"{mock_vehicles_list[0].id}"
 
 
-async def test_device_tracker_attributes(
+async def test_device_tracker_location(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vehicles_list,
+    mock_autoskope_api,
 ) -> None:
-    """Test device tracker attributes."""
+    """Test device tracker location attributes."""
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch("autoskope_client.api.AutoskopeApi.authenticate", return_value=True),
-        patch("autoskope_client.api.AutoskopeApi.get_vehicles") as mock_get_vehicles,
+    with patch(
+        "homeassistant.components.autoskope.AutoskopeApi",
+        return_value=mock_autoskope_api,
     ):
-        mock_get_vehicles.return_value = mock_vehicles_list
+        mock_autoskope_api.get_vehicles.return_value = mock_vehicles_list
 
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -62,24 +65,23 @@ async def test_device_tracker_attributes(
         state = hass.states.get("device_tracker.test_vehicle")
         assert state is not None
 
-        # Check vehicle-specific attributes
-        assert state.attributes["battery_voltage"] == vehicle.battery_voltage
-        assert state.attributes["external_voltage"] == vehicle.external_voltage
-        assert state.attributes["gps_quality"] == vehicle.gps_quality
-        assert state.attributes["imei"] == vehicle.imei
-        assert "activity" in state.attributes
-        assert "gps_accuracy" in state.attributes
-
-        # Check coordinates
+        # Check coordinates - these are still device_tracker attributes
         if vehicle.position:
             assert state.attributes["latitude"] == vehicle.position.latitude
             assert state.attributes["longitude"] == vehicle.position.longitude
-            assert state.attributes["speed"] == vehicle.position.speed
+            assert "gps_accuracy" in state.attributes
+
+        # Check that extra attributes are NOT present (they are separate sensors now)
+        assert "battery_voltage" not in state.attributes
+        assert "external_voltage" not in state.attributes
+        assert "speed" not in state.attributes
+        assert "imei" not in state.attributes
 
 
 async def test_device_tracker_moving_vehicle(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_autoskope_api,
 ) -> None:
     """Test device tracker with moving vehicle."""
     # Create moving vehicle data
@@ -104,11 +106,11 @@ async def test_device_tracker_moving_vehicle(
 
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch("autoskope_client.api.AutoskopeApi.authenticate", return_value=True),
-        patch("autoskope_client.api.AutoskopeApi.get_vehicles") as mock_get_vehicles,
+    with patch(
+        "homeassistant.components.autoskope.AutoskopeApi",
+        return_value=mock_autoskope_api,
     ):
-        mock_get_vehicles.return_value = [moving_vehicle]
+        mock_autoskope_api.get_vehicles.return_value = [moving_vehicle]
 
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -116,14 +118,19 @@ async def test_device_tracker_moving_vehicle(
         state = hass.states.get("device_tracker.test_vehicle")
         assert state is not None
 
-        # Check moving vehicle attributes
-        assert state.attributes["speed"] == 50
-        assert state.attributes["activity"] == "moving"
+        # Check icon for moving vehicle
+        assert state.attributes["icon"] == "mdi:car-arrow-right"
+
+        # Speed is now a separate sensor
+        speed_state = hass.states.get("sensor.test_vehicle_speed")
+        assert speed_state is not None
+        assert speed_state.state == "50"
 
 
 async def test_device_tracker_parked_vehicle(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_autoskope_api,
 ) -> None:
     """Test device tracker with parked vehicle."""
     # Create parked vehicle data
@@ -148,11 +155,11 @@ async def test_device_tracker_parked_vehicle(
 
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch("autoskope_client.api.AutoskopeApi.authenticate", return_value=True),
-        patch("autoskope_client.api.AutoskopeApi.get_vehicles") as mock_get_vehicles,
+    with patch(
+        "homeassistant.components.autoskope.AutoskopeApi",
+        return_value=mock_autoskope_api,
     ):
-        mock_get_vehicles.return_value = [parked_vehicle]
+        mock_autoskope_api.get_vehicles.return_value = [parked_vehicle]
 
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -160,15 +167,23 @@ async def test_device_tracker_parked_vehicle(
         state = hass.states.get("device_tracker.test_vehicle")
         assert state is not None
 
-        # Check parked vehicle attributes
-        assert state.attributes["speed"] == 0
-        assert state.attributes["park_mode"] is True
-        assert state.attributes["activity"] == "parked"
+        # Check icon for parked vehicle
+        assert state.attributes["icon"] == "mdi:car-brake-parking"
+
+        # Speed and park_mode are now separate sensor/binary_sensor entities
+        speed_state = hass.states.get("sensor.test_vehicle_speed")
+        assert speed_state is not None
+        assert speed_state.state == "0"
+
+        motion_state = hass.states.get("binary_sensor.test_vehicle_motion")
+        assert motion_state is not None
+        assert motion_state.state == "off"  # off = parked (no motion)
 
 
 async def test_device_tracker_no_position(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_autoskope_api,
 ) -> None:
     """Test device tracker with vehicle that has no position data."""
     vehicle_no_position = Vehicle(
@@ -184,11 +199,11 @@ async def test_device_tracker_no_position(
 
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch("autoskope_client.api.AutoskopeApi.authenticate", return_value=True),
-        patch("autoskope_client.api.AutoskopeApi.get_vehicles") as mock_get_vehicles,
+    with patch(
+        "homeassistant.components.autoskope.AutoskopeApi",
+        return_value=mock_autoskope_api,
     ):
-        mock_get_vehicles.return_value = [vehicle_no_position]
+        mock_autoskope_api.get_vehicles.return_value = [vehicle_no_position]
 
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -199,22 +214,24 @@ async def test_device_tracker_no_position(
         # Check that position attributes are None or not present
         assert state.attributes.get("latitude") is None
         assert state.attributes.get("longitude") is None
-        assert state.attributes["activity"] == "unknown"
+        # Check icon when no position data
+        assert state.attributes["icon"] == "mdi:car-clock"
 
 
 async def test_device_tracker_gps_accuracy(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vehicles_list,
+    mock_autoskope_api,
 ) -> None:
     """Test GPS accuracy calculation."""
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch("autoskope_client.api.AutoskopeApi.authenticate", return_value=True),
-        patch("autoskope_client.api.AutoskopeApi.get_vehicles") as mock_get_vehicles,
+    with patch(
+        "homeassistant.components.autoskope.AutoskopeApi",
+        return_value=mock_autoskope_api,
     ):
-        mock_get_vehicles.return_value = mock_vehicles_list
+        mock_autoskope_api.get_vehicles.return_value = mock_vehicles_list
 
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

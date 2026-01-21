@@ -55,7 +55,3 @@ class AutoskopeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Vehicle]]):
 
         except CannotConnect as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-        except Exception as err:
-            raise UpdateFailed(
-                f"Unexpected error communicating with API: {err}"
-            ) from err

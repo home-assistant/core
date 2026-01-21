@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-from typing import Any
-
 from autoskope_client.constants import MANUFACTURER
 from autoskope_client.models import Vehicle
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
@@ -15,8 +12,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import AutoskopeConfigEntry, AutoskopeDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -59,7 +54,7 @@ class AutoskopeDeviceTracker(
     """Representation of an Autoskope tracked device."""
 
     _attr_has_entity_name = True
-    _attr_name = None
+    _attr_name: str | None = None
 
     def __init__(
         self, coordinator: AutoskopeDataUpdateCoordinator, vehicle_id: str
@@ -67,31 +62,25 @@ class AutoskopeDeviceTracker(
         """Initialize the TrackerEntity."""
         super().__init__(coordinator)
         self._vehicle_id = vehicle_id
-        # Use vehicle ID as unique identifier for state persistence
-        self._attr_unique_id = f"{DOMAIN}_{vehicle_id}"
+        self._attr_unique_id = vehicle_id
 
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return the device info."""
-        vehicle_data = (
-            self.coordinator.data.get(self._vehicle_id)
-            if self.coordinator.data
-            else None
-        )
-
+        # Set device info in constructor
+        vehicle_data = coordinator.data.get(vehicle_id) if coordinator.data else None
         if vehicle_data:
-            return DeviceInfo(
+            device_info = DeviceInfo(
                 identifiers={(DOMAIN, str(vehicle_data.id))},
                 name=vehicle_data.name,
                 manufacturer=MANUFACTURER,
                 model=vehicle_data.model,
-                sw_version=vehicle_data.imei,
+                serial_number=vehicle_data.imei,  # IMEI is the device serial number
             )
-        return DeviceInfo(
-            identifiers={(DOMAIN, str(self._vehicle_id))},
-            name=f"Autoskope Vehicle {self._vehicle_id}",
-            manufacturer=MANUFACTURER,
-        )
+        else:
+            device_info = DeviceInfo(
+                identifiers={(DOMAIN, str(vehicle_id))},
+                name=f"Autoskope Vehicle {vehicle_id}",
+                manufacturer=MANUFACTURER,
+            )
+        self._attr_device_info = device_info  # type: ignore[assignment]
 
     @property
     def available(self) -> bool:
@@ -129,14 +118,14 @@ class AutoskopeDeviceTracker(
         return SourceType.GPS
 
     @property
-    def gps_accuracy(self) -> int | None:
-        """Return the GPS accuracy of the device in meters."""
-        if (vehicle := self._vehicle_data) and vehicle.gps_quality is not None:
+    def location_accuracy(self) -> int:
+        """Return the location accuracy of the device in meters."""
+        if (vehicle := self._vehicle_data) and vehicle.gps_quality:
             if vehicle.gps_quality > 0:
                 # HDOP to estimated accuracy in meters
                 # HDOP of 1-2 = good (5-10m), 2-5 = moderate (10-25m), >5 = poor (>25m)
                 return max(5, int(vehicle.gps_quality * 5.0))
-        return None
+        return 0
 
     @property
     def icon(self) -> str:
@@ -148,52 +137,3 @@ class AutoskopeDeviceTracker(
                 return "mdi:car-arrow-right"
             return "mdi:car"
         return "mdi:car-clock"
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return device specific state attributes."""
-        if not (vehicle := self._vehicle_data):
-            return {}
-
-        attrs: dict[str, Any] = {
-            "battery_voltage": vehicle.battery_voltage,
-            "external_voltage": vehicle.external_voltage,
-            "gps_quality": vehicle.gps_quality,
-            "imei": vehicle.imei,
-            "model": vehicle.model,
-            "gps_accuracy": self.gps_accuracy,
-        }
-
-        if vehicle.position:
-            attrs.update(
-                {
-                    "speed": vehicle.position.speed,
-                    "park_mode": vehicle.position.park_mode,
-                    "last_update": vehicle.position.timestamp,
-                    "activity": self._get_activity_status(vehicle),
-                }
-            )
-        else:
-            attrs.update(
-                {
-                    "speed": None,
-                    "park_mode": None,
-                    "last_update": None,
-                    "activity": "unknown",
-                }
-            )
-
-        return attrs
-
-    def _get_activity_status(self, vehicle: Vehicle) -> str:
-        """Determine the activity status of the vehicle."""
-        if not vehicle.position:
-            return "unknown"
-
-        if vehicle.position.park_mode:
-            return "parked"
-
-        if vehicle.position.speed > 5:  # Moving threshold: 5 km/h
-            return "moving"
-
-        return "idle"

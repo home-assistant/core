@@ -36,7 +36,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             username=data[CONF_USERNAME],
             password=data[CONF_PASSWORD],
         ):
-            # If we get here, connection and authentication succeeded
             pass
 
     except InvalidAuth as err:

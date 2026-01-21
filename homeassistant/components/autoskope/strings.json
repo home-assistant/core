@@ -1,42 +1,66 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Connect to Autoskope",
-        "description": "Enter your Autoskope credentials.",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "host": "Host (optional)"
-        },
-        "data_description": {
-          "username": "The username for your Autoskope account",
-          "password": "The password for your Autoskope account.",
-          "host": "The hostname or IP address of your Autoskope API endpoint. Defaults to the standard Autoskope cloud service if left blank."
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host (optional)",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Autoskope API endpoint. Defaults to the standard Autoskope cloud service if left blank.",
+          "password": "The password for your Autoskope account.",
+          "username": "The username for your Autoskope account"
+        },
+        "description": "Enter your Autoskope credentials.",
+        "title": "Connect to Autoskope"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "park_mode": {
+        "name": "Motion"
+      }
+    },
+    "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "external_voltage": {
+        "name": "External voltage"
+      },
+      "gps_accuracy": {
+        "name": "GPS accuracy"
+      },
+      "gps_quality": {
+        "name": "GPS quality"
+      },
+      "speed": {
+        "name": "Speed"
+      }
     }
   },
   "issues": {
     "cannot_connect": {
-      "title": "Failed to connect to Autoskope",
-      "description": "Home Assistant could not connect to the Autoskope API at {host}. Please check the connection details and ensure the API endpoint is reachable.\n\nError: {error}"
+      "description": "Home Assistant could not connect to the Autoskope API at {host}. Please check the connection details and ensure the API endpoint is reachable.\n\nError: {error}",
+      "title": "Failed to connect to Autoskope"
     },
     "invalid_auth": {
-      "title": "Invalid Autoskope authentication",
-      "description": "Authentication with Autoskope failed for user {username}. Please re-authenticate the integration with the correct password."
+      "description": "Authentication with Autoskope failed for user {username}. Please re-authenticate the integration with the correct password.",
+      "title": "Invalid Autoskope authentication"
     },
     "low_battery": {
-      "title": "Low vehicle battery ({vehicle_name})",
-      "description": "The battery voltage for vehicle {vehicle_name} ({vehicle_id}) is low ({value}V). Consider checking or replacing the battery."
+      "description": "The battery voltage for vehicle {vehicle_name} ({vehicle_id}) is low ({value}V). Consider checking or replacing the battery.",
+      "title": "Low vehicle battery ({vehicle_name})"
     }
   }
 }

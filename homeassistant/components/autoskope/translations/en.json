@@ -25,6 +25,30 @@
             }
         }
     },
+    "entity": {
+        "binary_sensor": {
+            "park_mode": {
+                "name": "Motion"
+            }
+        },
+        "sensor": {
+            "battery_voltage": {
+                "name": "Battery voltage"
+            },
+            "external_voltage": {
+                "name": "External voltage"
+            },
+            "gps_accuracy": {
+                "name": "GPS accuracy"
+            },
+            "gps_quality": {
+                "name": "GPS quality"
+            },
+            "speed": {
+                "name": "Speed"
+            }
+        }
+    },
     "issues": {
         "cannot_connect": {
             "description": "Home Assistant could not connect to the Autoskope API at {host}. Please check the connection details and ensure the API endpoint is reachable.\n\nError: {error}",

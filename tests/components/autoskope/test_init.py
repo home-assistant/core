@@ -33,11 +33,12 @@ async def test_setup_entry_success(
         assert mock_config_entry.state is ConfigEntryState.LOADED
 
         # Verify API was created with correct parameters
-        mock_api_class.assert_called_once_with(
-            host=mock_config_entry.data[CONF_HOST],
-            username=mock_config_entry.data[CONF_USERNAME],
-            password=mock_config_entry.data[CONF_PASSWORD],
-        )
+        assert mock_api_class.call_count == 1
+        call_args = mock_api_class.call_args
+        assert call_args[1]["host"] == mock_config_entry.data[CONF_HOST]
+        assert call_args[1]["username"] == mock_config_entry.data[CONF_USERNAME]
+        assert call_args[1]["password"] == mock_config_entry.data[CONF_PASSWORD]
+        assert "session" in call_args[1]
 
         # Verify connect was called
         mock_api_instance.connect.assert_called_once()
@@ -80,9 +81,6 @@ async def test_setup_entry_connection_error(
         assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-# test_setup_entry_unexpected_error removed - bare exceptions no longer caught in async_setup_entry
-
-
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -112,5 +110,9 @@ async def test_unload_entry(
 
 async def test_platforms_defined() -> None:
     """Test that platforms are properly defined."""
-    assert PLATFORMS == [Platform.DEVICE_TRACKER]
-    assert len(PLATFORMS) == 1
+    assert PLATFORMS == [
+        Platform.BINARY_SENSOR,
+        Platform.DEVICE_TRACKER,
+        Platform.SENSOR,
+    ]
+    assert len(PLATFORMS) == 3
