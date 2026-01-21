@@ -36,7 +36,6 @@ async def test_device_tracker_setup(
             entity_registry, mock_config_entry.entry_id
         )
 
-        # Now we should have multiple entities (device_tracker, sensors, binary_sensor)
         tracker_entries = [e for e in entries if e.domain == DEVICE_TRACKER_DOMAIN]
         assert len(tracker_entries) == 1
         entity = tracker_entries[0]
@@ -121,10 +120,10 @@ async def test_device_tracker_moving_vehicle(
         # Check icon for moving vehicle
         assert state.attributes["icon"] == "mdi:car-arrow-right"
 
-        # Speed is now a separate sensor
-        speed_state = hass.states.get("sensor.test_vehicle_speed")
-        assert speed_state is not None
-        assert speed_state.state == "50"
+        # Speed sensor is removed in minimal version
+        # Just verify device tracker works
+        assert state.attributes["latitude"] == 50.1109221
+        assert state.attributes["longitude"] == 8.6821267
 
 
 async def test_device_tracker_parked_vehicle(
@@ -170,14 +169,10 @@ async def test_device_tracker_parked_vehicle(
         # Check icon for parked vehicle
         assert state.attributes["icon"] == "mdi:car-brake-parking"
 
-        # Speed and park_mode are now separate sensor/binary_sensor entities
-        speed_state = hass.states.get("sensor.test_vehicle_speed")
-        assert speed_state is not None
-        assert speed_state.state == "0"
-
-        motion_state = hass.states.get("binary_sensor.test_vehicle_motion")
-        assert motion_state is not None
-        assert motion_state.state == "off"  # off = parked (no motion)
+        # Sensors removed in minimal version
+        # Just verify device tracker works with parked vehicle
+        assert state.attributes["latitude"] == 50.1109221
+        assert state.attributes["longitude"] == 8.6821267
 
 
 async def test_device_tracker_no_position(

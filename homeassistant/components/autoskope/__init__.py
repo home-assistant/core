@@ -18,11 +18,7 @@ from .coordinator import AutoskopeConfigEntry, AutoskopeDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
-    Platform.DEVICE_TRACKER,
-    Platform.SENSOR,
-]
+PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AutoskopeConfigEntry) -> bool:

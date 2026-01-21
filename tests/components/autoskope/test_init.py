@@ -111,8 +111,6 @@ async def test_unload_entry(
 async def test_platforms_defined() -> None:
     """Test that platforms are properly defined."""
     assert PLATFORMS == [
-        Platform.BINARY_SENSOR,
         Platform.DEVICE_TRACKER,
-        Platform.SENSOR,
     ]
-    assert len(PLATFORMS) == 3
+    assert len(PLATFORMS) == 1
