@@ -33,7 +33,7 @@ async def async_setup_addon_panel(hass: HomeAssistant, hassio: HassIO) -> None:
         # _register_panel never suspends and is only
         # a coroutine because it would be a breaking change
         # to make it a normal function
-        await _register_panel(hass, addon, data)
+        _register_panel(hass, addon, data)
 
 
 class HassIOAddonPanel(HomeAssistantView):
@@ -58,7 +58,7 @@ class HassIOAddonPanel(HomeAssistantView):
         data = panels[addon]
 
         # Register panel
-        await _register_panel(self.hass, addon, data)
+        _register_panel(self.hass, addon, data)
         return web.Response()
 
     async def delete(self, request: web.Request, addon: str) -> web.Response:
