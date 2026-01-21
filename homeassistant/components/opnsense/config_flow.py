@@ -157,9 +157,6 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
         self, import_data: (dict[str, Any])
     ) -> ConfigFlowResult:
         """Import a Yaml config."""
-        # Check if already configured. Only one instance allowed for now.
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
         self._async_abort_entries_match({CONF_URL: import_data[CONF_URL]})
 
         # Test connection
