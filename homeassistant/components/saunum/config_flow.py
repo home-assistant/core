@@ -51,7 +51,7 @@ async def validate_input(data: dict[str, Any]) -> None:
         # Try to read data to verify communication
         await client.async_get_data()
     finally:
-        client.close()
+        await client.async_close()
 
 
 class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):

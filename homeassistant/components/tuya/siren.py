@@ -110,10 +110,12 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
     async def _handle_state_update(
         self,
         updated_status_properties: list[str] | None,
-        dp_timestamps: dict | None = None,
+        dp_timestamps: dict[str, int] | None,
     ) -> None:
         """Handle state update, only if this entity's dpcode was actually updated."""
-        if self._dpcode_wrapper.skip_update(self.device, updated_status_properties):
+        if self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        ):
             return
         self.async_write_ha_state()
 

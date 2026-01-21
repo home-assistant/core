@@ -56,6 +56,7 @@ from homeassistant.util.unit_conversion import (
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
+    NitrogenDioxideConcentrationConverter,
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
@@ -103,6 +104,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         EnergyDistanceConverter,
         VolumeConverter,
         VolumeFlowRateConverter,
+        NitrogenDioxideConcentrationConverter,
         SulphurDioxideConcentrationConverter,
     )
 }
@@ -159,6 +161,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         1000,
+    ),
+    NitrogenDioxideConcentrationConverter: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        1.912503,
     ),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
     PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
@@ -302,7 +309,32 @@ _CONVERTED_VALUE: dict[
         ),
     ],
     CarbonMonoxideConcentrationConverter: [
+        # PPB to other units
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            0.001,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            1.16441,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            0.00116441,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
         # PPM to other units
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            1000,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
         (
             1,
             CONCENTRATION_PARTS_PER_MILLION,
@@ -315,24 +347,17 @@ _CONVERTED_VALUE: dict[
             1164.41,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
-        # MILLIGRAMS_PER_CUBIC_METER to other units
-        (
-            120,
-            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-            103.05655,
-            CONCENTRATION_PARTS_PER_MILLION,
-        ),
-        (
-            120,
-            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-            120000,
-            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        ),
         # MICROGRAMS_PER_CUBIC_METER to other units
         (
             120000,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            103.05655,
+            103056.5,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+        (
+            120000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            103.0565,
             CONCENTRATION_PARTS_PER_MILLION,
         ),
         (
@@ -340,6 +365,39 @@ _CONVERTED_VALUE: dict[
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             120,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
+        # MILLIGRAMS_PER_CUBIC_METER to other units
+        (
+            120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            103056.5,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+        (
+            120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            103.0565,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            120000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+    ],
+    NitrogenDioxideConcentrationConverter: [
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            1.912503,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            62.744976,
+            CONCENTRATION_PARTS_PER_BILLION,
         ),
     ],
     ConductivityConverter: [
