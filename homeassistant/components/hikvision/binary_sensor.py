@@ -185,19 +185,30 @@ class HikvisionBinarySensor(BinarySensorEntity):
         # Build unique ID
         self._attr_unique_id = f"{self._data.device_id}_{sensor_type}_{channel}"
 
-        # Build entity name based on device type
-        if self._data.device_type == "NVR":
-            self._attr_name = f"{sensor_type} {channel}"
-        else:
-            self._attr_name = sensor_type
-
         # Device info for device registry
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._data.device_id)},
-            name=self._data.device_name,
-            manufacturer="Hikvision",
-            model=self._data.device_type,
-        )
+        if self._data.device_type == "NVR":
+            # NVR channels get their own device linked to the NVR via via_device
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, f"{self._data.device_id}_{channel}")},
+                via_device=(DOMAIN, self._data.device_id),
+                translation_key="nvr_channel",
+                translation_placeholders={
+                    "device_name": self._data.device_name,
+                    "channel_number": str(channel),
+                },
+                manufacturer="Hikvision",
+                model="NVR Channel",
+            )
+            self._attr_name = sensor_type
+        else:
+            # Single camera device
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._data.device_id)},
+                name=self._data.device_name,
+                manufacturer="Hikvision",
+                model=self._data.device_type,
+            )
+            self._attr_name = sensor_type
 
         # Set device class
         self._attr_device_class = DEVICE_CLASS_MAP.get(sensor_type)

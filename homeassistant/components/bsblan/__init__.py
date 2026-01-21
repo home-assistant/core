@@ -1,5 +1,6 @@
 """The BSB-Lan integration."""
 
+import asyncio
 import dataclasses
 
 from bsblan import (
@@ -77,12 +78,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
     bsblan = BSBLAN(config, session)
 
     try:
-        # Initialize the client first - this sets up internal caches and validates the connection
+        # Initialize the client first - this sets up internal caches and validates
+        # the connection by fetching firmware version
         await bsblan.initialize()
-        # Fetch all required device metadata
-        device = await bsblan.device()
-        info = await bsblan.info()
-        static = await bsblan.static_values()
+
+        # Fetch device metadata in parallel for faster startup
+        device, info, static = await asyncio.gather(
+            bsblan.device(),
+            bsblan.info(),
+            bsblan.static_values(),
+        )
     except BSBLANConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -110,10 +115,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
     fast_coordinator = BSBLanFastCoordinator(hass, entry, bsblan)
     slow_coordinator = BSBLanSlowCoordinator(hass, entry, bsblan)
 
-    # Perform first refresh of both coordinators
+    # Perform first refresh of fast coordinator (required for entities)
     await fast_coordinator.async_config_entry_first_refresh()
 
-    # Try to refresh slow coordinator, but don't fail if DHW is not available
+    # Refresh slow coordinator - don't fail if DHW is not available
     # This allows the integration to work even if the device doesn't support DHW
     await slow_coordinator.async_refresh()
 
