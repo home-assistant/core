@@ -58,7 +58,7 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerBinarySensorEntityDescription, ...] = (
     ProxmoxContainerBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: data.get("status") == VM_CONTAINER_RUNNING,
+        state_fn=lambda data: data["status"] == VM_CONTAINER_RUNNING,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -68,7 +68,7 @@ VM_SENSORS: tuple[ProxmoxVMBinarySensorEntityDescription, ...] = (
     ProxmoxVMBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: data.get("status") == VM_CONTAINER_RUNNING,
+        state_fn=lambda data: data["status"] == VM_CONTAINER_RUNNING,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -83,7 +83,6 @@ async def async_setup_entry(
     """Set up Proxmox VE binary sensors."""
     coordinator = entry.runtime_data
 
-    # Add node sensors
     async_add_entities(
         ProxmoxNodeBinarySensor(
             coordinator,
@@ -94,7 +93,6 @@ async def async_setup_entry(
         for node_data in coordinator.data.nodes.values()
     )
 
-    # Add VM sensors
     async_add_entities(
         ProxmoxVMBinarySensor(
             coordinator,
@@ -107,7 +105,6 @@ async def async_setup_entry(
         for entity_description in VM_SENSORS
     )
 
-    # Add container sensors
     async_add_entities(
         ProxmoxContainerBinarySensor(
             coordinator,
