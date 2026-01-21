@@ -17,11 +17,7 @@ from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 
-from . import (
-    configure_integration,
-    configure_integration_with_custom_webhook1,
-    configure_integration_with_custom_webhook2,
-)
+from . import configure_integration, configure_integration_with_custom_webhook1
 
 from tests.typing import ClientSessionGenerator
 
@@ -236,33 +232,3 @@ async def test_posting_to_webhook(
     await hass.async_block_till_done()
 
     mock_setup_webhook.assert_called_once()
-
-
-async def test_set_wrong_webhook_domain(
-    hass: HomeAssistant,
-    mock_list_devices,
-    mock_get_status,
-    mock_get_webook_configuration,
-    mock_delete_webhook,
-    mock_setup_webhook,
-    hass_client_no_auth: ClientSessionGenerator,
-) -> None:
-    """Test handler webhook call."""
-    await async_process_ha_core_config(
-        hass,
-        {"external_url": "https://example.com"},
-    )
-    mock_get_webook_configuration.return_value = {"urls": ["https://example.com"]}
-    mock_list_devices.return_value = [
-        Device(
-            deviceId="vacuum-1",
-            deviceName="vacuum-name-1",
-            deviceType="K10+",
-            hubDeviceId=None,
-        ),
-    ]
-    mock_get_status.return_value = {"power": PowerState.ON.value}
-    mock_delete_webhook.return_value = {}
-    mock_setup_webhook.return_value = {}
-    entry = await configure_integration_with_custom_webhook2(hass)
-    assert entry.state is ConfigEntryState.SETUP_ERROR

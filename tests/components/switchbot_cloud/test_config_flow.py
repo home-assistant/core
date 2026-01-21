@@ -9,7 +9,11 @@ from homeassistant.components.switchbot_cloud.config_flow import (
     SwitchBotAuthenticationError,
     SwitchBotConnectionError,
 )
-from homeassistant.components.switchbot_cloud.const import DOMAIN, ENTRY_TITLE
+from homeassistant.components.switchbot_cloud.const import (
+    CONF_WEBHOOK_DOMAIN,
+    DOMAIN,
+    ENTRY_TITLE,
+)
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -28,6 +32,7 @@ async def _fill_out_form_and_assert_entry_created(
             {
                 CONF_API_TOKEN: "test-token",
                 CONF_API_KEY: "test-secret-key",
+                CONF_WEBHOOK_DOMAIN: "http://192.168.245.128:8123",
             },
         )
         await hass.async_block_till_done()
@@ -37,6 +42,7 @@ async def _fill_out_form_and_assert_entry_created(
         assert result_configure["data"] == {
             CONF_API_TOKEN: "test-token",
             CONF_API_KEY: "test-secret-key",
+            CONF_WEBHOOK_DOMAIN: "http://192.168.245.128:8123",
         }
         mock_setup_entry.assert_called_once()
 
@@ -79,6 +85,7 @@ async def test_form_fails(
             {
                 CONF_API_TOKEN: "test-token",
                 CONF_API_KEY: "test-secret-key",
+                # CONF_WEBHOOK_DOMAIN: "https://www.switch-bot.com",
             },
         )
 

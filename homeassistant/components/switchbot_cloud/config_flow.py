@@ -54,7 +54,7 @@ class SwitchBotCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except SwitchBotAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except vol.Invalid:
+            except ValueError:
                 errors["base"] = "webhook domain format error, can be empty"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

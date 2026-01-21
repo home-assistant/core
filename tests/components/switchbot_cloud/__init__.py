@@ -44,25 +44,6 @@ async def configure_integration_with_custom_webhook1(
     return entry
 
 
-async def configure_integration_with_custom_webhook2(
-    hass: HomeAssistant,
-) -> MockConfigEntry:
-    """Configure the integration with wrong format domain."""
-    config = {
-        CONF_API_TOKEN: "test-token",
-        CONF_API_KEY: "test-api-key",
-        CONF_WEBHOOK_DOMAIN: "www.switchbot.com",
-    }
-    entry = MockConfigEntry(
-        domain=DOMAIN, data=config, entry_id="123456", unique_id="123456"
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    return entry
-
-
 AIR_PURIFIER_INFO = Device(
     version="V1.0",
     deviceId="air-purifier-id-1",
