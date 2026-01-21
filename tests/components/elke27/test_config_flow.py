@@ -19,7 +19,6 @@ from homeassistant import config_entries
 from homeassistant.components.elke27.const import (
     CONF_INTEGRATION_SERIAL,
     CONF_LINK_KEYS_JSON,
-    CONF_PIN,
     DEFAULT_PORT,
     DOMAIN,
 )
@@ -117,7 +116,6 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
                 CONF_HOST: "192.168.1.10",
                 "access_code": "1234",
                 "passphrase": "test-pass",
-                CONF_PIN: "9999",
             },
         )
 
@@ -128,7 +126,6 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
             "tk", "lk", "lh"
         ).to_json()
         assert result2["data"][CONF_INTEGRATION_SERIAL] == "112233445566"
-        assert result2["data"][CONF_PIN] == "9999"
         assert "panel_info" in result2["options"]
         assert "table_info" in result2["options"]
         client.async_disconnect.assert_awaited_once()
@@ -158,7 +155,6 @@ async def test_invalid_auth_returns_error(hass: HomeAssistant) -> None:
                 CONF_HOST: "192.168.1.30",
                 "access_code": "1234",
                 "passphrase": "bad-pass",
-                CONF_PIN: "9999",
             },
         )
 
@@ -192,7 +188,6 @@ async def test_cannot_connect_returns_error(hass: HomeAssistant) -> None:
                 CONF_HOST: "192.168.1.31",
                 "access_code": "1234",
                 "passphrase": "bad-pass",
-                CONF_PIN: "9999",
             },
         )
 
@@ -257,7 +252,7 @@ async def test_relink_updates_entry(hass: HomeAssistant) -> None:
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"access_code": "1234", "passphrase": "new-pass", CONF_PIN: "9999"},
+            {"access_code": "1234", "passphrase": "new-pass"},
         )
 
         assert result2["type"] is FlowResultType.FORM
@@ -265,7 +260,7 @@ async def test_relink_updates_entry(hass: HomeAssistant) -> None:
 
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
-            {"access_code": "1234", "passphrase": "new-pass", CONF_PIN: "9999"},
+            {"access_code": "1234", "passphrase": "new-pass"},
         )
 
         assert result3["type"] is FlowResultType.ABORT
@@ -273,7 +268,6 @@ async def test_relink_updates_entry(hass: HomeAssistant) -> None:
         assert entry.data[CONF_LINK_KEYS_JSON] == LinkKeys(
             "newt", "new", "newh"
         ).to_json()
-        assert entry.data[CONF_PIN] == "9999"
         link_client_error.async_disconnect.assert_awaited_once()
         link_client_ok.async_disconnect.assert_awaited_once()
 
@@ -327,7 +321,7 @@ async def test_relink_missing_link_keys_updates_entry(hass: HomeAssistant) -> No
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"access_code": "1234", "passphrase": "new-pass", CONF_PIN: "9999"},
+            {"access_code": "1234", "passphrase": "new-pass"},
         )
 
         assert result2["type"] is FlowResultType.ABORT
@@ -335,5 +329,4 @@ async def test_relink_missing_link_keys_updates_entry(hass: HomeAssistant) -> No
         assert entry.data[CONF_LINK_KEYS_JSON] == LinkKeys(
             "newt", "new", "newh"
         ).to_json()
-        assert entry.data[CONF_PIN] == "9999"
         link_client.async_disconnect.assert_awaited_once()

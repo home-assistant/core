@@ -47,7 +47,6 @@ async def test_connect_subscribes_and_disconnects(hass: HomeAssistant) -> None:
             LinkKeys("tk", "lk", "lh").to_json(),
             "112233445566",
             None,
-            None,
         )
         await hub.async_connect()
 
@@ -81,7 +80,6 @@ async def test_connect_wait_ready_false_disconnects(
             2101,
             LinkKeys("tk", "lk", "lh").to_json(),
             "112233445566",
-            None,
             None,
         )
         with pytest.raises(ConfigEntryNotReady):

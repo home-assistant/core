@@ -11,7 +11,6 @@ import pytest
 from homeassistant.components.elke27.const import (
     CONF_INTEGRATION_SERIAL,
     CONF_LINK_KEYS_JSON,
-    CONF_PIN,
     DATA_COORDINATOR,
     DATA_HUB,
     DEFAULT_PORT,
@@ -74,15 +73,13 @@ async def _wait_for_bypass_state(
 )
 async def test_live_setup_and_snapshot(hass: HomeAssistant) -> None:
     """Verify live setup populates coordinator data."""
-    host, port, link_keys_json, integration_serial, pin = _load_live_config()
+    host, port, link_keys_json, integration_serial, _pin = _load_live_config()
     data = {
         CONF_HOST: host,
         CONF_PORT: port,
         CONF_LINK_KEYS_JSON: link_keys_json,
         CONF_INTEGRATION_SERIAL: integration_serial,
     }
-    if pin:
-        data[CONF_PIN] = pin
 
     entry = MockConfigEntry(domain=DOMAIN, data=data)
     entry.add_to_hass(hass)
@@ -121,7 +118,6 @@ async def test_live_zone_bypass_events(hass: HomeAssistant) -> None:
         CONF_PORT: port,
         CONF_LINK_KEYS_JSON: link_keys_json,
         CONF_INTEGRATION_SERIAL: integration_serial,
-        CONF_PIN: pin,
     }
 
     entry = MockConfigEntry(domain=DOMAIN, data=data)
@@ -140,9 +136,9 @@ async def test_live_zone_bypass_events(hass: HomeAssistant) -> None:
 
     target = not initial
     try:
-        await hub.async_set_zone_bypass(zone_id, target)
+        await hub.async_set_zone_bypass(zone_id, target, pin=pin)
         await _wait_for_bypass_state(coordinator, zone_id, target, timeout_s)
-        await hub.async_set_zone_bypass(zone_id, initial)
+        await hub.async_set_zone_bypass(zone_id, initial, pin=pin)
         await _wait_for_bypass_state(coordinator, zone_id, initial, timeout_s)
     finally:
         await hass.config_entries.async_unload(entry.entry_id)

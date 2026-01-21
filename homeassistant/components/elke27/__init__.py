@@ -29,7 +29,6 @@ from .const import (
     CONF_INTEGRATION_SERIAL,
     CONF_LINK_KEYS_JSON,
     CONF_PANEL,
-    CONF_PIN,
     DATA_COORDINATOR,
     DATA_HUB,
     DOMAIN,
@@ -54,17 +53,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     link_keys_json = entry.data.get(CONF_LINK_KEYS_JSON)
-    pin = entry.data.get(CONF_PIN)
     panel_name = _panel_name_from_entry(entry.data.get(CONF_PANEL))
     if not link_keys_json:
         raise ConfigEntryAuthFailed("Link keys are missing; relink required")
     integration_serial = entry.data.get(CONF_INTEGRATION_SERIAL)
+    entry_data = dict(entry.data)
+    pin_removed = entry_data.pop("pin", None)
     if not integration_serial:
         integration_serial = await async_get_integration_serial(hass, host)
-        hass.config_entries.async_update_entry(
-            entry,
-            data={**entry.data, CONF_INTEGRATION_SERIAL: integration_serial},
-        )
+        entry_data[CONF_INTEGRATION_SERIAL] = integration_serial
+        hass.config_entries.async_update_entry(entry, data=entry_data)
+    elif pin_removed is not None:
+        hass.config_entries.async_update_entry(entry, data=entry_data)
     if panel_name:
         _LOGGER.debug("Discovered panel name: %s", panel_name)
     hub = Elke27Hub(
@@ -73,7 +73,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         port,
         link_keys_json,
         integration_serial,
-        pin,
         panel_name,
     )
     try:
