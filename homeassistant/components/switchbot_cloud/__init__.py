@@ -392,9 +392,6 @@ async def _initialize_webhook(
                 entry.data[CONF_WEBHOOK_ID],
             )
         else:
-            webhook_domain = webhook_domain.rstrip("/")
-            if not webhook_domain.startswith("http"):
-                raise ValueError("CONF_WEBHOOK_DOMAIN name settings error")
             webhook_url = f"{webhook_domain}/api/webhook/{entry.data[CONF_WEBHOOK_ID]}"
         # check if webhook is configured in switchbot cloud
         check_webhook_result = None

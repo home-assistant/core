@@ -1,6 +1,7 @@
 """Config flow for SwitchBot via API integration."""
 
 from logging import getLogger
+import re
 from typing import Any
 
 from switchbot_api import (
@@ -13,7 +14,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 
-from .const import CONF_WEBHOOK_DOMAIN, DOMAIN, ENTRY_TITLE
+from .const import CONF_WEBHOOK_DOMAIN, DOMAIN, ENTRY_TITLE, WEBHOOK_DOMAIN_PATTERN
 
 _LOGGER = getLogger(__name__)
 
@@ -24,6 +25,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_WEBHOOK_DOMAIN): str,
     }
 )
+
+
+def _validate_webhook_domain(domain: str) -> None:
+    """Validate webhook domain."""
+    if not re.match(WEBHOOK_DOMAIN_PATTERN, domain, re.IGNORECASE):
+        raise vol.Invalid("Webhook Domain Error")
 
 
 class SwitchBotCloudConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -41,10 +48,14 @@ class SwitchBotCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 await SwitchBotAPI(
                     token=user_input[CONF_API_TOKEN], secret=user_input[CONF_API_KEY]
                 ).list_devices()
+                if user_input.get(CONF_WEBHOOK_DOMAIN):
+                    _validate_webhook_domain(user_input[CONF_WEBHOOK_DOMAIN])
             except SwitchBotConnectionError:
                 errors["base"] = "cannot_connect"
             except SwitchBotAuthenticationError:
                 errors["base"] = "invalid_auth"
+            except vol.Invalid:
+                errors["base"] = "webhook domain format error, can be empty"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

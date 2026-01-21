@@ -18,6 +18,8 @@ VACUUM_FAN_SPEED_STRONG = "strong"
 VACUUM_FAN_SPEED_MAX = "max"
 
 CONF_WEBHOOK_DOMAIN = "webhook_domain"
+WEBHOOK_DOMAIN_PATTERN = r"^https?://(?:(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?):\d{1,5})$"
+
 
 AFTER_COMMAND_REFRESH = 5
 COVER_ENTITY_AFTER_COMMAND_REFRESH = 10
