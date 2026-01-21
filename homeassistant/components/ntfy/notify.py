@@ -34,6 +34,8 @@ PARALLEL_UPDATES = 0
 
 
 SERVICE_PUBLISH = "publish"
+SERVICE_CLEAR = "clear"
+SERVICE_DELETE = "delete"
 ATTR_ATTACH = "attach"
 ATTR_CALL = "call"
 ATTR_CLICK = "click"
@@ -65,6 +67,12 @@ SERVICE_PUBLISH_SCHEMA = cv.make_entity_service_schema(
     }
 )
 
+SERVICE_CLEAR_DELETE_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Required(ATTR_SEQUENCE_ID): cv.string,
+    }
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -86,6 +94,18 @@ async def async_setup_entry(
         description_placeholders={
             "markdown_guide_url": "https://www.markdownguide.org/basic-syntax/"
         },
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_CLEAR,
+        SERVICE_CLEAR_DELETE_SCHEMA,
+        "clear",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_DELETE,
+        SERVICE_CLEAR_DELETE_SCHEMA,
+        "delete",
     )
 
 
@@ -139,5 +159,55 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
         except NtfyException as e:
             raise HomeAssistantError(
                 translation_key="publish_failed_exception",
+                translation_domain=DOMAIN,
+            ) from e
+
+    async def clear(self, **kwargs: Any) -> None:
+        """Clear a message."""
+
+        params: dict[str, Any] = kwargs
+
+        try:
+            await self.ntfy.clear(self.topic, params[ATTR_SEQUENCE_ID])
+        except NtfyUnauthorizedAuthenticationError as e:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+            ) from e
+        except NtfyHTTPError as e:
+            raise HomeAssistantError(
+                translation_key="clear_failed_request_error",
+                translation_domain=DOMAIN,
+                translation_placeholders={"error_msg": e.error},
+            ) from e
+        except NtfyException as e:
+            raise HomeAssistantError(
+                translation_key="clear_failed_exception",
+                translation_domain=DOMAIN,
+            ) from e
+
+    async def delete(self, **kwargs: Any) -> None:
+        """Delete a message."""
+
+        params: dict[str, Any] = kwargs
+
+        try:
+            await self.ntfy.delete(self.topic, params[ATTR_SEQUENCE_ID])
+        except NtfyUnauthorizedAuthenticationError as e:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+            ) from e
+        except NtfyHTTPError as e:
+            raise HomeAssistantError(
+                translation_key="delete_failed_request_error",
+                translation_domain=DOMAIN,
+                translation_placeholders={"error_msg": e.error},
+            ) from e
+        except NtfyException as e:
+            raise HomeAssistantError(
+                translation_key="delete_failed_exception",
                 translation_domain=DOMAIN,
             ) from e

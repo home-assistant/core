@@ -267,6 +267,12 @@
     "authentication_error": {
       "message": "Failed to authenticate with ntfy service. Please verify your credentials"
     },
+    "clear_failed_exception": {
+      "message": "Failed to dismiss notification due to a connection error"
+    },
+    "clear_failed_request_error": {
+      "message": "Failed to dismiss notification: {error_msg}"
+    },
     "connection_error": {
       "message": "Failed to connect to ntfy service due to a connection error"
     },
@@ -275,6 +281,12 @@
     },
     "delay_no_email": {
       "message": "Delayed email notifications are not supported"
+    },
+    "delete_failed_exception": {
+      "message": "Failed to delete notification due to a connection error"
+    },
+    "delete_failed_request_error": {
+      "message": "Failed to delete notification: {error_msg}"
     },
     "entity_not_found": {
       "message": "The selected ntfy entity could not be found."
@@ -288,7 +300,6 @@
     "publish_failed_request_error": {
       "message": "Failed to publish notification: {error_msg}"
     },
-
     "server_error": {
       "message": "Failed to connect to ntfy service due to a server error: {error_msg}"
     },
@@ -321,6 +332,26 @@
     }
   },
   "services": {
+    "clear": {
+      "description": "Dismisses a previously sent message from a ntfy topic by marking it as read.",
+      "fields": {
+        "sequence_id": {
+          "description": "Enter the message ID or sequence ID of a notification you want to dismiss.",
+          "name": "[%key:component::ntfy::common::sequence_id%]"
+        }
+      },
+      "name": "Dismiss notification"
+    },
+    "delete": {
+      "description": "Delete a message from a ntfy topic.",
+      "fields": {
+        "sequence_id": {
+          "description": "Enter the message ID or sequence ID of a notification you want to delete.",
+          "name": "[%key:component::ntfy::common::sequence_id%]"
+        }
+      },
+      "name": "Delete notification"
+    },
     "publish": {
       "description": "Publishes a notification message to a ntfy topic",
       "fields": {
