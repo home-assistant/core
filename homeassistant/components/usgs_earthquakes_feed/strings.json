@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "U.S. Geological Survey Earthquake Hazards",
+        "description": "Configure the USGS Earthquake Feed to track earthquakes.",
+        "data": {
+          "feed_type": "Feed type",
+          "radius": "Radius (km)",
+          "minimum_magnitude": "Minimum magnitude"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This location and feed type is already configured."
+    }
+  }
+}
