@@ -15,10 +15,23 @@ from hass_nabucasa.llm import (
     LLMResponseError,
     LLMServiceError,
 )
-from litellm import (
-    ResponseFunctionToolCall,
-    ResponseInputParam,
-    ResponsesAPIStreamEvents,
+from hass_nabucasa.llm_stream_events import (
+    ResponseCompletedEvent,
+    ResponseErrorEvent,
+    ResponseFailedEvent,
+    ResponseFunctionCallArgumentsDeltaEvent,
+    ResponseFunctionCallArgumentsDoneEvent,
+    ResponseFunctionCallOutputItem,
+    ResponseImageOutputItem,
+    ResponseIncompleteEvent,
+    ResponseMessageOutputItem,
+    ResponseOutputItemAddedEvent,
+    ResponseOutputItemDoneEvent,
+    ResponseOutputTextDeltaEvent,
+    ResponseReasoningOutputItem,
+    ResponseReasoningSummaryTextDeltaEvent,
+    ResponseWebSearchCallOutputItem,
+    ResponseWebSearchCallSearchingEvent,
 )
 from openai.types.responses import (
     FunctionToolParam,
@@ -46,6 +59,9 @@ from .client import CloudClient
 _LOGGER = logging.getLogger(__name__)
 
 _MAX_TOOL_ITERATIONS = 10
+
+
+type ResponseInputParam = list[ResponseInputItemParam]
 
 
 class ResponseItemType(str, Enum):
@@ -238,7 +254,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
     """Transform stream result into HA format."""
     last_summary_index = None
     last_role: Literal["assistant", "tool_result"] | None = None
-    current_tool_call: ResponseFunctionToolCall | None = None
+    current_tool_call: ResponseFunctionCallOutputItem | None = None
 
     # Non-reasoning models don't follow our request to remove citations, so we remove
     # them manually here. They always follow the same pattern: the citation is always
@@ -248,19 +264,10 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
     citation_regexp = re.compile(r"\(\[([^\]]+)\]\((https?:\/\/[^\)]+)\)")
 
     async for event in stream:
-        event_type = getattr(event, "type", None)
-        event_item = getattr(event, "item", None)
-        event_item_type = getattr(event_item, "type", None) if event_item else None
+        _LOGGER.debug("Event[%s]", getattr(event, "type", None))
 
-        _LOGGER.debug(
-            "Event[%s] | item: %s",
-            event_type,
-            event_item_type,
-        )
-
-        if event_type == ResponsesAPIStreamEvents.OUTPUT_ITEM_ADDED:
-            # Detect function_call even when it's a BaseLiteLLMOpenAIResponseObject
-            if event_item_type == ResponseItemType.FUNCTION_CALL:
+        if isinstance(event, ResponseOutputItemAddedEvent):
+            if isinstance(event.item, ResponseFunctionCallOutputItem):
                 # OpenAI has tool calls as individual events
                 # while HA puts tool calls inside the assistant message.
                 # We turn them into individual assistant content for HA
@@ -268,11 +275,11 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 yield {"role": "assistant"}
                 last_role = "assistant"
                 last_summary_index = None
-                current_tool_call = cast(ResponseFunctionToolCall, event.item)
+                current_tool_call = event.item
             elif (
-                event_item_type == ResponseItemType.MESSAGE
+                isinstance(event.item, ResponseMessageOutputItem)
                 or (
-                    event_item_type == ResponseItemType.REASONING
+                    isinstance(event.item, ResponseReasoningOutputItem)
                     and last_summary_index is not None
                 )  # Subsequent ResponseReasoningItem
                 or last_role != "assistant"
@@ -281,10 +288,10 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 last_role = "assistant"
                 last_summary_index = None
 
-        elif event_type == ResponsesAPIStreamEvents.OUTPUT_ITEM_DONE:
-            if event_item_type == ResponseItemType.REASONING:
-                encrypted_content = getattr(event.item, "encrypted_content", None)
-                summary = getattr(event.item, "summary", []) or []
+        elif isinstance(event, ResponseOutputItemDoneEvent):
+            if isinstance(event.item, ResponseReasoningOutputItem):
+                encrypted_content = event.item.encrypted_content
+                summary = event.item.summary
 
                 yield {
                     "native": ResponseReasoningItem(
@@ -296,14 +303,8 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 }
 
                 last_summary_index = len(summary) - 1 if summary else None
-            elif event_item_type == ResponseItemType.WEB_SEARCH_CALL:
-                action = getattr(event.item, "action", None)
-                if isinstance(action, dict):
-                    action_dict = action
-                elif action is not None:
-                    action_dict = action.to_dict()
-                else:
-                    action_dict = {}
+            elif isinstance(event.item, ResponseWebSearchCallOutputItem):
+                action_dict = event.item.action
                 yield {
                     "tool_calls": [
                         llm.ToolInput(
@@ -321,11 +322,11 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "tool_result": {"status": event.item.status},
                 }
                 last_role = "tool_result"
-            elif event_item_type == ResponseItemType.IMAGE:
-                yield {"native": event.item}
+            elif isinstance(event.item, ResponseImageOutputItem):
+                yield {"native": event.item.raw}
                 last_summary_index = -1  # Trigger new assistant message on next turn
 
-        elif event_type == ResponsesAPIStreamEvents.OUTPUT_TEXT_DELTA:
+        elif isinstance(event, ResponseOutputTextDeltaEvent):
             data = event.delta
             if remove_parentheses:
                 data = data.removeprefix(")")
@@ -344,7 +345,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
             if data:
                 yield {"content": data}
 
-        elif event_type == ResponsesAPIStreamEvents.REASONING_SUMMARY_TEXT_DELTA:
+        elif isinstance(event, ResponseReasoningSummaryTextDeltaEvent):
             # OpenAI can output several reasoning summaries
             # in a single ResponseReasoningItem. We split them as separate
             # AssistantContent messages. Only last of them will have
@@ -358,14 +359,14 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
             last_summary_index = event.summary_index
             yield {"thinking_content": event.delta}
 
-        elif event_type == ResponsesAPIStreamEvents.FUNCTION_CALL_ARGUMENTS_DELTA:
+        elif isinstance(event, ResponseFunctionCallArgumentsDeltaEvent):
             if current_tool_call is not None:
                 current_tool_call.arguments += event.delta
 
-        elif event_type == ResponsesAPIStreamEvents.WEB_SEARCH_CALL_SEARCHING:
+        elif isinstance(event, ResponseWebSearchCallSearchingEvent):
             yield {"role": "assistant"}
 
-        elif event_type == ResponsesAPIStreamEvents.FUNCTION_CALL_ARGUMENTS_DONE:
+        elif isinstance(event, ResponseFunctionCallArgumentsDoneEvent):
             if current_tool_call is not None:
                 current_tool_call.status = "completed"
 
@@ -385,35 +386,42 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     ]
                 }
 
-        elif event_type == ResponsesAPIStreamEvents.RESPONSE_COMPLETED:
-            if event.response.usage is not None:
+        elif isinstance(event, ResponseCompletedEvent):
+            response = event.response
+            if response and "usage" in response:
+                usage = response["usage"]
                 chat_log.async_trace(
                     {
                         "stats": {
-                            "input_tokens": event.response.usage.input_tokens,
-                            "output_tokens": event.response.usage.output_tokens,
+                            "input_tokens": usage.get("input_tokens"),
+                            "output_tokens": usage.get("output_tokens"),
                         }
                     }
                 )
 
-        elif event_type == ResponsesAPIStreamEvents.RESPONSE_INCOMPLETE:
-            if event.response.usage is not None:
+        elif isinstance(event, ResponseIncompleteEvent):
+            response = event.response
+            if response and "usage" in response:
+                usage = response["usage"]
                 chat_log.async_trace(
                     {
                         "stats": {
-                            "input_tokens": event.response.usage.input_tokens,
-                            "output_tokens": event.response.usage.output_tokens,
+                            "input_tokens": usage.get("input_tokens"),
+                            "output_tokens": usage.get("output_tokens"),
                         }
                     }
                 )
 
-            if (
-                event.response.incomplete_details
-                and event.response.incomplete_details.reason
+            incomplete_details = (
+                response.get("incomplete_details")
+                if isinstance(response, dict)
+                else None
+            )
+            reason = "unknown reason"
+            if isinstance(incomplete_details, dict) and incomplete_details.get(
+                "reason"
             ):
-                reason: str = event.response.incomplete_details.reason
-            else:
-                reason = "unknown reason"
+                reason = incomplete_details["reason"]
 
             if reason == "max_output_tokens":
                 reason = "max output tokens reached"
@@ -422,22 +430,24 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
 
             raise HomeAssistantError(f"OpenAI response incomplete: {reason}")
 
-        elif event_type == ResponsesAPIStreamEvents.RESPONSE_FAILED:
-            if event.response.usage is not None:
+        elif isinstance(event, ResponseFailedEvent):
+            response = event.response
+            if response and "usage" in response:
+                usage = response["usage"]
                 chat_log.async_trace(
                     {
                         "stats": {
-                            "input_tokens": event.response.usage.input_tokens,
-                            "output_tokens": event.response.usage.output_tokens,
+                            "input_tokens": usage.get("input_tokens"),
+                            "output_tokens": usage.get("output_tokens"),
                         }
                     }
                 )
             reason = "unknown reason"
-            if event.response.error is not None:
-                reason = event.response.error.message
+            if response and "error" in response:
+                reason = response["error"].get("message") or reason
             raise HomeAssistantError(f"OpenAI response failed: {reason}")
 
-        elif event_type == ResponsesAPIStreamEvents.ERROR:
+        elif isinstance(event, ResponseErrorEvent):
             raise HomeAssistantError(f"OpenAI response error: {event.message}")
 
 
