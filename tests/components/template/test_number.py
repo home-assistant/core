@@ -446,8 +446,8 @@ async def test_not_optimistic(hass: HomeAssistant) -> None:
 async def test_availability(hass: HomeAssistant) -> None:
     """Test configuration with optimistic state."""
 
-    await async_trigger(hass, TEST_AVAILABILITY_ENTITY_ID, "on")
     await async_trigger(hass, TEST_STATE_ENTITY_ID, "4.0")
+    await async_trigger(hass, TEST_AVAILABILITY_ENTITY_ID, "on")
     state = hass.states.get(TEST_NUMBER.entity_id)
     assert float(state.state) == 4
 
