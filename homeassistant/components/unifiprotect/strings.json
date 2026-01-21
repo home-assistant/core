@@ -409,14 +409,14 @@
       "ptz_patrol": {
         "name": "PTZ patrol",
         "state": {
-          "stop": "Stop"
+          "stop": "[%key:common::state::stopped%]"
         }
       },
       "ptz_preset": {
         "name": "PTZ preset",
         "state": {
           "home": "Home",
-          "idle": "Idle"
+          "idle": "[%key:common::state::idle%]"
         }
       },
       "recording_mode": {
