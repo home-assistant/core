@@ -93,7 +93,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
                         errors["base"] = "invalid_interface"
                         return await self._show_setup_form(user_input, errors)
 
-            return self.async_create_entry(title="OPNsense", data=user_input)
+            return self.async_create_entry(title=user_input[CONF_URL], data=user_input)
 
         except (APIException, requestsConnectionError):
             errors["base"] = "cannot_connect"
