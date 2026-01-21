@@ -168,7 +168,7 @@ class TonewinnerProtocol:
 
     @staticmethod
     def parse_volume_status(response: str) -> float | None:
-        """Parse volume level from device response (0-100)."""
+        """Parse volume level from device response (0-80)."""
         _LOGGER.debug("Parsing volume from: '%s'", response)
         if not response or not response.startswith("VOL"):
             _LOGGER.debug("Not a volume response")

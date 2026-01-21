@@ -379,9 +379,9 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
             self._attr_state = new_state
 
-        # Parse volume (device returns 0-80, convert to 0.0-1.0 for HA)
+        # Parse volume (device returns 0-80, convert to 0.0-0.8 for HA)
         if (volume := TonewinnerProtocol.parse_volume_status(response)) is not None:
-            ha_volume = volume / 80.0
+            ha_volume = volume / 100.0
             _LOGGER.debug("Volume updated: device=%.2f, ha=%.2f", volume, ha_volume)
             self._attr_volume_level = ha_volume
 
@@ -520,8 +520,8 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self.async_write_ha_state()
 
     async def async_set_volume_level(self, volume: float) -> None:
-        """Set volume level (HA 0.0-1.0, device 0-80)."""
-        vol_device = int(volume * 80.0)
+        """Set volume level (HA 0.0-1.0, device 0-80). Uses only part of the input range."""
+        vol_device = min(volume * 100.0, 80)
         command = f"VOL {vol_device}"
         _LOGGER.debug("Setting volume: HA=%.2f, device=%d", volume, vol_device)
         await self.send_raw_command(command)
