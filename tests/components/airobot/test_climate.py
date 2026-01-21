@@ -17,12 +17,18 @@ from homeassistant.components.climate import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.CLIMATE]
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -31,6 +37,7 @@ async def test_climate_entities(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    platforms: list[Platform],
 ) -> None:
     """Test climate entities."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

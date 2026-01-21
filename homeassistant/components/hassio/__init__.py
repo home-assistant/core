@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from contextlib import suppress
 from datetime import datetime
-from functools import partial
 import logging
 import os
 import re
@@ -17,7 +16,7 @@ from aiohasupervisor.models import GreenOptions, YellowOptions  # noqa: F401
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components import panel_custom
+from homeassistant.components import frontend, panel_custom
 from homeassistant.components.homeassistant import async_set_stop_handler
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
@@ -42,24 +41,9 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstant,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    deprecated_function,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.hassio import (
-    get_supervisor_ip as _get_supervisor_ip,
-    is_hassio as _is_hassio,
-)
 from homeassistant.helpers.issue_registry import IssueSeverity
-from homeassistant.helpers.service_info.hassio import (
-    HassioServiceInfo as _HassioServiceInfo,
-)
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import now
 
@@ -134,14 +118,6 @@ from .websocket_api import async_load_websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 
-get_supervisor_ip = deprecated_function(
-    "homeassistant.helpers.hassio.get_supervisor_ip", breaks_in_ha_version="2025.11"
-)(_get_supervisor_ip)
-_DEPRECATED_HassioServiceInfo = DeprecatedConstant(
-    _HassioServiceInfo,
-    "homeassistant.helpers.service_info.hassio.HassioServiceInfo",
-    "2025.11",
-)
 
 # If new platforms are added, be sure to import them above
 # so we do not make other components that depend on hassio
@@ -302,19 +278,6 @@ def hostname_from_addon_slug(addon_slug: str) -> str:
     return addon_slug.replace("_", "-")
 
 
-@callback
-@deprecated_function(
-    "homeassistant.helpers.hassio.is_hassio", breaks_in_ha_version="2025.11"
-)
-@bind_hass
-def is_hassio(hass: HomeAssistant) -> bool:
-    """Return true if Hass.io is loaded.
-
-    Async friendly.
-    """
-    return _is_hassio(hass)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up the Hass.io component."""
     # Check local setup
@@ -329,6 +292,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         return False
 
     async_load_websocket_api(hass)
+    frontend.async_register_built_in_panel(hass, "app")
 
     host = os.environ["SUPERVISOR"]
     websession = async_get_clientsession(hass)
@@ -628,11 +592,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.pop(ADDONS_COORDINATOR, None)
 
     return unload_ok
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

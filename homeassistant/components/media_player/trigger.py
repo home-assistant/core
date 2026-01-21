@@ -4,7 +4,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.trigger import (
     EntityTriggerBase,
     Trigger,
-    make_conditional_entity_state_trigger,
+    make_entity_transition_trigger,
 )
 
 from . import ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, MediaPlayerState
@@ -30,7 +30,7 @@ class MediaPlayerMutedTrigger(EntityTriggerBase):
 
 TRIGGERS: dict[str, type[Trigger]] = {
     "muted": MediaPlayerMutedTrigger,
-    "stopped_playing": make_conditional_entity_state_trigger(
+    "stopped_playing": make_entity_transition_trigger(
         DOMAIN,
         from_states={
             MediaPlayerState.BUFFERING,
