@@ -173,8 +173,8 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
     ),
     AirQualitySensorEntityDescription(
         key="so2",
-        translation_key="sulphur_dioxide",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
         native_unit_of_measurement_fn=lambda x: x.pollutants.so2.concentration.units,
         exists_fn=lambda x: "so2" in {p.code for p in x.pollutants},
         value_fn=lambda x: x.pollutants.so2.concentration.value,
