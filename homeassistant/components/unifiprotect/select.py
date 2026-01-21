@@ -636,7 +636,7 @@ class ProtectPTZSelect(ProtectDeviceEntity, SelectEntity):
             self.async_write_ha_state()
 
             @callback
-            def _reset_to_idle(_: Any) -> None:
+            def _reset_to_idle() -> None:
                 """Reset preset to Idle after delay."""
                 self._reset_timer = None
                 self._attr_current_option = PTZ_PRESET_IDLE
@@ -646,6 +646,6 @@ class ProtectPTZSelect(ProtectDeviceEntity, SelectEntity):
             if self._reset_timer is not None:
                 self._reset_timer.cancel()
             self._reset_timer = self.hass.loop.call_later(
-                _PTZ_PRESET_RESET_DELAY, _reset_to_idle, None
+                _PTZ_PRESET_RESET_DELAY, _reset_to_idle
             )
         # For patrols: State will be updated via websocket when active_patrol_slot changes
