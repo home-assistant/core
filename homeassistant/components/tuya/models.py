@@ -253,28 +253,18 @@ class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
         if (
             super().skip_update(device, updated_status_properties, dp_timestamps)
             or dp_timestamps is None
-            or (current_timestamp := dp_timestamps.get(self.dpcode) is None)
+            or (current_timestamp := dp_timestamps.get(self.dpcode)) is None
             or (raw_value := super().read_device_status(device)) is None
         ):
             return True
 
-        # Process delta update when not skipping
-        current_timestamp = dp_timestamps.get(self.dpcode) if dp_timestamps else None
-
         # Skip duplicate updates with same timestamp
-        if (
-            current_timestamp is not None
-            and current_timestamp == self._last_dp_timestamp
-        ):
+        if current_timestamp == self._last_dp_timestamp:
             _LOGGER.debug(
                 "Skipping duplicate update for %s (same timestamp: %s)",
                 self.dpcode,
                 current_timestamp,
             )
-            return True
-
-        raw_value = super().read_device_status(device)
-        if raw_value is None:
             return True
 
         delta = float(raw_value)
