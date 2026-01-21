@@ -94,13 +94,13 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         InformationConverter,
         MassConverter,
         ApparentPowerConverter,
+        OzoneConcentrationConverter,
         PowerConverter,
         PressureConverter,
         ReactiveEnergyConverter,
         ReactivePowerConverter,
         SpeedConverter,
         TemperatureConverter,
-        OzoneConcentrationConverter,
         TemperatureDeltaConverter,
         UnitlessRatioConverter,
         EnergyDistanceConverter,
@@ -742,6 +742,20 @@ _CONVERTED_VALUE: dict[
         (1, UnitOfMass.STONES, 14, UnitOfMass.POUNDS),
         (1, UnitOfMass.STONES, 224, UnitOfMass.OUNCES),
     ],
+    OzoneConcentrationConverter: [
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            1.995417,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            60.1378,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+    ],
     PowerConverter: [
         (10, UnitOfPower.KILO_WATT, 10000, UnitOfPower.WATT),
         (10, UnitOfPower.MEGA_WATT, 10e6, UnitOfPower.WATT),
@@ -995,20 +1009,6 @@ _CONVERTED_VALUE: dict[
             CONCENTRATION_GRAMS_PER_CUBIC_METER,
             3000,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-        ),
-    ],
-    OzoneConcentrationConverter: [
-        (
-            1,
-            CONCENTRATION_PARTS_PER_BILLION,
-            1.995417,
-            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        ),
-        (
-            120,
-            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            60.1378,
-            CONCENTRATION_PARTS_PER_BILLION,
         ),
     ],
     VolumeConverter: [
