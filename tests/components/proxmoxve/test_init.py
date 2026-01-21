@@ -76,11 +76,11 @@ async def test_config_import(
     [
         (
             AuthenticationError("Invalid credentials"),
-            ConfigEntryState.SETUP_ERROR,
+            ConfigEntryState.SETUP_RETRY,
         ),
         (
             SSLError("SSL handshake failed"),
-            ConfigEntryState.SETUP_ERROR,
+            ConfigEntryState.SETUP_RETRY,
         ),
         (ConnectTimeout("Connection timed out"), ConfigEntryState.SETUP_RETRY),
         (

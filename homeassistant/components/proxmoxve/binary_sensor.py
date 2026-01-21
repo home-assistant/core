@@ -117,38 +117,28 @@ async def async_setup_entry(
     coordinator.new_vms_callbacks.append(_async_add_new_vms)
     coordinator.new_containers_callbacks.append(_async_add_new_containers)
 
-    async_add_entities(
-        ProxmoxNodeBinarySensor(
-            coordinator,
-            entity_description,
-            node_data,
-        )
-        for entity_description in NODE_SENSORS
-        for node_data in coordinator.data.nodes.values()
+    _async_add_new_nodes(
+        [
+            node_data
+            for node_data in coordinator.data.nodes.values()
+            if node_data.node["node"] in coordinator.known_nodes
+        ]
     )
-
-    async_add_entities(
-        ProxmoxVMBinarySensor(
-            coordinator,
-            entity_description,
-            vm_data,
-            node_data,
-        )
-        for node_data in coordinator.data.nodes.values()
-        for vm_data in node_data.vms.values()
-        for entity_description in VM_SENSORS
+    _async_add_new_vms(
+        [
+            (node_data, vm_data)
+            for node_data in coordinator.data.nodes.values()
+            for vmid, vm_data in node_data.vms.items()
+            if (node_data.node["node"], vmid) in coordinator.known_vms
+        ]
     )
-
-    async_add_entities(
-        ProxmoxContainerBinarySensor(
-            coordinator,
-            entity_description,
-            container_data,
-            node_data,
-        )
-        for node_data in coordinator.data.nodes.values()
-        for container_data in node_data.containers.values()
-        for entity_description in CONTAINER_SENSORS
+    _async_add_new_containers(
+        [
+            (node_data, container_data)
+            for node_data in coordinator.data.nodes.values()
+            for vmid, container_data in node_data.containers.items()
+            if (node_data.node["node"], vmid) in coordinator.known_containers
+        ]
     )
 
 

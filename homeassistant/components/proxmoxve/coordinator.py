@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_NODE, CONF_REALM, DEFAULT_VERIFY_SSL, DOMAIN
@@ -100,13 +100,13 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
             )
             await self.hass.async_add_executor_job(self.proxmox.nodes.get)
         except AuthenticationError as err:
-            raise ConfigEntryAuthFailed(
+            raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except SSLError as err:
-            raise ConfigEntryAuthFailed(
+            raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="ssl_error",
                 translation_placeholders={"error": repr(err)},
@@ -133,7 +133,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
                 for node in nodes
             ]
         except AuthenticationError as err:
-            raise ConfigEntryAuthFailed(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(err)},
