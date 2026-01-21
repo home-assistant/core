@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from dataclasses import dataclass
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+from pyhems import EOJ
 from pyhems.runtime import HemsFrameEvent
 import pytest
 
@@ -19,6 +21,32 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+
+@dataclass(slots=True)
+class TestProperty:
+    """Minimal representation of an ECHONET Lite property for tests."""
+
+    __test__ = False
+    epc: int
+    edt: bytes
+
+
+@dataclass(slots=True)
+class TestFrame:
+    """Minimal representation of an ECHONET Lite frame for tests."""
+
+    __test__ = False
+    tid: int
+    seoj: bytes
+    deoj: bytes
+    esv: int
+    properties: list[TestProperty]
+
+    def is_response_frame(self) -> bool:
+        """Check if frame is a response (success or failure)."""
+        return (0x70 <= self.esv <= 0x7F) or (0x50 <= self.esv <= 0x5F)
+
+
 # Default manufacturer code for tests (arbitrary but consistent)
 TEST_MANUFACTURER_CODE = 0x000005  # Sharp
 
@@ -27,7 +55,7 @@ def make_frame_event(
     frame,
     *,
     node_id: str,
-    eoj: int,
+    eoj: EOJ,
     received_at: float = 0.0,
 ) -> HemsFrameEvent:
     """Create a HemsFrameEvent for testing.

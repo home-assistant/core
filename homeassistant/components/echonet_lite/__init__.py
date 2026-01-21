@@ -10,6 +10,7 @@ import logging
 import time
 from typing import Final
 
+from pyhems.definitions import DefinitionsLoadError, load_definitions_registry
 from pyhems.runtime import (
     HemsClient,
     HemsErrorEvent,
@@ -43,7 +44,6 @@ from .const import (
     RUNTIME_MONITOR_MAX_SILENCE,
 )
 from .coordinator import EchonetLiteCoordinator
-from .definitions import DefinitionsLoadError, async_get_definitions_registry
 from .poller import EchonetLitePropertyPoller
 from .types import EchonetLiteConfigEntry, EchonetLiteRuntimeData, RuntimeHealth
 
@@ -78,17 +78,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: EchonetLiteConfigEntry) 
 
     _LOGGER.debug("Setting up ECHONET Lite with interface %s", interface)
 
-    # Load device definitions from bundled JSON
+    # Load device definitions from pyhems
     try:
-        definitions = await async_get_definitions_registry()
+        definitions = await hass.async_add_executor_job(load_definitions_registry)
     except DefinitionsLoadError as err:
         raise ConfigEntryNotReady(
             "Device definitions file could not be loaded"
         ) from err
 
     # Build device-specific EPC sets for polling/notification
-    # Start with definitions-based EPCs (MRA + vendor)
-    monitored_epcs: dict[int, frozenset[int]] = dict(definitions.monitored_epcs)
+    monitored_epcs: dict[int, frozenset[int]] = {
+        class_code: frozenset(e.epc for e in entities)
+        for class_code, entities in definitions.entities.items()
+    }
 
     _LOGGER.debug(
         "Monitored EPCs (polling/notification) per device class: %s",

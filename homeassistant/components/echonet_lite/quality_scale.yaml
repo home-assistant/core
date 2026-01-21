@@ -29,7 +29,7 @@ rules:
     comment: Removal steps detailed in docs/integration/echonet_lite.md.
   entity-event-setup:
     status: done
-    comment: Entities subscribe to coordinator listeners registered in sensor.py.
+    comment: Entities subscribe to coordinator listeners registered in switch.py.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -49,9 +49,7 @@ rules:
   entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates:
-    status: done
-    comment: switch module declares PARALLEL_UPDATES = 0.
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: ECHONET Lite protocol does not require authentication.

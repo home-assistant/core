@@ -235,3 +235,24 @@ async def test_options_flow_preserves_interface(
     assert entry.options[CONF_INTERFACE] == "192.168.1.100"
     assert entry.options[CONF_POLL_INTERVAL] == 90
     assert entry.options[CONF_ENABLE_EXPERIMENTAL] is True
+
+
+async def test_user_flow_unknown_exception(hass: HomeAssistant) -> None:
+    """Test unknown error is surfaced when unexpected exception occurs."""
+    with patch(
+        "homeassistant.components.echonet_lite.config_flow.create_multicast_socket",
+        AsyncMock(side_effect=RuntimeError("Unexpected error")),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}

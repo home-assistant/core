@@ -5,8 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import Literal
 
 from pyhems import CONTROLLER_INSTANCE, ESV_SETC, Frame, Property
+from pyhems.definitions import EntityDefinition
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -17,10 +19,28 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import EchonetLiteCoordinator
-from .definitions import DecoderSpec, EntityDefinition, PlatformType
 from .types import EchonetLiteConfigEntry, EchonetLiteNodeState
 
 _LOGGER = logging.getLogger(__name__)
+
+# Platform type for entity classification
+type PlatformType = Literal["binary"]
+
+
+def infer_platform(entity: EntityDefinition) -> PlatformType | None:
+    """Infer the platform type from entity definition.
+
+    Args:
+        entity: Entity definition to analyze.
+
+    Returns:
+        Platform type: "binary" or None for unsupported types.
+    """
+    if entity.enum_values:
+        # Has enum values -> binary (2 values only)
+        return "binary" if len(entity.enum_values) == 2 else None
+    # Numeric entities not supported (sensor platform removed)
+    return None
 
 
 class EchonetLiteEntity(CoordinatorEntity[EchonetLiteCoordinator]):
@@ -68,8 +88,8 @@ class EchonetLiteEntity(CoordinatorEntity[EchonetLiteCoordinator]):
         """
         node = self._node
         frame = Frame(
-            seoj=CONTROLLER_INSTANCE.to_bytes(3, "big"),
-            deoj=node.eoj.to_bytes(3, "big"),
+            seoj=CONTROLLER_INSTANCE,
+            deoj=node.eoj,
             esv=ESV_SETC,
             properties=properties,
         )
@@ -97,7 +117,7 @@ class EchonetLiteEntityDescription(EntityDescription):
     this class and the appropriate platform EntityDescription using diamond
     inheritance:
 
-        class EchonetLiteSensorEntityDescription(SensorEntityDescription, EchonetLiteEntityDescription):
+        class EchonetLiteSwitchEntityDescription(SwitchEntityDescription, EchonetLiteEntityDescription):
             ...
 
     The diamond inheritance pattern works correctly because both this class and
@@ -141,7 +161,7 @@ class EchonetLiteDescribedEntity[DescriptionT: EchonetLiteEntityDescription](
     """Base class for ECHONET Lite entities with EntityDescription.
 
     This intermediate class handles the common initialization pattern shared by
-    sensor and switch platforms. It extracts the
+    the switch platform. It extracts the
     repetitive __init__ logic that sets up unique_id, translation_key/name,
     and epc from the entity description.
 
@@ -189,7 +209,7 @@ def setup_echonet_lite_platform[DescriptionT: EchonetLiteEntityDescription](
     entry: EchonetLiteConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     platform_type: PlatformType,
-    description_factory: Callable[[int, EntityDefinition, DecoderSpec], DescriptionT],
+    description_factory: Callable[[int, EntityDefinition], DescriptionT],
     entity_factory: Callable[
         [EchonetLiteCoordinator, EchonetLiteNodeState, DescriptionT], Entity
     ],
@@ -198,8 +218,8 @@ def setup_echonet_lite_platform[DescriptionT: EchonetLiteEntityDescription](
     """Set up common entity platform setup pattern for ECHONET Lite.
 
     This helper handles:
-    - Retrieving resolved entity definitions from the definitions registry
-    - Building entity descriptions from definitions
+    - Retrieving entity definitions from the definitions registry
+    - Building entity descriptions from definitions (filtered by platform_type)
     - Creating entities for existing devices
     - Subscribing to coordinator updates for new device discovery
     - Logging skipped entities for debugging
@@ -207,11 +227,11 @@ def setup_echonet_lite_platform[DescriptionT: EchonetLiteEntityDescription](
     Args:
         entry: The config entry
         async_add_entities: Callback to add entities
-        platform_type: Type of platform ("binary", "sensor")
+        platform_type: Type of platform ("binary")
         description_factory: Factory function to create descriptions from definitions.
-            Args: (class_code, entity_def, decoder_spec)
+            Args: (class_code, entity_def)
         entity_factory: Factory function to create entity instances
-        platform_name: Name of the platform for logging (e.g., "sensor", "switch")
+        platform_name: Name of the platform for logging (e.g., "switch")
 
     """
     runtime_data = entry.runtime_data
@@ -219,17 +239,14 @@ def setup_echonet_lite_platform[DescriptionT: EchonetLiteEntityDescription](
     coordinator = runtime_data.coordinator
     definitions = runtime_data.definitions
 
-    # Get resolved entities (decoder already looked up, empty classes filtered)
-    resolved_entities = definitions.get_resolved_entities(platform_type)
-
-    # Build descriptions from resolved entities
-    descriptions_by_class_code: dict[int, list[DescriptionT]] = {
-        class_code: [
-            description_factory(class_code, entity_def, decoder_spec)
-            for entity_def, decoder_spec in entity_tuples
+    # Build descriptions from entity definitions, filtering by platform
+    descriptions_by_class_code: dict[int, list[DescriptionT]] = {}
+    for class_code, entity_defs in definitions.entities.items():
+        descriptions_by_class_code[class_code] = [
+            description_factory(class_code, entity_def)
+            for entity_def in entity_defs
+            if infer_platform(entity_def) == platform_type
         ]
-        for class_code, entity_tuples in resolved_entities.items()
-    }
 
     @callback
     def _async_add_entities_for_devices(device_keys: set[str]) -> None:
@@ -241,9 +258,7 @@ def setup_echonet_lite_platform[DescriptionT: EchonetLiteEntityDescription](
             if not node:
                 continue
 
-            class_code = node.eoj >> 8
-
-            for description in descriptions_by_class_code.get(class_code, []):
+            for description in descriptions_by_class_code.get(node.eoj.class_code, []):
                 if not description.should_create(node):
                     _LOGGER.debug(
                         "Skipping %s %s for %s: EPC 0x%02X not meeting criteria",

@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import time
 from unittest.mock import AsyncMock, patch
 
+from pyhems import EOJ
 from pyhems.runtime import HemsErrorEvent, HemsInstanceListEvent
 
 from homeassistant.components.echonet_lite import async_setup, async_unload_entry
@@ -23,8 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
 
-from .conftest import make_frame_event
-from .helpers import TestFrame, TestProperty
+from .conftest import TestFrame, TestProperty, make_frame_event
 
 from tests.common import MockConfigEntry
 
@@ -246,8 +246,8 @@ async def test_property_poller_requests_polled_properties(
 
     now = time.monotonic()
     node_id = bytes.fromhex("00000000000002").hex()
-    node_profile_eoj = 0x0EF001
-    sensor_eoj = 0x001101
+    node_profile_eoj = EOJ(0x0EF001)
+    sensor_eoj = EOJ(0x001101)
 
     def _async_get(
         node_id_arg: str, eoj_arg: int, _epcs: list[int]
@@ -260,14 +260,11 @@ async def test_property_poller_requests_polled_properties(
                 TestProperty(epc=0xD6, edt=bytes.fromhex("01001101")),
             ]
         if eoj_arg == sensor_eoj:
-            # EPC 0x80 (Operation status) is now the only monitored EPC for sensors
             return [
-                TestProperty(
-                    epc=0x9F, edt=bytes.fromhex("01808A")
-                ),  # 0x80 in property map
+                TestProperty(epc=0x9F, edt=bytes.fromhex("02E08A")),
                 TestProperty(epc=0x9D, edt=bytes.fromhex("00")),
                 TestProperty(epc=0x8A, edt=bytes.fromhex("000001")),
-                TestProperty(epc=0x80, edt=b"\x30"),  # ON state
+                TestProperty(epc=0xE0, edt=b"\x00d"),
             ]
         raise AssertionError(f"Unexpected EOJ {eoj_arg:06x}")
 
@@ -328,8 +325,8 @@ async def test_property_poller_falls_back_to_poll_when_notifications_disabled(
 
     coordinator = entry.runtime_data.coordinator
     node_id = bytes.fromhex("00000000000002").hex()
-    node_profile_eoj = 0x0EF001
-    sensor_eoj = 0x001101
+    node_profile_eoj = EOJ(0x0EF001)
+    sensor_eoj = EOJ(0x001101)
 
     def _async_get(
         node_id_arg: str, eoj_arg: int, _epcs: list[int]
@@ -342,14 +339,11 @@ async def test_property_poller_falls_back_to_poll_when_notifications_disabled(
                 TestProperty(epc=0x8A, edt=bytes.fromhex("000001")),
             ]
         if eoj_arg == sensor_eoj:
-            # EPC 0x80 (Operation status) is now the only monitored EPC for sensors
             return [
-                TestProperty(
-                    epc=0x9F, edt=bytes.fromhex("02808A")
-                ),  # 0x80 in property map
+                TestProperty(epc=0x9F, edt=bytes.fromhex("02E08A")),
                 TestProperty(epc=0x9D, edt=bytes.fromhex("00")),
                 TestProperty(epc=0x8A, edt=bytes.fromhex("000001")),
-                TestProperty(epc=0x80, edt=b"\x30"),  # ON state
+                TestProperty(epc=0xE0, edt=b"\x00d"),
             ]
         raise AssertionError(f"Unexpected EOJ {eoj_arg:06x}")
 
@@ -374,7 +368,7 @@ async def test_property_poller_falls_back_to_poll_when_notifications_disabled(
 
     assert any(
         call.args[1].esv == 0x62
-        and any(prop.epc == 0x80 for prop in call.args[1].properties)
+        and any(prop.epc == 0xE0 for prop in call.args[1].properties)
         for call in mock_echonet_lite_client.async_send.await_args_list
     )
 
@@ -394,8 +388,8 @@ async def test_node_created_with_property_maps(
 
     coordinator = entry.runtime_data.coordinator
     node_hex = bytes.fromhex("00000000000001").hex()
-    node_profile_eoj = 0x0EF001
-    sensor_eoj = 0x001101
+    node_profile_eoj = EOJ(0x0EF001)
+    sensor_eoj = EOJ(0x001101)
 
     def _async_get(
         node_id_arg: str, eoj_arg: int, _epcs: list[int]
@@ -424,11 +418,11 @@ async def test_node_created_with_property_maps(
         await coordinator._async_setup_device(node_hex, sensor_eoj)
 
     # Parent node should be created
-    parent_id = f"{node_hex}-{node_profile_eoj:06x}"
+    parent_id = f"{node_hex}-{int(node_profile_eoj):06x}"
     assert parent_id in coordinator.data
 
     # Instance node should be created
-    node_id = f"{node_hex}-{sensor_eoj:06x}"
+    node_id = f"{node_hex}-{int(sensor_eoj):06x}"
     assert node_id in coordinator.data
 
     # Verify node state properties
@@ -451,7 +445,7 @@ async def test_node_updated_by_subsequent_frames(
 
     coordinator = entry.runtime_data.coordinator
     node_hex = bytes.fromhex("00000000000001").hex()
-    node_profile_eoj = 0x0EF001
+    node_profile_eoj = EOJ(0x0EF001)
 
     entry.runtime_data.client.async_get.return_value = [
         TestProperty(epc=0x9F, edt=bytes.fromhex("028AD6")),
@@ -465,7 +459,7 @@ async def test_node_updated_by_subsequent_frames(
         await coordinator._async_setup_device(node_hex, node_profile_eoj)
 
     # Node should be created
-    node_id = f"{node_hex}-{node_profile_eoj:06x}"
+    node_id = f"{node_hex}-{int(node_profile_eoj):06x}"
     assert node_id in coordinator.data
     node_state = coordinator.data[node_id]
     assert node_state.manufacturer_code == 0x000001  # stored as int
@@ -474,7 +468,7 @@ async def test_node_updated_by_subsequent_frames(
     # Frames no longer update existing nodes
     update_frame = TestFrame(
         tid=2,
-        seoj=node_profile_eoj.to_bytes(3, "big"),
+        seoj=int(node_profile_eoj).to_bytes(3, "big"),
         deoj=bytes.fromhex("05ff01"),
         esv=0x72,
         properties=[
@@ -527,7 +521,7 @@ async def test_property_poller_respects_get_property_map(
         "homeassistant.components.echonet_lite.coordinator.time.monotonic",
         return_value=now,
     ):
-        await coordinator._async_setup_device(node_hex, 0x001101)
+        await coordinator._async_setup_device(node_hex, EOJ(0x001101))
 
     await hass.async_block_till_done()
 
@@ -565,29 +559,29 @@ async def test_property_poller_requests_notifications_for_required_epcs(
     node_hex = bytes.fromhex("00000000000002").hex()
 
     entry.runtime_data.client.async_get.return_value = [
-        # Get map: 0x8A (ID) and 0x80 (Operation status - binary entity)
-        TestProperty(epc=0x9F, edt=bytes.fromhex("028A80")),
-        # INF map announces 0x80 so 0x63 can be used
-        TestProperty(epc=0x9D, edt=bytes.fromhex("0180")),
+        # Get map: 0x8A (ID) and 0xB3 (required temp setpoint)
+        TestProperty(epc=0x9F, edt=bytes.fromhex("028AB3")),
+        # INF map announces 0xB3 so 0x63 can be used
+        TestProperty(epc=0x9D, edt=bytes.fromhex("01B3")),
         TestProperty(epc=0x8A, edt=bytes.fromhex("000001")),
-        TestProperty(epc=0x80, edt=bytes.fromhex("30")),  # ON state
+        TestProperty(epc=0xB3, edt=bytes.fromhex("19")),
     ]
 
     with patch(
         "homeassistant.components.echonet_lite.coordinator.time.monotonic",
         return_value=now,
     ):
-        await coordinator._async_setup_device(node_hex, 0x013001)
+        await coordinator._async_setup_device(node_hex, EOJ(0x013001))
 
     await hass.async_block_till_done()
 
-    # Initial 0x63 should be sent once after device creation (since INF map includes 0x80)
+    # Initial 0x63 should be sent once after device creation (since INF map includes 0xB3)
     calls = mock_echonet_lite_client.async_send.await_args_list
     assert any(
         call.args[1].esv == 0x63
-        and any(prop.epc == 0x80 for prop in call.args[1].properties)
+        and any(prop.epc == 0xB3 for prop in call.args[1].properties)
         for call in calls
-    ), "Should request notifications for 0x80 via 0x63"
+    ), "Should request notifications for 0xB3 via 0x63"
 
 
 async def test_property_poller_handles_sna_notification_response(
@@ -612,22 +606,22 @@ async def test_property_poller_handles_sna_notification_response(
     node_hex = bytes.fromhex("00000000000002").hex()
 
     entry.runtime_data.client.async_get.return_value = [
-        TestProperty(epc=0x9F, edt=bytes.fromhex("028A80")),
-        # INF map is empty: device does not announce 0x80
+        TestProperty(epc=0x9F, edt=bytes.fromhex("028AB3")),
+        # INF map is empty: device does not announce B3
         TestProperty(epc=0x9D, edt=bytes.fromhex("00")),
         TestProperty(epc=0x8A, edt=bytes.fromhex("000001")),
-        TestProperty(epc=0x80, edt=bytes.fromhex("30")),  # ON state
+        TestProperty(epc=0xB3, edt=bytes.fromhex("19")),
     ]
 
     with patch(
         "homeassistant.components.echonet_lite.coordinator.time.monotonic",
         return_value=now,
     ):
-        await coordinator._async_setup_device(node_hex, 0x013001)
+        await coordinator._async_setup_device(node_hex, EOJ(0x013001))
 
     await hass.async_block_till_done()
 
-    # No 0x63 should be sent because INF map does not include 0x80
+    # No 0x63 should be sent because INF map does not include 0xB3
     assert not any(
         call.args[1].esv == 0x63
         for call in mock_echonet_lite_client.async_send.await_args_list
@@ -637,9 +631,9 @@ async def test_property_poller_handles_sna_notification_response(
     entry.runtime_data.property_poller._async_handle_interval()
     await hass.async_block_till_done()
 
-    # Should poll 0x80
+    # Should poll 0xB3
     assert any(
         call.args[1].esv == 0x62
-        and any(prop.epc == 0x80 for prop in call.args[1].properties)
+        and any(prop.epc == 0xB3 for prop in call.args[1].properties)
         for call in mock_echonet_lite_client.async_send.await_args_list
     )

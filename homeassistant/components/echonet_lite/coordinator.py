@@ -8,6 +8,7 @@ import time
 
 from pyhems import (
     CONTROLLER_INSTANCE,
+    EOJ,
     EPC_MANUFACTURER_CODE,
     EPC_PRODUCT_CODE,
     EPC_SERIAL_NUMBER,
@@ -104,7 +105,7 @@ class EchonetLiteCoordinator(DataUpdateCoordinator[dict[str, EchonetLiteNodeStat
         # for an unknown device, skip to avoid duplicate/partial setup.
         if existing is None:
             _LOGGER.debug(
-                "Ignoring frame for unknown node %s EOJ 0x%06X (setup handled elsewhere)",
+                "Ignoring frame for unknown node %s %r (setup handled elsewhere)",
                 device_key,
                 eoj,
             )
@@ -167,23 +168,22 @@ class EchonetLiteCoordinator(DataUpdateCoordinator[dict[str, EchonetLiteNodeStat
             device_key = f"{node_id}-{eoj:06x}"
             if device_key not in self.data and device_key not in self._pending_setups:
                 # Filter out experimental device classes unless enabled
-                class_code = eoj >> 8
                 if (
                     not self._enable_experimental
-                    and class_code not in STABLE_CLASS_CODES
+                    and eoj.class_code not in STABLE_CLASS_CODES
                 ):
                     _LOGGER.debug(
                         "Skipping experimental device class 0x%04X from node %s "
                         "(enable_experimental is disabled)",
-                        class_code,
+                        eoj.class_code,
                         node_id,
                     )
                     continue
                 self._pending_setups.add(device_key)
-                _LOGGER.debug("Discovered new EOJ 0x%06X from node %s", eoj, node_id)
+                _LOGGER.debug("Discovered new %r from node %s", eoj, node_id)
                 await self._async_setup_device(event.node_id, eoj)
 
-    async def _async_setup_device(self, node_id: str, eoj: int) -> None:
+    async def _async_setup_device(self, node_id: str, eoj: EOJ) -> None:
         """Set up a device by requesting its properties and creating an EchonetLiteNodeState.
 
         Uses async_get with automatic retry for partial responses
@@ -200,7 +200,7 @@ class EchonetLiteCoordinator(DataUpdateCoordinator[dict[str, EchonetLiteNodeStat
 
         Args:
             node_id: Device node ID (hex string from EPC 0x83).
-            eoj: ECHONET object instance (3 bytes as int).
+            eoj: ECHONET object instance.
         """
         device_key = f"{node_id}-{eoj:06x}"
         try:
@@ -215,8 +215,7 @@ class EchonetLiteCoordinator(DataUpdateCoordinator[dict[str, EchonetLiteNodeStat
             ]
 
             # Get monitored EPCs for this device class (initial values)
-            class_code = eoj >> 8
-            initial_epcs = self._monitored_epcs.get(class_code, frozenset())
+            initial_epcs = self._monitored_epcs.get(eoj.class_code, frozenset())
             monitored_epcs = initial_epcs - set(base_epcs)
 
             # Combine base EPCs and monitored EPCs (preserving order)
@@ -224,7 +223,7 @@ class EchonetLiteCoordinator(DataUpdateCoordinator[dict[str, EchonetLiteNodeStat
 
             _LOGGER.debug(
                 "Requesting property maps, device ID, "
-                "for node %s EOJ 0x%06X: base=[%s], monitored=[%s]",
+                "for node %s %r: base=[%s], monitored=[%s]",
                 node_id,
                 eoj,
                 " ".join(f"{epc:02X}" for epc in base_epcs),
@@ -322,23 +321,22 @@ class EchonetLiteCoordinator(DataUpdateCoordinator[dict[str, EchonetLiteNodeStat
         except Exception:
             # If setup fails, remove from pending so it can be retried
             self._pending_setups.discard(device_key)
-            _LOGGER.exception("Failed to request property maps for EOJ 0x%06X", eoj)
+            _LOGGER.exception("Failed to request property maps for %r", eoj)
 
     async def _async_send_initial_notification(
         self, device_key: str, node: EchonetLiteNodeState
     ) -> None:
         """Send a one-time 0x63 notification request for required EPCs."""
 
-        class_code = node.eoj >> 8
-        epcs = set(self._monitored_epcs.get(class_code, frozenset()))
+        epcs = set(self._monitored_epcs.get(node.eoj.class_code, frozenset()))
         epcs &= node.inf_epcs
 
         if not epcs:
             return
 
         frame = Frame(
-            seoj=CONTROLLER_INSTANCE.to_bytes(3, "big"),
-            deoj=node.eoj.to_bytes(3, "big"),
+            seoj=CONTROLLER_INSTANCE,
+            deoj=node.eoj,
             esv=ESV_INF_REQ,
             properties=[Property(epc=epc, edt=b"") for epc in epcs],
         )

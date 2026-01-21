@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pyhems import EOJ
 from pyhems.runtime import HemsInstanceListEvent
 
 from homeassistant.components.echonet_lite.const import (
@@ -65,7 +66,7 @@ async def test_process_frame_registers_node(hass: HomeAssistant) -> None:
     )
 
     node_hex = bytes.fromhex("010203").hex()
-    eoj = 0x001101
+    eoj = EOJ(0x001101)
 
     with patch(
         "homeassistant.components.echonet_lite.coordinator.time.monotonic",
@@ -75,16 +76,16 @@ async def test_process_frame_registers_node(hass: HomeAssistant) -> None:
 
     # Stable ID: uid(hex)-eoj(hex) (0x83 + EOJ preferred)
     # 010203-001101
-    node_id = f"{node_hex}-{eoj:06x}"
+    node_id = f"{node_hex}-{int(eoj):06x}"
     node = coordinator.data[node_id]
-    assert node.eoj == 0x001101
+    assert node.eoj == eoj
     assert node.last_seen == 10.0
     assert node.properties[0xE0] == b"\x00d"
 
     # Frames update existing nodes
     frame2 = FrameMessage(
         tid=2,
-        seoj=eoj.to_bytes(3, "big"),
+        seoj=int(eoj).to_bytes(3, "big"),
         deoj=bytes.fromhex("0ef001"),
         esv=0x73,
         properties=[FrameProperty(epc=0xE0, edt=b"\x00e")],
@@ -127,7 +128,7 @@ async def test_set_response_does_not_overwrite_properties(hass: HomeAssistant) -
     )
 
     node_hex = bytes.fromhex("010203").hex()
-    eoj = 0x001101
+    eoj = EOJ(0x001101)
 
     with patch(
         "homeassistant.components.echonet_lite.coordinator.time.monotonic",
@@ -135,14 +136,14 @@ async def test_set_response_does_not_overwrite_properties(hass: HomeAssistant) -
     ):
         await coordinator._async_setup_device(node_hex, eoj)
 
-    device_key = f"{node_hex}-{eoj:06x}"
+    device_key = f"{node_hex}-{int(eoj):06x}"
     assert coordinator.data[device_key].properties[0xB0] == b"E"
 
     # Simulate a successful Set_Res for EPC 0xB0: empty EDT is an acknowledgement
     # and must not be interpreted as a new value.
     frame = FrameMessage(
         tid=4,
-        seoj=eoj.to_bytes(3, "big"),
+        seoj=int(eoj).to_bytes(3, "big"),
         deoj=bytes.fromhex("0ef001"),
         esv=0x71,
         properties=[FrameProperty(epc=0xB0, edt=b"")],
@@ -191,7 +192,7 @@ async def test_process_frame_registers_instance_list(hass: HomeAssistant) -> Non
             frame,
             received_at=20.0,
             node_id="",
-            eoj=int.from_bytes(frame.seoj, "big"),
+            eoj=EOJ(int.from_bytes(frame.seoj, "big")),
         )
     )
 
@@ -222,8 +223,8 @@ async def test_experimental_filtering_skips_non_stable_classes(
 
     node_id = "010203040506"
     # 0x0011 is temperature sensor (experimental), 0x0130 is air conditioner (stable)
-    experimental_eoj = 0x001101
-    stable_eoj = 0x013001
+    experimental_eoj = EOJ(0x001101)
+    stable_eoj = EOJ(0x013001)
 
     event = HemsInstanceListEvent(
         received_at=10.0,
@@ -265,8 +266,8 @@ async def test_experimental_filtering_allows_all_when_enabled(
 
     node_id = "010203040506"
     # 0x0011 is temperature sensor (experimental), 0x0130 is air conditioner (stable)
-    experimental_eoj = 0x001101
-    stable_eoj = 0x013001
+    experimental_eoj = EOJ(0x001101)
+    stable_eoj = EOJ(0x013001)
 
     event = HemsInstanceListEvent(
         received_at=10.0,

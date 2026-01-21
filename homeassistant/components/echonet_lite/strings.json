@@ -8,7 +8,8 @@
     },
     "error": {
       "cannot_connect": "Home Assistant could not start the multicast listener. Verify that UDP multicast traffic (224.0.23.0:3610) is allowed on the host network.",
-      "invalid_interface": "Enter a valid IPv4 address (for example 192.168.1.10 or 0.0.0.0)."
+      "invalid_interface": "Enter a valid IPv4 address (for example 192.168.1.10 or 0.0.0.0).",
+      "unknown": "Unexpected error while validating the configuration"
     },
     "step": {
       "reconfigure": {
@@ -35,6 +36,27 @@
   },
   "entity": {
     "switch": {
+      "class_0000_epc_80": {
+        "name": "Operation status",
+        "state": {
+          "off": "OFF",
+          "on": "ON"
+        }
+      },
+      "class_0000_epc_88": {
+        "name": "Fault status",
+        "state": {
+          "off": "No fault has occurred.",
+          "on": "Fault occurred."
+        }
+      },
+      "class_0000_epc_8f": {
+        "name": "Power-saving operation setting",
+        "state": {
+          "off": "Normal Operation",
+          "on": "Power saving Operation"
+        }
+      },
       "class_0002_epc_b1": {
         "name": "Invasion occurrence status",
         "state": {
@@ -70,11 +92,11 @@
           "on": "Detected"
         }
       },
-      "class_0130_epc_8f": {
-        "name": "Power-saving operation setting",
+      "class_0130_epc_ab": {
+        "name": "Non-priority state",
         "state": {
-          "off": "Operating in normal operation mode",
-          "on": "Operating in power-saving mode"
+          "off": "Non-priority",
+          "on": "Normal"
         }
       },
       "class_0130_epc_b1": {
@@ -175,6 +197,20 @@
           "on": "Found"
         }
       },
+      "class_0156_epc_ac": {
+        "name": "Thermostat state",
+        "state": {
+          "off": "Thermostat OFF",
+          "on": "Thermostat ON"
+        }
+      },
+      "class_0157_epc_ab": {
+        "name": "Special state",
+        "state": {
+          "off": "Special state",
+          "on": "Normal operation"
+        }
+      },
       "class_0260_epc_90": {
         "name": "Timer operation setting",
         "state": {
@@ -273,6 +309,13 @@
           "on": "Supplying hot water"
         }
       },
+      "class_026b_epc_c7": {
+        "name": "Participation in energy shift",
+        "state": {
+          "off": "Non Participation",
+          "on": "Participation"
+        }
+      },
       "class_026b_epc_d7": {
         "name": "Mute setting",
         "state": {
@@ -288,14 +331,14 @@
         }
       },
       "class_026b_epc_e5": {
-        "name": "Addition of hot water function setting",
+        "name": "Manual bath hot water addition function setting",
         "state": {
           "off": "Addition of hot water function OFF",
           "on": "Addition of hot water function ON"
         }
       },
       "class_026b_epc_e6": {
-        "name": "Slight bath water temperature lowering function setting",
+        "name": "Manual lukewarm water temperature lowering function setting.",
         "state": {
           "off": "Lukewarm water temperature function OFF",
           "on": "Lukewarm water temperature function ON"
@@ -348,6 +391,13 @@
         "state": {
           "off": "OFF",
           "on": "ON"
+        }
+      },
+      "class_026f_epc_e7": {
+        "name": "Battery level",
+        "state": {
+          "off": "Ordinary level",
+          "on": "Notification of battery replacement"
         }
       },
       "class_0272_epc_90": {
@@ -623,6 +673,13 @@
           "on": "Supplying hot water"
         }
       },
+      "class_02a7_epc_c0": {
+        "name": "Control point",
+        "state": {
+          "off": "Power receiving point",
+          "on": "Device point"
+        }
+      },
       "class_03b7_epc_a5": {
         "name": "Icemaker operation status",
         "state": {
@@ -656,6 +713,13 @@
         "state": {
           "off": "OFF",
           "on": "ON"
+        }
+      },
+      "class_03b7_epc_b1": {
+        "name": "Door open warning",
+        "state": {
+          "off": "Door open warning not found",
+          "on": "Door open warning found"
         }
       },
       "class_03b7_epc_b2": {
@@ -756,6 +820,13 @@
           "on": "Separate type"
         }
       },
+      "class_03ce_epc_d4": {
+        "name": "This property indicates the purpose of the showcase, either refrigeration or freezing.",
+        "state": {
+          "off": "Freezing",
+          "on": "Refrigeration"
+        }
+      },
       "class_03ce_epc_e0": {
         "name": "Indicates on/off status of lighting installed inside the showcase.",
         "state": {
@@ -845,13 +916,6 @@
         "state": {
           "off": "Displaying disabled",
           "on": "Displaying enabled"
-        }
-      },
-      "class_common_epc_80": {
-        "name": "Operation status",
-        "state": {
-          "off": "OFF",
-          "on": "ON"
         }
       }
     }

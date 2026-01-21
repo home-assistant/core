@@ -140,8 +140,8 @@ class EchonetLitePropertyPoller:
 
             properties = [Property(epc=epc, edt=b"") for epc in node.poll_epcs]
             frame = Frame(
-                seoj=CONTROLLER_INSTANCE.to_bytes(3, "big"),
-                deoj=node.eoj.to_bytes(3, "big"),
+                seoj=CONTROLLER_INSTANCE,
+                deoj=node.eoj,
                 esv=ESV_GET,
                 properties=properties,
             )

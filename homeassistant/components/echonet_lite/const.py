@@ -42,6 +42,7 @@ STABLE_CLASS_CODES: frozenset[int] = frozenset(
     }
 )
 
+
 __all__ = [
     "CONF_ENABLE_EXPERIMENTAL",
     "CONF_INTERFACE",

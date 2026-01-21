@@ -6,11 +6,12 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from pyhems.definitions import EntityDefinition, create_binary_decoder
+
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .definitions import BinaryDecoderSpec, DecoderSpec, EntityDefinition
 from .entity import (
     EchonetLiteDescribedEntity,
     EchonetLiteEntityDescription,
@@ -28,38 +29,29 @@ class EchonetLiteSwitchEntityDescription(
     """Entity description that also stores EPC metadata."""
 
     decoder: Callable[[bytes], bool | None] = lambda _: None
-    decoder_spec: BinaryDecoderSpec = None  # type: ignore[assignment]
+    on_value: bytes  # Byte value for ON command
+    off_value: bytes  # Byte value for OFF command
     require_write: bool | None = True  # Switch: must be writable
-
-    @property
-    def on_value(self) -> bytes:
-        """Get byte value for ON command from decoder spec."""
-        return self.decoder_spec.on
-
-    @property
-    def off_value(self) -> bytes:
-        """Get byte value for OFF command from decoder spec."""
-        return self.decoder_spec.off
 
 
 def _create_switch_description(
     class_code: int,
     entity_def: EntityDefinition,
-    decoder_spec: DecoderSpec,
 ) -> EchonetLiteSwitchEntityDescription:
     """Create a switch entity description from an EntityDefinition."""
-    assert isinstance(decoder_spec, BinaryDecoderSpec)
+    on_value, off_value = entity_def.get_binary_values()
 
     return EchonetLiteSwitchEntityDescription(
         key=f"{entity_def.epc:02x}",
-        translation_key=entity_def.translation_key,
+        translation_key=entity_def.id,
         class_code=class_code,
         epc=entity_def.epc,
         device_class=None,
-        decoder=decoder_spec.create_decoder(),
-        decoder_spec=decoder_spec,
+        decoder=create_binary_decoder(on_value),
+        on_value=on_value,
+        off_value=off_value,
         manufacturer_code=entity_def.manufacturer_code,
-        fallback_name=entity_def.fallback_name,
+        fallback_name=entity_def.name_en or None,
     )
 
 

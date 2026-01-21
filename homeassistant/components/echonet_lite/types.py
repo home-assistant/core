@@ -7,11 +7,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol
 
+from pyhems import EOJ
+from pyhems.definitions import DefinitionsRegistry
 from pyhems.runtime import HemsClient
 
 from homeassistant.config_entries import ConfigEntry
-
-from .definitions import DefinitionsRegistry
 
 if TYPE_CHECKING:
     from .coordinator import EchonetLiteCoordinator
@@ -59,7 +59,7 @@ class PropertyPollerProtocol(Protocol):
 class EchonetLiteNodeState:
     """State for a discovered node (SEOJ)."""
 
-    eoj: int
+    eoj: EOJ
     properties: dict[int, bytes]
     last_seen: float
     node_id: str

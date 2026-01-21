@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pyhems import EOJ
 import pytest
 
 from homeassistant.components.echonet_lite.const import DOMAIN, EPC_MANUFACTURER_CODE
@@ -9,8 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import TEST_MANUFACTURER_CODE, make_frame_event
-from .helpers import TestFrame, TestProperty
+from .conftest import TEST_MANUFACTURER_CODE, TestFrame, TestProperty, make_frame_event
 
 
 @pytest.fixture(name="platforms")
@@ -57,7 +57,7 @@ async def test_operation_status_switch(
         ],
     ]
 
-    await coordinator._async_setup_device("010106", int("013501", 16))
+    await coordinator._async_setup_device("010106", EOJ(0x013501))
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
@@ -86,7 +86,7 @@ async def test_operation_status_switch(
     frame_arg = call.args[1]
     assert frame_arg.properties[0].epc == 0x80
     assert frame_arg.properties[0].edt == b"\x30"  # 0x30 = on
-    assert frame_arg.deoj == bytes.fromhex("013501")
+    assert frame_arg.deoj == EOJ(0x013501)
     assert frame_arg.esv == 0x61  # SetC
     assert call.args[0] == "010106"
 
@@ -105,7 +105,7 @@ async def test_operation_status_switch(
             update_frame,
             received_at=31.0,
             node_id="010106",
-            eoj=int("013501", 16),
+            eoj=EOJ(int("013501", 16)),
         ),
     )
     await hass.async_block_till_done()

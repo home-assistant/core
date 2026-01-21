@@ -8,7 +8,8 @@
     },
     "error": {
       "cannot_connect": "Home Assistant could not start the multicast listener. Verify that UDP multicast traffic (224.0.23.0:3610) is allowed on the host network.",
-      "invalid_interface": "Enter a valid IPv4 address (for example 192.168.1.10 or 0.0.0.0)."
+      "invalid_interface": "Enter a valid IPv4 address (for example 192.168.1.10 or 0.0.0.0).",
+      "unknown": "Unexpected error while validating the configuration"
     },
     "step": {
       "reconfigure": {
@@ -33,6 +34,7 @@
       }
     }
   },
+  "entity": {},
   "issues": {
     "runtime_client_error": {
       "fix_flow": {
