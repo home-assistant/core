@@ -174,7 +174,7 @@ async def test_delta_report_sensor(
     assert state is not None
     assert float(state.state) == pytest.approx(0.6)  # unchanged
 
-    # Send delta update (no timestamp)
+    # Send delta update (no timestamp - skipped)
     mock_device.status["add_ele"] = 200
     await mock_listener.async_send_device_update(
         hass,
@@ -184,4 +184,4 @@ async def test_delta_report_sensor(
     )
     state = hass.states.get(entity_id)
     assert state is not None
-    assert float(state.state) == pytest.approx(0.8)  # 0.6 + 0.2
+    assert float(state.state) == pytest.approx(0.6)  # unchanged
