@@ -108,17 +108,6 @@ def entity_registry_enabled_by_default() -> Generator[None]:
         yield
 
 
-# Blueprint test fixtures
-@pytest.fixture(name="stub_blueprint_populate")
-def stub_blueprint_populate_fixture() -> Generator[None]:
-    """Stub copying the blueprints to the config folder."""
-    from .blueprint.common import (  # noqa: PLC0415
-        stub_blueprint_populate_fixture_helper,
-    )
-
-    yield from stub_blueprint_populate_fixture_helper()
-
-
 # TTS test fixtures
 @pytest.fixture(name="mock_tts_get_cache_files")
 def mock_tts_get_cache_files_fixture() -> Generator[MagicMock]:
@@ -811,6 +800,7 @@ async def _check_config_flow_result_translations(
         return
 
     key_prefix = ""
+    description_placeholders = result.get("description_placeholders")
     if isinstance(manager, ConfigEntriesFlowManager):
         category = "config"
         integration = flow.handler
@@ -822,7 +812,16 @@ async def _check_config_flow_result_translations(
         integration = flow.handler
         issue_id = flow.issue_id
         issue = ir.async_get(flow.hass).async_get_issue(integration, issue_id)
+        if issue is None:
+            # Issue was deleted mid-flow (e.g., config entry removed), skip check
+            return
         key_prefix = f"{issue.translation_key}.fix_flow."
+        description_placeholders = {
+            # Both are used in issue translations, and description_placeholders
+            # takes precedence over translation_placeholders
+            **(issue.translation_placeholders or {}),
+            **(description_placeholders or {}),
+        }
     else:
         return
 
@@ -838,7 +837,7 @@ async def _check_config_flow_result_translations(
                 category,
                 integration,
                 f"{key_prefix}step.{step_id}",
-                result["description_placeholders"],
+                description_placeholders,
                 result["data_schema"],
                 ignore_translations_for_mock_domains,
             )
@@ -852,7 +851,7 @@ async def _check_config_flow_result_translations(
                     category,
                     integration,
                     f"{key_prefix}error.{error}",
-                    result["description_placeholders"],
+                    description_placeholders,
                 )
         return
 
@@ -868,7 +867,7 @@ async def _check_config_flow_result_translations(
             category,
             integration,
             f"{key_prefix}abort.{result['reason']}",
-            result["description_placeholders"],
+            description_placeholders,
         )
 
 
@@ -1121,3 +1120,13 @@ async def check_translations(
     for description in translation_errors.values():
         if description != "used":
             pytest.fail(description)
+
+
+@pytest.fixture(name="enable_labs_preview_features")
+def enable_labs_preview_features() -> Generator[None]:
+    """Enable labs preview features."""
+    with patch(
+        "homeassistant.components.labs.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        yield

@@ -1208,7 +1208,14 @@ def config_entry_attr(
     if not isinstance(config_entry_id_, str):
         raise TemplateError("Must provide a config entry ID")
 
-    if attr_name not in ("domain", "title", "state", "source", "disabled_by"):
+    if attr_name not in (
+        "domain",
+        "title",
+        "state",
+        "source",
+        "disabled_by",
+        "pref_disable_polling",
+    ):
         raise TemplateError("Invalid config entry attribute")
 
     config_entry = hass.config_entries.async_get_entry(config_entry_id_)

@@ -2,6 +2,8 @@
 
 from typing import TYPE_CHECKING, Any
 
+from fressnapftracker import FressnapfTrackerError
+
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
@@ -13,6 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FressnapfTrackerConfigEntry
 from .entity import FressnapfTrackerEntity
+from .services import handle_fressnapf_tracker_exception
 
 PARALLEL_UPDATES = 1
 
@@ -43,12 +46,18 @@ class FressnapfTrackerSwitch(FressnapfTrackerEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
-        await self.coordinator.client.set_energy_saving(True)
+        try:
+            await self.coordinator.client.set_energy_saving(True)
+        except FressnapfTrackerError as e:
+            handle_fressnapf_tracker_exception(e)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
-        await self.coordinator.client.set_energy_saving(False)
+        try:
+            await self.coordinator.client.set_energy_saving(False)
+        except FressnapfTrackerError as e:
+            handle_fressnapf_tracker_exception(e)
         await self.coordinator.async_request_refresh()
 
     @property
