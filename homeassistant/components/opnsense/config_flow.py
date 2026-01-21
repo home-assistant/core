@@ -175,7 +175,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception during import")
             return self.async_abort(reason="unknown")
 
-        return self.async_create_entry(title="OPNsense", data=import_data)
+        return self.async_create_entry(title=user_input[CONF_URL], data=import_data)
 
     async def _async_check_connection(self, api_data: APIData) -> None:
         """Check connection to OPNsense."""
