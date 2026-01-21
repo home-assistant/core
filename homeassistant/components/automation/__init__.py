@@ -604,7 +604,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         if self._condition is not None:
             for conf in self._condition.config:
-                referenced |= condition.async_extract_targets(conf, ATTR_LABEL_ID)
+                referenced |= condition_helper.async_extract_targets(
+                    conf, ATTR_LABEL_ID
+                )
 
         for conf in self._trigger_config:
             referenced |= set(_get_targets_from_trigger_config(conf, ATTR_LABEL_ID))
@@ -617,7 +619,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         if self._condition is not None:
             for conf in self._condition.config:
-                referenced |= condition.async_extract_targets(conf, ATTR_FLOOR_ID)
+                referenced |= condition_helper.async_extract_targets(
+                    conf, ATTR_FLOOR_ID
+                )
 
         for conf in self._trigger_config:
             referenced |= set(_get_targets_from_trigger_config(conf, ATTR_FLOOR_ID))
@@ -630,7 +634,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         if self._condition is not None:
             for conf in self._condition.config:
-                referenced |= condition.async_extract_targets(conf, ATTR_AREA_ID)
+                referenced |= condition_helper.async_extract_targets(conf, ATTR_AREA_ID)
 
         for conf in self._trigger_config:
             referenced |= set(_get_targets_from_trigger_config(conf, ATTR_AREA_ID))
