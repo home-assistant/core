@@ -2,6 +2,12 @@
 
 from unittest.mock import MagicMock
 
+from proxmoxer import AuthenticationError
+from proxmoxer.core import ResourceException
+import pytest
+import requests
+from requests.exceptions import ConnectTimeout, SSLError
+
 from homeassistant.components.proxmoxve.const import (
     CONF_CONTAINERS,
     CONF_NODE,
@@ -10,6 +16,7 @@ from homeassistant.components.proxmoxve.const import (
     CONF_VMS,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -20,6 +27,10 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
+
+from . import setup_integration
+
+from tests.common import MockConfigEntry
 
 
 async def test_config_import(
@@ -58,3 +69,45 @@ async def test_config_import(
     assert len(issue_registry.issues) == 1
     assert (HOMEASSISTANT_DOMAIN, "deprecated_yaml") in issue_registry.issues
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (
+            AuthenticationError("Invalid credentials"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            SSLError("SSL handshake failed"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (ConnectTimeout("Connection timed out"), ConfigEntryState.SETUP_RETRY),
+        (
+            ResourceException,
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            requests.exceptions.ConnectionError,
+            ConfigEntryState.SETUP_RETRY,
+        ),
+    ],
+    ids=[
+        "auth_error",
+        "ssl_error",
+        "connect_timeout",
+        "resource_exception",
+        "connection_error",
+    ],
+)
+async def test_setup_exceptions(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test the _async_setup."""
+    mock_proxmox_client.nodes.get.side_effect = exception
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state == expected_state

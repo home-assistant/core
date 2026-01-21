@@ -135,4 +135,5 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="ProxmoxVE test",
         data=MOCK_TEST_CONFIG,
+        entry_id="1234",
     )

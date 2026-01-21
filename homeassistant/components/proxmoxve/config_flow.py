@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
+from proxmoxer.core import ResourceException
 import requests
 from requests.exceptions import ConnectTimeout, SSLError
 import voluptuous as vol
@@ -21,7 +22,6 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
-from .common import ResourceException
 from .const import (
     CONF_CONTAINERS,
     CONF_NODE,

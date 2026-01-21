@@ -37,13 +37,14 @@ _LOGGER = logging.getLogger(__name__)
 class ProxmoxNodeData:
     """All resources for a single Proxmox node."""
 
+    node: dict[str, str] = field(default_factory=dict)
     vms: dict[int, dict[str, Any]] = field(default_factory=dict)
     containers: dict[int, dict[str, Any]] = field(default_factory=dict)
 
 
 @dataclass(slots=True, kw_only=True)
 class ProxmoxCoordinatorData:
-    """Snapshot of Proxmox state grouped by node."""
+    """Proxmox state grouped by node."""
 
     nodes: dict[str, ProxmoxNodeData] = field(default_factory=dict)
 
@@ -68,6 +69,10 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
         )
         self.proxmox: ProxmoxAPI
 
+        self.known_nodes: set[str] = set()
+        self.known_vms: set[tuple[str, int]] = set()
+        self.known_containers: set[tuple[str, int]] = set()
+
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         user_id = (
@@ -84,6 +89,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
                 self.config_entry.data[CONF_PASSWORD],
                 self.config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
             )
+            await self.hass.async_add_executor_job(self.proxmox.nodes.get)
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -145,13 +151,16 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
         data = ProxmoxCoordinatorData()
         for node, (vms, containers) in zip(nodes, vms_containers, strict=True):
             data.nodes[node[CONF_NODE]] = ProxmoxNodeData(
+                node=node,
                 vms={int(vm["vmid"]): vm for vm in vms if "vmid" in vm},
                 containers={
                     int(container["vmid"]): container
                     for container in containers
                     if "vmid" in container
-                },
+                },  # I need to recheck this...
             )
+
+        self._async_add_remove_nodes(data)
         return data
 
     @staticmethod
@@ -180,3 +189,32 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
         containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get()
         assert vms is not None and containers is not None
         return vms, containers
+
+    def _async_add_remove_nodes(self, data: ProxmoxCoordinatorData) -> None:
+        """Add new nodes/VMs/containers, track removals."""
+        current_nodes = set(data.nodes.keys())
+        new_nodes = current_nodes - self.known_nodes
+        if new_nodes:
+            _LOGGER.debug("New nodes found: %s", new_nodes)
+            self.known_nodes.update(new_nodes)
+
+        # And yes, track new VM's and containers as well
+        current_vms = {
+            (node_name, vmid)
+            for node_name, node_data in data.nodes.items()
+            for vmid in node_data.vms
+        }
+        new_vms = current_vms - self.known_vms
+        if new_vms:
+            _LOGGER.debug("New VMs found: %s", new_vms)
+            self.known_vms.update(new_vms)
+
+        current_containers = {
+            (node_name, vmid)
+            for node_name, node_data in data.nodes.items()
+            for vmid in node_data.containers
+        }
+        new_containers = current_containers - self.known_containers
+        if new_containers:
+            _LOGGER.debug("New containers found: %s", new_containers)
+            self.known_containers.update(new_containers)
