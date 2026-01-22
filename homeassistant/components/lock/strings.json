@@ -14,7 +14,7 @@
           "name": "[%key:component::lock::common::condition_behavior_name%]"
         }
       },
-      "name": "If a lock is jammed"
+      "name": "Lock is jammed"
     },
     "is_locked": {
       "description": "Tests if one or more locks are locked.",
@@ -24,7 +24,7 @@
           "name": "[%key:component::lock::common::condition_behavior_name%]"
         }
       },
-      "name": "If a lock is locked"
+      "name": "Lock is locked"
     },
     "is_open": {
       "description": "Tests if one or more locks are open.",
@@ -34,7 +34,7 @@
           "name": "[%key:component::lock::common::condition_behavior_name%]"
         }
       },
-      "name": "If a lock is open"
+      "name": "Lock is open"
     },
     "is_unlocked": {
       "description": "Tests if one or more locks are unlocked.",
@@ -44,7 +44,7 @@
           "name": "[%key:component::lock::common::condition_behavior_name%]"
         }
       },
-      "name": "If a lock is unlocked"
+      "name": "Lock is unlocked"
     }
   },
   "device_automation": {
