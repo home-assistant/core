@@ -70,6 +70,7 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.VACUUM,
     Platform.VALVE,
+    Platform.TEXT,
 ]
 
 
@@ -785,6 +786,7 @@ class DPCode(StrEnum):
     MASTER_STATE = "master_state"  # alarm state
     MATERIAL = "material"  # Material
     MAX_SET = "max_set"
+    MEAL_PLAN = "meal_plan"
     MINI_SET = "mini_set"
     MODE = "mode"  # Working mode / Mode
     MOODLIGHTING = "moodlighting"  # Mood light
