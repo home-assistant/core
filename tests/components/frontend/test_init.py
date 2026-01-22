@@ -1105,10 +1105,12 @@ async def test_development_pr_requires_github_token() -> None:
     }
     assert CONFIG_SCHEMA(valid_config)
 
-    valid_config_no_pr = {DOMAIN: {}}
+    valid_config_no_pr: dict[str, dict[str, Any]] = {DOMAIN: {}}
     assert CONFIG_SCHEMA(valid_config_no_pr)
 
-    valid_config_token_only = {DOMAIN: {CONF_GITHUB_TOKEN: "test_token"}}
+    valid_config_token_only: dict[str, dict[str, Any]] = {
+        DOMAIN: {CONF_GITHUB_TOKEN: "test_token"}
+    }
     assert CONFIG_SCHEMA(valid_config_token_only)
 
     invalid_config = {
@@ -1118,3 +1120,36 @@ async def test_development_pr_requires_github_token() -> None:
     }
     with pytest.raises(vol.Invalid, match="'github_token' is required"):
         CONFIG_SCHEMA(invalid_config)
+
+
+async def test_setup_with_development_pr_and_token(
+    hass: HomeAssistant,
+    tmp_path: Path,
+) -> None:
+    """Test that setup succeeds when both development_pr and github_token are provided."""
+    hass.config.config_dir = str(tmp_path)
+
+    config = {
+        DOMAIN: {
+            CONF_DEVELOPMENT_PR: 12345,
+            CONF_GITHUB_TOKEN: "test_token",
+        }
+    }
+
+    # Mock download_pr_artifact to verify it's called with correct parameters
+    with patch(
+        "homeassistant.components.frontend.download_pr_artifact"
+    ) as mock_download:
+        # Simulate successful download
+        mock_download.return_value = (
+            tmp_path / "frontend_development_artifacts" / "12345" / "hass_frontend"
+        )
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+        # Verify download_pr_artifact was called with the correct parameters
+        mock_download.assert_called_once()
+        call_args = mock_download.call_args
+        assert call_args[0][1] == 12345  # PR number
+        assert call_args[0][2] == "test_token"  # GitHub token
