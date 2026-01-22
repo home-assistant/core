@@ -8,14 +8,37 @@
       "cannot_connect": "Unable to connect to the panel. Confirm the host is reachable and the panel is online.",
       "invalid_auth": "Unable to authenticate with the panel. Check the access code, passphrase, and network connectivity.",
       "link_required": "The panel requires linking. Enter the access code and passphrase again.",
+      "no_panels_found": "No panels were discovered. Confirm the panel is online, then try again or set it up manually.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
         "title": "Set up Elk E27 Alarm Panel",
-        "description": "Enter the panel address and linking credentials.",
+        "description": "Choose how you want to add the panel.",
+        "menu_options": {
+          "discover": "Discover panels",
+          "manual": "Manual setup"
+        }
+      },
+      "discover": {
+        "title": "Discover panels",
+        "description": "Select a discovered panel and enter the linking credentials.",
         "data": {
-          "host": "Address",
+          "panel": "Panel",
+          "access_code": "Access code (used for linking, NOT a PIN)",
+          "passphrase": "Passphrase"
+        },
+        "data_description": {
+          "panel": "Select the panel to add.",
+          "access_code": "The panel access code used during linking. It is not a PIN.",
+          "passphrase": "The passphrase used during linking."
+        }
+      },
+      "manual": {
+        "title": "Manual connection",
+        "description": "Enter the host and linking credentials.",
+        "data": {
+          "host": "Host",
           "access_code": "Access code (used for linking, NOT a PIN)",
           "passphrase": "Passphrase"
         },
@@ -23,18 +46,6 @@
           "host": "The panel host name or IP address.",
           "access_code": "The panel access code used during linking. It is not a PIN.",
           "passphrase": "The passphrase used during linking."
-        }
-      },
-      "manual": {
-        "title": "Manual connection",
-        "description": "Enter the host and port.",
-        "data": {
-          "host": "Host",
-          "port": "Port"
-        },
-        "data_description": {
-          "host": "The panel host name or IP address.",
-          "port": "The panel port, usually 2101."
         }
       },
       "link": {

@@ -107,11 +107,19 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["type"] is FlowResultType.FORM
+        assert result["type"] is FlowResultType.MENU
         assert result["step_id"] == "user"
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
+            {"next_step_id": "manual"},
+        )
+
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "manual"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {
                 CONF_HOST: "192.168.1.10",
                 "access_code": "1234",
@@ -119,15 +127,15 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result2["type"] is FlowResultType.CREATE_ENTRY
-        assert result2["title"] == "Test Panel"
-        assert result2["data"][CONF_HOST] == "192.168.1.10"
-        assert result2["data"][CONF_LINK_KEYS_JSON] == LinkKeys(
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
+        assert result3["title"] == "Test Panel"
+        assert result3["data"][CONF_HOST] == "192.168.1.10"
+        assert result3["data"][CONF_LINK_KEYS_JSON] == LinkKeys(
             "tk", "lk", "lh"
         ).to_json()
-        assert result2["data"][CONF_INTEGRATION_SERIAL] == "112233445566"
-        assert "panel_info" in result2["options"]
-        assert "table_info" in result2["options"]
+        assert result3["data"][CONF_INTEGRATION_SERIAL] == "112233445566"
+        assert "panel_info" in result3["options"]
+        assert "table_info" in result3["options"]
         client.async_disconnect.assert_awaited_once()
 
 
@@ -147,10 +155,16 @@ async def test_invalid_auth_returns_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["type"] is FlowResultType.MENU
         assert result["step_id"] == "user"
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
+            {"next_step_id": "manual"},
+        )
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {
                 CONF_HOST: "192.168.1.30",
                 "access_code": "1234",
@@ -158,8 +172,8 @@ async def test_invalid_auth_returns_error(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["errors"]["base"] == "invalid_auth"
+        assert result3["type"] is FlowResultType.FORM
+        assert result3["errors"]["base"] == "invalid_auth"
         client.async_disconnect.assert_awaited_once()
 
 
@@ -180,10 +194,16 @@ async def test_cannot_connect_returns_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        assert result["type"] is FlowResultType.MENU
         assert result["step_id"] == "user"
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
+            {"next_step_id": "manual"},
+        )
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {
                 CONF_HOST: "192.168.1.31",
                 "access_code": "1234",
@@ -191,8 +211,80 @@ async def test_cannot_connect_returns_error(hass: HomeAssistant) -> None:
             },
         )
 
+        assert result3["type"] is FlowResultType.FORM
+        assert result3["errors"]["base"] == "cannot_connect"
+        client.async_disconnect.assert_awaited_once()
+
+
+async def test_discovery_flow_creates_entry(hass: HomeAssistant) -> None:
+    """Test discovery flow creates an entry."""
+    client = AsyncMock()
+    client.async_link = AsyncMock(return_value=LinkKeys("tk", "lk", "lh"))
+    client.async_connect = AsyncMock(return_value=None)
+    client.async_execute = AsyncMock(return_value=SimpleNamespace(ok=True))
+    client.wait_ready = AsyncMock(return_value=True)
+    client.async_disconnect = AsyncMock(return_value=None)
+    client.snapshot = FakeSnapshot(
+        panel_info=FakePanelInfo(
+            panel_name="Test Panel",
+            mac="aa:bb:cc:dd:ee:ff",
+            panel_serial="1234",
+        ),
+        table_info=FakeTableInfo(areas=8, zones=16),
+    )
+
+    discovery = SimpleNamespace(
+        panel_host="192.168.1.20",
+        port=DEFAULT_PORT,
+        panel_name="Discovered Panel",
+        panel_mac="aa:bb:cc:dd:ee:00",
+    )
+
+    with patch(
+        "homeassistant.components.elke27.config_flow._create_client",
+        side_effect=_client_factory([client]),
+    ), patch(
+        "homeassistant.components.elke27.config_flow.async_get_integration_serial",
+        AsyncMock(return_value="112233445566"),
+    ), patch(
+        "homeassistant.components.elke27.config_flow.AIOELKDiscovery.async_scan",
+        AsyncMock(return_value=[discovery]),
+    ), patch(
+        "homeassistant.components.elke27.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "user"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "discover"},
+        )
+
         assert result2["type"] is FlowResultType.FORM
-        assert result2["errors"]["base"] == "cannot_connect"
+        assert result2["step_id"] == "discover"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "panel": "0",
+                "access_code": "1234",
+                "passphrase": "test-pass",
+            },
+        )
+
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
+        assert result3["title"] == "Test Panel"
+        assert result3["data"][CONF_HOST] == "192.168.1.20"
+        assert result3["data"][CONF_LINK_KEYS_JSON] == LinkKeys(
+            "tk", "lk", "lh"
+        ).to_json()
+        assert result3["data"][CONF_INTEGRATION_SERIAL] == "112233445566"
+        assert "panel_info" in result3["options"]
+        assert "table_info" in result3["options"]
         client.async_disconnect.assert_awaited_once()
 
 
