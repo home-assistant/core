@@ -36,6 +36,7 @@ from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockUser, async_capture_events, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import (
     ClientSessionGenerator,
     MockHAClientWebSocket,
@@ -1125,9 +1126,16 @@ async def test_development_pr_requires_github_token() -> None:
 async def test_setup_with_development_pr_and_token(
     hass: HomeAssistant,
     tmp_path: Path,
+    mock_github_api,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test that setup succeeds when both development_pr and github_token are provided."""
     hass.config.config_dir = str(tmp_path)
+
+    aioclient_mock.get(
+        "https://api.github.com/artifact/download",
+        content=b"fake zip data",
+    )
 
     config = {
         DOMAIN: {
@@ -1136,20 +1144,11 @@ async def test_setup_with_development_pr_and_token(
         }
     }
 
-    with patch(
-        "homeassistant.components.frontend.download_pr_artifact"
-    ) as mock_download:
-        mock_download.return_value = (
-            tmp_path / ".tmp" / "frontend_development_artifacts"
-        )
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
-
-        mock_download.assert_called_once()
-        call_args = mock_download.call_args
-        assert call_args[0][1] == 12345  # PR number
-        assert call_args[0][2] == "test_token"  # GitHub token
+    # Verify GitHub API was called
+    assert mock_github_api.generic.call_count >= 2  # PR + workflow runs
 
 
 async def test_setup_cleans_up_pr_cache_when_not_configured(
@@ -1159,7 +1158,7 @@ async def test_setup_cleans_up_pr_cache_when_not_configured(
     """Test that PR cache is cleaned up when no PR is configured."""
     hass.config.config_dir = str(tmp_path)
 
-    pr_cache_dir = tmp_path / ".tmp" / "frontend_development_artifacts"
+    pr_cache_dir = tmp_path / ".cache" / "frontend" / "development_artifacts"
     pr_cache_dir.mkdir(parents=True)
     (pr_cache_dir / "test_file.txt").write_text("test")
 

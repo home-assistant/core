@@ -149,6 +149,76 @@ def _extract_artifact(
     sha_file.write_text(head_sha)
 
 
+async def _download_pr_artifact(
+    hass: HomeAssistant,
+    pr_number: int,
+    github_token: str,
+    tmp_dir: pathlib.Path,
+) -> pathlib.Path:
+    """Download and extract frontend PR artifact from GitHub (core logic).
+
+    Returns the path to the tmp directory containing hass_frontend/.
+    Raises HomeAssistantError on failure.
+    """
+    try:
+        session = async_get_clientsession(hass)
+    except Exception as err:
+        raise HomeAssistantError(f"Failed to get HTTP client session: {err}") from err
+
+    client = GitHubAPI(token=github_token, session=session)
+
+    head_sha = await _get_pr_head_sha(client, pr_number)
+
+    frontend_dir = tmp_dir / "hass_frontend"
+    sha_file = tmp_dir / ".sha"
+
+    if frontend_dir.exists() and sha_file.exists():
+        try:
+            cached_sha = await hass.async_add_executor_job(sha_file.read_text)
+            if cached_sha.strip() == head_sha:
+                _LOGGER.info(
+                    "Using cached PR #%s (commit %s) from %s",
+                    pr_number,
+                    head_sha[:8],
+                    tmp_dir,
+                )
+                return tmp_dir
+            _LOGGER.info(
+                "PR #%s has new commits (cached: %s, current: %s), re-downloading",
+                pr_number,
+                cached_sha[:8],
+                head_sha[:8],
+            )
+        except OSError as err:
+            _LOGGER.debug("Failed to read cache SHA file: %s", err)
+
+    artifact_url = await _find_pr_artifact(client, pr_number, head_sha)
+
+    _LOGGER.info("Downloading frontend PR #%s artifact", pr_number)
+    artifact_data = await _download_artifact_data(hass, artifact_url, github_token)
+
+    try:
+        await hass.async_add_executor_job(
+            _extract_artifact, artifact_data, tmp_dir, head_sha
+        )
+    except zipfile.BadZipFile as err:
+        raise HomeAssistantError(
+            f"Downloaded artifact for PR #{pr_number} is corrupted or invalid"
+        ) from err
+    except OSError as err:
+        raise HomeAssistantError(
+            f"Failed to extract artifact for PR #{pr_number}: {err}"
+        ) from err
+
+    _LOGGER.info(
+        "Successfully downloaded and extracted PR #%s (commit %s) to %s",
+        pr_number,
+        head_sha[:8],
+        tmp_dir,
+    )
+    return tmp_dir
+
+
 async def download_pr_artifact(
     hass: HomeAssistant,
     pr_number: int,
@@ -159,58 +229,11 @@ async def download_pr_artifact(
 
     Returns the path to the tmp directory containing hass_frontend/, or None on failure.
     """
-    client = GitHubAPI(
-        token=github_token,
-        session=async_get_clientsession(hass),
-    )
-
     try:
-        head_sha = await _get_pr_head_sha(client, pr_number)
+        return await _download_pr_artifact(hass, pr_number, github_token, tmp_dir)
     except HomeAssistantError as err:
-        _LOGGER.error("%s", err)
+        _LOGGER.error("Failed to download PR #%s: %s", pr_number, err)
         return None
-
-    frontend_dir = tmp_dir / "hass_frontend"
-    sha_file = tmp_dir / ".sha"
-
-    if frontend_dir.exists() and sha_file.exists():
-        cached_sha = await hass.async_add_executor_job(sha_file.read_text)
-        if cached_sha.strip() == head_sha:
-            _LOGGER.info(
-                "Using cached PR #%s (commit %s) from %s",
-                pr_number,
-                head_sha[:8],
-                tmp_dir,
-            )
-            return tmp_dir
-        _LOGGER.info(
-            "PR #%s has new commits (cached: %s, current: %s), re-downloading",
-            pr_number,
-            cached_sha[:8],
-            head_sha[:8],
-        )
-
-    try:
-        artifact_url = await _find_pr_artifact(client, pr_number, head_sha)
-
-        _LOGGER.info("Downloading frontend PR #%s artifact", pr_number)
-        artifact_data = await _download_artifact_data(hass, artifact_url, github_token)
-
-        await hass.async_add_executor_job(
-            _extract_artifact, artifact_data, tmp_dir, head_sha
-        )
-
-        _LOGGER.info(
-            "Successfully downloaded and extracted PR #%s (commit %s) to %s",
-            pr_number,
-            head_sha[:8],
-            tmp_dir,
-        )
-    except HomeAssistantError as err:
-        _LOGGER.error("%s", err)
-        return None
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         _LOGGER.exception("Unexpected error downloading PR #%s", pr_number)
         return None
-    else:
-        return tmp_dir

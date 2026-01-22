@@ -60,7 +60,7 @@ async def test_pr_download_uses_cache(
     """Test that cached PR is used when commit hasn't changed."""
     hass.config.config_dir = str(tmp_path)
 
-    pr_cache_dir = tmp_path / ".tmp" / "frontend_development_artifacts"
+    pr_cache_dir = tmp_path / ".cache" / "frontend" / "development_artifacts"
     frontend_dir = pr_cache_dir / "hass_frontend"
     frontend_dir.mkdir(parents=True)
     (frontend_dir / "index.html").write_text("test")
@@ -103,7 +103,7 @@ async def test_pr_download_cache_invalidated(
     """Test that cache is invalidated when commit changes."""
     hass.config.config_dir = str(tmp_path)
 
-    pr_cache_dir = tmp_path / ".tmp" / "frontend_development_artifacts"
+    pr_cache_dir = tmp_path / ".cache" / "frontend" / "development_artifacts"
     frontend_dir = pr_cache_dir / "hass_frontend"
     frontend_dir.mkdir(parents=True)
     (frontend_dir / "index.html").write_text("test")

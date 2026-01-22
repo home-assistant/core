@@ -26,7 +26,7 @@ EXCLUDE_FROM_BACKUP = [
     "tmp_backups/*.tar",
     "OZW_Log.txt",
     "tts/*",
-    ".tmp/*",
+    ".cache/*",
 ]
 
 EXCLUDE_DATABASE_FROM_BACKUP = [

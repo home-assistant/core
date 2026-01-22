@@ -57,8 +57,7 @@ CONF_JS_VERSION = "javascript_version"
 CONF_DEVELOPMENT_PR = "development_pr"
 CONF_GITHUB_TOKEN = "github_token"
 
-TMP_DIR = ".tmp"
-PR_CACHE_DIR = "frontend_development_artifacts"
+DEV_ARTIFACTS_DIR = "development_artifacts"
 
 DEFAULT_THEME_COLOR = "#2980b9"
 
@@ -446,10 +445,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     repo_path = conf.get(CONF_FRONTEND_REPO)
     dev_pr_number = conf.get(CONF_DEVELOPMENT_PR)
 
-    pr_cache_dir = pathlib.Path(hass.config.config_dir) / TMP_DIR / PR_CACHE_DIR
+    pr_cache_dir = pathlib.Path(hass.config.cache_path(DOMAIN, DEV_ARTIFACTS_DIR))
     if not dev_pr_number and pr_cache_dir.exists():
-        await hass.async_add_executor_job(shutil.rmtree, pr_cache_dir)
-        _LOGGER.debug("Cleaned up frontend development artifacts")
+        try:
+            await hass.async_add_executor_job(shutil.rmtree, pr_cache_dir)
+            _LOGGER.debug("Cleaned up frontend development artifacts")
+        except OSError as err:
+            _LOGGER.warning(
+                "Could not clean up frontend development artifacts: %s", err
+            )
 
     # Priority: development_repo > development_pr > integrated
     if repo_path and dev_pr_number:
@@ -468,9 +472,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         if dev_pr_dir is None:
-            _LOGGER.error(
-                "Failed to download PR #%s, falling back to the integrated frontend",
-                dev_pr_number,
+            _LOGGER.info(
+                "Falling back to the integrated frontend",
             )
             repo_path = None
         else:
