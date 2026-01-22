@@ -21,7 +21,11 @@ from tests.components import (
 
 @pytest.fixture
 async def target_lights(hass: HomeAssistant) -> list[str]:
-    """Create multiple light entities associated with different targets."""
+    """Create multiple light entities associated with different targets.
+
+    Note: The lights are used to ensure that only switch entities are considered
+    in the condition evaluation and not other toggle entities.
+    """
     return (await target_entities(hass, "light"))["included"]
 
 
