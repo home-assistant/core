@@ -24,9 +24,13 @@ RE_REFERENCE = r"\[\%key:(.+)\%\]"
 RE_TRANSLATION_KEY = re.compile(r"^(?!.+[_-]{2})(?![_-])[a-z0-9-_]+(?<![_-])$")
 RE_COMBINED_REFERENCE = re.compile(r"(.+\[%)|(%\].+)")
 RE_PLACEHOLDER_IN_SINGLE_QUOTES = re.compile(r"'{\w+}'")
+RE_IP = re.compile(
+    r"((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.){3}(25[0-5]|(2[0-4]|1\d|[1-9]|)\d)"
+)
 RE_URL = re.compile(
     r"(((ftp|ftps|scp|http|https|mqtt|mqtts|socket|socks5):\/\/|www\.)"
-    r"[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?)"
+    r"[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?)",
+    re.IGNORECASE,
 )
 
 # Only allow translation of integration names if they contain non-brand names

@@ -418,10 +418,12 @@ def test_gen_strings_schema(
     [
         "An example is: https://example.com.",
         "www.example.com",
+        "WWW.EXAMPLE.COM",
+        "HTTPS://www.example.com",
     ],
 )
 def test_no_placeholders_used_for_urls(translation_string: str) -> None:
-    """Test string with no placeholders in single quotes."""
+    """Test that translation strings containing URLs are rejected."""
     schema = vol.Schema(translations.translation_value_validator)
 
     with pytest.raises(vol.Invalid):
