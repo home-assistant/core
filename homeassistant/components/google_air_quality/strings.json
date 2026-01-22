@@ -211,9 +211,6 @@
       "non_methane_hydrocarbons": {
         "name": "Non-methane hydrocarbons"
       },
-      "ozone": {
-        "name": "[%key:component::sensor::entity_component::ozone::name%]"
-      },
       "uaqi": {
         "name": "Universal Air Quality Index"
       },
