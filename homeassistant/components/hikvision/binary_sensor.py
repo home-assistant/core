@@ -27,7 +27,6 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -36,6 +35,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import HikvisionConfigEntry
 from .const import DEFAULT_PORT, DOMAIN
+from .entity import HikvisionEntity
 
 CONF_IGNORED = "ignored"
 
@@ -164,10 +164,9 @@ async def async_setup_entry(
     )
 
 
-class HikvisionBinarySensor(BinarySensorEntity):
+class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
     """Representation of a Hikvision binary sensor."""
 
-    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -177,38 +176,14 @@ class HikvisionBinarySensor(BinarySensorEntity):
         channel: int,
     ) -> None:
         """Initialize the binary sensor."""
-        self._data = entry.runtime_data
-        self._camera = self._data.camera
+        super().__init__(entry, channel)
         self._sensor_type = sensor_type
-        self._channel = channel
 
-        # Build unique ID
+        # Build unique ID (includes sensor_type for uniqueness per sensor)
         self._attr_unique_id = f"{self._data.device_id}_{sensor_type}_{channel}"
 
-        # Device info for device registry
-        if self._data.device_type == "NVR":
-            # NVR channels get their own device linked to the NVR via via_device
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"{self._data.device_id}_{channel}")},
-                via_device=(DOMAIN, self._data.device_id),
-                translation_key="nvr_channel",
-                translation_placeholders={
-                    "device_name": self._data.device_name,
-                    "channel_number": str(channel),
-                },
-                manufacturer="Hikvision",
-                model="NVR Channel",
-            )
-            self._attr_name = sensor_type
-        else:
-            # Single camera device
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._data.device_id)},
-                name=self._data.device_name,
-                manufacturer="Hikvision",
-                model=self._data.device_type,
-            )
-            self._attr_name = sensor_type
+        # Set entity name
+        self._attr_name = sensor_type
 
         # Set device class
         self._attr_device_class = DEVICE_CLASS_MAP.get(sensor_type)
