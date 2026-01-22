@@ -1,6 +1,6 @@
 {
   "common": {
-    "trigger_behavior_description": "The behavior of the targeted climates to trigger on.",
+    "trigger_behavior_description": "The behavior of the targeted thermostats to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
   "device_automation": {
@@ -298,22 +298,22 @@
       "name": "Set target temperature"
     },
     "toggle": {
-      "description": "Toggles climate device, from on to off, or off to on.",
+      "description": "Toggles thermostat, from on to off, or off to on.",
       "name": "[%key:common::action::toggle%]"
     },
     "turn_off": {
-      "description": "Turns climate device off.",
+      "description": "Turns thermostat off.",
       "name": "[%key:common::action::turn_off%]"
     },
     "turn_on": {
-      "description": "Turns climate device on.",
+      "description": "Turns thermostat on.",
       "name": "[%key:common::action::turn_on%]"
     }
   },
   "title": "Climate",
   "triggers": {
     "current_humidity_changed": {
-      "description": "Triggers after the humidity measured by one or more climate-control devices changes.",
+      "description": "Triggers after the humidity measured by one or more thermostats changes.",
       "fields": {
         "above": {
           "description": "Trigger when the humidity is above this value.",
@@ -324,10 +324,10 @@
           "name": "Below"
         }
       },
-      "name": "Climate-control device current humidity changed"
+      "name": "Thermostat current humidity changed"
     },
     "current_humidity_crossed_threshold": {
-      "description": "Triggers after the humidity measured by one or more climate-control devices crosses a threshold.",
+      "description": "Triggers after the humidity measured by one or more thermostats crosses a threshold.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
@@ -346,10 +346,10 @@
           "name": "Upper threshold"
         }
       },
-      "name": "Climate-control device current humidity crossed threshold"
+      "name": "Thermostat current humidity crossed threshold"
     },
     "current_temperature_changed": {
-      "description": "Triggers after the temperature measured by one or more climate-control devices changes.",
+      "description": "Triggers after the temperature measured by one or more thermostats changes.",
       "fields": {
         "above": {
           "description": "Trigger when the temperature is above this value.",
@@ -360,10 +360,10 @@
           "name": "Below"
         }
       },
-      "name": "Climate-control device current temperature changed"
+      "name": "Thermostat current temperature changed"
     },
     "current_temperature_crossed_threshold": {
-      "description": "Triggers after the temperature measured by one or more climate-control devices crosses a threshold.",
+      "description": "Triggers after the temperature measured by one or more thermostats crosses a threshold.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
@@ -382,10 +382,10 @@
           "name": "Upper threshold"
         }
       },
-      "name": "Climate-control device current temperature crossed threshold"
+      "name": "Thermostat current temperature crossed threshold"
     },
     "hvac_mode_changed": {
-      "description": "Triggers after the mode of one or more climate-control devices changes.",
+      "description": "Triggers after the mode of one or more thermostats changes.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
@@ -396,40 +396,40 @@
           "name": "Modes"
         }
       },
-      "name": "Climate-control device mode changed"
+      "name": "Thermostat mode changed"
     },
     "started_cooling": {
-      "description": "Triggers after one or more climate-control devices start cooling.",
+      "description": "Triggers after one or more thermostats start cooling.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "Climate-control device started cooling"
+      "name": "Thermostat started cooling"
     },
     "started_drying": {
-      "description": "Triggers after one or more climate-control devices start drying.",
+      "description": "Triggers after one or more thermostats start drying.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "Climate-control device started drying"
+      "name": "Thermostat started drying"
     },
     "started_heating": {
-      "description": "Triggers after one or more climate-control devices start heating.",
+      "description": "Triggers after one or more thermostats start heating.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "Climate-control device started heating"
+      "name": "Thermostat started heating"
     },
     "target_humidity_changed": {
-      "description": "Triggers after the humidity setpoint of one or more climate-control devices changes.",
+      "description": "Triggers after the humidity setpoint of one or more thermostats changes.",
       "fields": {
         "above": {
           "description": "Trigger when the target humidity is above this value.",
@@ -440,10 +440,10 @@
           "name": "Below"
         }
       },
-      "name": "Climate-control device target humidity changed"
+      "name": "Thermostat target humidity changed"
     },
     "target_humidity_crossed_threshold": {
-      "description": "Triggers after the humidity setpoint of one or more climate-control devices crosses a threshold.",
+      "description": "Triggers after the humidity setpoint of one or more thermostats crosses a threshold.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
@@ -462,10 +462,10 @@
           "name": "Upper threshold"
         }
       },
-      "name": "Climate-control device target humidity crossed threshold"
+      "name": "Thermostat target humidity crossed threshold"
     },
     "target_temperature_changed": {
-      "description": "Triggers after the temperature setpoint of one or more climate-control devices changes.",
+      "description": "Triggers after the temperature setpoint of one or more thermostats changes.",
       "fields": {
         "above": {
           "description": "Trigger when the target temperature is above this value.",
@@ -476,10 +476,10 @@
           "name": "Below"
         }
       },
-      "name": "Climate-control device target temperature changed"
+      "name": "Thermostat target temperature changed"
     },
     "target_temperature_crossed_threshold": {
-      "description": "Triggers after the temperature setpoint of one or more climate-control devices crosses a threshold.",
+      "description": "Triggers after the temperature setpoint of one or more thermostats crosses a threshold.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
@@ -498,27 +498,27 @@
           "name": "Upper threshold"
         }
       },
-      "name": "Climate-control device target temperature crossed threshold"
+      "name": "Thermostat target temperature crossed threshold"
     },
     "turned_off": {
-      "description": "Triggers after one or more climate-control devices turn off.",
+      "description": "Triggers after one or more thermostats turn off.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "Climate-control device turned off"
+      "name": "Thermostat turned off"
     },
     "turned_on": {
-      "description": "Triggers after one or more climate-control devices turn on, regardless of the mode.",
+      "description": "Triggers after one or more thermostats turn on, regardless of the mode.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
         }
       },
-      "name": "Climate-control device turned on"
+      "name": "Thermostat turned on"
     }
   }
 }
