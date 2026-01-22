@@ -14,9 +14,12 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.frontend import (
+    CONF_DEVELOPMENT_PR,
     CONF_EXTRA_JS_URL_ES5,
     CONF_EXTRA_MODULE_URL,
+    CONF_GITHUB_TOKEN,
     CONF_THEMES,
+    CONFIG_SCHEMA,
     DEFAULT_THEME_COLOR,
     DOMAIN,
     EVENT_PANELS_UPDATED,
@@ -1090,3 +1093,28 @@ async def test_www_local_dir(
     client = await hass_client()
     resp = await client.get("/local/x.txt")
     assert resp.status == HTTPStatus.OK
+
+
+async def test_development_pr_requires_github_token() -> None:
+    """Test that github_token is required when development_pr is set."""
+    valid_config = {
+        DOMAIN: {
+            CONF_DEVELOPMENT_PR: 12345,
+            CONF_GITHUB_TOKEN: "test_token",
+        }
+    }
+    assert CONFIG_SCHEMA(valid_config)
+
+    valid_config_no_pr = {DOMAIN: {}}
+    assert CONFIG_SCHEMA(valid_config_no_pr)
+
+    valid_config_token_only = {DOMAIN: {CONF_GITHUB_TOKEN: "test_token"}}
+    assert CONFIG_SCHEMA(valid_config_token_only)
+
+    invalid_config = {
+        DOMAIN: {
+            CONF_DEVELOPMENT_PR: 12345,
+        }
+    }
+    with pytest.raises(vol.Invalid, match="'github_token' is required"):
+        CONFIG_SCHEMA(invalid_config)

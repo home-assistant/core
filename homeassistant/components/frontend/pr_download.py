@@ -28,7 +28,6 @@ GITHUB_REPO = "home-assistant/frontend"
 ARTIFACT_NAME = "frontend-build"
 CACHE_WARNING_SIZE_MB = 500
 
-# Error messages
 ERROR_INVALID_TOKEN = (
     "GitHub token is invalid or expired. "
     "Please check your github_token in the frontend configuration. "
@@ -71,21 +70,17 @@ async def _find_pr_artifact(client: GitHubAPI, pr_number: int, head_sha: str) ->
     Returns the artifact download URL.
     """
     try:
-        # Get workflow runs for the commit
         response = await client.generic(
             endpoint="/repos/home-assistant/frontend/actions/workflows/ci.yaml/runs",
             params={"head_sha": head_sha, "per_page": 10},
         )
 
-        # Find the most recent successful run for this commit
         for run in response.data.get("workflow_runs", []):
             if run["status"] == "completed" and run["conclusion"] == "success":
-                # Get artifacts for this run
                 artifacts_response = await client.generic(
                     endpoint=f"/repos/home-assistant/frontend/actions/runs/{run['id']}/artifacts",
                 )
 
-                # Find the frontend-build artifact
                 for artifact in artifacts_response.data.get("artifacts", []):
                     if artifact["name"] == ARTIFACT_NAME:
                         _LOGGER.info(
@@ -163,40 +158,28 @@ def _extract_artifact(
 async def download_pr_artifact(
     hass: HomeAssistant,
     pr_number: int,
-    github_token: str | None,
+    github_token: str,
     cache_dir: pathlib.Path,
 ) -> pathlib.Path | None:
     """Download and extract frontend PR artifact from GitHub.
 
     Returns the path to the extracted hass_frontend directory, or None on failure.
     """
-    # GitHub token is required to download artifacts
-    if not github_token:
-        _LOGGER.error(
-            "GitHub token is required to download PR artifacts. "
-            "Add 'github_token' to your frontend configuration"
-        )
-        return None
-
-    # Create GitHub API client
     client = GitHubAPI(
         token=github_token,
         session=async_get_clientsession(hass),
     )
 
-    # Get the current head SHA for this PR
     try:
         head_sha = await _get_pr_head_sha(client, pr_number)
     except HomeAssistantError as err:
         _LOGGER.error("%s", err)
         return None
 
-    # Check if we have this exact version cached
     pr_dir = cache_dir / str(pr_number)
     frontend_dir = pr_dir / "hass_frontend"
     sha_file = pr_dir / ".sha"
 
-    # Check if cached version matches current commit
     if frontend_dir.exists() and sha_file.exists():
         cached_sha = await hass.async_add_executor_job(sha_file.read_text)
         if cached_sha.strip() == head_sha:
@@ -215,14 +198,11 @@ async def download_pr_artifact(
         )
 
     try:
-        # Find the artifact
         artifact_url = await _find_pr_artifact(client, pr_number, head_sha)
 
-        # Download artifact
         _LOGGER.info("Downloading frontend PR #%s artifact", pr_number)
         artifact_data = await _download_artifact_data(hass, artifact_url, github_token)
 
-        # Extract artifact
         await hass.async_add_executor_job(
             _extract_artifact, artifact_data, pr_dir, frontend_dir, head_sha
         )
@@ -237,7 +217,6 @@ async def download_pr_artifact(
         size_mb = await hass.async_add_executor_job(_get_directory_size_mb, pr_dir)
         _LOGGER.info("PR #%s cache size: %.1f MB", pr_number, size_mb)
 
-        # Warn if total cache size exceeds threshold
         total_cache_size = await hass.async_add_executor_job(
             _get_directory_size_mb, cache_dir
         )

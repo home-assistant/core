@@ -36,6 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.hass_dict import HassKey
 
+from .pr_download import download_pr_artifact
 from .storage import async_setup_frontend_storage
 
 _LOGGER = logging.getLogger(__name__)
@@ -129,25 +130,37 @@ def _validate_themes(themes: dict) -> dict[str, Any]:
     return validated_themes
 
 
+def _validate_frontend_config(config: dict) -> dict:
+    """Validate frontend configuration dependencies."""
+    if CONF_DEVELOPMENT_PR in config and CONF_GITHUB_TOKEN not in config:
+        raise vol.Invalid(
+            f"'{CONF_GITHUB_TOKEN}' is required when '{CONF_DEVELOPMENT_PR}' is set"
+        )
+    return config
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_FRONTEND_REPO): cv.path,
-                vol.Optional(CONF_DEVELOPMENT_PR): cv.positive_int,
-                vol.Optional(CONF_GITHUB_TOKEN): cv.string,
-                vol.Optional(CONF_THEMES): vol.All(dict, _validate_themes),
-                vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-                vol.Optional(CONF_EXTRA_JS_URL_ES5): vol.All(
-                    cv.ensure_list, [cv.string]
-                ),
-                # We no longer use these options.
-                vol.Optional(CONF_EXTRA_HTML_URL): cv.match_all,
-                vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
-                vol.Optional(CONF_JS_VERSION): cv.match_all,
-            },
+        DOMAIN: vol.All(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_FRONTEND_REPO): cv.path,
+                    vol.Optional(CONF_DEVELOPMENT_PR): cv.positive_int,
+                    vol.Optional(CONF_GITHUB_TOKEN): cv.string,
+                    vol.Optional(CONF_THEMES): vol.All(dict, _validate_themes),
+                    vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                    vol.Optional(CONF_EXTRA_JS_URL_ES5): vol.All(
+                        cv.ensure_list, [cv.string]
+                    ),
+                    # We no longer use these options.
+                    vol.Optional(CONF_EXTRA_HTML_URL): cv.match_all,
+                    vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
+                    vol.Optional(CONF_JS_VERSION): cv.match_all,
+                },
+            ),
+            _validate_frontend_config,
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -400,16 +413,7 @@ def add_manifest_json_key(key: str, val: Any) -> None:
 def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     """Return root path to the frontend files."""
     if dev_repo_path is not None:
-        dev_frontend_path = pathlib.Path(dev_repo_path) / "hass_frontend"
-        if dev_frontend_path.exists() and dev_frontend_path.is_dir():
-            _LOGGER.info("Using frontend development repo: %s", dev_repo_path)
-            return dev_frontend_path
-
-        _LOGGER.error(
-            "Frontend development repo path does not exist: %s, "
-            "falling back to the integrated frontend",
-            dev_repo_path,
-        )
+        return pathlib.Path(dev_repo_path) / "hass_frontend"
 
     # Keep import here so that we can import frontend without installing reqs
     import hass_frontend  # noqa: PLC0415
@@ -437,7 +441,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 key,
             )
 
-    # Handle development configuration with priority
     repo_path = conf.get(CONF_FRONTEND_REPO)
     dev_pr_number = conf.get(CONF_DEVELOPMENT_PR)
 
@@ -448,16 +451,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "Using development_repo (takes precedence). "
             "Remove development_repo to use automatic PR download"
         )
-        dev_pr_number = None  # Disable PR download
+        dev_pr_number = None
 
     if dev_pr_number:
         pr_cache_dir = pathlib.Path(hass.config.config_dir) / PR_CACHE_DIR
-        github_token = conf.get(CONF_GITHUB_TOKEN)
+        github_token: str = conf[CONF_GITHUB_TOKEN]
 
-        # Keep import here so that we can import frontend without installing reqs
-        from .pr_download import download_pr_artifact  # noqa: PLC0415
-
-        # Download PR artifact
         dev_pr_dir = await download_pr_artifact(
             hass, dev_pr_number, github_token, pr_cache_dir
         )
@@ -469,8 +468,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
             repo_path = None
         else:
-            # frontend_dir is .../frontend_development_artifacts/<pr_number>/hass_frontend
-            # We need to pass .../frontend_development_artifacts/<pr_number> to _frontend_root
             repo_path = str(dev_pr_dir.parent)
             _LOGGER.info("Using frontend from PR #%s", dev_pr_number)
 
