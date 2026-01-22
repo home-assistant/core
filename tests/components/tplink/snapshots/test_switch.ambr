@@ -55,6 +55,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -103,6 +104,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-off enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -151,6 +153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-update enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -199,6 +202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Baby cry detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -247,6 +251,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carpet boost',
     'options': dict({
     }),
     'original_device_class': None,
@@ -295,6 +300,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -343,6 +349,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fan sleep mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -391,6 +398,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED',
     'options': dict({
     }),
     'original_device_class': None,
@@ -439,6 +447,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -487,6 +496,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion sensor',
     'options': dict({
     }),
     'original_device_class': None,
@@ -535,6 +545,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Person detection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -583,6 +594,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smooth transitions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -631,6 +643,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tamper detection',
     'options': dict({
     }),
     'original_device_class': None,

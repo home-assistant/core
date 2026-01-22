@@ -34,7 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -265,6 +265,15 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
 
 DATA_API_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
+        key="cellular.rssi",
+        translation_key="cellular_rssi",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
         key="storage.stateOfCharge",
         translation_key="storage_state_of_charge",
         device_class=SensorDeviceClass.BATTERY,
@@ -277,6 +286,254 @@ DATA_API_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="storage.ratedCapacity",
+        translation_key="storage_rated_capacity",
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="storage.ratedPower",
+        translation_key="storage_rated_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="storage.availableEnergy",
+        translation_key="storage_available_energy",
+        device_class=SensorDeviceClass.ENERGY_STORAGE,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="powerFlow.battery.power",
+        translation_key="power_flow_battery",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="powerFlow.grid.power",
+        translation_key="power_flow_grid",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="powerFlow.load.power",
+        translation_key="power_flow_load",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="powerFlow.toGrid",
+        translation_key="power_flow_to_grid",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="powerFlow.toLoad",
+        translation_key="power_flow_to_load",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="powerFlow.fromGrid",
+        translation_key="power_flow_from_grid",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="powerFlow.fromLoad",
+        translation_key="power_flow_from_load",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.hour.battery.charged",
+        translation_key="energy_flow_hour_battery_charged",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.hour.battery.discharged",
+        translation_key="energy_flow_hour_battery_discharged",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.hour.battery.source.grid",
+        translation_key="energy_flow_hour_battery_source_grid",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.hour.battery.source.load",
+        translation_key="energy_flow_hour_battery_source_load",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.hour.grid.imported",
+        translation_key="energy_flow_hour_grid_imported",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.hour.grid.exported",
+        translation_key="energy_flow_hour_grid_exported",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.hour.load.consumed",
+        translation_key="energy_flow_hour_load_consumed",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.hour.load.generated",
+        translation_key="energy_flow_hour_load_generated",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.hour.load.source.battery",
+        translation_key="energy_flow_hour_load_source_battery",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.hour.load.source.grid",
+        translation_key="energy_flow_hour_load_source_grid",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.month.battery.charged",
+        translation_key="energy_flow_month_battery_charged",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.month.battery.discharged",
+        translation_key="energy_flow_month_battery_discharged",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.month.battery.source.grid",
+        translation_key="energy_flow_month_battery_source_grid",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.month.battery.source.battery",
+        translation_key="energy_flow_month_battery_source_battery",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.month.battery.source.load",
+        translation_key="energy_flow_month_battery_source_load",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.month.grid.imported",
+        translation_key="energy_flow_month_grid_imported",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.month.grid.exported",
+        translation_key="energy_flow_month_grid_exported",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.month.grid.source.battery",
+        translation_key="energy_flow_month_grid_source_battery",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.month.grid.source.grid",
+        translation_key="energy_flow_month_grid_source_grid",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.month.grid.source.load",
+        translation_key="energy_flow_month_grid_source_load",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.month.load.consumed",
+        translation_key="energy_flow_month_load_consumed",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.month.load.generated",
+        translation_key="energy_flow_month_load_generated",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.month.load.source.battery",
+        translation_key="energy_flow_month_load_source_battery",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="energyFlow.month.load.source.grid",
+        translation_key="energy_flow_month_load_source_grid",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="range.remaining",
@@ -348,10 +605,9 @@ async def _async_setup_graphql_sensors(
 ) -> None:
     """Set up the Tibber sensor."""
 
-    tibber_connection = entry.runtime_data.tibber_connection
+    tibber_connection = await entry.runtime_data.async_get_client(hass)
 
     entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     coordinator: TibberDataCoordinator | None = None
     entities: list[TibberSensor] = []
@@ -391,25 +647,6 @@ async def _async_setup_graphql_sensors(
                 ).async_set_updated_data
             )
 
-        # migrate
-        old_id = home.info["viewer"]["home"]["meteringPointData"]["consumptionEan"]
-        if old_id is None:
-            continue
-
-        # migrate to new device ids
-        old_entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, old_id)
-        if old_entity_id is not None:
-            entity_registry.async_update_entity(
-                old_entity_id, new_unique_id=home.home_id
-            )
-
-        # migrate to new device ids
-        device_entry = device_registry.async_get_device(identifiers={(DOMAIN, old_id)})
-        if device_entry and entry.entry_id in device_entry.config_entries:
-            device_registry.async_update_device(
-                device_entry.id, new_identifiers={(DOMAIN, home.home_id)}
-            )
-
     async_add_entities(entities)
 
 
@@ -430,9 +667,6 @@ def _setup_data_api_sensors(
         for sensor in device.sensors:
             description: SensorEntityDescription | None = api_sensors.get(sensor.id)
             if description is None:
-                _LOGGER.debug(
-                    "Sensor %s not found in DATA_API_SENSORS, skipping", sensor
-                )
                 continue
             entities.append(TibberDataAPISensor(coordinator, device, description))
     async_add_entities(entities)
