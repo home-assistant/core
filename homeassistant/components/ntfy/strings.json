@@ -343,7 +343,7 @@
       "name": "Dismiss notification"
     },
     "delete": {
-      "description": "Delete a message from a ntfy topic.",
+      "description": "Deletes a message from a ntfy topic.",
       "fields": {
         "sequence_id": {
           "description": "Enter the message ID or sequence ID of a notification you want to delete.",
