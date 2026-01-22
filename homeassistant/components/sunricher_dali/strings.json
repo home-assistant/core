@@ -23,5 +23,15 @@
         "description": "**Three-step process:**\n\n1. Ensure the gateway is powered and on the same network.\n2. Select **Submit** to start discovery (searches for up to 3 minutes)\n3. While discovery is in progress, press the **Reset** button on your Sunricher DALI gateway device **once**.\n\nThe gateway will respond immediately after the button press."
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "Motion"
+      },
+      "occupancy": {
+        "name": "Occupancy"
+      }
+    }
   }
 }
