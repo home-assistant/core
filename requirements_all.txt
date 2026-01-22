@@ -2607,7 +2607,7 @@ python-telegram-bot[socks]==22.1
 python-vlc==3.0.18122
 
 # homeassistant.components.xbox
-python-xbox==0.1.2
+python-xbox==0.1.3
 
 # homeassistant.components.egardia
 pythonegardia==1.0.52
