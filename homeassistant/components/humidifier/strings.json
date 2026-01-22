@@ -14,7 +14,7 @@
           "name": "[%key:component::humidifier::common::condition_behavior_name%]"
         }
       },
-      "name": "If a humidifier is drying"
+      "name": "Humidifier is drying"
     },
     "is_humidifying": {
       "description": "Tests if one or more humidifiers are humidifying.",
@@ -24,7 +24,7 @@
           "name": "[%key:component::humidifier::common::condition_behavior_name%]"
         }
       },
-      "name": "If a humidifier is humidifying"
+      "name": "Humidifier is humidifying"
     },
     "is_off": {
       "description": "Tests if one or more humidifiers are off.",
@@ -34,7 +34,7 @@
           "name": "[%key:component::humidifier::common::condition_behavior_name%]"
         }
       },
-      "name": "If a humidifier is off"
+      "name": "Humidifier is off"
     },
     "is_on": {
       "description": "Tests if one or more humidifiers are on.",
@@ -44,7 +44,7 @@
           "name": "[%key:component::humidifier::common::condition_behavior_name%]"
         }
       },
-      "name": "If a humidifier is on"
+      "name": "Humidifier is on"
     }
   },
   "device_automation": {
