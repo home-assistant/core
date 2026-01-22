@@ -14,7 +14,7 @@
           "name": "[%key:component::climate::common::condition_behavior_name%]"
         }
       },
-      "name": "If a climate-control device is cooling"
+      "name": "Climate-control device is cooling"
     },
     "is_drying": {
       "description": "Tests if one or more climate-control devices are drying.",
@@ -24,7 +24,7 @@
           "name": "[%key:component::climate::common::condition_behavior_name%]"
         }
       },
-      "name": "If a climate-control device is drying"
+      "name": "Climate-control device is drying"
     },
     "is_heating": {
       "description": "Tests if one or more climate-control devices are heating.",
@@ -34,7 +34,7 @@
           "name": "[%key:component::climate::common::condition_behavior_name%]"
         }
       },
-      "name": "If a climate-control device is heating"
+      "name": "Climate-control device is heating"
     },
     "is_off": {
       "description": "Tests if one or more climate-control devices are off.",
@@ -44,7 +44,7 @@
           "name": "[%key:component::climate::common::condition_behavior_name%]"
         }
       },
-      "name": "If a climate-control device is off"
+      "name": "Climate-control device is off"
     },
     "is_on": {
       "description": "Tests if one or more climate-control devices are on.",
@@ -54,7 +54,7 @@
           "name": "[%key:component::climate::common::condition_behavior_name%]"
         }
       },
-      "name": "If a climate-control device is on"
+      "name": "Climate-control device is on"
     }
   },
   "device_automation": {
