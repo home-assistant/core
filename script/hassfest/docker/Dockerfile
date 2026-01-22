@@ -26,7 +26,7 @@ RUN --mount=from=ghcr.io/astral-sh/uv:0.9.17,source=/uv,target=/bin/uv \
         -r /usr/src/homeassistant/requirements.txt \
         pipdeptree==2.26.1 \
         tqdm==4.67.1 \
-        ruff==0.13.0
+        ruff==0.14.13
 
 LABEL "name"="hassfest"
 LABEL "maintainer"="Home Assistant <hello@home-assistant.io>"
