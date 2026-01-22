@@ -137,7 +137,6 @@ class SunricherDaliEnergySensor(DaliDeviceEntity, SensorEntity):
         super().__init__(device)
         self._device = device
         self._attr_unique_id = f"{device.unique_id}_energy"
-        self._energy_value: float | None = None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.dev_id)},
             name=device.name,
@@ -145,11 +144,6 @@ class SunricherDaliEnergySensor(DaliDeviceEntity, SensorEntity):
             model=device.model,
             via_device=(DOMAIN, device.gw_sn),
         )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the energy value."""
-        return self._energy_value
 
     async def async_added_to_hass(self) -> None:
         """Register energy report listener."""
@@ -163,5 +157,5 @@ class SunricherDaliEnergySensor(DaliDeviceEntity, SensorEntity):
     @callback
     def _handle_energy_update(self, energy_value: float) -> None:
         """Update energy value."""
-        self._energy_value = energy_value
+        self._attr_native_value = energy_value
         self.schedule_update_ha_state()
