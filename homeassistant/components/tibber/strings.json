@@ -2,26 +2,21 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "The connected account does not match {title}. Sign in with the same Tibber account and try again."
     },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
-      "timeout": "[%key:common::config_flow::error::timeout_connect%]"
-    },
     "step": {
+      "connection_error": {
+        "description": "Could not connect to Tibber. Check your internet connection and try again.",
+        "title": "Connection failed"
+      },
       "reauth_confirm": {
         "description": "Reconnect your Tibber account to refresh access.",
         "title": "[%key:common::config_flow::title::reauth%]"
-      },
-      "user": {
-        "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]"
-        },
-        "description": "Enter your access token from {url}"
       }
     }
   },
