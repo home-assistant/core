@@ -17,15 +17,13 @@ from telegram import (
 )
 from telegram.constants import ChatType
 
-from homeassistant.components.telegram_bot import (
+from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
     CONF_ALLOWED_CHAT_IDS,
+    CONF_CHAT_ID,
     CONF_TRUSTED_NETWORKS,
     DOMAIN,
     PARSER_MD,
-)
-from homeassistant.components.telegram_bot.const import (
-    CONF_CHAT_ID,
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
@@ -33,30 +31,8 @@ from homeassistant.components.telegram_bot.const import (
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def config_webhooks() -> dict[str, Any]:
-    """Fixture for a webhooks platform configuration."""
-    return {
-        DOMAIN: [
-            {
-                CONF_PLATFORM: PLATFORM_WEBHOOKS,
-                CONF_URL: "https://test",
-                CONF_TRUSTED_NETWORKS: ["127.0.0.1"],
-                CONF_API_KEY: "1234567890:ABC",
-                CONF_ALLOWED_CHAT_IDS: [
-                    # "me"
-                    12345678,
-                    # Some chat
-                    -123456789,
-                ],
-            }
-        ]
-    }
 
 
 @pytest.fixture
@@ -332,25 +308,6 @@ async def webhook_bot(
     """Fixture for setting up a webhook telegram bot."""
     mock_webhooks_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
-    await hass.async_block_till_done()
-    yield
-    await hass.async_stop()
-
-
-@pytest.fixture
-async def webhook_platform(
-    hass: HomeAssistant,
-    config_webhooks: dict[str, Any],
-    mock_register_webhook: None,
-    mock_external_calls: None,
-    mock_generate_secret_token: str,
-) -> AsyncGenerator[None]:
-    """Fixture for setting up the webhooks platform using appropriate config and mocks."""
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        config_webhooks,
-    )
     await hass.async_block_till_done()
     yield
     await hass.async_stop()

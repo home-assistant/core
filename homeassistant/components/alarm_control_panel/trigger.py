@@ -4,24 +4,24 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import (
-    EntityStateTriggerBase,
+    EntityTargetStateTriggerBase,
     Trigger,
-    make_conditional_entity_state_trigger,
-    make_entity_state_trigger,
+    make_entity_target_state_trigger,
+    make_entity_transition_trigger,
 )
 
 from .const import DOMAIN, AlarmControlPanelEntityFeature, AlarmControlPanelState
 
 
 def supports_feature(hass: HomeAssistant, entity_id: str, features: int) -> bool:
-    """Get the device class of an entity or UNDEFINED if not found."""
+    """Test if an entity supports the specified features."""
     try:
         return bool(get_supported_features(hass, entity_id) & features)
     except HomeAssistantError:
         return False
 
 
-class EntityStateTriggerRequiredFeatures(EntityStateTriggerBase):
+class EntityStateTriggerRequiredFeatures(EntityTargetStateTriggerBase):
     """Trigger for entity state changes."""
 
     _required_features: int
@@ -38,21 +38,21 @@ class EntityStateTriggerRequiredFeatures(EntityStateTriggerBase):
 
 def make_entity_state_trigger_required_features(
     domain: str, to_state: str, required_features: int
-) -> type[EntityStateTriggerBase]:
-    """Create an entity state trigger class."""
+) -> type[EntityTargetStateTriggerBase]:
+    """Create an entity state trigger class with required feature filtering."""
 
     class CustomTrigger(EntityStateTriggerRequiredFeatures):
         """Trigger for entity state changes."""
 
         _domain = domain
-        _to_state = to_state
+        _to_states = {to_state}
         _required_features = required_features
 
     return CustomTrigger
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "armed": make_conditional_entity_state_trigger(
+    "armed": make_entity_transition_trigger(
         DOMAIN,
         from_states={
             AlarmControlPanelState.ARMING,
@@ -89,8 +89,12 @@ TRIGGERS: dict[str, type[Trigger]] = {
         AlarmControlPanelState.ARMED_VACATION,
         AlarmControlPanelEntityFeature.ARM_VACATION,
     ),
-    "disarmed": make_entity_state_trigger(DOMAIN, AlarmControlPanelState.DISARMED),
-    "triggered": make_entity_state_trigger(DOMAIN, AlarmControlPanelState.TRIGGERED),
+    "disarmed": make_entity_target_state_trigger(
+        DOMAIN, AlarmControlPanelState.DISARMED
+    ),
+    "triggered": make_entity_target_state_trigger(
+        DOMAIN, AlarmControlPanelState.TRIGGERED
+    ),
 }
 
 
