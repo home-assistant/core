@@ -136,7 +136,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_CLEAN_AREA,
         {
-            vol.Required("area_ids"): [str],
+            vol.Required("area_ids"): vol.All(cv.ensure_list, [str]),
         },
         "async_internal_clean_area",
         [VacuumEntityFeature.CLEAN_AREA],
@@ -493,6 +493,11 @@ class StateVacuumEntity(
                 segment_ids[segment_id] = None
 
         if not segment_ids:
+            _LOGGER.debug(
+                "No segments found for area_ids %s on vacuum %s",
+                area_ids,
+                self.entity_id,
+            )
             return
 
         await self.async_clean_segments(list(segment_ids), **kwargs)
