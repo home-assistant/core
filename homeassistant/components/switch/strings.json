@@ -14,7 +14,7 @@
           "name": "[%key:component::switch::common::condition_behavior_name%]"
         }
       },
-      "name": "If a switch is off"
+      "name": "Switch is off"
     },
     "is_on": {
       "description": "Tests if one or more switches are on.",
@@ -24,7 +24,7 @@
           "name": "[%key:component::switch::common::condition_behavior_name%]"
         }
       },
-      "name": "If a switch is on"
+      "name": "Switch is on"
     }
   },
   "device_automation": {
