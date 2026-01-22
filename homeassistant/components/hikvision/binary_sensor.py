@@ -27,7 +27,6 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -200,33 +199,8 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
         # Build unique ID (includes sensor_type for uniqueness per sensor)
         self._attr_unique_id = f"{self._data.device_id}_{sensor_type}_{channel}"
 
-        # Device info for device registry
-        if self._data.device_type == "NVR":
-            # NVR channels get their own device linked to the NVR via via_device
-            # Get the channel name from channels dict
-            ch = self._data.channels.get(channel)
-            channel_name = (
-                ch.name if ch else f"{self._data.device_name} Channel {channel}"
-            )
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"{self._data.device_id}_{channel}")},
-                via_device=(DOMAIN, self._data.device_id),
-                name=channel_name,
-                manufacturer="Hikvision",
-                model="NVR channel",
-            )
-            self._attr_name = sensor_type
-        else:
-            # Single camera device
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._data.device_id)},
-                name=self._data.device_name,
-                manufacturer="Hikvision",
-                model=self._data.device_type,
-            )
-            self._attr_name = sensor_type
-
-        # Set device class
+        # Set entity name and device class
+        self._attr_name = sensor_type
         self._attr_device_class = DEVICE_CLASS_MAP.get(sensor_type)
 
         # Callback ID for pyhik

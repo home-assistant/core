@@ -28,16 +28,17 @@ class HikvisionEntity(Entity):
         # Device info for device registry
         if self._data.device_type == "NVR":
             # NVR channels get their own device linked to the NVR via via_device
+            # Get the channel name from channels dict if available
+            ch = self._data.channels.get(channel)
+            channel_name = (
+                ch.name if ch else f"{self._data.device_name} channel {channel}"
+            )
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, f"{self._data.device_id}_{channel}")},
                 via_device=(DOMAIN, self._data.device_id),
-                translation_key="nvr_channel",
-                translation_placeholders={
-                    "device_name": self._data.device_name,
-                    "channel_number": str(channel),
-                },
+                name=channel_name,
                 manufacturer="Hikvision",
-                model="NVR Channel",
+                model="NVR channel",
             )
         else:
             # Single camera device
