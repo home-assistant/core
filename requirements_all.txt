@@ -1297,7 +1297,7 @@ influxdb==5.3.1
 inkbird-ble==1.1.1
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.6.0
+insteon-frontend-home-assistant==0.6.1
 
 # homeassistant.components.intellifire
 intellifire4py==4.2.1
