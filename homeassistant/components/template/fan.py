@@ -552,7 +552,6 @@ class TriggerFanEntity(TriggerEntity, AbstractTemplateFan):
         self._process_data()
 
         if not self.available:
-            self.async_write_ha_state()
             return
 
         write_ha_state = False
