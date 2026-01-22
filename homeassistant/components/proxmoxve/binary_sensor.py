@@ -160,11 +160,6 @@ class ProxmoxNodeBinarySensor(ProxmoxNodeEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}_{entity_description.key}"
 
     @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return super().available and self.device_name in self.coordinator.data.nodes
-
-    @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(
@@ -191,15 +186,6 @@ class ProxmoxVMBinarySensor(ProxmoxVMEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self._node_name}_vm_{self.device_id}_{entity_description.key}"
 
     @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return (
-            super().available
-            and self._node_name in self.coordinator.data.nodes
-            and self.device_id in self.coordinator.data.nodes[self._node_name].vms
-        )
-
-    @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.vm_data)
@@ -222,16 +208,6 @@ class ProxmoxContainerBinarySensor(ProxmoxContainerEntity, BinarySensorEntity):
         super().__init__(coordinator, container_data, node_data)
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self._node_name}_container_{self.device_id}_{entity_description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return (
-            super().available
-            and self._node_name in self.coordinator.data.nodes
-            and self.device_id
-            in self.coordinator.data.nodes[self._node_name].containers
-        )
 
     @property
     def is_on(self) -> bool | None:

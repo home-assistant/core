@@ -38,6 +38,11 @@ class ProxmoxNodeEntity(ProxmoxCoordinatorEntity):
             model="Node",
         )
 
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return super().available and self.device_name in self.coordinator.data.nodes
+
 
 class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
     """Represents a VM entity."""
@@ -65,6 +70,15 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
                 DOMAIN,
                 f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
             ),
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return (
+            super().available
+            and self._node_name in self.coordinator.data.nodes
+            and self.device_id in self.coordinator.data.nodes[self._node_name].vms
         )
 
     @property
@@ -102,6 +116,16 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
                 DOMAIN,
                 f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
             ),
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return (
+            super().available
+            and self._node_name in self.coordinator.data.nodes
+            and self.device_id
+            in self.coordinator.data.nodes[self._node_name].containers
         )
 
     @property
