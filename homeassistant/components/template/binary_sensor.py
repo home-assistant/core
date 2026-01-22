@@ -410,6 +410,8 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
     def _render_availability_template(self, variables):
         available = super()._render_availability_template(variables)
         if not available:
+            # Cancel any delay_on, delay_off, or auto_off when
+            # the entity goes unavailable
             self._cancel_delays()
         return available
 
