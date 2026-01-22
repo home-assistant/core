@@ -8,9 +8,6 @@
           "on": "mdi:valve-open"
         }
       },
-      "airing_program_zone": {
-        "default": "mdi:calendar-clock"
-      },
       "buffer_mode": {
         "default": "mdi:database",
         "state": {
@@ -18,23 +15,10 @@
           "schedule": "mdi:calendar-clock"
         }
       },
-      "circuit_type_heating_zone": {
-        "default": "mdi:pipe",
-        "state": {
-          "pump": "mdi:pump"
-        }
-      },
       "dhw_circulation": {
         "default": "mdi:pump",
         "state": {
           "disabled": "mdi:pump-off",
-          "schedule": "mdi:calendar-clock"
-        }
-      },
-      "heating_operating_mode_zone": {
-        "default": "mdi:heating-coil",
-        "state": {
-          "disabled": "mdi:cancel",
           "schedule": "mdi:calendar-clock"
         }
       },
@@ -50,27 +34,6 @@
           "no_corrections": "mdi:cancel",
           "schedule": "mdi:calendar-clock",
           "thermostat": "mdi:thermostat"
-        }
-      },
-      "heating_source_of_correction_zone": {
-        "default": "mdi:tune-variant",
-        "state": {
-          "disabled": "mdi:cancel",
-          "nano_nr_1": "mdi:thermostat-box",
-          "nano_nr_2": "mdi:thermostat-box",
-          "nano_nr_3": "mdi:thermostat-box",
-          "nano_nr_4": "mdi:thermostat-box",
-          "nano_nr_5": "mdi:thermostat-box",
-          "no_corrections": "mdi:cancel",
-          "schedule": "mdi:calendar-clock",
-          "thermostat": "mdi:thermostat"
-        }
-      },
-      "hot_water_circulation": {
-        "default": "mdi:pump",
-        "state": {
-          "disabled": "mdi:pump-off",
-          "schedule": "mdi:calendar-clock"
         }
       },
       "language": {
@@ -121,18 +84,20 @@
           "eco": "mdi:leaf"
         }
       },
-      "pre_heater_configuration_zone": {
-        "default": "mdi:radiator"
-      },
-      "secondary_heater_configuration_zone": {
-        "default": "mdi:radiator"
-      },
       "solarcomp_operating_mode": {
         "default": "mdi:heating-coil",
         "state": {
           "de_icing": "mdi:snowflake-melt",
           "disabled": "mdi:cancel",
           "holiday": "mdi:beach"
+        }
+      },
+      "work_mode": {
+        "default": "mdi:cog-outline",
+        "state": {
+          "cooling": "mdi:snowflake-thermometer",
+          "summer": "mdi:weather-sunny",
+          "winter": "mdi:snowflake"
         }
       }
     }

@@ -42,28 +42,12 @@
           "on": "On"
         }
       },
-      "airing_program_zone": {
-        "name": "Airing program zone {zone}",
-        "state": {
-          "20m_work100m_stop": "20 min work / 100 min stop",
-          "20m_work40m_stop": "20 min work / 40 min stop",
-          "30m_work30m_stop": "30 min work / 30 min stop",
-          "no_exclusions": "No exclusions"
-        }
-      },
       "buffer_mode": {
         "name": "Buffer mode",
         "state": {
           "disabled": "Disabled",
           "manual": "Manual",
           "schedule": "Schedule"
-        }
-      },
-      "circuit_type_heating_zone": {
-        "name": "Circuit type heating zone {zone}",
-        "state": {
-          "mixer": "Mixer",
-          "pump": "Pump"
         }
       },
       "dhw_circulation": {
@@ -74,17 +58,10 @@
           "schedule": "Schedule"
         }
       },
-      "heating_operating_mode_zone": {
-        "name": "Heating operating mode zone {zone}",
-        "state": {
-          "disabled": "Disabled",
-          "manual": "Manual",
-          "schedule": "Schedule"
-        }
-      },
       "heating_source_of_correction": {
         "name": "Heating source of correction",
         "state": {
+          "disabled": "Disabled",
           "nano_nr_1": "Nano 1",
           "nano_nr_2": "Nano 2",
           "nano_nr_3": "Nano 3",
@@ -149,7 +126,8 @@
           "nano_nr_5": "Nano 5",
           "no_corrections": "No corrections",
           "schedule": "Schedule",
-          "thermostat": "Thermostat"
+          "thermostat": "Thermostat",
+          "without_thermostat": "Without thermostat"
         }
       },
       "nano_work_mode": {
@@ -173,27 +151,6 @@
           "hybrid": "Hybrid"
         }
       },
-      "pre_heater_configuration_zone": {
-        "name": "Pre heater configuration zone {zone}",
-        "state": {
-          "disabled": "Disabled",
-          "onoff": "ON/OFF",
-          "pwm": "PWM"
-        }
-      },
-      "secondary_heater_configuration_zone": {
-        "name": "Secondary heater configuration zone {zone}",
-        "state": {
-          "disabled": "Disabled",
-          "onoff": "ON/OFF",
-          "onoff_outside_temp": "ON/OFF outside temperature",
-          "onoff_room_temp": "ON/OFF room temperature",
-          "onoff_tpom_function": "ON/OFF Tpom function",
-          "pwm": "PWM",
-          "pwm_outside_temp": "PWM outside temperature",
-          "pwm_room_temp": "PWM room temperature"
-        }
-      },
       "solarcomp_operating_mode": {
         "name": "Operating mode",
         "state": {
@@ -201,6 +158,14 @@
           "de_icing": "De-icing",
           "disabled": "Disabled",
           "holiday": "Holiday"
+        }
+      },
+      "work_mode": {
+        "name": "Current season",
+        "state": {
+          "cooling": "Cooling",
+          "summer": "Summer",
+          "winter": "Winter"
         }
       }
     }
