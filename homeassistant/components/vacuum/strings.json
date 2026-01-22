@@ -14,7 +14,7 @@
           "name": "[%key:component::vacuum::common::condition_behavior_name%]"
         }
       },
-      "name": "If a vacuum cleaner is cleaning"
+      "name": "Vacuum cleaner is cleaning"
     },
     "is_docked": {
       "description": "Tests if one or more vacuum cleaners are docked.",
@@ -24,7 +24,7 @@
           "name": "[%key:component::vacuum::common::condition_behavior_name%]"
         }
       },
-      "name": "If a vacuum cleaner is docked"
+      "name": "Vacuum cleaner is docked"
     },
     "is_encountering_an_error": {
       "description": "Tests if one or more vacuum cleaners are encountering an error.",
@@ -34,7 +34,7 @@
           "name": "[%key:component::vacuum::common::condition_behavior_name%]"
         }
       },
-      "name": "If a vacuum cleaner is encountering an error"
+      "name": "Vacuum cleaner is encountering an error"
     },
     "is_paused": {
       "description": "Tests if one or more vacuum cleaners are paused.",
@@ -44,7 +44,7 @@
           "name": "[%key:component::vacuum::common::condition_behavior_name%]"
         }
       },
-      "name": "If a vacuum cleaner is paused"
+      "name": "Vacuum cleaner is paused"
     },
     "is_returning": {
       "description": "Tests if one or more vacuum cleaners are returning to the dock.",
@@ -54,7 +54,7 @@
           "name": "[%key:component::vacuum::common::condition_behavior_name%]"
         }
       },
-      "name": "If a vacuum cleaner is returning"
+      "name": "Vacuum cleaner is returning"
     }
   },
   "device_automation": {
