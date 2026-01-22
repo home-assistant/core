@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Unpack, cast
 
 import voluptuous as vol
 
@@ -22,11 +22,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.condition import (
     Condition,
-    ConditionCheckerType,
+    ConditionChecker,
+    ConditionCheckParams,
     ConditionConfig,
-    trace_condition_function,
 )
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType
 
 from . import in_zone
 
@@ -114,16 +114,16 @@ class ZoneCondition(Condition):
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
+        super().__init__(hass, config)
         assert config.options is not None
         self._options = config.options
 
-    async def async_get_checker(self) -> ConditionCheckerType:
+    async def async_get_checker(self) -> ConditionChecker:
         """Wrap action method with zone based condition."""
         entity_ids = self._options.get(CONF_ENTITY_ID, [])
         zone_entity_ids = self._options.get(CONF_ZONE, [])
 
-        @trace_condition_function
-        def if_in_zone(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        def if_in_zone(**kwargs: Unpack[ConditionCheckParams]) -> bool:
             """Test if condition."""
             errors = []
 
@@ -132,7 +132,7 @@ class ZoneCondition(Condition):
                 entity_ok = False
                 for zone_entity_id in zone_entity_ids:
                     try:
-                        if zone(hass, zone_entity_id, entity_id):
+                        if zone(self._hass, zone_entity_id, entity_id):
                             entity_ok = True
                     except ConditionErrorMessage as ex:
                         errors.append(

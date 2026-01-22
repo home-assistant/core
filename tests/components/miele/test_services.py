@@ -1,7 +1,7 @@
 """Tests the services provided by the miele integration."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientResponseError
 import pytest
@@ -138,7 +138,7 @@ async def test_service_api_errors(
     device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
 
     # Test http error
-    mock_miele_client.set_program.side_effect = ClientResponseError("TestInfo", "test")
+    mock_miele_client.set_program.side_effect = ClientResponseError(Mock(), Mock())
     with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             DOMAIN,
@@ -162,7 +162,7 @@ async def test_get_service_api_errors(
     device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
 
     # Test http error
-    mock_miele_client.get_programs.side_effect = ClientResponseError("TestInfo", "test")
+    mock_miele_client.get_programs.side_effect = ClientResponseError(Mock(), Mock())
     with pytest.raises(HomeAssistantError, match="'Get programs' action failed"):
         await hass.services.async_call(
             DOMAIN,

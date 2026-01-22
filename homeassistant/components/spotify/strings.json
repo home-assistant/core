@@ -16,6 +16,9 @@
     "create_entry": {
       "default": "Successfully authenticated with Spotify."
     },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
+    },
     "step": {
       "pick_implementation": {
         "data": {
@@ -30,6 +33,11 @@
         "description": "The Spotify integration needs to re-authenticate with Spotify for account: {account}",
         "title": "[%key:common::config_flow::title::reauth%]"
       }
+    }
+  },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   },
   "system_health": {

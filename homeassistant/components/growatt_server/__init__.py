@@ -1,13 +1,17 @@
 """The Growatt server PV inverter sensor integration."""
 
 from collections.abc import Mapping
+from json import JSONDecodeError
 import logging
 
 import growattServer
+from requests import RequestException
 
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     AUTH_API_TOKEN,
@@ -17,13 +21,24 @@ from .const import (
     DEFAULT_PLANT_ID,
     DEFAULT_URL,
     DEPRECATED_URLS,
+    DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
 )
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
 from .models import GrowattRuntimeData
+from .services import async_register_services
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Growatt Server component."""
+    # Register services
+    await async_register_services(hass)
+    return True
 
 
 def get_device_list_classic(
@@ -35,9 +50,7 @@ def get_device_list_classic(
     # Log in to api and fetch first plant if no plant id is defined.
     try:
         login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-        # DEBUG: Log the actual response structure
-    except Exception as ex:
-        _LOGGER.error("DEBUG - Login response: %s", login_response)
+    except (RequestException, JSONDecodeError) as ex:
         raise ConfigEntryError(
             f"Error communicating with Growatt API during login: {ex}"
         ) from ex
@@ -51,10 +64,13 @@ def get_device_list_classic(
 
     user_id = login_response["user"]["id"]
 
+    # Legacy support: DEFAULT_PLANT_ID ("0") triggers auto-selection of first plant.
+    # Modern config flow always sets a specific plant_id, but old config entries
+    # from earlier versions may still have plant_id="0".
     if plant_id == DEFAULT_PLANT_ID:
         try:
             plant_info = api.plant_list(user_id)
-        except Exception as ex:
+        except (RequestException, JSONDecodeError) as ex:
             raise ConfigEntryError(
                 f"Error communicating with Growatt API during plant list: {ex}"
             ) from ex
@@ -65,7 +81,7 @@ def get_device_list_classic(
     # Get a list of devices for specified plant to add sensors for.
     try:
         devices = api.device_list(plant_id)
-    except Exception as ex:
+    except (RequestException, JSONDecodeError) as ex:
         raise ConfigEntryError(
             f"Error communicating with Growatt API during device list: {ex}"
         ) from ex
@@ -118,7 +134,9 @@ def get_device_list(
         return get_device_list_v1(api, config)
     if api_version == "classic":
         return get_device_list_classic(api, config)
-    raise ConfigEntryError(f"Unknown API version: {api_version}")
+    # Defensive: api_version is hardcoded in async_setup_entry as "v1" or "classic"
+    # This line is unreachable through normal execution but kept as a safeguard
+    raise ConfigEntryError(f"Unknown API version: {api_version}")  # pragma: no cover
 
 
 async def async_setup_entry(
@@ -135,6 +153,21 @@ async def async_setup_entry(
         new_data = dict(config_entry.data)
         new_data[CONF_URL] = url
         hass.config_entries.async_update_entry(config_entry, data=new_data)
+
+    # Migrate legacy config entries without auth_type field
+    if CONF_AUTH_TYPE not in config:
+        new_data = dict(config_entry.data)
+        # Detect auth type based on which fields are present
+        if CONF_TOKEN in config:
+            new_data[CONF_AUTH_TYPE] = AUTH_API_TOKEN
+        elif CONF_USERNAME in config:
+            new_data[CONF_AUTH_TYPE] = AUTH_PASSWORD
+        else:
+            raise ConfigEntryError(
+                "Unable to determine authentication type from config entry."
+            )
+        hass.config_entries.async_update_entry(config_entry, data=new_data)
+        config = config_entry.data
 
     # Determine API version
     if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:

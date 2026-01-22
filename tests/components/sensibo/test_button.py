@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import MagicMock
 
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -27,7 +26,7 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed, snapshot_platform
 
 
-@freeze_time("2022-03-12T15:24:26+00:00")
+@pytest.mark.freeze_time("2022-03-12T15:24:26+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     "load_platforms",

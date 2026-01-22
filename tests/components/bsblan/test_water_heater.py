@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
-from bsblan import BSBLANError
+from bsblan import BSBLANError, SetHotWaterParam
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -160,7 +160,9 @@ async def test_set_operation_mode(
         blocking=True,
     )
 
-    mock_bsblan.set_hot_water.assert_called_once_with(operating_mode=bsblan_mode)
+    mock_bsblan.set_hot_water.assert_called_once_with(
+        SetHotWaterParam(operating_mode=bsblan_mode)
+    )
 
 
 async def test_set_invalid_operation_mode(
@@ -208,7 +210,9 @@ async def test_set_temperature(
         blocking=True,
     )
 
-    mock_bsblan.set_hot_water.assert_called_once_with(nominal_setpoint=50)
+    mock_bsblan.set_hot_water.assert_called_once_with(
+        SetHotWaterParam(nominal_setpoint=50)
+    )
 
 
 async def test_set_temperature_failure(

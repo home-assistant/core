@@ -28,6 +28,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
 from .const import DOMAIN, UPDATE_INTERVAL
 from .entity import AqualinkEntity
@@ -66,7 +67,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
 
-    aqualink = AqualinkClient(username, password, httpx_client=get_async_client(hass))
+    aqualink = AqualinkClient(
+        username,
+        password,
+        httpx_client=get_async_client(hass, alpn_protocols=SSL_ALPN_HTTP11_HTTP2),
+    )
     try:
         await aqualink.login()
     except AqualinkServiceException as login_exception:

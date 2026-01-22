@@ -1,4 +1,9 @@
 {
+  "exceptions": {
+    "url_already_exists": {
+      "message": "The URL \"{url}\" is already in use. Please choose a different one."
+    }
+  },
   "services": {
     "reload_resources": {
       "description": "Reloads dashboard resources from the YAML-configuration.",

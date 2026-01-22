@@ -19,6 +19,7 @@ import uuid
 import pytest
 from serial.tools.list_ports_common import ListPortInfo
 from zha.application.const import RadioType
+from zigpy.application import ControllerApplication
 from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, SCHEMA_DEVICE
@@ -97,9 +98,11 @@ def mock_multipan_platform():
 @pytest.fixture(autouse=True)
 def mock_app() -> Generator[AsyncMock]:
     """Mock zigpy app interface."""
-    mock_app = AsyncMock()
+    mock_app = create_autospec(ControllerApplication, instance=True)
     mock_app.backups = create_autospec(BackupManager, instance=True)
     mock_app.backups.backups = []
+
+    mock_app.state = MagicMock()
     mock_app.state.network_info.extended_pan_id = zigpy.types.EUI64.convert(
         "AABBCCDDEE000000"
     )
@@ -213,6 +216,15 @@ async def consume_progress_flow(
     # Ensure all background tasks complete
     await hass.async_block_till_done()
     return result
+
+
+class DelayedAsyncMock(AsyncMock):
+    """AsyncMock that waits a moment before returning, useful for progress steps."""
+
+    async def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        """Overridden `__call__` with an added delay."""
+        await asyncio.sleep(0)
+        return await super().__call__(*args, **kwargs)
 
 
 @pytest.mark.parametrize(
@@ -720,6 +732,7 @@ async def test_migration_strategy_recommended_cannot_write(
 
     with patch(
         "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
+        new_callable=DelayedAsyncMock,
         side_effect=CannotWriteNetworkSettings("test error"),
     ) as mock_restore_backup:
         result_migrate = await hass.config_entries.flow.async_configure(
@@ -1716,7 +1729,7 @@ def advanced_pick_radio(
             user_input={"next_step_id": config_flow.SETUP_STRATEGY_ADVANCED},
         )
 
-        assert advanced_strategy_result["type"] == FlowResultType.MENU
+        assert advanced_strategy_result["type"] is FlowResultType.MENU
         assert advanced_strategy_result["step_id"] == "choose_formation_strategy"
 
         return advanced_strategy_result
@@ -1735,7 +1748,7 @@ async def test_strategy_no_network_settings(
     advanced_pick_radio: RadioPicker, mock_app: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test formation strategy when no network settings are present."""
-    mock_app.load_network_info = MagicMock(side_effect=NetworkNotFormed())
+    mock_app.load_network_info = DelayedAsyncMock(side_effect=NetworkNotFormed())
 
     result = await advanced_pick_radio(RadioType.ezsp)
     assert (
@@ -1773,7 +1786,7 @@ async def test_formation_strategy_form_initial_network(
 ) -> None:
     """Test forming a new network, with no previous settings on the radio."""
     # Initially, no network is formed
-    mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
+    mock_app.load_network_info = DelayedAsyncMock(side_effect=NetworkNotFormed())
 
     # After form_network is called, load_network_info should return the network settings
     async def form_network_side_effect(*args, **kwargs):
@@ -1800,6 +1813,36 @@ async def test_formation_strategy_form_initial_network(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_formation_strategy_form_initial_network_failure(
+    advanced_pick_radio: RadioPicker, mock_app: AsyncMock, hass: HomeAssistant
+) -> None:
+    """Test forming a new network that fails with an exception."""
+    # Mock form_network to raise an exception
+    mock_app.form_network.side_effect = DelayedAsyncMock(
+        side_effect=Exception("Network formation failed")
+    )
+
+    result = await advanced_pick_radio(RadioType.ezsp)
+    result_form = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": config_flow.FORMATION_FORM_NEW_NETWORK},
+    )
+
+    result2 = await consume_progress_flow(
+        hass,
+        flow_id=result_form["flow_id"],
+        valid_step_ids=("form_new_network",),
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "cannot_form_network"
+    assert "Network formation failed" in result2["description_placeholders"]["error"]
+
+    # Verify form_network was called
+    mock_app.form_network.assert_called_once()
+
+
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_onboarding_auto_formation_new_hardware(
@@ -1807,7 +1850,7 @@ async def test_onboarding_auto_formation_new_hardware(
 ) -> None:
     """Test auto network formation with new hardware during onboarding."""
     # Initially, no network is formed
-    mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
+    mock_app.load_network_info = DelayedAsyncMock(side_effect=NetworkNotFormed())
     mock_app.get_device = MagicMock(return_value=MagicMock(spec=zigpy.device.Device))
 
     # After form_network is called, load_network_info should return the network settings
@@ -1951,6 +1994,7 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
         ),
         patch(
             "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
+            new_callable=DelayedAsyncMock,
             side_effect=[
                 DestructiveWriteNetworkSettings("Radio IEEE change is permanent"),
                 None,
@@ -1981,8 +2025,14 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
             user_input={config_flow.OVERWRITE_COORDINATOR_IEEE: True},
         )
 
-    assert result_confirm["type"] is FlowResultType.CREATE_ENTRY
-    assert result_confirm["data"][CONF_RADIO_TYPE] == "ezsp"
+        result_final = await consume_progress_flow(
+            hass,
+            flow_id=result_confirm["flow_id"],
+            valid_step_ids=("restore_backup",),
+        )
+
+    assert result_final["type"] is FlowResultType.CREATE_ENTRY
+    assert result_final["data"][CONF_RADIO_TYPE] == "ezsp"
 
     assert mock_restore_backup.call_count == 1
     assert mock_restore_backup.mock_calls[0].kwargs["overwrite_ieee"] is True
@@ -2014,6 +2064,7 @@ async def test_formation_strategy_restore_manual_backup_ezsp(
         ),
         patch(
             "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
+            new_callable=DelayedAsyncMock,
             side_effect=[
                 DestructiveWriteNetworkSettings("Radio IEEE change is permanent"),
                 None,
@@ -2316,6 +2367,7 @@ async def test_options_flow_defaults(
     # ZHA gets unloaded
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_unload",
+        new_callable=DelayedAsyncMock,
         side_effect=[async_unload_effect],
     ) as mock_async_unload:
         result1 = await hass.config_entries.options.async_configure(
@@ -2853,6 +2905,7 @@ async def test_config_flow_port_no_multiprotocol(hass: HomeAssistant) -> None:
         patch("homeassistant.components.zha.config_flow.is_hassio", return_value=True),
         patch(
             "homeassistant.components.hassio.addon_manager.AddonManager.async_get_addon_info",
+            new_callable=DelayedAsyncMock,
             side_effect=AddonError,
         ),
         patch(
@@ -3075,6 +3128,7 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp_writ
         ),
         patch(
             "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
+            new_callable=DelayedAsyncMock,
             side_effect=[
                 DestructiveWriteNetworkSettings("Radio IEEE change is permanent"),
                 CannotWriteNetworkSettings("Failed to write settings"),
@@ -3100,9 +3154,15 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp_writ
         assert confirm_restore_result["type"] is FlowResultType.FORM
         assert confirm_restore_result["step_id"] == "confirm_ezsp_ieee_overwrite"
 
-        final_result = await hass.config_entries.flow.async_configure(
+        confirm_result = await hass.config_entries.flow.async_configure(
             confirm_restore_result["flow_id"],
             user_input={config_flow.OVERWRITE_COORDINATOR_IEEE: True},
+        )
+
+        final_result = await consume_progress_flow(
+            hass,
+            flow_id=confirm_result["flow_id"],
+            valid_step_ids=("restore_backup",),
         )
 
     assert final_result["type"] is FlowResultType.ABORT
@@ -3191,6 +3251,7 @@ async def test_plug_in_new_radio_retry(
         ),
         patch(
             "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
+            new_callable=DelayedAsyncMock,
             side_effect=[
                 HomeAssistantError(
                     "Failed to connect to Zigbee adapter: [Errno 2] No such file or directory"
@@ -3203,20 +3264,32 @@ async def test_plug_in_new_radio_retry(
             ],
         ) as mock_restore_backup,
     ):
-        result3 = await hass.config_entries.flow.async_configure(
+        upload_result = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
         )
 
-        # Prompt user to plug old adapter back in when restore fails
+        result3 = await consume_progress_flow(
+            hass,
+            flow_id=upload_result["flow_id"],
+            valid_step_ids=("restore_backup",),
+        )
+
+        # Prompt user to plug new adapter back in when restore fails
         assert result3["type"] is FlowResultType.FORM
         assert result3["step_id"] == "plug_in_new_radio"
         assert result3["description_placeholders"] == {"device_path": "/dev/ttyUSB1234"}
 
         # Submit retry attempt with plugged in adapter
-        result4 = await hass.config_entries.flow.async_configure(
+        retry_result = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
             user_input={},
+        )
+
+        result4 = await consume_progress_flow(
+            hass,
+            flow_id=retry_result["flow_id"],
+            valid_step_ids=("restore_backup",),
         )
 
         # This adapter requires user confirmation for restore
@@ -3224,20 +3297,32 @@ async def test_plug_in_new_radio_retry(
         assert result4["step_id"] == "confirm_ezsp_ieee_overwrite"
 
         # Confirm destructive rewrite, but adapter is unplugged again
-        result5 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"],
+        confirm_result = await hass.config_entries.flow.async_configure(
+            result4["flow_id"],
             user_input={config_flow.OVERWRITE_COORDINATOR_IEEE: True},
         )
 
-        # Prompt user to plug old adapter back in again
+        result5 = await consume_progress_flow(
+            hass,
+            flow_id=confirm_result["flow_id"],
+            valid_step_ids=("restore_backup",),
+        )
+
+        # Prompt user to plug new adapter back in again
         assert result5["type"] is FlowResultType.FORM
         assert result5["step_id"] == "plug_in_new_radio"
         assert result5["description_placeholders"] == {"device_path": "/dev/ttyUSB1234"}
 
         # User confirms they plugged in the adapter
-        result6 = await hass.config_entries.flow.async_configure(
-            result4["flow_id"],
+        final_retry_result = await hass.config_entries.flow.async_configure(
+            result5["flow_id"],
             user_input={},
+        )
+
+        result6 = await consume_progress_flow(
+            hass,
+            flow_id=final_retry_result["flow_id"],
+            valid_step_ids=("restore_backup",),
         )
 
     # Entry created successfully
@@ -3277,7 +3362,7 @@ async def test_plug_in_old_radio_retry(hass: HomeAssistant, backup, mock_app) ->
     )
 
     mock_temp_radio_mgr = AsyncMock()
-    mock_temp_radio_mgr.async_reset_adapter = AsyncMock(
+    mock_temp_radio_mgr.async_reset_adapter = DelayedAsyncMock(
         side_effect=HomeAssistantError(
             "Failed to connect to Zigbee adapter: [Errno 2] No such file or directory"
         )
@@ -3303,9 +3388,15 @@ async def test_plug_in_old_radio_retry(hass: HomeAssistant, backup, mock_app) ->
 
         assert result_confirm["step_id"] == "choose_migration_strategy"
 
-        result_recommended = await hass.config_entries.flow.async_configure(
+        recommended_result = await hass.config_entries.flow.async_configure(
             result_confirm["flow_id"],
             user_input={"next_step_id": config_flow.MIGRATION_STRATEGY_RECOMMENDED},
+        )
+
+        result_recommended = await consume_progress_flow(
+            hass,
+            flow_id=recommended_result["flow_id"],
+            valid_step_ids=("maybe_reset_old_radio",),
         )
 
         # Prompt user to plug old adapter back in when reset fails
@@ -3321,9 +3412,15 @@ async def test_plug_in_old_radio_retry(hass: HomeAssistant, backup, mock_app) ->
         ]
 
         # Retry with unplugged adapter
-        result_retry = await hass.config_entries.flow.async_configure(
+        retry_result = await hass.config_entries.flow.async_configure(
             result_recommended["flow_id"],
             user_input={"next_step_id": "retry_old_radio"},
+        )
+
+        result_retry = await consume_progress_flow(
+            hass,
+            flow_id=retry_result["flow_id"],
+            valid_step_ids=("maybe_reset_old_radio",),
         )
 
     # Prompt user again to plug old adapter back in
