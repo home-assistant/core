@@ -320,6 +320,7 @@ FLOWS = {
         "imeon_inverter",
         "imgw_pib",
         "immich",
+        "imou",
         "improv_ble",
         "incomfort",
         "inels",

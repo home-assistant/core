@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "button": {
+      "ptz_down": {
+        "default": "mdi:arrow-down-bold"
+      },
+      "ptz_left": {
+        "default": "mdi:arrow-left-bold"
+      },
+      "ptz_right": {
+        "default": "mdi:arrow-right-bold"
+      },
+      "ptz_up": {
+        "default": "mdi:arrow-up-bold"
+      },
+      "restart_device": {
+        "default": "mdi:restart"
+      }
+    }
+  }
+}
