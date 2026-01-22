@@ -351,9 +351,9 @@ class UploadMediaView(http.HomeAssistantView):
         hass = request.app[http.KEY_HASS]
 
         # Increase max payload
-        request._client_max_size = http.get_upload_limit(
+        request._client_max_size = http.get_upload_limit(  # noqa: SLF001
             hass, CONF_MEDIA_SOURCE, DEFAULT_MAX_UPLOAD_SIZE
-        )  # noqa: SLF001
+        )
 
         try:
             data = self.schema(dict(await request.post()))

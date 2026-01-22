@@ -2560,9 +2560,9 @@ class FirmwareUploadView(HomeAssistantView):
         assert node.client.driver
 
         # Increase max payload
-        request._client_max_size = get_upload_limit(
+        request._client_max_size = get_upload_limit(  # noqa: SLF001
             hass, CONF_ZWAVE_JS, DEFAULT_MAX_UPLOAD_SIZE
-        )  # noqa: SLF001
+        )
 
         data = await request.post()
 

@@ -131,9 +131,9 @@ class FileUploadView(HomeAssistantView):
         """Handle uploaded file."""
         hass = request.app[KEY_HASS]
         # Increase max payload
-        request._client_max_size = get_upload_limit(
+        request._client_max_size = get_upload_limit(  # noqa: SLF001
             hass, CONF_FILE_UPLOAD, DEFAULT_MAX_SIZE
-        )  # noqa: SLF001
+        )
 
         reader = await request.multipart()
         file_field_reader = await reader.next()

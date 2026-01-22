@@ -10,6 +10,7 @@ from functools import partial
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
 import os
+import re
 import socket
 import ssl
 from tempfile import NamedTemporaryFile
@@ -107,6 +108,47 @@ MAX_CLIENT_SIZE: Final = 1024**2 * 16
 MAX_LINE_SIZE: Final = 24570
 _UPLOAD_LIMITS: HassKey[dict[str, int]] = HassKey("http_upload_limits")
 
+_BYTE_SIZE_RE = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?\s*$")
+_BYTE_SIZE_MULTIPLIERS: Final[dict[str, int]] = {
+    "b": 1,
+    "byte": 1,
+    "bytes": 1,
+    "kb": 1000,
+    "mb": 1000**2,
+    "gb": 1000**3,
+    "kib": 1024,
+    "mib": 1024**2,
+    "gib": 1024**3,
+}
+
+
+def _byte_size(value: int | float | str) -> int:
+    """Return a size in bytes from a size string or number."""
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    if not isinstance(value, str):
+        raise vol.Invalid("Upload limit must be a number or a size string")
+
+    match = _BYTE_SIZE_RE.match(value)
+    if match is None:
+        raise vol.Invalid("Upload limit must be a number or a size string")
+
+    number_str, unit = match.groups()
+    number = float(number_str)
+    if number <= 0:
+        raise vol.Invalid("Upload limit must be greater than 0")
+
+    if unit is None:
+        return int(number)
+
+    multiplier = _BYTE_SIZE_MULTIPLIERS.get(unit.strip().lower())
+    if multiplier is None:
+        raise vol.Invalid("Upload limit unit is not supported")
+
+    return int(number * multiplier)
+
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
 SAVE_DELAY: Final = 180
@@ -144,20 +186,18 @@ HTTP_SCHEMA: Final = vol.All(
             vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
             vol.Optional(CONF_UPLOAD_LIMITS, default={}): vol.Schema(
                 {
-                    vol.Optional(CONF_DEFAULT): vol.All(
-                        cv.byte_size, vol.Range(min=1)
-                    ),
+                    vol.Optional(CONF_DEFAULT): vol.All(_byte_size, vol.Range(min=1)),
                     vol.Optional(CONF_FILE_UPLOAD): vol.All(
-                        cv.byte_size, vol.Range(min=1)
+                        _byte_size, vol.Range(min=1)
                     ),
                     vol.Optional(CONF_IMAGE_UPLOAD): vol.All(
-                        cv.byte_size, vol.Range(min=1)
+                        _byte_size, vol.Range(min=1)
                     ),
                     vol.Optional(CONF_MEDIA_SOURCE): vol.All(
-                        cv.byte_size, vol.Range(min=1)
+                        _byte_size, vol.Range(min=1)
                     ),
                     vol.Optional(CONF_ZWAVE_JS): vol.All(
-                        cv.byte_size, vol.Range(min=1)
+                        _byte_size, vol.Range(min=1)
                     ),
                 }
             ),
