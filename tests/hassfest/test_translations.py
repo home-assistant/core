@@ -418,6 +418,7 @@ def test_gen_strings_schema(
     [
         "An example is: https://example.com.",
         "www.example.com",
+        "http://example.com:8080",
         "WWW.EXAMPLE.COM",
         "HTTPS://www.example.com",
     ],
