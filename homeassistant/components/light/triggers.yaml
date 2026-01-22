@@ -19,6 +19,13 @@
   selector:
     choose:
       choices:
+        number:
+          selector:
+            number:
+              max: 100
+              min: 0
+              mode: box
+              unit_of_measurement: "%"
         entity:
           selector:
             entity:
@@ -27,10 +34,6 @@
                   - input_number
                   - number
                   - sensor
-        number:
-          selector:
-            number:
-              mode: box
       translation_key: number_or_entity
 
 turned_on: *trigger_common
@@ -48,6 +51,7 @@ brightness_crossed_threshold:
     behavior: *trigger_behavior
     threshold_type:
       required: true
+      default: above
       selector:
         select:
           options:

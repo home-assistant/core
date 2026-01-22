@@ -31,6 +31,7 @@ class VelbusSelect(VelbusEntity, SelectEntity):
 
     _channel: SelectedProgram
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "select_program"
 
     def __init__(
         self,

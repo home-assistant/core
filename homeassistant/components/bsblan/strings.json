@@ -79,9 +79,6 @@
     "invalid_device_id": {
       "message": "Invalid device ID: {device_id}"
     },
-    "invalid_time_format": {
-      "message": "Invalid time format provided"
-    },
     "no_config_entry_for_device": {
       "message": "No configuration entry found for device: {device_id}"
     },
@@ -108,6 +105,9 @@
     },
     "setup_general_error": {
       "message": "An unknown error occurred while retrieving static device data"
+    },
+    "sync_time_failed": {
+      "message": "Failed to sync time for {device_name}: {error}"
     }
   },
   "services": {
@@ -148,6 +148,16 @@
         }
       },
       "name": "Set hot water schedule"
+    },
+    "sync_time": {
+      "description": "Synchronize Home Assistant time to the BSB-Lan device. Only updates if device time differs from Home Assistant time.",
+      "fields": {
+        "device_id": {
+          "description": "The BSB-LAN device to sync time for.",
+          "name": "Device"
+        }
+      },
+      "name": "Sync time"
     }
   }
 }

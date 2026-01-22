@@ -39,6 +39,7 @@ from .const import (
 )
 from .entity import TuyaEntity
 from .models import (
+    DeviceWrapper,
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,
     DPCodeJsonWrapper,
@@ -1779,14 +1780,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     """Tuya Sensor Entity."""
 
     entity_description: TuyaSensorEntityDescription
-    _dpcode_wrapper: DPCodeWrapper
 
     def __init__(
         self,
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaSensorEntityDescription,
-        dpcode_wrapper: DPCodeWrapper,
+        dpcode_wrapper: DeviceWrapper[StateType],
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
@@ -1849,3 +1849,15 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self._read_wrapper(self._dpcode_wrapper)
+
+    async def _handle_state_update(
+        self,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict[str, int] | None,
+    ) -> None:
+        """Handle state update, only if this entity's dpcode was actually updated."""
+        if self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        ):
+            return
+        self.async_write_ha_state()

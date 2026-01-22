@@ -220,31 +220,33 @@ def get_accessory(  # noqa: C901
             a_type = "TemperatureSensor"
         elif device_class == SensorDeviceClass.HUMIDITY and unit == PERCENTAGE:
             a_type = "HumiditySensor"
-        elif (
-            device_class == SensorDeviceClass.PM10
-            or SensorDeviceClass.PM10 in state.entity_id
-        ):
+        elif device_class == SensorDeviceClass.PM10:
             a_type = "PM10Sensor"
-        elif (
-            device_class == SensorDeviceClass.PM25
-            or SensorDeviceClass.PM25 in state.entity_id
-        ):
+        elif device_class == SensorDeviceClass.PM25:
             a_type = "PM25Sensor"
         elif device_class == SensorDeviceClass.NITROGEN_DIOXIDE:
             a_type = "NitrogenDioxideSensor"
         elif device_class == SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS:
             a_type = "VolatileOrganicCompoundsSensor"
-        elif (
-            device_class == SensorDeviceClass.GAS
-            or SensorDeviceClass.GAS in state.entity_id
-        ):
+        elif device_class == SensorDeviceClass.GAS:
             a_type = "AirQualitySensor"
         elif device_class == SensorDeviceClass.CO:
             a_type = "CarbonMonoxideSensor"
-        elif device_class == SensorDeviceClass.CO2 or "co2" in state.entity_id:
+        elif device_class == SensorDeviceClass.CO2:
             a_type = "CarbonDioxideSensor"
         elif device_class == SensorDeviceClass.ILLUMINANCE or unit == LIGHT_LUX:
             a_type = "LightSensor"
+
+        # Fallbacks based on entity_id
+        elif SensorDeviceClass.PM10 in state.entity_id:
+            a_type = "PM10Sensor"
+        elif SensorDeviceClass.PM25 in state.entity_id:
+            a_type = "PM25Sensor"
+        elif SensorDeviceClass.GAS in state.entity_id:
+            a_type = "AirQualitySensor"
+        elif "co2" in state.entity_id:
+            a_type = "CarbonDioxideSensor"
+
         else:
             _LOGGER.debug(
                 "%s: Unsupported sensor type (device_class=%s) (unit=%s)",

@@ -1,25 +1,20 @@
 """Support for namecheap DNS services."""
 
-from datetime import timedelta
 import logging
 
-import defusedxml.ElementTree as ET
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_DOMAIN, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
+
+from .const import DOMAIN
+from .coordinator import NamecheapConfigEntry, NamecheapDnsUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "namecheapdns"
-
-INTERVAL = timedelta(minutes=5)
-
-UPDATE_URL = "https://dynamicdns.park-your-domain.com/update"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -37,37 +32,30 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the namecheap DNS component."""
-    host = config[DOMAIN][CONF_HOST]
-    domain = config[DOMAIN][CONF_DOMAIN]
-    password = config[DOMAIN][CONF_PASSWORD]
 
-    session = async_get_clientsession(hass)
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+            )
+        )
 
-    result = await _update_namecheapdns(session, host, domain, password)
-
-    if not result:
-        return False
-
-    async def update_domain_interval(now):
-        """Update the namecheap DNS entry."""
-        await _update_namecheapdns(session, host, domain, password)
-
-    async_track_time_interval(hass, update_domain_interval, INTERVAL)
-
-    return result
+    return True
 
 
-async def _update_namecheapdns(session, host, domain, password):
-    """Update namecheap DNS entry."""
-    params = {"host": host, "domain": domain, "password": password}
+async def async_setup_entry(hass: HomeAssistant, entry: NamecheapConfigEntry) -> bool:
+    """Set up Namecheap DynamicDNS from a config entry."""
 
-    resp = await session.get(UPDATE_URL, params=params)
-    xml_string = await resp.text()
-    root = ET.fromstring(xml_string)
-    err_count = root.find("ErrCount").text
+    coordinator = NamecheapDnsUpdateCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
-    if int(err_count) != 0:
-        _LOGGER.warning("Updating namecheap domain failed: %s", domain)
-        return False
+    # Add a dummy listener as we do not have regular entities
+    entry.async_on_unload(coordinator.async_add_listener(lambda: None))
 
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: NamecheapConfigEntry) -> bool:
+    """Unload a config entry."""
     return True
