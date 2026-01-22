@@ -38,6 +38,9 @@ class HikvisionData:
     device_id: str
     device_name: str
     device_type: str
+    host: str
+    username: str
+    password: str
     channels: dict[int, VideoChannel] = field(default_factory=dict)
 
 
@@ -83,6 +86,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
         device_id=device_id,
         device_name=device_name,
         device_type=device_type,
+        host=host,
+        username=username,
+        password=password,
         channels=channels,
     )
 

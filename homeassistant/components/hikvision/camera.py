@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from urllib.parse import quote
+
 from pyhik.hikvision import VideoChannel
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -13,6 +15,7 @@ from . import HikvisionConfigEntry
 from .entity import HikvisionEntity
 
 PARALLEL_UPDATES = 0
+RTSP_PORT = 554
 
 
 async def async_setup_entry(
@@ -74,5 +77,23 @@ class HikvisionCamera(HikvisionEntity, Camera):
             ) from err
 
     async def stream_source(self) -> str | None:
-        """Return the stream source URL."""
-        return self._camera.get_stream_url(self._video_channel.id)
+        """Return the stream source URL.
+
+        Constructs the RTSP URL directly to work around a bug in pyhik
+        where the library includes the HTTP protocol in the RTSP URL.
+        """
+        # NVR uses channel * 100 + stream_type format
+        # Standalone cameras use stream_type directly (1 for main stream)
+        if self._data.device_type == "NVR":
+            stream_channel = self._video_channel.id * 100 + 1
+        else:
+            stream_channel = 1
+
+        # URL encode credentials for safety
+        encoded_user = quote(self._data.username, safe="")
+        encoded_pwd = quote(self._data.password, safe="")
+
+        return (
+            f"rtsp://{encoded_user}:{encoded_pwd}@"
+            f"{self._data.host}:{RTSP_PORT}/Streaming/Channels/{stream_channel}"
+        )
