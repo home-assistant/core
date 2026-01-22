@@ -147,6 +147,8 @@ def _byte_size(value: float | str) -> int:
         raise vol.Invalid("Upload limit unit is not supported")
 
     return int(number * multiplier)
+
+
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
 SAVE_DELAY: Final = 180
