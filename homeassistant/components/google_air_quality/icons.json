@@ -12,9 +12,6 @@
       },
       "non_methane_hydrocarbons": {
         "default": "mdi:molecule"
-      },
-      "ozone": {
-        "default": "mdi:molecule"
       }
     }
   }
