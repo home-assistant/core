@@ -122,7 +122,7 @@ _BYTE_SIZE_MULTIPLIERS: Final[dict[str, int]] = {
 }
 
 
-def _byte_size(value: int | float | str) -> int:
+def _byte_size(value: float | str) -> int:
     """Return a size in bytes from a size string or number."""
     if isinstance(value, int):
         return value
@@ -148,7 +148,6 @@ def _byte_size(value: int | float | str) -> int:
         raise vol.Invalid("Upload limit unit is not supported")
 
     return int(number * multiplier)
-
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
 SAVE_DELAY: Final = 180
@@ -196,9 +195,7 @@ HTTP_SCHEMA: Final = vol.All(
                     vol.Optional(CONF_MEDIA_SOURCE): vol.All(
                         _byte_size, vol.Range(min=1)
                     ),
-                    vol.Optional(CONF_ZWAVE_JS): vol.All(
-                        _byte_size, vol.Range(min=1)
-                    ),
+                    vol.Optional(CONF_ZWAVE_JS): vol.All(_byte_size, vol.Range(min=1)),
                 }
             ),
         }
