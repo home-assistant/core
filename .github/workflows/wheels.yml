@@ -28,16 +28,14 @@ jobs:
     name: Initialize wheels builder
     if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
-    outputs:
-      architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - &checkout
         name: Checkout the repository
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -49,10 +47,6 @@ jobs:
           python --version
           pip install "$(grep '^uv' < requirements.txt)"
           uv pip install -r requirements.txt
-
-      - name: Get information
-        id: info
-        uses: home-assistant/actions/helpers/info@master
 
       - name: Create requirements_diff file
         run: |
@@ -80,7 +74,7 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: &actions-upload-artifact actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: &actions-upload-artifact actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: env_file
           path: ./.env_file
@@ -114,9 +108,10 @@ jobs:
       fail-fast: false
       matrix: &matrix-build
         abi: ["cp313", "cp314"]
-        arch: ${{ fromJson(needs.init.outputs.architectures) }}
+        arch: ["amd64", "aarch64"]
         include:
-          - os: ubuntu-latest
+          - arch: amd64
+            os: ubuntu-latest
           - arch: aarch64
             os: ubuntu-24.04-arm
     steps:
@@ -124,7 +119,7 @@ jobs:
 
       - &download-env-file
         name: Download env_file
-        uses: &actions-download-artifact actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: &actions-download-artifact actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: env_file
 
@@ -140,9 +135,8 @@ jobs:
           sed -i "/uv/d" requirements.txt
           sed -i "/uv/d" requirements_diff.txt
 
-      # home-assistant/wheels doesn't support sha pinning
       - name: Build wheels
-        uses: &home-assistant-wheels home-assistant/wheels@2025.10.0
+        uses: &home-assistant-wheels home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -183,7 +177,6 @@ jobs:
           sed -i "/uv/d" requirements.txt
           sed -i "/uv/d" requirements_diff.txt
 
-      # home-assistant/wheels doesn't support sha pinning
       - name: Build wheels
         uses: *home-assistant-wheels
         with:

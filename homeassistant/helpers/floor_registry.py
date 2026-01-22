@@ -7,6 +7,7 @@ from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass
 from datetime import datetime
+import math
 from typing import Any, Literal, TypedDict
 
 from homeassistant.core import Event, HomeAssistant, callback
@@ -30,7 +31,7 @@ EVENT_FLOOR_REGISTRY_UPDATED: EventType[EventFloorRegistryUpdatedData] = EventTy
 )
 STORAGE_KEY = "core.floor_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 
 
 class _FloorStoreData(TypedDict):
@@ -51,12 +52,23 @@ class FloorRegistryStoreData(TypedDict):
     floors: list[_FloorStoreData]
 
 
-class EventFloorRegistryUpdatedData(TypedDict):
+class _EventFloorRegistryUpdatedData_Create_Remove_Update(TypedDict):
     """Event data for when the floor registry is updated."""
 
-    action: Literal["create", "remove", "update", "reorder"]
-    floor_id: str | None
+    action: Literal["create", "remove", "update"]
+    floor_id: str
 
+
+class _EventFloorRegistryUpdatedData_Reorder(TypedDict):
+    """Event data for when the floor registry is updated."""
+
+    action: Literal["reorder"]
+
+
+type EventFloorRegistryUpdatedData = (
+    _EventFloorRegistryUpdatedData_Create_Remove_Update
+    | _EventFloorRegistryUpdatedData_Reorder
+)
 
 type EventFloorRegistryUpdated = Event[EventFloorRegistryUpdatedData]
 
@@ -90,6 +102,16 @@ class FloorRegistryStore(Store[FloorRegistryStoreData]):
                 created_at = utc_from_timestamp(0).isoformat()
                 for floor in old_data["floors"]:
                     floor["created_at"] = floor["modified_at"] = created_at
+
+            if old_minor_version < 3:
+                # Version 1.3 sorts the floors by their level attribute, then by name
+                old_data["floors"] = sorted(
+                    old_data["floors"],
+                    key=lambda floor: (
+                        math.inf if floor["level"] is None else -floor["level"],
+                        floor["name"].casefold(),
+                    ),
+                )
 
         return old_data  # type: ignore[return-value]
 
@@ -200,7 +222,9 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
 
         self.hass.bus.async_fire_internal(
             EVENT_FLOOR_REGISTRY_UPDATED,
-            EventFloorRegistryUpdatedData(action="create", floor_id=floor_id),
+            _EventFloorRegistryUpdatedData_Create_Remove_Update(
+                action="create", floor_id=floor_id
+            ),
         )
         return floor
 
@@ -211,7 +235,7 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         del self.floors[floor_id]
         self.hass.bus.async_fire_internal(
             EVENT_FLOOR_REGISTRY_UPDATED,
-            EventFloorRegistryUpdatedData(
+            _EventFloorRegistryUpdatedData_Create_Remove_Update(
                 action="remove",
                 floor_id=floor_id,
             ),
@@ -253,7 +277,7 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         self.async_schedule_save()
         self.hass.bus.async_fire_internal(
             EVENT_FLOOR_REGISTRY_UPDATED,
-            EventFloorRegistryUpdatedData(
+            _EventFloorRegistryUpdatedData_Create_Remove_Update(
                 action="update",
                 floor_id=floor_id,
             ),
@@ -280,7 +304,7 @@ class FloorRegistry(BaseRegistry[FloorRegistryStoreData]):
         self.async_schedule_save()
         self.hass.bus.async_fire_internal(
             EVENT_FLOOR_REGISTRY_UPDATED,
-            EventFloorRegistryUpdatedData(action="reorder", floor_id=None),
+            _EventFloorRegistryUpdatedData_Reorder(action="reorder"),
         )
 
     async def async_load(self) -> None:

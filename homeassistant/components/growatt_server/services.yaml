@@ -1,0 +1,50 @@
+# Service definitions for Growatt Server integration
+
+update_time_segment:
+  fields:
+    segment_id:
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 9
+          mode: box
+    batt_mode:
+      required: true
+      example: "load_first"
+      selector:
+        select:
+          options:
+            - "load_first"
+            - "battery_first"
+            - "grid_first"
+          translation_key: batt_mode
+    start_time:
+      required: true
+      example: "08:00"
+      selector:
+        time:
+    end_time:
+      required: true
+      example: "12:00"
+      selector:
+        time:
+    enabled:
+      required: true
+      example: true
+      selector:
+        boolean:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: growatt_server
+
+read_time_segments:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: growatt_server

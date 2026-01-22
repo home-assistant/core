@@ -118,9 +118,12 @@ from tests.common import MockConfigEntry
             },
         ),
         (
-            {ATTR_STATUS: "test toot", ATTR_IDEMPOTENCY_KEY: "post_once_only"},
             {
-                "status": "test toot",
+                ATTR_STATUS: "test toot\nwith idempotency",
+                ATTR_IDEMPOTENCY_KEY: "post_once_only",
+            },
+            {
+                "status": "test toot\nwith idempotency",
                 "idempotency_key": "post_once_only",
                 "language": None,
                 "spoiler_text": None,

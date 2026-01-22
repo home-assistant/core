@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fan speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -56,64 +57,6 @@
     'state': '0',
   })
 # ---
-# name: test_all_entities[da_ks_oven_0107x][number.kitchen_oven_rinse_cycles-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 5,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.kitchen_oven_rinse_cycles',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Rinse cycles',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'washer_rinse_cycles',
-    'unique_id': '199d7863-ad04-793d-176d-658f10062575_main_custom.washerRinseCycles_washerRinseCycles_washerRinseCycles',
-    'unit_of_measurement': 'cycles',
-  })
-# ---
-# name: test_all_entities[da_ks_oven_0107x][number.kitchen_oven_rinse_cycles-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen oven Rinse cycles',
-      'max': 5,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
-      'unit_of_measurement': 'cycles',
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.kitchen_oven_rinse_cycles',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2',
-  })
-# ---
 # name: test_all_entities[da_ref_normal_000001][number.refrigerator_freezer_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -140,6 +83,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -199,6 +143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -258,6 +203,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -317,6 +263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -376,6 +323,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freezer temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -435,6 +383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fridge temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -468,6 +417,66 @@
     'state': '2.0',
   })
 # ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][number.lodowka_target_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 7,
+      'min': 1,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.lodowka_target_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Target temperature',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'target_temperature',
+    'unique_id': '271d82e0-5b0c-e4b8-058e-cdf23a188610_onedoor_thermostatCoolingSetpoint_coolingSetpoint_coolingSetpoint',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][number.lodowka_target_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Lodówka Target temperature',
+      'max': 7,
+      'min': 1,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.lodowka_target_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_all_entities[da_wm_wm_000001][number.washer_rinse_cycles-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -494,6 +503,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse cycles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -552,6 +562,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse cycles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -610,6 +621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse cycles',
     'options': dict({
     }),
     'original_device_class': None,

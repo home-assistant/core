@@ -57,6 +57,7 @@ def mock_aiontfy() -> Generator[AsyncMock]:
             actions=[],
             attachment=None,
             content_type=None,
+            sequence_id="Mc3otamDNcpJ",
         )
 
         resp.to_dict.return_value = {
@@ -74,6 +75,7 @@ def mock_aiontfy() -> Generator[AsyncMock]:
             "actions": [],
             "attachment": None,
             "content_type": None,
+            "sequence_id": "Mc3otamDNcpJ",
         }
 
         async def mock_ws(

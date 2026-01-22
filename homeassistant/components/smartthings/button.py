@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pysmartthings import Capability, Command, SmartThings
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -33,6 +34,13 @@ CAPABILITIES_TO_BUTTONS: dict[Capability | str, SmartThingsButtonDescription] = 
         key=Capability.CUSTOM_WATER_FILTER,
         translation_key="reset_water_filter",
         command=Command.RESET_WATER_FILTER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    Capability.SAMSUNG_CE_HOOD_FILTER: SmartThingsButtonDescription(
+        key=Capability.SAMSUNG_CE_HOOD_FILTER,
+        translation_key="reset_hood_filter",
+        command=Command.RESET_HOOD_FILTER,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 

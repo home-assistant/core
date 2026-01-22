@@ -55,11 +55,7 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import (
-    entity_registry as er,
-    issue_registry as ir,
-    location as loc_helper,
-)
+from homeassistant.helpers import entity_registry as er, location as loc_helper
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.translation import async_translate_state
 from homeassistant.helpers.typing import TemplateVarsType
@@ -1212,7 +1208,14 @@ def config_entry_attr(
     if not isinstance(config_entry_id_, str):
         raise TemplateError("Must provide a config entry ID")
 
-    if attr_name not in ("domain", "title", "state", "source", "disabled_by"):
+    if attr_name not in (
+        "domain",
+        "title",
+        "state",
+        "source",
+        "disabled_by",
+        "pref_disable_polling",
+    ):
         raise TemplateError("Invalid config entry attribute")
 
     config_entry = hass.config_entries.async_get_entry(config_entry_id_)
@@ -1221,25 +1224,6 @@ def config_entry_attr(
         return None
 
     return getattr(config_entry, attr_name)
-
-
-def issues(hass: HomeAssistant) -> dict[tuple[str, str], dict[str, Any]]:
-    """Return all open issues."""
-    current_issues = ir.async_get(hass).issues
-    # Use JSON for safe representation
-    return {
-        key: issue_entry.to_json()
-        for (key, issue_entry) in current_issues.items()
-        if issue_entry.active
-    }
-
-
-def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | None:
-    """Get issue by domain and issue_id."""
-    result = ir.async_get(hass).async_get_issue(domain, issue_id)
-    if result:
-        return result.to_json()
-    return None
 
 
 def closest(hass: HomeAssistant, *args: Any) -> State | None:
@@ -1896,6 +1880,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         )
         self.add_extension("homeassistant.helpers.template.extensions.DeviceExtension")
         self.add_extension("homeassistant.helpers.template.extensions.FloorExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.IssuesExtension")
         self.add_extension("homeassistant.helpers.template.extensions.LabelExtension")
         self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
         self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
@@ -1981,12 +1966,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["config_entry_id"] = hassfunction(config_entry_id)
         self.filters["config_entry_id"] = self.globals["config_entry_id"]
-
-        # Issue extensions
-
-        self.globals["issues"] = hassfunction(issues)
-        self.globals["issue"] = hassfunction(issue)
-        self.filters["issue"] = self.globals["issue"]
 
         if limited:
             # Only device_entities is available to limited templates, mark other

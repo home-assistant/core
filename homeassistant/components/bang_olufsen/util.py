@@ -2,11 +2,25 @@
 
 from __future__ import annotations
 
+from typing import cast
+
+from mozart_api.models import PairedRemote
+from mozart_api.mozart_client import MozartClient
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DEVICE_BUTTONS, DOMAIN, BangOlufsenButtons, BangOlufsenModel
+from .const import (
+    BEO_REMOTE_CONTROL_KEYS,
+    BEO_REMOTE_KEYS,
+    BEO_REMOTE_SUBMENU_CONTROL,
+    BEO_REMOTE_SUBMENU_LIGHT,
+    DEVICE_BUTTONS,
+    DOMAIN,
+    BeoButtons,
+    BeoModel,
+)
 
 
 def get_device(hass: HomeAssistant, unique_id: str) -> DeviceEntry:
@@ -23,16 +37,57 @@ def get_serial_number_from_jid(jid: str) -> str:
     return jid.split(".")[2].split("@")[0]
 
 
-def get_device_buttons(model: BangOlufsenModel) -> list[str]:
+async def get_remotes(client: MozartClient) -> list[PairedRemote]:
+    """Get paired remotes."""
+
+    bluetooth_remote_list = await client.get_bluetooth_remotes()
+
+    return [
+        remote
+        for remote in cast(list[PairedRemote], bluetooth_remote_list.items)
+        if remote.serial_number is not None
+    ]
+
+
+def get_device_buttons(model: BeoModel) -> list[str]:
     """Get supported buttons for a given model."""
+    # Beoconnect Core does not have any buttons
+    if model == BeoModel.BEOCONNECT_CORE:
+        return []
+
     buttons = DEVICE_BUTTONS.copy()
 
-    # Beosound Premiere does not have a bluetooth button
-    if model == BangOlufsenModel.BEOSOUND_PREMIERE:
-        buttons.remove(BangOlufsenButtons.BLUETOOTH)
+    # Models that don't have a microphone button
+    if model in (
+        BeoModel.BEOSOUND_A5,
+        BeoModel.BEOSOUND_A9,
+        BeoModel.BEOSOUND_PREMIERE,
+    ):
+        buttons.remove(BeoButtons.MICROPHONE)
 
-    # Beoconnect Core does not have any buttons
-    elif model == BangOlufsenModel.BEOCONNECT_CORE:
-        buttons = []
+    # Models that don't have a Bluetooth button
+    if model in (
+        BeoModel.BEOSOUND_A9,
+        BeoModel.BEOSOUND_PREMIERE,
+    ):
+        buttons.remove(BeoButtons.BLUETOOTH)
 
     return buttons
+
+
+def get_remote_keys() -> list[str]:
+    """Get remote keys for the Beoremote One. Formatted for Home Assistant use."""
+    return [
+        *[f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}" for key_type in BEO_REMOTE_KEYS],
+        *[
+            f"{BEO_REMOTE_SUBMENU_CONTROL}/{key_type}"
+            for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)
+        ],
+    ]
+
+
+async def supports_battery(client: MozartClient) -> bool:
+    """Get if a Mozart device has a battery."""
+    battery_state = await client.get_battery_state()
+
+    return battery_state.state != "BatteryNotPresent"
