@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.tailscale.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
