@@ -97,3 +97,37 @@ async def test_form_fails(
     await _fill_out_form_and_assert_entry_created(
         hass, result_init["flow_id"], mock_setup_entry
     )
+
+
+@pytest.mark.parametrize(
+    ("domain", "result"),
+    [
+        ("wrong_format_domain://www.switch-bot.com", FlowResultType.FORM),
+        ("http://www.switch-bot.com", FlowResultType.CREATE_ENTRY),
+    ],
+)
+async def test_form_webhook_domain_error(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    domain: str,
+    result: FlowResultType,
+) -> None:
+    """Test we handle error cases."""
+    result_init = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.switchbot_cloud.config_flow.SwitchBotAPI.list_devices"
+    ):
+        result_configure = await hass.config_entries.flow.async_configure(
+            result_init["flow_id"],
+            {
+                CONF_API_TOKEN: "test-token",
+                CONF_API_KEY: "test-secret-key",
+                CONF_WEBHOOK_DOMAIN: domain,
+            },
+        )
+
+        await hass.async_block_till_done()
+        assert result_configure["type"] is result
