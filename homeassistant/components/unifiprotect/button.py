@@ -31,6 +31,7 @@ from .entity import (
     T,
     async_all_device_entities,
 )
+from .utils import async_ufp_instance_command
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -159,6 +160,7 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
 
     entity_description: ProtectButtonEntityDescription
 
+    @async_ufp_instance_command
     async def async_press(self) -> None:
         """Press the button."""
         if self.entity_description.ufp_press is not None:

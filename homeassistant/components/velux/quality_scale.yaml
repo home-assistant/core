@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: needs to move to async_setup
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -24,15 +22,15 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
-  config-entry-unloading: todo
+  action-exceptions: done
+  config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
+  log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage:
     status: todo
     comment: add tests where missing
