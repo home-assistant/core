@@ -52,10 +52,13 @@ def make_test_trigger(*entities: str) -> dict:
 
 
 async def async_trigger(
-    hass: HomeAssistant, entity_id: str, state: str | None = None
+    hass: HomeAssistant,
+    entity_id: str,
+    state: str | None = None,
+    attributes: dict | None = None,
 ) -> None:
     """Trigger a state change."""
-    hass.states.async_set(entity_id, state)
+    hass.states.async_set(entity_id, state, attributes)
     await hass.async_block_till_done()
 
 

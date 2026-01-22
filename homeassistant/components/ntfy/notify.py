@@ -43,6 +43,7 @@ ATTR_ICON = "icon"
 ATTR_MARKDOWN = "markdown"
 ATTR_PRIORITY = "priority"
 ATTR_TAGS = "tags"
+ATTR_SEQUENCE_ID = "sequence_id"
 ATTR_ACTIONS = "actions"
 ATTR_ACTION = "action"
 ATTR_VIEW = "view"
@@ -105,6 +106,7 @@ SERVICE_PUBLISH_SCHEMA = cv.make_entity_service_schema(
         vol.Optional(ATTR_EMAIL): vol.Email(),
         vol.Optional(ATTR_CALL): cv.string,
         vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
+        vol.Optional(ATTR_SEQUENCE_ID): cv.string,
         vol.Optional(ATTR_ACTIONS): vol.All(
             cv.ensure_list, [vol.Any(VIEW_SCHEMA, BROADCAST_SCHEMA, HTTP_SCHEMA)]
         ),

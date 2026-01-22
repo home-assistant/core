@@ -141,3 +141,8 @@ publish:
             clear:
               selector:
                 boolean:
+    sequence_id:
+      required: false
+      selector:
+        text:
+      example: "Mc3otamDNcpJ"
