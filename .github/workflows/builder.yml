@@ -47,10 +47,10 @@ jobs:
         with:
           type: ${{ env.BUILD_TYPE }}
 
-      - name: Verify version
-        uses: home-assistant/actions/helpers/verify-version@master
-        with:
-          ignore-dev: true
+      # - name: Verify version
+      #   uses: home-assistant/actions/helpers/verify-version@master
+      #   with:
+      #     ignore-dev: true
 
       - name: Fail if translations files are checked in
         run: |
@@ -245,314 +245,314 @@ jobs:
         run: |
           cosign sign --yes "ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}@${{ steps.build.outputs.digest }}"
 
-  build_machine:
-    name: Build ${{ matrix.machine }} machine core image
-    if: github.repository_owner == 'home-assistant'
-    needs: ["init", "build_base"]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    strategy:
-      matrix:
-        machine:
-          - generic-x86-64
-          - intel-nuc
-          - khadas-vim3
-          - odroid-c2
-          - odroid-c4
-          - odroid-m1
-          - odroid-n2
-          - qemuarm-64
-          - qemux86-64
-          - raspberrypi3-64
-          - raspberrypi4-64
-          - raspberrypi5-64
-          - yellow
-          - green
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+  # build_machine:
+  #   name: Build ${{ matrix.machine }} machine core image
+  #   if: github.repository_owner == 'home-assistant'
+  #   needs: ["init", "build_base"]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     packages: write
+  #     id-token: write
+  #   strategy:
+  #     matrix:
+  #       machine:
+  #         - generic-x86-64
+  #         - intel-nuc
+  #         - khadas-vim3
+  #         - odroid-c2
+  #         - odroid-c4
+  #         - odroid-m1
+  #         - odroid-n2
+  #         - qemuarm-64
+  #         - qemux86-64
+  #         - raspberrypi3-64
+  #         - raspberrypi4-64
+  #         - raspberrypi5-64
+  #         - yellow
+  #         - green
+  #   steps:
+  #     - name: Checkout the repository
+  #       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
-      - name: Set build additional args
-        run: |
-          # Create general tags
-          if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
-            echo "BUILD_ARGS=--additional-tag dev" >> $GITHUB_ENV
-          elif [[ "${{ needs.init.outputs.version }}" =~ b ]]; then
-            echo "BUILD_ARGS=--additional-tag beta" >> $GITHUB_ENV
-          else
-            echo "BUILD_ARGS=--additional-tag stable" >> $GITHUB_ENV
-          fi
+  #     - name: Set build additional args
+  #       run: |
+  #         # Create general tags
+  #         if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
+  #           echo "BUILD_ARGS=--additional-tag dev" >> $GITHUB_ENV
+  #         elif [[ "${{ needs.init.outputs.version }}" =~ b ]]; then
+  #           echo "BUILD_ARGS=--additional-tag beta" >> $GITHUB_ENV
+  #         else
+  #           echo "BUILD_ARGS=--additional-tag stable" >> $GITHUB_ENV
+  #         fi
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Login to GitHub Container Registry
+  #       uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.repository_owner }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      # home-assistant/builder doesn't support sha pinning
-      - name: Build base image
-        uses: home-assistant/builder@2025.11.0
-        with:
-          args: |
-            $BUILD_ARGS \
-            --target /data/machine \
-            --cosign \
-            --machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}"
+  #     # home-assistant/builder doesn't support sha pinning
+  #     - name: Build base image
+  #       uses: home-assistant/builder@2025.11.0
+  #       with:
+  #         args: |
+  #           $BUILD_ARGS \
+  #           --target /data/machine \
+  #           --cosign \
+  #           --machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}"
 
-  publish_ha:
-    name: Publish version files
-    environment: ${{ needs.init.outputs.channel }}
-    if: github.repository_owner == 'home-assistant'
-    needs: ["init", "build_machine"]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+  # publish_ha:
+  #   name: Publish version files
+  #   environment: ${{ needs.init.outputs.channel }}
+  #   if: github.repository_owner == 'home-assistant'
+  #   needs: ["init", "build_machine"]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout the repository
+  #       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
-      - name: Initialize git
-        uses: home-assistant/actions/helpers/git-init@master
-        with:
-          name: ${{ secrets.GIT_NAME }}
-          email: ${{ secrets.GIT_EMAIL }}
-          token: ${{ secrets.GIT_TOKEN }}
+  #     - name: Initialize git
+  #       uses: home-assistant/actions/helpers/git-init@master
+  #       with:
+  #         name: ${{ secrets.GIT_NAME }}
+  #         email: ${{ secrets.GIT_EMAIL }}
+  #         token: ${{ secrets.GIT_TOKEN }}
 
-      - name: Update version file
-        uses: home-assistant/actions/helpers/version-push@master
-        with:
-          key: "homeassistant[]"
-          key-description: "Home Assistant Core"
-          version: ${{ needs.init.outputs.version }}
-          channel: ${{ needs.init.outputs.channel }}
-          exclude-list: '["odroid-xu","qemuarm","qemux86","raspberrypi","raspberrypi2","raspberrypi3","raspberrypi4","tinker"]'
+  #     - name: Update version file
+  #       uses: home-assistant/actions/helpers/version-push@master
+  #       with:
+  #         key: "homeassistant[]"
+  #         key-description: "Home Assistant Core"
+  #         version: ${{ needs.init.outputs.version }}
+  #         channel: ${{ needs.init.outputs.channel }}
+  #         exclude-list: '["odroid-xu","qemuarm","qemux86","raspberrypi","raspberrypi2","raspberrypi3","raspberrypi4","tinker"]'
 
-      - name: Update version file (stable -> beta)
-        if: needs.init.outputs.channel == 'stable'
-        uses: home-assistant/actions/helpers/version-push@master
-        with:
-          key: "homeassistant[]"
-          key-description: "Home Assistant Core"
-          version: ${{ needs.init.outputs.version }}
-          channel: beta
-          exclude-list: '["odroid-xu","qemuarm","qemux86","raspberrypi","raspberrypi2","raspberrypi3","raspberrypi4","tinker"]'
+  #     - name: Update version file (stable -> beta)
+  #       if: needs.init.outputs.channel == 'stable'
+  #       uses: home-assistant/actions/helpers/version-push@master
+  #       with:
+  #         key: "homeassistant[]"
+  #         key-description: "Home Assistant Core"
+  #         version: ${{ needs.init.outputs.version }}
+  #         channel: beta
+  #         exclude-list: '["odroid-xu","qemuarm","qemux86","raspberrypi","raspberrypi2","raspberrypi3","raspberrypi4","tinker"]'
 
-  publish_container:
-    name: Publish meta container for ${{ matrix.registry }}
-    environment: ${{ needs.init.outputs.channel }}
-    if: github.repository_owner == 'home-assistant'
-    needs: ["init", "build_base"]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    strategy:
-      fail-fast: false
-      matrix:
-        registry: ["ghcr.io/home-assistant", "docker.io/homeassistant"]
-    steps:
-      - *install_cosign
+  # publish_container:
+  #   name: Publish meta container for ${{ matrix.registry }}
+  #   environment: ${{ needs.init.outputs.channel }}
+  #   if: github.repository_owner == 'home-assistant'
+  #   needs: ["init", "build_base"]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     packages: write
+  #     id-token: write
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       registry: ["ghcr.io/home-assistant", "docker.io/homeassistant"]
+  #   steps:
+  #     - *install_cosign
 
-      - name: Login to DockerHub
-        if: matrix.registry == 'docker.io/homeassistant'
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+  #     - name: Login to DockerHub
+  #       if: matrix.registry == 'docker.io/homeassistant'
+  #       uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Login to GitHub Container Registry
+  #       uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.repository_owner }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify architecture image signatures
-        shell: bash
-        run: |
-          ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
-          for arch in $ARCHS; do
-            echo "Verifying ${arch} image signature..."
-            cosign verify \
-              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-              --certificate-identity-regexp https://github.com/home-assistant/core/.* \
-              "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
-          done
-          echo "✓ All images verified successfully"
+  #     - name: Verify architecture image signatures
+  #       shell: bash
+  #       run: |
+  #         ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
+  #         for arch in $ARCHS; do
+  #           echo "Verifying ${arch} image signature..."
+  #           cosign verify \
+  #             --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  #             --certificate-identity-regexp https://github.com/home-assistant/core/.* \
+  #             "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
+  #         done
+  #         echo "✓ All images verified successfully"
 
-      # Generate all Docker tags based on version string
-      # Version format: YYYY.MM.PATCH, YYYY.MM.PATCHbN (beta), or YYYY.MM.PATCH.devYYYYMMDDHHMM (dev)
-      # Examples:
-      #   2025.12.1     (stable)    -> tags: 2025.12.1, 2025.12, stable, latest, beta, rc
-      #   2025.12.0b3   (beta)      -> tags: 2025.12.0b3, beta, rc
-      #   2025.12.0.dev202511250240 -> tags: 2025.12.0.dev202511250240, dev
-      - name: Generate Docker metadata
-        id: meta
-        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
-        with:
-          images: ${{ matrix.registry }}/home-assistant
-          sep-tags: ","
-          tags: |
-            type=raw,value=${{ needs.init.outputs.version }},priority=9999
-            type=raw,value=dev,enable=${{ contains(needs.init.outputs.version, 'd') }}
-            type=raw,value=beta,enable=${{ !contains(needs.init.outputs.version, 'd') }}
-            type=raw,value=rc,enable=${{ !contains(needs.init.outputs.version, 'd') }}
-            type=raw,value=stable,enable=${{ !contains(needs.init.outputs.version, 'd') && !contains(needs.init.outputs.version, 'b') }}
-            type=raw,value=latest,enable=${{ !contains(needs.init.outputs.version, 'd') && !contains(needs.init.outputs.version, 'b') }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ needs.init.outputs.version }},enable=${{ !contains(needs.init.outputs.version, 'd') && !contains(needs.init.outputs.version, 'b') }}
+  #     # Generate all Docker tags based on version string
+  #     # Version format: YYYY.MM.PATCH, YYYY.MM.PATCHbN (beta), or YYYY.MM.PATCH.devYYYYMMDDHHMM (dev)
+  #     # Examples:
+  #     #   2025.12.1     (stable)    -> tags: 2025.12.1, 2025.12, stable, latest, beta, rc
+  #     #   2025.12.0b3   (beta)      -> tags: 2025.12.0b3, beta, rc
+  #     #   2025.12.0.dev202511250240 -> tags: 2025.12.0.dev202511250240, dev
+  #     - name: Generate Docker metadata
+  #       id: meta
+  #       uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+  #       with:
+  #         images: ${{ matrix.registry }}/home-assistant
+  #         sep-tags: ","
+  #         tags: |
+  #           type=raw,value=${{ needs.init.outputs.version }},priority=9999
+  #           type=raw,value=dev,enable=${{ contains(needs.init.outputs.version, 'd') }}
+  #           type=raw,value=beta,enable=${{ !contains(needs.init.outputs.version, 'd') }}
+  #           type=raw,value=rc,enable=${{ !contains(needs.init.outputs.version, 'd') }}
+  #           type=raw,value=stable,enable=${{ !contains(needs.init.outputs.version, 'd') && !contains(needs.init.outputs.version, 'b') }}
+  #           type=raw,value=latest,enable=${{ !contains(needs.init.outputs.version, 'd') && !contains(needs.init.outputs.version, 'b') }}
+  #           type=semver,pattern={{major}}.{{minor}},value=${{ needs.init.outputs.version }},enable=${{ !contains(needs.init.outputs.version, 'd') && !contains(needs.init.outputs.version, 'b') }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.7.1
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.7.1
 
-      - name: Copy architecture images to DockerHub
-        if: matrix.registry == 'docker.io/homeassistant'
-        shell: bash
-        run: |
-          # Use imagetools to copy image blobs directly between registries
-          # This preserves provenance/attestations and seems to be much faster than pull/push
-          ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
-          for arch in $ARCHS; do
-            echo "Copying ${arch} image to DockerHub..."
-            for attempt in 1 2 3; do
-              if docker buildx imagetools create \
-                --tag "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}" \
-                "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"; then
-                break
-              fi
-              echo "Attempt ${attempt} failed, retrying in 10 seconds..."
-              sleep 10
-              if [ "${attempt}" -eq 3 ]; then
-                echo "Failed after 3 attempts"
-                exit 1
-              fi
-            done
-            cosign sign --yes "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
-          done
+  #     - name: Copy architecture images to DockerHub
+  #       if: matrix.registry == 'docker.io/homeassistant'
+  #       shell: bash
+  #       run: |
+  #         # Use imagetools to copy image blobs directly between registries
+  #         # This preserves provenance/attestations and seems to be much faster than pull/push
+  #         ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
+  #         for arch in $ARCHS; do
+  #           echo "Copying ${arch} image to DockerHub..."
+  #           for attempt in 1 2 3; do
+  #             if docker buildx imagetools create \
+  #               --tag "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}" \
+  #               "ghcr.io/home-assistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"; then
+  #               break
+  #             fi
+  #             echo "Attempt ${attempt} failed, retrying in 10 seconds..."
+  #             sleep 10
+  #             if [ "${attempt}" -eq 3 ]; then
+  #               echo "Failed after 3 attempts"
+  #               exit 1
+  #             fi
+  #           done
+  #           cosign sign --yes "docker.io/homeassistant/${arch}-homeassistant:${{ needs.init.outputs.version }}"
+  #         done
 
-      - name: Create and push multi-arch manifests
-        shell: bash
-        run: |
-          # Build list of architecture images dynamically
-          ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
-          ARCH_IMAGES=()
-          for arch in $ARCHS; do
-            ARCH_IMAGES+=("${{ matrix.registry }}/${arch}-homeassistant:${{ needs.init.outputs.version }}")
-          done
+  #     - name: Create and push multi-arch manifests
+  #       shell: bash
+  #       run: |
+  #         # Build list of architecture images dynamically
+  #         ARCHS=$(echo '${{ needs.init.outputs.architectures }}' | jq -r '.[]')
+  #         ARCH_IMAGES=()
+  #         for arch in $ARCHS; do
+  #           ARCH_IMAGES+=("${{ matrix.registry }}/${arch}-homeassistant:${{ needs.init.outputs.version }}")
+  #         done
 
-          # Build list of all tags for single manifest creation
-          # Note: Using sep-tags=',' in metadata-action for easier parsing
-          TAG_ARGS=()
-          IFS=',' read -ra TAGS <<< "${{ steps.meta.outputs.tags }}"
-          for tag in "${TAGS[@]}"; do
-            TAG_ARGS+=("--tag" "${tag}")
-          done
+  #         # Build list of all tags for single manifest creation
+  #         # Note: Using sep-tags=',' in metadata-action for easier parsing
+  #         TAG_ARGS=()
+  #         IFS=',' read -ra TAGS <<< "${{ steps.meta.outputs.tags }}"
+  #         for tag in "${TAGS[@]}"; do
+  #           TAG_ARGS+=("--tag" "${tag}")
+  #         done
 
-          # Create manifest with ALL tags in a single operation (much faster!)
-          echo "Creating multi-arch manifest with tags: ${TAGS[*]}"
-          docker buildx imagetools create "${TAG_ARGS[@]}" "${ARCH_IMAGES[@]}"
+  #         # Create manifest with ALL tags in a single operation (much faster!)
+  #         echo "Creating multi-arch manifest with tags: ${TAGS[*]}"
+  #         docker buildx imagetools create "${TAG_ARGS[@]}" "${ARCH_IMAGES[@]}"
 
-          # Sign each tag separately (signing requires individual tag names)
-          echo "Signing all tags..."
-          for tag in "${TAGS[@]}"; do
-            echo "Signing ${tag}"
-            cosign sign --yes "${tag}"
-          done
+  #         # Sign each tag separately (signing requires individual tag names)
+  #         echo "Signing all tags..."
+  #         for tag in "${TAGS[@]}"; do
+  #           echo "Signing ${tag}"
+  #           cosign sign --yes "${tag}"
+  #         done
 
-          echo "All manifests created and signed successfully"
+  #         echo "All manifests created and signed successfully"
 
-  build_python:
-    name: Build PyPi package
-    environment: ${{ needs.init.outputs.channel }}
-    needs: ["init", "build_base"]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+  # build_python:
+  #   name: Build PyPi package
+  #   environment: ${{ needs.init.outputs.channel }}
+  #   needs: ["init", "build_base"]
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     id-token: write
+  #   if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
+  #   steps:
+  #     - name: Checkout the repository
+  #       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
-      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+  #     - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+  #       uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+  #       with:
+  #         python-version: ${{ env.DEFAULT_PYTHON }}
 
-      - name: Download translations
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-        with:
-          name: translations
+  #     - name: Download translations
+  #       uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+  #       with:
+  #         name: translations
 
-      - name: Extract translations
-        run: |
-          tar xvf translations.tar.gz
-          rm translations.tar.gz
+  #     - name: Extract translations
+  #       run: |
+  #         tar xvf translations.tar.gz
+  #         rm translations.tar.gz
 
-      - name: Build package
-        shell: bash
-        run: |
-          # Remove dist, build, and homeassistant.egg-info
-          # when build locally for testing!
-          pip install build
-          python -m build
+  #     - name: Build package
+  #       shell: bash
+  #       run: |
+  #         # Remove dist, build, and homeassistant.egg-info
+  #         # when build locally for testing!
+  #         pip install build
+  #         python -m build
 
-      - name: Upload package to PyPI
-        uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
-        with:
-          skip-existing: true
+  #     - name: Upload package to PyPI
+  #       uses: pypa/gh-action-pypi-publish@ed0c53931b1dc9bd32cbe73a98c7f6766f8a527e # v1.13.0
+  #       with:
+  #         skip-existing: true
 
-  hassfest-image:
-    name: Build and test hassfest image
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
-    needs: ["init"]
-    if: github.repository_owner == 'home-assistant'
-    env:
-      HASSFEST_IMAGE_NAME: ghcr.io/home-assistant/hassfest
-      HASSFEST_IMAGE_TAG: ghcr.io/home-assistant/hassfest:${{ needs.init.outputs.version }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+  # hassfest-image:
+  #   name: Build and test hassfest image
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     packages: write
+  #     attestations: write
+  #     id-token: write
+  #   needs: ["init"]
+  #   if: github.repository_owner == 'home-assistant'
+  #   env:
+  #     HASSFEST_IMAGE_NAME: ghcr.io/home-assistant/hassfest
+  #     HASSFEST_IMAGE_TAG: ghcr.io/home-assistant/hassfest:${{ needs.init.outputs.version }}
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+  #     - name: Login to GitHub Container Registry
+  #       uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.repository_owner }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker image
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
-        with:
-          context: . # So action will not pull the repository again
-          file: ./script/hassfest/docker/Dockerfile
-          load: true
-          tags: ${{ env.HASSFEST_IMAGE_TAG }}
+  #     - name: Build Docker image
+  #       uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+  #       with:
+  #         context: . # So action will not pull the repository again
+  #         file: ./script/hassfest/docker/Dockerfile
+  #         load: true
+  #         tags: ${{ env.HASSFEST_IMAGE_TAG }}
 
-      - name: Run hassfest against core
-        run: docker run --rm -v ${{ github.workspace }}:/github/workspace ${{ env.HASSFEST_IMAGE_TAG }} --core-path=/github/workspace
+  #     - name: Run hassfest against core
+  #       run: docker run --rm -v ${{ github.workspace }}:/github/workspace ${{ env.HASSFEST_IMAGE_TAG }} --core-path=/github/workspace
 
-      - name: Push Docker image
-        if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
-        id: push
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
-        with:
-          context: . # So action will not pull the repository again
-          file: ./script/hassfest/docker/Dockerfile
-          push: true
-          tags: ${{ env.HASSFEST_IMAGE_TAG }},${{ env.HASSFEST_IMAGE_NAME }}:latest
+  #     - name: Push Docker image
+  #       if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
+  #       id: push
+  #       uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+  #       with:
+  #         context: . # So action will not pull the repository again
+  #         file: ./script/hassfest/docker/Dockerfile
+  #         push: true
+  #         tags: ${{ env.HASSFEST_IMAGE_TAG }},${{ env.HASSFEST_IMAGE_NAME }}:latest
 
-      - name: Generate artifact attestation
-        if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
-        uses: actions/attest-build-provenance@00014ed6ed5efc5b1ab7f7f34a39eb55d41aa4f8 # v3.1.0
-        with:
-          subject-name: ${{ env.HASSFEST_IMAGE_NAME }}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
+  #     - name: Generate artifact attestation
+  #       if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
+  #       uses: actions/attest-build-provenance@00014ed6ed5efc5b1ab7f7f34a39eb55d41aa4f8 # v3.1.0
+  #       with:
+  #         subject-name: ${{ env.HASSFEST_IMAGE_NAME }}
+  #         subject-digest: ${{ steps.push.outputs.digest }}
+  #         push-to-registry: true
