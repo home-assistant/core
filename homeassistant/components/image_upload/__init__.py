@@ -15,9 +15,9 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView, get_upload_limit
 from homeassistant.components.http.static import CACHE_HEADERS
-from homeassistant.const import CONF_ID
+from homeassistant.const import CONF_ID, CONF_IMAGE_UPLOAD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.storage import Store
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 STORAGE_KEY = "image"
 STORAGE_VERSION = 1
 VALID_SIZES = {256, 512}
-MAX_SIZE = 1024 * 1024 * 10
+DEFAULT_MAX_SIZE = 1024 * 1024 * 10
 
 CREATE_FIELDS: VolDictType = {
     vol.Required("file"): FileField,
@@ -173,11 +173,14 @@ class ImageUploadView(HomeAssistantView):
 
     async def post(self, request: web.Request) -> web.Response:
         """Handle upload."""
+        hass = request.app[KEY_HASS]
         # Increase max payload
-        request._client_max_size = MAX_SIZE  # noqa: SLF001
+        request._client_max_size = get_upload_limit(
+            hass, CONF_IMAGE_UPLOAD, DEFAULT_MAX_SIZE
+        )  # noqa: SLF001
 
         data = await request.post()
-        item = await request.app[KEY_HASS].data[DOMAIN].async_create_item(data)
+        item = await hass.data[DOMAIN].async_create_item(data)
         return self.json(item)
 
 
