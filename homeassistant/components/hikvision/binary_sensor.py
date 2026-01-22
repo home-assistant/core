@@ -150,7 +150,12 @@ async def async_setup_entry(
 
     sensors = camera.current_event_states
     if sensors is None or not sensors:
-        _LOGGER.warning("Hikvision device has no sensors available")
+        _LOGGER.warning(
+            "Hikvision %s %s has no sensors available. "
+            "Ensure event detection is enabled and configured on the device",
+            data.device_type,
+            data.device_name,
+        )
         return
 
     async_add_entities(
