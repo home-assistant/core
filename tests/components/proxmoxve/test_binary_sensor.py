@@ -93,7 +93,7 @@ async def test_refresh_exceptions(
 
     freezer.tick(DEFAULT_UPDATE_INTERVAL)
     async_fire_time_changed(hass, dt_util.utcnow())
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("binary_sensor.ct_nginx_status")
     assert state.state == STATE_UNAVAILABLE

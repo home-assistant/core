@@ -41,7 +41,7 @@ class ProxmoxNodeEntity(ProxmoxCoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return super().available and self.device_name in self.coordinator.data.nodes
+        return super().available and self.device_name in self.coordinator.data
 
 
 class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
@@ -77,14 +77,14 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         """Return if the device is available."""
         return (
             super().available
-            and self._node_name in self.coordinator.data.nodes
-            and self.device_id in self.coordinator.data.nodes[self._node_name].vms
+            and self._node_name in self.coordinator.data
+            and self.device_id in self.coordinator.data[self._node_name].vms
         )
 
     @property
     def vm_data(self) -> dict[str, Any]:
         """Return the VM data."""
-        return self.coordinator.data.nodes[self._node_name].vms[self.device_id]
+        return self.coordinator.data[self._node_name].vms[self.device_id]
 
 
 class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
@@ -123,12 +123,11 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         """Return if the device is available."""
         return (
             super().available
-            and self._node_name in self.coordinator.data.nodes
-            and self.device_id
-            in self.coordinator.data.nodes[self._node_name].containers
+            and self._node_name in self.coordinator.data
+            and self.device_id in self.coordinator.data[self._node_name].containers
         )
 
     @property
     def container_data(self) -> dict[str, Any]:
         """Return the Container data."""
-        return self.coordinator.data.nodes[self._node_name].containers[self.device_id]
+        return self.coordinator.data[self._node_name].containers[self.device_id]

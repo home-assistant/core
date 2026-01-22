@@ -43,14 +43,7 @@ class ProxmoxNodeData:
     containers: dict[int, dict[str, Any]] = field(default_factory=dict)
 
 
-@dataclass(slots=True, kw_only=True)
-class ProxmoxCoordinatorData:
-    """Proxmox state grouped by node."""
-
-    nodes: dict[str, ProxmoxNodeData] = field(default_factory=dict)
-
-
-class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
+class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
     """Data Update Coordinator for Proxmox VE integration."""
 
     config_entry: ProxmoxConfigEntry
@@ -84,21 +77,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
-        user_id = (
-            self.config_entry.data[CONF_USERNAME]
-            if "@" in self.config_entry.data[CONF_USERNAME]
-            else f"{self.config_entry.data[CONF_USERNAME]}@{self.config_entry.data[CONF_REALM]}"
-        )
         try:
-            self.proxmox = await self.hass.async_add_executor_job(
-                self._create_proxmox_api,
-                self.config_entry.data[CONF_HOST],
-                self.config_entry.data[CONF_PORT],
-                user_id,
-                self.config_entry.data[CONF_PASSWORD],
-                self.config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-            )
-            await self.hass.async_add_executor_job(self.proxmox.nodes.get)
+            await self.hass.async_add_executor_job(self._init_proxmox)
         except AuthenticationError as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
@@ -124,14 +104,13 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
-    async def _async_update_data(self) -> ProxmoxCoordinatorData:
+    async def _async_update_data(self) -> dict[str, ProxmoxNodeData]:
         """Fetch data from Proxmox VE API."""
+
         try:
-            nodes = await self.hass.async_add_executor_job(self.proxmox.nodes.get)
-            vms_containers = [
-                await self.hass.async_add_executor_job(self._get_vms_containers, node)
-                for node in nodes
-            ]
+            nodes, vms_containers = await self.hass.async_add_executor_job(
+                self._fetch_all_nodes
+            )
         except AuthenticationError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -157,9 +136,9 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
-        data = ProxmoxCoordinatorData()
+        data: dict[str, ProxmoxNodeData] = {}
         for node, (vms, containers) in zip(nodes, vms_containers, strict=True):
-            data.nodes[node[CONF_NODE]] = ProxmoxNodeData(
+            data[node[CONF_NODE]] = ProxmoxNodeData(
                 node=node,
                 vms={int(vm["vmid"]): vm for vm in vms},
                 containers={
@@ -170,22 +149,32 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
         self._async_add_remove_nodes(data)
         return data
 
-    @staticmethod
-    def _create_proxmox_api(
-        host: str,
-        port: int,
-        user_id: str,
-        password: str,
-        verify_ssl: bool,
-    ) -> ProxmoxAPI:
-        """Create a ProxmoxAPI instance - needed for the executor job."""
-        return ProxmoxAPI(
-            host=host,
-            user=user_id,
-            password=password,
-            verify_ssl=verify_ssl,
-            port=port,
+    def _init_proxmox(self) -> None:
+        """Initialize ProxmoxAPI instance."""
+        user_id = (
+            self.config_entry.data[CONF_USERNAME]
+            if "@" in self.config_entry.data[CONF_USERNAME]
+            else f"{self.config_entry.data[CONF_USERNAME]}@{self.config_entry.data[CONF_REALM]}"
         )
+
+        self.proxmox = ProxmoxAPI(
+            host=self.config_entry.data[CONF_HOST],
+            port=self.config_entry.data[CONF_PORT],
+            user=user_id,
+            password=self.config_entry.data[CONF_PASSWORD],
+            verify_ssl=self.config_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+        )
+        self.proxmox.nodes.get()
+
+    def _fetch_all_nodes(
+        self,
+    ) -> tuple[
+        list[dict[str, Any]], list[tuple[list[dict[str, Any]], list[dict[str, Any]]]]
+    ]:
+        """Fetch all nodes, and then proceed to the VMs and containers."""
+        nodes = self.proxmox.nodes.get()
+        vms_containers = [self._get_vms_containers(node) for node in nodes]
+        return nodes, vms_containers
 
     def _get_vms_containers(
         self,
@@ -197,9 +186,9 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
         assert vms is not None and containers is not None
         return vms, containers
 
-    def _async_add_remove_nodes(self, data: ProxmoxCoordinatorData) -> None:
+    def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:
         """Add new nodes/VMs/containers, track removals."""
-        current_nodes = set(data.nodes.keys())
+        current_nodes = set(data.keys())
         new_nodes = current_nodes - self.known_nodes
         if new_nodes:
             _LOGGER.debug("New nodes found: %s", new_nodes)
@@ -208,7 +197,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
         # And yes, track new VM's and containers as well
         current_vms = {
             (node_name, vmid)
-            for node_name, node_data in data.nodes.items()
+            for node_name, node_data in data.items()
             for vmid in node_data.vms
         }
         new_vms = current_vms - self.known_vms
@@ -218,7 +207,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
 
         current_containers = {
             (node_name, vmid)
-            for node_name, node_data in data.nodes.items()
+            for node_name, node_data in data.items()
             for vmid in node_data.containers
         }
         new_containers = current_containers - self.known_containers

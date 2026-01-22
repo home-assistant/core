@@ -120,14 +120,14 @@ async def async_setup_entry(
     _async_add_new_nodes(
         [
             node_data
-            for node_data in coordinator.data.nodes.values()
+            for node_data in coordinator.data.values()
             if node_data.node["node"] in coordinator.known_nodes
         ]
     )
     _async_add_new_vms(
         [
             (node_data, vm_data)
-            for node_data in coordinator.data.nodes.values()
+            for node_data in coordinator.data.values()
             for vmid, vm_data in node_data.vms.items()
             if (node_data.node["node"], vmid) in coordinator.known_vms
         ]
@@ -135,7 +135,7 @@ async def async_setup_entry(
     _async_add_new_containers(
         [
             (node_data, container_data)
-            for node_data in coordinator.data.nodes.values()
+            for node_data in coordinator.data.values()
             for vmid, container_data in node_data.containers.items()
             if (node_data.node["node"], vmid) in coordinator.known_containers
         ]
@@ -162,9 +162,7 @@ class ProxmoxNodeBinarySensor(ProxmoxNodeEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.entity_description.state_fn(
-            self.coordinator.data.nodes[self.device_name]
-        )
+        return self.entity_description.state_fn(self.coordinator.data[self.device_name])
 
 
 class ProxmoxVMBinarySensor(ProxmoxVMEntity, BinarySensorEntity):
