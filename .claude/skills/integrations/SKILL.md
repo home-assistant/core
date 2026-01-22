@@ -25,8 +25,8 @@ homeassistant/components/my_integration/
 ```
 
 An integration can have platforms as needed (e.g., `sensor.py`, `switch.py`, etc.). The following platforms have extra guidelines:
-- **Diagnostics**: [`platform-diagnostics.py`](platform-diagnostics.py) for diagnostic data collection
-- **Repairs**: [`platform-repairs.py`](platform-repairs.py) for user-actionable repair issues
+- **Diagnostics**: [`platform-diagnostics.md`](platform-diagnostics.md) for diagnostic data collection
+- **Repairs**: [`platform-repairs.md`](platform-repairs.md) for user-actionable repair issues
 
 ### Minimal Integration Checklist
 - [ ] `manifest.json` with required fields (domain, name, codeowners, etc.)
