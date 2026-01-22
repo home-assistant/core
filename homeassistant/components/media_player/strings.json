@@ -14,7 +14,7 @@
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
         }
       },
-      "name": "If a media player is not playing"
+      "name": "Media player is not playing"
     },
     "is_off": {
       "description": "Tests if one or more media players are off.",
@@ -24,7 +24,7 @@
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
         }
       },
-      "name": "If a media player is off"
+      "name": "Media player is off"
     },
     "is_on": {
       "description": "Tests if one or more media players are on.",
@@ -34,7 +34,7 @@
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
         }
       },
-      "name": "If a media player is on"
+      "name": "Media player is on"
     },
     "is_paused": {
       "description": "Tests if one or more media players are paused.",
@@ -44,7 +44,7 @@
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
         }
       },
-      "name": "If a media player is paused"
+      "name": "Media player is paused"
     },
     "is_playing": {
       "description": "Tests if one or more media players are playing.",
@@ -54,7 +54,7 @@
           "name": "[%key:component::media_player::common::condition_behavior_name%]"
         }
       },
-      "name": "If a media player is playing"
+      "name": "Media player is playing"
     }
   },
   "device_automation": {

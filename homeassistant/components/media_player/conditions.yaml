@@ -8,10 +8,10 @@
       default: any
       selector:
         select:
+          translation_key: condition_behavior
           options:
             - all
             - any
-          translation_key: condition_behavior
 
 is_off: *condition_common
 is_on: *condition_common
