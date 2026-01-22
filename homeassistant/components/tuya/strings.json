@@ -39,9 +39,6 @@
       "charge_state": {
         "name": "Charging"
       },
-      "light": {
-        "name": "Light"
-      },
       "cover_off": {
         "name": "Cover off"
       },
