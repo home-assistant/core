@@ -14,7 +14,7 @@
           "name": "[%key:component::person::common::condition_behavior_name%]"
         }
       },
-      "name": "If a person is home"
+      "name": "Person is home"
     },
     "is_not_home": {
       "description": "Tests if one or more persons are not home.",
@@ -24,7 +24,7 @@
           "name": "[%key:component::person::common::condition_behavior_name%]"
         }
       },
-      "name": "If a person is not home"
+      "name": "Person is not home"
     }
   },
   "entity_component": {
