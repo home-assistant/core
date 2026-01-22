@@ -1051,7 +1051,7 @@ hassil==3.5.0
 hdate[astral]==1.1.2
 
 # homeassistant.components.hdfury
-hdfury==1.3.1
+hdfury==1.4.2
 
 # homeassistant.components.here_travel_time
 here-routing==1.2.0
@@ -1142,7 +1142,7 @@ influxdb==5.3.1
 inkbird-ble==1.1.1
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.6.0
+insteon-frontend-home-assistant==0.6.1
 
 # homeassistant.components.intellifire
 intellifire4py==4.2.1
@@ -2691,7 +2691,7 @@ wsdot==0.0.1
 wyoming==1.7.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.5.0
+xiaomi-ble==1.6.0
 
 # homeassistant.components.knx
 xknx==3.14.0
