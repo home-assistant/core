@@ -350,6 +350,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         *BATTERY_SENSORS,
     ),
     DeviceCategory.CWWSQ: (
+        *BATTERY_SENSORS,
         TuyaSensorEntityDescription(
             key=DPCode.FEED_REPORT,
             translation_key="last_amount",

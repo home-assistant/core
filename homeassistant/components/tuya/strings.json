@@ -36,6 +36,12 @@
       "carbon_monoxide": {
         "name": "Carbon monoxide"
       },
+      "charge_state": {
+        "name": "Charging"
+      },
+      "light": {
+        "name": "Light"
+      },
       "cover_off": {
         "name": "Cover off"
       },
@@ -1082,6 +1088,11 @@
       },
       "wide_dynamic_range": {
         "name": "Wide dynamic range"
+      }
+    },
+    "text": {
+      "meal_plan": {
+        "name": "Meal plan"
       }
     },
     "valve": {

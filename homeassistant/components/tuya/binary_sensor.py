@@ -62,6 +62,14 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    DeviceCategory.CWWSQ: (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CHARGE_STATE,
+            translation_key="charge_state",
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
     DeviceCategory.COBJ: (
         TuyaBinarySensorEntityDescription(
             key=DPCode.CO_STATE,
@@ -106,6 +114,12 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
             key=DPCode.FEED_STATE,
             translation_key="feeding",
             on_value="feeding",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CHARGE_STATE,
+            translation_key="charge_state",
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
     DeviceCategory.DGNBJ: (
