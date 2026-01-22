@@ -1136,11 +1136,9 @@ async def test_setup_with_development_pr_and_token(
         }
     }
 
-    # Mock download_pr_artifact to verify it's called with correct parameters
     with patch(
         "homeassistant.components.frontend.download_pr_artifact"
     ) as mock_download:
-        # Simulate successful download
         mock_download.return_value = (
             tmp_path / "frontend_development_artifacts" / "12345" / "hass_frontend"
         )
@@ -1148,7 +1146,6 @@ async def test_setup_with_development_pr_and_token(
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
 
-        # Verify download_pr_artifact was called with the correct parameters
         mock_download.assert_called_once()
         call_args = mock_download.call_args
         assert call_args[0][1] == 12345  # PR number
