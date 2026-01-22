@@ -161,12 +161,10 @@ class ProxmoxCoordinator(DataUpdateCoordinator[ProxmoxCoordinatorData]):
         for node, (vms, containers) in zip(nodes, vms_containers, strict=True):
             data.nodes[node[CONF_NODE]] = ProxmoxNodeData(
                 node=node,
-                vms={int(vm["vmid"]): vm for vm in vms if "vmid" in vm},
+                vms={int(vm["vmid"]): vm for vm in vms},
                 containers={
-                    int(container["vmid"]): container
-                    for container in containers
-                    if "vmid" in container
-                },  # I need to recheck this...
+                    int(container["vmid"]): container for container in containers
+                },
             )
 
         self._async_add_remove_nodes(data)

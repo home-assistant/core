@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "binary_sensor": {
-      "status": {
-        "icon": "mdi:play"
-      }
-    }
-  }
-}
