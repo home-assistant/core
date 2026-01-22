@@ -25,6 +25,7 @@ from homeassistant.components.openrgb.const import (
     DOMAIN,
     OFF_COLOR,
     SCAN_INTERVAL,
+    UID_SEPARATOR,
     OpenRGBMode,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -72,7 +73,16 @@ async def test_entities(
         identifiers={
             (
                 DOMAIN,
-                f"{mock_config_entry.entry_id}||DRAM||ENE||ENE SMBus Device||none||I2C: PIIX4, address 0x70",
+                UID_SEPARATOR.join(
+                    [
+                        mock_config_entry.entry_id,
+                        "DRAM",
+                        "ENE",
+                        "ENE SMBus Device",
+                        "none",
+                        "I2C: PIIX4, address 0x70",
+                    ]
+                ),
             )
         }
     )

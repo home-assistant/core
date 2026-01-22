@@ -13,12 +13,18 @@ from tplink_omada_client import (
     PortProfileOverrides,
     SwitchPortSettings,
 )
-from tplink_omada_client.definitions import GatewayPortMode, PoEMode, PortType
+from tplink_omada_client.definitions import (
+    DeviceStatusCategory,
+    GatewayPortMode,
+    PoEMode,
+    PortType,
+)
 from tplink_omada_client.devices import (
     OmadaDevice,
     OmadaGateway,
     OmadaGatewayPortConfig,
     OmadaGatewayPortStatus,
+    OmadaListDevice,
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
@@ -26,6 +32,7 @@ from tplink_omada_client.devices import (
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OmadaConfigEntry
@@ -45,18 +52,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches."""
     controller = config_entry.runtime_data
-    omada_client = controller.omada_client
 
-    # Naming fun. Omada switches, as in the network hardware
-    network_switches = await omada_client.get_switches()
-
-    entities: list = []
-    for switch in [
-        ns for ns in network_switches if ns.device_capabilities.supports_poe
-    ]:
+    async def _create_switch_port_entities(
+        device: OmadaListDevice,
+    ) -> None:
+        """Create entities for a switch's ports."""
+        omada_client = controller.omada_client
+        switch = await omada_client.get_switch(device)
         coordinator = controller.get_switch_port_coordinator(switch)
         await coordinator.async_request_refresh()
 
+        entities: list[Entity] = []
         entities.extend(
             OmadaDevicePortSwitchEntity[
                 OmadaSwitchPortCoordinator, OmadaSwitch, OmadaSwitchPortDetails
@@ -72,10 +78,25 @@ async def async_setup_entry(
             for desc in SWITCH_PORT_DETAILS_SWITCHES
             if desc.exists_func(switch, port)
         )
+        async_add_entities(entities)
 
-    gateway_coordinator = controller.gateway_coordinator
-    if gateway_coordinator:
-        for gateway in gateway_coordinator.data.values():
+    # Register switch port entities for switches that are connected, such that we can determine the port information
+    await controller.async_register_device_entities(
+        device_filter=lambda d: (
+            d.type == "switch" and d.status_category == DeviceStatusCategory.CONNECTED
+        ),
+        entity_callback=_create_switch_port_entities,
+    )
+
+    # Set up gateway port switches
+    async def _create_gateway_port_entities(
+        device: OmadaListDevice,
+    ) -> None:
+        """Create entities for a gateway's ports."""
+        entities: list[Entity] = []
+        gateway_coordinator = controller.gateway_coordinator
+        if gateway_coordinator:
+            gateway = gateway_coordinator.data[device.mac]
             entities.extend(
                 OmadaDevicePortSwitchEntity[
                     OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortStatus
@@ -92,8 +113,14 @@ async def async_setup_entry(
                 for desc in GATEWAY_PORT_CONFIG_SWITCHES
                 if desc.exists_func(gateway, p)
             )
+        async_add_entities(entities)
 
-    async_add_entities(entities)
+    await controller.async_register_device_entities(
+        device_filter=lambda d: (
+            d.type == "gateway" and d.status_category == DeviceStatusCategory.CONNECTED
+        ),
+        entity_callback=_create_gateway_port_entities,
+    )
 
 
 def _get_switch_port_base_name(port: OmadaSwitchPortDetails) -> str:
@@ -184,7 +211,9 @@ SWITCH_PORT_DETAILS_SWITCHES: list[OmadaSwitchPortSwitchEntityDescription] = [
         key="poe",
         translation_key="poe_control",
         exists_func=(
-            lambda d, p: d.device_capabilities.supports_poe and p.type != PortType.SFP
+            lambda d, p: d.device_capabilities.supports_poe
+            and p.supports_poe
+            and p.type != PortType.SFP
         ),
         set_func=(
             lambda client, device, port, enable: client.update_switch_port(

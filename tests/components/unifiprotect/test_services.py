@@ -32,6 +32,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import patch_ufp_method
 from .utils import MockUFPFixture, init_entry
 
 
@@ -66,19 +67,18 @@ async def test_global_service_bad_device(
     """Test global service, invalid device ID."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__pydantic_fields__["add_custom_doorbell_message"] = Mock(
-        final=False, frozen=False
-    )
-    nvr.add_custom_doorbell_message = AsyncMock()
 
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ADD_DOORBELL_TEXT,
-            {ATTR_DEVICE_ID: "bad_device_id", ATTR_MESSAGE: "Test Message"},
-            blocking=True,
-        )
-    assert not nvr.add_custom_doorbell_message.called
+    with patch_ufp_method(
+        nvr, "add_custom_doorbell_message", new_callable=AsyncMock
+    ) as mock_method:
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_ADD_DOORBELL_TEXT,
+                {ATTR_DEVICE_ID: "bad_device_id", ATTR_MESSAGE: "Test Message"},
+                blocking=True,
+            )
+        assert not mock_method.called
 
 
 async def test_global_service_exception(
@@ -87,19 +87,21 @@ async def test_global_service_exception(
     """Test global service, unexpected error."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__pydantic_fields__["add_custom_doorbell_message"] = Mock(
-        final=False, frozen=False
-    )
-    nvr.add_custom_doorbell_message = AsyncMock(side_effect=BadRequest)
 
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ADD_DOORBELL_TEXT,
-            {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
-            blocking=True,
-        )
-    assert nvr.add_custom_doorbell_message.called
+    with patch_ufp_method(
+        nvr,
+        "add_custom_doorbell_message",
+        new_callable=AsyncMock,
+        side_effect=BadRequest,
+    ) as mock_method:
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_ADD_DOORBELL_TEXT,
+                {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
+                blocking=True,
+            )
+        assert mock_method.called
 
 
 async def test_add_doorbell_text(
@@ -108,18 +110,17 @@ async def test_add_doorbell_text(
     """Test add_doorbell_text service."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__pydantic_fields__["add_custom_doorbell_message"] = Mock(
-        final=False, frozen=False
-    )
-    nvr.add_custom_doorbell_message = AsyncMock()
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_ADD_DOORBELL_TEXT,
-        {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
-        blocking=True,
-    )
-    nvr.add_custom_doorbell_message.assert_called_once_with("Test Message")
+    with patch_ufp_method(
+        nvr, "add_custom_doorbell_message", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_DOORBELL_TEXT,
+            {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
+            blocking=True,
+        )
+        mock_method.assert_called_once_with("Test Message")
 
 
 async def test_remove_doorbell_text(
@@ -128,18 +129,17 @@ async def test_remove_doorbell_text(
     """Test remove_doorbell_text service."""
 
     nvr = ufp.api.bootstrap.nvr
-    nvr.__pydantic_fields__["remove_custom_doorbell_message"] = Mock(
-        final=False, frozen=False
-    )
-    nvr.remove_custom_doorbell_message = AsyncMock()
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_REMOVE_DOORBELL_TEXT,
-        {ATTR_DEVICE_ID: subdevice.id, ATTR_MESSAGE: "Test Message"},
-        blocking=True,
-    )
-    nvr.remove_custom_doorbell_message.assert_called_once_with("Test Message")
+    with patch_ufp_method(
+        nvr, "remove_custom_doorbell_message", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REMOVE_DOORBELL_TEXT,
+            {ATTR_DEVICE_ID: subdevice.id, ATTR_MESSAGE: "Test Message"},
+            blocking=True,
+        )
+        mock_method.assert_called_once_with("Test Message")
 
 
 async def test_add_doorbell_text_disabled_config_entry(
@@ -147,24 +147,23 @@ async def test_add_doorbell_text_disabled_config_entry(
 ) -> None:
     """Test add_doorbell_text service."""
     nvr = ufp.api.bootstrap.nvr
-    nvr.__pydantic_fields__["add_custom_doorbell_message"] = Mock(
-        final=False, frozen=False
-    )
-    nvr.add_custom_doorbell_message = AsyncMock()
 
     await hass.config_entries.async_set_disabled_by(
         ufp.entry.entry_id, ConfigEntryDisabler.USER
     )
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ADD_DOORBELL_TEXT,
-            {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
-            blocking=True,
-        )
-    assert not nvr.add_custom_doorbell_message.called
+    with patch_ufp_method(
+        nvr, "add_custom_doorbell_message", new_callable=AsyncMock
+    ) as mock_method:
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_ADD_DOORBELL_TEXT,
+                {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
+                blocking=True,
+            )
+        assert not mock_method.called
 
 
 async def test_set_chime_paired_doorbells(
@@ -261,7 +260,6 @@ async def test_remove_privacy_zone(
     assert not doorbell.privacy_zones
 
 
-@pytest.mark.asyncio
 async def get_user_keyring_info(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
