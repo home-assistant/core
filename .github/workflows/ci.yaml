@@ -479,6 +479,22 @@ jobs:
           . venv/bin/activate
           python -m script.gen_requirements_all validate
 
+  gen-copilot-instructions:
+    name: Check copilot instructions
+    runs-on: *runs-on-ubuntu
+    needs:
+      - info
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+    steps:
+      - *checkout
+      - *setup-python-default
+      - name: Run gen_copilot_instructions.py
+        run: |
+          python -m script.gen_copilot_instructions validate
+
   dependency-review:
     name: Dependency review
     runs-on: *runs-on-ubuntu
