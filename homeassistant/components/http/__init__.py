@@ -37,7 +37,6 @@ from homeassistant.const import (
     CONF_IMAGE_UPLOAD,
     CONF_MEDIA_SOURCE,
     CONF_UPLOAD_LIMITS,
-    CONF_ZWAVE_JS,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     SERVER_PORT,
@@ -195,7 +194,6 @@ HTTP_SCHEMA: Final = vol.All(
                     vol.Optional(CONF_MEDIA_SOURCE): vol.All(
                         _byte_size, vol.Range(min=1)
                     ),
-                    vol.Optional(CONF_ZWAVE_JS): vol.All(_byte_size, vol.Range(min=1)),
                 }
             ),
         }

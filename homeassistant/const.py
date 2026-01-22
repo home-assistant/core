@@ -263,7 +263,6 @@ LEGACY_CONF_WHITELIST_EXTERNAL_DIRS: Final = "whitelist_external_dirs"
 CONF_DEBUG: Final = "debug"
 CONF_XY: Final = "xy"
 CONF_ZONE: Final = "zone"
-CONF_ZWAVE_JS: Final = "zwave_js"
 
 # #### EVENTS ####
 EVENT_CALL_SERVICE: Final = "call_service"

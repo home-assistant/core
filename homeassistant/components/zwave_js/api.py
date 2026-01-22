@@ -61,12 +61,7 @@ from zwave_js_server.model.value import ConfigurationValueFormat
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import (
-    KEY_HASS,
-    HomeAssistantView,
-    get_upload_limit,
-    require_admin,
-)
+from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.websocket_api import (
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
@@ -75,7 +70,7 @@ from homeassistant.components.websocket_api import (
     ActiveConnection,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_URL, CONF_ZWAVE_JS
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -110,7 +105,6 @@ if TYPE_CHECKING:
 
 
 DATA_UNSUBSCRIBE = "unsubs"
-DEFAULT_MAX_UPLOAD_SIZE = 1024 * 1024 * 10
 
 # general API constants
 ID = "id"
@@ -2560,9 +2554,7 @@ class FirmwareUploadView(HomeAssistantView):
         assert node.client.driver
 
         # Increase max payload
-        request._client_max_size = get_upload_limit(  # noqa: SLF001
-            hass, CONF_ZWAVE_JS, DEFAULT_MAX_UPLOAD_SIZE
-        )
+        request._client_max_size = 1024 * 1024 * 10  # noqa: SLF001
 
         data = await request.post()
 
