@@ -7,6 +7,7 @@ from functools import lru_cache, partial
 import logging
 import os
 import pathlib
+import shutil
 from typing import Any, TypedDict
 
 from aiohttp import hdrs, web, web_urldispatcher
@@ -56,6 +57,7 @@ CONF_JS_VERSION = "javascript_version"
 CONF_DEVELOPMENT_PR = "development_pr"
 CONF_GITHUB_TOKEN = "github_token"
 
+TMP_DIR = ".tmp"
 PR_CACHE_DIR = "frontend_development_artifacts"
 
 DEFAULT_THEME_COLOR = "#2980b9"
@@ -444,6 +446,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     repo_path = conf.get(CONF_FRONTEND_REPO)
     dev_pr_number = conf.get(CONF_DEVELOPMENT_PR)
 
+    pr_cache_dir = pathlib.Path(hass.config.config_dir) / TMP_DIR / PR_CACHE_DIR
+    if not dev_pr_number and pr_cache_dir.exists():
+        await hass.async_add_executor_job(shutil.rmtree, pr_cache_dir)
+        _LOGGER.debug("Cleaned up frontend development artifacts")
+
     # Priority: development_repo > development_pr > integrated
     if repo_path and dev_pr_number:
         _LOGGER.warning(
@@ -454,7 +461,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         dev_pr_number = None
 
     if dev_pr_number:
-        pr_cache_dir = pathlib.Path(hass.config.config_dir) / PR_CACHE_DIR
         github_token: str = conf[CONF_GITHUB_TOKEN]
 
         dev_pr_dir = await download_pr_artifact(
@@ -468,7 +474,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
             repo_path = None
         else:
-            repo_path = str(dev_pr_dir.parent)
+            repo_path = str(dev_pr_dir)
             _LOGGER.info("Using frontend from PR #%s", dev_pr_number)
 
     is_dev = repo_path is not None

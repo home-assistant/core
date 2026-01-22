@@ -26,7 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 
 GITHUB_REPO = "home-assistant/frontend"
 ARTIFACT_NAME = "frontend-build"
-CACHE_WARNING_SIZE_MB = 500
 
 ERROR_INVALID_TOKEN = (
     "GitHub token is invalid or expired. "
@@ -37,12 +36,6 @@ ERROR_RATE_LIMIT = (
     "GitHub API rate limit exceeded or token lacks permissions. "
     "Ensure your token has 'repo' or 'public_repo' scope"
 )
-
-
-def _get_directory_size_mb(directory: pathlib.Path) -> float:
-    """Calculate total size of directory in MB (runs in executor)."""
-    total = sum(f.stat().st_size for f in directory.rglob("*") if f.is_file())
-    return total / (1024 * 1024)
 
 
 async def _get_pr_head_sha(client: GitHubAPI, pr_number: int) -> str:
@@ -138,20 +131,21 @@ async def _download_artifact_data(
 
 def _extract_artifact(
     artifact_data: bytes,
-    pr_dir: pathlib.Path,
-    frontend_dir: pathlib.Path,
+    cache_dir: pathlib.Path,
     head_sha: str,
 ) -> None:
     """Extract artifact and save SHA (runs in executor)."""
-    if pr_dir.exists():
-        shutil.rmtree(pr_dir)
+    frontend_dir = cache_dir / "hass_frontend"
+
+    if cache_dir.exists():
+        shutil.rmtree(cache_dir)
     frontend_dir.mkdir(parents=True, exist_ok=True)
 
     with zipfile.ZipFile(io.BytesIO(artifact_data)) as zip_file:
         zip_file.extractall(str(frontend_dir))
 
     # Save the commit SHA for cache validation
-    sha_file = pr_dir / ".sha"
+    sha_file = cache_dir / ".sha"
     sha_file.write_text(head_sha)
 
 
@@ -159,11 +153,11 @@ async def download_pr_artifact(
     hass: HomeAssistant,
     pr_number: int,
     github_token: str,
-    cache_dir: pathlib.Path,
+    tmp_dir: pathlib.Path,
 ) -> pathlib.Path | None:
     """Download and extract frontend PR artifact from GitHub.
 
-    Returns the path to the extracted hass_frontend directory, or None on failure.
+    Returns the path to the tmp directory containing hass_frontend/, or None on failure.
     """
     client = GitHubAPI(
         token=github_token,
@@ -176,9 +170,8 @@ async def download_pr_artifact(
         _LOGGER.error("%s", err)
         return None
 
-    pr_dir = cache_dir / str(pr_number)
-    frontend_dir = pr_dir / "hass_frontend"
-    sha_file = pr_dir / ".sha"
+    frontend_dir = tmp_dir / "hass_frontend"
+    sha_file = tmp_dir / ".sha"
 
     if frontend_dir.exists() and sha_file.exists():
         cached_sha = await hass.async_add_executor_job(sha_file.read_text)
@@ -187,9 +180,9 @@ async def download_pr_artifact(
                 "Using cached PR #%s (commit %s) from %s",
                 pr_number,
                 head_sha[:8],
-                pr_dir,
+                tmp_dir,
             )
-            return frontend_dir
+            return tmp_dir
         _LOGGER.info(
             "PR #%s has new commits (cached: %s, current: %s), re-downloading",
             pr_number,
@@ -204,30 +197,15 @@ async def download_pr_artifact(
         artifact_data = await _download_artifact_data(hass, artifact_url, github_token)
 
         await hass.async_add_executor_job(
-            _extract_artifact, artifact_data, pr_dir, frontend_dir, head_sha
+            _extract_artifact, artifact_data, tmp_dir, head_sha
         )
 
         _LOGGER.info(
             "Successfully downloaded and extracted PR #%s (commit %s) to %s",
             pr_number,
             head_sha[:8],
-            pr_dir,
+            tmp_dir,
         )
-
-        size_mb = await hass.async_add_executor_job(_get_directory_size_mb, pr_dir)
-        _LOGGER.info("PR #%s cache size: %.1f MB", pr_number, size_mb)
-
-        total_cache_size = await hass.async_add_executor_job(
-            _get_directory_size_mb, cache_dir
-        )
-        if total_cache_size > CACHE_WARNING_SIZE_MB:
-            _LOGGER.warning(
-                "Frontend PR cache directory has grown to %.1f MB (threshold: %d MB). "
-                "Consider manually cleaning up old PR caches in %s",
-                total_cache_size,
-                CACHE_WARNING_SIZE_MB,
-                cache_dir,
-            )
     except HomeAssistantError as err:
         _LOGGER.error("%s", err)
         return None
@@ -235,4 +213,4 @@ async def download_pr_artifact(
         _LOGGER.exception("Unexpected error downloading PR #%s", pr_number)
         return None
     else:
-        return frontend_dir
+        return tmp_dir

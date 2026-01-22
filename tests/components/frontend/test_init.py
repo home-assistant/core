@@ -1140,7 +1140,7 @@ async def test_setup_with_development_pr_and_token(
         "homeassistant.components.frontend.download_pr_artifact"
     ) as mock_download:
         mock_download.return_value = (
-            tmp_path / "frontend_development_artifacts" / "12345" / "hass_frontend"
+            tmp_path / ".tmp" / "frontend_development_artifacts"
         )
 
         assert await async_setup_component(hass, DOMAIN, config)
@@ -1150,3 +1150,22 @@ async def test_setup_with_development_pr_and_token(
         call_args = mock_download.call_args
         assert call_args[0][1] == 12345  # PR number
         assert call_args[0][2] == "test_token"  # GitHub token
+
+
+async def test_setup_cleans_up_pr_cache_when_not_configured(
+    hass: HomeAssistant,
+    tmp_path: Path,
+) -> None:
+    """Test that PR cache is cleaned up when no PR is configured."""
+    hass.config.config_dir = str(tmp_path)
+
+    pr_cache_dir = tmp_path / ".tmp" / "frontend_development_artifacts"
+    pr_cache_dir.mkdir(parents=True)
+    (pr_cache_dir / "test_file.txt").write_text("test")
+
+    config: dict[str, dict[str, Any]] = {DOMAIN: {}}
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert not pr_cache_dir.exists()
