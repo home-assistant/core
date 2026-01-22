@@ -68,9 +68,9 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.VACUUM,
     Platform.VALVE,
-    Platform.TEXT,
 ]
 
 
