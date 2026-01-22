@@ -73,6 +73,9 @@ ILLUMINANCE_SENSOR_DATA: dict[str, Any] = {
     "channel": 0,
 }
 
+# Light device data for energy sensor testing (reuse first device from DEVICE_DATA)
+LIGHT_DEVICE_DATA: dict[str, Any] = DEVICE_DATA[0]
+
 
 @pytest.fixture
 async def init_integration(
@@ -140,6 +143,12 @@ def mock_devices() -> list[MagicMock]:
 def mock_illuminance_device() -> MagicMock:
     """Return a mocked illuminance sensor device."""
     return _create_mock_device(ILLUMINANCE_SENSOR_DATA)
+
+
+@pytest.fixture
+def mock_light_device() -> MagicMock:
+    """Return a mocked light device for energy sensor testing."""
+    return _create_mock_device(LIGHT_DEVICE_DATA)
 
 
 def _create_scene_device_property(
