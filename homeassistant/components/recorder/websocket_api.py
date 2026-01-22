@@ -34,6 +34,7 @@ from homeassistant.util.unit_conversion import (
     MassConverter,
     MassVolumeConcentrationConverter,
     NitrogenDioxideConcentrationConverter,
+    NitrogenMonoxideConcentrationConverter,
     OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
@@ -93,6 +94,9 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
         vol.Optional("nitrogen_dioxide"): vol.In(
             NitrogenDioxideConcentrationConverter.VALID_UNITS
+        ),
+        vol.Optional("nitrogen_monoxide"): vol.In(
+            NitrogenMonoxideConcentrationConverter.VALID_UNITS
         ),
         vol.Optional("ozone"): vol.In(OzoneConcentrationConverter.VALID_UNITS),
         vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),

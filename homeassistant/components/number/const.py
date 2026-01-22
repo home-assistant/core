@@ -253,7 +253,7 @@ class NumberDeviceClass(StrEnum):
     NITROGEN_MONOXIDE = "nitrogen_monoxide"
     """Amount of NO.
 
-    Unit of measurement: `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `μg/m³`
     """
 
     NITROUS_OXIDE = "nitrous_oxide"
@@ -521,7 +521,10 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
         CONCENTRATION_PARTS_PER_BILLION,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
-    NumberDeviceClass.NITROGEN_MONOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.NITROGEN_MONOXIDE: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
     NumberDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.OZONE: {
         CONCENTRATION_PARTS_PER_BILLION,
