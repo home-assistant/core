@@ -130,7 +130,6 @@ class SunricherDaliEnergySensor(DaliDeviceEntity, SensorEntity):
     _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_suggested_display_precision = 2
-    _attr_translation_key = "energy"
 
     def __init__(self, device: Device) -> None:
         """Initialize the energy sensor."""
