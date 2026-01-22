@@ -168,7 +168,6 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "service_calls": "list[ServiceCall]",
     "snapshot": "SnapshotAssertion",
     "socket_enabled": "None",
-    "stub_blueprint_populate": "None",
     "tmp_path": "Path",
     "tmpdir": "py.path.local",
     "tts_mutagen_mock": "MagicMock",
@@ -1225,6 +1224,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="preset_mode",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="preset_modes",
@@ -1602,6 +1602,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="preset_mode",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="preset_modes",
