@@ -361,57 +361,19 @@ async def test_alarm_update_other_exception_does_not_crash_setup(
     assert "switch.sonos_alarm_14" in entity_registry.entities
 
 @pytest.mark.asyncio
-async def test_alarm_update_household_mismatch_logs_warning(hass, entity_registry, caplog):
-    """Test that a household mismatch raises a warning but still loads entities."""
+async def test_alarm_update_exception_logs_warning(  
+    hass: HomeAssistant,  
+    async_setup_sonos,  
+    entity_registry: er.EntityRegistry,  
+    soco: MockSoCo,
+    caplog : pytest.LogCaptureFixture,
+) -> None:  
+    """Test other SoCoExceptions during alarm update causes speaker to not be setup."""  
+    soco.alarmClock.ListAlarms.side_effect = SoCoException("Alarm list UID does not match household")
+    with caplog.at_level(logging.WARNING):
+        await async_setup_sonos()  
+        await hass.async_block_till_done()  
 
-    # Mock SoCo device
-    soco = MagicMock()
-    soco.player_name = "Living Room"
-
-    # Create a real mock config entry
-    config_entry = MockConfigEntry(
-        domain="sonos",
-        data={},
-        entry_id="mock-entry-id",
-    )
-    config_entry.add_to_hass(hass)  # Register the entry in the test hass instance
-
-    household_id = "mock-household-id"
-
-    # Create SonosAlarms instance with required parameters
-    alarms_instance = SonosAlarms(hass, household_id, config_entry)
-
-    # Set the SoCo device on the instance
-    alarms_instance.soco = soco
-
-    # Register an entity for the test
-    entity_registry.async_get_or_create(
-        domain="switch",
-        platform="sonos",
-        unique_id="sonos_alarm_14",
-        config_entry=config_entry,
-    )
-
-    # Patch the internal Alarms object to raise the household mismatch exception
-    with patch.object(
-        alarms_instance.alarms,
-        "update",
-        side_effect=SoCoException("Alarm list UID does not match household")
-    ):
-        caplog.set_level(logging.WARNING)
-        # update_cache returns a bool, so no 'await' is needed
-        result = alarms_instance.update_cache(soco)
-
-    # Assert: update_cache should return False
-    assert result is False
-
-    # Assert: the entity should still exist — use the registered entity_id
-    assert any(
-        entry.unique_id == "sonos_alarm_14" for entry in entity_registry.entities.values()
-    )
-
-    # Assert: the warning message should be logged
-    assert any(
-        "cannot be updated due to a household mismatch" in record.message
-        for record in caplog.records
-    )
+    # Integration should not load entities  
+    assert "switch.sonos_alarm_14" not in entity_registry.entities  
+    assert "cannot be updated due to a household mismatch" in caplog.text
