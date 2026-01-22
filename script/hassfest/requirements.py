@@ -41,7 +41,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pymodbus": "Custom",
     "pytz": "CalVer",
     "requests": "SemVer",
-    "typing_extensions": "SemVer",
+    "typing-extensions": "SemVer",
     "urllib3": "SemVer",
     "yarl": "SemVer",
     "zeroconf": "SemVer",
