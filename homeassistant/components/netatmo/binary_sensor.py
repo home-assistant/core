@@ -56,13 +56,7 @@ OPENING_STATUS_TO_BINARY_SENSOR_STATE: Final[dict[str, bool | None]] = {
 }
 
 
-def process_opening_status_string(status: str) -> bool | None:
-    """Process opening status and return bool."""
-
-    return OPENING_STATUS_TO_BINARY_SENSOR_STATE.get(status, None)
-
-
-OPENING_CATEGORY_TO_DEVICE_CLASS: Final[dict[str, BinarySensorDeviceClass]] = {
+OPENING_CATEGORY_TO_DEVICE_CLASS: Final[dict[str | None, BinarySensorDeviceClass]] = {
     DOORTAG_CATEGORY_DOOR: BinarySensorDeviceClass.DOOR,
     DOORTAG_CATEGORY_FURNITURE: BinarySensorDeviceClass.OPENING,
     DOORTAG_CATEGORY_GARAGE: BinarySensorDeviceClass.GARAGE_DOOR,
@@ -75,27 +69,18 @@ OPENING_CATEGORY_TO_DEVICE_CLASS: Final[dict[str, BinarySensorDeviceClass]] = {
 def get_opening_category(netatmo_device: NetatmoDevice) -> str | None:
     """Helper function to get opening category from Netatmo API raw data."""
 
-    # First, get the unique ID of the device we are processing.
-    device_id_to_find = netatmo_device.device.entity_id
-
-    # Get the raw data containing the full list of homes and modules.
-    raw_data = netatmo_device.data_handler.account.raw_data
-
-    # Initialize category as None
-    category: str | None = None
-
     # Iterate through each home in the raw data.
-    for home in raw_data["homes"]:
+    for home in netatmo_device.data_handler.account.raw_data["homes"]:
         # Check if the modules list exists for the current home.
         if "modules" in home:
             # Iterate through each module to find a matching ID.
             for module in home["modules"]:
-                if module["id"] == device_id_to_find:
+                if module["id"] == netatmo_device.device.entity_id:
                     # We found the matching device. Get its category.
                     if module.get("category") is not None:
-                        category = module["category"]
+                        return cast(str, module["category"])
 
-    return category
+    return None
 
 
 def process_opening_category(
@@ -105,14 +90,9 @@ def process_opening_category(
     category = get_opening_category(netatmo_device)
 
     # Use a specific device class if we have a match, otherwise default to OPENING
-    if category is None:
-        device_class = BinarySensorDeviceClass.OPENING
-    else:
-        device_class = OPENING_CATEGORY_TO_DEVICE_CLASS.get(
-            category, BinarySensorDeviceClass.OPENING
-        )
-
-    return device_class
+    return OPENING_CATEGORY_TO_DEVICE_CLASS.get(
+        category, BinarySensorDeviceClass.OPENING
+    )
 
 
 OPENING_CATEGORY_TO_KEY: Final[dict[str, str | None]] = {
@@ -196,7 +176,7 @@ NETATMO_OPENING_BINARY_SENSOR_DESCRIPTIONS: Final[
         netatmo_name="status",
         device_class_fn=process_opening_category,
         device_key_fn=process_opening_key,
-        value_fn=process_opening_status_string,
+        value_fn=OPENING_STATUS_TO_BINARY_SENSOR_STATE.get,
     ),
 ]
 
