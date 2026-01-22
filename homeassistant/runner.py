@@ -277,9 +277,32 @@ def _enable_posix_spawn() -> None:
     subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform  # type: ignore[misc]  # noqa: SLF001
 
 
+def _patch_aiodns_to_disable_edns() -> None:
+    """Disable EDNS cookies in aiodns by setting default flags to 0.
+
+    c-ares 1.33.0+ enables EDNS cookies by default which can cause timeouts
+    with some DNS servers. We disable EDNS (and thus cookies) by default
+    unless flags are explicitly set.
+    """
+    try:
+        import aiodns
+    except ImportError:
+        return
+
+    original_init = aiodns.DNSResolver.__init__
+
+    def new_init(self, *args: Any, **kwargs: Any) -> None:
+        if "flags" not in kwargs:
+            kwargs["flags"] = 0
+        original_init(self, *args, **kwargs)
+
+    aiodns.DNSResolver.__init__ = new_init
+
+
 def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
     _enable_posix_spawn()
+    _patch_aiodns_to_disable_edns()
     set_open_file_descriptor_limit()
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
     # Backport of cpython 3.9 asyncio.run with a _cancel_all_tasks that times out
