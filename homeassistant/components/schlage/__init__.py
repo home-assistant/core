@@ -24,23 +24,8 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: SchlageConfigEntry) -> bool:
-    """Set up Schlage from a config entry."""
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-    try:
-        auth = await hass.async_add_executor_job(pyschlage.Auth, username, password)
-    except WarrantException as ex:
-        raise ConfigEntryAuthFailed from ex
-
-    coordinator = SchlageDataUpdateCoordinator(
-        hass, entry, username, pyschlage.Schlage(auth)
-    )
-    entry.runtime_data = coordinator
-
-    await coordinator.async_config_entry_first_refresh()
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Set up the Schlage component."""
     service.async_register_platform_entity_service(
         hass,
         DOMAIN,
@@ -73,6 +58,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: SchlageConfigEntry) -> b
         func=SERVICE_GET_CODES,
         supports_response=SupportsResponse.ONLY,
     )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SchlageConfigEntry) -> bool:
+    """Set up Schlage from a config entry."""
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
+    try:
+        auth = await hass.async_add_executor_job(pyschlage.Auth, username, password)
+    except WarrantException as ex:
+        raise ConfigEntryAuthFailed from ex
+
+    coordinator = SchlageDataUpdateCoordinator(
+        hass, entry, username, pyschlage.Schlage(auth)
+    )
+    entry.runtime_data = coordinator
+
+    await coordinator.async_config_entry_first_refresh()
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
