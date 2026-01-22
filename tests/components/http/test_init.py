@@ -688,13 +688,7 @@ async def test_ssl_issue_urls_configured(
     ),
     [
         (False, {}, ["0.0.0.0", "::"], 0, set()),
-        (
-            False,
-            {"server_host": "0.0.0.0"},
-            ["0.0.0.0"],
-            1,
-            {("http", "server_host_deprecated")},
-        ),
+        (False, {"server_host": "0.0.0.0"}, ["0.0.0.0"], 0, set()),
         (True, {}, ["0.0.0.0", "::"], 0, set()),
         (
             True,
@@ -702,7 +696,7 @@ async def test_ssl_issue_urls_configured(
             [
                 "0.0.0.0",
             ],
-            1,
+            0,
             {("http", "server_host_deprecated_hassio")},
         ),
     ],
