@@ -65,6 +65,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     [
         (SwitchBotAuthenticationError, "invalid_auth"),
         (SwitchBotConnectionError, "cannot_connect"),
+        (ValueError, "webhook_domain_error"),
         (Exception, "unknown"),
     ],
 )

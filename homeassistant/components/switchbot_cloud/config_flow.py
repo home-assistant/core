@@ -30,7 +30,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 def _validate_webhook_domain(domain: str) -> None:
     """Validate webhook domain."""
     if not re.match(WEBHOOK_DOMAIN_PATTERN, domain, re.IGNORECASE):
-        raise vol.Invalid("Webhook Domain Error")
+        raise ValueError("Webhook Domain Error")
 
 
 class SwitchBotCloudConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -55,7 +55,7 @@ class SwitchBotCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             except SwitchBotAuthenticationError:
                 errors["base"] = "invalid_auth"
             except ValueError:
-                errors["base"] = "webhook domain format error, can be empty"
+                errors["base"] = "webhook_domain_error"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
