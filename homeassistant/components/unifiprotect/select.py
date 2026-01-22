@@ -22,8 +22,6 @@ from uiprotect.data import (
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
-    PTZPatrol,
-    PTZPreset,
     RecordingMode,
     Sensor,
     Viewer,
@@ -200,30 +198,6 @@ async def _set_doorbell_message(obj: Camera, message: str) -> None:
 async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
     liveview = obj.api.bootstrap.liveviews[liveview_id]
     await obj.set_liveview(liveview)
-
-
-async def _get_ptz_presets(camera: Camera) -> list[PTZPreset]:
-    """Get PTZ presets for camera."""
-    if not camera.feature_flags.is_ptz:
-        return []
-    try:
-        presets = await camera.get_ptz_presets()
-    except Exception:  # noqa: BLE001
-        _LOGGER.debug("Failed to get PTZ presets for camera %s", camera.id)
-        return []
-    return presets
-
-
-async def _get_ptz_patrols(camera: Camera) -> list[PTZPatrol]:
-    """Get PTZ patrols for camera."""
-    if not camera.feature_flags.is_ptz:
-        return []
-    try:
-        patrols = await camera.get_ptz_patrols()
-    except Exception:  # noqa: BLE001
-        _LOGGER.debug("Failed to get PTZ patrols for camera %s", camera.id)
-        return []
-    return patrols
 
 
 async def _set_ptz_preset(obj: Camera, preset_slot: str) -> None:
@@ -532,8 +506,6 @@ class ProtectPTZSelect(ProtectDeviceEntity, SelectEntity):
         self._attr_current_option: str | None = None
         self._hass_to_unifi_options: dict[str, str] = {}
         self._unifi_to_hass_options: dict[str, str] = {}
-        self._presets: list[PTZPreset] = []
-        self._patrols: list[PTZPatrol] = []
         self._reset_timer: asyncio.TimerHandle | None = None
 
     async def async_added_to_hass(self) -> None:
@@ -557,36 +529,34 @@ class ProtectPTZSelect(ProtectDeviceEntity, SelectEntity):
 
     async def _async_load_preset_options(self) -> None:
         """Load PTZ preset options from the camera."""
-        self._presets = await _get_ptz_presets(self.device)
+        presets = await self.device.get_ptz_presets()
 
-        options: list[dict[str, Any]] = [
-            {"id": PTZ_PRESET_IDLE, "name": PTZ_PRESET_IDLE},
-            {"id": str(PTZ_PRESET_HOME_SLOT), "name": PTZ_PRESET_HOME},
-        ]
-        options.extend(
-            {"id": str(preset.slot), "name": preset.name} for preset in self._presets
+        self._hass_to_unifi_options = {
+            PTZ_PRESET_IDLE: PTZ_PRESET_IDLE,
+            PTZ_PRESET_HOME: str(PTZ_PRESET_HOME_SLOT),
+        }
+        self._hass_to_unifi_options.update(
+            {preset.name: str(preset.slot) for preset in presets}
         )
-
-        self._attr_options = [item["name"] for item in options]
-        self._hass_to_unifi_options = {item["name"]: item["id"] for item in options}
-        self._unifi_to_hass_options = {item["id"]: item["name"] for item in options}
+        self._unifi_to_hass_options = {
+            v: k for k, v in self._hass_to_unifi_options.items()
+        }
+        self._attr_options = list(self._hass_to_unifi_options)
         self._attr_current_option = PTZ_PRESET_IDLE
         self.async_write_ha_state()
 
     async def _async_load_patrol_options(self) -> None:
         """Load PTZ patrol options from the camera."""
-        self._patrols = await _get_ptz_patrols(self.device)
+        patrols = await self.device.get_ptz_patrols()
 
-        options: list[dict[str, Any]] = [
-            {"id": PTZ_PATROL_STOP, "name": PTZ_PATROL_STOP},
-        ]
-        options.extend(
-            {"id": str(patrol.slot), "name": patrol.name} for patrol in self._patrols
+        self._hass_to_unifi_options = {PTZ_PATROL_STOP: PTZ_PATROL_STOP}
+        self._hass_to_unifi_options.update(
+            {patrol.name: str(patrol.slot) for patrol in patrols}
         )
-
-        self._attr_options = [item["name"] for item in options]
-        self._hass_to_unifi_options = {item["name"]: item["id"] for item in options}
-        self._unifi_to_hass_options = {item["id"]: item["name"] for item in options}
+        self._unifi_to_hass_options = {
+            v: k for k, v in self._hass_to_unifi_options.items()
+        }
+        self._attr_options = list(self._hass_to_unifi_options)
         # Set initial state based on active patrol
         self._update_patrol_state()
         self.async_write_ha_state()
