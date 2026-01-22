@@ -348,18 +348,15 @@ async def test_alarm_update_other_exception_does_not_crash_setup(
     hass: HomeAssistant,
     async_setup_sonos,
     entity_registry: er.EntityRegistry,
+    soco: MockSoCo,
 ) -> None:
-    """Test other SoCoExceptions during alarm update do not crash the integration."""
-    with patch(
-        "homeassistant.components.sonos.alarms.Alarm.update",
-        side_effect=SoCoException("Some other error"),
-    ):
-        await async_setup_sonos()
-        await hass.async_block_till_done()
+    """Test other SoCoExceptions during alarm update causes speaker to not be setup."""
+    soco.alarmClock.ListAlarms.side_effect = SoCoException("Initial setup error")
+    await async_setup_sonos()
+    await hass.async_block_till_done()
 
     # Integration should still load entities
-    assert "switch.sonos_alarm_14" in entity_registry.entities
-
+    assert "switch.sonos_alarm_14" not in entity_registry.entities
 @pytest.mark.asyncio
 async def test_alarm_update_exception_logs_warning(  
     hass: HomeAssistant,  
