@@ -3,6 +3,8 @@
 from typing import Any
 from unittest.mock import patch
 
+import pytest
+from pywizlight import BulbType
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
@@ -28,7 +30,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import FAKE_DIMMABLE_FAN, FAKE_MAC, async_push_update, async_setup_integration
+from . import (
+    FAKE_DIMMABLE_FAN,
+    FAKE_DIMMABLE_FAN_2,
+    FAKE_MAC,
+    async_push_update,
+    async_setup_integration,
+)
 
 from tests.common import snapshot_platform
 
@@ -43,12 +51,16 @@ INITIAL_PARAMS = {
 }
 
 
+@pytest.mark.parametrize("bulb_type", [FAKE_DIMMABLE_FAN, FAKE_DIMMABLE_FAN_2])
 @patch("homeassistant.components.wiz.PLATFORMS", [Platform.FAN])
 async def test_entity(
-    hass: HomeAssistant, snapshot: SnapshotAssertion, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    bulb_type: BulbType,
 ) -> None:
     """Test the fan entity."""
-    entry = (await async_setup_integration(hass, bulb_type=FAKE_DIMMABLE_FAN))[1]
+    entry = (await async_setup_integration(hass, bulb_type=bulb_type))[1]
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
