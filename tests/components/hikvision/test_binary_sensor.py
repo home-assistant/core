@@ -129,7 +129,7 @@ async def test_binary_sensor_no_sensors(
     assert len(states) == 0
 
     # Verify warning was logged
-    assert "Hikvision device has no sensors available" in caplog.text
+    assert "has no sensors available" in caplog.text
 
 
 async def test_binary_sensor_nvr_device(

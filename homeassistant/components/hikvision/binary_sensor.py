@@ -250,6 +250,15 @@ async def async_setup_entry(
         )
         return
 
+    # Log warnings for unknown sensor types
+    for sensor_type in sensors:
+        if sensor_type not in BINARY_SENSOR_DESCRIPTIONS:
+            _LOGGER.warning(
+                "Unknown Hikvision sensor type '%s', please report this at "
+                "https://github.com/home-assistant/core/issues",
+                sensor_type,
+            )
+
     async_add_entities(
         HikvisionBinarySensor(
             entry=entry,
