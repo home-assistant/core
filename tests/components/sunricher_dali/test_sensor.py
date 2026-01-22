@@ -149,8 +149,13 @@ class TestEnergySensor:
         hass: HomeAssistant,
         entity_registry: er.EntityRegistry,
         mock_config_entry: MockConfigEntry,
+        snapshot: SnapshotAssertion,
     ) -> None:
         """Test that energy sensor is created for light devices."""
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )
+
         entity_entries = er.async_entries_for_config_entry(
             entity_registry, mock_config_entry.entry_id
         )
