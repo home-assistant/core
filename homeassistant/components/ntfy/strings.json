@@ -336,7 +336,7 @@
       "description": "Dismisses a previously sent message from a ntfy topic by marking it as read.",
       "fields": {
         "sequence_id": {
-          "description": "Enter the message ID or sequence ID of a notification you want to dismiss.",
+          "description": "The message ID or sequence ID of the notification to dismiss.",
           "name": "[%key:component::ntfy::common::sequence_id%]"
         }
       },
