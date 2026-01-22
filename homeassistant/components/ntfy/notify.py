@@ -46,6 +46,7 @@ ATTR_ICON = "icon"
 ATTR_MARKDOWN = "markdown"
 ATTR_PRIORITY = "priority"
 ATTR_TAGS = "tags"
+ATTR_SEQUENCE_ID = "sequence_id"
 ATTR_ATTACH_FILE = "attach_file"
 ATTR_FILENAME = "filename"
 GRP_ATTACHMENT = "attachment"
@@ -77,6 +78,7 @@ SERVICE_PUBLISH_SCHEMA = vol.All(
             vol.Optional(ATTR_EMAIL): vol.Email(),
             vol.Optional(ATTR_CALL): cv.string,
             vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
+            vol.Optional(ATTR_SEQUENCE_ID): cv.string,
             vol.Exclusive(ATTR_ATTACH, GRP_ATTACHMENT, MSG_ATTACHMENT): vol.All(
                 vol.Url(), vol.Coerce(URL)
             ),

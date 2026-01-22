@@ -26,6 +26,7 @@ from homeassistant.components.ntfy.notify import (
     ATTR_ICON,
     ATTR_MARKDOWN,
     ATTR_PRIORITY,
+    ATTR_SEQUENCE_ID,
     ATTR_TAGS,
     SERVICE_PUBLISH,
 )
@@ -65,6 +66,7 @@ async def test_ntfy_publish(
             ATTR_MARKDOWN: True,
             ATTR_PRIORITY: "5",
             ATTR_TAGS: ["partying_face", "grin"],
+            ATTR_SEQUENCE_ID: "Mc3otamDNcpJ",
         },
         blocking=True,
     )
@@ -81,6 +83,7 @@ async def test_ntfy_publish(
             markdown=True,
             icon=URL("https://example.org/logo.png"),
             delay="86430.0s",
+            sequence_id="Mc3otamDNcpJ",
         ),
         None,
     )
