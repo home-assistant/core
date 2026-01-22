@@ -14,7 +14,7 @@
           "name": "[%key:component::device_tracker::common::condition_behavior_name%]"
         }
       },
-      "name": "If a device tracker is home"
+      "name": "Device tracker is home"
     },
     "is_not_home": {
       "description": "Tests if one or more device trackers are not home.",
@@ -24,7 +24,7 @@
           "name": "[%key:component::device_tracker::common::condition_behavior_name%]"
         }
       },
-      "name": "If a device tracker is not home"
+      "name": "Device tracker is not home"
     }
   },
   "device_automation": {
