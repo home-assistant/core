@@ -22,6 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client as client
+from homeassistant.util import ssl as ssl_util
 from homeassistant.util.color import RGBColor
 from homeassistant.util.ssl import SSLCipherList
 
@@ -413,3 +414,29 @@ async def test_resolver_is_singleton(hass: HomeAssistant) -> None:
     assert isinstance(session3._connector, aiohttp.TCPConnector)
     assert session._connector._resolver is session2._connector._resolver
     assert session._connector._resolver is session3._connector._resolver
+
+
+async def test_connector_uses_http11_alpn(hass: HomeAssistant) -> None:
+    """Test that connector uses HTTP/1.1 ALPN protocols."""
+    with patch.object(
+        ssl_util, "client_context", wraps=ssl_util.client_context
+    ) as mock_client_context:
+        client.async_get_clientsession(hass)
+
+        # Verify client_context was called with HTTP/1.1 ALPN
+        mock_client_context.assert_called_once_with(
+            SSLCipherList.PYTHON_DEFAULT, ssl_util.SSL_ALPN_HTTP11
+        )
+
+
+async def test_connector_no_verify_uses_http11_alpn(hass: HomeAssistant) -> None:
+    """Test that connector without SSL verification uses HTTP/1.1 ALPN protocols."""
+    with patch.object(
+        ssl_util, "client_context_no_verify", wraps=ssl_util.client_context_no_verify
+    ) as mock_client_context_no_verify:
+        client.async_get_clientsession(hass, verify_ssl=False)
+
+        # Verify client_context_no_verify was called with HTTP/1.1 ALPN
+        mock_client_context_no_verify.assert_called_once_with(
+            SSLCipherList.PYTHON_DEFAULT, ssl_util.SSL_ALPN_HTTP11
+        )
