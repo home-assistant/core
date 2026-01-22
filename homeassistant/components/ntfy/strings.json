@@ -346,7 +346,7 @@
       "description": "Deletes a message from a ntfy topic.",
       "fields": {
         "sequence_id": {
-          "description": "Enter the message ID or sequence ID of a notification you want to delete.",
+          "description": "The message ID or sequence ID of the notification to delete.",
           "name": "[%key:component::ntfy::common::sequence_id%]"
         }
       },
