@@ -11,19 +11,19 @@ You are developing a Home Assistant integration. Follow these guidelines and ref
 
 | Component | Reference File |
 |-----------|----------------|
-| Config flow | [config-flow.md](config-flow.md) |
-| Data coordinator | [coordinator.md](coordinator.md) |
-| Entities (base) | [entity.md](entity.md) |
-| Sensors | [sensor.md](sensor.md) |
-| Binary sensors | [binary-sensor.md](binary-sensor.md) |
-| Switches | [switch.md](switch.md) |
-| Numbers | [number.md](number.md) |
-| Selects | [select.md](select.md) |
-| Buttons | [button.md](button.md) |
-| Device management | [device.md](device.md) |
-| Diagnostics | [diagnostics.md](diagnostics.md) |
-| Services | [services.md](services.md) |
-| Testing | [testing.md](testing.md) |
+| Config flow | [CONFIG-FLOW.MD](CONFIG-FLOW.MD) |
+| Data coordinator | [COORDINATOR.MD](COORDINATOR.MD) |
+| Entities (base) | [ENTITY.MD](ENTITY.MD) |
+| Sensors | [SENSOR.MD](SENSOR.MD) |
+| Binary sensors | [BINARY-SENSOR.MD](BINARY-SENSOR.MD) |
+| Switches | [SWITCH.MD](SWITCH.MD) |
+| Numbers | [NUMBER.MD](NUMBER.MD) |
+| Selects | [SELECT.MD](SELECT.MD) |
+| Buttons | [BUTTON.MD](BUTTON.MD) |
+| Device management | [DEVICE.MD](DEVICE.MD) |
+| Diagnostics | [DIAGNOSTICS.MD](DIAGNOSTICS.MD) |
+| Services | [SERVICES.MD](SERVICES.MD) |
+| Testing | [TESTING.MD](TESTING.MD) |
 
 ## Integration Structure
 
