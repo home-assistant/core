@@ -186,13 +186,11 @@ async def test_camera_stream_source(
 
     stream_url = await async_get_stream_source(hass, "camera.front_camera")
 
-    # Verify RTSP URL from library
+    # Verify RTSP URL is constructed correctly
     assert stream_url is not None
     assert stream_url.startswith("rtsp://")
+    # Standalone camera uses stream channel 1
     assert f"@{TEST_HOST}:554/Streaming/Channels/1" in stream_url
-
-    # Verify get_stream_url was called with channel 1
-    mock_hikcamera.return_value.get_stream_url.assert_called_with(1)
 
 
 async def test_camera_stream_source_nvr(
@@ -202,9 +200,6 @@ async def test_camera_stream_source_nvr(
 ) -> None:
     """Test NVR camera stream source URL."""
     mock_hikcamera.return_value.get_type = "NVR"
-    mock_hikcamera.return_value.get_stream_url.return_value = (
-        f"rtsp://admin:{TEST_PASSWORD}@{TEST_HOST}:554/Streaming/Channels/201"
-    )
 
     # Create mock VideoChannel for channel 2
     class MockVideoChannel:
@@ -221,9 +216,6 @@ async def test_camera_stream_source_nvr(
 
     stream_url = await async_get_stream_source(hass, "camera.front_camera_channel_2")
 
-    # NVR channel 2 should use stream channel 201
+    # NVR channel 2 should use stream channel 201 (2 * 100 + 1)
     assert stream_url is not None
     assert f"@{TEST_HOST}:554/Streaming/Channels/201" in stream_url
-
-    # Verify get_stream_url was called with channel 2
-    mock_hikcamera.return_value.get_stream_url.assert_called_with(2)
