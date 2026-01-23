@@ -36,9 +36,6 @@
       "carbon_monoxide": {
         "name": "Carbon monoxide"
       },
-      "charge_state": {
-        "name": "Charging"
-      },
       "cover_off": {
         "name": "Cover off"
       },
