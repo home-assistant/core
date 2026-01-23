@@ -433,7 +433,7 @@ def make_entity_state_condition(
     return CustomCondition
 
 
-class EntityStateAttributeConditionBase(EntityStateConditionBase):
+class EntityStateAttributeConditionBase(EntityConditionBase):
     """State attribute condition."""
 
     _attribute: str
