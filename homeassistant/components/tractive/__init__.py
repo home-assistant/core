@@ -60,11 +60,11 @@ class Trackables:
     """A class that describes trackables."""
 
     tracker: aiotractive.tracker.Tracker
-    trackable: dict
+    trackable: dict[str, Any]
     tracker_details: dict[str, Any]
-    hw_info: dict
-    pos_report: dict
-    health_overview: dict
+    hw_info: dict[str, Any]
+    pos_report: dict[str, Any]
+    health_overview: dict[str, Any]
 
 
 @dataclass(slots=True)
