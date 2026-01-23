@@ -54,6 +54,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -137,6 +138,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -170,6 +172,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
       'original_device_class': None,
@@ -266,6 +269,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -299,6 +303,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
       'original_device_class': None,
@@ -395,6 +400,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -428,6 +434,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
       'original_device_class': None,
@@ -719,6 +726,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -752,6 +760,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Auto Off',
       'options': dict({
       }),
       'original_device_class': None,
@@ -848,6 +857,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -881,6 +891,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
       'original_device_class': None,
@@ -914,6 +925,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Auto Off',
       'options': dict({
       }),
       'original_device_class': None,
@@ -1023,6 +1035,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -1056,6 +1069,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Auto Off',
       'options': dict({
       }),
       'original_device_class': None,
@@ -1152,6 +1166,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': None,
       'options': dict({
       }),
       'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -1236,6 +1251,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -1356,6 +1372,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': None,
       'options': dict({
       }),
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
