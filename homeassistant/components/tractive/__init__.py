@@ -148,21 +148,21 @@ async def _generate_trackables(
     trackable: aiotractive.trackable_object.TrackableObject,
 ) -> Trackables | None:
     """Generate trackables."""
-    trackable = await trackable.details()
+    trackable_data = await trackable.details()
 
     # Check that the pet has tracker linked.
-    if not trackable.get("device_id"):
+    if not trackable_data.get("device_id"):
         return None
 
-    if "details" not in trackable:
+    if "details" not in trackable_data:
         _LOGGER.warning(
             "Tracker %s has no details and will be skipped. This happens for shared trackers",
-            trackable["device_id"],
+            trackable_data["device_id"],
         )
         return None
 
-    tracker = client.tracker(trackable["device_id"])
-    trackable_pet = client.trackable_object(trackable["_id"])
+    tracker = client.tracker(trackable_data["device_id"])
+    trackable_pet = client.trackable_object(trackable_data["_id"])
 
     tracker_details, hw_info, pos_report, health_overview = await asyncio.gather(
         tracker.details(),
@@ -173,11 +173,11 @@ async def _generate_trackables(
 
     if not tracker_details.get("_id"):
         raise ConfigEntryNotReady(
-            f"Tractive API returns incomplete data for tracker {trackable['device_id']}",
+            f"Tractive API returns incomplete data for tracker {trackable_data['device_id']}",
         )
 
     return Trackables(
-        tracker, trackable, tracker_details, hw_info, pos_report, health_overview
+        tracker, trackable_data, tracker_details, hw_info, pos_report, health_overview
     )
 
 
