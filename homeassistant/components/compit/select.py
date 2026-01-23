@@ -13,7 +13,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, MANUFACTURER_NAME
 from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
 
-SELECT_PARAM_TYPE = "Select"
 PARALLEL_UPDATES = 0
 
 
