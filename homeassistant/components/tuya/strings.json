@@ -1103,5 +1103,43 @@
       "description": "The Tuya entity `{entity}` is deprecated, replaced by a new valve entity.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue.",
       "title": "{name} is deprecated"
     }
+  },
+  "services": {
+    "get_available_dp_codes": {
+      "description": "Get all available DP codes for a Tuya device.",
+      "fields": {
+        "device_id": {
+          "description": "The Tuya device."
+        }
+      },
+      "name": "Get available DP codes"
+    },
+    "get_data": {
+      "description": "Retrieve data for a specific DP code from a Tuya device.",
+      "fields": {
+        "device_id": {
+          "description": "The Tuya device."
+        },
+        "dp_code": {
+          "description": "The DP code to retrieve."
+        }
+      },
+      "name": "Get device data"
+    },
+    "set_data": {
+      "description": "Set data for a specific DP code on a Tuya device.",
+      "fields": {
+        "device_id": {
+          "description": "The Tuya device."
+        },
+        "dp_code": {
+          "description": "The DP code to set."
+        },
+        "data": {
+          "description": "The data to set."
+        }
+      },
+      "name": "Set device data"
+    }
   }
 }
