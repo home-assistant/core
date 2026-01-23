@@ -1,4 +1,4 @@
-"""Media player entity for the Bang & Olufsen integration."""
+"""Services for Bang & Olufsen integration."""
 
 from __future__ import annotations
 
