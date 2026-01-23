@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiotractive
 
@@ -61,7 +61,7 @@ class Trackables:
 
     tracker: aiotractive.tracker.Tracker
     trackable: dict
-    tracker_details: dict
+    tracker_details: dict[str, Any]
     hw_info: dict
     pos_report: dict
     health_overview: dict
@@ -96,6 +96,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
     except aiotractive.exceptions.TractiveError as error:
         await client.close()
         raise ConfigEntryNotReady from error
+
+    if TYPE_CHECKING:
+        assert creds is not None
 
     tractive = TractiveClient(hass, client, creds["user_id"], entry)
 
