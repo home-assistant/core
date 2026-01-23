@@ -109,7 +109,6 @@ BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ..
         ),
         TuyaBinarySensorEntityDescription(
             key=DPCode.CHARGE_STATE,
-            translation_key="charge_state",
             device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
