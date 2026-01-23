@@ -88,11 +88,12 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
 
         # Get current rotation and update value
         action = self._dest.action(ACTION_DESC.SlatRotate)
-        rotation = action["rotation"]
-        if rotation:
-            self._attr_native_value = self._value_func(
-                self._attr_native_value, rotation
-            )
+        if action is not None:
+            rotation = action["rotation"]
+            if rotation is not None:
+                self._attr_native_value = self._value_func(
+                    self._attr_native_value, rotation
+                )
 
     @property
     def native_min_value(self) -> float:
