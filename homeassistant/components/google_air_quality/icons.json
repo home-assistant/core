@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "ammonia": {
+        "default": "mdi:molecule"
+      },
+      "benzene": {
+        "default": "mdi:molecule"
+      },
+      "non_methane_hydrocarbons": {
+        "default": "mdi:molecule"
+      }
+    }
+  }
+}

@@ -79,6 +79,7 @@ from .utils import (
     get_rpc_device_wakeup_period,
     get_rpc_ws_url,
     get_shelly_model_name,
+    is_rpc_ble_scanner_supported,
     update_device_fw_info,
 )
 
@@ -726,6 +727,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Handle device connected."""
         async with self._connection_lock:
             if self.connected:  # Already connected
+                LOGGER.debug("Device %s already connected", self.name)
                 return
             self.connected = True
             try:
@@ -743,10 +745,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         is updated.
         """
         if not self.sleep_period:
-            if (
-                self.config_entry.runtime_data.rpc_supports_scripts
-                and not self.config_entry.runtime_data.rpc_zigbee_firmware
-            ):
+            if is_rpc_ble_scanner_supported(self.config_entry):
                 await self._async_connect_ble_scanner()
         else:
             await self._async_setup_outbound_websocket()
@@ -776,6 +775,10 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         if await async_ensure_ble_enabled(self.device):
             # BLE enable required a reboot, don't bother connecting
             # the scanner since it will be disconnected anyway
+            LOGGER.debug(
+                "Device %s BLE enable required a reboot, skipping scanner connect",
+                self.name,
+            )
             return
         assert self.device_id is not None
         self._disconnected_callbacks.append(
@@ -844,20 +847,13 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Shutdown the coordinator."""
         if self.device.connected:
             try:
-                if not self.sleep_period:
+                if not self.sleep_period and is_rpc_ble_scanner_supported(
+                    self.config_entry
+                ):
                     await async_stop_scanner(self.device)
                 await super().shutdown()
             except InvalidAuthError:
                 self.config_entry.async_start_reauth(self.hass)
-                return
-            except RpcCallError as err:
-                # Ignore 404 (No handler for) error
-                if err.code != 404:
-                    LOGGER.debug(
-                        "Error during shutdown for device %s: %s",
-                        self.name,
-                        err.message,
-                    )
                 return
             except DeviceConnectionError as err:
                 # If the device is restarting or has gone offline before
