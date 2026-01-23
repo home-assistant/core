@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -32,11 +33,12 @@ class UnraidSystemEntity(CoordinatorEntity[UnraidSystemCoordinator]):
         super().__init__(coordinator)
         self.entity_description = entity_description
         server_info = coordinator.server_info
+        # UUID must be present as it's validated during config flow
+        assert server_info.uuid is not None
         self._attr_unique_id = f"{server_info.uuid}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, server_info.uuid or "unknown")},
-            name=(server_info.hostname
-            or coordinator.config_entry.data[CONF_HOST]),
+            identifiers={(DOMAIN, server_info.uuid)},
+            name=(server_info.hostname or coordinator.config_entry.data[CONF_HOST]),
             manufacturer=server_info.manufacturer or MANUFACTURER,
             model=server_info.model,
             serial_number=server_info.serial_number,

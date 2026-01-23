@@ -7,6 +7,7 @@
       "unsupported_version": "Unraid version not supported. Minimum required: Unraid 7.2.0 (API v4.21.0)."
     },
     "error": {
+      "base": "Unexpected error occurred. Check Home Assistant logs for details.",
       "cannot_connect": "Cannot connect. Verify the host and port are correct and reachable.",
       "invalid_auth": "Invalid API key or insufficient permissions. Ensure the key has ADMIN role.",
       "unknown": "Unexpected error occurred. Check Home Assistant logs for details."

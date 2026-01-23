@@ -17,38 +17,16 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import create_mock_server_info
+from .conftest import create_mock_server_info, create_mock_unraid_client
 
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-def _mock_api_client(
-    uuid: str = "test-server-uuid",
-    hostname: str = "tower",
-    unraid_version: str = "7.2.0",
-    api_version: str = "4.29.2",
-) -> MagicMock:
-    """Create a mock API client with standard responses."""
-    mock_api = MagicMock()
-    mock_api.test_connection = AsyncMock(return_value=True)
-    mock_api.get_version = AsyncMock(
-        return_value={"unraid": unraid_version, "api": api_version}
-    )
-    mock_api.get_server_info = AsyncMock(
-        return_value=create_mock_server_info(
-            uuid=uuid,
-            hostname=hostname,
-            unraid_version=unraid_version,
-            api_version=api_version,
-        )
-    )
-    mock_api.close = AsyncMock()
-    return mock_api
-
-
-async def test_user_flow(hass: HomeAssistant) -> None:
+async def test_user_flow(
+    hass: HomeAssistant, mock_unraid_client_config_flow: MagicMock
+) -> None:
     """Test the full happy path user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -57,18 +35,13 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.unraid.config_flow.UnraidClient"
-    ) as mock_client:
-        mock_client.return_value = _mock_api_client()
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_HOST: "unraid.local",
-                CONF_API_KEY: "valid-api-key",
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "unraid.local",
+            CONF_API_KEY: "valid-api-key",
+        },
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "tower"
@@ -80,22 +53,19 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     }
 
 
-async def test_user_flow_with_custom_port(hass: HomeAssistant) -> None:
+async def test_user_flow_with_custom_port(
+    hass: HomeAssistant, mock_unraid_client_config_flow: MagicMock
+) -> None:
     """Test user flow with custom port."""
-    with patch(
-        "homeassistant.components.unraid.config_flow.UnraidClient"
-    ) as mock_client:
-        mock_client.return_value = _mock_api_client()
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                CONF_HOST: "unraid.local",
-                CONF_PORT: 8443,
-                CONF_API_KEY: "valid-api-key",
-            },
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={
+            CONF_HOST: "unraid.local",
+            CONF_PORT: 8443,
+            CONF_API_KEY: "valid-api-key",
+        },
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PORT] == 8443
@@ -143,7 +113,7 @@ async def test_user_flow_errors(
     with patch(
         "homeassistant.components.unraid.config_flow.UnraidClient"
     ) as mock_client:
-        mock_client.return_value = _mock_api_client()
+        mock_client.return_value = create_mock_unraid_client(create_mock_server_info())
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -287,7 +257,9 @@ async def test_user_flow_already_configured(
     with patch(
         "homeassistant.components.unraid.config_flow.UnraidClient"
     ) as mock_client:
-        mock_client.return_value = _mock_api_client(uuid="test-uuid-1234")
+        mock_client.return_value = create_mock_unraid_client(
+            create_mock_server_info(uuid="test-uuid-1234")
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

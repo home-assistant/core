@@ -25,6 +25,35 @@ _LOGGER = logging.getLogger(__name__)
 MIN_API_VERSION = "4.21.0"
 
 
+class UnraidFlowError(Exception):
+    """Base exception for Unraid config flow errors."""
+
+    def __init__(self, error_key: str | None = None) -> None:
+        """Initialize the error."""
+        self.error_key = error_key
+        super().__init__()
+
+
+class UnraidAbortFlow(Exception):
+    """Exception to abort the config flow with a reason."""
+
+    def __init__(self, reason: str) -> None:
+        """Initialize the abort."""
+        self.reason = reason
+        super().__init__()
+
+
+USER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=65535)
+        ),
+        vol.Required(CONF_API_KEY): str,
+    }
+)
+
+
 class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Unraid."""
 
@@ -39,21 +68,21 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the user step."""
         errors: dict[str, str] = {}
-        abort_reason: str | None = None
 
         if user_input is not None:
-            abort_reason = await self._test_connection(user_input, errors)
-
-            if abort_reason:
-                return self.async_abort(reason=abort_reason)
-
-            if not errors:
-                if not self._server_uuid:
-                    return self.async_abort(reason="no_server_uuid")
-
+            try:
+                await self._validate_and_create_entry(user_input)
+            except UnraidAbortFlow as err:
+                return self.async_abort(reason=err.reason)
+            except UnraidFlowError as err:
+                if err.error_key == CONF_API_KEY:
+                    errors[CONF_API_KEY] = "invalid_auth"
+                elif err.error_key:
+                    errors["base"] = err.error_key
+            else:
+                # Successfully validated - create entry
                 await self.async_set_unique_id(self._server_uuid)
                 self._abort_if_unique_id_configured()
-
                 return self.async_create_entry(
                     title=self._server_hostname or user_input[CONF_HOST],
                     data={
@@ -66,59 +95,36 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
-                        vol.Coerce(int), vol.Range(min=1, max=65535)
-                    ),
-                    vol.Required(CONF_API_KEY): str,
-                }
-            ),
+            data_schema=USER_SCHEMA,
             errors=errors,
         )
 
-    async def _test_connection(
-        self, user_input: dict[str, Any], errors: dict[str, str]
-    ) -> str | None:
-        """Test connection to Unraid server and validate version.
+    async def _validate_and_create_entry(self, user_input: dict[str, Any]) -> None:
+        """Validate connection and prepare entry data.
 
-        Returns abort reason if flow should be aborted, otherwise None.
-        Populates errors dict with any validation errors.
-
-        Automatically detects SSL: tries HTTPS first, falls back to HTTP on SSL errors.
+        Raises UnraidAbortFlow or UnraidFlowError on validation issues.
         """
         host = user_input[CONF_HOST].strip()
         api_key = user_input[CONF_API_KEY].strip()
         port = user_input.get(CONF_PORT, DEFAULT_PORT)
 
         # Try HTTPS first
-        result = await self._try_connection(host, api_key, port, True, errors)
-        if result != "try_http":
-            return result
+        try:
+            await self._test_connection_with_ssl(host, api_key, port, use_ssl=True)
+        except UnraidAbortFlow:
+            raise
+        except UnraidFlowError:
+            # SSL failed, try HTTP
+            _LOGGER.debug("HTTPS connection failed, trying HTTP")
+            await self._test_connection_with_ssl(host, api_key, port, use_ssl=False)
 
-        # SSL failed, try HTTP
-        _LOGGER.debug("HTTPS connection failed, trying HTTP")
-        errors.clear()
-        return await self._try_connection(host, api_key, port, False, errors)
+    async def _test_connection_with_ssl(
+        self, host: str, api_key: str, port: int, use_ssl: bool
+    ) -> None:
+        """Test connection with specified SSL setting.
 
-    async def _try_connection(
-        self,
-        host: str,
-        api_key: str,
-        port: int,
-        use_ssl: bool,
-        errors: dict[str, str],
-    ) -> str | None:
-        """Try connecting with specified SSL setting.
-
-        Returns:
-            - None on success
-            - "try_http" if SSL error occurred and should retry with HTTP
-            - abort reason string if flow should be aborted
+        Raises UnraidAbortFlow or UnraidFlowError on validation issues.
         """
-        # Set both ports to user's port to prevent library fallback behavior
-        # Pass HA's session so HA manages session lifecycle (no close() needed)
         api_client = UnraidClient(
             host=host,
             api_key=api_key,
@@ -129,61 +135,54 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            result = await self._validate_connection(api_client, errors)
-        except UnraidSSLError:
+            await self._validate_connection(api_client)
+        except UnraidSSLError as err:
             if use_ssl:
-                return "try_http"
-            errors["base"] = "cannot_connect"
-            return None
-        else:
-            if result is None and not errors:
-                self._use_ssl = use_ssl
-            return result
+                # Try HTTP fallback
+                raise UnraidFlowError from err
+            # HTTP also failed with SSL error
+            raise UnraidFlowError("base") from err
+        except UnraidAuthenticationError as err:
+            raise UnraidFlowError(CONF_API_KEY) from err
+        except UnraidConnectionError as err:
+            raise UnraidFlowError("cannot_connect") from err
+        except UnraidAbortFlow:
+            raise
+        except Exception as err:
+            _LOGGER.exception("Unexpected error during connection test")
+            raise UnraidFlowError("unknown") from err
 
-    async def _validate_connection(
-        self, api_client: UnraidClient, errors: dict[str, str]
-    ) -> str | None:
+        # Success - set SSL preference
+        self._use_ssl = use_ssl
+
+    async def _validate_connection(self, api_client: UnraidClient) -> None:
         """Validate connection, version, and fetch server info.
 
-        Returns abort reason if flow should be aborted, otherwise None.
-        Populates errors dict with any validation errors.
-        Raises UnraidSSLError to trigger SSL error handling.
+        Raises UnraidAbortFlow or connection exceptions.
         """
-        try:
-            await api_client.test_connection()
-        except UnraidAuthenticationError:
-            errors[CONF_API_KEY] = "invalid_auth"
-            return None
-        except UnraidSSLError:
-            raise
-        except UnraidConnectionError:
-            errors["base"] = "cannot_connect"
-            return None
-        except Exception:
-            _LOGGER.exception("Unexpected error during connection test")
-            errors["base"] = "unknown"
-            return None
+        await api_client.test_connection()
 
         try:
             version_info = await api_client.get_version()
-        except Exception:
+        except Exception as err:
             _LOGGER.exception("Failed to get version info")
-            return "cannot_get_version"
+            raise UnraidAbortFlow(reason="cannot_get_version") from err
 
         api_version = version_info.get("api", "0.0.0")
         if not self._is_supported_version(api_version):
-            return "unsupported_version"
+            raise UnraidAbortFlow(reason="unsupported_version")
 
         try:
             server_info = await api_client.get_server_info()
-        except Exception:
+        except Exception as err:
             _LOGGER.exception("Failed to get server info")
-            errors["base"] = "unknown"
-            return None
+            raise UnraidFlowError("base") from err
+
+        if not server_info.uuid:
+            raise UnraidAbortFlow(reason="no_server_uuid")
 
         self._server_uuid = server_info.uuid
         self._server_hostname = server_info.hostname
-        return None
 
     def _is_supported_version(self, api_version: str) -> bool:
         """Check if API version is supported using proper version parsing."""

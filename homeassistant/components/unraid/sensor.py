@@ -65,7 +65,12 @@ SYSTEM_SENSORS: tuple[UnraidSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
-        value_fn=lambda data: data.metrics.memory_used,
+        value_fn=lambda data: (
+            data.metrics.memory_total - data.metrics.memory_used
+            if data.metrics.memory_total is not None
+            and data.metrics.memory_used is not None
+            else None
+        ),
     ),
     UnraidSensorEntityDescription(
         key="uptime",
@@ -74,6 +79,19 @@ SYSTEM_SENSORS: tuple[UnraidSensorEntityDescription, ...] = (
         value_fn=lambda data: data.metrics.uptime,
     ),
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: UnraidConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up sensor entities."""
+    coordinator = entry.runtime_data.system_coordinator
+
+    async_add_entities(
+        UnraidSensorEntity(coordinator, description) for description in SYSTEM_SENSORS
+    )
 
 
 class UnraidSensorEntity(UnraidSystemEntity, SensorEntity):
@@ -93,16 +111,3 @@ class UnraidSensorEntity(UnraidSystemEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: UnraidConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up sensor entities."""
-    coordinator = entry.runtime_data.system_coordinator
-
-    async_add_entities(
-        UnraidSensorEntity(coordinator, description) for description in SYSTEM_SENSORS
-    )
