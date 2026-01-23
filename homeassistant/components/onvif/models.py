@@ -66,6 +66,8 @@ class Capabilities:
     events: bool = False
     ptz: bool = False
     imaging: bool = False
+    deviceio: bool = False
+    relay_outputs: int = 0
 
 
 @dataclass

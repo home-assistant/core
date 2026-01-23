@@ -71,11 +71,20 @@ async def async_setup_entry(
     """Set up a ONVIF switch platform."""
     device = hass.data[DOMAIN][config_entry.unique_id]
 
-    async_add_entities(
+    # Add predefined switches
+    entities = [
         ONVIFSwitch(device, description)
         for description in SWITCHES
         if description.supported_fn(device)
-    )
+    ]
+
+    # Add relay output switches
+    if device.capabilities.deviceio and device.capabilities.relay_outputs > 0:
+        relays = await device.async_get_relay_outputs()
+        for relay in relays:
+            entities.append(ONVIFRelaySwitch(device, relay))
+
+    async_add_entities(entities)
 
 
 class ONVIFSwitch(ONVIFBaseEntity, SwitchEntity):
@@ -107,3 +116,40 @@ class ONVIFSwitch(ONVIFBaseEntity, SwitchEntity):
         await self.entity_description.turn_off_fn(self.device)(
             profile, self.entity_description.turn_off_data
         )
+
+
+class ONVIFRelaySwitch(ONVIFBaseEntity, SwitchEntity):
+    """An ONVIF relay output switch."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, device: ONVIFDevice, relay: Any) -> None:
+        """Initialize the relay switch."""
+        super().__init__(device)
+        self._relay_token = relay.token
+        # Extract relay properties if available
+        if hasattr(relay, "Properties"):
+            self._attr_name = relay.Properties.Name if hasattr(relay.Properties, "Name") else f"Relay {relay.token}"
+            # Determine initial state from IdleState
+            # IdleState: "open" means relay is open (off) when idle, "closed" means closed (on) when idle
+            if hasattr(relay.Properties, "IdleState"):
+                # We assume current state is idle state initially
+                self._attr_is_on = relay.Properties.IdleState == "closed"
+        else:
+            self._attr_name = f"Relay {relay.token}"
+            self._attr_is_on = False
+        
+        self._attr_unique_id = f"{self.mac_or_serial}_relay_{self._relay_token}"
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on relay."""
+        await self.device.async_set_relay_output_state(self._relay_token, "active")
+        self._attr_is_on = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off relay."""
+        await self.device.async_set_relay_output_state(self._relay_token, "inactive")
+        self._attr_is_on = False
+        self.async_write_ha_state()
+
