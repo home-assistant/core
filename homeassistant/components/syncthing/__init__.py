@@ -18,8 +18,10 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    DEVICE_EVENTS,
     DOMAIN,
-    EVENTS,
+    FOLDER_EVENTS,
+    INITIAL_EVENTS_READY,
     RECONNECT_INTERVAL,
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
@@ -86,6 +88,8 @@ class SyncthingClient:
         self._client = client
         self._server_id = server_id
         self._listen_task = None
+        self._initial_events = []
+        self._inital_events_processed = False
 
     @property
     def server_id(self):
@@ -107,9 +111,18 @@ class SyncthingClient:
         """Get system namespace client."""
         return self._client.system
 
+    @property
+    def config(self):
+        """Get config namespace client."""
+        return self._client.config
+
     def subscribe(self):
         """Start event listener coroutine."""
         self._listen_task = asyncio.create_task(self._listen())
+
+    def get_initial_events(self):
+        """Get initial events received upon subscription."""
+        return self._initial_events
 
     async def unsubscribe(self):
         """Stop event listener coroutine."""
@@ -137,21 +150,49 @@ class SyncthingClient:
             try:
                 async for event in events.listen():
                     if events.last_seen_id == 0:
-                        continue  # skipping historical events from the first batch
-                    if event["type"] not in EVENTS:
+                        # Storing initial events to find current device state
+                        if event["type"] in DEVICE_EVENTS:
+                            self._initial_events.append(event)
                         continue
 
-                    signal_name = EVENTS[event["type"]]
-                    folder = None
-                    if "folder" in event["data"]:
-                        folder = event["data"]["folder"]
-                    else:  # A workaround, some events store folder id under `id` key
-                        folder = event["data"]["id"]
-                    async_dispatcher_send(
-                        self._hass,
-                        f"{signal_name}-{self._server_id}-{folder}",
-                        event,
-                    )
+                    # Triggering device status check once initial events are ready
+                    if not self._inital_events_processed and events.last_seen_id != 0:
+                        self._inital_events_processed = True
+                        async_dispatcher_send(
+                            self._hass,
+                            f"{INITIAL_EVENTS_READY}-{self._server_id}",
+                        )
+
+                    if (
+                        event["type"] not in FOLDER_EVENTS
+                        and event["type"] not in DEVICE_EVENTS
+                    ):
+                        continue
+
+                    if event["type"] in DEVICE_EVENTS:
+                        signal_name = DEVICE_EVENTS[event["type"]]
+                        device = None
+                        if "device" in event["data"]:
+                            device = event["data"]["device"]
+                        else:  # A workaround, some events store device id under `id` key
+                            device = event["data"]["id"]
+                        async_dispatcher_send(
+                            self._hass,
+                            f"{signal_name}-{self._server_id}-{device}",
+                            event,
+                        )
+                    elif event["type"] in FOLDER_EVENTS:
+                        signal_name = FOLDER_EVENTS[event["type"]]
+                        folder = None
+                        if "folder" in event["data"]:
+                            folder = event["data"]["folder"]
+                        else:  # A workaround, some events store folder id under `id` key
+                            folder = event["data"]["id"]
+                        async_dispatcher_send(
+                            self._hass,
+                            f"{signal_name}-{self._server_id}-{folder}",
+                            event,
+                        )
             except aiosyncthing.exceptions.SyncthingError:
                 _LOGGER.warning(
                     (
