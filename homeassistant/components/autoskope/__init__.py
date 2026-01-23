@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 import aiohttp
 
 from autoskope_client.api import AutoskopeApi
@@ -15,8 +13,6 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DEFAULT_HOST
 from .coordinator import AutoskopeConfigEntry, AutoskopeDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER]
 
@@ -36,15 +32,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutoskopeConfigEntry) ->
         await api.connect()
     except InvalidAuth as err:
         # Raise ConfigEntryError until reauth flow is implemented (then ConfigEntryAuthFailed)
-        _LOGGER.error(
-            "Authentication failed for Autoskope entry %s",
-            entry.entry_id,
-        )
         raise ConfigEntryError(
             "Authentication failed, please check credentials"
         ) from err
     except CannotConnect as err:
-        _LOGGER.warning("Could not connect to Autoskope API")
         raise ConfigEntryNotReady("Could not connect to Autoskope API") from err
 
     coordinator = AutoskopeDataUpdateCoordinator(hass, api, entry)

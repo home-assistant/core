@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -14,8 +13,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_HOST, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -39,13 +36,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             pass
 
     except InvalidAuth as err:
-        _LOGGER.warning("Authentication failed during validation: %s", err)
         raise InvalidAuth("Authentication failed") from err
     except CannotConnect as err:
-        _LOGGER.warning("Connection failed during validation: %s", err)
         raise CannotConnect(f"Connection error: {err}") from err
     except Exception as err:
-        _LOGGER.exception("Unexpected error during validation")
         raise CannotConnect(f"Unexpected validation error: {err}") from err
 
     return {"title": f"Autoskope ({data[CONF_USERNAME]})"}

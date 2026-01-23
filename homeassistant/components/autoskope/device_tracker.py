@@ -28,20 +28,15 @@ async def async_setup_entry(
     @callback
     def update_entities() -> None:
         """Update entities based on coordinator data."""
-        new_entities = []
-        current_vehicles = set(coordinator.data.keys()) if coordinator.data else set()
+        current_vehicles = set(coordinator.data.keys())
+        vehicles_to_add = current_vehicles - tracked_vehicles
 
-        vehicles_to_add = [
-            vehicle_id
-            for vehicle_id in current_vehicles - tracked_vehicles
-            if coordinator.data and vehicle_id in coordinator.data
-        ]
-
-        for vehicle_id in vehicles_to_add:
-            new_entities.append(AutoskopeDeviceTracker(coordinator, vehicle_id))
-            tracked_vehicles.add(vehicle_id)
-
-        if new_entities:
+        if vehicles_to_add:
+            new_entities = [
+                AutoskopeDeviceTracker(coordinator, vehicle_id)
+                for vehicle_id in vehicles_to_add
+            ]
+            tracked_vehicles.update(vehicles_to_add)
             async_add_entities(new_entities)
 
     entry.async_on_unload(coordinator.async_add_listener(update_entities))
@@ -64,23 +59,15 @@ class AutoskopeDeviceTracker(
         self._vehicle_id = vehicle_id
         self._attr_unique_id = vehicle_id
 
-        # Set device info in constructor
-        vehicle_data = coordinator.data.get(vehicle_id) if coordinator.data else None
-        if vehicle_data:
-            device_info = DeviceInfo(
-                identifiers={(DOMAIN, str(vehicle_data.id))},
-                name=vehicle_data.name,
-                manufacturer=MANUFACTURER,
-                model=vehicle_data.model,
-                serial_number=vehicle_data.imei,  # IMEI is the device serial number
-            )
-        else:
-            device_info = DeviceInfo(
-                identifiers={(DOMAIN, str(vehicle_id))},
-                name=f"Autoskope Vehicle {vehicle_id}",
-                manufacturer=MANUFACTURER,
-            )
-        self._attr_device_info = device_info  # type: ignore[assignment]
+        # Set device info from coordinator data
+        vehicle_data = coordinator.data[vehicle_id]
+        self._attr_device_info = DeviceInfo(  # type: ignore[assignment]
+            identifiers={(DOMAIN, str(vehicle_data.id))},
+            name=vehicle_data.name,
+            manufacturer=MANUFACTURER,
+            model=vehicle_data.model,
+            serial_number=vehicle_data.imei,  # IMEI is the device serial number
+        )
 
     @property
     def available(self) -> bool:
@@ -94,9 +81,7 @@ class AutoskopeDeviceTracker(
     @property
     def _vehicle_data(self) -> Vehicle | None:
         """Return the vehicle data for the current entity."""
-        if self.coordinator.data:
-            return self.coordinator.data.get(self._vehicle_id)
-        return None
+        return self.coordinator.data.get(self._vehicle_id)
 
     @property
     def latitude(self) -> float | None:

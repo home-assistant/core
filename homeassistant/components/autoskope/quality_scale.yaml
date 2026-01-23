@@ -6,135 +6,83 @@ rules:
     status: exempt
     comment: |
       Integration does not provide custom services.
-  appropriate-polling:
-    status: done
-  brands:
-    status: done
-  common-modules:
-    status: done
-  config-flow-test-coverage:
-    status: done
-  config-flow:
-    status: done
-  dependency-transparency:
-    status: done
-    comment: |
-      Library includes LICENSE, py.typed, and proper metadata.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: |
       Integration does not provide custom services.
-  docs-high-level-description:
-    status: done
-  docs-installation-instructions:
-    status: done
-  docs-removal-instructions:
-    status: done
-  entity-event-setup:
-    status: done
-  entity-unique-id:
-    status: done
-  has-entity-name:
-    status: done
-  runtime-data:
-    status: done
-  test-before-configure:
-    status: done
-  test-before-setup:
-    status: done
-  unique-config-entry:
-    status: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
 
   # Silver
   action-exceptions:
     status: exempt
     comment: |
       Integration does not provide custom services.
-  config-entry-unloading:
-    status: done
-  docs-configuration-parameters:
-    status: done
-  docs-installation-parameters:
-    status: done
-  entity-unavailable:
-    status: done
-  integration-owner:
-    status: done
-  log-when-unavailable:
-    status: todo
-    comment: |
-      Coordinator should log when devices become unavailable/available.
-  parallel-updates:
-    status: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: done
   reauthentication-flow:
     status: todo
     comment: |
       Reauthentication flow removed for initial PR, will be added in follow-up.
-  test-coverage:
-    status: done
-
+  test-coverage: done
   # Gold
-  devices:
-    status: done
-  diagnostics:
-    status: todo
-    comment: |
-      Diagnostics not yet implemented.
+  devices: done
+  diagnostics: todo
   discovery-update-info:
     status: exempt
     comment: |
-      Integration does not use discovery.
+      Integration does not use discovery. Autoskope devices use NB-IoT/LTE-M (via IoT SIMs) and LoRaWAN.
   discovery:
     status: exempt
     comment: |
-      Integration does not use discovery.
-  docs-data-update:
-    status: done
-  docs-examples:
-    status: done
-  docs-known-limitations:
-    status: done
-  docs-supported-devices:
-    status: done
-  docs-supported-functions:
-    status: done
-  docs-troubleshooting:
-    status: done
-  docs-use-cases:
-    status: done
-  dynamic-devices:
-    status: done
-  entity-category:
-    status: done
-  entity-device-class:
-    status: done
+      Integration does not use discovery. Autoskope devices use NB-IoT/LTE-M (via IoT SIMs) and LoRaWAN.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
   entity-disabled-by-default:
     status: exempt
     comment: |
       Only one entity type (device_tracker) is created, making this not applicable.
-  entity-translations:
-    status: done
-  exception-translations:
-    status: done
-  icon-translations:
-    status: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow:
     status: todo
     comment: |
       Reconfiguration flow removed for initial PR, will be added in follow-up.
-  repair-issues:
-    status: todo
-    comment: |
-      Repair issues functionality needs to be implemented
-  stale-devices:
-    status: done
+  repair-issues: todo
+  stale-devices: done
 
   # Platinum
-  async-dependency:
-    status: done
-  inject-websession:
-    status: done
+  async-dependency: done
+  inject-websession: done
   strict-typing:
     status: todo
     comment: |
-      autoskope_client library needs py.typed file for PEP 561 compliance.
+      Integration needs to be added to .strict-typing file for full compliance.
