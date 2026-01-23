@@ -35,6 +35,7 @@ def mock_waterfurnace_client() -> Generator[Mock]:
         device_data = WFReading(load_json_object_fixture("device_data.json", DOMAIN))
 
         mock_client.read.return_value = device_data
+        mock_client.read_with_retry.return_value = device_data
 
         yield mock_client
 
