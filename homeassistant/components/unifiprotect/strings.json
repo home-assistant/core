@@ -700,6 +700,10 @@
       "description": "UniFi Protect v3 added a new state for HDR (auto). As a result, the HDR Mode switch has been replaced with an HDR Mode select, and it is deprecated.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly.",
       "title": "HDR Mode switch deprecated"
     },
+    "insecure_camera_removed": {
+      "description": "The insecure (unencrypted RTSP) camera entity `{camera}` has been removed. UniFi Protect now uses only secure RTSPS streams via the public API.\n\nThe following automations or scripts reference this entity and need to be updated to use the secure camera entity instead:\n{items}\nPlease update your automations and scripts to use the corresponding secure camera entity (same entity ID without the `_insecure` suffix).",
+      "title": "Insecure camera entity removed"
+    },
     "rtsp_disabled_readonly": {
       "fix_flow": {
         "step": {
@@ -723,7 +727,7 @@
             "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]"
           },
           "start": {
-            "description": "RTSPS is disabled on the camera {camera}. RTSPS is required to live stream your camera within Home Assistant. If you do not enable RTSPS, it may create an additional load on your UniFi Protect NVR as any live video players will default to rapidly pulling snapshots from the camera.\n\nYou may manually [enable RTSPS]({learn_more}) on your selected camera quality channel or Home Assistant can automatically enable the highest quality channel for you. Confirm this repair once you have enabled the RTSPS channel or if you want Home Assistant to enable the highest quality automatically.",
+            "description": "RTSPS is disabled on the camera {camera}. RTSPS is required to live stream your camera within Home Assistant. If you do not enable RTSPS, it may create an additional load on your UniFi Protect NVR as any live video players will default to rapidly pulling snapshots from the camera.\n\nYou may manually [enable RTSPS]({learn_more}) on the camera or Home Assistant can automatically enable all quality channels for you. Confirm this repair once you have enabled RTSPS or if you want Home Assistant to enable it automatically.",
             "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]"
           }
         }

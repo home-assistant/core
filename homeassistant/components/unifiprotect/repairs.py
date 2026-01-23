@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import cast
 
 from uiprotect import ProtectApiClient
+from uiprotect.api import RTSPSStreams
 from uiprotect.data import Bootstrap, Camera
 import voluptuous as vol
 
@@ -111,9 +112,14 @@ class RTSPRepair(ProtectRepair):
             assert self._camera is not None
         return self._camera
 
-    async def _enable_rtsp(self) -> None:
+    async def _enable_rtsp(self) -> RTSPSStreams | None:
+        """Enable RTSPS streams for all available qualities via public API."""
         camera = await self._get_camera()
-        await camera.create_rtsps_streams(qualities="high")
+        # Activate high, medium, low; add package only if camera has package feature
+        qualities = ["high", "medium", "low"]
+        if camera.feature_flags.has_package_camera:
+            qualities.append("package")
+        return await camera.create_rtsps_streams(qualities)
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -137,13 +143,19 @@ class RTSPRepair(ProtectRepair):
                 description_placeholders=placeholders,
             )
 
+        # Check if streams already exist via public API
         updated_camera = await self._api.get_camera(self._camera_id)
-        if not any(c.is_rtsp_enabled for c in updated_camera.channels):
-            await self._enable_rtsp()
+        streams = await updated_camera.get_rtsps_streams()
 
-        updated_camera = await self._api.get_camera(self._camera_id)
-        if any(c.is_rtsp_enabled for c in updated_camera.channels):
-            await self.hass.config_entries.async_reload(self._entry.entry_id)
+        # If no active streams, try to enable them
+        if streams is None or not streams.get_active_stream_qualities():
+            streams = await self._enable_rtsp()
+
+        # Verify streams are now active
+        if streams is not None and streams.get_active_stream_qualities():
+            # Update cache for this camera and signal entities to refresh
+            if data := async_get_data_for_entry_id(self.hass, self._entry.entry_id):
+                data.async_update_camera_rtsps_streams(self._camera_id, streams)
             return self.async_create_entry(data={})
         return await self.async_step_confirm()
 

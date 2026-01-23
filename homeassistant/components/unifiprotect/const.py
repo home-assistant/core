@@ -78,6 +78,7 @@ PLATFORMS = [
 DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"
+DISPATCH_STREAMS = "refresh_streams"
 
 EVENT_TYPE_FINGERPRINT_IDENTIFIED: Final = "identified"
 EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED: Final = "not_identified"

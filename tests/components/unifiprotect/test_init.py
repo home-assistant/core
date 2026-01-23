@@ -2,14 +2,26 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from uiprotect import NvrError, ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
-from uiprotect.data import NVR, Bootstrap, CloudAccount, Light
-from uiprotect.exceptions import BadRequest, NotAuthorized
+from uiprotect.data import (
+    NVR,
+    Bootstrap,
+    Camera,
+    CloudAccount,
+    Event,
+    EventType,
+    Light,
+    ModelType,
+)
+from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
@@ -643,3 +655,139 @@ async def test_setup_fails_when_api_key_still_missing_after_creation(
         name="Home Assistant (test home)"
     )
     ufp.api.set_api_key.assert_called_once_with("new-api-key-123")  # type: ignore[attr-defined]
+
+
+async def test_ws_event_message_with_debug_logging(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that event messages trigger debug logging when DEBUG level is enabled."""
+    await init_entry(hass, ufp, [doorbell])
+
+    # Enable DEBUG logging for the data module
+    logger = logging.getLogger("homeassistant.components.unifiprotect.data")
+    logger.setLevel(logging.DEBUG)
+
+    # Create an event message
+    event = Event(
+        model=ModelType.EVENT,
+        id="test_debug_event",
+        type=EventType.RING,
+        start=datetime.now(tz=UTC),
+        end=None,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+        api=ufp.api,
+    )
+
+    # Send the event via websocket
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = event
+
+    with patch(
+        "homeassistant.components.unifiprotect.data.log_event"
+    ) as mock_log_event:
+        ufp.ws_msg(mock_msg)
+        await hass.async_block_till_done()
+
+        # Verify log_event was called
+        mock_log_event.assert_called_once_with(event)
+
+
+async def test_fetch_rtsps_streams_not_authorized(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling NotAuthorized error during RTSPS stream pre-fetch."""
+    object.__setattr__(
+        doorbell,
+        "get_rtsps_streams",
+        AsyncMock(side_effect=NotAuthorized("No API key")),
+    )
+
+    with caplog.at_level(logging.WARNING):
+        await init_entry(hass, ufp, [doorbell])
+
+    assert "Cannot fetch RTSPS streams without API key" in caplog.text
+    assert ufp.entry.state is ConfigEntryState.LOADED
+
+
+async def test_fetch_rtsps_streams_client_error(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling ClientError during RTSPS stream pre-fetch."""
+    object.__setattr__(
+        doorbell,
+        "get_rtsps_streams",
+        AsyncMock(side_effect=ClientError("Connection failed")),
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        await init_entry(hass, ufp, [doorbell])
+
+    assert "Error fetching RTSPS streams for" in caplog.text
+    assert ufp.entry.state is ConfigEntryState.LOADED
+
+
+async def test_fetch_rtsps_streams_nvr_error(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling NvrError during RTSPS stream pre-fetch."""
+    object.__setattr__(
+        doorbell,
+        "get_rtsps_streams",
+        AsyncMock(side_effect=NvrError("NVR unavailable")),
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        await init_entry(hass, ufp, [doorbell])
+
+    assert "Error fetching RTSPS streams for" in caplog.text
+    assert ufp.entry.state is ConfigEntryState.LOADED
+
+
+async def test_websocket_reconnect_clears_rtsps_cache(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """Test that RTSPS streams are refreshed when WebSocket reconnects after disconnect."""
+    await init_entry(hass, ufp, [doorbell])
+    data = ufp.entry.runtime_data
+
+    # Verify initial setup fetched streams
+    assert data.is_camera_rtsps_checked(doorbell.id)
+    assert data.last_update_success is True
+
+    # Count how many times get_rtsps_streams is called - reset the call count
+    doorbell.get_rtsps_streams.reset_mock()  # type: ignore[attr-defined]
+
+    # Simulate WebSocket disconnect (state change to not connected)
+    ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+
+    # After disconnect, last_update_success should be False
+    assert data.last_update_success is False
+
+    # Simulate WebSocket reconnect
+    ufp.ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    # After reconnect, last_update_success should be True
+    assert data.last_update_success is True
+
+    # get_rtsps_streams should have been called to refresh streams after reconnect
+    assert doorbell.get_rtsps_streams.call_count >= 1  # type: ignore[attr-defined]

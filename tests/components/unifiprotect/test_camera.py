@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, Mock
+import logging
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
-from uiprotect.exceptions import NvrError
+from uiprotect.exceptions import ClientError, NotAuthorized, NvrError
 from uiprotect.websocket import WebsocketState
 from webrtc_models import RTCIceCandidateInit
 
@@ -45,6 +46,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import patch_ufp_method
+from .conftest import create_mock_rtsps_streams
 from .utils import (
     Camera,
     MockUFPFixture,
@@ -136,31 +138,10 @@ def validate_rtsps_camera_entity(
 
     channel = camera_obj.channels[channel_id]
 
-    entity_name = f"{camera_obj.name} {channel.name} Resolution Channel"
+    camera_name = get_camera_base_name(channel)
+    entity_name = f"{camera_obj.name} {camera_name}"
     unique_id = f"{camera_obj.mac}_{channel.id}"
     entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
-
-    entity_registry = er.async_get(hass)
-    entity = entity_registry.async_get(entity_id)
-    assert entity
-    assert entity.disabled is True
-    assert entity.unique_id == unique_id
-
-    return entity_id
-
-
-def validate_rtsp_camera_entity(
-    hass: HomeAssistant,
-    camera_obj: ProtectCamera,
-    channel_id: int,
-) -> str:
-    """Validate a disabled RTSP camera entity."""
-
-    channel = camera_obj.channels[channel_id]
-
-    entity_name = f"{camera_obj.name} {channel.name} Resolution Channel (Insecure)"
-    unique_id = f"{camera_obj.mac}_{channel.id}_insecure"
-    entity_id = f"camera.{entity_name.replace(' ', '_').replace('(', '').replace(')', '').lower()}"
 
     entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
@@ -199,21 +180,10 @@ async def validate_rtsps_camera_state(
     """Validate a camera's state."""
     channel = camera_obj.channels[channel_id]
 
-    assert await async_get_stream_source(hass, entity_id) == channel.rtsps_no_srtp_url
-    validate_common_camera_state(hass, channel, entity_id, features)
-
-
-async def validate_rtsp_camera_state(
-    hass: HomeAssistant,
-    camera_obj: ProtectCamera,
-    channel_id: int,
-    entity_id: str,
-    features: int = CameraEntityFeature.STREAM,
-):
-    """Validate a camera's state."""
-    channel = camera_obj.channels[channel_id]
-
-    assert await async_get_stream_source(hass, entity_id) == channel.rtsp_url
+    # Stream source comes from public API - check that it has a valid RTSPS URL
+    stream_source = await async_get_stream_source(hass, entity_id)
+    assert stream_source is not None
+    assert stream_source.startswith("rtsps://")
     validate_common_camera_state(hass, channel, entity_id, features)
 
 
@@ -239,98 +209,67 @@ async def test_basic_setup(
 ) -> None:
     """Test working setup of unifiprotect entry."""
 
-    camera_high_only = camera_all.model_copy()
-    camera_high_only.channels = [c.model_copy() for c in camera_all.channels]
-    camera_high_only.name = "Test Camera 1"
-    camera_high_only.channels[0].is_rtsp_enabled = True
-    camera_high_only.channels[1].is_rtsp_enabled = False
-    camera_high_only.channels[2].is_rtsp_enabled = False
+    # All cameras get entities for all channels regardless of is_rtsp_enabled
+    # Stream availability is determined by the public API, not is_rtsp_enabled
 
-    camera_medium_only = camera_all.model_copy()
-    camera_medium_only.channels = [c.model_copy() for c in camera_all.channels]
-    camera_medium_only.name = "Test Camera 2"
-    camera_medium_only.channels[0].is_rtsp_enabled = False
-    camera_medium_only.channels[1].is_rtsp_enabled = True
-    camera_medium_only.channels[2].is_rtsp_enabled = False
+    camera1 = camera_all.model_copy()
+    camera1.channels = [c.model_copy() for c in camera_all.channels]
+    camera1.name = "Test Camera 1"
+
+    camera2 = camera_all.model_copy()
+    camera2.channels = [c.model_copy() for c in camera_all.channels]
+    camera2.name = "Test Camera 2"
 
     camera_all.name = "Test Camera 3"
 
-    camera_no_channels = camera_all.model_copy()
-    camera_no_channels.channels = [c.model_copy() for c in camera_all.channels]
-    camera_no_channels.name = "Test Camera 4"
-    camera_no_channels.channels[0].is_rtsp_enabled = False
-    camera_no_channels.channels[1].is_rtsp_enabled = False
-    camera_no_channels.channels[2].is_rtsp_enabled = False
-
+    # Doorbell with package camera
     doorbell.name = "Test Camera 5"
+    doorbell.feature_flags.has_package_camera = True
 
     devices = [
-        camera_high_only,
-        camera_medium_only,
+        camera1,
+        camera2,
         camera_all,
-        camera_no_channels,
         doorbell,
     ]
     await init_entry(hass, ufp, devices)
 
-    assert_entity_counts(hass, Platform.CAMERA, 14, 6)
+    # All cameras get all channels as entities:
+    # camera1: 3 entities (high enabled, medium disabled, low disabled)
+    # camera2: 3 entities (high enabled, medium disabled, low disabled)
+    # camera_all: 3 entities (high enabled, medium disabled, low disabled)
+    # doorbell: 4 entities (high enabled, medium disabled, low disabled, package disabled)
+    # Total: 13 entities, 4 enabled by default (one "high" per camera)
+    assert_entity_counts(hass, Platform.CAMERA, 13, 4)
 
-    # test camera 1
-    entity_id = validate_default_camera_entity(hass, camera_high_only, 0)
-    await validate_rtsps_camera_state(hass, camera_high_only, 0, entity_id)
+    # test camera 1 - high channel should be enabled
+    entity_id = validate_default_camera_entity(hass, camera1, 0)
+    await validate_rtsps_camera_state(hass, camera1, 0, entity_id)
 
-    entity_id = validate_rtsp_camera_entity(hass, camera_high_only, 0)
-    await enable_entity(hass, ufp.entry.entry_id, entity_id)
-    await validate_rtsp_camera_state(hass, camera_high_only, 0, entity_id)
-
-    # test camera 2
-    entity_id = validate_default_camera_entity(hass, camera_medium_only, 1)
-    await validate_rtsps_camera_state(hass, camera_medium_only, 1, entity_id)
-
-    entity_id = validate_rtsp_camera_entity(hass, camera_medium_only, 1)
-    await enable_entity(hass, ufp.entry.entry_id, entity_id)
-    await validate_rtsp_camera_state(hass, camera_medium_only, 1, entity_id)
+    # verify medium and low channels exist but are disabled
+    validate_rtsps_camera_entity(hass, camera1, 1)
+    validate_rtsps_camera_entity(hass, camera1, 2)
 
     # test camera 3
     entity_id = validate_default_camera_entity(hass, camera_all, 0)
     await validate_rtsps_camera_state(hass, camera_all, 0, entity_id)
 
-    entity_id = validate_rtsp_camera_entity(hass, camera_all, 0)
-    await enable_entity(hass, ufp.entry.entry_id, entity_id)
-    await validate_rtsp_camera_state(hass, camera_all, 0, entity_id)
-
+    # enable medium channel and verify
     entity_id = validate_rtsps_camera_entity(hass, camera_all, 1)
     await enable_entity(hass, ufp.entry.entry_id, entity_id)
     await validate_rtsps_camera_state(hass, camera_all, 1, entity_id)
 
-    entity_id = validate_rtsp_camera_entity(hass, camera_all, 1)
-    await enable_entity(hass, ufp.entry.entry_id, entity_id)
-    await validate_rtsp_camera_state(hass, camera_all, 1, entity_id)
-
+    # enable low channel and verify
     entity_id = validate_rtsps_camera_entity(hass, camera_all, 2)
     await enable_entity(hass, ufp.entry.entry_id, entity_id)
     await validate_rtsps_camera_state(hass, camera_all, 2, entity_id)
 
-    entity_id = validate_rtsp_camera_entity(hass, camera_all, 2)
-    await enable_entity(hass, ufp.entry.entry_id, entity_id)
-    await validate_rtsp_camera_state(hass, camera_all, 2, entity_id)
-
-    # test camera 4
-    entity_id = validate_default_camera_entity(hass, camera_no_channels, 0)
-    await validate_no_stream_camera_state(
-        hass, camera_no_channels, 0, entity_id, features=0
-    )
-
-    # test camera 5
+    # test doorbell - high channel should be enabled
     entity_id = validate_default_camera_entity(hass, doorbell, 0)
     await validate_rtsps_camera_state(hass, doorbell, 0, entity_id)
 
-    entity_id = validate_rtsp_camera_entity(hass, doorbell, 0)
-    await enable_entity(hass, ufp.entry.entry_id, entity_id)
-    await validate_rtsp_camera_state(hass, doorbell, 0, entity_id)
-
-    entity_id = validate_default_camera_entity(hass, doorbell, 3)
-    await validate_no_stream_camera_state(hass, doorbell, 3, entity_id, features=0)
+    # verify package channel exists but is disabled (index 3)
+    validate_rtsps_camera_entity(hass, doorbell, 3)
 
 
 @pytest.mark.usefixtures("web_rtc_provider")
@@ -381,12 +320,13 @@ async def test_adopt(
     mock_msg.new_obj = camera1
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
-    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+    # With all channels (high, medium, low), we get 3 entities total, 1 enabled
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
 
     await remove_entities(hass, ufp, [camera1])
     assert_entity_counts(hass, Platform.CAMERA, 0, 0)
     await adopt_devices(hass, ufp, [camera1])
-    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
 
 
 async def test_camera_image(
@@ -395,7 +335,8 @@ async def test_camera_image(
     """Test retrieving camera image."""
 
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+    # Camera with 3 channels (high, medium, low), only high enabled by default
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
 
     ufp.api.get_public_api_camera_snapshot = AsyncMock()
 
@@ -403,13 +344,15 @@ async def test_camera_image(
     ufp.api.get_public_api_camera_snapshot.assert_called_once()
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_package_camera_image(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: ProtectCamera
 ) -> None:
     """Test retrieving package camera image."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.CAMERA, 3, 2)
+    # All channels enabled via entity_registry_enabled_by_default fixture
+    assert_entity_counts(hass, Platform.CAMERA, 4, 4)
 
     ufp.api.get_package_camera_snapshot = AsyncMock()
 
@@ -423,7 +366,7 @@ async def test_camera_generic_update(
     """Tests generic entity update service."""
 
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
     assert await async_setup_component(hass, "homeassistant", {})
@@ -449,7 +392,7 @@ async def test_camera_interval_update(
     """Interval updates updates camera entity."""
 
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
@@ -472,7 +415,7 @@ async def test_camera_bad_interval_update(
     """Interval updates marks camera unavailable."""
 
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
@@ -499,7 +442,7 @@ async def test_camera_websocket_disconnected(
     """Test the websocket gets disconnected and reconnected."""
 
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
@@ -526,7 +469,7 @@ async def test_camera_ws_update(
     """WS update updates camera entity."""
 
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
@@ -561,7 +504,7 @@ async def test_camera_ws_update_offline(
     """WS updates marks camera unavailable."""
 
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
@@ -613,7 +556,7 @@ async def test_camera_motion_detection(
 ) -> None:
     """Test enabling/disabling motion detection on camera."""
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
     with patch_ufp_method(
@@ -627,3 +570,56 @@ async def test_camera_motion_detection(
         )
 
         mock_method.assert_called_once_with(expected_value)
+
+
+async def test_camera_rtsps_not_authorized(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test camera handles NotAuthorized exception when fetching RTSPS streams."""
+    with patch.object(
+        ProtectCamera, "get_rtsps_streams", AsyncMock(side_effect=NotAuthorized)
+    ):
+        await init_entry(hass, ufp, [camera])
+
+    assert "Cannot fetch RTSPS streams without API key" in caplog.text
+
+
+async def test_camera_rtsps_client_error(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test camera handles ClientError exception when fetching RTSPS streams."""
+    # Override the fixture mock to raise ClientError using object.__setattr__ for pydantic
+    object.__setattr__(
+        camera, "get_rtsps_streams", AsyncMock(side_effect=ClientError("test"))
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        await init_entry(hass, ufp, [camera])
+
+    # Error is logged at DEBUG level during pre-fetch in async_setup
+    assert "Error fetching RTSPS streams for" in caplog.text
+
+
+async def test_camera_rtsps_cache_clear_on_none(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+) -> None:
+    """Test that setting RTSPS streams to None clears the cache."""
+    await init_entry(hass, ufp, [camera])
+    data = ufp.entry.runtime_data
+
+    # First set streams to a value
+    mock_streams = create_mock_rtsps_streams(["high"])
+    data.set_camera_rtsps_streams(camera.id, mock_streams)
+    assert data.get_camera_rtsps_streams(camera.id) is not None
+
+    # Now set to None to trigger the elif branch (line 122-123 in data.py)
+    data.set_camera_rtsps_streams(camera.id, None)
+    assert data.get_camera_rtsps_streams(camera.id) is None

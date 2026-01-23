@@ -225,3 +225,114 @@ async def test_deprecate_entity_script(
         if i["issue_id"] == "deprecate_hdr_switch":
             issue = i
     assert issue is None
+
+
+async def test_insecure_camera_removed_no_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    hass_ws_client: WebSocketGenerator,
+    doorbell: Camera,
+) -> None:
+    """Test no repair issue when no insecure camera entities exist."""
+    await init_entry(hass, ufp, [doorbell])
+
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    # No insecure camera repair issues should exist
+    for i in msg["result"]["issues"]:
+        assert not i["issue_id"].startswith("insecure_camera_removed_")
+
+
+async def test_insecure_camera_removed_not_used(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    hass_ws_client: WebSocketGenerator,
+    doorbell: Camera,
+) -> None:
+    """Test insecure camera entity is removed without repair issue when not used."""
+    # Create an insecure camera entity
+    insecure_entity = entity_registry.async_get_or_create(
+        Platform.CAMERA,
+        DOMAIN,
+        f"{doorbell.mac}_0_insecure",
+        config_entry=ufp.entry,
+    )
+    assert entity_registry.async_get(insecure_entity.entity_id) is not None
+
+    await init_entry(hass, ufp, [doorbell])
+
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+
+    # Entity should be removed
+    assert entity_registry.async_get(insecure_entity.entity_id) is None
+
+    # No repair issue should be created (entity was not used)
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    for i in msg["result"]["issues"]:
+        assert not i["issue_id"].startswith("insecure_camera_removed_")
+
+
+async def test_insecure_camera_removed_with_automation(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    hass_ws_client: WebSocketGenerator,
+    doorbell: Camera,
+) -> None:
+    """Test insecure camera entity creates repair issue when used in automation."""
+    # Create an insecure camera entity
+    insecure_entity = entity_registry.async_get_or_create(
+        Platform.CAMERA,
+        DOMAIN,
+        f"{doorbell.mac}_0_insecure",
+        config_entry=ufp.entry,
+    )
+
+    # Set up automation that uses the insecure entity
+    assert await async_setup_component(
+        hass,
+        AUTOMATION_DOMAIN,
+        {
+            AUTOMATION_DOMAIN: [
+                {
+                    "alias": "test_automation",
+                    "trigger": {"platform": "state", "entity_id": "sensor.test"},
+                    "action": {
+                        "service": "camera.snapshot",
+                        "target": {"entity_id": insecure_entity.entity_id},
+                    },
+                }
+            ]
+        },
+    )
+
+    await init_entry(hass, ufp, [doorbell])
+
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+
+    # Entity should be removed
+    assert entity_registry.async_get(insecure_entity.entity_id) is None
+
+    # Repair issue should be created
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"].startswith("insecure_camera_removed_"):
+            issue = i
+    assert issue is not None
+    assert issue["translation_key"] == "insecure_camera_removed"

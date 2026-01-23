@@ -756,10 +756,6 @@ class ProtectMediaSource(MediaSource):
             entity_id = entity_registry.async_get_entity_id(
                 Platform.CAMERA, DOMAIN, base_id
             )
-            if entity_id is None:
-                entity_id = entity_registry.async_get_entity_id(
-                    Platform.CAMERA, DOMAIN, f"{base_id}_insecure"
-                )
 
             if entity_id:
                 # verify entity is available

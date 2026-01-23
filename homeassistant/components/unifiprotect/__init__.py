@@ -159,7 +159,7 @@ async def _async_setup_entry(
     bootstrap: Bootstrap,
 ) -> None:
     await async_migrate_data(hass, entry, data_service.api, bootstrap)
-    data_service.async_setup()
+    await data_service.async_setup()
 
     # Create the NVR device before loading platforms
     # This ensures via_device references work for all device entities
