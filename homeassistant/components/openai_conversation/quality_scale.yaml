@@ -1,0 +1,93 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: exempt
+    comment: |
+      Integration does not poll.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: todo
+  integration-owner: todo
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      Service integration, no discovery.
+  discovery:
+    status: exempt
+    comment: |
+      Service integration, no discovery.
+  docs-data-update:
+    status: exempt
+    comment: |
+      No data updates.
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      Service integration, no devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Service integration, no devices.
+  entity-category:
+    status: exempt
+    comment: |
+      No entities with categories.
+  entity-device-class:
+    status: exempt
+    comment: |
+      No entities with device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      No entities disabled by default.
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: |
+      Service integration, no devices.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: done
+    comment: |
+      Uses `httpx` session.
+  strict-typing: done
