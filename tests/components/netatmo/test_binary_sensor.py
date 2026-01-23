@@ -9,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+import homeassistant.util.dt as dt_util
 
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
@@ -18,64 +19,6 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry
-
-
-def get_netatmo_entity_instance(
-    hass: HomeAssistant, config_entry: MockConfigEntry, entity_id: str
-) -> object | None:
-    """Helper to find the specific entity instance."""
-    BINARY_SENSOR_DOMAIN = "binary_sensor"
-
-    # 1. Get the EntityComponent object for the binary_sensor domain
-    component = hass.data.get(BINARY_SENSOR_DOMAIN)
-
-    if not component:
-        raise ValueError(f"Component not found for {BINARY_SENSOR_DOMAIN}")
-
-    platform_key = config_entry.entry_id
-
-    platform_instance = component._platforms.get(platform_key)
-
-    if not platform_instance:
-        raise ValueError(
-            f"Netatmo platform not loaded for {BINARY_SENSOR_DOMAIN} with key {platform_key}"
-        )
-
-    platform_entities = platform_instance.entities
-
-    if not platform_entities:
-        raise ValueError(f"No Netatmo entities found for {BINARY_SENSOR_DOMAIN}")
-
-    entity_instance = platform_entities.get(entity_id)
-
-    if entity_instance:
-        return entity_instance
-
-    return None
-
-
-async def set_netatmo_entity_state(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    entity_id: str,
-    pyatmo_key: str,
-    pyatmo_status: str | bool,
-) -> None:
-    """Sets the HA state and synchronizes the underlying mocked Pyatmo data."""
-    # Get the actual entity object instance
-    entity_instance = get_netatmo_entity_instance(hass, config_entry, entity_id)
-
-    if entity_instance is None:
-        raise ValueError(f"Entity instance with ID {entity_id} not found.")
-
-    # Update the entity's state and ensure Home Assistant is aware of the change
-    setattr(entity_instance.device, pyatmo_key, pyatmo_status)
-    entity_instance.async_write_ha_state()
-    await hass.async_block_till_done()
-
-    # Wait for the state to be fully processed
-    entity_instance.async_update_callback()
-    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -177,12 +120,41 @@ async def test_doortag_opening_status_change(
 ) -> None:
     """Test doortag opening status changes."""
     fake_post_hits = 0
+    # Repeatedly used variables for the test and initial value from fixture
+    doortag_entity_id = "12:34:56:00:86:99"
+    doortag_connectivity = True
+    doortag_opening = doortag_status
 
-    async def fake_post(*args: Any, **kwargs: Any):
-        """Fake error during requesting backend data."""
+    def tag_modifier(payload):
+        """This function will be called by common.py during ANY homestatus call."""
+        nonlocal doortag_connectivity, doortag_opening
+        payload["time_server"] = int(dt_util.utcnow().timestamp())
+        body = payload.get("body", {})
+
+        # Handle both structures: {"home": {...}} AND {"homes": [{...}]}
+        homes_to_check = []
+        if "home" in body and isinstance(body["home"], dict):
+            homes_to_check.append(body["home"])
+        elif "homes" in body and isinstance(body["homes"], list):
+            homes_to_check.extend(body["homes"])
+
+        for home_data in homes_to_check:
+            # Safety check: ensure home_data is actually a dictionary
+            if not isinstance(home_data, dict):
+                continue
+
+            modules = home_data.get("modules", [])
+            for module in modules:
+                if isinstance(module, dict) and module.get("id") == doortag_entity_id:
+                    module["reachable"] = doortag_connectivity
+                    module["status"] = doortag_opening
+                    break
+
+    async def fake_tag_post(*args, **kwargs):
+        """Fake tag status during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
-        return await fake_post_request(hass, *args, **kwargs)
+        return await fake_post_request(hass, *args, msg_callback=tag_modifier, **kwargs)
 
     with (
         patch(
@@ -200,7 +172,7 @@ async def test_doortag_opening_status_change(
             "homeassistant.components.netatmo.webhook_generate_url",
         ) as mock_webhook,
     ):
-        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_post_api_request.side_effect = fake_tag_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
         mock_webhook.return_value = "https://example.com"
@@ -224,29 +196,7 @@ async def test_doortag_opening_status_change(
     # Check connectivity creation
     assert hass.states.get(_doortag_entity_connectivity) is not None
 
-    # Check opening initial state
-    assert hass.states.get(_doortag_entity_opening).state == "unavailable"
-    # Check connectivity initial state
-    assert hass.states.get(_doortag_entity_connectivity).state == "off"
-
-    # Initial state should be unavailable, need to connect first
-    await set_netatmo_entity_state(
-        hass, config_entry, _doortag_entity_connectivity, "reachable", True
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get(_doortag_entity_connectivity).state == "on"
-
-    # Check if became available (this indicated as unknown state, not as unavailable)
-    # NEED TO BE CORRECTED IN THE FUTURE
-    assert hass.states.get(_doortag_entity_opening).state == "unavailable"
-    hass.states.async_set(_doortag_entity_opening, "unknown")
-    await hass.async_block_till_done()
-    assert hass.states.get(_doortag_entity_opening).state == "unknown"
-
-    # Set state as parameterized
-    await set_netatmo_entity_state(
-        hass, config_entry, _doortag_entity_opening, "status", doortag_status
-    )
-
-    # State should be as expected
+    # Check opening mocked state
     assert hass.states.get(_doortag_entity_opening).state == expected
+    # Check connectivity mocked state
+    assert hass.states.get(_doortag_entity_connectivity).state == "on"
