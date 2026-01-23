@@ -661,6 +661,37 @@ MOCK_SUBENTRY_VALVE_COMPONENT_POSITION = {
         "optimistic": False,
     },
 }
+MOCK_SUBENTRY_WATER_HEATER_COMPONENT = {
+    "b085c09efba7ec76acd94e2e0f851123": {
+        "platform": "water_heater",
+        "name": "Boyler",
+        "entity_category": None,
+        "entity_picture": "https://example.com/b085c09efba7ec76acd94e2e0f851123",
+        "temperature_unit": "C",
+        "mode_command_topic": "mode-command-topic",
+        "mode_command_template": "{{ value }}",
+        "mode_state_topic": "mode-state-topic",
+        "mode_state_template": "{{ value_json.mode }}",
+        "modes": ["off", "gas", "electric"],
+        # target temperature
+        "temperature_command_topic": "temperature-command-topic",
+        "temperature_command_template": "{{ value }}",
+        "temperature_state_topic": "temperature-state-topic",
+        "temperature_state_template": "{{ value_json.temperature }}",
+        "min_temp": 43,
+        "max_temp": 60,
+        "precision": "0.1",
+        "initial": 43,
+        # power settings
+        "power_command_topic": "power-command-topic",
+        "power_command_template": "{{ value }}",
+        "payload_on": "ON",
+        "payload_off": "OFF",
+        # current temperature
+        "current_temperature_topic": "current-temperature-topic",
+        "current_temperature_template": "{{ value_json.temperature }}",
+    },
+}
 
 MOCK_SUBENTRY_AVAILABILITY_DATA = {
     "availability": {
@@ -797,6 +828,10 @@ MOCK_VALVE_SUBENTRY_DATA_STATE = {
 MOCK_VALVE_SUBENTRY_DATA_POSITION = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
     "components": MOCK_SUBENTRY_VALVE_COMPONENT_POSITION,
+}
+MOCK_WATER_HEATER_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_WATER_HEATER_COMPONENT,
 }
 MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
