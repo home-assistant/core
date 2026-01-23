@@ -1294,7 +1294,7 @@ influxdb==5.3.1
 inkbird-ble==1.1.1
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.6.0
+insteon-frontend-home-assistant==0.6.1
 
 # homeassistant.components.intellifire
 intellifire4py==4.2.1
@@ -1524,7 +1524,7 @@ mozart-api==5.3.1.108.0
 mullvad-api==1.0.0
 
 # homeassistant.components.music_assistant
-music-assistant-client==1.3.2
+music-assistant-client==1.3.3
 
 # homeassistant.components.tts
 mutagen==1.47.0
@@ -1644,7 +1644,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.17
+onedrive-personal-sdk==0.1.1
 
 # homeassistant.components.onvif
 onvif-zeep-async==4.0.4
@@ -1684,7 +1684,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.16.3
+opower==0.16.5
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
@@ -3078,7 +3078,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==8.0.0
+uiprotect==10.0.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -3213,7 +3213,7 @@ wsdot==0.0.1
 wyoming==1.7.2
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.4.1
+xiaomi-ble==1.4.3
 
 # homeassistant.components.knx
 xknx==3.13.0
