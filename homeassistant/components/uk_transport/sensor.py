@@ -36,6 +36,8 @@ ATTR_LAST_UPDATED = "last_updated"
 
 CONF_API_APP_KEY = "app_key"
 CONF_API_APP_ID = "app_id"
+CONF_API_LIMIT = "app_limit"
+CONF_SCAN_INTERVAL = "scan_interval"
 CONF_QUERIES = "queries"
 CONF_ORIGIN = "origin"
 CONF_DESTINATION = "destination"
@@ -52,6 +54,8 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_APP_ID): cv.string,
         vol.Required(CONF_API_APP_KEY): cv.string,
+        vol.Optional(CONF_API_LIMIT, default=30): cv.positive_int,
+        vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,
         vol.Required(CONF_QUERIES): [_QUERY_SCHEME],
     }
 )
@@ -66,7 +70,12 @@ def setup_platform(
     """Get the uk_transport sensor."""
     sensors: list[UkTransportSensor] = []
     number_sensors = len(queries := config[CONF_QUERIES])
-    interval = timedelta(seconds=87 * number_sensors)
+
+    # Total seconds in a day 86400
+    if CONF_SCAN_INTERVAL in config:
+        interval = timedelta(seconds=87 * number_sensors)
+    else:
+        interval = timedelta(seconds=(86400 * number_sensors) / config[CONF_API_LIMIT])
 
     api_app_id = config[CONF_API_APP_ID]
     api_app_key = config[CONF_API_APP_KEY]
@@ -160,34 +169,39 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
         self._stop_atcocode = stop_atcocode
         self._bus_direction = bus_direction
         self._next_buses = []
-        self._destination_re = re.compile(f"{bus_direction}", re.IGNORECASE)
+
+        bus_destinations = bus_direction.split(",")
+        bus_destination = "|".join(
+            [destination.strip() for destination in bus_destinations]
+        )
+
+        self._destination_re = re.compile(f"{bus_destination}", re.IGNORECASE)
 
         sensor_name = f"Next bus to {bus_direction}"
-        stop_url = f"bus/stop/{stop_atcocode}.json"
+        stop_url = f"bus/stop_timetables/{stop_atcocode}.json"
 
         UkTransportSensor.__init__(self, sensor_name, api_app_id, api_app_key, stop_url)
         self.update = Throttle(interval)(self._update)
 
     def _update(self):
         """Get the latest live departure data for the specified stop."""
-        params = {"group": "route", "nextbuses": "no"}
+        params = {"live": "true"}
 
         self._do_api_request(params)
+        self._next_buses = []
 
         if self._data != {}:
-            self._next_buses = []
-
-            for route, departures in self._data["departures"].items():
-                for departure in departures:
-                    if self._destination_re.search(departure["direction"]):
-                        self._next_buses.append(
-                            {
-                                "route": route,
-                                "direction": departure["direction"],
-                                "scheduled": departure["aimed_departure_time"],
-                                "estimated": departure["best_departure_estimate"],
-                            }
-                        )
+            for departure in self._data["departures"]["all"]:
+                if self._destination_re.search(departure["direction"]):
+                    self._next_buses.append(
+                        {
+                            "route": departure["line_name"],
+                            "direction": departure["direction"],
+                            "scheduled": departure["aimed_departure_time"],
+                            "estimated": departure["best_departure_estimate"],
+                            "operator_name": departure["operator_name"],
+                        }
+                    )
 
             if self._next_buses:
                 self._state = min(
@@ -226,7 +240,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
         self._next_trains = []
 
         sensor_name = f"Next train to {calling_at}"
-        query_url = f"train/station/{station_code}.json"
+        query_url = f"train/station_timetables/{station_code}.json"
 
         UkTransportSensor.__init__(
             self, sensor_name, api_app_id, api_app_key, query_url
@@ -236,7 +250,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
     def _update(self):
         """Get the latest live departure data for the specified stop."""
         params = {
-            "darwin": "false",
+            "live": "true",
             "calling_at": self._calling_at,
             "train_status": "passenger",
         }
@@ -245,28 +259,25 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
         self._next_trains = []
 
         if self._data != {}:
-            if self._data["departures"]["all"] == []:
-                self._state = "No departures"
-            else:
-                for departure in self._data["departures"]["all"]:
-                    self._next_trains.append(
-                        {
-                            "origin_name": departure["origin_name"],
-                            "destination_name": departure["destination_name"],
-                            "status": departure["status"],
-                            "scheduled": departure["aimed_departure_time"],
-                            "estimated": departure["expected_departure_time"],
-                            "platform": departure["platform"],
-                            "operator_name": departure["operator_name"],
-                        }
-                    )
+            for departure in self._data["departures"]["all"]:
+                self._next_trains.append(
+                    {
+                        "origin_name": departure["origin_name"],
+                        "destination_name": departure["destination_name"],
+                        "status": departure["status"],
+                        "scheduled": departure["aimed_departure_time"],
+                        "estimated": departure["expected_departure_time"],
+                        "platform": departure["platform"],
+                        "operator_name": departure["operator_name"],
+                    }
+                )
 
-                if self._next_trains:
-                    self._state = min(
-                        _delta_mins(train["scheduled"]) for train in self._next_trains
-                    )
-                else:
-                    self._state = None
+            if self._next_trains:
+                self._state = min(
+                    _delta_mins(train["scheduled"]) for train in self._next_trains
+                )
+            else:
+                self._state = None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
