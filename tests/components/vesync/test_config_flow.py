@@ -23,7 +23,7 @@ async def test_abort_duplicate_unique_id(hass: HomeAssistant) -> None:
     mock_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
 
