@@ -25,6 +25,9 @@
       "folder_creation_error": "Failed to create folder",
       "folder_rename_error": "Failed to rename folder"
     },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
+    },
     "step": {
       "folder_name": {
         "data": {
