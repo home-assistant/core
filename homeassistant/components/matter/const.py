@@ -1,7 +1,6 @@
 """Constants for the Matter integration."""
 
 import logging
-from typing import Final
 
 ADDON_SLUG = "core_matter_server"
 
