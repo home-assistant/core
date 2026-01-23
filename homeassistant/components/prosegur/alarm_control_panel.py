@@ -78,7 +78,7 @@ class ProsegurAlarm(AlarmControlPanelEntity):
         self._auth = auth
 
         self._attr_code_arm_required = False
-        self._attr_unique_id = f"{contract}{partition.id}" if partition else contract
+        self._attr_unique_id = f"{contract}-{partition.id}" if partition else contract
         self._attr_name = partition.name if partition else f"Contract {contract}"
 
         self._attr_device_info = DeviceInfo(
