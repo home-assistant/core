@@ -40,16 +40,14 @@ async def async_setup_entry(
         hass.data[DOMAIN][entry.entry_id], entry.data["contract"]
     )
     async_add_entities(
-        [ProsegurAlarm(entry.data["contract"], hass.data[DOMAIN][entry.entry_id])],
-        update_before_add=True,
-    )
-
-    async_add_entities(
         [
-            ProsegurAlarm(
-                entry.data["contract"], hass.data[DOMAIN][entry.entry_id], partition
-            )
-            for partition in _installation.partitions
+            ProsegurAlarm(entry.data["contract"], hass.data[DOMAIN][entry.entry_id]),
+            *[
+                ProsegurAlarm(
+                    entry.data["contract"], hass.data[DOMAIN][entry.entry_id], partition
+                )
+                for partition in _installation.partitions
+            ],
         ],
         update_before_add=True,
     )
