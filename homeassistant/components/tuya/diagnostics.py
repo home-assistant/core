@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from tuya_device_handlers.device_wrapper import DEVICE_WARNINGS
 from tuya_sharing import CustomerDevice
 
 from homeassistant.components.diagnostics import REDACTED
@@ -14,7 +15,6 @@ from homeassistant.util import dt as dt_util
 
 from . import TuyaConfigEntry
 from .const import DOMAIN, DPCode
-from .type_information import DEVICE_WARNINGS
 
 _REDACTED_DPCODES = {
     DPCode.ALARM_MESSAGE,
