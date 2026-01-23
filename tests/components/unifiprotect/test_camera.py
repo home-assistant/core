@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
-from uiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
+from uiprotect.data import Camera as ProtectCamera, CameraChannel, Light, StateType
 from uiprotect.exceptions import ClientError, NotAuthorized, NvrError
 from uiprotect.websocket import WebsocketState
 from webrtc_models import RTCIceCandidateInit
@@ -42,7 +42,12 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 from . import patch_ufp_method
@@ -327,6 +332,20 @@ async def test_adopt(
     assert_entity_counts(hass, Platform.CAMERA, 0, 0)
     await adopt_devices(hass, ufp, [camera1])
     assert_entity_counts(hass, Platform.CAMERA, 3, 1)
+
+
+async def test_adopt_non_camera_device_ignored(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """Test that adopting a non-camera device is ignored by camera platform."""
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+    data = ufp.entry.runtime_data
+
+    # Send a light device directly via the adopt signal - should be ignored
+    async_dispatcher_send(hass, data.adopt_signal, light)
+    await hass.async_block_till_done()
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
 
 
 async def test_camera_image(
@@ -623,3 +642,141 @@ async def test_camera_rtsps_cache_clear_on_none(
     # Now set to None to trigger the elif branch (line 122-123 in data.py)
     data.set_camera_rtsps_streams(camera.id, None)
     assert data.get_camera_rtsps_streams(camera.id) is None
+
+
+async def test_camera_creates_repair_when_no_streams_available(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+) -> None:
+    """Test camera creates repair issue when checked but no streams available."""
+    # Mock get_rtsps_streams to return None (no active streams)
+    object.__setattr__(camera, "get_rtsps_streams", AsyncMock(return_value=None))
+
+    await init_entry(hass, ufp, [camera])
+
+    # Verify repair issue was created for RTSP disabled
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, f"rtsp_disabled_{camera.id}")
+    assert issue is not None
+
+
+async def test_camera_creates_repair_when_cached_check_has_no_streams(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+) -> None:
+    """Test repair issue created when camera is checked but no streams in cache.
+
+    This tests the cached check path (line 153) where a camera has already
+    been checked but has no available streams.
+    """
+    await init_entry(hass, ufp, [camera])
+    data = ufp.entry.runtime_data
+
+    # Clear the streams cache but keep the camera marked as checked
+    data._camera_rtsps_streams.pop(camera.id, None)
+
+    # Trigger a refresh via the streams signal (simulates reconnect or IP change)
+    # This will hit the cached check path since camera is already marked as checked
+    async_dispatcher_send(hass, data.streams_signal, camera.id)
+    await hass.async_block_till_done()
+
+    # Verify repair issue was created
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, f"rtsp_disabled_{camera.id}")
+    assert issue is not None
+
+
+async def test_camera_handles_not_authorized_on_refresh(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test camera handles NotAuthorized during individual refresh (not pre-fetch).
+
+    This tests line 265-271 - the NotAuthorized exception path when refreshing
+    an individual camera that wasn't pre-fetched.
+    """
+    await init_entry(hass, ufp, [camera])
+    data = ufp.entry.runtime_data
+
+    # Clear the checked set so camera will attempt fresh fetch
+    data._camera_rtsps_checked.discard(camera.id)
+
+    # Mock the camera to raise NotAuthorized on next call
+    object.__setattr__(
+        camera, "get_rtsps_streams", AsyncMock(side_effect=NotAuthorized)
+    )
+
+    # Trigger a refresh - this should hit the NotAuthorized exception
+    async_dispatcher_send(hass, data.streams_signal, camera.id)
+    await hass.async_block_till_done()
+
+    assert "Cannot fetch RTSPS streams without API key" in caplog.text
+    # Camera should be marked as checked to prevent repeated calls
+    assert data.is_camera_rtsps_checked(camera.id)
+
+
+async def test_camera_handles_client_error_on_refresh(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test camera handles ClientError during individual refresh (not pre-fetch).
+
+    This tests lines 272-275 - the ClientError/NvrError exception path when
+    refreshing an individual camera.
+    """
+    await init_entry(hass, ufp, [camera])
+    data = ufp.entry.runtime_data
+
+    # Clear the checked set so camera will attempt fresh fetch
+    data._camera_rtsps_checked.discard(camera.id)
+
+    # Mock the camera to raise ClientError on next call
+    object.__setattr__(
+        camera, "get_rtsps_streams", AsyncMock(side_effect=ClientError("test"))
+    )
+
+    # Trigger a refresh - this should hit the ClientError exception
+    async_dispatcher_send(hass, data.streams_signal, camera.id)
+    await hass.async_block_till_done()
+
+    assert "Error fetching RTSPS streams from public API" in caplog.text
+    # Camera should be marked as checked to prevent repeated calls
+    assert data.is_camera_rtsps_checked(camera.id)
+
+
+async def test_camera_creates_repair_on_fresh_fetch_with_no_streams(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+) -> None:
+    """Test repair issue created when fresh fetch returns no streams.
+
+    This tests line 265 - the else branch after API fetch when streams is None.
+    """
+    await init_entry(hass, ufp, [camera])
+    data = ufp.entry.runtime_data
+
+    # Clear the checked set AND the streams cache so camera will attempt fresh fetch
+    data._camera_rtsps_checked.discard(camera.id)
+    data._camera_rtsps_streams.pop(camera.id, None)
+
+    # Delete any existing repair issue first
+    ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{camera.id}")
+
+    # Mock the camera to return None (no streams)
+    object.__setattr__(camera, "get_rtsps_streams", AsyncMock(return_value=None))
+
+    # Trigger a refresh - this should create a repair issue
+    async_dispatcher_send(hass, data.streams_signal, camera.id)
+    await hass.async_block_till_done()
+
+    # Verify repair issue was created
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, f"rtsp_disabled_{camera.id}")
+    assert issue is not None

@@ -267,8 +267,12 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             _LOGGER.warning(
                 "Cannot fetch RTSPS streams without API key, streaming will be disabled"
             )
+            # Mark as checked to prevent repeated API calls
+            self.data.set_camera_rtsps_streams(self.device.id, None)
         except (ClientError, NvrError):
             _LOGGER.exception("Error fetching RTSPS streams from public API")
+            # Mark as checked to prevent repeated API calls
+            self.data.set_camera_rtsps_streams(self.device.id, None)
 
     @callback
     def _maybe_create_rtsp_repair(self) -> None:
