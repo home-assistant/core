@@ -102,6 +102,7 @@
             "boost": "Boost",
             "comfort": "Comfort",
             "eco": "Eco",
+            "frost_protect": "Frost-Protect",
             "home": "[%key:common::state::home%]",
             "none": "None",
             "sleep": "Sleep"
