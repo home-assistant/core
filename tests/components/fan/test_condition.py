@@ -27,7 +27,11 @@ async def target_fans(hass: HomeAssistant) -> list[str]:
 
 @pytest.fixture
 async def target_switches(hass: HomeAssistant) -> list[str]:
-    """Create multiple switch entities associated with different targets."""
+    """Create multiple switch entities associated with different targets.
+
+    Note: The switches are used to ensure that only fan entities are considered
+    in the condition evaluation and not other toggle entities.
+    """
     return (await target_entities(hass, "switch"))["included"]
 
 
