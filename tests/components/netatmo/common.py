@@ -80,6 +80,10 @@ async def fake_post_request(hass: HomeAssistant, *args: Any, **kwargs: Any):
             await async_load_fixture(hass, f"{endpoint}_{home_id}.json", DOMAIN)
         )
 
+        # Apply test-specific modifications to the homestatus payload
+        if "msg_callback" in kwargs:
+            kwargs["msg_callback"](payload)
+
     else:
         payload = json.loads(await async_load_fixture(hass, f"{endpoint}.json", DOMAIN))
 
