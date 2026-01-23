@@ -395,13 +395,35 @@ class ONVIFDevice:
                 capabilities = await deviceio_service.GetServiceCapabilities()
                 if capabilities and hasattr(capabilities, "RelayOutputs"):
                     relay_outputs = int(capabilities.RelayOutputs)
-            except Exception:
+            except (
+                ONVIFError,
+                Fault,
+                TransportError,
+                XMLParseError,
+                XMLSyntaxError,
+                AttributeError,
+                TypeError,
+                ValueError,
+            ):
                 # Fallback: try to get relay outputs directly
                 try:
                     relay_list = await deviceio_service.GetRelayOutputs()
                     if relay_list and hasattr(relay_list, "RelayOutput"):
-                        relay_outputs = len(relay_list.RelayOutput) if isinstance(relay_list.RelayOutput, list) else 1
-                except Exception:
+                        relay_outputs = (
+                            len(relay_list.RelayOutput)
+                            if isinstance(relay_list.RelayOutput, list)
+                            else 1
+                        )
+                except (
+                    ONVIFError,
+                    Fault,
+                    TransportError,
+                    XMLParseError,
+                    XMLSyntaxError,
+                    AttributeError,
+                    TypeError,
+                    ValueError,
+                ):
                     pass
 
         return Capabilities(snapshot=snapshot, ptz=ptz, imaging=imaging, deviceio=deviceio, relay_outputs=relay_outputs)
@@ -716,25 +738,47 @@ class ONVIFDevice:
     async def async_set_relay_output_state(
         self, relay_token: str, state: str
     ) -> None:
-        """Set a relay output state on the ONVIF DeviceIO service."""
+        """Set relay output state.
+
+        NOTE: Per ONVIF Core Specification 8.6.3, SetRelayOutputState elements
+        are defined in the Device service namespace (tds:) even though the
+        operation is exposed through DeviceIO service. This is intentional design.
+
+        The official deviceio.wsdl references:
+        - <wsdl:part element="tds:SetRelayOutputState"/> (Device namespace)
+        - <wsdl:part element="tds:SetRelayOutputStateResponse"/>
+
+        This is NOT a workaround - it's the correct way to use ONVIF relay control
+        with WSDL-strict clients like Zeep.
+
+        Args:
+            relay_token: The relay output token
+            state: "active" or "inactive"
+
+        Raises:
+            ONVIFError: If the relay output state cannot be set
+
+        """
         if not self.capabilities.deviceio:
             LOGGER.warning(
                 "The DeviceIO service is not supported on device '%s'", self.name
             )
-            return
+            raise ONVIFError("DeviceIO service not supported")
 
-        deviceio_service = await self.device.create_deviceio_service()
+        # Use Device service per ONVIF spec design
+        device_service = self.device.devicemgmt
 
         LOGGER.debug(
             "Setting Relay Output State | Token = %s, State = %s", relay_token, state
         )
         try:
-            req = deviceio_service.create_type("SetRelayOutputState")
+            req = device_service.create_type("SetRelayOutputState")
             req.RelayOutputToken = relay_token
             req.LogicalState = state
-            await deviceio_service.SetRelayOutputState(req)
+            await device_service.SetRelayOutputState(req)
         except ONVIFError as err:
             LOGGER.error("Error trying to set relay output state: %s", err)
+            raise
 
 
 def get_device(
