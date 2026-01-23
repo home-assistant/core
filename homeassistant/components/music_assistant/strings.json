@@ -169,6 +169,10 @@
           "description": "Use a forced volume level for the announcement. Omit to use player default.",
           "name": "Announce volume"
         },
+        "pre_announce_url": {
+          "description": "URL to the pre-announcement sound.",
+          "name": "Pre-announce URL"
+        },
         "url": {
           "description": "URL to the notification sound.",
           "name": "URL"
