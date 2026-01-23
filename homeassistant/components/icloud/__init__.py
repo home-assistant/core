@@ -20,6 +20,7 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+from .media_source import async_setup_mediasource
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -29,7 +30,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up iCloud integration."""
 
     async_setup_services(hass)
-
+    async_setup_mediasource(hass)
     return True
 
 
