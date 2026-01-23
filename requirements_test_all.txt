@@ -405,7 +405,7 @@ aiotankerkoenig==0.4.2
 aiotedee==0.2.25
 
 # homeassistant.components.tractive
-aiotractive==0.7.0
+aiotractive==1.0.0
 
 # homeassistant.components.unifi
 aiounifi==88
