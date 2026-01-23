@@ -70,6 +70,7 @@ from .const import (  # noqa: F401
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
+    PRESET_FROST_PROTECT,
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
