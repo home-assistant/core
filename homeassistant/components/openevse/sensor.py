@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
-import openevsewifi
-from requests import RequestException
+from openevsehttp.__main__ import OpenEVSE
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
@@ -18,74 +18,98 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_CONNECTIONS,
+    ATTR_SERIAL_NUMBER,
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
     UnitOfEnergy,
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ConfigEntry
 from .const import DOMAIN, INTEGRATION_TITLE
+from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class OpenEVSESensorDescription(SensorEntityDescription):
+    """Describes an OpenEVSE sensor entity."""
+
+    value_fn: Callable[[OpenEVSE], str | float | None]
+
+
+SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
+    OpenEVSESensorDescription(
         key="status",
-        name="Charging Status",
+        translation_key="status",
+        value_fn=lambda ev: ev.status,
     ),
-    SensorEntityDescription(
+    OpenEVSESensorDescription(
         key="charge_time",
-        name="Charge Time Elapsed",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        translation_key="charge_time",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.charge_time_elapsed,
     ),
-    SensorEntityDescription(
+    OpenEVSESensorDescription(
         key="ambient_temp",
-        name="Ambient Temperature",
+        translation_key="ambient_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.ambient_temperature,
     ),
-    SensorEntityDescription(
+    OpenEVSESensorDescription(
         key="ir_temp",
-        name="IR Temperature",
+        translation_key="ir_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.ir_temperature,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    OpenEVSESensorDescription(
         key="rtc_temp",
-        name="RTC Temperature",
+        translation_key="rtc_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.rtc_temperature,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    OpenEVSESensorDescription(
         key="usage_session",
-        name="Usage this Session",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        translation_key="usage_session",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda ev: ev.usage_session,
     ),
-    SensorEntityDescription(
+    OpenEVSESensorDescription(
         key="usage_total",
-        name="Total Usage",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        translation_key="usage_total",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda ev: ev.usage_total,
     ),
 )
 
@@ -152,56 +176,47 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: OpenEVSEConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add sensors for passed config_entry in HA."""
+    """Set up OpenEVSE sensors based on config entry."""
+    coordinator = entry.runtime_data
+    identifier = entry.unique_id or entry.entry_id
     async_add_entities(
-        (
-            OpenEVSESensor(
-                config_entry.data[CONF_HOST],
-                config_entry.runtime_data,
-                description,
-            )
-            for description in SENSOR_TYPES
-        ),
-        True,
+        OpenEVSESensor(coordinator, description, identifier, entry.unique_id)
+        for description in SENSOR_TYPES
     )
 
 
-class OpenEVSESensor(SensorEntity):
+class OpenEVSESensor(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SensorEntity):
     """Implementation of an OpenEVSE sensor."""
+
+    _attr_has_entity_name = True
+    entity_description: OpenEVSESensorDescription
 
     def __init__(
         self,
-        host: str,
-        charger: openevsewifi.Charger,
-        description: SensorEntityDescription,
+        coordinator: OpenEVSEDataUpdateCoordinator,
+        description: OpenEVSESensorDescription,
+        identifier: str,
+        unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self.entity_description = description
-        self.host = host
-        self.charger = charger
+        self._attr_unique_id = f"{identifier}-{description.key}"
 
-    def update(self) -> None:
-        """Get the monitored data from the charger."""
-        try:
-            sensor_type = self.entity_description.key
-            if sensor_type == "status":
-                self._attr_native_value = self.charger.getStatus()
-            elif sensor_type == "charge_time":
-                self._attr_native_value = self.charger.getChargeTimeElapsed() / 60
-            elif sensor_type == "ambient_temp":
-                self._attr_native_value = self.charger.getAmbientTemperature()
-            elif sensor_type == "ir_temp":
-                self._attr_native_value = self.charger.getIRTemperature()
-            elif sensor_type == "rtc_temp":
-                self._attr_native_value = self.charger.getRTCTemperature()
-            elif sensor_type == "usage_session":
-                self._attr_native_value = float(self.charger.getUsageSession()) / 1000
-            elif sensor_type == "usage_total":
-                self._attr_native_value = float(self.charger.getUsageTotal()) / 1000
-            else:
-                self._attr_native_value = "Unknown"
-        except (RequestException, ValueError, KeyError):
-            _LOGGER.warning("Could not update status for %s", self.name)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
+            manufacturer="OpenEVSE",
+        )
+        if unique_id:
+            self._attr_device_info[ATTR_CONNECTIONS] = {
+                (CONNECTION_NETWORK_MAC, unique_id)
+            }
+            self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.charger)

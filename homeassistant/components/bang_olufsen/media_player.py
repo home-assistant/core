@@ -38,7 +38,6 @@ from mozart_api.models import (
     VolumeState,
 )
 from mozart_api.mozart_client import MozartClient, get_highest_resolution_artwork
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -56,17 +55,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import BeoConfigEntry
@@ -74,7 +66,6 @@ from .const import (
     BEO_REPEAT_FROM_HA,
     BEO_REPEAT_TO_HA,
     BEO_STATES,
-    BEOLINK_JOIN_SOURCES,
     BEOLINK_JOIN_SOURCES_TO_UPPER,
     CONF_BEOLINK_JID,
     CONNECTION_STATUS,
@@ -127,61 +118,6 @@ async def async_setup_entry(
     async_add_entities(
         new_entities=[BeoMediaPlayer(config_entry, config_entry.runtime_data.client)],
         update_before_add=True,
-    )
-
-    # Register actions.
-    platform = async_get_current_platform()
-
-    jid_regex = vol.Match(
-        r"(^\d{4})[.](\d{7})[.](\d{8})(@products\.bang-olufsen\.com)$"
-    )
-
-    platform.async_register_entity_service(
-        name="beolink_join",
-        schema={
-            vol.Optional("beolink_jid"): jid_regex,
-            vol.Optional("source_id"): vol.In(BEOLINK_JOIN_SOURCES),
-        },
-        func="async_beolink_join",
-    )
-
-    platform.async_register_entity_service(
-        name="beolink_expand",
-        schema={
-            vol.Exclusive("all_discovered", "devices", ""): cv.boolean,
-            vol.Exclusive(
-                "beolink_jids",
-                "devices",
-                "Define either specific Beolink JIDs or all discovered",
-            ): vol.All(
-                cv.ensure_list,
-                [jid_regex],
-            ),
-        },
-        func="async_beolink_expand",
-    )
-
-    platform.async_register_entity_service(
-        name="beolink_unexpand",
-        schema={
-            vol.Required("beolink_jids"): vol.All(
-                cv.ensure_list,
-                [jid_regex],
-            ),
-        },
-        func="async_beolink_unexpand",
-    )
-
-    platform.async_register_entity_service(
-        name="beolink_leave",
-        schema=None,
-        func="async_beolink_leave",
-    )
-
-    platform.async_register_entity_service(
-        name="beolink_allstandby",
-        schema=None,
-        func="async_beolink_allstandby",
     )
 
 

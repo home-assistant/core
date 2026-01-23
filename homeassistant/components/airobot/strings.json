@@ -59,6 +59,11 @@
     }
   },
   "entity": {
+    "button": {
+      "recalibrate_co2": {
+        "name": "Recalibrate CO2 sensor"
+      }
+    },
     "number": {
       "hysteresis_band": {
         "name": "Hysteresis band"
@@ -80,6 +85,14 @@
       "heating_uptime": {
         "name": "Heating uptime"
       }
+    },
+    "switch": {
+      "actuator_exercise_disabled": {
+        "name": "Actuator exercise disabled"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      }
     }
   },
   "exceptions": {
@@ -100,6 +113,12 @@
     },
     "set_value_failed": {
       "message": "Failed to set value: {error}"
+    },
+    "switch_turn_off_failed": {
+      "message": "Failed to turn off {switch}."
+    },
+    "switch_turn_on_failed": {
+      "message": "Failed to turn on {switch}."
     }
   }
 }

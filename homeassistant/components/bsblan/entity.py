@@ -29,7 +29,11 @@ class BSBLanEntityBase[_T: BSBLanCoordinator](CoordinatorEntity[_T]):
             connections={(CONNECTION_NETWORK_MAC, format_mac(mac))},
             name=data.device.name,
             manufacturer="BSBLAN Inc.",
-            model=data.info.device_identification.value,
+            model=(
+                data.info.device_identification.value
+                if data.info.device_identification
+                else None
+            ),
             sw_version=data.device.version,
             configuration_url=f"http://{host}",
         )
