@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyschlage.code import AccessCode
 
@@ -69,7 +69,6 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         await self.hass.async_add_executor_job(self._lock.unlock)
         await self.coordinator.async_request_refresh()
 
-    # Door code services
     def _validate_code_name(
         self, codes: dict[str, AccessCode] | None, name: str
     ) -> None:
@@ -95,22 +94,15 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
     async def add_code(self, name: str, code: str) -> None:
         """Add a lock code."""
 
-        # code is required by voluptuous, the following is just to satisfy type
-        # checker, it should never be None
-        if code is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="schlage_code_required",
-            )  # pragma: no cover
+        if TYPE_CHECKING:
+            assert code is not None
 
         codes = self._lock.access_codes
         self._validate_code_name(codes, name)
         self._validate_code_value(codes, code)
 
         access_code = AccessCode(name=name, code=code)
-        await self.coordinator.hass.async_add_executor_job(
-            self._lock.add_access_code, access_code
-        )
+        await self.hass.async_add_executor_job(self._lock.add_access_code, access_code)
         await self.coordinator.async_request_refresh()
 
     async def delete_code(self, name: str) -> None:
@@ -132,9 +124,7 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
             return
 
         if self._lock.access_codes:
-            await self.coordinator.hass.async_add_executor_job(
-                self._lock.access_codes[code_id_to_delete].delete
-            )
+            await self.hass.async_add_executor_job(codes[code_id_to_delete].delete)
             await self.coordinator.async_request_refresh()
 
     async def get_codes(self) -> ServiceResponse:
