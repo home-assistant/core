@@ -37,6 +37,9 @@ PRESET_NONE = "none"
 # Device is running an energy-saving mode
 PRESET_ECO = "eco"
 
+# Device is running an frost-protect mode
+PRESET_FROST_PROTECT = "frost_protect"
+
 # Device is in away mode
 PRESET_AWAY = "away"
 
