@@ -82,11 +82,11 @@ async def async_setup_entry(
     config_entry.runtime_data = VeSyncDataCoordinator(hass, config_entry, manager)
 
     # Complete version migration now that we have the account_id
-    if config_entry.version == 1:
+    if config_entry.minor_version == 2:
         hass.config_entries.async_update_entry(
             config_entry,
             unique_id=manager.account_id,
-            version=2,
+            minor_version=3,
         )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

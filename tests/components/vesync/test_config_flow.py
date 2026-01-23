@@ -5,6 +5,7 @@ from unittest.mock import PropertyMock, patch
 from pyvesync.utils.errors import VeSyncLoginError
 
 from homeassistant.components.vesync import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -12,15 +13,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_abort_duplicate_unique_id(hass: HomeAssistant) -> None:
-    """Test if we abort because component is already setup under that email."""
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="user@user.com",
-        unique_id="account_id",
-        data={CONF_USERNAME: "user@user.com", CONF_PASSWORD: "pass"},
-    )
-    mock_entry.add_to_hass(hass)
+async def test_abort_duplicate_unique_id(hass: HomeAssistant, config_entry) -> None:
+    """Test if we abort because component is already setup under that Account ID."""
+    config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -33,7 +28,7 @@ async def test_abort_duplicate_unique_id(hass: HomeAssistant) -> None:
             "pyvesync.vesync.VeSync.account_id", new_callable=PropertyMock
         ) as mock_account_id,
     ):
-        mock_account_id.return_value = "account_id"
+        mock_account_id.return_value = "TESTACCOUNTID"
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_USERNAME: "user@user.com", CONF_PASSWORD: "pass"},
@@ -79,6 +74,7 @@ async def test_config_flow_user_input(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_USERNAME] == "user"
     assert result["data"][CONF_PASSWORD] == "pass"
+    assert result["result"].unique_id == "TESTACCOUNTID"
 
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:

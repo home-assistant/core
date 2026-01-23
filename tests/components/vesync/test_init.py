@@ -129,7 +129,7 @@ async def test_migrate_config_entry(
     await hass.config_entries.async_setup(switch_old_id_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert switch_old_id_config_entry.minor_version == 2
+    assert switch_old_id_config_entry.minor_version == 3
 
     migrated_switch = entity_registry.async_get(switch.entity_id)
     assert migrated_switch is not None
@@ -150,7 +150,7 @@ async def test_migrate_config_entry(
         e for e in entity_registry.entities.values() if e.domain == "humidifier"
     ]
     assert len(humidifier_entities) == 2
-    assert switch_old_id_config_entry.version == 2
+    assert switch_old_id_config_entry.version == 1
     assert switch_old_id_config_entry.unique_id == "TESTACCOUNTID"
 
 
