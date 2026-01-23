@@ -39,7 +39,6 @@ def expand_file_references(content: str, skill_dir: Path) -> str:
             continue
 
         # Check if any match is a local file reference
-        expanded = False
         for match in matches:
             link_path = match.group(2)
 
@@ -56,11 +55,7 @@ def expand_file_references(content: str, skill_dir: Path) -> str:
                 result_lines.append(ref_content)
                 result_lines.append(f"<END REFERENCE {ref_file.name}>")
                 result_lines.append("")
-                expanded = True
                 break
-
-        if not expanded:
-            result_lines.append(line)
 
     return "\n".join(result_lines)
 
