@@ -138,7 +138,8 @@ async def test_add_code_service_duplicate_name(
     mock_lock.access_codes = {"1": existing_code}
 
     with pytest.raises(
-        ServiceValidationError, match="Code name 'test_user' already exists"
+        ServiceValidationError,
+        match="A PIN code with this name already exists on the lock",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -164,7 +165,10 @@ async def test_add_code_service_duplicate_code(
     existing_code.code = "1234"
     mock_lock.access_codes = {"1": existing_code}
 
-    with pytest.raises(ServiceValidationError, match="Code already exists"):
+    with pytest.raises(
+        ServiceValidationError,
+        match="A PIN code with this value already exists on the lock",
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_CODE,
