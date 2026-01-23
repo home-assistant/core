@@ -5458,7 +5458,7 @@
       "name": "Rainforest Automation",
       "integrations": {
         "rainforest_eagle": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Rainforest Eagle"
