@@ -12,7 +12,7 @@ from electrolux_group_developer_sdk.client.client_exception import (
 )
 from electrolux_group_developer_sdk.client.dto.appliance_state import ApplianceState
 
-_LOGGER: logging.Logger = logging.getLogger(__package__)
+_LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 class ElectroluxApiClient:
