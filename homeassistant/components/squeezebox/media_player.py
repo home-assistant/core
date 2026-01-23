@@ -85,6 +85,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 ATTR_PARAMETERS = "parameters"
+ATTR_TIMEOUT = "timeout"
 ATTR_OTHER_PLAYER = "other_player"
 
 ATTR_TO_PROPERTY = [
@@ -200,6 +201,7 @@ async def async_setup_entry(
             vol.Optional(ATTR_PARAMETERS): vol.All(
                 cv.ensure_list, vol.Length(min=1), [cv.string]
             ),
+            vol.Optional(ATTR_TIMEOUT): vol.Coerce(float),
         },
         "async_call_query",
     )
@@ -764,7 +766,10 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
 
     async def async_call_query(
-        self, command: str, parameters: list[str] | None = None
+        self,
+        command: str,
+        parameters: list[str] | None = None,
+        timeout: float | None = None,
     ) -> None:
         """Call Squeezebox JSON/RPC method where we care about the result.
 
@@ -775,11 +780,16 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         if parameters:
             all_params.extend(parameters)
 
+        kwargs = {}
+        if timeout:
+            kwargs["timeout"] = timeout
+
         self._query_result = await safe_library_call(
             self._player.async_query,
             *all_params,
             translation_key="call_query_failed",
             translation_placeholders={"command": command},
+            **kwargs,
         )
         _LOGGER.debug("call_query got result %s", self._query_result)
         self.async_write_ha_state()
