@@ -63,7 +63,9 @@ async def test_lawn_mower_entity_init(mock_mower_coordinator) -> None:
 
     assert entity._attr_name is None
     assert entity._attr_supported_features == (
-        LawnMowerEntityFeature.DOCK | LawnMowerEntityFeature.PAUSE
+        LawnMowerEntityFeature.DOCK
+        | LawnMowerEntityFeature.PAUSE
+        | LawnMowerEntityFeature.START_MOWING
     )
 
 

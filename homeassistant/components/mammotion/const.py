@@ -33,10 +33,8 @@ COMMAND_EXCEPTIONS = (
 
 EXPIRED_CREDENTIAL_EXCEPTIONS = (CheckSessionException, SetupException)
 
-CONF_STAY_CONNECTED_BLUETOOTH: Final = "stay_connected_bluetooth"
 CONF_ACCOUNTNAME: Final = "account_name"
 CONF_ACCOUNT_ID: Final = "mammotion_account_id"
-CONF_USE_WIFI: Final = "use_wifi"
 CONF_BLE_DEVICES: Final = "ble_devices"
 CONF_AUTH_DATA: Final = "auth_data"
 CONF_CONNECT_DATA: Final = "connect_data"

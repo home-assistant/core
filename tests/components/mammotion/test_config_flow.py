@@ -10,8 +10,6 @@ from homeassistant.components.mammotion.const import (
     CONF_ACCOUNT_ID,
     CONF_ACCOUNTNAME,
     CONF_BLE_DEVICES,
-    CONF_STAY_CONNECTED_BLUETOOTH,
-    CONF_USE_WIFI,
     DOMAIN,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD
@@ -52,24 +50,15 @@ async def test_bluetooth_discovery_success(hass: HomeAssistant) -> None:
             data=discovery_info,
         )
 
+    # Bluetooth discovery goes to bluetooth_confirm step
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
-    assert result["description_placeholders"] == {"name": "Luba-ABC123"}
 
-    # Confirm Bluetooth
-    mock_mammotion = MagicMock()
-    mock_mammotion.login_v2 = AsyncMock()
-    with patch(
-        "homeassistant.components.mammotion.config_flow.MammotionHTTP",
-        return_value=mock_mammotion,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_STAY_CONNECTED_BLUETOOTH: True},
-        )
+    # Confirm bluetooth step
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "wifi"
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "wifi"
 
     # Configure WiFi with credentials
     mock_http = MagicMock()
@@ -80,72 +69,22 @@ async def test_bluetooth_discovery_success(hass: HomeAssistant) -> None:
         "homeassistant.components.mammotion.config_flow.MammotionHTTP",
         return_value=mock_http,
     ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
             {
                 CONF_ACCOUNTNAME: "user@example.com",
                 CONF_PASSWORD: "password",
-                CONF_USE_WIFI: True,
             },
         )
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "user@example.com"
-    assert result3["data"] == {
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "user@example.com"
+    assert result2["data"] == {
         CONF_ACCOUNTNAME: "user@example.com",
         CONF_PASSWORD: "password",
         CONF_ACCOUNT_ID: "user123",
-        CONF_USE_WIFI: True,
         CONF_BLE_DEVICES: {"Luba-ABC123": "aa:bb:cc:dd:ee:ff"},
     }
-    assert result3["options"] == {CONF_STAY_CONNECTED_BLUETOOTH: True}
-
-
-async def test_bluetooth_discovery_bluetooth_only(hass: HomeAssistant) -> None:
-    """Test bluetooth discovery configuring usage without WiFi."""
-    discovery_info = _get_discovery_info()
-    device = _get_mock_device()
-
-    with patch(
-        "homeassistant.components.bluetooth.async_ble_device_from_address",
-        return_value=device,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_BLUETOOTH},
-            data=discovery_info,
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "bluetooth_confirm"
-
-    mock_mammotion = MagicMock()
-    mock_mammotion.login_v2 = AsyncMock()
-    with patch(
-        "homeassistant.components.mammotion.config_flow.MammotionHTTP",
-        return_value=mock_mammotion,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_STAY_CONNECTED_BLUETOOTH: False},
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "wifi"
-
-    # Disable WiFi
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        {CONF_USE_WIFI: False},
-    )
-
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Luba-ABC123"
-    assert result3["data"] == {
-        CONF_USE_WIFI: False,
-        CONF_BLE_DEVICES: {"Luba-ABC123": "aa:bb:cc:dd:ee:ff"},
-    }
-    assert result3["options"] == {CONF_STAY_CONNECTED_BLUETOOTH: False}
 
 
 async def test_bluetooth_discovery_already_configured(hass: HomeAssistant) -> None:
@@ -235,13 +174,14 @@ async def test_user_step_pick_discovery(hass: HomeAssistant) -> None:
 
     mock_mammotion = MagicMock()
     mock_mammotion.login_v2 = AsyncMock()
+    mock_mammotion.login_info.userInformation.userAccount = "user123"
+
     with patch(
         "homeassistant.components.mammotion.config_flow.MammotionHTTP",
         return_value=mock_mammotion,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_STAY_CONNECTED_BLUETOOTH: True},
+            result["flow_id"], {CONF_ADDRESS: "AA:BB:CC:DD:EE:FF"}
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -254,6 +194,7 @@ async def test_user_step_manual_entry(hass: HomeAssistant) -> None:
 
     mock_mammotion = MagicMock()
     mock_mammotion.login_v2 = AsyncMock()
+    mock_mammotion.login_info.userInformation.userAccount = "user123"
 
     with (
         patch(
@@ -266,12 +207,7 @@ async def test_user_step_manual_entry(hass: HomeAssistant) -> None:
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
-                CONF_STAY_CONNECTED_BLUETOOTH: True,
-            },
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data={}
         )
 
     assert result["type"] == FlowResultType.FORM
@@ -349,11 +285,7 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     """Test reconfiguration flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_ACCOUNTNAME: "old@example.com",
-            CONF_PASSWORD: "old_password",
-            CONF_USE_WIFI: True,
-        },
+        data={CONF_ACCOUNTNAME: "old@example.com", CONF_PASSWORD: "old_password"},
         unique_id="user123",
     )
     entry.add_to_hass(hass)
@@ -374,7 +306,6 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
         {
             CONF_ACCOUNTNAME: "new@example.com",
             CONF_PASSWORD: "new_password",
-            CONF_USE_WIFI: False,
         },
     )
 
@@ -384,30 +315,6 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     entry = hass.config_entries.async_get_entry(entry.entry_id)
     assert entry.data[CONF_ACCOUNTNAME] == "new@example.com"
     assert entry.data[CONF_PASSWORD] == "new_password"
-    assert entry.data[CONF_USE_WIFI] is False
-
-
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test options flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={CONF_STAY_CONNECTED_BLUETOOTH: False},
-        unique_id="user123",
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_STAY_CONNECTED_BLUETOOTH: True}
-    )
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["data"][CONF_STAY_CONNECTED_BLUETOOTH] is True
 
 
 async def test_bluetooth_discovery_update_existing_entry(hass: HomeAssistant) -> None:

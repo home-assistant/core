@@ -3816,7 +3816,7 @@
       "name": "Mammotion",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "cloud_polling"
     },
     "marantz": {
       "name": "Marantz",

@@ -54,7 +54,9 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
 
     _attr_name = None
     _attr_supported_features = (
-        LawnMowerEntityFeature.DOCK | LawnMowerEntityFeature.PAUSE
+        LawnMowerEntityFeature.DOCK
+        | LawnMowerEntityFeature.PAUSE
+        | LawnMowerEntityFeature.START_MOWING
     )
 
     def __init__(self, coordinator: MammotionMowerUpdateCoordinator) -> None:
@@ -92,6 +94,41 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
         if mode == WorkMode.MODE_READY and charge_state != 0:
             return LawnMowerActivity.DOCKED
         return None
+
+    async def async_start_mowing(self) -> None:
+        """Start mowing."""
+        trans_key = "start_mowing_failed"
+
+        mode = self.rpt_dev_status.sys_status
+        if mode is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="device_not_ready"
+            )
+
+        if mode == WorkMode.MODE_PAUSE:
+            trans_key = "resume_failed"
+            try:
+                await self.coordinator.async_send_command("resume_execute_task")
+            except COMMAND_EXCEPTIONS as exc:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key=trans_key
+                ) from exc
+            finally:
+                await self.coordinator.api.async_request_iot_sync(
+                    self.coordinator.device_name
+                )
+
+        else:
+            try:
+                await self.coordinator.async_send_command("start_job")
+            except COMMAND_EXCEPTIONS as exc:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key=trans_key
+                ) from exc
+            finally:
+                await self.coordinator.api.async_request_iot_sync(
+                    self.coordinator.device_name
+                )
 
     async def async_dock(self) -> None:
         """Start docking."""
