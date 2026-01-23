@@ -30,7 +30,12 @@ async def async_setup_entities_helper(
 
     data = entry.runtime_data
     client: ElectroluxApiClient = data.client
-    appliances = await client.fetch_appliance_data()
+    appliances: list[ApplianceData] = data.appliances
+
+    if appliances is None:
+        appliances = await client.fetch_appliance_data()
+        data.appliances = appliances
+
     entities: list[ElectroluxBaseEntity] = []
     coordinators = data.coordinators
 
@@ -40,11 +45,13 @@ async def async_setup_entities_helper(
     async_add_entities(entities)
 
     # Listen for new/removed appliances
-    async def _new_appliance(entry_id: str, appliance_data: ApplianceData):
-        if entry.entry_id != entry_id:
-            return
+    async def _new_appliance(appliance_data: ApplianceData):
         new_entities = build_entities_fn(appliance_data, coordinators)
         if new_entities:
             async_add_entities(new_entities)
 
-    entry.async_on_unload(async_dispatcher_connect(hass, NEW_APPLIANCE, _new_appliance))
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{NEW_APPLIANCE}_{entry.entry_id}", _new_appliance
+        )
+    )

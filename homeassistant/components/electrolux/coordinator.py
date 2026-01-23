@@ -1,8 +1,10 @@
 """Electrolux coordinator class."""
 
-from dataclasses import dataclass
 import logging
 
+from electrolux_group_developer_sdk.client.client_exception import (
+    ApplianceClientException,
+)
 from electrolux_group_developer_sdk.client.dto.appliance_state import ApplianceState
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,61 +14,51 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .api import ElectroluxApiClient
 from .const import DOMAIN
 
-_LOGGER: logging.Logger = logging.getLogger(__package__)
+_LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
-@dataclass
-class ElectroluxCoordinatorData:
-    """Data class for storing coordinator data."""
-
-    appliance_state: ApplianceState
-
-
-class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ElectroluxCoordinatorData]):
+class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
     """Class for fetching appliance data from the API."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        configEntry: ConfigEntry,
+        config_entry: ConfigEntry,
         client: ElectroluxApiClient,
-        applianceId: str,
+        appliance_id: str,
     ) -> None:
         """Initialize."""
         self.client = client
-        self._applianceId = applianceId
+        self._appliance_id = appliance_id
         super().__init__(
             hass,
             _LOGGER,
-            config_entry=configEntry,
-            name=f"{DOMAIN}_{configEntry.entry_id}_{applianceId}",
+            config_entry=config_entry,
+            name=f"{DOMAIN}_{config_entry.entry_id}_{appliance_id}",
             update_interval=None,
         )
 
-    async def _async_update_data(self) -> ElectroluxCoordinatorData:
+    async def _async_update_data(self) -> ApplianceState:
         """Return the current appliance state (SSE keeps it updated)."""
         try:
-            appliance_state: ApplianceState = await self.client.fetch_appliance_state(
-                self._applianceId
+            appliance_state = await self.client.fetch_appliance_state(
+                self._appliance_id
             )
-            _LOGGER.info(
-                "Async update data %s for updates. State: %s",
-                self.name,
-                appliance_state,
-            )
-        except Exception as exception:
+        except ValueError as exception:
+            raise UpdateFailed(exception) from exception
+        except ApplianceClientException as exception:
             raise UpdateFailed(exception) from exception
         else:
-            return ElectroluxCoordinatorData(appliance_state)
+            return appliance_state
 
     def remove_listeners(self) -> None:
         """Remove all SSE listeners."""
-        self.client.remove_all_listeners_by_appliance_id(self._applianceId)
+        self.client.remove_all_listeners_by_appliance_id(self._appliance_id)
 
     def callback_handle_event(self, event: dict) -> None:
         """Handle an incoming SSE event. Event will look like: {"userId": "...", "applianceId": "...", "property": "timeToEnd", "value": 720}."""
 
-        current_state = self.data.appliance_state
+        current_state = self.data
         if not current_state:
             return
 
@@ -77,13 +69,13 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ElectroluxCoordinato
 
         _LOGGER.info(
             "SSE update for %s, property %s, value %s, state: %s",
-            self._applianceId,
+            self._appliance_id,
             event.get("property"),
             event.get("value"),
             updated_state,
         )
 
-        self.async_set_updated_data(ElectroluxCoordinatorData(updated_state))
+        self.async_set_updated_data(updated_state)
 
     def _apply_sse_update(self, state: ApplianceState, event: dict) -> ApplianceState:
         """Apply an SSE property update into the appliance state dict and returns the updated state."""

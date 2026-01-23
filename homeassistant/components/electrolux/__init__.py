@@ -6,8 +6,8 @@ from dataclasses import dataclass
 import logging
 
 from electrolux_group_developer_sdk.auth.token_manager import TokenManager
-from electrolux_group_developer_sdk.client.appliance_client import (
-    ApplianceClient,
+from electrolux_group_developer_sdk.client.appliance_client import ApplianceClient
+from electrolux_group_developer_sdk.client.appliances.appliance_data import (
     ApplianceData,
 )
 from electrolux_group_developer_sdk.client.failed_connection_exception import (
@@ -28,7 +28,7 @@ from .coordinator import ElectroluxDataUpdateCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-_LOGGER: logging.Logger = logging.getLogger(__package__)
+_LOGGER: logging.Logger = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.SENSOR,
@@ -40,6 +40,7 @@ class ElectroluxData:
     """Electrolux data type."""
 
     client: ElectroluxApiClient
+    appliances: list[ApplianceData]
     coordinators: dict[str, ElectroluxDataUpdateCoordinator]
     sse_task: Task
 
@@ -47,18 +48,10 @@ class ElectroluxData:
 type ElectroluxConfigEntry = ConfigEntry[ElectroluxData]
 
 
-@dataclass(kw_only=True, slots=True)
-class ElectroluxDiscoveryData:
-    """Electrolux discovery data type."""
-
-    discovered_appliance: ApplianceData
-    entry: ElectroluxConfigEntry
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> bool:
     """Set up Electrolux integration entry."""
 
-    def save_tokens(new_access: str, new_refresh: str, api_key: str):
+    def save_tokens(new_access: str, new_refresh: str, api_key: str) -> None:
         hass.config_entries.async_update_entry(
             entry,
             data={
@@ -95,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
     for appliance in appliances:
         appliance_id = appliance.appliance.applianceId
         coordinator = ElectroluxDataUpdateCoordinator(
-            hass, entry, client=client, applianceId=appliance_id
+            hass, entry, client=client, appliance_id=appliance_id
         )
 
         await coordinator.async_config_entry_first_refresh()
@@ -115,6 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -
 
     entry.runtime_data = ElectroluxData(
         client=client,
+        appliances=appliances,
         coordinators=coordinators,
         sse_task=sse_task,
     )
@@ -168,7 +162,7 @@ class ElectroluxTokenManager(TokenManager):
 
 async def _check_for_new_devices(
     hass: HomeAssistant, entry: ElectroluxConfigEntry, client: ElectroluxApiClient
-):
+) -> None:
     """Fetch appliances from API and trigger discovery for any new ones."""
     _LOGGER.info("Checking for new devices")
     device_registry = dr.async_get(hass)
@@ -185,7 +179,7 @@ async def _check_for_new_devices(
         if appliance_id not in existing_ids:
             # Create coordinator for appliance
             coordinator = ElectroluxDataUpdateCoordinator(
-                hass, entry, client=client, applianceId=appliance_id
+                hass, entry, client=client, appliance_id=appliance_id
             )
 
             await coordinator.async_refresh()
@@ -194,13 +188,7 @@ async def _check_for_new_devices(
             data.coordinators[appliance_id] = coordinator
 
             # Notify all platforms
-            async_dispatcher_send(hass, NEW_APPLIANCE, entry.entry_id, appliance)
-
-            persistent_notification.async_create(
-                hass,
-                f"New Electrolux appliance {appliance.appliance.applianceName} added.",
-                title="Electrolux",
-            )
+            async_dispatcher_send(hass, f"{NEW_APPLIANCE}_{entry.entry_id}", appliance)
 
     # Detect MISSING appliances
     discovered_ids = {appliance.appliance.applianceId for appliance in appliances}

@@ -2,7 +2,6 @@
 
 from abc import abstractmethod
 import logging
-from typing import Generic, TypeVar
 
 from electrolux_group_developer_sdk.client.appliance_client import ApplianceData
 
@@ -15,12 +14,9 @@ from .coordinator import ElectroluxDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T", bound=ApplianceData)
 
-
-# Place common patterns in common modules
-class ElectroluxBaseEntity(
-    CoordinatorEntity[ElectroluxDataUpdateCoordinator], Generic[T]
+class ElectroluxBaseEntity[T: ApplianceData](
+    CoordinatorEntity[ElectroluxDataUpdateCoordinator]
 ):
     """Base class for Electrolux entities."""
 
@@ -83,7 +79,7 @@ class ElectroluxBaseEntity(
     @callback
     def _handle_coordinator_update(self) -> None:
         """When the coordinator updates."""
-        appliance_state = self.coordinator.data.appliance_state
+        appliance_state = self.coordinator.data
         if not appliance_state:
             _LOGGER.warning("Appliance %s not found in update", self.appliance_id)
             return
