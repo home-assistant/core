@@ -32,16 +32,13 @@ def mock_waterfurnace_client() -> Generator[Mock]:
     ):
         mock_client = mock_client_class.return_value
 
-        # Mock the login method (blocking call)
         mock_client.login = Mock()
+        mock_client.gwid = "TEST_GWID_12345"
 
         # Mock the read method (blocking call) with fixture data
         device_data = WFReading(load_json_object_fixture("device_data.json", DOMAIN))
 
         mock_client.read = Mock(return_value=device_data)
-
-        # Mock the GWID property
-        mock_client.gwid = "TEST_GWID_12345"
 
         yield mock_client
 
