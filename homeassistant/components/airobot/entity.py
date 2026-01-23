@@ -24,8 +24,6 @@ class AirobotEntity(CoordinatorEntity[AirobotDataUpdateCoordinator]):
         status = coordinator.data.status
         settings = coordinator.data.settings
 
-        self._attr_unique_id = status.device_id
-
         connections = set()
         if (mac := coordinator.config_entry.data.get(CONF_MAC)) is not None:
             connections.add((CONNECTION_NETWORK_MAC, mac))
