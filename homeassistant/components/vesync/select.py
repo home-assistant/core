@@ -105,9 +105,7 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
         ],
         icon="mdi:brightness-6",
         exists_fn=lambda device: is_purifier(device) and device.supports_nightlight,
-        select_option_fn=lambda device, value: _toggle_purifier_nightlight(
-            device, value
-        ),
+        select_option_fn=_toggle_purifier_nightlight,
         current_option_fn=lambda device: device.state.nightlight_status,
     ),
     # night_light for outlets
@@ -121,7 +119,7 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
         ],
         icon="mdi:brightness-6",
         exists_fn=lambda device: is_outlet(device) and device.supports_nightlight,
-        select_option_fn=lambda device, value: _toggle_outlet_nightlight(device, value),
+        select_option_fn=_toggle_outlet_nightlight,
         current_option_fn=lambda device: device.state.nightlight_status,
     ),
 ]
