@@ -110,7 +110,7 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             keys_response: GetKeysResponse = await api.async_check_api_key()
         except InvalidApiKeyError as err:
-            LOGGER.exception("InvalidApiKeyError exception: %s", err)
+            LOGGER.error("InvalidApiKeyError: %s", err)
             self._errors[CONF_API_KEY] = CONF_INVALID_API_KEY
             return False
         except (
@@ -119,11 +119,13 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
             NotFoundError,
             PurpleAirError,
         ) as err:
-            LOGGER.exception("PurpleAirError exception: %s", err)
+            LOGGER.error("PurpleAirError: %s", err)
             self._errors[CONF_BASE] = CONF_UNKNOWN
             return False
         except Exception as err:  # noqa: BLE001
-            LOGGER.exception("Exception: %s", err)
+            # Catch broad exceptions in config flow for user experience.
+            # Any unexpected error should show a generic error message.
+            LOGGER.exception("Unexpected error checking API key: %s", err)
             self._errors[CONF_BASE] = CONF_UNKNOWN
             return False
 
@@ -346,7 +348,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
                 limit_results=LIMIT_RESULTS,
             )
         except InvalidApiKeyError as err:
-            LOGGER.exception("InvalidApiKeyError exception: %s", err)
+            LOGGER.error("InvalidApiKeyError: %s", err)
             self._errors[CONF_BASE] = CONF_INVALID_API_KEY
             return False
         except (
@@ -355,11 +357,13 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
             NotFoundError,
             PurpleAirError,
         ) as err:
-            LOGGER.exception("PurpleAirError exception: %s", err)
+            LOGGER.error("PurpleAirError: %s", err)
             self._errors[CONF_BASE] = CONF_UNKNOWN
             return False
         except Exception as err:  # noqa: BLE001
-            LOGGER.exception("Exception: %s", err)
+            # Catch broad exceptions in config flow for user experience.
+            # Any unexpected error should show a generic error message.
+            LOGGER.exception("Unexpected error validating location: %s", err)
             self._errors[CONF_BASE] = CONF_UNKNOWN
             return False
 
@@ -393,7 +397,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
                 read_keys=read_key_list,
             )
         except InvalidApiKeyError as err:
-            LOGGER.exception("InvalidApiKeyError exception: %s", err)
+            LOGGER.error("InvalidApiKeyError: %s", err)
             self._errors[CONF_BASE] = CONF_INVALID_API_KEY
             return False
         except (
@@ -402,11 +406,13 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
             NotFoundError,
             PurpleAirError,
         ) as err:
-            LOGGER.exception("PurpleAirError exception: %s", err)
+            LOGGER.error("PurpleAirError: %s", err)
             self._errors[CONF_BASE] = CONF_UNKNOWN
             return False
         except Exception as err:  # noqa: BLE001
-            LOGGER.exception("Exception: %s", err)
+            # Catch broad exceptions in config flow for user experience.
+            # Any unexpected error should show a generic error message.
+            LOGGER.exception("Unexpected error validating sensor: %s", err)
             self._errors[CONF_BASE] = CONF_UNKNOWN
             return False
 
@@ -496,8 +502,6 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
                 data_schema=self.map_location_schema,
                 errors=self._errors,
             )
-        if TYPE_CHECKING:
-            assert self._flow_data.get(CONF_NEARBY_SENSOR_LIST) is not None
 
         return await self.async_step_select_sensor()
 

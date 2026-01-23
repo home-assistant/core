@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from aiopurpleair.api import API
 from aiopurpleair.errors import InvalidApiKeyError, PurpleAirError
@@ -58,8 +58,6 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
             for subentry in self.config_entry.subentries.values()
             if subentry.data.get(CONF_SENSOR_READ_KEY) is not None
         ] or None
-        if TYPE_CHECKING:
-            assert index_list is not None and len(index_list) > 0
 
         try:
             return await self._api.sensors.async_get_sensors(
