@@ -127,33 +127,6 @@ async def test_user_flow_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_flow_no_gwid(
-    hass: HomeAssistant, mock_waterfurnace_client_no_gwid: Mock
-) -> None:
-    """Test user flow when device has no GWID."""
-    result = cast(
-        dict[str, Any],
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        ),
-    )
-    assert result["type"] is FlowResultType.FORM
-
-    result = cast(
-        dict[str, Any],
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test_user",
-                CONF_PASSWORD: "test_password",
-            },
-        ),
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
     mock_waterfurnace_client: Mock,

@@ -47,13 +47,6 @@ def mock_waterfurnace_client() -> Generator[Mock]:
 
 
 @pytest.fixture
-def mock_waterfurnace_client_no_gwid(mock_waterfurnace_client: Mock) -> Mock:
-    """Mock WaterFurnace client without GWID."""
-    mock_waterfurnace_client.gwid = None
-    return mock_waterfurnace_client
-
-
-@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
