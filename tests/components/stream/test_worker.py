@@ -1180,8 +1180,11 @@ class TestAddStream:
     def test_audio_branch_copies_audio_properties(self) -> None:
         """Test audio stream branch copies sample_rate and channels.
 
-        Uses libdav1d (a video codec) to trigger remapping and reach the
-        audio branch. This tests the else-branch of isinstance(VideoStream).
+        This test deliberately uses libdav1d (a video-only codec) with an
+        av.audio.AudioStream to trigger codec remapping and exercise the
+        non-VideoStream (audio properties) branch. This setup is artificial
+        and would not occur in production, but ensures coverage of the audio
+        branch logic.
         """
         template = MagicMock(spec=av.audio.AudioStream)
         template.codec_context.name = "libdav1d"
