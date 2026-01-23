@@ -1,7 +1,6 @@
 """Test alarm control panel triggers."""
 
-from collections.abc import Generator
-from unittest.mock import patch
+from typing import Any
 
 import pytest
 
@@ -11,10 +10,9 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.const import ATTR_LABEL_ID, ATTR_SUPPORTED_FEATURES, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
-    StateDescription,
+    TriggerStateDescription,
     arm_trigger,
     other_states,
     parametrize_target_entities,
@@ -24,25 +22,10 @@ from tests.components import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture(name="enable_experimental_triggers_conditions")
-def enable_experimental_triggers_conditions() -> Generator[None]:
-    """Enable experimental triggers and conditions."""
-    with patch(
-        "homeassistant.components.labs.async_is_preview_feature_enabled",
-        return_value=True,
-    ):
-        yield
-
-
 @pytest.fixture
 async def target_alarm_control_panels(hass: HomeAssistant) -> list[str]:
     """Create multiple alarm control panel entities associated with different targets."""
-    return await target_entities(hass, "alarm_control_panel")
+    return (await target_entities(hass, "alarm_control_panel"))["included"]
 
 
 @pytest.mark.parametrize(
@@ -70,13 +53,13 @@ async def test_alarm_control_panel_triggers_gated_by_labs_flag(
     ) in caplog.text
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="alarm_control_panel.armed",
@@ -151,22 +134,22 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the alarm control panel state trigger fires when any alarm control panel state changes to a specific state."""
-    await async_setup_component(hass, "alarm_control_panel", {})
-
     other_entity_ids = set(target_alarm_control_panels) - {entity_id}
 
     # Set all alarm control panels, including the tested one, to the initial state
     for eid in target_alarm_control_panels:
-        set_or_remove_state(hass, eid, states[0])
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {}, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state)
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -175,19 +158,19 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
 
         # Check if changing other alarm control panels also triggers
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
         service_calls.clear()
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="alarm_control_panel.armed",
@@ -262,22 +245,22 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the alarm control panel state trigger fires when the first alarm control panel changes to a specific state."""
-    await async_setup_component(hass, "alarm_control_panel", {})
-
     other_entity_ids = set(target_alarm_control_panels) - {entity_id}
 
     # Set all alarm control panels, including the tested one, to the initial state
     for eid in target_alarm_control_panels:
-        set_or_remove_state(hass, eid, states[0])
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state)
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -286,18 +269,18 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
 
         # Triggering other alarm control panels should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
 
-@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="alarm_control_panel.armed",
@@ -372,27 +355,27 @@ async def test_alarm_control_panel_state_trigger_behavior_last(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
-    states: list[StateDescription],
+    trigger_options: dict[str, Any],
+    states: list[TriggerStateDescription],
 ) -> None:
     """Test that the alarm_control_panel state trigger fires when the last alarm_control_panel changes to a specific state."""
-    await async_setup_component(hass, "alarm_control_panel", {})
-
     other_entity_ids = set(target_alarm_control_panels) - {entity_id}
 
     # Set all alarm control panels, including the tested one, to the initial state
     for eid in target_alarm_control_panels:
-        set_or_remove_state(hass, eid, states[0])
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
     for state in states[1:]:
+        included_state = state["included"]
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
-        set_or_remove_state(hass, entity_id, state)
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:

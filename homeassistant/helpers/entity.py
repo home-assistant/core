@@ -452,6 +452,11 @@ class Entity(
     # Entity description instance for this Entity
     entity_description: EntityDescription
 
+    # Integration suggested object id, derived from entity_id, if it is set by the
+    # integration before the entity is added.
+    # Only handled internally, never to be used by integrations.
+    internal_integration_suggested_object_id: str | None
+
     # If we reported if this entity was slow
     _slow_reported = False
 
@@ -715,7 +720,7 @@ class Entity(
 
     @property
     def suggested_object_id(self) -> str | None:
-        """Return input for object id."""
+        """Return suggested object id."""
         if (
             # Check our class has overridden the name property from Entity
             # We need to use type.__getattribute__ to retrieve the underlying
@@ -733,6 +738,7 @@ class Entity(
             )
         else:
             name = self.name
+
         return None if name is UNDEFINED else name
 
     @cached_property
@@ -1553,7 +1559,9 @@ class Entity(
         # Clear the remove future to handle entity added again after entity id change
         self.__remove_future = None
         self._platform_state = EntityPlatformState.NOT_ADDED
-        await self.platform.async_add_entities([self])
+        await self.platform.async_add_entities(
+            [self], config_subentry_id=registry_entry.config_subentry_id
+        )
 
     @callback
     def _async_unsubscribe_device_updates(self) -> None:
