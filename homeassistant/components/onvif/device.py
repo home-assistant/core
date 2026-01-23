@@ -385,7 +385,26 @@ class ONVIFDevice:
             await self.device.create_imaging_service()
             imaging = True
 
-        return Capabilities(snapshot=snapshot, ptz=ptz, imaging=imaging)
+        deviceio = False
+        relay_outputs = 0
+        with suppress(*GET_CAPABILITIES_EXCEPTIONS):
+            deviceio_service = await self.device.create_deviceio_service()
+            deviceio = True
+            # Try to get relay output count from capabilities
+            try:
+                capabilities = await deviceio_service.GetServiceCapabilities()
+                if capabilities and hasattr(capabilities, "RelayOutputs"):
+                    relay_outputs = int(capabilities.RelayOutputs)
+            except Exception:
+                # Fallback: try to get relay outputs directly
+                try:
+                    relay_list = await deviceio_service.GetRelayOutputs()
+                    if relay_list and hasattr(relay_list, "RelayOutput"):
+                        relay_outputs = len(relay_list.RelayOutput) if isinstance(relay_list.RelayOutput, list) else 1
+                except Exception:
+                    pass
+
+        return Capabilities(snapshot=snapshot, ptz=ptz, imaging=imaging, deviceio=deviceio, relay_outputs=relay_outputs)
 
     async def async_start_events(self):
         """Start the event handler."""
@@ -672,6 +691,50 @@ class ONVIFDevice:
                 )
             else:
                 LOGGER.error("Error trying to set Imaging settings: %s", err)
+
+    async def async_get_relay_outputs(self) -> list[Any]:
+        """Get relay outputs from the ONVIF DeviceIO service."""
+        if not self.capabilities.deviceio:
+            LOGGER.warning(
+                "The DeviceIO service is not supported on device '%s'", self.name
+            )
+            return []
+
+        deviceio_service = await self.device.create_deviceio_service()
+
+        LOGGER.debug("Getting relay outputs")
+        try:
+            result = await deviceio_service.GetRelayOutputs()
+            if result and hasattr(result, "RelayOutput"):
+                relays = result.RelayOutput
+                return relays if isinstance(relays, list) else [relays]
+            return []
+        except ONVIFError as err:
+            LOGGER.error("Error trying to get relay outputs: %s", err)
+            return []
+
+    async def async_set_relay_output_state(
+        self, relay_token: str, state: str
+    ) -> None:
+        """Set a relay output state on the ONVIF DeviceIO service."""
+        if not self.capabilities.deviceio:
+            LOGGER.warning(
+                "The DeviceIO service is not supported on device '%s'", self.name
+            )
+            return
+
+        deviceio_service = await self.device.create_deviceio_service()
+
+        LOGGER.debug(
+            "Setting Relay Output State | Token = %s, State = %s", relay_token, state
+        )
+        try:
+            req = deviceio_service.create_type("SetRelayOutputState")
+            req.RelayOutputToken = relay_token
+            req.LogicalState = state
+            await deviceio_service.SetRelayOutputState(req)
+        except ONVIFError as err:
+            LOGGER.error("Error trying to set relay output state: %s", err)
 
 
 def get_device(
