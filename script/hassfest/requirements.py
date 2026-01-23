@@ -41,7 +41,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pymodbus": "Custom",
     "pytz": "CalVer",
     "requests": "SemVer",
-    "typing_extensions": "SemVer",
+    "typing-extensions": "SemVer",
     "urllib3": "SemVer",
     "yarl": "SemVer",
     "zeroconf": "SemVer",
@@ -117,7 +117,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "airthings": {"airthings-cloud": {"async-timeout"}},
     "ampio": {"asmog": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
-    "apple_tv": {"pyatv": {"async-timeout"}},
     "blackbird": {
         # https://github.com/koolsb/pyblackbird/issues/12
         # pyblackbird > pyserial-asyncio
