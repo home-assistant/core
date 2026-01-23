@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -96,5 +97,16 @@ async def async_get_config_entry_diagnostics(
             # Remove context as it is not relevant
             state_dict.pop("context")
             data["battery_level"] = state_dict
+
+    # Get Mozart battery charging entity
+    if entity_id := entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{config_entry.unique_id}_charging"
+    ):
+        if state := hass.states.get(entity_id):
+            state_dict = dict(state.as_dict())
+
+            # Remove context as it is not relevant
+            state_dict.pop("context")
+            data["charging"] = state_dict
 
     return data
