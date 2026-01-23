@@ -38,6 +38,7 @@
             "boost": "mdi:rocket-launch",
             "comfort": "mdi:sofa",
             "eco": "mdi:leaf",
+            "frost_protect": "mdi:snowflake-check",
             "home": "mdi:home",
             "sleep": "mdi:bed"
           }
