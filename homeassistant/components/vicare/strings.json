@@ -197,6 +197,21 @@
       "collector_temperature": {
         "name": "Solar collector temperature"
       },
+      "cop_cooling": {
+        "name": "Coefficient of performance - cooling"
+      },
+      "cop_dhw": {
+        "name": "Coefficient of performance - domestic hot water"
+      },
+      "cop_green": {
+        "name": "Coefficient of performance - green"
+      },
+      "cop_heating": {
+        "name": "Coefficient of performance - heating"
+      },
+      "cop_total": {
+        "name": "Coefficient of performance"
+      },
       "compressor_hours": {
         "name": "Compressor hours"
       },
@@ -214,6 +229,12 @@
       },
       "compressor_hours_loadclass5": {
         "name": "Compressor hours load class 5"
+      },
+      "compressor_modulation": {
+        "name": "Compressor modulation"
+      },
+      "compressor_power": {
+        "name": "Compressor power"
       },
       "compressor_inlet_pressure": {
         "name": "Compressor inlet pressure"
@@ -429,8 +450,17 @@
       "hotwater_out_temperature": {
         "name": "DHW out temperature"
       },
+      "hot_gas_pressure": {
+        "name": "Hot gas pressure"
+      },
+      "hot_gas_temperature": {
+        "name": "Hot gas temperature"
+      },
       "hydraulic_separator_temperature": {
         "name": "Hydraulic separator temperature"
+      },
+      "liquid_gas_temperature": {
+        "name": "Liquid gas temperature"
       },
       "outside_humidity": {
         "name": "Outside humidity"
@@ -502,6 +532,9 @@
       "primary_circuit_return_temperature": {
         "name": "Primary circuit return temperature"
       },
+      "primary_circuit_pump_rotation": {
+        "name": "Primary circuit pump rotation"
+      },
       "primary_circuit_supply_temperature": {
         "name": "Primary circuit supply temperature"
       },
@@ -552,6 +585,12 @@
       },
       "supply_temperature": {
         "name": "Supply temperature"
+      },
+      "suction_gas_pressure": {
+        "name": "Suction gas pressure"
+      },
+      "suction_gas_temperature": {
+        "name": "Suction gas temperature"
       },
       "valve_position": {
         "name": "Valve position"
