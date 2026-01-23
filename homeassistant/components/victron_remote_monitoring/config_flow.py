@@ -11,21 +11,52 @@ from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 from victron_vrm.models import Site
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
 
-from .const import CONF_API_TOKEN, CONF_SITE_ID, DOMAIN
+from .const import (
+    CONF_API_TOKEN,
+    CONF_MQTT_UPDATE_FREQUENCY_SECONDS,
+    CONF_SITE_ID,
+    DEFAULT_MQTT_UPDATE_FREQUENCY_SECONDS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_TOKEN): str})
+
+STEP_OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_MQTT_UPDATE_FREQUENCY_SECONDS,
+            default=DEFAULT_MQTT_UPDATE_FREQUENCY_SECONDS,
+        ): vol.All(
+            vol.Coerce(int),
+            vol.Range(min=0, max=3600),
+            NumberSelector(
+                NumberSelectorConfig(
+                    min=0, max=3600, step=1, mode=NumberSelectorMode.BOX
+                )
+            ),
+        )
+    }
+)
 
 
 class CannotConnect(HomeAssistantError):
@@ -47,6 +78,7 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
     """
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize flow state."""
@@ -252,4 +284,31 @@ class VictronRemoteMonitoringFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
             errors=errors,
+        )
+
+    @staticmethod
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Get the options flow for this handler."""
+        return VictronRemoteMonitoringOptionsFlow(config_entry)
+
+
+class VictronRemoteMonitoringOptionsFlow(OptionsFlow):
+    """Handle Victron Remote Monitoring options."""
+
+    def __init__(self, config_entry) -> None:
+        """Initialize options flow."""
+        self._config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_OPTIONS_SCHEMA, self._config_entry.options
+            ),
         )
