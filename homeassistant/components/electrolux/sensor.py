@@ -5,25 +5,11 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
-from electrolux_group_developer_sdk.client.appliances.ac_appliance import ACAppliance
-from electrolux_group_developer_sdk.client.appliances.ap_appliance import APAppliance
 from electrolux_group_developer_sdk.client.appliances.appliance_data import (
     ApplianceData,
 )
 from electrolux_group_developer_sdk.client.appliances.cr_appliance import CRAppliance
-from electrolux_group_developer_sdk.client.appliances.dam_ac_appliance import (
-    DAMACAppliance,
-)
-from electrolux_group_developer_sdk.client.appliances.dh_appliance import DHAppliance
-from electrolux_group_developer_sdk.client.appliances.dw_appliance import DWAppliance
-from electrolux_group_developer_sdk.client.appliances.hb_appliance import HBAppliance
-from electrolux_group_developer_sdk.client.appliances.hd_appliance import HDAppliance
 from electrolux_group_developer_sdk.client.appliances.ov_appliance import OVAppliance
-from electrolux_group_developer_sdk.client.appliances.rvc_appliance import RVCAppliance
-from electrolux_group_developer_sdk.client.appliances.so_appliance import SOAppliance
-from electrolux_group_developer_sdk.client.appliances.td_appliance import TDAppliance
-from electrolux_group_developer_sdk.client.appliances.wd_appliance import WDAppliance
-from electrolux_group_developer_sdk.client.appliances.wm_appliance import WMAppliance
 from electrolux_group_developer_sdk.feature_constants import (
     APPLIANCE_STATE,
     DISPLAY_FOOD_PROBE_TEMPERATURE_C,
@@ -66,17 +52,6 @@ class ElectroluxSensorDescription(SensorEntityDescription):
     value_fn: Callable[..., Any]
     is_supported_fn: Callable[..., Any] = lambda *args: None
 
-
-GENERAL_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
-    ElectroluxSensorDescription(
-        key="connection_state",
-        translation_key="connection_state",
-        icon="mdi:wifi",
-        value_fn=lambda appliance: appliance.state.connectionState.lower(),
-        device_class=SensorDeviceClass.ENUM,
-        options=["connected", "disconnected"],
-    ),
-)
 
 OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
     ElectroluxSensorDescription(
@@ -174,30 +149,6 @@ def build_entities_for_appliance(
     appliance = appliance_data.appliance
     coordinator = coordinators[appliance.applianceId]
     entities: list[ElectroluxBaseEntity] = []
-
-    if isinstance(
-        appliance_data,
-        (
-            APAppliance,
-            RVCAppliance,
-            WMAppliance,
-            WDAppliance,
-            TDAppliance,
-            DWAppliance,
-            OVAppliance,
-            HDAppliance,
-            HBAppliance,
-            CRAppliance,
-            DHAppliance,
-            ACAppliance,
-            SOAppliance,
-            DAMACAppliance,
-        ),
-    ):
-        entities.extend(
-            ElectroluxSensor(appliance_data, coordinator, description)
-            for description in GENERAL_ELECTROLUX_SENSORS
-        )
 
     if isinstance(appliance_data, OVAppliance):
         entities.extend(
