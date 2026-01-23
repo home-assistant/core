@@ -25,6 +25,7 @@ from homeassistant.util import dt as dt_util
 from . import redact_credentials
 from .const import (
     AUDIO_CODECS,
+    DECODER_TO_CODEC,
     HLS_PROVIDER,
     MAX_MISSING_DTS,
     MAX_TIMESTAMP_GAP,
@@ -152,6 +153,36 @@ class StreamMuxer:
         self._stream_state = stream_state
         self._start_time = dt_util.utcnow()
 
+    @staticmethod
+    def _add_stream(
+        container: av.container.OutputContainer,
+        template: av.VideoStream | av.audio.AudioStream,
+    ) -> av.VideoStream | av.audio.AudioStream:
+        """Add stream to container, remapping decoder-only codecs if needed.
+
+        Some codecs like AV1 use decoder-only libraries (e.g., libdav1d) that
+        cannot be used for muxing. This method creates the stream manually
+        with the correct codec name when add_stream_from_template would fail.
+        """
+        if codec := DECODER_TO_CODEC.get(template.codec_context.name):
+            stream: av.VideoStream | av.audio.AudioStream = cast(
+                av.VideoStream | av.audio.AudioStream, container.add_stream(codec)
+            )
+            stream.time_base = template.time_base
+            if template.codec_context.extradata:
+                stream.codec_context.extradata = template.codec_context.extradata
+            if isinstance(template, av.VideoStream):
+                assert isinstance(stream, av.VideoStream)
+                stream.width = template.width
+                stream.height = template.height
+                stream.pix_fmt = template.pix_fmt
+            else:
+                assert isinstance(stream, av.audio.AudioStream)
+                stream.sample_rate = template.sample_rate
+                stream.channels = template.channels
+            return stream
+        return container.add_stream_from_template(template)
+
     def make_new_av(
         self,
         memory_file: BytesIO,
@@ -223,15 +254,18 @@ class StreamMuxer:
             format=SEGMENT_CONTAINER_FORMAT,
             container_options=container_options,
         )
-        output_vstream = container.add_stream_from_template(input_vstream)
-        # Check if audio is requested
-        output_astream = None
+        output_vstream = cast(
+            av.VideoStream, self._add_stream(container, input_vstream)
+        )
+        output_astream: av.audio.AudioStream | None = None
         if input_astream:
             if self._audio_bsf:
                 self._audio_bsf_context = av.BitStreamFilterContext(
                     self._audio_bsf, input_astream
                 )
-            output_astream = container.add_stream_from_template(input_astream)
+            output_astream = cast(
+                av.audio.AudioStream, self._add_stream(container, input_astream)
+            )
         return container, output_vstream, output_astream
 
     def reset(self, video_dts: int) -> None:
