@@ -68,7 +68,7 @@ class ProsegurAlarm(AlarmControlPanelEntity):
         self,
         contract: str,
         auth: Auth,
-        partition=None,
+        partition: Partition | None = None,
     ) -> None:
         """Initialize the Prosegur alarm panel."""
         self._changed_by = None
