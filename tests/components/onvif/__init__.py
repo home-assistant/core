@@ -151,6 +151,19 @@ def setup_mock_device(mock_device, capabilities=None, profiles=None):
         pullpoint_manager=MagicMock(state=PullPointManagerState.PAUSED),
     )
 
+    # Setup relay outputs mock based on capabilities
+    relay_count = (
+        capabilities.relay_outputs if capabilities and capabilities.relay_outputs else 0
+    )
+    relay_outputs = []
+    for i in range(relay_count):
+        relay = MagicMock()
+        relay.token = f"RelayOutputToken_{i}"
+        relay.Properties = MagicMock()
+        relay.Properties.Name = f"Relay {relay.token}"
+        relay_outputs.append(relay)
+    mock_device.async_get_relay_outputs = AsyncMock(return_value=relay_outputs)
+
     def mock_constructor(
         hass: HomeAssistant, config: config_entries.ConfigEntry
     ) -> MagicMock:
