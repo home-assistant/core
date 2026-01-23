@@ -538,8 +538,9 @@ async def test_media_player_play_announcement_action(
         "players/cmd/play_announcement",
         player_id=mass_player_id,
         url="http://blah.com/announcement.mp3",
-        use_pre_announce=True,
+        pre_announce=True,
         volume_level=50,
+        pre_announce_url=None,
     )
 
 
