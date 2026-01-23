@@ -8,6 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration, snapshot_compit_entities
@@ -79,11 +80,15 @@ async def test_select_invalid_option(
 
     await setup_integration(hass, mock_config_entry)
 
-    await hass.services.async_call(
-        "select",
-        "select_option",
-        {"entity_id": "select.nano_color_2_installation_season", "option": "invalid"},
-        blocking=True,
-    )
+    with pytest.raises(
+        ServiceValidationError,
+        match=r"Option invalid is not valid for entity select\.nano_color_2_language",
+    ):
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {"entity_id": "select.nano_color_2_language", "option": "invalid"},
+            blocking=True,
+        )
 
     mock_connector.select_device_option.assert_not_called()
