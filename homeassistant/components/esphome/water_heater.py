@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from aioesphomeapi import EntityInfo, WaterHeaterInfo, WaterHeaterMode, WaterHeaterState
@@ -11,8 +12,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.core import callback
 
 from .entity import (
     EsphomeEntity,
@@ -21,26 +21,9 @@ from .entity import (
     esphome_state_property,
     platform_async_setup_entry,
 )
-from .entry_data import ESPHomeConfigEntry
 from .enum_mapper import EsphomeEnumMapper
 
 PARALLEL_UPDATES = 0
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ESPHomeConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up ESPHome water heaters based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=WaterHeaterInfo,
-        entity_type=EsphomeWaterHeater,
-        state_type=WaterHeaterState,
-    )
 
 
 _WATER_HEATER_MODES: EsphomeEnumMapper[WaterHeaterMode, str] = EsphomeEnumMapper(
@@ -119,3 +102,11 @@ class EsphomeWaterHeater(
             mode=_WATER_HEATER_MODES.from_hass(operation_mode),
             device_id=self._static_info.device_id,
         )
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=WaterHeaterInfo,
+    entity_type=EsphomeWaterHeater,
+    state_type=WaterHeaterState,
+)
