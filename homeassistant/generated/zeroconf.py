@@ -582,6 +582,10 @@ ZEROCONF = {
             "name": "eheimdigital._http._tcp.local.",
         },
         {
+            "domain": "indevolt",
+            "name": "smd web server*",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
