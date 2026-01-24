@@ -140,47 +140,6 @@ async def test_water_heater_set_temperature(
     )
 
 
-async def test_water_heater_set_temperature_no_temperature(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_generic_device_entry: MockGenericDeviceEntryType,
-) -> None:
-    """Test calling set_temperature without temperature attribute."""
-    entity_info = [
-        WaterHeaterInfo(
-            object_id="my_boiler",
-            key=1,
-            name="My Boiler",
-            min_temperature=10.0,
-            max_temperature=85.0,
-        )
-    ]
-    states = [
-        WaterHeaterState(
-            key=1,
-            mode=WaterHeaterMode.ECO,
-            target_temperature=45.0,
-        )
-    ]
-
-    await mock_generic_device_entry(
-        mock_client=mock_client,
-        entity_info=entity_info,
-        states=states,
-    )
-
-    await hass.services.async_call(
-        WATER_HEATER_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            ATTR_ENTITY_ID: "water_heater.test_my_boiler",
-        },
-        blocking=True,
-    )
-
-    mock_client.water_heater_command.assert_not_called()
-
-
 async def test_water_heater_set_operation_mode(
     hass: HomeAssistant,
     mock_client: APIClient,

@@ -86,8 +86,6 @@ class EsphomeWaterHeater(
     @convert_api_error_ha_error
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if ATTR_TEMPERATURE not in kwargs:
-            return
         self._client.water_heater_command(
             key=self._key,
             target_temperature=kwargs[ATTR_TEMPERATURE],
