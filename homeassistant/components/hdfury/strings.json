@@ -6,6 +6,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
+    "flow_title": "HDFury ({host})",
     "step": {
       "discovery_confirm": {
         "description": "Do you want to set up {host}?"
