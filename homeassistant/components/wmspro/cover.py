@@ -156,6 +156,16 @@ class WebControlProSlatRotate(WebControlProSlat):
         action_list += action_tilt.prep(rotation=self._max_rotation)
         await action_list()
 
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Move the cover to a specific position and eventually tilt."""
+        target_position = kwargs[ATTR_POSITION]
+        if target_position == 0:
+            await self.async_close_cover()
+        elif target_position == 100:
+            await self.async_open_cover()
+        else:
+            await super().async_set_cover_position(**kwargs)
+
     @property
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt."""
