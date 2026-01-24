@@ -19,23 +19,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
-    conversation_entities = []
-    first_subentry_id = None
     for subentry in config_entry.subentries.values():
         if subentry.subentry_type != "conversation":
             continue
 
-        if first_subentry_id is None:
-            first_subentry_id = subentry.subentry_id
-
-        conversation_entities.append(
-            AWSBedrockConversationEntity(config_entry, subentry)
-        )
-
-    if conversation_entities:
         async_add_entities(
-            conversation_entities,
-            config_subentry_id=first_subentry_id,
+            [AWSBedrockConversationEntity(config_entry, subentry)],
+            config_subentry_id=subentry.subentry_id,
         )
 
 
