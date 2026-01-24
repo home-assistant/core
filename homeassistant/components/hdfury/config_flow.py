@@ -30,6 +30,11 @@ class HDFuryConfigFlow(ConfigFlow, domain=DOMAIN):
         if serial is not None:
             await self.async_set_unique_id(serial)
             self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+            self.context["title_placeholders"] = {
+                CONF_HOST: host,
+            }
+
             return await self.async_step_discovery_confirm()
 
         return self.async_abort(reason="cannot_connect")
