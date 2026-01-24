@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from aiogithubapi import (
     GitHubAPI,
+    GitHubAuthenticationException,
     GitHubConnectionException,
     GitHubEventModel,
     GitHubException,
@@ -99,7 +101,30 @@ query ($owner: String!, $repository: String!) {
 }
 """
 
-type GithubConfigEntry = ConfigEntry[dict[str, GitHubDataUpdateCoordinator]]
+GRAPHQL_ACCOUNT_QUERY = """
+query {
+  viewer {
+    login
+    issues(first: 1, filterBy: {assignee: "USERNAME", states: OPEN}) {
+      totalCount
+    }
+    pullRequests(first: 1, states: OPEN) {
+      totalCount
+    }
+  }
+}
+"""
+
+
+@dataclass
+class GitHubRuntimeData:
+    """Class to hold your data."""
+
+    repositories: dict[str, GitHubDataUpdateCoordinator]
+    account: GitHubAccountDataUpdateCoordinator
+
+
+type GithubConfigEntry = ConfigEntry[GitHubRuntimeData]
 
 
 class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -170,3 +195,101 @@ class GitHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def unsubscribe(self, *args: Any) -> None:
         """Unsubscribe to repository events."""
         self._client.repos.events.unsubscribe(subscription_id=self._subscription_id)
+
+
+class GitHubAccountDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Data update coordinator for the GitHub account."""
+
+    config_entry: GithubConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: GithubConfigEntry,
+        client: GitHubAPI,
+    ) -> None:
+        """Initialize GitHub data update coordinator base class."""
+        self._client = client
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=f"GitHub Account {config_entry.title}",
+            update_interval=FALLBACK_UPDATE_INTERVAL,
+        )
+        self.data = {}
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update data."""
+        data: dict[str, Any] = {}
+
+        try:
+            # Notifications
+            # Fetch unread notifications
+            # Use generic for notifications endpoint
+            try:
+                notifications = await self._client.generic("/notifications")
+                data["notifications"] = {
+                    "count": len(notifications.data),
+                    "items": [
+                        {
+                            "title": n["subject"]["title"],
+                            "repository": n["repository"]["full_name"],
+                            "url": n["repository"]["html_url"],
+                            "type": n["subject"]["type"],
+                        }
+                        for n in notifications.data[:5]
+                    ],
+                }
+            except GitHubAuthenticationException:
+                data["notifications"] = None
+                LOGGER.warning(
+                    "GitHub Personal Access Token is missing 'notifications' scope"
+                )
+
+            # Helper to extract search items
+            def _extract_search_items(search_result: Any) -> list[dict[str, Any]]:
+                return [
+                    {
+                        "title": item["title"],
+                        "number": item["number"],
+                        "url": item["html_url"],
+                        "repository": item["repository_url"].split("/repos/", 1)[1],
+                    }
+                    for item in search_result.data["items"][:5]
+                ]
+
+            # Assigned Issues
+            issues = await self._client.generic(
+                "/search/issues", params={"q": "is:open is:issue assignee:@me"}
+            )
+            data["issues"] = {
+                "count": issues.data["total_count"],
+                "items": _extract_search_items(issues),
+            }
+
+            # Assigned PRs
+            prs = await self._client.generic(
+                "/search/issues", params={"q": "is:open is:pr assignee:@me"}
+            )
+            data["pull_requests"] = {
+                "count": prs.data["total_count"],
+                "items": _extract_search_items(prs),
+            }
+
+            # Review Requests
+            reviews = await self._client.generic(
+                "/search/issues", params={"q": "is:open is:pr review-requested:@me"}
+            )
+            data["review_requests"] = {
+                "count": reviews.data["total_count"],
+                "items": _extract_search_items(reviews),
+            }
+
+        except (GitHubConnectionException, GitHubRatelimitException) as exception:
+            raise UpdateFailed(exception) from exception
+        except GitHubException as exception:
+            LOGGER.exception(exception)
+            raise UpdateFailed(exception) from exception
+
+        return data

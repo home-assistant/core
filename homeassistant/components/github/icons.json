@@ -1,6 +1,12 @@
 {
   "entity": {
     "sensor": {
+      "assigned_issues_count": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "assigned_pull_requests_count": {
+        "default": "mdi:source-pull"
+      },
       "discussions_count": {
         "default": "mdi:forum"
       },
@@ -28,8 +34,14 @@
       "latest_tag": {
         "default": "mdi:tag"
       },
+      "notifications_count": {
+        "default": "mdi:bell"
+      },
       "pulls_count": {
         "default": "mdi:source-pull"
+      },
+      "review_requests_count": {
+        "default": "mdi:eye-plus"
       },
       "stargazers_count": {
         "default": "mdi:star"

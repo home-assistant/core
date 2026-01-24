@@ -19,7 +19,11 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import GithubConfigEntry, GitHubDataUpdateCoordinator
+from .coordinator import (
+    GitHubAccountDataUpdateCoordinator,
+    GithubConfigEntry,
+    GitHubDataUpdateCoordinator,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -142,13 +146,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up GitHub sensor based on a config entry."""
-    repositories = entry.runtime_data
     async_add_entities(
         (
             GitHubSensorEntity(coordinator, description)
             for description in SENSOR_DESCRIPTIONS
-            for coordinator in repositories.values()
+            for coordinator in entry.runtime_data.repositories.values()
         ),
+    )
+    account_coordinator = entry.runtime_data.account
+    async_add_entities(
+        GitHubAccountSensorEntity(account_coordinator, description)
+        for description in ACCOUNT_SENSOR_DESCRIPTIONS
+        if account_coordinator.data.get(description.key) is not None
     )
 
 
@@ -197,3 +206,80 @@ class GitHubSensorEntity(CoordinatorEntity[GitHubDataUpdateCoordinator], SensorE
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the extra state attributes."""
         return self.entity_description.attr_fn(self.coordinator.data)
+
+
+ACCOUNT_SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="notifications",
+        translation_key="notifications_count",
+        name="Notifications",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="issues",
+        translation_key="assigned_issues_count",
+        name="Assigned Issues",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="pull_requests",
+        translation_key="assigned_pull_requests_count",
+        name="Assigned Pull Requests",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="review_requests",
+        translation_key="review_requests_count",
+        name="Review Requests",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
+
+class GitHubAccountSensorEntity(
+    CoordinatorEntity[GitHubAccountDataUpdateCoordinator], SensorEntity
+):
+    """Defines a GitHub account sensor entity."""
+
+    _attr_attribution = "Data provided by the GitHub API"
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: GitHubAccountDataUpdateCoordinator,
+        entity_description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator=coordinator)
+
+        self.entity_description = entity_description
+        # Unique ID based on entry unique_id (which is unique per user/config) + header
+        # Account coordinator data doesn't have ID inside it necessarily, but config_entry does.
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_{entity_description.key}"
+        )
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{coordinator.config_entry.unique_id}_account")},
+            name=f"Account: {coordinator.config_entry.title}",
+            manufacturer="GitHub",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        data = self.coordinator.data.get(self.entity_description.key)
+        if data is None:
+            return None
+        if isinstance(data, dict):
+            return data.get("count")
+        return data
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the extra state attributes."""
+        data = self.coordinator.data.get(self.entity_description.key)
+        if isinstance(data, dict):
+            return {"items": data.get("items", [])}
+        return None

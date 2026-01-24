@@ -23,11 +23,18 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     SERVER_SOFTWARE,
     async_get_clientsession,
 )
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
+from homeassistant.util import slugify
 
 from .const import CLIENT_ID, CONF_REPOSITORIES, DEFAULT_REPOSITORIES, DOMAIN, LOGGER
 
@@ -111,10 +118,67 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
+        if user_input is not None:
+            if user_input["auth_type"] == "pat":
+                return await self.async_step_pat()
+            return await self.async_step_device()
 
-        return await self.async_step_device(user_input)
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["device", "pat"],
+        )
+
+    async def async_step_pat(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Handle PAT step."""
+        errors = {}
+
+        if user_input is not None:
+            try:
+                # Validate the token
+                client = GitHubAPI(
+                    token=user_input[CONF_ACCESS_TOKEN],
+                    session=async_get_clientsession(self.hass),
+                    client_name=SERVER_SOFTWARE,
+                )
+                # Verify token and get user info for unique ID
+                user = await client.user.get()
+                username = user.data.login
+                name = user_input.get("name", "PAT")
+
+                # Use a composite unique ID to allow multiple instances
+                # For PATs: username_slugifiedname
+
+                unique_id = f"{username}_{slugify(name)}"
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+
+            except GitHubException:
+                errors["base"] = "invalid_access_token"
+            except AbortFlow:
+                raise
+            except Exception:  # pylint: disable=broad-except  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=f"{username} ({name})",
+                    data={CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN]},
+                    options={CONF_REPOSITORIES: []},
+                )
+
+        return self.async_show_form(
+            step_id="pat",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+                    vol.Optional("name", default="PAT"): cv.string,
+                }
+            ),
+            errors=errors,
+        )
 
     async def async_step_device(
         self,
@@ -185,15 +249,32 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="repositories",
                 data_schema=vol.Schema(
                     {
-                        vol.Required(CONF_REPOSITORIES): cv.multi_select(
-                            {k: k for k in repositories}
+                        vol.Required(CONF_REPOSITORIES): SelectSelector(
+                            SelectSelectorConfig(
+                                options=repositories,
+                                multiple=True,
+                                mode=SelectSelectorMode.DROPDOWN,
+                            )
                         ),
                     }
                 ),
             )
 
+        client = GitHubAPI(
+            token=self._login.access_token,
+            session=async_get_clientsession(self.hass),
+            client_name=SERVER_SOFTWARE,
+        )
+        user = await client.user.get()
+        username = user.data.login
+
+        # For OAuth: username_oauth
+        unique_id = f"{username}_oauth"
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
+
         return self.async_create_entry(
-            title="",
+            title=f"{username} (OAuth)",
             data={CONF_ACCESS_TOKEN: self._login.access_token},
             options={CONF_REPOSITORIES: user_input[CONF_REPOSITORIES]},
         )
@@ -242,7 +323,13 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                         vol.Required(
                             CONF_REPOSITORIES,
                             default=configured_repositories,
-                        ): cv.multi_select({k: k for k in repositories}),
+                        ): SelectSelector(
+                            SelectSelectorConfig(
+                                options=repositories,
+                                multiple=True,
+                                mode=SelectSelectorMode.DROPDOWN,
+                            )
+                        ),
                     }
                 ),
             )

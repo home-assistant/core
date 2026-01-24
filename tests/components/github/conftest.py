@@ -132,4 +132,28 @@ def github_client(hass: HomeAssistant) -> Generator[AsyncMock]:
         graphql_mock.data = load_json_object_fixture("graphql.json", DOMAIN)
         client.graphql.return_value = graphql_mock
         client.repos.events.subscribe = AsyncMock()
+
+        # Account coordinator mocks
+        # Account coordinator mocks
+        # Mock generic for notifications and search
+        notifications_mock = MagicMock()
+        notifications_mock.data = []
+
+        search_mock = MagicMock()
+        search_mock.data = {"total_count": 10, "items": []}
+
+        async def generic_side_effect(endpoint, **kwargs):
+            if "notifications" in endpoint:
+                return notifications_mock
+            return search_mock
+
+        client.generic = AsyncMock(side_effect=generic_side_effect)
+
+        # Remove search_issues mock as it's no longer used
+        # client.search_issues = AsyncMock(return_value=search_mock)
+
+        user_mock = MagicMock()
+        user_mock.data.login = "mock_user"
+        client.user.get = AsyncMock(return_value=user_mock)
+
         yield client
