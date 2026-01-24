@@ -14,7 +14,7 @@ from homeassistant.components.ecobee.climate import (
     PRESET_AWAY_INDEFINITELY,
     Thermostat,
 )
-from homeassistant.components.ecobee.const import DOMAIN
+from homeassistant.components.ecobee.const import DOMAIN, ECOBEE_MODEL_TO_NAME
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -618,3 +618,12 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
         )
     assert execinfo.value.translation_domain == "ecobee"
     assert execinfo.value.translation_key == "sensor_lookup_failed"
+
+
+async def test_attis_retail_model_recognized(hass: HomeAssistant) -> None:
+    """Test that attisRetail model is recognized."""
+    assert "attisRetail" in ECOBEE_MODEL_TO_NAME
+    assert (
+        ECOBEE_MODEL_TO_NAME["attisRetail"]
+        == "ecobee Smart Thermostat with Voice Control"
+    )
