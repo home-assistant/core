@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -73,6 +74,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last fertilized',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
@@ -124,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -187,6 +190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -246,6 +250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MOISTURE: 'moisture'>,
@@ -310,6 +315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -367,6 +373,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next fertilization',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
@@ -425,6 +432,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nutrients state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -484,6 +492,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
@@ -541,6 +550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plant state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -598,6 +608,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salinity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -665,6 +676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salinity state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -722,6 +734,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scientific name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -772,6 +785,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -839,6 +853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -898,6 +913,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -949,6 +965,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last fertilized',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
@@ -1000,6 +1017,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1063,6 +1081,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1122,6 +1141,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MOISTURE: 'moisture'>,
@@ -1186,6 +1206,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1243,6 +1264,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next fertilization',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
@@ -1301,6 +1323,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nutrients state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1360,6 +1383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
@@ -1417,6 +1441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plant state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1474,6 +1499,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salinity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1541,6 +1567,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salinity state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1598,6 +1625,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Scientific name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1648,6 +1676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1715,6 +1744,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,

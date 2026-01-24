@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air density',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 5,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -135,6 +137,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feels like',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -192,6 +195,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heat index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -249,6 +253,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lightning count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -301,6 +306,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lightning count last 1 hr',
     'options': dict({
     }),
     'original_device_class': None,
@@ -353,6 +359,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lightning count last 3 hr',
     'options': dict({
     }),
     'original_device_class': None,
@@ -405,6 +412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lightning last distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -460,6 +468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lightning last strike',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -512,6 +521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nearcast precipitation duration yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -568,6 +578,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nearcast precipitation today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -624,6 +635,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Nearcast precipitation yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -680,6 +692,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation duration today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -736,6 +749,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation duration yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -792,6 +806,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -854,6 +869,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation type yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -916,6 +932,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -972,6 +989,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure barometric',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1032,6 +1050,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure sea level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -1092,6 +1111,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rain last hour',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1148,6 +1168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1205,6 +1226,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wet bulb globe temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1262,6 +1284,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wet bulb temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1319,6 +1342,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind chill',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1374,6 +1398,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
@@ -1427,6 +1452,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1487,6 +1513,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind lull',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1547,6 +1574,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind sample interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1603,6 +1631,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1663,6 +1692,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed (avg)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

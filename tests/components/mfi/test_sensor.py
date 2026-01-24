@@ -34,7 +34,7 @@ async def test_setup_missing_config(hass: HomeAssistant) -> None:
     """Test setup with missing configuration."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
         config = {"sensor": {"platform": "mfi"}}
-        assert await async_setup_component(hass, "sensor", config)
+        assert await async_setup_component(hass, COMPONENT.DOMAIN, config)
         assert not mock_client.called
 
 
@@ -42,14 +42,14 @@ async def test_setup_failed_login(hass: HomeAssistant) -> None:
     """Test setup with login failure."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
         mock_client.side_effect = FailedToLogin
-        assert not PLATFORM.setup_platform(hass, GOOD_CONFIG, None)
+        assert not PLATFORM.setup_platform(hass, GOOD_CONFIG[COMPONENT.DOMAIN], None)
 
 
 async def test_setup_failed_connect(hass: HomeAssistant) -> None:
     """Test setup with connection failure."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
         mock_client.side_effect = requests.exceptions.ConnectionError
-        assert not PLATFORM.setup_platform(hass, GOOD_CONFIG, None)
+        assert not PLATFORM.setup_platform(hass, GOOD_CONFIG[COMPONENT.DOMAIN], None)
 
 
 async def test_setup_minimum(hass: HomeAssistant) -> None:
@@ -111,7 +111,7 @@ async def test_setup_adds_proper_devices(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         for ident, port in ports.items():
             if ident != "bad":
-                mock_sensor.assert_any_call(port, hass)
+                mock_sensor.assert_any_call(port)
         assert mock.call(ports["bad"], hass) not in mock_sensor.mock_calls
 
 
@@ -124,7 +124,7 @@ def port_fixture() -> mock.MagicMock:
 @pytest.fixture(name="sensor")
 def sensor_fixture(hass: HomeAssistant, port: mock.MagicMock) -> mfi.MfiSensor:
     """Sensor fixture."""
-    sensor = mfi.MfiSensor(port, hass)
+    sensor = mfi.MfiSensor(port)
     sensor.hass = hass
     return sensor
 

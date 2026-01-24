@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed A',
     'options': dict({
     }),
     'original_device_class': None,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed B',
     'options': dict({
     }),
     'original_device_class': None,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -216,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -265,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -314,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -363,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -412,6 +420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 5',
     'options': dict({
     }),
     'original_device_class': None,
@@ -461,6 +470,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 6',
     'options': dict({
     }),
     'original_device_class': None,
@@ -510,6 +520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed 7',
     'options': dict({
     }),
     'original_device_class': None,
@@ -559,6 +570,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed A',
     'options': dict({
     }),
     'original_device_class': None,
@@ -608,6 +620,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensed B',
     'options': dict({
     }),
     'original_device_class': None,
@@ -657,6 +670,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub short on branch 0',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -707,6 +721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub short on branch 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -757,6 +772,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub short on branch 2',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -807,6 +823,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub short on branch 3',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
