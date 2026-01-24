@@ -29,6 +29,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
@@ -277,7 +278,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         preset_handle = self._preset_handle_by_name.get(preset_mode)
 
         if preset_handle is None:
-            raise ValueError(
+            raise HomeAssistantError(
                 f"Preset mode '{preset_mode}' not found. "
                 f"Available presets: {self.preset_modes}"
             )
