@@ -66,24 +66,10 @@ class AWSBedrockConversationEntity(
             )
         except conversation.ConverseError as err:
             return err.as_conversation_result()
-        except Exception:  # noqa: BLE001
-            LOGGER.exception("Unexpected error in async_provide_llm_data")
-            return conversation.ConversationResult(
-                response=conversation.intent.IntentResponse(
-                    language=user_input.language
-                ),
-                conversation_id=user_input.conversation_id or "unknown",
-            )
 
         try:
             await self._async_handle_chat_log(chat_log)
-        except Exception:  # noqa: BLE001
-            LOGGER.exception("Error in _async_handle_chat_log")
-            return conversation.ConversationResult(
-                response=conversation.intent.IntentResponse(
-                    language=user_input.language
-                ),
-                conversation_id=user_input.conversation_id or "unknown",
-            )
+        except conversation.ConverseError as err:
+            return err.as_conversation_result()
 
         return conversation.async_get_result_from_chat_log(user_input, chat_log)
