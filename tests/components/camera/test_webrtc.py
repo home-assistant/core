@@ -707,13 +707,17 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
         ) -> None:
             """Handle the WebRTC candidate."""
 
+    camera = Mock()
     provider = OnlyRequiredInterfaceProvider()
     # Call all interface methods
     assert provider.async_is_supported("stream_source") is True
     await provider.async_handle_async_webrtc_offer(
-        Mock(), "offer_sdp", "session_id", Mock()
+        camera, "offer_sdp", "session_id", Mock()
     )
     await provider.async_on_webrtc_candidate(
         "session_id", RTCIceCandidateInit("candidate")
     )
     provider.async_close_session("session_id")
+    await provider.async_register_camera(camera)
+    await provider.async_unregister_camera(camera)
+    await provider.async_on_camera_prefs_update(camera)
