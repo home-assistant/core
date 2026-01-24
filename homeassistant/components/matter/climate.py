@@ -60,21 +60,11 @@ KNOWN_PRESETS: dict[str, str] = {
     # Custom preset names (device-provided, may vary by manufacturer)
     "Home": PRESET_HOME,
     "Away": PRESET_AWAY,
+    "Sleep": PRESET_SLEEP,
     "Eco": PRESET_ECO,
     "Wake": "wake",
     "Vacation": "vacation",
     "GoingToSleep": "going_to_sleep",
-}
-
-# Map of PresetScenarioEnum values to preset names from Matter spec
-PRESET_SCENARIO_MAP: dict[int, str] = {
-    clusters.Thermostat.Enums.PresetScenarioEnum.kOccupied: "occupied",
-    clusters.Thermostat.Enums.PresetScenarioEnum.kUnoccupied: "unoccupied",
-    clusters.Thermostat.Enums.PresetScenarioEnum.kSleep: "sleep",
-    clusters.Thermostat.Enums.PresetScenarioEnum.kWake: "wake",
-    clusters.Thermostat.Enums.PresetScenarioEnum.kVacation: "vacation",
-    clusters.Thermostat.Enums.PresetScenarioEnum.kGoingToSleep: "going_to_sleep",
-    clusters.Thermostat.Enums.PresetScenarioEnum.kUserDefined: "user_defined",
 }
 
 SINGLE_SETPOINT_DEVICES: set[tuple[int, int]] = {
@@ -246,10 +236,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._preset_handle_by_name: dict[str, bytes] = {}
         super().__init__(*args, **kwargs)
 
-    async def async_get_presets(self) -> None:
-        """Get presets."""
-        # return self._attr_preset_modes
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
@@ -387,20 +373,22 @@ class MatterClimate(MatterEntity, ClimateEntity):
         presets = []
         if self.matter_presets:
             for i, preset in enumerate(self.matter_presets, start=1):
-                # Use preset name if available, otherwise try to map from scenarioType
-                name = None
-                if preset.name and preset.name.strip():
-                    name = preset.name.strip()
-                elif hasattr(preset, "scenarioType") and preset.scenarioType:
-                    # Try to get the standard name from PresetScenarioEnum
-                    name = PRESET_SCENARIO_MAP.get(preset.scenarioType)
+                # Get device preset name from preset.name if available
+                device_preset_name = None
+                if preset.name and (name := preset.name.strip()):
+                    device_preset_name = name
 
                 # Fall back to generic name if no name was determined
-                if not name:
-                    name = f"Preset{i}"
+                if not device_preset_name:
+                    device_preset_name = f"Preset{i}"
 
-                presets.append(name)
-                self._preset_handle_by_name[name] = preset.presetHandle
+                # Map to HA translation key (slugified) version if known, otherwise slugify
+                ha_preset_name = KNOWN_PRESETS.get(
+                    device_preset_name, device_preset_name.lower().replace(" ", "_")
+                )
+
+                presets.append(ha_preset_name)
+                self._preset_handle_by_name[ha_preset_name] = preset.presetHandle
 
         self._attr_preset_modes = presets
 

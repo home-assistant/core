@@ -443,16 +443,17 @@ async def test_eve_thermo_v5_presets(
     assert state.attributes["supported_features"] & mask == mask
 
     # Test preset modes parsed correctly from Eve Thermo v5
+    # Should be slugified/translation key versions
     assert state.attributes["preset_modes"] == [
-        "Home",
-        "Away",
-        "Sleep",
-        "Wake",
-        "Vacation",
-        "GoingToSleep",
-        "Eco",
+        "home",
+        "away",
+        "sleep",
+        "wake",
+        "vacation",
+        "going_to_sleep",
+        "eco",
     ]
-    assert state.attributes["preset_mode"] == "Home"
+    assert state.attributes["preset_mode"] == "home"
 
     # Get presets from the node for dynamic testing
     presets_attribute = matter_node.endpoints[1].get_attribute_value(
@@ -461,13 +462,13 @@ async def test_eve_thermo_v5_presets(
     )
     preset_by_name = {preset.name: preset.presetHandle for preset in presets_attribute}
 
-    # test set_preset_mode with "Home" preset
+    # test set_preset_mode with "home" preset (slugified)
     await hass.services.async_call(
         "climate",
         "set_preset_mode",
         {
             "entity_id": entity_id,
-            "preset_mode": "Home",
+            "preset_mode": "home",
         },
         blocking=True,
     )
@@ -482,16 +483,16 @@ async def test_eve_thermo_v5_presets(
     # Verify preset_mode is optimistically updated
     state = hass.states.get(entity_id)
     assert state
-    assert state.attributes["preset_mode"] == "Home"
+    assert state.attributes["preset_mode"] == "home"
     matter_client.send_device_command.reset_mock()
 
-    # test set_preset_mode with "Away" preset
+    # test set_preset_mode with "away" preset (slugified)
     await hass.services.async_call(
         "climate",
         "set_preset_mode",
         {
             "entity_id": entity_id,
-            "preset_mode": "Away",
+            "preset_mode": "away",
         },
         blocking=True,
     )
@@ -506,16 +507,16 @@ async def test_eve_thermo_v5_presets(
     # Verify preset_mode is optimistically updated
     state = hass.states.get(entity_id)
     assert state
-    assert state.attributes["preset_mode"] == "Away"
+    assert state.attributes["preset_mode"] == "away"
     matter_client.send_device_command.reset_mock()
 
-    # test set_preset_mode with "Eco" preset
+    # test set_preset_mode with "eco" preset (slugified)
     await hass.services.async_call(
         "climate",
         "set_preset_mode",
         {
             "entity_id": entity_id,
-            "preset_mode": "Eco",
+            "preset_mode": "eco",
         },
         blocking=True,
     )
@@ -558,7 +559,7 @@ async def test_eve_thermo_v5_presets(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
-    assert state.attributes["preset_mode"] == "Home"
+    assert state.attributes["preset_mode"] == "home"
 
     # Test that preset_mode is updated when ActivePresetHandle changes to different preset
     set_node_attribute(
@@ -571,7 +572,7 @@ async def test_eve_thermo_v5_presets(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
-    assert state.attributes["preset_mode"] == "Away"
+    assert state.attributes["preset_mode"] == "away"
 
     # Test that preset_mode is None when ActivePresetHandle is cleared
     set_node_attribute(

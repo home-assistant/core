@@ -139,7 +139,20 @@
     },
     "climate": {
       "thermostat": {
-        "name": "Thermostat"
+        "name": "Thermostat",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "away": "[%key:common::state::not_home%]",
+              "eco": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
+              "going_to_sleep": "Going to sleep",
+              "home": "[%key:common::state::home%]",
+              "sleep": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::sleep%]",
+              "vacation": "Vacation",
+              "wake": "Wake"
+            }
+          }
+        }
       }
     },
     "cover": {
