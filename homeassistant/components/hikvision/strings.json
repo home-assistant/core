@@ -87,9 +87,6 @@
       "shelter_alarm": {
         "name": "Shelter alarm"
       },
-      "tamper_detection": {
-        "name": "Tamper detection"
-      },
       "unattended_baggage": {
         "name": "Unattended baggage"
       },
