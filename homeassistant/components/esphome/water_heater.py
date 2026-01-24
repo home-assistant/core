@@ -17,6 +17,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import EsphomeEntity, EsphomeEnumMapper, platform_async_setup_entry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
