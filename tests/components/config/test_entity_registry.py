@@ -1350,19 +1350,18 @@ async def test_get_automatic_entity_ids(
                 entity_id="test_domain.test_1",
                 unique_id="uniq1",
                 platform="test_domain",
+                object_id_base="test_1",
             ),
             "test_domain.test_2": RegistryEntryWithDefaults(
                 entity_id="test_domain.test_2",
                 unique_id="uniq2",
                 platform="test_domain",
-                suggested_object_id="collision",
             ),
             "test_domain.test_3": RegistryEntryWithDefaults(
                 entity_id="test_domain.test_3",
                 name="Name by User 3",
                 unique_id="uniq3",
                 platform="test_domain",
-                suggested_object_id="suggested_3",
             ),
             "test_domain.test_4": RegistryEntryWithDefaults(
                 entity_id="test_domain.test_4",
@@ -1385,13 +1384,11 @@ async def test_get_automatic_entity_ids(
                 entity_id="test_domain.test_7",
                 unique_id="uniq7",
                 platform="test_domain",
-                suggested_object_id="test_7",
             ),
             "test_domain.not_unique": RegistryEntryWithDefaults(
                 entity_id="test_domain.not_unique",
                 unique_id="not_unique_1",
                 platform="test_domain",
-                suggested_object_id="not_unique",
             ),
             "test_domain.not_unique_2": RegistryEntryWithDefaults(
                 entity_id="test_domain.not_unique_2",
@@ -1403,7 +1400,6 @@ async def test_get_automatic_entity_ids(
                 entity_id="test_domain.not_unique_3",
                 unique_id="not_unique_3",
                 platform="test_domain",
-                suggested_object_id="not_unique",
             ),
             "test_domain.also_not_unique_changed_1": RegistryEntryWithDefaults(
                 entity_id="test_domain.also_not_unique_changed_1",
@@ -1425,15 +1421,25 @@ async def test_get_automatic_entity_ids(
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_setup({})
-    entity2 = MockEntity(unique_id="uniq2", name="Entity Name 2")
-    entity3 = MockEntity(unique_id="uniq3", name="Entity Name 3")
+    entity2 = MockEntity(unique_id="uniq2", entity_id="test_domain.collision")
+    entity3 = MockEntity(
+        unique_id="uniq3", name="Entity Name 3", entity_id="test_domain.suggested_3"
+    )
     entity4 = MockEntity(unique_id="uniq4", name="Entity Name 4")
     entity5 = MockEntity(unique_id="uniq5", name="Entity Name 5")
     entity6 = MockEntity(unique_id="uniq6", name="Entity Name 6")
-    entity7 = MockEntity(unique_id="uniq7", name="Entity Name 7")
-    entity8 = MockEntity(unique_id="not_unique_1", name="Entity Name 8")
+    entity7 = MockEntity(
+        unique_id="uniq7", name="Entity Name 7", entity_id="test_domain.test_7"
+    )
+    entity8 = MockEntity(
+        unique_id="not_unique_1",
+        name="Entity Name 8",
+        entity_id="test_domain.not_unique",
+    )
     entity9 = MockEntity(unique_id="not_unique_2", name="Entity Name 9")
-    entity10 = MockEntity(unique_id="not_unique_3", name="Not unique")
+    entity10 = MockEntity(
+        unique_id="not_unique_3", name="Not unique", entity_id="test_domain.not_unique"
+    )
     entity11 = MockEntity(unique_id="also_not_unique_1", name="Also not unique")
     entity12 = MockEntity(unique_id="also_not_unique_2", name="Also not unique")
     await component.async_add_entities(
@@ -1477,8 +1483,9 @@ async def test_get_automatic_entity_ids(
 
     assert msg["success"]
     assert msg["result"] == {
-        # No entity object for test_domain.test_1
-        "test_domain.test_1": None,
+        # No entity object for test_domain.test_1,
+        # but still works thanks to stored object_id_base
+        "test_domain.test_1": "test_domain.test_1",
         # The suggested_object_id is taken, fall back to suggested_object_id + _2
         "test_domain.test_2": "test_domain.collision_2",
         # name set by user has higher priority than suggested_object_id or entity
