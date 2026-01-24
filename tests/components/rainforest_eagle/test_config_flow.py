@@ -87,7 +87,7 @@ async def test_form_multiple_meters(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.rainforest_eagle.async_setup_entry",
             return_value=True,
-        ),
+        ) as mock_setup_entry,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -99,6 +99,9 @@ async def test_form_multiple_meters(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # Should not have create the entities, yet
+    assert len(mock_setup_entry.mock_calls) == 0
+
     # Should show meter selection form
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "meter_select"
@@ -108,7 +111,7 @@ async def test_form_multiple_meters(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.rainforest_eagle.async_setup_entry",
             return_value=True,
-        ),
+        ) as mock_setup_entry_2,
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -125,6 +128,7 @@ async def test_form_multiple_meters(hass: HomeAssistant) -> None:
         CONF_INSTALL_CODE: "123456",
         CONF_HARDWARE_ADDRESS: "meter-2",
     }
+    assert len(mock_setup_entry_2.mock_calls) == 1
 
 
 async def test_form_no_meters(hass: HomeAssistant) -> None:
