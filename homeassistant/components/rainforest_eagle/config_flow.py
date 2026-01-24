@@ -97,8 +97,8 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
             # Create a list of meter choices
             assert self._meters is not None
             meter_choices = {
-                meter.hardware_address: f"Meter {meter.hardware_address} ({meter.connection_status})"
-                for meter in self._meters
+                meter.hardware_address: f"Meter #{i + 1}: ({meter.connection_status}) hardware address {meter.hardware_address}"
+                for i, meter in enumerate(self._meters)
             }
 
             return self.async_show_form(

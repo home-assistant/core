@@ -13,7 +13,7 @@
         "data": {
           "hardware_address": "Meter"
         },
-        "description": "Multiple meters detected ({meter_count} total). Please select which meter you want to monitor.",
+        "description": "This gateway has connected to {meter_count} different smart meters in its lifetime, each with a unique hardware address. Please select the hardware address corresponding to the meter you want to monitor.",
         "title": "Select meter"
       },
       "user": {
