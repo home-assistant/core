@@ -83,6 +83,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
+    if entry.version == 2:
+        # 2 -> 2.2: Unique ID from integer to string
+        if entry.minor_version == 1:
+            minor_version = 2
+            hass.config_entries.async_update_entry(
+                entry, unique_id=str(entry.unique_id), minor_version=minor_version
+            )
+
     return True
 
 
