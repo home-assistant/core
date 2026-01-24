@@ -97,7 +97,7 @@ jobs:
     steps:
       - &checkout
         name: Check out code from GitHub
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: |
@@ -297,7 +297,7 @@ jobs:
       - &setup-python-matrix
         name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: &actions-setup-python actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        uses: &actions-setup-python actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -478,6 +478,22 @@ jobs:
         run: |
           . venv/bin/activate
           python -m script.gen_requirements_all validate
+
+  gen-copilot-instructions:
+    name: Check copilot instructions
+    runs-on: *runs-on-ubuntu
+    needs:
+      - info
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+    steps:
+      - *checkout
+      - *setup-python-default
+      - name: Run gen_copilot_instructions.py
+        run: |
+          python -m script.gen_copilot_instructions validate
 
   dependency-review:
     name: Dependency review
@@ -1187,6 +1203,8 @@ jobs:
       - pytest-postgres
       - pytest-mariadb
     timeout-minutes: 10
+    permissions:
+      id-token: write
     # codecov/test-results-action currently doesn't support tokenless uploads
     # therefore we can't run it on forks
     if: |
@@ -1198,8 +1216,9 @@ jobs:
         with:
           pattern: test-results-*
       - name: Upload test results to Codecov
-        uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
+          report_type: test_results
           fail_ci_if_error: true
           verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true
