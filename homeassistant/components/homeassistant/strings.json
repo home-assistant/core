@@ -157,10 +157,6 @@
       "description": "The {domain} integration does not support configuration under its own key, it must be configured under its supported platforms.\n\nTo resolve this:\n\n1. Remove `{domain}:` from your YAML configuration file.\n\n2. Restart Home Assistant.",
       "title": "The {domain} integration does not support YAML configuration under its own key"
     },
-    "python_version": {
-      "description": "Support for running Home Assistant in the currently used Python version {current_python_version} is deprecated and will be removed in Home Assistant {breaks_in_ha_version}. Please upgrade Python to {required_python_version} to prevent your Home Assistant instance from breaking.",
-      "title": "Support for Python {current_python_version} is being removed"
-    },
     "storage_corruption": {
       "fix_flow": {
         "step": {

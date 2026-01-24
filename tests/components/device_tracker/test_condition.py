@@ -1,10 +1,10 @@
-"""Test siren conditions."""
+"""Test device tracker conditions."""
 
 from typing import Any
 
 import pytest
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 
 from tests.components import (
@@ -20,59 +20,48 @@ from tests.components import (
 
 
 @pytest.fixture
-async def target_sirens(hass: HomeAssistant) -> list[str]:
-    """Create multiple siren entities associated with different targets."""
-    return (await target_entities(hass, "siren"))["included"]
-
-
-@pytest.fixture
-async def target_switches(hass: HomeAssistant) -> list[str]:
-    """Create multiple switch entities associated with different targets.
-
-    Note: The switches are used to ensure that only siren entities are considered
-    in the condition evaluation and not other toggle entities.
-    """
-    return (await target_entities(hass, "switch"))["included"]
+async def target_device_trackers(hass: HomeAssistant) -> list[str]:
+    """Create multiple device tracker entities associated with different targets."""
+    return (await target_entities(hass, "device_tracker"))["included"]
 
 
 @pytest.mark.parametrize(
     "condition",
     [
-        "siren.is_off",
-        "siren.is_on",
+        "device_tracker.is_home",
+        "device_tracker.is_not_home",
     ],
 )
-async def test_siren_conditions_gated_by_labs_flag(
+async def test_device_tracker_conditions_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
 ) -> None:
-    """Test the siren conditions are gated by the labs flag."""
+    """Test the device tracker conditions are gated by the labs flag."""
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("siren"),
+    parametrize_target_entities("device_tracker"),
 )
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
         *parametrize_condition_states_any(
-            condition="siren.is_on",
-            target_states=[STATE_ON],
-            other_states=[STATE_OFF],
+            condition="device_tracker.is_home",
+            target_states=[STATE_HOME],
+            other_states=[STATE_NOT_HOME],
         ),
         *parametrize_condition_states_any(
-            condition="siren.is_off",
-            target_states=[STATE_OFF],
-            other_states=[STATE_ON],
+            condition="device_tracker.is_not_home",
+            target_states=[STATE_NOT_HOME],
+            other_states=[STATE_HOME],
         ),
     ],
 )
-async def test_siren_state_condition_behavior_any(
+async def test_device_tracker_state_condition_behavior_any(
     hass: HomeAssistant,
-    target_sirens: list[str],
-    target_switches: list[str],
+    target_device_trackers: list[str],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -80,11 +69,11 @@ async def test_siren_state_condition_behavior_any(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test the siren state condition with the 'any' behavior."""
-    other_entity_ids = set(target_sirens) - {entity_id}
+    """Test the device tracker state condition with the 'any' behavior."""
+    other_entity_ids = set(target_device_trackers) - {entity_id}
 
-    # Set all sirens, including the tested siren, to the initial state
-    for eid in target_sirens:
+    # Set all device trackers, including the tested one, to the initial state
+    for eid in target_device_trackers:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -95,20 +84,13 @@ async def test_siren_state_condition_behavior_any(
         behavior="any",
     )
 
-    # Set state for switches to ensure that they don't impact the condition
-    for state in states:
-        for eid in target_switches:
-            set_or_remove_state(hass, eid, state["included"])
-            await hass.async_block_till_done()
-            assert condition(hass) is False
-
     for state in states:
         included_state = state["included"]
         set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert condition(hass) == state["condition_true"]
 
-        # Check if changing other sirens also passes the condition
+        # Check if changing other device trackers also passes the condition
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
@@ -118,26 +100,26 @@ async def test_siren_state_condition_behavior_any(
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("siren"),
+    parametrize_target_entities("device_tracker"),
 )
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
         *parametrize_condition_states_all(
-            condition="siren.is_on",
-            target_states=[STATE_ON],
-            other_states=[STATE_OFF],
+            condition="device_tracker.is_home",
+            target_states=[STATE_HOME],
+            other_states=[STATE_NOT_HOME],
         ),
         *parametrize_condition_states_all(
-            condition="siren.is_off",
-            target_states=[STATE_OFF],
-            other_states=[STATE_ON],
+            condition="device_tracker.is_not_home",
+            target_states=[STATE_NOT_HOME],
+            other_states=[STATE_HOME],
         ),
     ],
 )
-async def test_siren_state_condition_behavior_all(
+async def test_device_tracker_state_condition_behavior_all(
     hass: HomeAssistant,
-    target_sirens: list[str],
+    target_device_trackers: list[str],
     condition_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -145,14 +127,11 @@ async def test_siren_state_condition_behavior_all(
     condition_options: dict[str, Any],
     states: list[ConditionStateDescription],
 ) -> None:
-    """Test the siren state condition with the 'all' behavior."""
-    # Set state for two switches to ensure that they don't impact the condition
-    hass.states.async_set("switch.label_switch_1", STATE_OFF)
-    hass.states.async_set("switch.label_switch_2", STATE_ON)
-    other_entity_ids = set(target_sirens) - {entity_id}
+    """Test the device tracker state condition with the 'all' behavior."""
+    other_entity_ids = set(target_device_trackers) - {entity_id}
 
-    # Set all sirens, including the tested siren, to the initial state
-    for eid in target_sirens:
+    # Set all device trackers, including the tested one, to the initial state
+    for eid in target_device_trackers:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
