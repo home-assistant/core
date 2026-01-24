@@ -381,16 +381,16 @@ async def test_async_handle_message_unexpected_exception_in_provide_llm_data(
         AsyncMock(side_effect=ValueError("Unexpected error")),
     )
 
-    with patch.object(
-        entity, "_async_handle_chat_log", AsyncMock()
-    ) as mock_handle_chat_log:
-        result = await entity._async_handle_message(user_input, chat_log)
+    with (
+        patch.object(
+            entity, "_async_handle_chat_log", AsyncMock()
+        ) as mock_handle_chat_log,
+        pytest.raises(ValueError, match="Unexpected error"),
+    ):
+        await entity._async_handle_message(user_input, chat_log)
 
     # Verify _async_handle_chat_log was NOT called due to error
     mock_handle_chat_log.assert_not_called()
-
-    # Verify error result - should return a conversation result with unknown conversation_id
-    assert result.conversation_id == "test-conversation-id"
 
 
 async def test_async_handle_message_exception_in_handle_chat_log(
@@ -425,12 +425,12 @@ async def test_async_handle_message_exception_in_handle_chat_log(
     object.__setattr__(chat_log, "async_provide_llm_data", AsyncMock())
 
     # Make _async_handle_chat_log raise an exception
-    with patch.object(
-        entity,
-        "_async_handle_chat_log",
-        AsyncMock(side_effect=RuntimeError("Chat log error")),
+    with (
+        patch.object(
+            entity,
+            "_async_handle_chat_log",
+            AsyncMock(side_effect=RuntimeError("Chat log error")),
+        ),
+        pytest.raises(RuntimeError, match="Chat log error"),
     ):
-        result = await entity._async_handle_message(user_input, chat_log)
-
-    # Verify error result is returned
-    assert result.conversation_id == "test-conversation-id"
+        await entity._async_handle_message(user_input, chat_log)

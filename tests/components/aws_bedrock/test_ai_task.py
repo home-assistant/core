@@ -209,10 +209,7 @@ def test_entity_supported_features(
         mock_runtime_data.client = AsyncMock()
         entity = AWSBedrockTaskEntity(mock_config_entry, subentry)
 
-    assert entity._attr_supported_features == (
-        ai_task.AITaskEntityFeature.GENERATE_DATA
-        | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
-    )
+    assert entity._attr_supported_features == ai_task.AITaskEntityFeature.GENERATE_DATA
 
 
 async def test_generate_data_with_unstructured_response(

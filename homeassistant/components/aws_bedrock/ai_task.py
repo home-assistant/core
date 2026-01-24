@@ -37,10 +37,7 @@ class AWSBedrockTaskEntity(
 ):
     """AWS Bedrock AI Task entity."""
 
-    _attr_supported_features = (
-        ai_task.AITaskEntityFeature.GENERATE_DATA
-        | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
-    )
+    _attr_supported_features = ai_task.AITaskEntityFeature.GENERATE_DATA
 
     async def _async_generate_data(
         self,
