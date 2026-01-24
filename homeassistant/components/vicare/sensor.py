@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfEnergy,
     UnitOfMass,
@@ -969,6 +970,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_getter=lambda api: api.getBatteryLevel(),
+    ),
+    ViCareSensorEntityDescription(
+        key="wifi_signal_strength",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        value_getter=lambda api: api.getWifiSignalStrength(),
+        entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
         key="zigbee_signal_strength",
