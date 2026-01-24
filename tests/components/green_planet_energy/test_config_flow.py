@@ -93,3 +93,30 @@ async def test_form_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_single_instance_allowed(
+    hass: HomeAssistant, mock_api: MagicMock
+) -> None:
+    """Test we only allow a single config entry."""
+    # Create the first entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Green Planet Energy"
+    await hass.async_block_till_done()
+
+    # Try to add a second entry
+    result3 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "single_instance_allowed"
