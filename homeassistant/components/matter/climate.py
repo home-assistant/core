@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import IntEnum
-import logging
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -36,8 +35,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
-
-_LOGGER = logging.getLogger(__name__)
 
 HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
@@ -183,7 +180,6 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
 }
 
 SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum
-ControlSequenceEnum = clusters.Thermostat.Enums.ControlSequenceOfOperationEnum
 ThermostatFeature = clusters.Thermostat.Bitmaps.Feature
 
 
