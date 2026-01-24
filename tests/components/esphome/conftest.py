@@ -560,9 +560,10 @@ async def _mock_generic_device_entry(
 
         async def mock_try_connect(self):
             """Set an event when ReconnectLogic._try_connect has been awaited."""
-            result = await super()._try_connect()
-            try_connect_done.set()
-            return result
+            try:
+                return await super()._try_connect()
+            finally:
+                try_connect_done.set()
 
         def stop_callback(self) -> None:
             """Stop the reconnect logic."""

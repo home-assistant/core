@@ -14,7 +14,14 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemper
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import EsphomeEntity, EsphomeEnumMapper, platform_async_setup_entry
+from .entity import (
+    EsphomeEntity,
+    EsphomeEnumMapper,
+    convert_api_error_ha_error,
+    esphome_float_state_property,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
 PARALLEL_UPDATES = 0
@@ -85,21 +92,6 @@ class EsphomeWaterHeater(
         return self._static_info.max_temperature
 
     @property
-    def current_temperature(self) -> float | None:
-        """Return the current temperature."""
-        return self._state.current_temperature
-
-    @property
-    def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
-        return self._state.target_temperature
-
-    @property
-    def current_operation(self) -> str | None:
-        """Return current operation mode."""
-        return self._mode_selector.from_esphome(self._state.mode)
-
-    @property
     def operation_list(self) -> list[str] | None:
         """Return the list of available operation modes."""
         if not self._static_info.supported_modes:
@@ -109,6 +101,25 @@ class EsphomeWaterHeater(
             for mode in self._static_info.supported_modes
         ]
 
+    @property
+    @esphome_float_state_property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        return self._state.current_temperature
+
+    @property
+    @esphome_float_state_property
+    def target_temperature(self) -> float | None:
+        """Return the temperature we try to reach."""
+        return self._state.target_temperature
+
+    @property
+    @esphome_state_property
+    def current_operation(self) -> str | None:
+        """Return current operation mode."""
+        return self._mode_selector.from_esphome(self._state.mode)
+
+    @convert_api_error_ha_error
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
@@ -116,11 +127,14 @@ class EsphomeWaterHeater(
         self._client.water_heater_command(
             key=self._key,
             target_temperature=kwargs[ATTR_TEMPERATURE],
+            device_id=self._static_info.device_id,
         )
 
+    @convert_api_error_ha_error
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         self._client.water_heater_command(
             key=self._key,
             mode=self._mode_selector.from_hass(operation_mode),
+            device_id=self._static_info.device_id,
         )
