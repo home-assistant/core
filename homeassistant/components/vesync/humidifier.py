@@ -164,11 +164,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
             # We successfully changed the mode. Consider it a success even if display operation fails.
             await self.device.toggle_display(False)
 
-        # Changing mode while humidifier is off actually turns it on, as per the app. But
-        # the library does not seem to update the device_status. It is also possible that
-        # other attributes get updated. Scheduling a forced refresh to get device status.
-        # updated.
-        self.schedule_update_ha_state(force_refresh=True)
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
