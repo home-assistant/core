@@ -41,7 +41,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Green Planet Energy Current price',
-      'time_slot': '13:00-14:00',
+      'time_slot': '05:00-06:00',
       'unit_of_measurement': '€/kWh',
     }),
     'context': <ANY>,
@@ -49,7 +49,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.33',
+    'state': '0.25',
   })
 # ---
 # name: test_sensors[sensor.green_planet_energy_highest_price_today-entry]

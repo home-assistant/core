@@ -24,9 +24,16 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_api() -> Generator[MagicMock]:
     """Create a mocked Green Planet Energy API."""
-    with patch(
-        "homeassistant.components.green_planet_energy.coordinator.GreenPlanetEnergyAPI",
-    ) as mock_api_class:
+    with (
+        patch(
+            "homeassistant.components.green_planet_energy.coordinator.GreenPlanetEnergyAPI",
+            autospec=True,
+        ) as mock_api_class,
+        patch(
+            "homeassistant.components.green_planet_energy.config_flow.GreenPlanetEnergyAPI",
+            new=mock_api_class,
+        ),
+    ):
         # Use MagicMock instead of AsyncMock for sync methods
         mock_api_instance = MagicMock()
 

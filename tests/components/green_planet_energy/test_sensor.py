@@ -1,5 +1,6 @@
 """Test the Green Planet Energy sensor."""
 
+from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -13,8 +14,11 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     init_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensors."""
+    freezer.move_to("2024-01-01 13:00:00")
+    await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
