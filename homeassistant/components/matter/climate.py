@@ -297,6 +297,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         )
         self._endpoint.set_attribute_value(active_preset_path, preset_handle)
         self._update_from_device()
+        self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -385,16 +386,14 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_preset_modes = presets
 
         # Update active preset mode
+        self._attr_preset_mode = None
         if active_preset_handle := self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.ActivePresetHandle
         ):
-            self._attr_preset_mode = None
             for preset_name, handle in self._preset_handle_by_name.items():
                 if handle == active_preset_handle:
                     self._attr_preset_mode = preset_name
                     break
-        else:
-            self._attr_preset_mode = None
 
     @callback
     def _update_hvac_mode_and_action(self) -> None:

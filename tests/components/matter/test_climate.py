@@ -457,7 +457,7 @@ async def test_eve_thermo_v5_presets(
 
     # Get presets from the node for dynamic testing
     presets_attribute = matter_node.endpoints[1].get_attribute_value(
-        clusters.Thermostat.Attributes.Presets.cluster_id,
+        513,
         clusters.Thermostat.Attributes.Presets.attribute_id,
     )
     preset_by_name = {preset.name: preset.presetHandle for preset in presets_attribute}
