@@ -29,15 +29,15 @@ async def test_water_heater_entity(
             min_temperature=10.0,
             max_temperature=85.0,
             supported_modes=[
-                WaterHeaterMode.WATER_HEATER_MODE_ECO,
-                WaterHeaterMode.WATER_HEATER_MODE_GAS,
+                WaterHeaterMode.ECO,
+                WaterHeaterMode.GAS,
             ],
         )
     ]
     states = [
         WaterHeaterState(
             key=1,
-            mode=WaterHeaterMode.WATER_HEATER_MODE_ECO,
+            mode=WaterHeaterMode.ECO,
             current_temperature=45.0,
             target_temperature=50.0,
         )
@@ -77,7 +77,7 @@ async def test_water_heater_set_temperature(
     states = [
         WaterHeaterState(
             key=1,
-            mode=WaterHeaterMode.WATER_HEATER_MODE_ECO,
+            mode=WaterHeaterMode.ECO,
             target_temperature=45.0,
         )
     ]
@@ -115,15 +115,15 @@ async def test_water_heater_set_operation_mode(
             key=1,
             name="My Boiler",
             supported_modes=[
-                WaterHeaterMode.WATER_HEATER_MODE_ECO,
-                WaterHeaterMode.WATER_HEATER_MODE_GAS,
+                WaterHeaterMode.ECO,
+                WaterHeaterMode.GAS,
             ],
         )
     ]
     states = [
         WaterHeaterState(
             key=1,
-            mode=WaterHeaterMode.WATER_HEATER_MODE_ECO,
+            mode=WaterHeaterMode.ECO,
         )
     ]
 
@@ -144,5 +144,5 @@ async def test_water_heater_set_operation_mode(
     )
 
     mock_client.water_heater_command.assert_has_calls(
-        [call(key=1, mode=WaterHeaterMode.WATER_HEATER_MODE_GAS, device_id=0)]
+        [call(key=1, mode=WaterHeaterMode.GAS, device_id=0)]
     )
