@@ -1,4 +1,4 @@
-"""Select platform for Compit integration."""
+"""Sensor platform for Compit integration."""
 
 from dataclasses import dataclass
 
@@ -1173,7 +1173,7 @@ async def async_setup_entry(
     entry: CompitConfigEntry,
     async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Compit select entities from a config entry."""
+    """Set up Compit sensor entities from a config entry."""
 
     coordinator = entry.runtime_data
     sensor_entities = []
