@@ -17,7 +17,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={},
-        unique_id="green_planet_energy",
+        unique_id=DOMAIN,
     )
 
 
