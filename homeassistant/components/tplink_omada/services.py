@@ -107,7 +107,6 @@ async def _handle_cleanup_client_trackers(call: ServiceCall) -> None:
             if (entity := entity_registry.async_get(entity_id)) is not None
         ]
 
-    removed_count = 0
     for entity in entities_to_check:
         # Only process device_tracker entities from this integration
         if entity.domain != "device_tracker" or entity.platform != "tplink_omada":
@@ -144,7 +143,6 @@ async def _handle_cleanup_client_trackers(call: ServiceCall) -> None:
         # If the client is not in the known clients list, remove the entity
         if client_mac not in known_client_macs:
             entity_registry.async_remove(entity.entity_id)
-            removed_count += 1
 
 
 SERVICES = [
