@@ -289,9 +289,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 presetHandle=preset_handle
             )
         )
-        # Optimistically update the preset mode since we just set it
-        self._attr_preset_mode = preset_mode
-        self.async_write_ha_state()
+        # Optimistically update the endpoint's ActivePresetHandle attribute
+        # to prevent _update_from_device() from reverting to stale device state
+        active_preset_path = create_attribute_path_from_attribute(
+            endpoint_id=self._endpoint.endpoint_id,
+            attribute=clusters.Thermostat.Attributes.ActivePresetHandle,
+        )
+        self._endpoint.set_attribute_value(active_preset_path, preset_handle)
         self._update_from_device()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
