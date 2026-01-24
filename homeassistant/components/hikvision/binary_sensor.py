@@ -265,6 +265,7 @@ async def async_setup_entry(
                 sensor_type,
                 BinarySensorEntityDescription(
                     key=sensor_type.lower().replace(" ", "_"),
+                    name=sensor_type,
                 ),
             ),
             sensor_type=sensor_type,
@@ -294,11 +295,6 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
 
         # Build unique ID (includes sensor_type for uniqueness per sensor)
         self._attr_unique_id = f"{self._data.device_id}_{sensor_type}_{channel}"
-
-        # For unknown sensor types without translation_key, use sensor_type as name
-        if not description.translation_key:
-            self._attr_translation_key = None
-            self._attr_name = sensor_type
 
         # Callback ID for pyhik
         self._callback_id = f"{self._data.device_id}.{sensor_type}.{channel}"
