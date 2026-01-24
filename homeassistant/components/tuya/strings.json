@@ -1127,7 +1127,7 @@
       "name": "Get device data"
     },
     "set_data": {
-      "description": "Set data for a specific DP code on a Tuya device.",
+      "description": "Sets data for a specific DP code on a Tuya device.",
       "fields": {
         "device_id": {
           "description": "The Tuya device."
