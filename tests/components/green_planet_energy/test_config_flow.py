@@ -6,6 +6,7 @@ from greenplanet_energy_api import (
     GreenPlanetEnergyAPIError,
     GreenPlanetEnergyConnectionError,
 )
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.green_planet_energy.const import DOMAIN
@@ -40,15 +41,24 @@ async def test_form_create_entry(hass: HomeAssistant, mock_api: MagicMock) -> No
     assert result2["data"] == {}
 
 
-async def test_form_connection_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
-    """Test handling connection error."""
+@pytest.mark.parametrize(
+    ("exception", "error_base"),
+    [
+        (GreenPlanetEnergyConnectionError("Connection failed"), "cannot_connect"),
+        (GreenPlanetEnergyAPIError("API error"), "invalid_auth"),
+        (Exception("Unknown error"), "unknown"),
+    ],
+)
+async def test_form_errors_and_recovery(
+    hass: HomeAssistant, mock_api: MagicMock, exception: Exception, error_base: str
+) -> None:
+    """Test handling errors and recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_api.get_electricity_prices.side_effect = GreenPlanetEnergyConnectionError(
-        "Connection failed"
-    )
+    # Set the mock to raise an error
+    mock_api.get_electricity_prices.side_effect = exception
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -56,38 +66,30 @@ async def test_form_connection_error(hass: HomeAssistant, mock_api: MagicMock) -
     )
 
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": error_base}
 
+    # Reset the mock to not raise an error and test recovery
+    mock_api.get_electricity_prices.side_effect = None
 
-async def test_form_api_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
-    """Test handling API error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    mock_api.get_electricity_prices.side_effect = GreenPlanetEnergyAPIError("API error")
-
-    result2 = await hass.config_entries.flow.async_configure(
+    result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {},
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Green Planet Energy"
+    assert result3["data"] == {}
 
 
-async def test_form_unknown_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
-    """Test handling unknown error."""
+async def test_form_already_configured(
+    hass: HomeAssistant, mock_api: MagicMock, mock_config_entry
+) -> None:
+    """Test we abort if already configured."""
+    mock_config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_api.get_electricity_prices.side_effect = Exception("Unknown error")
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
