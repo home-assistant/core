@@ -28,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -105,6 +106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -163,6 +165,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -227,6 +230,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -312,6 +316,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light (RGB Indicator)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -381,6 +386,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -437,6 +443,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light (1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -501,6 +508,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light (6)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -570,6 +578,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -633,6 +642,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -708,6 +718,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -777,6 +788,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

@@ -3,9 +3,9 @@
 from collections.abc import Generator
 import time
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
-from aiosenz import Account, Thermostat
+from pysenz import Account, Thermostat
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -92,7 +92,7 @@ def mock_senz_client(account_fixture, device_fixture) -> Generator[MagicMock]:
 
         client.get_account.return_value = Account(account_fixture)
         client.get_thermostats.return_value = [
-            Thermostat(device, None) for device in device_fixture
+            Thermostat(device, Mock()) for device in device_fixture
         ]
 
         yield client

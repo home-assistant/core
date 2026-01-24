@@ -3,26 +3,33 @@
 import copy
 from datetime import timedelta
 from http import HTTPStatus
+import logging
 from unittest.mock import patch
 
-from PIL import Image
 import pytest
-from roborock import RoborockException
+from roborock import MultiMapsList, RoborockException
 from roborock.data import RoborockStateCode
-from vacuum_map_parser_base.map_data import ImageConfig, ImageData
+from roborock.devices.traits.v1.map_content import MapContent
 
-from homeassistant.components.roborock import DOMAIN
 from homeassistant.components.roborock.const import V1_LOCAL_NOT_CLEANING_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .mock_data import MAP_DATA, PROP
+from .conftest import FakeDevice, make_home_trait
+from .mock_data import (
+    HOME_DATA,
+    MAP_DATA,
+    MULTI_MAP_LIST,
+    MULTI_MAP_LIST_NO_MAP_NAMES,
+    ROOM_MAPPING,
+    STATUS,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
@@ -35,6 +42,7 @@ async def test_floorplan_image(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
+    fake_devices: list[FakeDevice],
 ) -> None:
     """Test floor plan map image is correctly set up."""
     assert len(hass.states.async_all("image")) == 4
@@ -46,34 +54,31 @@ async def test_floorplan_image(
     assert resp.status == HTTPStatus.OK
     body = await resp.read()
     assert body is not None
-    assert body[0:4] == b"\x89PNG"
+    assert body == b"\x89PNG-001"
 
     # Call a second time - this time forcing it to update - and save new image
     now = dt_util.utcnow() + timedelta(minutes=61)
 
-    # Copy the device prop so we don't override it
-    prop = copy.deepcopy(PROP)
-    prop.status.in_cleaning = 1
-    new_map_data = copy.deepcopy(MAP_DATA)
-    new_map_data.image = ImageData(
-        100, 10, 10, 10, 10, ImageConfig(), Image.new("RGB", (2, 2)), lambda p: p
-    )
+    # Update maps for all v1 devices
+    for fake_vacuum in fake_devices:
+        if fake_vacuum.v1_properties is None:
+            continue
+        assert fake_vacuum.v1_properties
+        fake_vacuum.v1_properties.status.in_cleaning = 1
+        assert fake_vacuum.v1_properties.map_content
+        fake_vacuum.v1_properties.map_content.image_content = b"\x89PNG-002"
+
     with (
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
-            return_value=prop,
-        ),
         patch(
             "homeassistant.components.roborock.coordinator.dt_util.utcnow",
             return_value=now,
         ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
-            return_value=MAP_DATA,
-        ) as parse_map,
     ):
         # This should call parse_map twice as the both devices are in cleaning.
         async_fire_time_changed(hass, now)
+        # Refresh device in the background
+        await hass.async_block_till_done()
+
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
         assert resp.status == HTTPStatus.OK
         resp = await client.get("/api/image_proxy/image.roborock_s7_2_upstairs")
@@ -83,213 +88,34 @@ async def test_floorplan_image(
     body = await resp.read()
     assert body is not None
 
-    assert parse_map.call_count == 2
-
-
-async def test_floorplan_image_failed_parse(
-    hass: HomeAssistant,
-    setup_entry: MockConfigEntry,
-    hass_client: ClientSessionGenerator,
-) -> None:
-    """Test that we correctly handle getting None from the image parser."""
-    client = await hass_client()
-    map_data = copy.deepcopy(MAP_DATA)
-    map_data.image = None
-    now = dt_util.utcnow() + timedelta(seconds=91)
-    # Copy the device prop so we don't override it
-    prop = copy.deepcopy(PROP)
-    prop.status.in_cleaning = 1
-    previous_state = hass.states.get("image.roborock_s7_maxv_upstairs").state
-    # Update image, but get none for parse image.
-    with (
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
-            return_value=map_data,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
-            return_value=prop,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
-            return_value=now,
-        ),
-    ):
-        async_fire_time_changed(hass, now)
-        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-    # The map should load fine from the coordinator, but it should not update the
-    # last_updated timestamp.
-    assert resp.ok
-    assert previous_state == hass.states.get("image.roborock_s7_maxv_upstairs").state
-
-
-async def test_fail_to_save_image(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_roborock_entry: MockConfigEntry,
-    bypass_api_fixture,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test that we gracefully handle a oserror on saving an image."""
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-
-    # Ensure that map is still working properly.
-    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
-    client = await hass_client()
-    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-    # Test that we can get the image and it correctly serialized and unserialized.
-    assert resp.status == HTTPStatus.OK
-
-    with patch(
-        "homeassistant.components.roborock.roborock_storage.Path.write_bytes",
-        side_effect=OSError,
-    ):
-        await hass.config_entries.async_unload(mock_roborock_entry.entry_id)
-        assert "Unable to write map file" in caplog.text
-
-        # Config entry is unloaded successfully
-        assert mock_roborock_entry.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_fail_to_load_image(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    setup_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test that we gracefully handle failing to load an image."""
-    with (
-        patch(
-            "homeassistant.components.roborock.roborock_storage.Path.exists",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.roborock.roborock_storage.Path.read_bytes",
-            side_effect=OSError,
-        ) as read_bytes,
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockDataUpdateCoordinator.refresh_coordinator_map"
-        ),
-    ):
-        # Reload the config entry so that the map is saved in storage and entities exist.
-        await hass.config_entries.async_reload(setup_entry.entry_id)
-        await hass.async_block_till_done()
-        assert read_bytes.call_count == 4
-    assert "Unable to read map file" in caplog.text
-
-
-async def test_fail_parse_on_startup(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_roborock_entry: MockConfigEntry,
-    bypass_api_fixture,
-) -> None:
-    """Test that if we fail parsing on startup, we still create the entity."""
-    map_data = copy.deepcopy(MAP_DATA)
-    map_data.image = None
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
-        return_value=map_data,
-    ):
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-    assert (
-        image_entity := hass.states.get("image.roborock_s7_maxv_upstairs")
-    ) is not None
-    assert image_entity.state
-
-
-async def test_fail_get_map_on_startup(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_roborock_entry: MockConfigEntry,
-    bypass_api_fixture,
-) -> None:
-    """Test that if we fail getting map on startup, we can still create the entity."""
-    with (
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
-            return_value=None,
-        ),
-    ):
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-    assert (
-        image_entity := hass.states.get("image.roborock_s7_maxv_upstairs")
-    ) is not None
-    assert image_entity.state
-
 
 async def test_fail_updating_image(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
 ) -> None:
-    """Test that we handle failing getting the image after it has already been setup.."""
+    """Test that we handle failing getting the image after it has already been setup."""
     client = await hass_client()
-    map_data = copy.deepcopy(MAP_DATA)
-    map_data.image = None
-    now = dt_util.utcnow() + timedelta(seconds=91)
-    # Copy the device prop so we don't override it
-    prop = copy.deepcopy(PROP)
-    prop.status.in_cleaning = 1
-    # Update image, but get none for parse image.
-    previous_state = hass.states.get("image.roborock_s7_maxv_upstairs").state
-    with (
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
-            return_value=map_data,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
-            return_value=prop,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
-            return_value=now,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
-            side_effect=RoborockException,
-        ),
-    ):
-        async_fire_time_changed(hass, now)
-        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-    # The map should load fine from the coordinator, but it should not update the
-    # last_updated timestamp.
-    assert resp.ok
-    assert previous_state == hass.states.get("image.roborock_s7_maxv_upstairs").state
 
-
-async def test_index_error_map(
-    hass: HomeAssistant,
-    setup_entry: MockConfigEntry,
-    hass_client: ClientSessionGenerator,
-) -> None:
-    """Test that we handle failing getting the image after it has already been setup with a indexerror."""
-    client = await hass_client()
-    now = dt_util.utcnow() + timedelta(seconds=91)
-    # Copy the device prop so we don't override it
-    prop = copy.deepcopy(PROP)
-    prop.status.in_cleaning = 1
     previous_state = hass.states.get("image.roborock_s7_maxv_upstairs").state
-    # Update image, but get IndexError for image.
+
+    # Refreshing the map should fail, but we should still be able to get the existing image.
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.home.refresh.side_effect = RoborockException
+    fake_vacuum.v1_properties.status.in_cleaning = 1
+
+    now = dt_util.utcnow() + timedelta(seconds=91)
     with (
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
-            side_effect=IndexError,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
-            return_value=prop,
-        ),
         patch(
             "homeassistant.components.roborock.coordinator.dt_util.utcnow",
             return_value=now,
         ),
     ):
         async_fire_time_changed(hass, now)
+        # Refresh device in the background
+        await hass.async_block_till_done()
+
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
     # The map should load fine from the coordinator, but it should not update the
     # last_updated timestamp.
@@ -301,6 +127,7 @@ async def test_map_status_change(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,
+    fake_vacuum: FakeDevice,
 ) -> None:
     """Test floor plan map image is correctly updated on status change."""
     assert len(hass.states.async_all("image")) == 4
@@ -310,37 +137,87 @@ async def test_map_status_change(
     resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
     assert resp.status == HTTPStatus.OK
     old_body = await resp.read()
-    assert old_body[0:4] == b"\x89PNG"
+    assert old_body == b"\x89PNG-001"
+
+    _LOGGER.debug("First image fetch complete")
 
     # Call a second time. This interval does not directly trigger a map update, but does
     # trigger a status update which detects the state has changed and uddates the map
     now = dt_util.utcnow() + V1_LOCAL_NOT_CLEANING_INTERVAL
 
-    # Copy the device prop so we don't override it
-    prop = copy.deepcopy(PROP)
-    prop.status.state = RoborockStateCode.docking
-    new_map_data = copy.deepcopy(MAP_DATA)
-    new_map_data.image = ImageData(
-        100, 10, 10, 10, 10, ImageConfig(), Image.new("RGB", (2, 2)), lambda p: p
-    )
-    with (
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
-            return_value=prop,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
-            return_value=now,
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
-            return_value=new_map_data,
-        ),
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.status.state = RoborockStateCode.returning_home
+    fake_vacuum.v1_properties.home.home_map_content = {
+        0: MapContent(
+            image_content=b"\x89PNG-003",
+            map_data=copy.deepcopy(MAP_DATA),
+        )
+    }
+
+    with patch(
+        "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+        return_value=now,
     ):
         async_fire_time_changed(hass, now)
+        # Refresh device in the background
+        await hass.async_block_till_done()
+
         resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+
         assert resp.status == HTTPStatus.OK
-    assert resp.status == HTTPStatus.OK
-    body = await resp.read()
-    assert body is not None
-    assert body != old_body
+        body = await resp.read()
+        assert body is not None
+        assert body != old_body
+
+
+@pytest.mark.parametrize(
+    ("multi_maps_list", "expected_entity_ids"),
+    [
+        (
+            MULTI_MAP_LIST,
+            {
+                "image.roborock_s7_2_downstairs",
+                "image.roborock_s7_2_upstairs",
+                "image.roborock_s7_maxv_downstairs",
+                "image.roborock_s7_maxv_upstairs",
+            },
+        ),
+        (
+            MULTI_MAP_LIST_NO_MAP_NAMES,
+            {
+                "image.roborock_s7_2_downstairs",
+                "image.roborock_s7_2_upstairs",
+                # Expect default names based on map flags
+                "image.roborock_s7_maxv_map_0",
+                "image.roborock_s7_maxv_map_1",
+            },
+        ),
+    ],
+)
+async def test_image_entity_naming(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    multi_maps_list: MultiMapsList,
+    expected_entity_ids: set[str],
+) -> None:
+    """Test entity naming when no map name is set."""
+    # Override one of the vacuums multi map list response based on the
+    # test parameterization
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.home = make_home_trait(
+        map_info=multi_maps_list.map_info or [],
+        current_map=STATUS.current_map,
+        room_mapping=ROOM_MAPPING,
+        rooms=HOME_DATA.rooms,
+    )
+
+    # Setup the config entry
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the image entities are created with the expected names
+    assert {
+        state.entity_id for state in hass.states.async_all("image")
+    } == expected_entity_ids

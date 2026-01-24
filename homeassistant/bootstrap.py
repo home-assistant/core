@@ -67,8 +67,6 @@ from .const import (
     BASE_PLATFORMS,
     FORMAT_DATETIME,
     KEY_DATA_LOGGING as DATA_LOGGING,
-    REQUIRED_NEXT_PYTHON_HA_RELEASE,
-    REQUIRED_NEXT_PYTHON_VER,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .core_config import async_process_ha_core_config
@@ -176,6 +174,8 @@ FRONTEND_INTEGRATIONS = {
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
     ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS, None),
+    # Setup labs for preview features
+    ("labs", {"labs"}, STAGE_0_SUBSTAGE_TIMEOUT),
     # Setup frontend
     ("frontend", FRONTEND_INTEGRATIONS, None),
     # Setup recorder
@@ -212,6 +212,7 @@ DEFAULT_INTEGRATIONS = {
     "backup",
     "frontend",
     "hardware",
+    "labs",
     "logger",
     "network",
     "system_health",
@@ -513,38 +514,6 @@ async def async_from_config_dict(
 
     stop = monotonic()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
-
-    if (
-        REQUIRED_NEXT_PYTHON_HA_RELEASE
-        and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER
-    ):
-        current_python_version = ".".join(str(x) for x in sys.version_info[:3])
-        required_python_version = ".".join(str(x) for x in REQUIRED_NEXT_PYTHON_VER[:2])
-        _LOGGER.warning(
-            (
-                "Support for the running Python version %s is deprecated and "
-                "will be removed in Home Assistant %s; "
-                "Please upgrade Python to %s"
-            ),
-            current_python_version,
-            REQUIRED_NEXT_PYTHON_HA_RELEASE,
-            required_python_version,
-        )
-        issue_registry.async_create_issue(
-            hass,
-            core.DOMAIN,
-            f"python_version_{required_python_version}",
-            is_fixable=False,
-            severity=issue_registry.IssueSeverity.WARNING,
-            breaks_in_ha_version=REQUIRED_NEXT_PYTHON_HA_RELEASE,
-            translation_key="python_version",
-            translation_placeholders={
-                "current_python_version": current_python_version,
-                "required_python_version": required_python_version,
-                "breaks_in_ha_version": REQUIRED_NEXT_PYTHON_HA_RELEASE,
-            },
-        )
-
     return hass
 
 
@@ -621,13 +590,16 @@ async def async_enable_logging(
 
     if log_file is None:
         default_log_path = hass.config.path(ERROR_LOG_FILENAME)
-        if "SUPERVISOR" in os.environ:
-            _LOGGER.info("Running in Supervisor, not logging to file")
+        if "SUPERVISOR" in os.environ and "HA_DUPLICATE_LOG_FILE" not in os.environ:
             # Rename the default log file if it exists, since previous versions created
             # it even on Supervisor
-            if os.path.isfile(default_log_path):
-                with contextlib.suppress(OSError):
-                    os.rename(default_log_path, f"{default_log_path}.old")
+            def rename_old_file() -> None:
+                """Rename old log file in executor."""
+                if os.path.isfile(default_log_path):
+                    with contextlib.suppress(OSError):
+                        os.rename(default_log_path, f"{default_log_path}.old")
+
+            await hass.async_add_executor_job(rename_old_file)
             err_log_path = None
         else:
             err_log_path = default_log_path
@@ -997,7 +969,7 @@ class _WatchPendingSetups:
             # We log every LOG_SLOW_STARTUP_INTERVAL until all integrations are done
             # once we take over LOG_SLOW_STARTUP_INTERVAL (60s) to start up
             _LOGGER.warning(
-                "Waiting on integrations to complete setup: %s",
+                "Waiting for integrations to complete setup: %s",
                 self._setup_started,
             )
 
