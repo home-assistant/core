@@ -67,18 +67,6 @@ DEVICE_CLASS_MAP: dict[str, BinarySensorDeviceClass | None] = {
     "Entering Region": BinarySensorDeviceClass.MOTION,
 }
 
-# System-level sensor types that belong to the NVR device, not camera channels
-NVR_SYSTEM_SENSORS: set[str] = {
-    "Disk Full",
-    "Disk Error",
-    "Net Interface Broken",
-    "IP Conflict",
-    "Illegal Access",
-    "Recording Failure",
-    "Video Mismatch",
-    "Bad Video",
-}
-
 _LOGGER = logging.getLogger(__name__)
 
 CUSTOMIZE_SCHEMA = vol.Schema(
