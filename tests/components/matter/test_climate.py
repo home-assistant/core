@@ -8,7 +8,12 @@ from matter_server.common.helpers.util import create_attribute_path_from_attribu
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.climate import ClimateEntityFeature, HVACAction, HVACMode
+from homeassistant.components.climate import (
+    PRESET_NONE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -443,14 +448,14 @@ async def test_eve_thermo_v5_presets(
     assert state.attributes["supported_features"] & mask == mask
 
     # Test preset modes parsed correctly from Eve Thermo v5
-    # Should be slugified/translation key versions
+    # Should use HA standard presets for known ones, original names for others
     assert state.attributes["preset_modes"] == [
         "home",
         "away",
         "sleep",
-        "wake",
-        "vacation",
-        "going_to_sleep",
+        "Wake",
+        "Vacation",
+        "GoingToSleep",
         "eco",
     ]
     assert state.attributes["preset_mode"] == "home"
@@ -462,7 +467,7 @@ async def test_eve_thermo_v5_presets(
     )
     preset_by_name = {preset.name: preset.presetHandle for preset in presets_attribute}
 
-    # test set_preset_mode with "home" preset (slugified)
+    # test set_preset_mode with "home" preset (HA standard)
     await hass.services.async_call(
         "climate",
         "set_preset_mode",
@@ -486,7 +491,7 @@ async def test_eve_thermo_v5_presets(
     assert state.attributes["preset_mode"] == "home"
     matter_client.send_device_command.reset_mock()
 
-    # test set_preset_mode with "away" preset (slugified)
+    # test set_preset_mode with "away" preset (HA standard)
     await hass.services.async_call(
         "climate",
         "set_preset_mode",
@@ -510,7 +515,7 @@ async def test_eve_thermo_v5_presets(
     assert state.attributes["preset_mode"] == "away"
     matter_client.send_device_command.reset_mock()
 
-    # test set_preset_mode with "eco" preset (slugified)
+    # test set_preset_mode with "eco" preset (HA standard)
     await hass.services.async_call(
         "climate",
         "set_preset_mode",
@@ -574,7 +579,7 @@ async def test_eve_thermo_v5_presets(
     assert state
     assert state.attributes["preset_mode"] == "away"
 
-    # Test that preset_mode is None when ActivePresetHandle is cleared
+    # Test that preset_mode is PRESET_NONE when ActivePresetHandle is cleared
     set_node_attribute(
         matter_node,
         1,
@@ -585,4 +590,4 @@ async def test_eve_thermo_v5_presets(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state
-    assert state.attributes["preset_mode"] is None
+    assert state.attributes["preset_mode"] == PRESET_NONE

@@ -19,6 +19,7 @@ from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_ECO,
     PRESET_HOME,
+    PRESET_NONE,
     PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityDescription,
@@ -31,7 +32,6 @@ from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import slugify
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
@@ -60,9 +60,6 @@ KNOWN_PRESETS: dict[str, str] = {
     "Away": PRESET_AWAY,
     "Sleep": PRESET_SLEEP,
     "Eco": PRESET_ECO,
-    "Wake": "wake",
-    "Vacation": "vacation",
-    "GoingToSleep": "going_to_sleep",
 }
 
 SINGLE_SETPOINT_DEVICES: set[tuple[int, int]] = {
@@ -355,7 +352,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             # Device doesn't support presets, skip preset update
             self._preset_handle_by_name.clear()
             self._attr_preset_modes = []
-            self._attr_preset_mode = None
+            self._attr_preset_mode = PRESET_NONE
             return
 
         self.matter_presets = self.get_matter_attribute_value(
@@ -375,9 +372,13 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 if not device_preset_name:
                     device_preset_name = f"Preset{i}"
 
-                # Map to HA translation key (slugified) version if known, otherwise slugify
+                # Map to HA standard presets if known (home, away, sleep, eco).
+                # For custom device presets (Wake, Vacation, etc.), keep the original
+                # device name instead of slugifying it. This preserves proper capitalization
+                # and makes preset names more readable in the UI.
+                # Example: "Wake" stays as "Wake" instead of becoming "wake"
                 ha_preset_name = KNOWN_PRESETS.get(
-                    device_preset_name, slugify(device_preset_name)
+                    device_preset_name, device_preset_name
                 )
 
                 presets.append(ha_preset_name)
@@ -386,7 +387,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_preset_modes = presets
 
         # Update active preset mode
-        self._attr_preset_mode = None
+        self._attr_preset_mode = PRESET_NONE
         if active_preset_handle := self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.ActivePresetHandle
         ):
