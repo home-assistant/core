@@ -3,28 +3,24 @@
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
 
-async def test_setup_entry(hass: HomeAssistant, mock_api, mock_config_entry) -> None:
+
+async def test_setup_entry(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
     """Test setting up config entry."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert init_integration.state is ConfigEntryState.LOADED
 
 
-async def test_unload_entry(hass: HomeAssistant, mock_api, mock_config_entry) -> None:
+async def test_unload_entry(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
     """Test unloading config entry."""
-    mock_config_entry.add_to_hass(hass)
+    assert init_integration.state is ConfigEntryState.LOADED
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    result = await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
 
     assert result
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert init_integration.state is ConfigEntryState.NOT_LOADED
