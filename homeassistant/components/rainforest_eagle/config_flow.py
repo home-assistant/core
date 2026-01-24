@@ -74,7 +74,7 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._user_input = user_input
                 return await self.async_step_meter_select()
 
-            if meters and len(meters) == 1:
+            if meters:
                 # For single meter, set it automatically
                 user_input[CONF_HARDWARE_ADDRESS] = meters[0].hardware_address
             else:
