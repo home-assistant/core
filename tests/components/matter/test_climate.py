@@ -538,9 +538,7 @@ async def test_eve_thermo_v5_presets(
     # test set_preset_mode with invalid preset mode
     # The climate platform validates preset modes before calling our method
 
-    with pytest.raises(
-        ServiceValidationError, match="Preset mode InvalidPreset is not valid"
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             "climate",
             "set_preset_mode",
@@ -550,6 +548,12 @@ async def test_eve_thermo_v5_presets(
             },
             blocking=True,
         )
+
+    assert err.value.translation_key == "not_valid_preset_mode"
+    assert err.value.translation_placeholders == {
+        "mode": "InvalidPreset",
+        "modes": "home, away, sleep, wake, vacation, going_to_sleep, Eco",
+    }
 
     # Ensure no command was sent for invalid preset
     assert matter_client.send_device_command.call_count == 0
