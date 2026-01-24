@@ -53,7 +53,7 @@ class HDFuryConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                "model": self.data[CONF_HOST],
+                CONF_HOST: self.data[CONF_HOST],
             },
         )
 
