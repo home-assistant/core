@@ -1,6 +1,7 @@
 """Fixtures for Garmin Connect tests."""
 
 from collections.abc import Generator
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -88,8 +89,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_sensor_data() -> dict:
     """Return mock sensor data for CORE coordinator."""
-    from datetime import datetime, timezone
-
     return {
         "totalSteps": 10000,
         "totalDistanceMeters": 8000.0,
@@ -109,9 +108,10 @@ def mock_sensor_data() -> dict:
         "lightSleepMinutes": 240,
         "remSleepMinutes": 120,
         # Datetime fields - aiogarmin returns these as datetime objects
-        "lastSyncTimestamp": datetime(2026, 1, 24, 12, 0, 0, tzinfo=timezone.utc),
-        "latestSpo2ReadingTime": datetime(2026, 1, 24, 5, 30, 0, tzinfo=timezone.utc),
-        "latestRespirationTime": datetime(2026, 1, 24, 11, 0, 0, tzinfo=timezone.utc),
-        "wellnessStartTime": datetime(2026, 1, 23, 23, 0, 0, tzinfo=timezone.utc),
-        "wellnessEndTime": datetime(2026, 1, 24, 16, 0, 0, tzinfo=timezone.utc),
+        "lastSyncTimestamp": datetime(2026, 1, 24, 12, 0, 0, tzinfo=UTC),
+        "latestSpo2ReadingTime": datetime(2026, 1, 24, 5, 30, 0, tzinfo=UTC),
+        "latestRespirationTime": datetime(2026, 1, 24, 11, 0, 0, tzinfo=UTC),
+        "wellnessStartTime": datetime(2026, 1, 23, 23, 0, 0, tzinfo=UTC),
+        "wellnessEndTime": datetime(2026, 1, 24, 16, 0, 0, tzinfo=UTC),
+
     }

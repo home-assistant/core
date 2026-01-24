@@ -37,8 +37,8 @@ async def test_sensor_setup(
 
         assert mock_config_entry.state is ConfigEntryState.LOADED
 
-        # Check total steps sensor
-        state = hass.states.get("sensor.garmin_connect_total_steps")
+        # Check steps sensor
+        state = hass.states.get("sensor.garmin_connect_steps")
         assert state is not None
         assert state.state == "10000"
 
