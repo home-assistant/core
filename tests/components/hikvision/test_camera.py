@@ -13,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-from .conftest import TEST_DEVICE_ID, TEST_DEVICE_NAME, TEST_HOST, TEST_PASSWORD
+from .conftest import TEST_DEVICE_ID, TEST_DEVICE_NAME, TEST_HOST
 
 from tests.common import MockConfigEntry, snapshot_platform
 
