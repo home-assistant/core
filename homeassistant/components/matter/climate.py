@@ -219,9 +219,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_hvac_mode: HVACMode = HVACMode.OFF
-    matter_presets_types: list[clusters.Thermostat.Structs.PresetTypeStruct] | None = (
-        None
-    )
     matter_presets: list[clusters.Thermostat.Structs.PresetStruct] | None = None
     _attr_preset_mode: str | None = None
     _attr_preset_modes: list[str] | None = None
@@ -362,9 +359,6 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self._attr_preset_mode = None
             return
 
-        self.matter_presets_types = self.get_matter_attribute_value(
-            clusters.Thermostat.Attributes.PresetTypes
-        )
         self.matter_presets = self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.Presets
         )
