@@ -105,21 +105,20 @@ class EsphomeWaterHeater(
         return [
             self._mode_selector.from_esphome(mode)
             for mode in self._static_info.supported_modes
-            if mode in self._mode_selector
         ]
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
             return
-        await self._client.water_heater_command(
+        self._client.water_heater_command(
             key=self._key,
             target_temperature=kwargs[ATTR_TEMPERATURE],
         )
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
-        await self._client.water_heater_command(
+        self._client.water_heater_command(
             key=self._key,
             mode=self._mode_selector.from_hass(operation_mode),
         )
