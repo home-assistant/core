@@ -383,6 +383,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         if active_preset_handle := self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.ActivePresetHandle
         ):
+            self._attr_preset_mode = None
             for preset_name, handle in self._preset_handle_by_name.items():
                 if handle == active_preset_handle:
                     self._attr_preset_mode = preset_name
