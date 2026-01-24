@@ -237,22 +237,22 @@
         "name": "Stress qualifier"
       },
       "total_calories": {
-        "name": "Total calories"
+        "name": "Calories"
       },
       "total_distance": {
-        "name": "Total distance"
+        "name": "Distance"
       },
       "total_intensity_minutes": {
-        "name": "Total intensity minutes"
+        "name": "Intensity minutes"
       },
       "total_sleep_duration": {
-        "name": "Total sleep duration"
+        "name": "Sleep duration"
       },
       "total_steps": {
-        "name": "Total steps"
+        "name": "Steps"
       },
       "total_stress_duration": {
-        "name": "Total stress duration"
+        "name": "Stress duration"
       },
       "uncategorized_stress_duration": {
         "name": "Uncategorized stress duration"
