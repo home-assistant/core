@@ -1,5 +1,6 @@
 {
   "domain": "eltako",
   "name": "Eltako",
+  "integrations": ["eltako_enocean"],
   "iot_standards": ["matter"]
 }

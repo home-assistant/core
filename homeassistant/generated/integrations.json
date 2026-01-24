@@ -1670,6 +1670,14 @@
     },
     "eltako": {
       "name": "Eltako",
+      "integrations": {
+        "eltako_enocean": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Eltako (EnOcean)"
+        }
+      },
       "iot_standards": [
         "matter"
       ]
