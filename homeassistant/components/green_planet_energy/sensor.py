@@ -14,6 +14,7 @@ from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -61,8 +62,7 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         translation_key="current_price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=4,
-        # Don't use lambda for current_price, handled in native_value property
-        value_fn=None,
+        value_fn=lambda api, data: api.get_current_price(data, dt_util.now().hour),
     ),
 ]
 
@@ -107,36 +107,27 @@ class GreenPlanetEnergySensor(
         )
 
     @property
-    def name(self) -> str | None:
-        """Return the name of the sensor with time range appended."""
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the entity."""
         base_name = super().name
-        # Convert UndefinedType to None for type safety
-        if base_name is None or str(base_name) == "<undefined>":
-            return None
-
-        base_name_str = str(base_name) if base_name else None
-        if base_name_str and self.entity_description.key == "gpe_lowest_price_day":
-            return f"{base_name_str} (06:00-18:00)"
-        if base_name_str and self.entity_description.key == "gpe_lowest_price_night":
-            return f"{base_name_str} (18:00-06:00)"
-        return base_name_str
+        if base_name is None or base_name is UNDEFINED:
+            return base_name
+        if self.entity_description.key == "gpe_lowest_price_day":
+            return f"{base_name} (06:00-18:00)"
+        if self.entity_description.key == "gpe_lowest_price_night":
+            return f"{base_name} (18:00-06:00)"
+        return base_name
 
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        # Special handling for current_price to use the current hour
-        if self.entity_description.key == "gpe_current_price":
-            return self.coordinator.api.get_current_price(
-                self.coordinator.data, dt_util.now().hour
-            )
-
-        # Use value_fn to get calculated values for other sensors
+        # Use value_fn to get calculated values
         if self.entity_description.value_fn:
             return self.entity_description.value_fn(
                 self.coordinator.api, self.coordinator.data
             )
 
-        # All our sensors have value_fn or are handled above
+        # All our sensors have value_fn
         return None
 
     @property
