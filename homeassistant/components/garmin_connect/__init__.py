@@ -69,17 +69,7 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Register options update listener
-    entry.async_on_unload(entry.add_update_listener(async_options_update_listener))
-
     return True
-
-
-async def async_options_update_listener(
-    hass: HomeAssistant, entry: GarminConnectConfigEntry
-) -> None:
-    """Handle options update - reload integration to apply new scan_interval."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(
@@ -87,4 +77,5 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
 

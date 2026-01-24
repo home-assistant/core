@@ -18,8 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     CONF_OAUTH1_TOKEN,
     CONF_OAUTH2_TOKEN,
-    CONF_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
 )
 
@@ -89,10 +88,10 @@ class CoreCoordinator(BaseGarminCoordinator):
         auth: GarminAuth,
     ) -> None:
         """Initialize."""
-        scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         super().__init__(
-            hass, entry, client, auth, "core", timedelta(seconds=scan_interval)
+            hass, entry, client, auth, "core", timedelta(seconds=DEFAULT_UPDATE_INTERVAL)
         )
+
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch core data from Garmin Connect."""

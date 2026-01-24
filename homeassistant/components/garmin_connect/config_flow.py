@@ -13,7 +13,6 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -21,11 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     CONF_OAUTH1_TOKEN,
     CONF_OAUTH2_TOKEN,
-    CONF_SCAN_INTERVAL,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    MAX_SCAN_INTERVAL,
-    MIN_SCAN_INTERVAL,
 )
 
 type GarminConnectConfigEntry = ConfigEntry
@@ -56,12 +51,6 @@ class GarminConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         self._auth: GarminAuth | None = None
         self._username: str | None = None
 
-    @staticmethod
-    def async_get_options_flow(
-        config_entry: GarminConnectConfigEntry,
-    ) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return GarminConnectOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -239,32 +228,3 @@ class GarminConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-
-class GarminConnectOptionsFlow(OptionsFlow):
-    """Handle options flow for Garmin Connect."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        current_scan_interval = self.config_entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL,
-                        default=current_scan_interval,
-                    ): vol.All(
-                        vol.Coerce(int),
-                        vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL),
-                    ),
-                }
-            ),
-        )

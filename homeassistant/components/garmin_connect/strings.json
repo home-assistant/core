@@ -119,23 +119,20 @@
       "deep_sleep": {
         "name": "Deep sleep"
       },
-      "device_last_synced": {
-        "name": "Last synced"
-      },
       "floors_ascended": {
         "name": "Floors ascended"
       },
       "floors_ascended_goal": {
         "name": "Floors ascended goal"
       },
-      "floors_ascended_meters": {
-        "name": "Floors ascended (meters)"
+      "floors_ascended_distance": {
+        "name": "Floors ascended distance"
       },
       "floors_descended": {
         "name": "Floors descended"
       },
-      "floors_descended_meters": {
-        "name": "Floors descended (meters)"
+      "floors_descended_distance": {
+        "name": "Floors descended distance"
       },
       "high_stress_duration": {
         "name": "High stress duration"
@@ -148,21 +145,6 @@
       },
       "highly_active_time": {
         "name": "Highly active time"
-      },
-      "hrv_baseline": {
-        "name": "HRV baseline"
-      },
-      "hrv_last_night_5min_high": {
-        "name": "HRV last night 5-min high"
-      },
-      "hrv_last_night_avg": {
-        "name": "HRV last night average"
-      },
-      "hrv_status": {
-        "name": "HRV status"
-      },
-      "hrv_weekly_avg": {
-        "name": "HRV weekly average"
       },
       "intensity_goal": {
         "name": "Intensity minutes goal"
@@ -293,9 +275,6 @@
       "wellness_calories": {
         "name": "Wellness calories"
       },
-      "wellness_description": {
-        "name": "Wellness description"
-      },
       "wellness_distance": {
         "name": "Wellness distance"
       },
@@ -310,26 +289,21 @@
       },
       "yesterday_steps": {
         "name": "Yesterday steps"
+      },
+      "nap_time": {
+        "name": "Nap time"
+      },
+      "unmeasurable_sleep": {
+        "name": "Unmeasurable sleep"
+      },
+      "last_synced": {
+        "name": "Last synced"
       }
     }
   },
   "exceptions": {
     "login_failed": {
       "message": "Failed to log in to Garmin Connect."
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Update interval (seconds)"
-        },
-        "data_description": {
-          "scan_interval": "How often to fetch data from Garmin Connect (60-3600 seconds)"
-        },
-        "description": "Configure your Garmin Connect integration settings.",
-        "title": "Garmin Connect Options"
-      }
     }
   }
 }
