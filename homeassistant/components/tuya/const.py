@@ -42,6 +42,13 @@ TUYA_SCHEMA = "haauthorize"
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
 TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
 
+# Service names
+SERVICE_SET_DP_VALUE = "set_dp_value"
+
+# Service field names
+CONF_DP_CODE = "dp_code"
+CONF_DP_VALUE = "dp_value"
+
 TUYA_RESPONSE_CODE = "code"
 TUYA_RESPONSE_MSG = "msg"
 TUYA_RESPONSE_QR_CODE = "qrcode"

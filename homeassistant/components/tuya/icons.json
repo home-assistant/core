@@ -381,5 +381,10 @@
         "default": "mdi:watermark"
       }
     }
+  },
+  "services": {
+    "set_dp_value": {
+      "service": "mdi:tune"
+    }
   }
 }

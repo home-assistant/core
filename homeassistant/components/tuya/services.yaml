@@ -1,0 +1,18 @@
+# Describes the format for available Tuya services
+set_dp_value:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: tuya
+    dp_code:
+      required: true
+      example: "switch_1"
+      selector:
+        text:
+    dp_value:
+      required: true
+      example: "true"
+      selector:
+        object:
