@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from botocore.exceptions import ClientError
@@ -17,7 +16,6 @@ from homeassistant.components.aws_bedrock.entity import (
     _clean_schema,
     _convert_messages,
     _sanitize_bedrock_tool_name,
-    async_prepare_files_for_prompt,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.core import HomeAssistant
@@ -572,11 +570,6 @@ async def test_handle_chat_log_with_attachments(hass: HomeAssistant) -> None:
     subentry = create_mock_subentry()
     entity = setup_entity_with_hass(hass, mock_entry, subentry)
 
-    # Mock prepared file content
-    mock_file_content = [
-        {"image": {"format": "jpeg", "source": {"bytes": b"fake_image_bytes"}}}
-    ]
-
     content = create_message_with_attachments(
         [{"url": "/media/local/image.jpg", "mime_type": "image/jpeg"}]
     )
@@ -585,13 +578,7 @@ async def test_handle_chat_log_with_attachments(hass: HomeAssistant) -> None:
     async def mock_executor_job(func):
         return func()
 
-    with (
-        patch.object(hass, "async_add_executor_job", side_effect=mock_executor_job),
-        patch(
-            "homeassistant.components.aws_bedrock.entity.async_prepare_files_for_prompt",
-            AsyncMock(return_value=mock_file_content),
-        ),
-    ):
+    with patch.object(hass, "async_add_executor_job", side_effect=mock_executor_job):
         await entity._async_handle_chat_log(
             chat_log, structure=None, structure_name=None
         )
@@ -867,10 +854,10 @@ async def test_handle_chat_log_empty_response(hass: HomeAssistant) -> None:
 def test_clean_schema_non_dict_returns_as_is() -> None:
     """Test _clean_schema returns non-dict values as-is."""
     # Non-dict input should be returned unchanged
-    assert _clean_schema("string value") == "string value"
-    assert _clean_schema(123) == 123
-    assert _clean_schema(None) is None
-    assert _clean_schema([1, 2, 3]) == [1, 2, 3]
+    assert _clean_schema("string value") == "string value"  # type: ignore[arg-type]
+    assert _clean_schema(123) == 123  # type: ignore[arg-type]
+    assert _clean_schema(None) is None  # type: ignore[arg-type]
+    assert _clean_schema([1, 2, 3]) == [1, 2, 3]  # type: ignore[arg-type]
 
 
 def test_clean_schema_with_empty_items() -> None:
@@ -936,88 +923,6 @@ def test_clean_schema_with_nested_object_properties() -> None:
     assert inner.get("description") == "An inner property"
     # Title should be removed
     assert "title" not in inner
-
-
-@pytest.mark.asyncio
-async def test_async_prepare_files_for_prompt_image(
-    hass: HomeAssistant, tmp_path: Path
-) -> None:
-    """Test preparing image files for prompt."""
-    # Create a test image file
-    image_path = tmp_path / "test_image.jpg"
-    image_path.write_bytes(b"\xff\xd8\xff\xe0test image content")
-
-    files = [(image_path, "image/jpeg")]
-    result = await async_prepare_files_for_prompt(hass, files)
-
-    assert len(result) == 1
-    assert "image" in result[0]
-    assert result[0]["image"]["format"] == "jpeg"
-    assert "bytes" in result[0]["image"]["source"]
-
-
-@pytest.mark.asyncio
-async def test_async_prepare_files_for_prompt_pdf(
-    hass: HomeAssistant, tmp_path: Path
-) -> None:
-    """Test preparing PDF files for prompt."""
-    # Create a test PDF file
-    pdf_path = tmp_path / "test_document.pdf"
-    pdf_path.write_bytes(b"%PDF-1.4 test pdf content")
-
-    files = [(pdf_path, "application/pdf")]
-    result = await async_prepare_files_for_prompt(hass, files)
-
-    assert len(result) == 1
-    assert "document" in result[0]
-    assert result[0]["document"]["format"] == "pdf"
-    assert result[0]["document"]["name"] == "test_document.pdf"
-
-
-@pytest.mark.asyncio
-async def test_async_prepare_files_for_prompt_no_mime_type(
-    hass: HomeAssistant, tmp_path: Path
-) -> None:
-    """Test preparing files when mime_type is None defaults to image/jpeg."""
-    # Create a test file
-    image_path = tmp_path / "test_image"
-    image_path.write_bytes(b"test content")
-
-    files = [(image_path, None)]  # No mime type provided
-    result = await async_prepare_files_for_prompt(hass, files)
-
-    assert len(result) == 1
-    assert "image" in result[0]
-    assert result[0]["image"]["format"] == "jpeg"  # Defaults to jpeg
-
-
-@pytest.mark.asyncio
-async def test_async_prepare_files_for_prompt_unsupported_type(
-    hass: HomeAssistant, tmp_path: Path
-) -> None:
-    """Test preparing files with unsupported mime type raises error."""
-    # Create a test file
-    text_path = tmp_path / "test.txt"
-    text_path.write_bytes(b"text content")
-
-    files = [(text_path, "text/plain")]  # Unsupported type
-
-    with pytest.raises(HomeAssistantError, match="Only images and PDF are supported"):
-        await async_prepare_files_for_prompt(hass, files)
-
-
-@pytest.mark.asyncio
-async def test_async_prepare_files_for_prompt_file_not_exists(
-    hass: HomeAssistant, tmp_path: Path
-) -> None:
-    """Test preparing files that don't exist raises error."""
-    # Non-existent file
-    nonexistent_path = tmp_path / "nonexistent.jpg"
-
-    files = [(nonexistent_path, "image/jpeg")]
-
-    with pytest.raises(HomeAssistantError, match="does not exist"):
-        await async_prepare_files_for_prompt(hass, files)
 
 
 def test_build_tool_name_maps_handles_collision() -> None:

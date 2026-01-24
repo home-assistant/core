@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from functools import partial
-from pathlib import Path
 import re
 from typing import Any
 
@@ -12,7 +11,6 @@ from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
@@ -314,7 +312,7 @@ class AWSBedrockBaseLLMEntity(Entity):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _async_handle_chat_log(  # noqa: C901
+    async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
@@ -414,21 +412,6 @@ class AWSBedrockBaseLLMEntity(Entity):
                 content_to_process,
                 ha_to_bedrock_tool_name=ha_to_bedrock_tool_name or None,
             )
-
-            # Handle attachments - only on first iteration
-            if _iteration == 0:
-                last_content = chat_log.content[-1]
-                if last_content.role == "user" and last_content.attachments:
-                    if messages and messages[-1]["role"] == "user":
-                        messages[-1]["content"].extend(
-                            await async_prepare_files_for_prompt(
-                                self.hass,
-                                [
-                                    (a.path, a.mime_type)
-                                    for a in last_content.attachments
-                                ],
-                            )
-                        )
 
             request_params: dict[str, Any] = {
                 "modelId": model_id,
@@ -530,54 +513,3 @@ class AWSBedrockBaseLLMEntity(Entity):
             # Check if we need to continue processing tool results
             if not chat_log.unresponded_tool_results:
                 break
-
-
-async def async_prepare_files_for_prompt(
-    hass: HomeAssistant, files: list[tuple[Path, str | None]]
-) -> list[dict[str, Any]]:
-    """Prepare files for the prompt.
-
-    Caller needs to ensure that the files are allowed.
-    """
-
-    def append_files_to_content() -> list[dict[str, Any]]:
-        content: list[dict[str, Any]] = []
-
-        for file_path, mime_type in files:
-            if not file_path.exists():
-                raise HomeAssistantError(f"`{file_path}` does not exist")
-
-            if mime_type is None:
-                # Try to detect mime type
-                mime_type = "image/jpeg"  # Default
-
-            if not mime_type or not mime_type.startswith(("image/", "application/pdf")):
-                raise HomeAssistantError(
-                    f"Only images and PDF are supported, `{file_path}` is not supported"
-                )
-
-            file_bytes = file_path.read_bytes()
-
-            if mime_type.startswith("image/"):
-                content.append(
-                    {
-                        "image": {
-                            "format": mime_type.split("/")[1],
-                            "source": {"bytes": file_bytes},
-                        }
-                    }
-                )
-            elif mime_type == "application/pdf":
-                content.append(
-                    {
-                        "document": {
-                            "format": "pdf",
-                            "name": file_path.name,
-                            "source": {"bytes": file_bytes},
-                        }
-                    }
-                )
-
-        return content
-
-    return await hass.async_add_executor_job(append_files_to_content)
