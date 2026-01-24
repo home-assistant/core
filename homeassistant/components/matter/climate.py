@@ -31,6 +31,7 @@ from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import slugify
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
@@ -371,7 +372,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
                 # Map to HA translation key (slugified) version if known, otherwise slugify
                 ha_preset_name = KNOWN_PRESETS.get(
-                    device_preset_name, device_preset_name.lower().replace(" ", "_")
+                    device_preset_name, slugify(device_preset_name)
                 )
 
                 presets.append(ha_preset_name)
