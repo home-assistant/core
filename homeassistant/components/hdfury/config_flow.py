@@ -45,7 +45,12 @@ class HDFuryConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         self._set_confirm_only()
-        return self.async_show_form(step_id="discovery_confirm")
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders={
+                "model": self.data[CONF_HOST],
+            },
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
