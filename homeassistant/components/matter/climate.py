@@ -17,7 +17,6 @@ from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     PRESET_AWAY,
-    PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
@@ -48,18 +47,16 @@ HVAC_SYSTEM_MODE_MAP = {
     HVACMode.FAN_ONLY: 7,
 }
 
-# Map of known Matter preset names that have HA standard preset equivalents
-# Maps both Matter spec standard names and custom device-provided names to HA presets
-KNOWN_PRESETS: dict[str, str] = {
-    # PresetScenarioEnum standard names (from Matter spec)
-    "occupied": PRESET_HOME,
-    "unoccupied": PRESET_AWAY,
-    "sleep": PRESET_SLEEP,
-    # Custom preset names (device-provided, may vary by manufacturer)
-    "Home": PRESET_HOME,
-    "Away": PRESET_AWAY,
-    "Sleep": PRESET_SLEEP,
-    "Eco": PRESET_ECO,
+# Map of Matter PresetScenarioEnum to HA standard preset constants or custom names
+# This ensures presets are translated correctly using HA's translation system.
+# kUserDefined scenarios always use device-provided names.
+PRESET_SCENARIO_TO_HA_PRESET: dict[int, str] = {
+    clusters.Thermostat.Enums.PresetScenarioEnum.kOccupied: PRESET_HOME,
+    clusters.Thermostat.Enums.PresetScenarioEnum.kUnoccupied: PRESET_AWAY,
+    clusters.Thermostat.Enums.PresetScenarioEnum.kSleep: PRESET_SLEEP,
+    clusters.Thermostat.Enums.PresetScenarioEnum.kWake: "wake",
+    clusters.Thermostat.Enums.PresetScenarioEnum.kVacation: "vacation",
+    clusters.Thermostat.Enums.PresetScenarioEnum.kGoingToSleep: "going_to_sleep",
 }
 
 SINGLE_SETPOINT_DEVICES: set[tuple[int, int]] = {
@@ -363,23 +360,15 @@ class MatterClimate(MatterEntity, ClimateEntity):
         presets = []
         if self.matter_presets:
             for i, preset in enumerate(self.matter_presets, start=1):
-                # Get device preset name from preset.name if available
-                device_preset_name = None
-                if preset.name and (name := preset.name.strip()):
-                    device_preset_name = name
-
-                # Fall back to generic name if no name was determined
-                if not device_preset_name:
-                    device_preset_name = f"Preset{i}"
-
-                # Map to HA standard presets if known (home, away, sleep, eco).
-                # For custom device presets (Wake, Vacation, etc.), keep the original
-                # device name instead of slugifying it. This preserves proper capitalization
-                # and makes preset names more readable in the UI.
-                # Example: "Wake" stays as "Wake" instead of becoming "wake"
-                ha_preset_name = KNOWN_PRESETS.get(
-                    device_preset_name, device_preset_name
-                )
+                # Map Matter PresetScenarioEnum to HA standard presets for translations
+                if preset.presetScenario in PRESET_SCENARIO_TO_HA_PRESET:
+                    # Use the mapped preset name from the dictionary
+                    ha_preset_name = PRESET_SCENARIO_TO_HA_PRESET[preset.presetScenario]
+                # For unmapped scenarios, use device-provided name
+                elif preset.name and (name := preset.name.strip()):
+                    ha_preset_name = name
+                else:
+                    ha_preset_name = f"Preset{i}"
 
                 presets.append(ha_preset_name)
                 self._preset_handle_by_name[ha_preset_name] = preset.presetHandle

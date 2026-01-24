@@ -453,10 +453,10 @@ async def test_eve_thermo_v5_presets(
         "home",
         "away",
         "sleep",
-        "Wake",
-        "Vacation",
-        "GoingToSleep",
-        "eco",
+        "wake",
+        "vacation",
+        "going_to_sleep",
+        "Eco",
     ]
     assert state.attributes["preset_mode"] == "home"
 
@@ -515,13 +515,13 @@ async def test_eve_thermo_v5_presets(
     assert state.attributes["preset_mode"] == "away"
     matter_client.send_device_command.reset_mock()
 
-    # test set_preset_mode with "eco" preset (HA standard)
+    # test set_preset_mode with "eco" preset (custom, device-provided name)
     await hass.services.async_call(
         "climate",
         "set_preset_mode",
         {
             "entity_id": entity_id,
-            "preset_mode": "eco",
+            "preset_mode": "Eco",
         },
         blocking=True,
     )
