@@ -1115,7 +1115,7 @@
       "name": "Get available DP codes"
     },
     "get_data": {
-      "description": "Retrieve data for a specific DP code from a Tuya device.",
+      "description": "Retrieves data for a specific DP code from a Tuya device.",
       "fields": {
         "device_id": {
           "description": "The Tuya device."
