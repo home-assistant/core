@@ -27,6 +27,7 @@ SCAN_INTERVAL = timedelta(minutes=30)
 
 AUTHORITIES = [
     "Barking and Dagenham",
+    "Barnet",
     "Bexley",
     "Brent",
     "Bromley",
@@ -49,11 +50,13 @@ AUTHORITIES = [
     "Lambeth",
     "Lewisham",
     "Merton",
+    "Newham",
     "Redbridge",
     "Richmond",
     "Southwark",
     "Sutton",
     "Tower Hamlets",
+    "Waltham Forest",
     "Wandsworth",
     "Westminster",
 ]
