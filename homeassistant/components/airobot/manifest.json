@@ -13,5 +13,5 @@
   "iot_class": "local_polling",
   "loggers": ["pyairobotrest"],
   "quality_scale": "gold",
-  "requirements": ["pyairobotrest==0.2.0"]
+  "requirements": ["pyairobotrest==0.3.0"]
 }
