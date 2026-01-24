@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import json
+import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientError
@@ -34,6 +34,8 @@ from .const import (
     MIN_SCAN_INTERVAL,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
@@ -41,24 +43,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
     }
 )
-
-
-def _extract_error_message(err: Exception) -> str:
-    """Extract a clean error message from a pyControl4 exception.
-
-    The pyControl4 library returns errors as JSON strings like:
-    {"C4ErrorResponse": {"code":401,"message":"Permission denied",...}}
-
-    This function extracts just the human-readable message.
-    """
-    error_str = str(err)
-    try:
-        error_data = json.loads(error_str)
-        if "C4ErrorResponse" in error_data:
-            return error_data["C4ErrorResponse"].get("message", error_str)
-    except (json.JSONDecodeError, TypeError, KeyError):
-        pass
-    return error_str
 
 
 class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -90,25 +74,20 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
             director_bearer_token = (
                 await account.getDirectorBearerToken(controller_unique_id)
             )["token"]
-        except BadCredentials as err:
+        except BadCredentials:
             errors["base"] = "credentials_invalid"
-            description_placeholders["error"] = _extract_error_message(err)
             return errors, data, description_placeholders
-        except Unauthorized as err:
+        except Unauthorized:
             errors["base"] = "api_auth_failed"
-            description_placeholders["error"] = _extract_error_message(err)
             return errors, data, description_placeholders
-        except NotFound as err:
+        except NotFound:
             errors["base"] = "controller_not_found"
-            description_placeholders["error"] = _extract_error_message(err)
             return errors, data, description_placeholders
-        except (KeyError, AttributeError) as err:
+        except Exception:
+            _LOGGER.exception(
+                "Unexpected exception during Control4 account authentication"
+            )
             errors["base"] = "unknown"
-            description_placeholders["error"] = str(err)
-            return errors, data, description_placeholders
-        except Exception as err:  # noqa: BLE001
-            errors["base"] = "unknown"
-            description_placeholders["error"] = str(err)
             return errors, data, description_placeholders
 
         # Step 2: Connect to local Control4 Director
@@ -118,18 +97,18 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             director = C4Director(host, director_bearer_token, director_session)
             await director.getAllItemInfo()
-        except Unauthorized as err:
+        except Unauthorized:
             errors["base"] = "director_auth_failed"
-            description_placeholders["error"] = _extract_error_message(err)
             return errors, data, description_placeholders
-        except (ClientError, TimeoutError) as err:
+        except (ClientError, TimeoutError):
             errors["base"] = "cannot_connect"
-            description_placeholders["error"] = str(err) or "Connection timed out"
             description_placeholders["host"] = host
             return errors, data, description_placeholders
-        except Exception as err:  # noqa: BLE001
+        except Exception:
+            _LOGGER.exception(
+                "Unexpected exception during Control4 director connection"
+            )
             errors["base"] = "unknown"
-            description_placeholders["error"] = str(err)
             return errors, data, description_placeholders
 
         # Success - return the data needed for entry creation
