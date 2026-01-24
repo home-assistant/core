@@ -1106,7 +1106,7 @@
   },
   "services": {
     "get_available_dp_codes": {
-      "description": "Get all available DP codes for a Tuya device.",
+      "description": "Retrieves all available DP codes for a Tuya device.",
       "fields": {
         "device_id": {
           "description": "The Tuya device."
