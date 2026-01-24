@@ -127,6 +127,47 @@ async def test_form_multiple_meters(hass: HomeAssistant) -> None:
     }
 
 
+async def test_form_no_meters(hass: HomeAssistant) -> None:
+    """Test proper flow with no meters connected."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with (
+        patch(
+            "homeassistant.components.rainforest_eagle.config_flow.async_get_type",
+            return_value=(TYPE_EAGLE_200, []),
+        ),
+        patch(
+            "homeassistant.components.rainforest_eagle.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CLOUD_ID: "abcdef",
+                CONF_INSTALL_CODE: "123456",
+                CONF_HOST: "192.168.1.55",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "abcdef"
+    assert result2["data"] == {
+        CONF_TYPE: TYPE_EAGLE_200,
+        CONF_HOST: "192.168.1.55",
+        CONF_CLOUD_ID: "abcdef",
+        CONF_INSTALL_CODE: "123456",
+        CONF_HARDWARE_ADDRESS: None,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
