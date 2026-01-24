@@ -13,9 +13,6 @@ from homeassistant.components.aws_bedrock.config_flow import (
 from homeassistant.components.aws_bedrock.const import (
     CONF_ACCESS_KEY_ID,
     CONF_CHAT_MODEL,
-    CONF_ENABLE_WEB_SEARCH,
-    CONF_GOOGLE_API_KEY,
-    CONF_GOOGLE_CSE_ID,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_REGION,
@@ -25,14 +22,10 @@ from homeassistant.components.aws_bedrock.const import (
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
-    LLM_API_WEB_SEARCH,
-    async_get_available_models,
 )
-from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import llm
 
 from tests.common import MockConfigEntry
 
@@ -43,7 +36,7 @@ TEST_CREDENTIALS = {
 }
 
 # Model ID that matches our mock data
-TEST_MODEL_ID = "anthropic.claude-3-sonnet-20240229-v1:0"
+TEST_MODEL_ID = "amazon.nova-pro-v1:0"
 
 # User-input fields for conversation subentry (no llm_hass_api - auto-managed)
 TEST_CONVERSATION_USER_INPUT = {
@@ -51,9 +44,6 @@ TEST_CONVERSATION_USER_INPUT = {
     CONF_CHAT_MODEL: TEST_MODEL_ID,
     CONF_MAX_TOKENS: 1024,
     CONF_TEMPERATURE: 1.0,
-    CONF_ENABLE_WEB_SEARCH: False,
-    CONF_GOOGLE_API_KEY: "",
-    CONF_GOOGLE_CSE_ID: "",
 }
 
 # User-input fields for AI task subentry (no llm_hass_api - auto-managed)
@@ -61,9 +51,6 @@ TEST_AI_TASK_USER_INPUT = {
     CONF_CHAT_MODEL: TEST_MODEL_ID,
     CONF_MAX_TOKENS: 1024,
     CONF_TEMPERATURE: 1.0,
-    CONF_ENABLE_WEB_SEARCH: False,
-    CONF_GOOGLE_API_KEY: "",
-    CONF_GOOGLE_CSE_ID: "",
 }
 
 
@@ -72,15 +59,7 @@ def mock_bedrock_client():
     """Mock boto3 bedrock client."""
     with patch("homeassistant.components.aws_bedrock.config_flow.boto3.client") as mock:
         client = MagicMock()
-        client.list_foundation_models.return_value = {
-            "modelSummaries": [
-                {
-                    "modelId": "anthropic.claude-3-sonnet-20240229-v1:0",
-                    "modelName": "Claude 3 Sonnet",
-                    "providerName": "Anthropic",
-                }
-            ]
-        }
+        client.list_foundation_models.return_value = {"modelSummaries": []}
         mock.return_value = client
         yield mock
 
@@ -96,8 +75,8 @@ async def test_form(hass: HomeAssistant, mock_bedrock_client) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") is None
 
     with patch(
         "homeassistant.components.aws_bedrock.async_setup_entry",
@@ -109,11 +88,11 @@ async def test_form(hass: HomeAssistant, mock_bedrock_client) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "AWS Bedrock (us-east-1)"
-    assert result2["data"] == TEST_CREDENTIALS
-    assert result2["options"] == {}
-    assert result2["subentries"] == [
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    assert result2.get("title") == "AWS Bedrock (us-east-1)"
+    assert result2.get("data") == TEST_CREDENTIALS
+    assert result2.get("options") == {}
+    assert result2.get("subentries") == [
         {
             "subentry_type": "conversation",
             "data": DEFAULT_CONVERSATION_OPTIONS,
@@ -152,9 +131,9 @@ async def test_form_with_default_region(
             credentials_without_region,
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     # Should use default region
-    assert result2["data"][CONF_REGION] == DEFAULT[CONF_REGION]
+    assert result2.get("data", {}).get(CONF_REGION) == DEFAULT[CONF_REGION]
 
 
 async def test_duplicate_entry(hass: HomeAssistant, mock_bedrock_client) -> None:
@@ -168,16 +147,16 @@ async def test_duplicate_entry(hass: HomeAssistant, mock_bedrock_client) -> None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert not result["errors"]
+    assert result.get("type") is FlowResultType.FORM
+    assert not result.get("errors")
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         TEST_CREDENTIALS,
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -229,8 +208,66 @@ async def test_form_errors(
             TEST_CREDENTIALS,
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": expected_error}
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("errors") == {"base": expected_error}
+
+
+async def test_validate_credentials_permissions(
+    hass: HomeAssistant,
+) -> None:
+    """Test that validation checks required AWS Bedrock permissions.
+
+    According to AWS Bedrock documentation, the integration requires:
+    - bedrock:ListFoundationModels - To validate credentials and list available models
+
+    This test ensures credentials are validated by calling ListFoundationModels,
+    which verifies the user has the minimum required Bedrock permissions.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.aws_bedrock.config_flow.boto3.client"
+    ) as mock_client:
+        client_instance = MagicMock()
+        # Simulate successful ListFoundationModels call
+        client_instance.list_foundation_models.return_value = {
+            "modelSummaries": [
+                {
+                    "modelId": "amazon.nova-pro-v1:0",
+                    "modelName": "Nova Pro",
+                    "providerName": "Amazon",
+                }
+            ]
+        }
+        mock_client.return_value = client_instance
+
+        with patch(
+            "homeassistant.components.aws_bedrock.async_setup_entry",
+            return_value=True,
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                TEST_CREDENTIALS,
+            )
+
+        # Verify boto3.client was called with correct service and credentials
+        mock_client.assert_called_with(
+            "bedrock",
+            aws_access_key_id=TEST_CREDENTIALS[CONF_ACCESS_KEY_ID],
+            aws_secret_access_key=TEST_CREDENTIALS[CONF_SECRET_ACCESS_KEY],
+            region_name=TEST_CREDENTIALS[CONF_REGION],
+        )
+
+        # Verify ListFoundationModels was called with TEXT modality
+        # This validates the user has bedrock:ListFoundationModels permission
+        client_instance.list_foundation_models.assert_called_once_with(
+            byOutputModality="TEXT"
+        )
+
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    assert result2.get("title") == f"AWS Bedrock ({TEST_CREDENTIALS[CONF_REGION]})"
 
 
 async def test_creating_conversation_subentry(
@@ -247,45 +284,25 @@ async def test_creating_conversation_subentry(
     # Mock runtime data
     mock_config_entry.runtime_data = MagicMock()
 
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert not result["errors"]
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "init"
+    assert not result.get("errors")
 
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result2 = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {CONF_NAME: "My Bedrock Agent", **TEST_CONVERSATION_USER_INPUT},
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_NAME: "My Bedrock Agent", **TEST_CONVERSATION_USER_INPUT},
+    )
+    await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "My Bedrock Agent"
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    assert result2.get("title") == "My Bedrock Agent"
     # Data should contain llm_hass_api auto-set by the flow
-    assert CONF_LLM_HASS_API in result2["data"]
+    assert CONF_LLM_HASS_API in (result2.get("data") or {})
 
 
 async def test_creating_ai_task_subentry(
@@ -302,43 +319,23 @@ async def test_creating_ai_task_subentry(
     # Mock runtime data
     mock_config_entry.runtime_data = MagicMock()
 
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "ai_task_data"),
-            context={"source": config_entries.SOURCE_USER},
-        )
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "ai_task_data"),
+        context={"source": config_entries.SOURCE_USER},
+    )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert not result["errors"]
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "init"
+    assert not result.get("errors")
 
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result2 = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {CONF_NAME: "My AI Task", **TEST_AI_TASK_USER_INPUT},
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_NAME: "My AI Task", **TEST_AI_TASK_USER_INPUT},
+    )
+    await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "My AI Task"
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
+    assert result2.get("title") == "My AI Task"
 
 
 async def test_creating_subentry_not_loaded(
@@ -357,8 +354,8 @@ async def test_creating_subentry_not_loaded(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "entry_not_loaded"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "entry_not_loaded"
 
 
 async def test_reconfigure_conversation_subentry(
@@ -385,409 +382,29 @@ async def test_reconfigure_conversation_subentry(
 
     subentry = next(iter(mock_config_entry.subentries.values()))
 
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result = await mock_config_entry.start_subentry_reconfigure_flow(
-            hass, subentry.subentry_id
-        )
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "init"
 
     new_options = TEST_CONVERSATION_USER_INPUT.copy()
     new_options[CONF_PROMPT] = "You are a pirate assistant."
     new_options[CONF_MAX_TOKENS] = 4096
 
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result2 = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            new_options,
-        )
+    result2 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        new_options,
+    )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reconfigure_successful"
+    assert result2.get("type") is FlowResultType.ABORT
+    assert result2.get("reason") == "reconfigure_successful"
 
     # Verify the subentry was updated
     updated_subentry = next(iter(mock_config_entry.subentries.values()))
     assert updated_subentry.data[CONF_PROMPT] == "You are a pirate assistant."
     assert updated_subentry.data[CONF_MAX_TOKENS] == 4096
-
-
-async def test_subentry_with_web_search_enabled(
-    hass: HomeAssistant,
-) -> None:
-    """Test conversation subentry with web search enabled."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=TEST_CREDENTIALS,
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    # Mock runtime data
-    mock_config_entry.runtime_data = MagicMock()
-
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
-
-    options_with_web_search = TEST_CONVERSATION_USER_INPUT.copy()
-    options_with_web_search[CONF_ENABLE_WEB_SEARCH] = True
-    options_with_web_search[CONF_GOOGLE_API_KEY] = "test_api_key"
-    options_with_web_search[CONF_GOOGLE_CSE_ID] = "test_cse_id"
-
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result2 = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {CONF_NAME: "Web Search Agent", **options_with_web_search},
-        )
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-
-    # Verify llm_hass_api includes web search
-    assert result2["data"][CONF_LLM_HASS_API] == [
-        llm.LLM_API_ASSIST,
-        LLM_API_WEB_SEARCH,
-    ]
-
-
-async def test_subentry_without_web_search(
-    hass: HomeAssistant,
-) -> None:
-    """Test conversation subentry without web search."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=TEST_CREDENTIALS,
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    # Mock runtime data
-    mock_config_entry.runtime_data = MagicMock()
-
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
-
-    options_without_web_search = TEST_CONVERSATION_USER_INPUT.copy()
-    options_without_web_search[CONF_ENABLE_WEB_SEARCH] = False
-
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result2 = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {CONF_NAME: "Basic Agent", **options_without_web_search},
-        )
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-
-    # Verify llm_hass_api only includes assist
-    assert result2["data"][CONF_LLM_HASS_API] == [llm.LLM_API_ASSIST]
-
-
-async def test_web_search_missing_api_key_error(
-    hass: HomeAssistant,
-) -> None:
-    """Test error when web search enabled but API key missing."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=TEST_CREDENTIALS,
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    mock_config_entry.add_to_hass(hass)
-    mock_config_entry.runtime_data = MagicMock()
-
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
-
-    # Enable web search but don't provide credentials
-    options_with_missing_creds = TEST_CONVERSATION_USER_INPUT.copy()
-    options_with_missing_creds[CONF_ENABLE_WEB_SEARCH] = True
-    options_with_missing_creds[CONF_GOOGLE_API_KEY] = ""  # Missing
-    options_with_missing_creds[CONF_GOOGLE_CSE_ID] = "valid_cse_id"
-
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result2 = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {CONF_NAME: "Test Agent", **options_with_missing_creds},
-        )
-
-    # Should show form again with error
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"][CONF_GOOGLE_API_KEY] == "google_credentials_required"
-
-
-async def test_web_search_missing_cse_id_error(
-    hass: HomeAssistant,
-) -> None:
-    """Test error when web search enabled but CSE ID missing."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=TEST_CREDENTIALS,
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    mock_config_entry.add_to_hass(hass)
-    mock_config_entry.runtime_data = MagicMock()
-
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
-
-    # Enable web search but don't provide CSE ID
-    options_with_missing_creds = TEST_CONVERSATION_USER_INPUT.copy()
-    options_with_missing_creds[CONF_ENABLE_WEB_SEARCH] = True
-    options_with_missing_creds[CONF_GOOGLE_API_KEY] = "valid_api_key"
-    options_with_missing_creds[CONF_GOOGLE_CSE_ID] = ""  # Missing
-
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result2 = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {CONF_NAME: "Test Agent", **options_with_missing_creds},
-        )
-
-    # Should show form again with error
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"][CONF_GOOGLE_CSE_ID] == "google_credentials_required"
-
-
-async def test_reconfigure_with_legacy_string_llm_api(
-    hass: HomeAssistant,
-) -> None:
-    """Test reconfigure when llm_hass_api is a legacy string value."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=TEST_CREDENTIALS,
-        state=config_entries.ConfigEntryState.LOADED,
-        subentries_data=[
-            ConfigSubentryData(
-                data={
-                    CONF_PROMPT: "Test prompt",
-                    CONF_CHAT_MODEL: TEST_MODEL_ID,
-                    CONF_MAX_TOKENS: 1024,
-                    CONF_TEMPERATURE: 1.0,
-                    # Legacy format: string instead of list
-                    CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-                },
-                subentry_type="conversation",
-                title="Legacy Conversation",
-                unique_id=None,
-            ),
-        ],
-    )
-    mock_config_entry.add_to_hass(hass)
-    mock_config_entry.runtime_data = MagicMock()
-
-    subentry = next(iter(mock_config_entry.subentries.values()))
-
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
-            context={
-                "source": "reconfigure",
-                "subentry_id": subentry.subentry_id,
-            },
-        )
-
-    # Should show form without errors (string was converted to list internally)
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
-
-
-async def test_subentry_invalid_model_selection(
-    hass: HomeAssistant,
-) -> None:
-    """Test subentry with invalid model selection (separator)."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=TEST_CREDENTIALS,
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    # Mock runtime data
-    mock_config_entry.runtime_data = MagicMock()
-
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            },
-            {
-                "id": "meta.llama-3-70b",
-                "name": "Llama 3 70B",
-                "provider": "Meta",
-            },
-        ],
-    ):
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
-
-    invalid_options = TEST_CONVERSATION_USER_INPUT.copy()
-    # Use separator for the second provider "Meta"
-    invalid_options[CONF_CHAT_MODEL] = "separator_Meta"
-
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            },
-            {
-                "id": "meta.llama-3-70b",
-                "name": "Llama 3 70B",
-                "provider": "Meta",
-            },
-        ],
-    ):
-        result2 = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {CONF_NAME: "Test Agent", **invalid_options},
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {CONF_CHAT_MODEL: "invalid_model"}
-
-
-async def test_subentry_fallback_models_on_api_error(
-    hass: HomeAssistant,
-) -> None:
-    """Test subentry uses fallback models when API fails."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=TEST_CREDENTIALS,
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    # Mock runtime data
-    mock_config_entry.runtime_data = MagicMock()
-
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        side_effect=Exception("API Error"),
-    ):
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "conversation"),
-            context={"source": config_entries.SOURCE_USER},
-        )
-
-    # Should still show form with fallback models
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert not result["errors"]
 
 
 async def test_ai_task_subentry_no_prompt_field(
@@ -804,92 +421,14 @@ async def test_ai_task_subentry_no_prompt_field(
     # Mock runtime data
     mock_config_entry.runtime_data = MagicMock()
 
-    with patch(
-        "homeassistant.components.aws_bedrock.config_flow.async_get_available_models",
-        return_value=[
-            {
-                "id": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "name": "Claude 3 Sonnet",
-                "provider": "Anthropic",
-            }
-        ],
-    ):
-        result = await hass.config_entries.subentries.async_init(
-            (mock_config_entry.entry_id, "ai_task_data"),
-            context={"source": config_entries.SOURCE_USER},
-        )
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "ai_task_data"),
+        context={"source": config_entries.SOURCE_USER},
+    )
 
     # AI task should not have CONF_PROMPT in schema
-    assert result["data_schema"] is not None
-    schema_keys = result["data_schema"].schema.keys()
+    data_schema = result.get("data_schema")
+    assert data_schema is not None
+    schema_keys = data_schema.schema.keys()
     assert CONF_NAME in [str(key) for key in schema_keys]
     assert CONF_PROMPT not in [str(key) for key in schema_keys]
-
-
-async def test_model_filtering_excludes_non_tool_models(
-    hass: HomeAssistant,
-) -> None:
-    """Test that models without tool use support are filtered out."""
-    mock_bedrock_client = MagicMock()
-    # Return a mix of tool-capable and non-tool-capable models
-    mock_bedrock_client.list_foundation_models.return_value = {
-        "modelSummaries": [
-            {
-                "modelId": "amazon.nova-pro-v1:0",
-                "modelName": "Nova Pro",
-                "providerName": "Amazon",
-                "inferenceTypesSupported": ["ON_DEMAND"],
-            },
-            {
-                "modelId": "amazon.titan-text-premier-v1:0",
-                "modelName": "Titan Text Premier",
-                "providerName": "Amazon",
-                "inferenceTypesSupported": ["ON_DEMAND"],
-            },
-            {
-                "modelId": "anthropic.claude-3-sonnet-20240229-v1:0",
-                "modelName": "Claude 3 Sonnet",
-                "providerName": "Anthropic",
-                "inferenceTypesSupported": ["ON_DEMAND"],
-            },
-            {
-                "modelId": "anthropic.claude-v2",
-                "modelName": "Claude 2",
-                "providerName": "Anthropic",
-                "inferenceTypesSupported": ["ON_DEMAND"],
-            },
-            {
-                "modelId": "meta.llama3-2-90b-instruct-v1:0",
-                "modelName": "Llama 3.2 90B",
-                "providerName": "Meta",
-                "inferenceTypesSupported": ["ON_DEMAND"],
-            },
-            {
-                "modelId": "meta.llama2-70b-chat-v1",
-                "modelName": "Llama 2 70B",
-                "providerName": "Meta",
-                "inferenceTypesSupported": ["ON_DEMAND"],
-            },
-        ]
-    }
-
-    with patch("boto3.client", return_value=mock_bedrock_client):
-        models = await async_get_available_models(
-            hass, "test_key", "test_secret", "us-east-1"
-        )
-
-    # Only tool-capable models should be returned
-    model_ids = [m["id"] for m in models]
-
-    # These should be included (support tool use)
-    assert "amazon.nova-pro-v1:0" in model_ids
-    assert "anthropic.claude-3-sonnet-20240229-v1:0" in model_ids
-    assert "meta.llama3-2-90b-instruct-v1:0" in model_ids
-
-    # These should be excluded (don't support tool use)
-    assert "amazon.titan-text-premier-v1:0" not in model_ids
-    assert "anthropic.claude-v2" not in model_ids
-    assert "meta.llama2-70b-chat-v1" not in model_ids
-
-    # Should have exactly 3 models
-    assert len(models) == 3

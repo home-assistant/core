@@ -7,14 +7,11 @@ import pytest
 
 from homeassistant.components.aws_bedrock.const import (
     CONF_ACCESS_KEY_ID,
-    CONF_ENABLE_WEB_SEARCH,
-    CONF_GOOGLE_API_KEY,
-    CONF_GOOGLE_CSE_ID,
     CONF_REGION,
     CONF_SECRET_ACCESS_KEY,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -139,132 +136,6 @@ async def test_async_setup_entry_botocore_error(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_async_setup_entry_with_web_search(
-    hass: HomeAssistant,
-    mock_bedrock_client: MagicMock,
-) -> None:
-    """Test setup with web search enabled in subentry."""
-    # Create config entry with conversation subentry that has web search enabled
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ACCESS_KEY_ID: "test-access-key",
-            CONF_SECRET_ACCESS_KEY: "test-secret-key",
-            CONF_REGION: "us-east-1",
-        },
-        subentries_data=[
-            ConfigSubentryData(
-                data={
-                    "prompt": "Test prompt",
-                    "model": "anthropic.claude-3-sonnet-20240229-v1:0",
-                    CONF_ENABLE_WEB_SEARCH: True,
-                    CONF_GOOGLE_API_KEY: "test-google-key",
-                    CONF_GOOGLE_CSE_ID: "test-cse-id",
-                },
-                subentry_type="conversation",
-                title="Test Conversation",
-                unique_id=None,
-            ),
-        ],
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("boto3.client", return_value=mock_bedrock_client):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
-async def test_async_setup_entry_with_web_search_missing_credentials(
-    hass: HomeAssistant,
-    mock_bedrock_client: MagicMock,
-) -> None:
-    """Test setup with web search enabled but missing Google credentials."""
-    # Create config entry with conversation subentry with web search but no Google credentials
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ACCESS_KEY_ID: "test-access-key",
-            CONF_SECRET_ACCESS_KEY: "test-secret-key",
-            CONF_REGION: "us-east-1",
-        },
-        subentries_data=[
-            ConfigSubentryData(
-                data={
-                    "prompt": "Test prompt",
-                    "model": "anthropic.claude-3-sonnet-20240229-v1:0",
-                    CONF_ENABLE_WEB_SEARCH: True,
-                    # Missing CONF_GOOGLE_API_KEY and CONF_GOOGLE_CSE_ID
-                },
-                subentry_type="conversation",
-                title="Test Conversation",
-                unique_id=None,
-            ),
-        ],
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("boto3.client", return_value=mock_bedrock_client):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Should still load, just without web search API registered
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
-async def test_async_setup_entry_multiple_subentries_web_search_once(
-    hass: HomeAssistant,
-    mock_bedrock_client: MagicMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test that web search API is registered only once when multiple subentries have it enabled."""
-    # Create config entry with two conversation subentries with web search
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_ACCESS_KEY_ID: "test-access-key",
-            CONF_SECRET_ACCESS_KEY: "test-secret-key",
-            CONF_REGION: "us-east-1",
-        },
-        subentries_data=[
-            ConfigSubentryData(
-                data={
-                    "prompt": "Test prompt 1",
-                    "model": "anthropic.claude-3-sonnet-20240229-v1:0",
-                    CONF_ENABLE_WEB_SEARCH: True,
-                    CONF_GOOGLE_API_KEY: "test-google-key",
-                    CONF_GOOGLE_CSE_ID: "test-cse-id",
-                },
-                subentry_type="conversation",
-                title="Test Conversation 1",
-                unique_id=None,
-            ),
-            ConfigSubentryData(
-                data={
-                    "prompt": "Test prompt 2",
-                    "model": "anthropic.claude-3-sonnet-20240229-v1:0",
-                    CONF_ENABLE_WEB_SEARCH: True,
-                    CONF_GOOGLE_API_KEY: "test-google-key-2",
-                    CONF_GOOGLE_CSE_ID: "test-cse-id-2",
-                },
-                subentry_type="conversation",
-                title="Test Conversation 2",
-                unique_id=None,
-            ),
-        ],
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("boto3.client", return_value=mock_bedrock_client):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    # Should only see one registration log
-    assert caplog.text.count("Registered AWS Bedrock Web Search API") == 1
 
 
 async def test_async_update_options_triggers_reload(

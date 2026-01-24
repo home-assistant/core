@@ -2,38 +2,32 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import boto3
+from botocore.client import BaseClient
 from botocore.exceptions import BotoCoreError, ClientError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, llm
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ACCESS_KEY_ID,
-    CONF_ENABLE_WEB_SEARCH,
-    CONF_GOOGLE_API_KEY,
-    CONF_GOOGLE_CSE_ID,
     CONF_REGION,
     CONF_SECRET_ACCESS_KEY,
     DEFAULT,
     DOMAIN,
     LOGGER,
 )
-from .llm_api import AWSBedrockWebSearchAPI
 
 PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-if TYPE_CHECKING:
-    type AWSBedrockConfigEntry = ConfigEntry[Any]
-else:
-    type AWSBedrockConfigEntry = ConfigEntry
+type AWSBedrockConfigEntry = ConfigEntry[Any]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -44,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: AWSBedrockConfigEntry) -> bool:
     """Set up AWS Bedrock from a config entry."""
 
-    def create_and_validate_client() -> boto3.client:
+    def create_and_validate_client() -> BaseClient:
         """Create and validate Bedrock client."""
         # Validate credentials using bedrock client
         bedrock_client = boto3.client(
@@ -76,20 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AWSBedrockConfigEntry) -
 
     entry.runtime_data = client
 
-    # Register web search API BEFORE setting up platforms if any subentry has it enabled
-    web_search_registered = False
-    for subentry in entry.subentries.values():
-        if subentry.data.get(CONF_ENABLE_WEB_SEARCH, DEFAULT[CONF_ENABLE_WEB_SEARCH]):
-            google_api_key = subentry.data.get(CONF_GOOGLE_API_KEY, "")
-            google_cse_id = subentry.data.get(CONF_GOOGLE_CSE_ID, "")
-            if google_api_key and google_cse_id and not web_search_registered:
-                # Register the web search API
-                api = AWSBedrockWebSearchAPI(hass, google_api_key, google_cse_id)
-                entry.async_on_unload(llm.async_register_api(hass, api))
-                web_search_registered = True
-                LOGGER.debug("Registered AWS Bedrock Web Search API")
-                break
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
@@ -105,8 +85,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_update_options(
     hass: HomeAssistant, entry: AWSBedrockConfigEntry
 ) -> None:
-    """Update options.
-
-    Reload is necessary to re-register the web search API with updated credentials.
-    """
+    """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)

@@ -27,19 +27,14 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
     TemplateSelector,
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
 )
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
+    AVAILABLE_MODELS,
     AVAILABLE_REGIONS,
     CONF_ACCESS_KEY_ID,
     CONF_CHAT_MODEL,
-    CONF_ENABLE_WEB_SEARCH,
-    CONF_GOOGLE_API_KEY,
-    CONF_GOOGLE_CSE_ID,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_REGION,
@@ -49,11 +44,7 @@ from .const import (
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
-    FALLBACK_MODELS,
-    LLM_API_WEB_SEARCH,
     LOGGER,
-    async_get_available_models,
-    get_model_name,
 )
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -89,11 +80,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     def test_connection() -> None:
         """Test AWS Bedrock connection."""
-        # Use bedrock client (not bedrock-runtime) to validate credentials
-        # by listing foundation models. This verifies:
-        # 1. Credentials are valid
-        # 2. User has Bedrock permissions
-        # 3. Region is accessible
         bedrock_client = boto3.client(
             "bedrock",
             aws_access_key_id=data[CONF_ACCESS_KEY_ID],
@@ -213,13 +199,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         if self._get_entry().state != ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
-        if (suggested_llm_apis := self.options.get(CONF_LLM_HASS_API)) and isinstance(
-            suggested_llm_apis, str
-        ):
-            self.options[CONF_LLM_HASS_API] = [suggested_llm_apis]
-
         step_schema: VolDictType = {}
-        errors: dict[str, str] = {}
 
         if self._is_new:
             if self._subentry_type == "ai_task_data":
@@ -235,50 +215,17 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 }
             )
 
-        # Get AWS credentials from parent config entry
-        parent_entry = self._get_entry()
-        access_key = parent_entry.data[CONF_ACCESS_KEY_ID]
-        secret_key = parent_entry.data[CONF_SECRET_ACCESS_KEY]
-        region = parent_entry.data.get(CONF_REGION, DEFAULT[CONF_REGION])
+        # Use hardcoded Nova models
+        available_models = AVAILABLE_MODELS
 
-        # Fetch available models from AWS Bedrock
-        try:
-            available_models = await async_get_available_models(
-                self.hass, access_key, secret_key, region
+        # Build model selector options
+        model_options = [
+            SelectOptionDict(
+                label=f"{model['name']} ({model['id']})",
+                value=model["id"],
             )
-        except Exception:  # noqa: BLE001
-            LOGGER.exception("Failed to fetch available models")
-            # Use fallback models
-            available_models = [
-                {
-                    "id": model_id,
-                    "name": get_model_name(model_id),
-                    "provider": "Fallback",
-                }
-                for model_id in FALLBACK_MODELS
-            ]
-
-        # Group models by provider for better UX
-        model_options = []
-        current_provider = None
-        for model in available_models:
-            provider = model["provider"]
-            if provider != current_provider:
-                if current_provider is not None:
-                    # Add separator (empty option with divider)
-                    model_options.append(
-                        SelectOptionDict(
-                            label=f"───── {provider} ─────",
-                            value=f"separator_{provider}",
-                        )
-                    )
-                current_provider = provider
-            model_options.append(
-                SelectOptionDict(
-                    label=f"{model['name']} ({model['id']})",
-                    value=model["id"],
-                )
-            )
+            for model in available_models
+        ]
 
         # Model configuration
         step_schema[
@@ -305,76 +252,26 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             )
         ] = NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05))
 
-        # Web search configuration
-        step_schema[
-            vol.Optional(
-                CONF_ENABLE_WEB_SEARCH,
-                default=self.options.get(CONF_ENABLE_WEB_SEARCH, False),
-            )
-        ] = bool
-
-        # Google Search API configuration (optional)
-        step_schema[
-            vol.Optional(
-                CONF_GOOGLE_CSE_ID,
-                default=self.options.get(CONF_GOOGLE_CSE_ID, ""),
-            )
-        ] = str
-        step_schema[
-            vol.Optional(
-                CONF_GOOGLE_API_KEY,
-                default=self.options.get(CONF_GOOGLE_API_KEY, ""),
-            )
-        ] = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
-
         if user_input is not None:
-            # Validate model selection (reject separators)
-            selected_model = user_input.get(CONF_CHAT_MODEL, "")
-            if selected_model.startswith("separator_"):
-                errors[CONF_CHAT_MODEL] = "invalid_model"
+            # Set llm_hass_api for conversation agents
+            if self._subentry_type == "conversation":
+                user_input[CONF_LLM_HASS_API] = [llm.LLM_API_ASSIST]
 
-            # Validate web search configuration
-            if user_input.get(CONF_ENABLE_WEB_SEARCH, False):
-                google_api_key = user_input.get(CONF_GOOGLE_API_KEY, "").strip()
-                google_cse_id = user_input.get(CONF_GOOGLE_CSE_ID, "").strip()
-
-                if not google_api_key:
-                    errors[CONF_GOOGLE_API_KEY] = "google_credentials_required"
-                if not google_cse_id:
-                    errors[CONF_GOOGLE_CSE_ID] = "google_credentials_required"
-
-            # Auto-manage llm_hass_api for conversation agents
-            if not errors and self._subentry_type == "conversation":
-                # Start with Assist API (always included for conversation agents)
-                llm_apis = [llm.LLM_API_ASSIST]
-
-                # Add web search API only if enabled AND credentials are valid
-                if user_input.get(CONF_ENABLE_WEB_SEARCH, False):
-                    google_api_key = user_input.get(CONF_GOOGLE_API_KEY, "").strip()
-                    google_cse_id = user_input.get(CONF_GOOGLE_CSE_ID, "").strip()
-                    if google_api_key and google_cse_id:
-                        llm_apis.append(LLM_API_WEB_SEARCH)
-
-                # Always set llm_hass_api - this ensures it's cleaned if web search is disabled
-                user_input[CONF_LLM_HASS_API] = llm_apis
-
-            if not errors:
-                if self._is_new:
-                    return self.async_create_entry(
-                        title=user_input.pop(CONF_NAME),
-                        data=user_input,
-                    )
-                return self.async_update_and_abort(
-                    self._get_entry(),
-                    self._get_reconfigure_subentry(),
+            if self._is_new:
+                return self.async_create_entry(
+                    title=user_input.pop(CONF_NAME),
                     data=user_input,
                 )
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=user_input,
+            )
 
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(step_schema), self.options
             ),
-            errors=errors or None,
             last_step=True,
         )

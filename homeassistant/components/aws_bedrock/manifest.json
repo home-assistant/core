@@ -9,5 +9,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["boto3==1.37.1", "trafilatura==2.0.0"]
+  "requirements": ["boto3==1.37.1"]
 }
