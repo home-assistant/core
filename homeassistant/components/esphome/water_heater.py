@@ -2,27 +2,27 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
-from aioesphomeapi import WaterHeaterInfo, WaterHeaterMode, WaterHeaterState
+from aioesphomeapi import EntityInfo, WaterHeaterInfo, WaterHeaterMode, WaterHeaterState
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import (
     EsphomeEntity,
-    EsphomeEnumMapper,
     convert_api_error_ha_error,
     esphome_float_state_property,
     esphome_state_property,
     platform_async_setup_entry,
 )
-from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
+from .entry_data import ESPHomeConfigEntry
+from .enum_mapper import EsphomeEnumMapper
 
 PARALLEL_UPDATES = 0
 
@@ -43,6 +43,19 @@ async def async_setup_entry(
     )
 
 
+_WATER_HEATER_MODES: EsphomeEnumMapper[WaterHeaterMode, str] = EsphomeEnumMapper(
+    {
+        WaterHeaterMode.OFF: "off",
+        WaterHeaterMode.ECO: "eco",
+        WaterHeaterMode.ELECTRIC: "electric",
+        WaterHeaterMode.PERFORMANCE: "performance",
+        WaterHeaterMode.HIGH_DEMAND: "high_demand",
+        WaterHeaterMode.HEAT_PUMP: "heat_pump",
+        WaterHeaterMode.GAS: "gas",
+    }
+)
+
+
 class EsphomeWaterHeater(
     EsphomeEntity[WaterHeaterInfo, WaterHeaterState], WaterHeaterEntity
 ):
@@ -51,55 +64,23 @@ class EsphomeWaterHeater(
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_TENTHS
 
-    def __init__(
-        self,
-        entry_data: RuntimeEntryData,
-        entity_info: WaterHeaterInfo,
-        state_type: type[WaterHeaterState],
-    ) -> None:
-        """Initialize the water heater."""
-        super().__init__(entry_data, entity_info, state_type)
-
-        mode = cast(Any, WaterHeaterMode)
-        self._mode_selector = EsphomeEnumMapper(
-            {
-                mode.OFF: "off",
-                mode.ECO: "eco",
-                mode.ELECTRIC: "electric",
-                mode.PERFORMANCE: "performance",
-                mode.HIGH_DEMAND: "high_demand",
-                mode.HEAT_PUMP: "heat_pump",
-                mode.GAS: "gas",
-            }
-        )
-
-    @property
-    def supported_features(self) -> WaterHeaterEntityFeature:
-        """Return the list of supported features."""
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        static_info = self._static_info
+        self._attr_min_temp = static_info.min_temperature
+        self._attr_max_temp = static_info.max_temperature
         features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
-        if self._static_info.supported_modes:
+        if static_info.supported_modes:
             features |= WaterHeaterEntityFeature.OPERATION_MODE
-        return features
-
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature."""
-        return self._static_info.min_temperature
-
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum temperature."""
-        return self._static_info.max_temperature
-
-    @property
-    def operation_list(self) -> list[str] | None:
-        """Return the list of available operation modes."""
-        if not self._static_info.supported_modes:
-            return None
-        return [
-            self._mode_selector.from_esphome(mode)
-            for mode in self._static_info.supported_modes
-        ]
+            self._attr_operation_list = [
+                _WATER_HEATER_MODES.from_esphome(mode)
+                for mode in static_info.supported_modes
+            ]
+        else:
+            self._attr_operation_list = None
+        self._attr_supported_features = features
 
     @property
     @esphome_float_state_property
@@ -117,7 +98,7 @@ class EsphomeWaterHeater(
     @esphome_state_property
     def current_operation(self) -> str | None:
         """Return current operation mode."""
-        return self._mode_selector.from_esphome(self._state.mode)
+        return _WATER_HEATER_MODES.from_esphome(self._state.mode)
 
     @convert_api_error_ha_error
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -135,6 +116,6 @@ class EsphomeWaterHeater(
         """Set new operation mode."""
         self._client.water_heater_command(
             key=self._key,
-            mode=self._mode_selector.from_hass(operation_mode),
+            mode=_WATER_HEATER_MODES.from_hass(operation_mode),
             device_id=self._static_info.device_id,
         )
