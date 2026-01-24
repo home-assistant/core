@@ -64,7 +64,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> DeviceInf
         settings = await client.get_settings()
     except AirobotAuthError as err:
         raise InvalidAuth from err
-    except (AirobotConnectionError, AirobotTimeoutError, AirobotError) as err:
+    except (
+        AirobotConnectionError,
+        AirobotTimeoutError,
+        AirobotError,
+        TimeoutError,
+    ) as err:
         raise CannotConnect from err
 
     # Use device name or device ID as title
