@@ -194,17 +194,21 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         if self._get_entry().state != ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
-        hass_apis: list[SelectOptionDict] = [
-            SelectOptionDict(
+        hass_apis: dict[str, SelectOptionDict] = {
+            api.id: SelectOptionDict(
                 label=api.name,
                 value=api.id,
             )
             for api in llm.async_get_apis(self.hass)
-        ]
-        if (suggested_llm_apis := self.options.get(CONF_LLM_HASS_API)) and isinstance(
-            suggested_llm_apis, str
-        ):
-            self.options[CONF_LLM_HASS_API] = [suggested_llm_apis]
+        }
+        if suggested_llm_apis := self.options.get(CONF_LLM_HASS_API):
+            if isinstance(suggested_llm_apis, str):
+                # Convert old string format to list
+                suggested_llm_apis = [suggested_llm_apis]
+            # Filter out any APIs no longer available
+            self.options[CONF_LLM_HASS_API] = [
+                api for api in suggested_llm_apis if api in hass_apis
+            ]
 
         step_schema: VolDictType = {}
         errors: dict[str, str] = {}
@@ -223,7 +227,9 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     vol.Optional(
                         CONF_LLM_HASS_API,
                     ): SelectSelector(
-                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                        SelectSelectorConfig(
+                            options=list(hass_apis.values()), multiple=True
+                        )
                     ),
                 }
             )
