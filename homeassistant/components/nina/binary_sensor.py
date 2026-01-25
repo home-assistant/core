@@ -1,4 +1,4 @@
-"""NINA sensor platform."""
+"""NINA binary sensor platform."""
 
 from __future__ import annotations
 
