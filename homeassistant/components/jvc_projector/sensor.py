@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from jvcprojector import const
+from jvcprojector import command as cmd
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,11 +23,11 @@ JVC_SENSORS = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[
-            const.STANDBY,
-            const.ON,
-            const.WARMING,
-            const.COOLING,
-            const.ERROR,
+            cmd.Power.STANDBY,
+            cmd.Power.ON,
+            cmd.Power.WARMING,
+            cmd.Power.COOLING,
+            cmd.Power.ERROR,
         ],
     ),
 )

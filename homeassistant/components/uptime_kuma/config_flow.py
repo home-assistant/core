@@ -42,6 +42,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_API_KEY, default=""): str})
+PLACEHOLDER = {"example_url": "https://uptime.example.com:3001"}
 
 
 async def validate_connection(
@@ -100,6 +101,7 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_USER_DATA_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
+            description_placeholders=PLACEHOLDER,
         )
 
     async def async_step_reauth(
@@ -170,6 +172,7 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=user_input or entry.data,
             ),
             errors=errors,
+            description_placeholders=PLACEHOLDER,
         )
 
     async def async_step_hassio(

@@ -1,36 +1,21 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Identify the device",
-        "description": "Provide the IP address or mDNS of the device and its password",
-        "data": {
-          "ip_address": "[%key:common::config_flow::data::ip%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_input": "[%key:common::config_flow::error::invalid_host%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    }
-  },
-  "options": {
     "step": {
-      "init": {
-        "title": "Configure air-Q integration",
+      "user": {
         "data": {
-          "return_average": "Show values averaged by the device",
-          "clip_negatives": "Clip negative values"
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
-        "data_description": {
-          "return_average": "air-Q allows to poll both the noisy sensor readings as well as the values averaged on the device (default)",
-          "clip_negatives": "For baseline calibration purposes, certain sensor values may briefly become negative. The default behaviour is to clip such values to 0"
-        }
+        "description": "Provide the IP address or mDNS of the device and its password",
+        "title": "Identify the device"
       }
     }
   },
@@ -53,20 +38,17 @@
       "bromine": {
         "name": "Bromine"
       },
-      "methanethiol": {
-        "name": "Methanethiol"
+      "carbon_disulfide": {
+        "name": "Carbon disulfide"
+      },
+      "carbon_monoxide": {
+        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
       },
       "chlorine": {
         "name": "Chlorine"
       },
       "chlorine_dioxide": {
         "name": "Chlorine dioxide"
-      },
-      "carbon_disulfide": {
-        "name": "Carbon disulfide"
-      },
-      "carbon_monoxide": {
-        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
       },
       "dew_point": {
         "name": "Dew point"
@@ -77,17 +59,20 @@
       "ethylene": {
         "name": "Ethylene"
       },
-      "formaldehyde": {
-        "name": "Formaldehyde"
-      },
       "fluorine": {
         "name": "Fluorine"
       },
-      "hydrogen_sulfide": {
-        "name": "Hydrogen sulfide"
+      "formaldehyde": {
+        "name": "Formaldehyde"
+      },
+      "health_index": {
+        "name": "Health index"
       },
       "hydrochloric_acid": {
         "name": "Hydrochloric acid"
+      },
+      "hydrogen": {
+        "name": "Hydrogen"
       },
       "hydrogen_cyanide": {
         "name": "Hydrogen cyanide"
@@ -95,17 +80,29 @@
       "hydrogen_fluoride": {
         "name": "Hydrogen fluoride"
       },
-      "health_index": {
-        "name": "Health index"
-      },
-      "hydrogen": {
-        "name": "Hydrogen"
-      },
       "hydrogen_peroxide": {
         "name": "Hydrogen peroxide"
       },
+      "hydrogen_phosphide": {
+        "name": "Hydrogen phosphide"
+      },
+      "hydrogen_sulfide": {
+        "name": "Hydrogen sulfide"
+      },
+      "industrial_volatile_organic_compounds": {
+        "name": "VOCs (industrial)"
+      },
+      "maximum_noise": {
+        "name": "Noise (maximum)"
+      },
       "methane": {
         "name": "Methane"
+      },
+      "methanethiol": {
+        "name": "Methanethiol"
+      },
+      "noise": {
+        "name": "Noise"
       },
       "organic_acid": {
         "name": "Organic acid"
@@ -116,35 +113,38 @@
       "performance_index": {
         "name": "Performance index"
       },
-      "hydrogen_phosphide": {
-        "name": "Hydrogen phosphide"
-      },
-      "relative_pressure": {
-        "name": "Relative pressure"
-      },
       "propane": {
         "name": "Propane"
-      },
-      "refigerant": {
-        "name": "Refrigerant"
-      },
-      "silicon_hydride": {
-        "name": "Silicon hydride"
-      },
-      "noise": {
-        "name": "Noise"
-      },
-      "maximum_noise": {
-        "name": "Noise (maximum)"
       },
       "radon": {
         "name": "Radon"
       },
-      "industrial_volatile_organic_compounds": {
-        "name": "VOCs (industrial)"
+      "refigerant": {
+        "name": "Refrigerant"
+      },
+      "relative_pressure": {
+        "name": "Relative pressure"
+      },
+      "silicon_hydride": {
+        "name": "Silicon hydride"
       },
       "virus_index": {
         "name": "Virus index"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "clip_negatives": "Clip negative values",
+          "return_average": "Show values averaged by the device"
+        },
+        "data_description": {
+          "clip_negatives": "For baseline calibration purposes, certain sensor values may briefly become negative. The default behavior is to clip such values to 0",
+          "return_average": "air-Q allows to poll both the noisy sensor readings as well as the values averaged on the device (default)"
+        },
+        "title": "Configure air-Q integration"
       }
     }
   }

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extract air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -73,6 +74,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extract fan speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -122,6 +124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter days left',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -171,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -224,6 +228,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -277,6 +282,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply fan speed',
     'options': dict({
     }),
     'original_device_class': None,

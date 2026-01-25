@@ -13,18 +13,20 @@ from homeassistant.components.bluesound import DOMAIN
 from homeassistant.components.bluesound.const import ATTR_MASTER
 from homeassistant.components.bluesound.media_player import (
     SERVICE_CLEAR_TIMER,
-    SERVICE_JOIN,
     SERVICE_SET_TIMER,
 )
 from homeassistant.components.media_player import (
+    ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_JOIN,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_SELECT_SOURCE,
+    SERVICE_UNJOIN,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
@@ -291,7 +293,7 @@ async def test_join(
     setup_config_entry_secondary: None,
     player_mocks: PlayerMocks,
 ) -> None:
-    """Test the join action."""
+    """Test the bluesound.join action."""
     await hass.services.async_call(
         DOMAIN,
         SERVICE_JOIN,
@@ -313,7 +315,7 @@ async def test_unjoin(
     setup_config_entry_secondary: None,
     player_mocks: PlayerMocks,
 ) -> None:
-    """Test the unjoin action."""
+    """Test the bluesound.unjoin action."""
     updated_sync_status = dataclasses.replace(
         player_mocks.player_data.sync_status_long_polling_mock.get(),
         leader=PairedPlayer("2.2.2.2", 11000),
@@ -455,3 +457,100 @@ async def test_volume_up_from_6_to_7(
     )
 
     player_mocks.player_data.player.volume.assert_called_once_with(level=7)
+
+
+async def test_attr_group_members(
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    setup_config_entry_secondary: None,
+    player_mocks: PlayerMocks,
+) -> None:
+    """Test the media player grouping for leader."""
+    attr_group_members = hass.states.get("media_player.player_name1111").attributes.get(
+        ATTR_GROUP_MEMBERS
+    )
+    assert attr_group_members is None
+
+    updated_sync_status = dataclasses.replace(
+        player_mocks.player_data.sync_status_long_polling_mock.get(),
+        followers=[PairedPlayer("2.2.2.2", 11000)],
+    )
+    player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
+
+    # give the long polling loop a chance to update the state; this could be any async call
+    await hass.async_block_till_done()
+
+    attr_group_members = hass.states.get("media_player.player_name1111").attributes.get(
+        ATTR_GROUP_MEMBERS
+    )
+
+    assert attr_group_members == [
+        "media_player.player_name1111",
+        "media_player.player_name2222",
+    ]
+
+
+async def test_join_players(
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    setup_config_entry_secondary: None,
+    player_mocks: PlayerMocks,
+) -> None:
+    """Test the media_player.join action."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.player_name1111",
+            ATTR_GROUP_MEMBERS: "media_player.player_name2222",
+        },
+        blocking=True,
+    )
+
+    player_mocks.player_data.player.add_followers.assert_called_once_with(
+        [PairedPlayer("2.2.2.2", 11000)]
+    )
+
+
+async def test_join_player_cannot_join_to_self(
+    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
+) -> None:
+    """Test that joining to self is not allowed."""
+    with pytest.raises(ServiceValidationError, match="Cannot join player to itself"):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: "media_player.player_name1111",
+                ATTR_GROUP_MEMBERS: "media_player.player_name1111",
+            },
+            blocking=True,
+        )
+
+
+async def test_unjoin_player(
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    setup_config_entry_secondary: None,
+    player_mocks: PlayerMocks,
+) -> None:
+    """Test the media_player.unjoin action."""
+    updated_sync_status = dataclasses.replace(
+        player_mocks.player_data.sync_status_long_polling_mock.get(),
+        leader=PairedPlayer("2.2.2.2", 11000),
+    )
+    player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
+
+    # give the long polling loop a chance to update the state; this could be any async call
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_UNJOIN,
+        {ATTR_ENTITY_ID: "media_player.player_name1111"},
+        blocking=True,
+    )
+
+    player_mocks.player_data_secondary.player.remove_follower.assert_called_once_with(
+        "1.1.1.1", 11000
+    )

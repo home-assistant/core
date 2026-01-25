@@ -47,6 +47,8 @@ MCP_DISCOVERY_HEADERS = {
     "MCP-Protocol-Version": "2025-03-26",
 }
 
+EXAMPLE_URL = "http://example/mcp"
+
 
 @dataclass
 class OAuthConfig:
@@ -120,7 +122,7 @@ async def validate_input(
     except vol.Invalid as error:
         raise InvalidUrl from error
     try:
-        async with mcp_client(url, token_manager=token_manager) as session:
+        async with mcp_client(hass, url, token_manager=token_manager) as session:
             response = await session.initialize()
     except httpx.TimeoutException as error:
         _LOGGER.info("Timeout connecting to MCP server: %s", error)
@@ -182,7 +184,10 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={"example_url": EXAMPLE_URL},
         )
 
     async def async_step_auth_discovery(

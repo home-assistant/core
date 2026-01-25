@@ -41,5 +41,22 @@
     "turn_on": {
       "service": "mdi:play"
     }
+  },
+  "triggers": {
+    "docked": {
+      "trigger": "mdi:home-outline"
+    },
+    "errored": {
+      "trigger": "mdi:alert-circle-outline"
+    },
+    "paused_cleaning": {
+      "trigger": "mdi:pause"
+    },
+    "started_cleaning": {
+      "trigger": "mdi:play"
+    },
+    "started_returning": {
+      "trigger": "mdi:home-import-outline"
+    }
   }
 }

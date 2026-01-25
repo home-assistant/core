@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Followers',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Following',
     'options': dict({
     }),
     'original_device_class': None,
@@ -126,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Posts',
     'options': dict({
     }),
     'original_device_class': None,

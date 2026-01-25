@@ -98,7 +98,7 @@ class AirOSBinarySensor(AirOSEntity, BinarySensorEntity):
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data.host.device_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.data.derived.mac}_{description.key}"
 
     @property
     def is_on(self) -> bool:

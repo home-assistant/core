@@ -7,47 +7,62 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from jvcprojector import const
+from jvcprojector import command as cmd
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import POWER
 from .coordinator import JVCConfigEntry
 from .entity import JvcProjectorEntity
 
-COMMANDS = {
-    "menu": const.REMOTE_MENU,
-    "up": const.REMOTE_UP,
-    "down": const.REMOTE_DOWN,
-    "left": const.REMOTE_LEFT,
-    "right": const.REMOTE_RIGHT,
-    "ok": const.REMOTE_OK,
-    "back": const.REMOTE_BACK,
-    "mpc": const.REMOTE_MPC,
-    "hide": const.REMOTE_HIDE,
-    "info": const.REMOTE_INFO,
-    "input": const.REMOTE_INPUT,
-    "cmd": const.REMOTE_CMD,
-    "advanced_menu": const.REMOTE_ADVANCED_MENU,
-    "picture_mode": const.REMOTE_PICTURE_MODE,
-    "color_profile": const.REMOTE_COLOR_PROFILE,
-    "lens_control": const.REMOTE_LENS_CONTROL,
-    "setting_memory": const.REMOTE_SETTING_MEMORY,
-    "gamma_settings": const.REMOTE_GAMMA_SETTINGS,
-    "hdmi_1": const.REMOTE_HDMI_1,
-    "hdmi_2": const.REMOTE_HDMI_2,
-    "mode_1": const.REMOTE_MODE_1,
-    "mode_2": const.REMOTE_MODE_2,
-    "mode_3": const.REMOTE_MODE_3,
-    "lens_ap": const.REMOTE_LENS_AP,
-    "gamma": const.REMOTE_GAMMA,
-    "color_temp": const.REMOTE_COLOR_TEMP,
-    "natural": const.REMOTE_NATURAL,
-    "cinema": const.REMOTE_CINEMA,
-    "anamo": const.REMOTE_ANAMO,
-    "3d_format": const.REMOTE_3D_FORMAT,
+COMMANDS: list[str] = [
+    cmd.Remote.MENU,
+    cmd.Remote.UP,
+    cmd.Remote.DOWN,
+    cmd.Remote.LEFT,
+    cmd.Remote.RIGHT,
+    cmd.Remote.OK,
+    cmd.Remote.BACK,
+    cmd.Remote.MPC,
+    cmd.Remote.HIDE,
+    cmd.Remote.INFO,
+    cmd.Remote.INPUT,
+    cmd.Remote.CMD,
+    cmd.Remote.ADVANCED_MENU,
+    cmd.Remote.PICTURE_MODE,
+    cmd.Remote.COLOR_PROFILE,
+    cmd.Remote.LENS_CONTROL,
+    cmd.Remote.SETTING_MEMORY,
+    cmd.Remote.GAMMA_SETTINGS,
+    cmd.Remote.HDMI1,
+    cmd.Remote.HDMI2,
+    cmd.Remote.MODE_1,
+    cmd.Remote.MODE_2,
+    cmd.Remote.MODE_3,
+    cmd.Remote.MODE_4,
+    cmd.Remote.MODE_5,
+    cmd.Remote.MODE_6,
+    cmd.Remote.MODE_7,
+    cmd.Remote.MODE_8,
+    cmd.Remote.MODE_9,
+    cmd.Remote.MODE_10,
+    cmd.Remote.GAMMA,
+    cmd.Remote.NATURAL,
+    cmd.Remote.CINEMA,
+    cmd.Remote.COLOR_TEMP,
+    cmd.Remote.ANAMORPHIC,
+    cmd.Remote.LENS_APERTURE,
+    cmd.Remote.V3D_FORMAT,
+]
+
+RENAMED_COMMANDS: dict[str, str] = {
+    "anamo": cmd.Remote.ANAMORPHIC,
+    "lens_ap": cmd.Remote.LENS_APERTURE,
+    "hdmi1": cmd.Remote.HDMI1,
+    "hdmi2": cmd.Remote.HDMI2,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,25 +85,34 @@ class JvcProjectorRemote(JvcProjectorEntity, RemoteEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self.coordinator.data["power"] in [const.ON, const.WARMING]
+        """Return True if the entity is on."""
+        return self.coordinator.data[POWER] in (cmd.Power.ON, cmd.Power.WARMING)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self.device.power_on()
+        await self.device.set(cmd.Power, cmd.Power.ON)
         await asyncio.sleep(1)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.device.power_off()
+        await self.device.set(cmd.Power, cmd.Power.OFF)
         await asyncio.sleep(1)
         await self.coordinator.async_refresh()
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a remote command to the device."""
-        for cmd in command:
-            if cmd not in COMMANDS:
-                raise HomeAssistantError(f"{cmd} is not a known command")
-            _LOGGER.debug("Sending command '%s'", cmd)
-            await self.device.remote(COMMANDS[cmd])
+        for send_command in command:
+            # Legacy name replace
+            if send_command in RENAMED_COMMANDS:
+                send_command = RENAMED_COMMANDS[send_command]
+
+            # Legacy name fixup
+            if "_" in send_command:
+                send_command = send_command.replace("_", "-")
+
+            if send_command not in COMMANDS:
+                raise HomeAssistantError(f"{send_command} is not a known command")
+
+            _LOGGER.debug("Sending command '%s'", send_command)
+            await self.device.remote(send_command)

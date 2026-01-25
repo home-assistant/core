@@ -16,7 +16,7 @@ from homeassistant.const import Platform
 
 if TYPE_CHECKING:
     # InferenceResult is available only from astroid >= 2.12.0
-    # pre-commit should still work on out of date environments
+    # prek should still work on out of date environments
     from astroid.typing import InferenceResult
 
 _COMMON_ARGUMENTS: dict[str, list[str]] = {
@@ -168,7 +168,6 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "service_calls": "list[ServiceCall]",
     "snapshot": "SnapshotAssertion",
     "socket_enabled": "None",
-    "stub_blueprint_populate": "None",
     "tmp_path": "Path",
     "tmpdir": "py.path.local",
     "tts_mutagen_mock": "MagicMock",
@@ -700,6 +699,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="device_class",
         return_type=["str", None],
+        mandatory=True,
     ),
     TypeHintMatch(
         function_name="unit_of_measurement",
@@ -931,6 +931,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["BinarySensorDeviceClass", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="is_on",
@@ -954,6 +955,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["ButtonDeviceClass", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="press",
@@ -1222,6 +1224,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="preset_mode",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="preset_modes",
@@ -1366,6 +1369,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["CoverDeviceClass", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="current_cover_position",
@@ -1598,6 +1602,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="preset_mode",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="preset_modes",
@@ -1991,6 +1996,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["MediaPlayerDeviceClass", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="state",
@@ -2314,6 +2320,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
             ],
         ),
@@ -2333,6 +2340,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["NumberDeviceClass", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="capability_attributes",
@@ -2507,14 +2515,17 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["SensorDeviceClass", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="state_class",
                     return_type=["SensorStateClass", "str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="last_reset",
                     return_type=["datetime", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="native_value",
@@ -2631,6 +2642,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["SwitchDeviceClass", None],
+                    mandatory=True,
                 ),
             ],
         ),
@@ -2735,6 +2747,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="device_class",
                     return_type=["UpdateDeviceClass", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="in_progress",

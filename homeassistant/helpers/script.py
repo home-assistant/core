@@ -86,7 +86,7 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType, SignalTypeFormat
 
 from . import condition, config_validation as cv, service, template
-from .condition import ConditionCheckerType, trace_condition_function
+from .condition import ConditionCheckerTypeOptional, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptRunVariables, ScriptVariables
@@ -675,12 +675,14 @@ class _ScriptRun:
 
     ### Condition actions ###
 
-    async def _async_get_condition(self, config: ConfigType) -> ConditionCheckerType:
+    async def _async_get_condition(
+        self, config: ConfigType
+    ) -> ConditionCheckerTypeOptional:
         return await self._script._async_get_condition(config)  # noqa: SLF001
 
     def _test_conditions(
         self,
-        conditions: list[ConditionCheckerType],
+        conditions: list[ConditionCheckerTypeOptional],
         name: str,
         condition_path: str | None = None,
     ) -> bool | None:
@@ -698,7 +700,13 @@ class _ScriptRun:
                             if cond(hass, variables) is False:
                                 return False
             except exceptions.ConditionError as ex:
-                _LOGGER.warning("Error in '%s[%s]' evaluation: %s", name, idx, ex)
+                self._log(
+                    "Error in '%s[%s]' evaluation: %s",
+                    name,
+                    idx,
+                    ex,
+                    level=logging.WARNING,
+                )
                 return None
 
             return True
@@ -719,7 +727,11 @@ class _ScriptRun:
                                 await self._async_run_script(script)
                                 return
                     except exceptions.ConditionError as ex:
-                        _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
+                        self._log(
+                            "Error in 'choose' evaluation:\n%s",
+                            ex,
+                            level=logging.WARNING,
+                        )
 
         if choose_data["default"] is not None:
             trace_set_result(choice="default")
@@ -738,7 +750,7 @@ class _ScriptRun:
                 trace_element.reuse_by_child = True
             check = cond(self._hass, self._variables)
         except exceptions.ConditionError as ex:
-            _LOGGER.warning("Error in 'condition' evaluation:\n%s", ex)
+            self._log("Error in 'condition' evaluation:\n%s", ex, level=logging.WARNING)
             check = False
 
         self._log("Test condition %s: %s", self._script.last_action, check)
@@ -751,13 +763,10 @@ class _ScriptRun:
         if_data = await self._script._async_get_if_data(self._step)  # noqa: SLF001
 
         test_conditions: bool | None = False
-        try:
-            with trace_path("if"):
-                test_conditions = self._test_conditions(
-                    if_data["if_conditions"], "if", "condition"
-                )
-        except exceptions.ConditionError as ex:
-            _LOGGER.warning("Error in 'if' evaluation:\n%s", ex)
+        with trace_path("if"):
+            test_conditions = self._test_conditions(
+                if_data["if_conditions"], "if", "condition"
+            )
 
         if test_conditions:
             trace_set_result(choice="then")
@@ -848,33 +857,28 @@ class _ScriptRun:
             ]
             for iteration in itertools.count(1):
                 set_repeat_var(iteration)
-                try:
-                    if self._stop.done():
-                        break
-                    if not self._test_conditions(conditions, "while"):
-                        break
-                except exceptions.ConditionError as ex:
-                    _LOGGER.warning("Error in 'while' evaluation:\n%s", ex)
+                if self._stop.done():
+                    break
+                if not self._test_conditions(conditions, "while"):
                     break
 
                 if iteration > 1:
                     if iteration > REPEAT_WARN_ITERATIONS:
                         if not warned_too_many_loops:
                             warned_too_many_loops = True
-                            _LOGGER.warning(
-                                "While condition %s in script `%s` looped %s times",
+                            self._log(
+                                "While condition %s looped %s times",
                                 repeat[CONF_WHILE],
-                                self._script.name,
                                 REPEAT_WARN_ITERATIONS,
+                                level=logging.WARNING,
                             )
 
                         if iteration > REPEAT_TERMINATE_ITERATIONS:
-                            _LOGGER.critical(
-                                "While condition %s in script `%s` "
-                                "terminated because it looped %s times",
+                            self._log(
+                                "While condition %s terminated because it looped %s times",
                                 repeat[CONF_WHILE],
-                                self._script.name,
                                 REPEAT_TERMINATE_ITERATIONS,
+                                level=logging.CRITICAL,
                             )
                             raise _AbortScript(
                                 f"While condition {repeat[CONF_WHILE]} "
@@ -896,32 +900,27 @@ class _ScriptRun:
             for iteration in itertools.count(1):
                 set_repeat_var(iteration)
                 await async_run_sequence(iteration)
-                try:
-                    if self._stop.done():
-                        break
-                    if self._test_conditions(conditions, "until") in [True, None]:
-                        break
-                except exceptions.ConditionError as ex:
-                    _LOGGER.warning("Error in 'until' evaluation:\n%s", ex)
+                if self._stop.done():
+                    break
+                if self._test_conditions(conditions, "until") in [True, None]:
                     break
 
                 if iteration >= REPEAT_WARN_ITERATIONS:
                     if not warned_too_many_loops:
                         warned_too_many_loops = True
-                        _LOGGER.warning(
-                            "Until condition %s in script `%s` looped %s times",
+                        self._log(
+                            "Until condition %s looped %s times",
                             repeat[CONF_UNTIL],
-                            self._script.name,
                             REPEAT_WARN_ITERATIONS,
+                            level=logging.WARNING,
                         )
 
                     if iteration >= REPEAT_TERMINATE_ITERATIONS:
-                        _LOGGER.critical(
-                            "Until condition %s in script `%s` "
-                            "terminated because it looped %s times",
+                        self._log(
+                            "Until condition %s terminated because it looped %s times",
                             repeat[CONF_UNTIL],
-                            self._script.name,
                             REPEAT_TERMINATE_ITERATIONS,
+                            level=logging.CRITICAL,
                         )
                         raise _AbortScript(
                             f"Until condition {repeat[CONF_UNTIL]} "
@@ -1002,7 +1001,7 @@ class _ScriptRun:
             if supports_response == SupportsResponse.NONE and return_response:
                 raise vol.Invalid(
                     f"Script does not support '{CONF_RESPONSE_VARIABLE}' for service "
-                    f"'{CONF_RESPONSE_VARIABLE}' which does not support response data."
+                    f"'{params[CONF_DOMAIN]}.{params[CONF_SERVICE]}' which does not support response data."
                 )
 
         running_script = (
@@ -1407,12 +1406,12 @@ def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
 
 
 class _ChooseData(TypedDict):
-    choices: list[tuple[list[ConditionCheckerType], Script]]
+    choices: list[tuple[list[ConditionCheckerTypeOptional], Script]]
     default: Script | None
 
 
 class _IfData(TypedDict):
-    if_conditions: list[ConditionCheckerType]
+    if_conditions: list[ConditionCheckerTypeOptional]
     if_then: Script
     if_else: Script | None
 
@@ -1489,7 +1488,9 @@ class Script:
         self._max_exceeded = max_exceeded
         if script_mode == SCRIPT_MODE_QUEUED:
             self._queue_lck = asyncio.Lock()
-        self._config_cache: dict[frozenset[tuple[str, str]], ConditionCheckerType] = {}
+        self._config_cache: dict[
+            frozenset[tuple[str, str]], ConditionCheckerTypeOptional
+        ] = {}
         self._repeat_script: dict[int, Script] = {}
         self._choose_data: dict[int, _ChooseData] = {}
         self._if_data: dict[int, _IfData] = {}
@@ -1600,8 +1601,13 @@ class Script:
                 ):
                     _referenced_extract_ids(data, target, referenced)
 
+            elif action == cv.SCRIPT_ACTION_CHECK_CONDITION:
+                referenced |= condition.async_extract_targets(step, target)
+
             elif action == cv.SCRIPT_ACTION_CHOOSE:
                 for choice in step[CONF_CHOOSE]:
+                    for cond in choice[CONF_CONDITIONS]:
+                        referenced |= condition.async_extract_targets(cond, target)
                     Script._find_referenced_target(
                         target, referenced, choice[CONF_SEQUENCE]
                     )
@@ -1611,6 +1617,8 @@ class Script:
                     )
 
             elif action == cv.SCRIPT_ACTION_IF:
+                for cond in step[CONF_IF]:
+                    referenced |= condition.async_extract_targets(cond, target)
                 Script._find_referenced_target(target, referenced, step[CONF_THEN])
                 if CONF_ELSE in step:
                     Script._find_referenced_target(target, referenced, step[CONF_ELSE])
@@ -1860,7 +1868,9 @@ class Script:
             return
         await asyncio.shield(create_eager_task(self._async_stop(aws, update_state)))
 
-    async def _async_get_condition(self, config: ConfigType) -> ConditionCheckerType:
+    async def _async_get_condition(
+        self, config: ConfigType
+    ) -> ConditionCheckerTypeOptional:
         config_cache_key = frozenset((k, str(v)) for k, v in config.items())
         if not (cond := self._config_cache.get(config_cache_key)):
             cond = await condition.async_from_config(self._hass, config)

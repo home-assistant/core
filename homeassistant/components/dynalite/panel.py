@@ -110,7 +110,7 @@ async def async_register_dynalite_frontend(hass: HomeAssistant):
         frontend_url_path=DOMAIN,
         config_panel_domain=DOMAIN,
         webcomponent_name="dynalite-panel",
-        module_url=f"{URL_BASE}/entrypoint-{build_id}.js",
+        module_url=f"{URL_BASE}/entrypoint.{build_id}.js",
         embed_iframe=True,
         require_admin=True,
     )

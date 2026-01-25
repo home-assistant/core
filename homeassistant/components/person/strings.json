@@ -1,5 +1,8 @@
 {
-  "title": "Person",
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted persons to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::person::title%]",
@@ -26,10 +29,42 @@
       }
     }
   },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
   "services": {
     "reload": {
-      "name": "[%key:common::action::reload%]",
-      "description": "Reloads persons from the YAML-configuration."
+      "description": "Reloads persons from the YAML-configuration.",
+      "name": "[%key:common::action::reload%]"
+    }
+  },
+  "title": "Person",
+  "triggers": {
+    "entered_home": {
+      "description": "Triggers when one or more persons enter home.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::person::common::trigger_behavior_description%]",
+          "name": "[%key:component::person::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Entered home"
+    },
+    "left_home": {
+      "description": "Triggers when one or more persons leave home.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::person::common::trigger_behavior_description%]",
+          "name": "[%key:component::person::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Left home"
     }
   }
 }

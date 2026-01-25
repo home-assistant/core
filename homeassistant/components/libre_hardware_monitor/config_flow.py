@@ -30,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
 class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for LibreHardwareMonitor."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -46,7 +46,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                _ = (await api.get_data()).main_device_ids_and_names.values()
+                computer_name = (await api.get_data()).computer_name
             except LibreHardwareMonitorConnectionError as exception:
                 _LOGGER.error(exception)
                 errors["base"] = "cannot_connect"
@@ -54,7 +54,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_devices"
             else:
                 return self.async_create_entry(
-                    title=f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+                    title=f"{computer_name} ({user_input[CONF_HOST]}:{user_input[CONF_PORT]})",
                     data=user_input,
                 )
 

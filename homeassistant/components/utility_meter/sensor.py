@@ -20,7 +20,9 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import _suggest_report_issue
+from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
+    _suggest_report_issue,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -686,7 +688,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._collecting = None
 
     @property
-    def device_class(self):
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         if self._input_device_class is not None:
             return self._input_device_class
@@ -698,7 +700,7 @@ class UtilityMeterSensor(RestoreSensor):
         return None
 
     @property
-    def state_class(self):
+    def state_class(self) -> SensorStateClass:
         """Return the device class of the sensor."""
         return (
             SensorStateClass.TOTAL

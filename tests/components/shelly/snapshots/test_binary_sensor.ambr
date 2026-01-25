@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calibration',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -29,7 +30,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'calibration',
     'unique_id': '123456789ABC-blutrv:200-calibration',
     'unit_of_measurement': None,
   })
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen cable unplugged',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -78,7 +80,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'cable_unplugged_with_channel_name',
     'unique_id': '123456789ABC-flood:0-flood_cable_unplugged',
     'unit_of_measurement': None,
   })
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen flood',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -127,7 +130,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'flood_with_channel_name',
     'unique_id': '123456789ABC-flood:0-flood',
     'unit_of_measurement': None,
   })
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen mute',
     'options': dict({
     }),
     'original_device_class': None,
@@ -176,7 +180,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'mute_with_channel_name',
     'unique_id': '123456789ABC-flood:0-mute',
     'unit_of_measurement': None,
   })

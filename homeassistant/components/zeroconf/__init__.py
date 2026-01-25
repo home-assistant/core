@@ -190,12 +190,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     homekit_model_lookup, homekit_model_matchers = build_homekit_model_lookups(
         homekit_models
     )
+    local_service_info = await _async_get_local_service_info(hass)
     discovery = ZeroconfDiscovery(
         hass,
         zeroconf,
         zeroconf_types,
         homekit_model_lookup,
         homekit_model_matchers,
+        local_service_info,
     )
     await discovery.async_setup()
     hass.data[DATA_DISCOVERY] = discovery
@@ -206,8 +208,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         Wait till started or otherwise HTTP is not up and running.
         """
-        uuid = await instance_id.async_get(hass)
-        await _async_register_hass_zc_service(hass, aio_zc, uuid)
+        await _async_register_hass_zc_service(aio_zc, local_service_info)
 
     async def _async_zeroconf_hass_stop(_event: Event) -> None:
         await discovery.async_stop()
@@ -227,48 +228,12 @@ def _filter_disallowed_characters(name: str) -> str:
 
 
 async def _async_register_hass_zc_service(
-    hass: HomeAssistant, aio_zc: HaAsyncZeroconf, uuid: str
+    aio_zc: HaAsyncZeroconf, local_service_info: AsyncServiceInfo
 ) -> None:
-    # Get instance UUID
-    valid_location_name = _truncate_location_name_to_valid(
-        _filter_disallowed_characters(hass.config.location_name or "Home")
-    )
-
-    params = {
-        "location_name": valid_location_name,
-        "uuid": uuid,
-        "version": __version__,
-        "external_url": "",
-        "internal_url": "",
-        # Old base URL, for backward compatibility
-        "base_url": "",
-        # Always needs authentication
-        "requires_api_password": True,
-    }
-
-    # Get instance URL's
-    with suppress(NoURLAvailableError):
-        params["external_url"] = get_url(hass, allow_internal=False)
-
-    with suppress(NoURLAvailableError):
-        params["internal_url"] = get_url(hass, allow_external=False)
-
-    # Set old base URL based on external or internal
-    params["base_url"] = params["external_url"] or params["internal_url"]
-
-    _suppress_invalid_properties(params)
-
-    info = AsyncServiceInfo(
-        ZEROCONF_TYPE,
-        name=f"{valid_location_name}.{ZEROCONF_TYPE}",
-        server=f"{uuid}.local.",
-        parsed_addresses=await network.async_get_announce_addresses(hass),
-        port=hass.http.server_port,
-        properties=params,
-    )
+    """Register the zeroconf service for the local Home Assistant instance."""
 
     _LOGGER.info("Starting Zeroconf broadcast")
-    await aio_zc.async_register_service(info, allow_name_change=True)
+    await aio_zc.async_register_service(local_service_info, allow_name_change=True)
 
 
 def _suppress_invalid_properties(properties: dict) -> None:
@@ -305,6 +270,47 @@ def _truncate_location_name_to_valid(location_name: str) -> str:
         location_name,
     )
     return location_name.encode("utf-8")[:MAX_NAME_LEN].decode("utf-8", "ignore")
+
+
+async def _async_get_local_service_info(hass: HomeAssistant) -> AsyncServiceInfo:
+    """Return the zeroconf service info for the local Home Assistant instance."""
+    valid_location_name = _truncate_location_name_to_valid(
+        _filter_disallowed_characters(hass.config.location_name or "Home")
+    )
+    uuid = await instance_id.async_get(hass)
+
+    params = {
+        "location_name": valid_location_name,
+        "uuid": uuid,
+        "version": __version__,
+        "external_url": "",
+        "internal_url": "",
+        # Old base URL, for backward compatibility
+        "base_url": "",
+        # Always needs authentication
+        "requires_api_password": True,
+    }
+
+    # Get instance URL's
+    with suppress(NoURLAvailableError):
+        params["external_url"] = get_url(hass, allow_internal=False)
+
+    with suppress(NoURLAvailableError):
+        params["internal_url"] = get_url(hass, allow_external=False)
+
+    # Set old base URL based on external or internal
+    params["base_url"] = params["external_url"] or params["internal_url"]
+
+    _suppress_invalid_properties(params)
+
+    return AsyncServiceInfo(
+        ZEROCONF_TYPE,
+        name=f"{valid_location_name}.{ZEROCONF_TYPE}",
+        server=f"{uuid}.local.",
+        parsed_addresses=await network.async_get_announce_addresses(hass),
+        port=hass.http.server_port,
+        properties=params,
+    )
 
 
 # These can be removed if no deprecated constant are in this module anymore

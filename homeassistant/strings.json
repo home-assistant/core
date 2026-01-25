@@ -52,8 +52,8 @@
         "elevation": "Elevation",
         "email": "Email",
         "host": "Host",
-        "ip": "IP address",
         "implementation": "Application credentials",
+        "ip": "IP address",
         "language": "Language",
         "latitude": "Latitude",
         "llm_hass_api": "Control Home Assistant",
@@ -85,6 +85,9 @@
         "timeout_connect": "Timeout establishing connection",
         "unknown": "Unexpected error"
       },
+      "initiate_flow": {
+        "account": "Add account"
+      },
       "title": {
         "oauth2_pick_implementation": "Pick authentication method",
         "reauth": "Authentication expired for {name}",
@@ -113,6 +116,11 @@
         "changed_states": "{entity_name} turned on or off",
         "turned_off": "{entity_name} turned off",
         "turned_on": "{entity_name} turned on"
+      }
+    },
+    "exceptions": {
+      "oauth2_implementation_unavailable": {
+        "message": "OAuth2 implementation unavailable, will retry"
       }
     },
     "generic": {
@@ -157,13 +165,13 @@
       "yes": "Yes"
     },
     "time": {
-      "monday": "Monday",
-      "tuesday": "Tuesday",
-      "wednesday": "Wednesday",
-      "thursday": "Thursday",
       "friday": "Friday",
+      "monday": "Monday",
       "saturday": "Saturday",
-      "sunday": "Sunday"
+      "sunday": "Sunday",
+      "thursday": "Thursday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday"
     }
   }
 }

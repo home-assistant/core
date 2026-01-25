@@ -2,24 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pyownet import protocol
+from aio_ownet.exceptions import OWServerError
+from aio_ownet.proxy import OWServerStatelessProxy
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
-
-from .const import READ_MODE_INT
-
-
-@dataclass(frozen=True)
-class OneWireEntityDescription(EntityDescription):
-    """Class describing OneWire entities."""
-
-    read_mode: str | None = None
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,16 +17,15 @@ _LOGGER = logging.getLogger(__name__)
 class OneWireEntity(Entity):
     """Implementation of a 1-Wire entity."""
 
-    entity_description: OneWireEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        description: OneWireEntityDescription,
+        description: EntityDescription,
         device_id: str,
         device_info: DeviceInfo,
         device_file: str,
-        owproxy: protocol._Proxy,
+        owproxy: OWServerStatelessProxy,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
@@ -44,8 +33,7 @@ class OneWireEntity(Entity):
         self._attr_unique_id = f"/{device_id}/{description.key}"
         self._attr_device_info = device_info
         self._device_file = device_file
-        self._state: int | float | None = None
-        self._value_raw: float | None = None
+        self._state: str | None = None
         self._owproxy = owproxy
 
     @property
@@ -55,20 +43,15 @@ class OneWireEntity(Entity):
             "device_file": self._device_file,
         }
 
-    def _read_value(self) -> str:
-        """Read a value from the server."""
-        read_bytes: bytes = self._owproxy.read(self._device_file)
-        return read_bytes.decode().lstrip()
-
-    def _write_value(self, value: bytes) -> None:
+    async def _write_value(self, value: bytes) -> None:
         """Write a value to the server."""
-        self._owproxy.write(self._device_file, value)
+        await self._owproxy.write(self._device_file, value)
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data from the device."""
         try:
-            self._value_raw = float(self._read_value())
-        except protocol.Error as exc:
+            state = await self._owproxy.read(self._device_file)
+        except OWServerError as exc:
             if self._last_update_success:
                 _LOGGER.error("Error fetching %s data: %s", self.name, exc)
                 self._last_update_success = False
@@ -77,7 +60,4 @@ class OneWireEntity(Entity):
             if not self._last_update_success:
                 self._last_update_success = True
                 _LOGGER.debug("Fetching %s data recovered", self.name)
-            if self.entity_description.read_mode == READ_MODE_INT:
-                self._state = int(self._value_raw)
-            else:
-                self._state = self._value_raw
+            self._state = state.decode("ascii").strip()

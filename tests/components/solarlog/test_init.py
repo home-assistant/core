@@ -62,7 +62,7 @@ async def test_setup_error(
 
     assert mock_config_entry.state == error
 
-    if error == ConfigEntryState.SETUP_RETRY:
+    if error is ConfigEntryState.SETUP_RETRY:
         assert len(hass.config_entries.flow.async_progress()) == 0
 
 
@@ -117,7 +117,7 @@ async def test_other_exceptions_during_first_refresh(
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert len(hass.config_entries.flow.async_progress()) == 0
 
