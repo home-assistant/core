@@ -24,8 +24,6 @@ class AirobotEntity(CoordinatorEntity[AirobotDataUpdateCoordinator]):
         status = coordinator.data.status
         settings = coordinator.data.settings
 
-        self._attr_unique_id = status.device_id
-
         connections = set()
         if (mac := coordinator.config_entry.data.get(CONF_MAC)) is not None:
             connections.add((CONNECTION_NETWORK_MAC, mac))
@@ -37,6 +35,6 @@ class AirobotEntity(CoordinatorEntity[AirobotDataUpdateCoordinator]):
             manufacturer="Airobot",
             model="Thermostat",
             model_id="TE1",
-            sw_version=str(status.fw_version),
-            hw_version=str(status.hw_version),
+            sw_version=status.fw_version_string,
+            hw_version=status.hw_version_string,
         )

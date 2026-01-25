@@ -73,7 +73,7 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.status.device.core.battery_level,
+        value_fn=lambda data: int(round(data.status.device.core.battery_level)),
     ),
     IOmeterEntityDescription(
         key="pin_status",
