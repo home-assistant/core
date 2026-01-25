@@ -137,6 +137,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._attr_is_opening = False
         self._attr_is_closing = False
         self.gateway.stop_cover(self.enocean_entity_id)
+        self.schedule_update_ha_state()
 
     def update(self, new_position: int) -> None:
         """Update the cover state."""
