@@ -773,9 +773,6 @@ energyflip-client==0.2.2
 # homeassistant.components.energyzero
 energyzero==2.1.1
 
-# homeassistant.components.enocean
-enocean==0.50
-
 # homeassistant.components.environment_canada
 env-canada==0.11.3
 
@@ -1039,6 +1036,9 @@ home-assistant-frontend==20251001.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.10.1
+
+# homeassistant.components.enocean
+homeassistant_enocean==0.0.10
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.3.0

@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from enocean.utils import combine_hex
+from homeassistant_enocean.legacy import combine_hex
 import voluptuous as vol
 
 from homeassistant.components.light import (
