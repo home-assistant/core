@@ -24,7 +24,7 @@
     'manufacturer': 'Liebherr',
     'model': None,
     'model_id': 'CBNes5678',
-    'name': 'test_device_id_2',
+    'name': 'CBNes5678',
   })
 # ---
 # name: test_liebherr_zone_entity_temperature_control

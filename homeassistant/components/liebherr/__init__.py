@@ -46,7 +46,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
             client=client,
             device_id=device.device_id,
         )
-        await coordinator.async_setup()
         await coordinator.async_config_entry_first_refresh()
         coordinators[device.device_id] = coordinator
 

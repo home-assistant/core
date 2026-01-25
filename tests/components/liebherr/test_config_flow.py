@@ -30,12 +30,14 @@ MOCK_USER_INPUT = {CONF_API_KEY: MOCK_API_KEY}
 
 @pytest.fixture
 def mock_get_devices():
-    """Mock the get_devices call with a successful response."""
+    """Mock the LiebherrClient and get_devices call with a successful response."""
     with patch(
-        "homeassistant.components.liebherr.config_flow.LiebherrClient.get_devices",
-        return_value=[MOCK_DEVICE],
-    ) as mock:
-        yield mock
+        "homeassistant.components.liebherr.config_flow.LiebherrClient",
+        autospec=True,
+    ) as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.get_devices = AsyncMock(return_value=[MOCK_DEVICE])
+        yield mock_client.get_devices
 
 
 async def _start_flow(hass: HomeAssistant) -> ConfigFlowResult:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from typing import Any
 
@@ -38,8 +39,9 @@ class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input[CONF_API_KEY] = user_input[CONF_API_KEY].strip()
 
-            # Set unique ID and prevent duplicates
-            await self.async_set_unique_id(user_input[CONF_API_KEY])
+            # Set unique ID using hash of API key for privacy
+            unique_id = hashlib.sha256(user_input[CONF_API_KEY].encode()).hexdigest()
+            await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
             try:
@@ -48,15 +50,7 @@ class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
                     api_key=user_input[CONF_API_KEY],
                     session=async_get_clientsession(self.hass),
                 )
-
                 devices = await client.get_devices()
-                if not devices:
-                    return self.async_abort(reason="no_devices")
-
-                return self.async_create_entry(
-                    title="Liebherr",
-                    data=user_input,
-                )
             except LiebherrAuthenticationError:
                 errors["base"] = "invalid_auth"
             except LiebherrConnectionError:
@@ -64,6 +58,14 @@ class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                if not devices:
+                    return self.async_abort(reason="no_devices")
+
+                return self.async_create_entry(
+                    title="Liebherr",
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

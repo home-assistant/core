@@ -38,9 +38,7 @@ SENSOR_TYPES: tuple[LiebherrSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value_fn=lambda control: (
-            float(control.value) if control.value is not None else None
-        ),
+        value_fn=lambda control: control.value,
         unit_fn=lambda control: (
             UnitOfTemperature.FAHRENHEIT
             if control.unit == TemperatureUnit.FAHRENHEIT
@@ -63,7 +61,7 @@ async def async_setup_entry(
         # Get all temperature controls for this device
         temp_controls = coordinator.data.get_temperature_controls()
 
-        for temp_control in temp_controls:
+        for temp_control in temp_controls.values():
             entities.extend(
                 LiebherrSensor(
                     coordinator=coordinator,

@@ -94,4 +94,4 @@ async def test_coordinator_setup_errors(
     )
 
     with pytest.raises(expected_error, match=expected_match):
-        await coordinator.async_setup()
+        await coordinator._async_setup()

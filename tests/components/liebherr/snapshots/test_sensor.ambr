@@ -12,7 +12,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-18.0',
+    'state': '-18',
   })
 # ---
 # name: test_multi_zone_sensor[top_zone]
@@ -28,7 +28,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.0',
+    'state': '5',
   })
 # ---
 # name: test_sensor_none_value
@@ -60,7 +60,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.0',
+    'state': '5',
   })
 # ---
 # name: test_sensor_unavailable_when_control_missing[unavailable]
@@ -76,7 +76,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.0',
+    'state': '5',
   })
 # ---
 # name: test_single_zone_sensor
@@ -92,6 +92,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.0',
+    'state': '5',
   })
 # ---

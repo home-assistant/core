@@ -20,7 +20,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
-type LiebherrConfigEntry = ConfigEntry[dict[str, "LiebherrCoordinator"]]
+type LiebherrConfigEntry = ConfigEntry[dict[str, LiebherrCoordinator]]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: LiebherrConfigEntry,
         client: LiebherrClient,
         device_id: str,
     ) -> None:
@@ -48,7 +48,7 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
         self.client = client
         self.device_id = device_id
 
-    async def async_setup(self) -> None:
+    async def _async_setup(self) -> None:
         """Set up the coordinator by validating device access."""
         try:
             await self.client.get_device(self.device_id)

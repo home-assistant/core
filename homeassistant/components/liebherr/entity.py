@@ -38,7 +38,7 @@ class LiebherrEntity(CoordinatorEntity[LiebherrCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.device_id)},
-            name=device.nickname or coordinator.device_id,
+            name=device.nickname or device.device_name,
             manufacturer=MANUFACTURER,
             model=model,
             model_id=device.device_name,
@@ -64,10 +64,7 @@ class LiebherrZoneEntity(LiebherrEntity):
     @property
     def temperature_control(self) -> TemperatureControl | None:
         """Get the temperature control for this zone."""
-        for control in self.coordinator.data.get_temperature_controls():
-            if control.zone_id == self._zone_id:
-                return control
-        return None
+        return self.coordinator.data.get_temperature_controls().get(self._zone_id)
 
     def _get_zone_translation_key(self) -> str | None:
         """Get the translation key for this zone."""
