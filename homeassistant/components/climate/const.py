@@ -55,6 +55,15 @@ PRESET_SLEEP = "sleep"
 # Device is reacting to activity (e.g. movement sensors)
 PRESET_ACTIVITY = "activity"
 
+# Device is in wake mode (morning)
+PRESET_WAKE = "wake"
+
+# Device is in vacation mode (extended away)
+PRESET_VACATION = "vacation"
+
+# Device is preparing to sleep (pre-sleep routine)
+PRESET_GOING_TO_SLEEP = "going_to_sleep"
+
 # Possible fan state
 FAN_ON = "on"
 FAN_OFF = "off"
