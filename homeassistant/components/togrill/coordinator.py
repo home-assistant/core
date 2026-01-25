@@ -146,6 +146,10 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             self.logger.debug("Connection failed", exc_info=True)
             raise DeviceFailed("Unable to connect to device") from exc
 
+        # Ensure the device has completed
+        # notification registrations.
+        await asyncio.sleep(0.5)
+
         try:
             async with asyncio.timeout(10):
                 packet_a0 = await client.read(PacketA0Notify)
