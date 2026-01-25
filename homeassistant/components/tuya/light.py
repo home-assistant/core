@@ -31,6 +31,7 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, WorkMode
 from .entity import TuyaEntity
 from .models import (
+    DeviceWrapper,
     DPCodeBooleanWrapper,
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,
@@ -186,14 +187,14 @@ class _ColorDataWrapper(DPCodeJsonWrapper):
         )
 
     def _convert_value_to_raw_value(
-        self, device: CustomerDevice, value: tuple[tuple[float, float], float]
+        self, device: CustomerDevice, value: tuple[float, float, float]
     ) -> Any:
-        """Convert a Home Assistant color/brightness pair back to a raw device value."""
-        color, brightness = value
+        """Convert a Home Assistant tuple (H, S, V) back to a raw device value."""
+        hue, saturation, brightness = value
         return json.dumps(
             {
-                "h": round(self.h_type.remap_value_from(color[0])),
-                "s": round(self.s_type.remap_value_from(color[1])),
+                "h": round(self.h_type.remap_value_from(hue)),
+                "s": round(self.s_type.remap_value_from(saturation)),
                 "v": round(self.v_type.remap_value_from(brightness)),
             }
         )
@@ -238,6 +239,13 @@ LIGHTS: dict[DeviceCategory, tuple[TuyaLightEntityDescription, ...]] = {
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_BACKLIGHT,
             translation_key="backlight",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.CWWSQ: (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            translation_key="light",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -673,11 +681,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         device_manager: Manager,
         description: TuyaLightEntityDescription,
         *,
-        brightness_wrapper: _BrightnessWrapper | None,
-        color_data_wrapper: _ColorDataWrapper | None,
-        color_mode_wrapper: DPCodeEnumWrapper | None,
-        color_temp_wrapper: _ColorTempWrapper | None,
-        switch_wrapper: DPCodeBooleanWrapper,
+        brightness_wrapper: DeviceWrapper[int] | None,
+        color_data_wrapper: DeviceWrapper[tuple[float, float, float]] | None,
+        color_mode_wrapper: DeviceWrapper[str] | None,
+        color_temp_wrapper: DeviceWrapper[int] | None,
+        switch_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init TuyaHaLight."""
         super().__init__(device, device_manager)

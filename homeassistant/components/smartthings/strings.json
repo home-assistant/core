@@ -18,6 +18,9 @@
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
+    },
     "step": {
       "pick_implementation": {
         "data": {
@@ -135,6 +138,17 @@
           "up_5x": "Up 5x",
           "up_6x": "Up 6x",
           "up_hold": "Up hold"
+        }
+      }
+    },
+    "fan": {
+      "hood": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "smart": "Smart"
+            }
+          }
         }
       }
     },
