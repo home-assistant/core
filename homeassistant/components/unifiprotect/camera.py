@@ -1,11 +1,8 @@
 """Support for Ubiquiti's UniFi Protect NVR.
 
 Camera entities use the public API (get_rtsps_streams) exclusively for obtaining
-RTSPS stream URLs. This provides stable, authenticated stream URLs that work
+RTSPS stream URLs. This provides stable stream URLs that work
 reliably with Home Assistant's stream integration.
-
-Insecure (unencrypted RTSP) camera variants have been removed in favor of
-secure RTSPS streams only.
 """
 
 from __future__ import annotations
