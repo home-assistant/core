@@ -17,6 +17,7 @@
       'is_volume_muted': False,
       'media_content_type': <MediaType.CHANNEL: 'channel'>,
       'media_title': 'Channel 1',
+      'power_state': 'Active',
       'sound_output': 'speaker',
       'source': 'Live TV',
       'source_list': list([

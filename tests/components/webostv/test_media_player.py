@@ -28,6 +28,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.webostv.const import (
     ATTR_BUTTON,
     ATTR_PAYLOAD,
+    ATTR_POWER_STATE,
     ATTR_SOUND_OUTPUT,
     DOMAIN,
     LIVE_TV_APP_ID,
@@ -371,6 +372,15 @@ async def test_entity_attributes(
 
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_SOUND_OUTPUT) is None
+
+    # Power state if available
+    assert state.attributes.get(ATTR_POWER_STATE) == "Active"
+
+    # Power state if unavailable
+    client.tv_state.power_state = None
+    await client.mock_state_update()
+    attrs = hass.states.get(ENTITY_ID).attributes
+    assert attrs.get(ATTR_POWER_STATE) is None
 
 
 async def test_service_entity_id_none(hass: HomeAssistant, client) -> None:

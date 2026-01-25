@@ -36,6 +36,7 @@ from homeassistant.helpers.typing import VolDictType
 from .const import (
     ATTR_BUTTON,
     ATTR_PAYLOAD,
+    ATTR_POWER_STATE,
     ATTR_SOUND_OUTPUT,
     CONF_SOURCES,
     DOMAIN,
@@ -292,9 +293,11 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
         self._attr_extra_state_attributes = {}
         if tv_state.sound_output is not None or self.state != MediaPlayerState.OFF:
-            self._attr_extra_state_attributes = {
-                ATTR_SOUND_OUTPUT: tv_state.sound_output
-            }
+            self._attr_extra_state_attributes[ATTR_SOUND_OUTPUT] = tv_state.sound_output
+        if tv_state.power_state is not None:
+            self._attr_extra_state_attributes[ATTR_POWER_STATE] = tv_state.power_state[
+                "state"
+            ]
 
     def _update_sources(self) -> None:
         """Update list of sources from current source, apps, inputs and configured list."""
