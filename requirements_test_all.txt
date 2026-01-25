@@ -96,7 +96,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
-PyViCare==2.55.1
+PyViCare==2.56.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -1154,7 +1154,7 @@ iometer==0.3.0
 iottycloud==0.3.0
 
 # homeassistant.components.irm_kmi
-irm-kmi-api==1.1.0
+irm-kmi-api==1.1.1
 
 # homeassistant.components.isal
 isal==1.8.0
@@ -1752,7 +1752,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.18
+pyfritzhome==0.6.19
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -2667,7 +2667,7 @@ webio-api==0.1.12
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2025.12.24
+weheat==2026.1.25
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==1.0.3
