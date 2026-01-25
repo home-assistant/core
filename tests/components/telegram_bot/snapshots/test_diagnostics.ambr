@@ -10,6 +10,7 @@
       'url': 'https://**redacted**/',
     }),
     'options': dict({
+      'api_endpoint': 'http://**redacted**/bot',
       'parse_mode': 'markdown',
     }),
     'subentries_count': 1,

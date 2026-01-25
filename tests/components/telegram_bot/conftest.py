@@ -18,6 +18,7 @@ from telegram import (
 from telegram.constants import ChatType
 
 from homeassistant.components.telegram_bot.const import (
+    ATTR_API_ENDPOINT,
     ATTR_PARSER,
     CONF_ALLOWED_CHAT_IDS,
     CONF_CHAT_ID,
@@ -286,7 +287,7 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
             CONF_URL: "https://test",
             CONF_TRUSTED_NETWORKS: ["127.0.0.1"],
         },
-        options={ATTR_PARSER: PARSER_MD},
+        options={ATTR_API_ENDPOINT: "http://mock/bot", ATTR_PARSER: PARSER_MD},
         subentries_data=[
             ConfigSubentryData(
                 unique_id="12345678",

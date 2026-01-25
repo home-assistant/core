@@ -11,7 +11,7 @@ from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from . import TelegramBotConfigEntry
-from .const import CONF_CHAT_ID
+from .const import ATTR_API_ENDPOINT, CONF_CHAT_ID, DEFAULT_API_ENDPOINT
 
 TO_REDACT = [CONF_API_KEY, CONF_CHAT_ID]
 
@@ -26,8 +26,14 @@ async def async_get_config_entry_diagnostics(
         url = URL(config_entry.data[CONF_URL])
         data[CONF_URL] = url.with_host(REDACTED).human_repr()
 
+    options = async_redact_data(config_entry.options, TO_REDACT)
+    api_endpoint = config_entry.options.get(ATTR_API_ENDPOINT)
+    if api_endpoint and api_endpoint != DEFAULT_API_ENDPOINT:
+        url = URL(config_entry.options[ATTR_API_ENDPOINT])
+        options[ATTR_API_ENDPOINT] = url.with_host(REDACTED).human_repr()
+
     return {
         "data": data,
-        "options": async_redact_data(config_entry.options, TO_REDACT),
+        "options": options,
         "subentries_count": len(config_entry.subentries.values()),
     }

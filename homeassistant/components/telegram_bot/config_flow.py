@@ -180,14 +180,18 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
                 # validation ok
                 # logout existing bot only if the API endpoint is changed from the default to a custom value
-                service: TelegramNotificationService = self.config_entry.runtime_data
+                # logout will lockout the bot temporarily so we only want to do this when necessary
+                current_api_endpoint = self.config_entry.options.get(
+                    ATTR_API_ENDPOINT, DEFAULT_API_ENDPOINT
+                )
                 if (
                     user_input[ATTR_API_ENDPOINT] != DEFAULT_API_ENDPOINT
-                    and self.config_entry.options.get(
-                        ATTR_API_ENDPOINT, DEFAULT_API_ENDPOINT
-                    )
-                    == DEFAULT_API_ENDPOINT
+                    and user_input[ATTR_API_ENDPOINT] != current_api_endpoint
+                    and current_api_endpoint == DEFAULT_API_ENDPOINT
                 ):
+                    service: TelegramNotificationService = (
+                        self.config_entry.runtime_data
+                    )
                     is_logged_out = await service.bot.log_out()
                     if not is_logged_out:
                         errors["base"] = "bot_logout_failed"
