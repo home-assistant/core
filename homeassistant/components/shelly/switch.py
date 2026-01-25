@@ -36,7 +36,7 @@ from .entity import (
     ShellyBlockAttributeEntity,
     ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
-    async_setup_entry_attribute_entities,
+    async_setup_entry_block,
     async_setup_entry_rpc,
     rpc_call,
 )
@@ -306,7 +306,6 @@ RPC_SWITCHES = {
     "cury_away_mode": RpcSwitchDescription(
         key="cury",
         sub_key="away_mode",
-        name="Away mode",
         translation_key="cury_away_mode",
         is_on=lambda status: status["away_mode"],
         method_on="cury_set_away_mode",
@@ -338,11 +337,11 @@ def _async_setup_block_entry(
     coordinator = config_entry.runtime_data.block
     assert coordinator
 
-    async_setup_entry_attribute_entities(
+    async_setup_entry_block(
         hass, config_entry, async_add_entities, BLOCK_RELAY_SWITCHES, BlockRelaySwitch
     )
 
-    async_setup_entry_attribute_entities(
+    async_setup_entry_block(
         hass,
         config_entry,
         async_add_entities,

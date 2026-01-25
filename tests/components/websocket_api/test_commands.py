@@ -23,6 +23,10 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
+from homeassistant.components.websocket_api.automation import (
+    AUTOMATION_COMPONENT_LOOKUP_CACHE,
+    _get_automation_component_lookup_table,
+)
 from homeassistant.components.websocket_api.commands import (
     ALL_CONDITION_DESCRIPTIONS_JSON_CACHE,
     ALL_SERVICE_DESCRIPTIONS_JSON_CACHE,
@@ -3646,51 +3650,60 @@ async def test_extract_from_target_validation_error(
     assert "error" in msg
 
 
-@pytest.mark.usefixtures("target_entities")
+@pytest.mark.usefixtures("enable_labs_preview_features", "target_entities")
 @patch("annotatedyaml.loader.load_yaml")
-@patch.object(Integration, "has_triggers", return_value=True)
-async def test_get_triggers_for_target(
-    mock_has_triggers: Mock,
+@pytest.mark.parametrize("automation_component", ["trigger", "condition"])
+async def test_get_triggers_conditions_for_target(
     mock_load_yaml: Mock,
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
+    automation_component: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test get_triggers_for_target command with mixed target types."""
+    """Test get_triggers_for_target/get_conditions_for_target command with mixed target types."""
 
-    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type]:
+    async def async_get_triggers_conditions(hass: HomeAssistant) -> dict[str, type]:
         return {
             "turned_on": Mock,
-            "non_target_trigger": Mock,
+            "non_target": Mock,
         }
 
-    mock_platform(hass, "light.trigger", Mock(async_get_triggers=async_get_triggers))
-    mock_platform(hass, "switch.trigger", Mock(async_get_triggers=async_get_triggers))
-    mock_platform(hass, "sensor.trigger", Mock(async_get_triggers=async_get_triggers))
+    common_mock = Mock(
+        **{f"async_get_{automation_component}s": async_get_triggers_conditions}
+    )
+
+    mock_platform(hass, f"light.{automation_component}", common_mock)
+    mock_platform(hass, f"switch.{automation_component}", common_mock)
+    mock_platform(hass, f"sensor.{automation_component}", common_mock)
     mock_platform(
         hass,
-        "component1.trigger",
+        f"component1.{automation_component}",
         Mock(
-            async_get_triggers=AsyncMock(
-                return_value={
-                    "_": Mock,
-                    "light_message": Mock,
-                    "light_flash": Mock,
-                    "light_dance": Mock,
-                }
-            )
+            **{
+                f"async_get_{automation_component}s": AsyncMock(
+                    return_value={
+                        "_": Mock,
+                        "light_message": Mock,
+                        "light_flash": Mock,
+                        "light_dance": Mock,
+                    }
+                )
+            }
         ),
     )
     mock_platform(
         hass,
-        "component2.trigger",
+        f"component2.{automation_component}",
         Mock(
-            async_get_triggers=AsyncMock(
-                return_value={"match_all": Mock, "other_integration_lights": Mock}
-            )
+            **{
+                f"async_get_{automation_component}s": AsyncMock(
+                    return_value={"match_all": Mock, "other_integration_lights": Mock}
+                )
+            }
         ),
     )
 
-    def get_common_trigger_descriptions(domain: str):
+    def get_common_descriptions(domain: str):
         return f"""
         turned_on:
           target:
@@ -3706,7 +3719,7 @@ async def test_get_triggers_for_target(
                     - first
                     - last
                     - any
-        non_target_trigger:
+        non_target:
           fields:
             behavior:
               required: true
@@ -3719,7 +3732,7 @@ async def test_get_triggers_for_target(
                     - any
     """
 
-    component1_trigger_descriptions = """
+    component1_descriptions = """
         _:
           target:
             entity:
@@ -3750,7 +3763,7 @@ async def test_get_triggers_for_target(
                   - light.LightEntityFeature.TRANSITION
     """
 
-    component2_trigger_descriptions = """
+    component2_descriptions = """
         match_all:
           target:
 
@@ -3765,145 +3778,155 @@ async def test_get_triggers_for_target(
     """
 
     def _load_yaml(fname, secrets=None):
-        if fname.endswith("component1/triggers.yaml"):
-            trigger_descriptions = component1_trigger_descriptions
-        elif fname.endswith("component2/triggers.yaml"):
-            trigger_descriptions = component2_trigger_descriptions
+        if fname.endswith(f"component1/{automation_component}s.yaml"):
+            descriptions = component1_descriptions
+        elif fname.endswith(f"component2/{automation_component}s.yaml"):
+            descriptions = component2_descriptions
         else:
-            trigger_descriptions = get_common_trigger_descriptions(fname.split("/")[-2])
-        with io.StringIO(trigger_descriptions) as file:
+            descriptions = get_common_descriptions(fname.split("/")[-2])
+        with io.StringIO(descriptions) as file:
             return parse_yaml(file)
 
     mock_load_yaml.side_effect = _load_yaml
-    assert await async_setup_component(hass, "light", {})
-    assert await async_setup_component(hass, "switch", {})
-    assert await async_setup_component(hass, "sensor", {})
-    assert await async_setup_component(hass, "component1", {})
-    assert await async_setup_component(hass, "component2", {})
-    await hass.async_block_till_done()
+    with patch.object(Integration, f"has_{automation_component}s", return_value=True):
+        assert await async_setup_component(hass, "light", {})
+        assert await async_setup_component(hass, "switch", {})
+        assert await async_setup_component(hass, "sensor", {})
+        assert await async_setup_component(hass, "component1", {})
+        assert await async_setup_component(hass, "component2", {})
+        await hass.async_block_till_done()
 
-    async def assert_triggers(target: dict[str, list[str]], expected: list[str]) -> Any:
-        """Call the command and assert expected triggers."""
-        await websocket_client.send_json_auto_id(
-            {"type": "get_triggers_for_target", "target": target}
+        async def assert_command(
+            target: dict[str, list[str]],
+            expected: list[str],
+            expect_lookup_cache: bool = True,
+        ) -> Any:
+            """Call the command and assert expected triggers/conditions."""
+            await websocket_client.send_json_auto_id(
+                {"type": f"get_{automation_component}s_for_target", "target": target}
+            )
+            msg = await websocket_client.receive_json()
+
+            assert msg["type"] == const.TYPE_RESULT
+            assert msg["success"]
+            assert sorted(msg["result"]) == sorted(expected)
+
+            assert ("has no cache yet" not in caplog.text) == expect_lookup_cache
+            caplog.clear()
+
+        # Test entity target - unknown entity
+        await assert_command(
+            {"entity_id": ["light.unknown_entity"]}, [], expect_lookup_cache=False
         )
-        msg = await websocket_client.receive_json()
 
-        assert msg["type"] == const.TYPE_RESULT
-        assert msg["success"]
-        assert sorted(msg["result"]) == sorted(expected)
+        # Test entity target - entity not in registry
+        await assert_command(
+            {"entity_id": ["light.not_registry"]},
+            [
+                "component2.match_all",
+                "component2.other_integration_lights",
+                "light.turned_on",
+            ],
+        )
 
-    # Test entity target - unknown entity
-    await assert_triggers({"entity_id": ["light.unknown_entity"]}, [])
+        # Test entity targets
+        await assert_command(
+            {"entity_id": ["light.component1_light", "switch.component1_switch"]},
+            [
+                "component1",
+                "component1.light_message",
+                "component2.match_all",
+                "light.turned_on",
+                "switch.turned_on",
+            ],
+        )
+        await assert_command(
+            {"entity_id": ["light.component1_flash_light"]},
+            [
+                "component1",
+                "component1.light_flash",
+                "component1.light_message",
+                "component2.match_all",
+                "light.turned_on",
+            ],
+        )
+        await assert_command(
+            {"entity_id": ["light.component1_effect_flash_light"]},
+            [
+                "component1",
+                "component1.light_flash",
+                "component1.light_message",
+                "component2.match_all",
+                "component2.other_integration_lights",
+                "light.turned_on",
+            ],
+        )
+        await assert_command(
+            {"entity_id": ["light.component1_flash_transition_light"]},
+            [
+                "component1",
+                "component1.light_dance",
+                "component1.light_flash",
+                "component1.light_message",
+                "component2.match_all",
+                "light.turned_on",
+            ],
+        )
 
-    # Test entity target - entity not in registry
-    await assert_triggers(
-        {"entity_id": ["light.not_registry"]},
-        [
-            "component2.match_all",
-            "component2.other_integration_lights",
-            "light.turned_on",
-        ],
-    )
+        # Test device target - multiple devices
+        await assert_command(
+            {"device_id": ["device1", "device2"]},
+            [
+                "component1",
+                "component1.light_message",
+                "component2.match_all",
+                "component2.other_integration_lights",
+                "light.turned_on",
+                "sensor.turned_on",
+                "switch.turned_on",
+            ],
+        )
 
-    # Test entity targets
-    await assert_triggers(
-        {"entity_id": ["light.component1_light", "switch.component1_switch"]},
-        [
-            "component1",
-            "component1.light_message",
-            "component2.match_all",
-            "light.turned_on",
-            "switch.turned_on",
-        ],
-    )
-    await assert_triggers(
-        {"entity_id": ["light.component1_flash_light"]},
-        [
-            "component1",
-            "component1.light_flash",
-            "component1.light_message",
-            "component2.match_all",
-            "light.turned_on",
-        ],
-    )
-    await assert_triggers(
-        {"entity_id": ["light.component1_effect_flash_light"]},
-        [
-            "component1",
-            "component1.light_flash",
-            "component1.light_message",
-            "component2.match_all",
-            "component2.other_integration_lights",
-            "light.turned_on",
-        ],
-    )
-    await assert_triggers(
-        {"entity_id": ["light.component1_flash_transition_light"]},
-        [
-            "component1",
-            "component1.light_dance",
-            "component1.light_flash",
-            "component1.light_message",
-            "component2.match_all",
-            "light.turned_on",
-        ],
-    )
+        # Test area target - multiple areas
+        await assert_command(
+            {"area_id": ["kitchen", "living_room"]},
+            [
+                "component2.match_all",
+                "component2.other_integration_lights",
+                "light.turned_on",
+                "switch.turned_on",
+            ],
+        )
 
-    # Test device target - multiple devices
-    await assert_triggers(
-        {"device_id": ["device1", "device2"]},
-        [
-            "component1",
-            "component1.light_message",
-            "component2.match_all",
-            "component2.other_integration_lights",
-            "light.turned_on",
-            "sensor.turned_on",
-            "switch.turned_on",
-        ],
-    )
-
-    # Test area target - multiple areas
-    await assert_triggers(
-        {"area_id": ["kitchen", "living_room"]},
-        [
-            "component2.match_all",
-            "component2.other_integration_lights",
-            "light.turned_on",
-            "switch.turned_on",
-        ],
-    )
-
-    # Test label target - multiple labels
-    await assert_triggers(
-        {"label_id": ["label_1", "label_2"]},
-        [
-            "light.turned_on",
-            "component1",
-            "component2.match_all",
-            "component2.other_integration_lights",
-            "switch.turned_on",
-        ],
-    )
-    # Test mixed target types
-    await assert_triggers(
-        {
-            "entity_id": ["light.test1"],
-            "device_id": ["device2"],
-            "area_id": ["kitchen"],
-            "label_id": ["label_1"],
-        },
-        [
-            "component1",
-            "component1.light_message",
-            "component2.match_all",
-            "component2.other_integration_lights",
-            "light.turned_on",
-            "sensor.turned_on",
-            "switch.turned_on",
-        ],
-    )
+        # Test label target - multiple labels
+        await assert_command(
+            {"label_id": ["label_1", "label_2"]},
+            [
+                "light.turned_on",
+                "component1",
+                "component2.match_all",
+                "component2.other_integration_lights",
+                "switch.turned_on",
+            ],
+        )
+        # Test mixed target types
+        await assert_command(
+            {
+                "entity_id": ["light.test1"],
+                "device_id": ["device2"],
+                "area_id": ["kitchen"],
+                "label_id": ["label_1"],
+            },
+            [
+                "component1",
+                "component1.light_message",
+                "component2.match_all",
+                "component2.other_integration_lights",
+                "light.turned_on",
+                "sensor.turned_on",
+                "switch.turned_on",
+            ],
+        )
 
 
 @pytest.mark.usefixtures("target_entities")
@@ -3914,6 +3937,7 @@ async def test_get_services_for_target(
     mock_load_yaml: Mock,
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test get_services_for_target command with mixed target types."""
 
@@ -4025,7 +4049,11 @@ async def test_get_services_for_target(
     )
     await hass.async_block_till_done()
 
-    async def assert_services(target: dict[str, list[str]], expected: list[str]) -> Any:
+    async def assert_services(
+        target: dict[str, list[str]],
+        expected: list[str],
+        expect_lookup_cache: bool = True,
+    ) -> Any:
         """Call the command and assert expected services."""
         await websocket_client.send_json_auto_id(
             {"type": "get_services_for_target", "target": target}
@@ -4036,8 +4064,13 @@ async def test_get_services_for_target(
         assert msg["success"]
         assert sorted(msg["result"]) == sorted(expected)
 
+        assert ("has no cache yet" not in caplog.text) == expect_lookup_cache
+        caplog.clear()
+
     # Test entity target - unknown entity
-    await assert_services({"entity_id": ["light.unknown_entity"]}, [])
+    await assert_services(
+        {"entity_id": ["light.unknown_entity"]}, [], expect_lookup_cache=False
+    )
 
     # Test entity target - entity not in registry
     await assert_services(
@@ -4139,4 +4172,165 @@ async def test_get_services_for_target(
             "sensor.turn_on",
             "switch.turn_on",
         ],
+    )
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_services", return_value=True)
+async def test_get_services_for_target_caching(
+    mock_has_services: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test that flattened service descriptions are cached and reused."""
+
+    def get_common_service_descriptions(domain: str):
+        return f"""
+        turn_on:
+          target:
+            entity:
+              domain: {domain}
+        """
+
+    def _load_yaml(fname, secrets=None):
+        domain = fname.split("/")[-2]
+        with io.StringIO(get_common_service_descriptions(domain)) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+    await hass.async_block_till_done()
+
+    hass.services.async_register("light", "turn_on", lambda call: None)
+    hass.services.async_register("switch", "turn_on", lambda call: None)
+    await hass.async_block_till_done()
+
+    async def call_command():
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "get_services_for_target",
+                "target": {"entity_id": ["light.test1"]},
+            }
+        )
+        msg = await websocket_client.receive_json()
+        assert msg["success"]
+
+    with patch(
+        "homeassistant.components.websocket_api.automation._async_get_automation_components_for_target",
+        return_value=set(),
+    ) as mock_get_components:
+        # First call: should create and cache flat descriptions
+        await call_command()
+
+        assert mock_get_components.call_count == 1
+        first_flat_descriptions = mock_get_components.call_args_list[0][0][4]
+        assert first_flat_descriptions == {
+            "light.turn_on": {
+                "fields": {},
+                "target": {"entity": [{"domain": ["light"]}]},
+            },
+            "switch.turn_on": {
+                "fields": {},
+                "target": {"entity": [{"domain": ["switch"]}]},
+            },
+        }
+
+        # Second call: should reuse cached flat descriptions
+        await call_command()
+        assert mock_get_components.call_count == 2
+        second_flat_descriptions = mock_get_components.call_args_list[1][0][4]
+        assert first_flat_descriptions is second_flat_descriptions
+
+        # Register a new service to invalidate cache
+        hass.services.async_register("new_domain", "new_service", lambda call: None)
+        await hass.async_block_till_done()
+
+        # Third call: cache should be rebuilt
+        await call_command()
+        assert mock_get_components.call_count == 3
+        third_flat_descriptions = mock_get_components.call_args_list[2][0][4]
+        assert "new_domain.new_service" in third_flat_descriptions
+        assert third_flat_descriptions is not first_flat_descriptions
+
+
+async def test_get_automation_component_lookup_table_cache(
+    hass: HomeAssistant,
+) -> None:
+    """Test that _get_automation_component_lookup_table caches and rotates properly."""
+    triggers: dict[str, dict[str, Any] | None] = {
+        "light.turned_on": {"target": {"entity": [{"domain": ["light"]}]}},
+        "switch.turned_on": {"target": {"entity": [{"domain": ["switch"]}]}},
+    }
+    conditions: dict[str, dict[str, Any] | None] = {
+        "light.is_on": {"target": {"entity": [{"domain": ["light"]}]}},
+        "sensor.is_above": {"target": {"entity": [{"domain": ["sensor"]}]}},
+    }
+    services: dict[str, dict[str, Any] | None] = {
+        "light.turn_on": {"target": {"entity": [{"domain": ["light"]}]}},
+        "climate.set_temperature": {"target": {"entity": [{"domain": ["climate"]}]}},
+    }
+
+    # First call with triggers - cache should be created with 1 entry
+    trigger_result1 = _get_automation_component_lookup_table(hass, "triggers", triggers)
+    assert AUTOMATION_COMPONENT_LOOKUP_CACHE in hass.data
+    cache = hass.data[AUTOMATION_COMPONENT_LOOKUP_CACHE]
+    assert len(cache) == 1
+
+    # Second call with same triggers - should return cached result
+    trigger_result2 = _get_automation_component_lookup_table(hass, "triggers", triggers)
+    assert trigger_result1 is trigger_result2
+    assert len(cache) == 1
+
+    # Call with conditions
+    condition_result1 = _get_automation_component_lookup_table(
+        hass, "conditions", conditions
+    )
+    assert condition_result1 is not trigger_result1
+    assert len(cache) == 2
+
+    # Call with services
+    service_result1 = _get_automation_component_lookup_table(hass, "services", services)
+    assert service_result1 is not trigger_result1
+    assert service_result1 is not condition_result1
+    assert len(cache) == 3
+
+    # Verify all 3 return cached results
+    assert (
+        _get_automation_component_lookup_table(hass, "triggers", triggers)
+        is trigger_result1
+    )
+    assert (
+        _get_automation_component_lookup_table(hass, "conditions", conditions)
+        is condition_result1
+    )
+    assert (
+        _get_automation_component_lookup_table(hass, "services", services)
+        is service_result1
+    )
+    assert len(cache) == 3
+
+    # Add a new triggers description dict - replaces previous triggers cache
+    new_triggers: dict[str, dict[str, Any] | None] = {
+        "fan.turned_on": {"target": {"entity": [{"domain": ["fan"]}]}},
+    }
+    _get_automation_component_lookup_table(hass, "triggers", new_triggers)
+    assert len(cache) == 3
+
+    # Initial trigger cache entry should have been replaced
+    trigger_result3 = _get_automation_component_lookup_table(hass, "triggers", triggers)
+    assert trigger_result3 is not trigger_result1
+    assert len(cache) == 3
+
+    # Verify all 3 return cached results again
+    assert (
+        _get_automation_component_lookup_table(hass, "triggers", triggers)
+        is trigger_result3
+    )
+    assert (
+        _get_automation_component_lookup_table(hass, "conditions", conditions)
+        is condition_result1
+    )
+    assert (
+        _get_automation_component_lookup_table(hass, "services", services)
+        is service_result1
     )

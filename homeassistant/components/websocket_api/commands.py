@@ -87,7 +87,11 @@ from homeassistant.setup import (
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
-from .automation import async_get_services_for_target, async_get_triggers_for_target
+from .automation import (
+    async_get_conditions_for_target,
+    async_get_services_for_target,
+    async_get_triggers_for_target,
+)
 from .connection import ActiveConnection
 from .messages import construct_event_message, construct_result_message
 
@@ -109,6 +113,7 @@ def async_register_commands(
     async_reg(hass, handle_execute_script)
     async_reg(hass, handle_extract_from_target)
     async_reg(hass, handle_fire_event)
+    async_reg(hass, handle_get_conditions_for_target)
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_services_for_target)
@@ -860,9 +865,9 @@ def handle_extract_from_target(
 ) -> None:
     """Handle extract from target command."""
 
-    selector_data = target_helpers.TargetSelectorData(msg["target"])
+    target_selection = target_helpers.TargetSelection(msg["target"])
     extracted = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group=msg["expand_group"]
+        hass, target_selection, expand_group=msg["expand_group"]
     )
 
     extracted_dict = {
@@ -901,6 +906,29 @@ async def handle_get_triggers_for_target(
     )
 
     connection.send_result(msg["id"], triggers)
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "get_conditions_for_target",
+        vol.Required("target"): cv.TARGET_FIELDS,
+        vol.Optional("expand_group", default=True): bool,
+    }
+)
+@decorators.async_response
+async def handle_get_conditions_for_target(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get conditions for target command.
+
+    This command returns all conditions that can be used with any entities that are currently
+    part of a target.
+    """
+    conditions = await async_get_conditions_for_target(
+        hass, msg["target"], msg["expand_group"]
+    )
+
+    connection.send_result(msg["id"], conditions)
 
 
 @decorators.websocket_command(

@@ -23,12 +23,7 @@ rules:
   entity-unique-id: done
   docs-installation-instructions: done
   docs-removal-instructions: todo
-  test-before-setup:
-    status: todo
-    comment: |
-      The integration does tests on setup, however the most common issues
-      observed are related to ipv6 misconfigurations and the error messages
-      are not self explanatory and can be improved.
+  test-before-setup: done
   docs-high-level-description: done
   config-flow-test-coverage: done
   docs-actions: done
@@ -58,16 +53,16 @@ rules:
   entity-disabled-by-default: todo
   discovery: todo
   exception-translations: todo
-  devices: todo
+  devices: done
   docs-supported-devices: todo
   icon-translations: todo
   docs-known-limitations: todo
-  stale-devices: todo
+  stale-devices: done
   docs-supported-functions: todo
   repair-issues: todo
   reconfiguration-flow: todo
   entity-category: todo
-  dynamic-devices: todo
+  dynamic-devices: done
   docs-troubleshooting: todo
   diagnostics: todo
   docs-use-cases: todo

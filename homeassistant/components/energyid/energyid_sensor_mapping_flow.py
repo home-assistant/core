@@ -107,8 +107,9 @@ class EnergyIDSensorMappingFlowHandler(ConfigSubentryFlow):
 
             # Get current mappings by UUID
             current_mappings = {
-                sub.data[CONF_HA_ENTITY_UUID]
+                uuid
                 for sub in config_entry.subentries.values()
+                if (uuid := sub.data.get(CONF_HA_ENTITY_UUID)) is not None
             }
 
             errors = _validate_mapping_input(ha_entity_id, current_mappings, ent_reg)

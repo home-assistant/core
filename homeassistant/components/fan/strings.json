@@ -1,7 +1,31 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted fans.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted fans to trigger on.",
     "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_off": {
+      "description": "Tests if one or more fans are off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::fan::common::condition_behavior_description%]",
+          "name": "[%key:component::fan::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Fan is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more fans are on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::fan::common::condition_behavior_description%]",
+          "name": "[%key:component::fan::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Fan is on"
+    }
   },
   "device_automation": {
     "action_type": {
@@ -65,6 +89,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "direction": {
       "options": {
         "forward": "Forward",
@@ -166,26 +196,24 @@
   "title": "Fan",
   "triggers": {
     "turned_off": {
-      "description": "Triggers when a fan is turned off.",
-      "description_configured": "[%key:component::fan::triggers::turned_off::description%]",
+      "description": "Triggers after one or more fans turn off.",
       "fields": {
         "behavior": {
           "description": "[%key:component::fan::common::trigger_behavior_description%]",
           "name": "[%key:component::fan::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a fan is turned off"
+      "name": "Fan turned off"
     },
     "turned_on": {
-      "description": "Triggers when a fan is turned on.",
-      "description_configured": "[%key:component::fan::triggers::turned_on::description%]",
+      "description": "Triggers after one or more fans turn on.",
       "fields": {
         "behavior": {
           "description": "[%key:component::fan::common::trigger_behavior_description%]",
           "name": "[%key:component::fan::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a fan is turned on"
+      "name": "Fan turned on"
     }
   }
 }

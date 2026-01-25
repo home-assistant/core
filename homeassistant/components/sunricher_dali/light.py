@@ -22,6 +22,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
+from .entity import DaliDeviceEntity
 from .types import DaliCenterConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,10 +46,9 @@ async def async_setup_entry(
     )
 
 
-class DaliCenterLight(LightEntity):
+class DaliCenterLight(DaliDeviceEntity, LightEntity):
     """Representation of a Sunricher DALI Light."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_is_on: bool | None = None
     _attr_brightness: int | None = None
@@ -60,11 +60,8 @@ class DaliCenterLight(LightEntity):
 
     def __init__(self, light: Device) -> None:
         """Initialize the light entity."""
-
+        super().__init__(light)
         self._light = light
-        self._unavailable_logged = False
-        self._attr_unique_id = light.unique_id
-        self._attr_available = light.status == "online"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, light.dev_id)},
             name=light.name,
@@ -111,6 +108,7 @@ class DaliCenterLight(LightEntity):
 
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to Home Assistant."""
+        await super().async_added_to_hass()
 
         self.async_on_remove(
             self._light.register_listener(
@@ -118,26 +116,9 @@ class DaliCenterLight(LightEntity):
             )
         )
 
-        self.async_on_remove(
-            self._light.register_listener(
-                CallbackEventType.ONLINE_STATUS, self._handle_availability
-            )
-        )
-
         # read_status() only queues a request on the gateway and relies on the
         # current event loop via call_later, so it must run in the loop thread.
         self._light.read_status()
-
-    @callback
-    def _handle_availability(self, available: bool) -> None:
-        self._attr_available = available
-        if not available and not self._unavailable_logged:
-            _LOGGER.info("Light %s became unavailable", self._attr_unique_id)
-            self._unavailable_logged = True
-        elif available and self._unavailable_logged:
-            _LOGGER.info("Light %s is back online", self._attr_unique_id)
-            self._unavailable_logged = False
-        self.schedule_update_ha_state()
 
     @callback
     def _handle_device_update(self, status: LightStatus) -> None:
