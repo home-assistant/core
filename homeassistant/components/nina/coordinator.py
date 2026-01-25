@@ -12,6 +12,7 @@ from pynina import ApiError, Nina
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -74,6 +75,15 @@ class NINADataUpdateCoordinator(
             config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+        )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information for nina entries."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.config_entry.entry_id)},
+            manufacturer="NINA",
+            entry_type=DeviceEntryType.SERVICE,
         )
 
     async def _async_update_data(self) -> dict[str, list[NinaWarningData]]:

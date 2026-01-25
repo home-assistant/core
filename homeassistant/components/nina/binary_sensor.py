@@ -8,11 +8,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_AFFECTED_AREAS,
@@ -28,9 +25,9 @@ from .const import (
     ATTR_WEB,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
-    DOMAIN,
 )
 from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator
+from .entity import NinaEntity
 
 
 async def async_setup_entry(
@@ -46,7 +43,7 @@ async def async_setup_entry(
     message_slots: int = config_entry.data[CONF_MESSAGE_SLOTS]
 
     async_add_entities(
-        NINAMessage(coordinator, ent, regions[ent], i + 1, config_entry)
+        NINAMessage(coordinator, ent, regions[ent], i + 1)
         for ent in coordinator.data
         for i in range(message_slots)
     )
@@ -55,7 +52,7 @@ async def async_setup_entry(
 PARALLEL_UPDATES = 0
 
 
-class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEntity):
+class NINAMessage(NinaEntity, BinarySensorEntity):
     """Representation of an NINA warning."""
 
     _attr_device_class = BinarySensorDeviceClass.SAFETY
@@ -67,31 +64,21 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
         region: str,
         region_name: str,
         slot_id: int,
-        config_entry: ConfigEntry,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator)
-
-        self._region = region
-        self._warning_index = slot_id - 1
+        super().__init__(coordinator, region, slot_id)
 
         self._attr_name = f"Warning: {region_name} {slot_id}"
         self._attr_unique_id = f"{region}-{slot_id}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, config_entry.entry_id)},
-            manufacturer="NINA",
-            entry_type=DeviceEntryType.SERVICE,
-        )
+        self._attr_device_info = coordinator.device_info
 
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        if len(self.coordinator.data[self._region]) <= self._warning_index:
+        if self._active_warning_count <= self._warning_index:
             return False
 
-        data = self.coordinator.data[self._region][self._warning_index]
-
-        return data.is_valid
+        return self._get_warning_data().is_valid
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -99,7 +86,7 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
         if not self.is_on:
             return {}
 
-        data = self.coordinator.data[self._region][self._warning_index]
+        data = self._get_warning_data()
 
         return {
             ATTR_HEADLINE: data.headline,
