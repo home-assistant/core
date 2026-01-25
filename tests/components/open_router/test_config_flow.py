@@ -406,8 +406,7 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
     schema = result["data_schema"].schema
     key = next(k for k in schema if k == CONF_LLM_HASS_API)
 
-    current_default = key.default()
-    assert current_default == suggested_llm_apis
+    assert key.default() == suggested_llm_apis
 
     field_schema = schema[key]
     assert field_schema.config
