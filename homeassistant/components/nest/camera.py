@@ -27,6 +27,10 @@ from homeassistant.components.camera import (
     WebRTCClientConfiguration,
     WebRTCSendMessage,
 )
+from homeassistant.components.camera.webrtc import (
+    CameraWebRTCProvider,
+    DATA_WEBRTC_PROVIDERS,
+)
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -206,10 +210,33 @@ class NestRTSPEntity(NestCameraBaseEntity):
                     self._async_refresh_stream,
                 )
                 self._refresh_unsub = refresh.unsub
+                await self.async_refresh_providers(write_state=False)
         assert self._rtsp_stream
         if self._rtsp_stream.expires_at < utcnow():
             _LOGGER.warning("Stream already expired")
         return self._rtsp_stream.rtsp_stream_url
+
+    async def _async_get_supported_webrtc_provider(
+        self,
+        fn: Callable[[HomeAssistant, Camera], Awaitable[CameraWebRTCProvider | None]],
+    ) -> CameraWebRTCProvider | None:
+        """Return a supported WebRTC provider without creating a new stream."""
+        del fn
+        if CameraEntityFeature.STREAM not in self.supported_features:
+            return None
+        providers: set[CameraWebRTCProvider] | None = self.hass.data.get(
+            DATA_WEBRTC_PROVIDERS
+        )
+        if not providers:
+            return None
+        rtsp_stream: RtspStream | None = self._rtsp_stream
+        if not rtsp_stream:
+            return None
+        stream_source: str = rtsp_stream.rtsp_stream_url
+        for provider in providers:
+            if provider.async_is_supported(stream_source):
+                return provider
+        return None
 
     async def _async_refresh_stream(self) -> datetime.datetime | None:
         """Refresh stream to extend expiration time."""
