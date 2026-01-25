@@ -460,7 +460,8 @@ async def test_open_wifi_ap_issue_ignore(
     assert result["reason"] == "issue_ignored"
     assert mock_rpc_device.wifi_setconfig.call_count == 0
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id).dismissed_version
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.dismissed_version
 
 
 @pytest.mark.parametrize(
@@ -535,7 +536,6 @@ async def test_coiot_missing_or_wrong_peer_issue(
 
     result = await process_repair_fix_flow(client, flow_id, {"next_step_id": "confirm"})
 
-    result = await process_repair_fix_flow(client, flow_id)
     assert result["type"] == "create_entry"
     assert mock_block_device.configure_coiot_protocol.call_count == 1
 
@@ -573,10 +573,9 @@ async def test_coiot_exception(
     assert result["step_id"] == "init"
     assert result["type"] == "menu"
 
+    mock_block_device.configure_coiot_protocol.side_effect = DeviceConnectionError
     result = await process_repair_fix_flow(client, flow_id, {"next_step_id": "confirm"})
 
-    mock_block_device.configure_coiot_protocol.side_effect = DeviceConnectionError
-    result = await process_repair_fix_flow(client, flow_id)
     assert result["type"] == "abort"
     assert result["reason"] == "cannot_connect"
     assert mock_block_device.configure_coiot_protocol.call_count == 1
@@ -653,13 +652,13 @@ async def test_coiot_no_hass_url(
     assert result["step_id"] == "init"
     assert result["type"] == "menu"
 
-    result = await process_repair_fix_flow(client, flow_id, {"next_step_id": "confirm"})
-
     with patch(
         "homeassistant.components.shelly.utils.get_url",
         side_effect=NoURLAvailableError(),
     ):
-        result = await process_repair_fix_flow(client, flow_id)
+        result = await process_repair_fix_flow(
+            client, flow_id, {"next_step_id": "confirm"}
+        )
 
         assert result["type"] == "abort"
         assert result["reason"] == "cannot_configure"
@@ -699,4 +698,5 @@ async def test_coiot_issue_ignore(
     assert result["reason"] == "issue_ignored"
     assert mock_block_device.configure_coiot_protocol.call_count == 0
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id).dismissed_version
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.dismissed_version

@@ -5,7 +5,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from aioshelly.block_device import BlockDevice
-from aioshelly.const import MODEL_OUT_PLUG_S_G3, MODEL_PLUG_S_G3, RPC_GENERATIONS
+from aioshelly.const import (
+    MODEL_OUT_PLUG_S_G3,
+    MODEL_PLUG,
+    MODEL_PLUG_S_G3,
+    RPC_GENERATIONS,
+)
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 from aioshelly.rpc_device import RpcDevice
 from awesomeversion import AwesomeVersion
@@ -243,28 +248,6 @@ class ShellyBlockRepairsFlow(RepairsFlow):
         """Initialize."""
         self._device = device
 
-    async def async_step_confirm(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the confirm step of a fix flow."""
-        if user_input is not None:
-            return await self._async_step_confirm()
-
-        issue_registry = ir.async_get(self.hass)
-        description_placeholders = None
-        if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
-            description_placeholders = issue.translation_placeholders
-
-        return self.async_show_form(
-            step_id="confirm",
-            data_schema=vol.Schema({}),
-            description_placeholders=description_placeholders,
-        )
-
-    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
-        """Handle the confirm step of a fix flow."""
-        raise NotImplementedError
-
 
 class CoiotConfigureFlow(ShellyBlockRepairsFlow):
     """Handler for fixing CoIoT configuration flow."""
@@ -283,7 +266,9 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
             description_placeholders=description_placeholders,
         )
 
-    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
         coiot_addr = get_coiot_address(self.hass)
         coiot_port = get_coiot_port(self.hass)
@@ -446,7 +431,7 @@ async def async_create_fix_flow(
     else:
         device = entry.runtime_data.block.device
 
-    if "coiot_unconfigured" in issue_id:
+    if "coiot_unconfigured" in issue_id and device.model != MODEL_PLUG:
         return CoiotConfigureFlow(device)
 
     if (
