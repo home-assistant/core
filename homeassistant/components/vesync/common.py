@@ -57,8 +57,10 @@ def is_outlet(device: VeSyncBaseDevice) -> TypeGuard[VeSyncOutlet]:
 
 def is_wall_switch(device: VeSyncBaseDevice) -> TypeGuard[VeSyncWallSwitch]:
     """Check if the device represents a wall switch, note this doessn't include dimming switches."""
+    if device.product_type != ProductTypes.SWITCH:
+        return False
 
-    return device.product_type == ProductTypes.SWITCH
+    return getattr(device, "supports_dimmable", False) is False
 
 
 def is_purifier(device: VeSyncBaseDevice) -> TypeGuard[VeSyncPurifier]:
