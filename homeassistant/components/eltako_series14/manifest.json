@@ -1,9 +1,9 @@
 {
-  "domain": "eltako_enocean",
-  "name": "Eltako (EnOcean)",
+  "domain": "eltako_series14",
+  "name": "Eltako Series 14",
   "codeowners": ["@jtjart"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/eltako_enocean",
+  "documentation": "https://www.home-assistant.io/integrations/eltako_series14",
   "integration_type": "hub",
   "iot_class": "local_push",
   "quality_scale": "bronze",

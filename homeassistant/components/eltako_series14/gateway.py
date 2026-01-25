@@ -1,4 +1,4 @@
-"""Representation of an Eltako Enocean gateway."""
+"""Representation of an Eltako Series 14 gateway."""
 
 from collections.abc import Callable
 import logging
@@ -26,7 +26,7 @@ type MessageCallback = Callable[[ESP2Message], None]
 type GwConnectionCallback = Callable[[bool], None]
 
 
-class EnOceanGateway:
+class EltakoGateway:
     """Representation of an Eltako gateway.
 
     The gateway is responsible for receiving the Eltako frames,
@@ -120,7 +120,7 @@ class EnOceanGateway:
             _LOGGER.warning("Serial port %s is not available", self._serial_port)
 
     def _callback_receive_message_from_serial_bus(self, msg: ESP2Message | None = None):
-        """Handle incoming EnOcean messages."""
+        """Handle incoming messages."""
 
         if not msg:
             return

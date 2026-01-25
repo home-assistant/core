@@ -1,4 +1,4 @@
-"""Representation of an Eltako Enocean entity."""
+"""Representation of an Eltako Series 14 entity."""
 
 import logging
 
@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 
 from . import EltakoConfigEntry
 from .const import DOMAIN
-from .gateway import EnOceanGateway
+from .gateway import EltakoGateway
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class EltakoEntity(Entity):
         )
 
     @property
-    def gateway(self) -> EnOceanGateway:
+    def gateway(self) -> EltakoGateway:
         """Return the supporting gateway of the entity."""
         return self._attr_gateway
 

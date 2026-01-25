@@ -1,4 +1,4 @@
-"""Support for Eltako Enocean devices."""
+"""Support for Eltako Series 14 devices."""
 
 from dataclasses import dataclass, field
 from enum import Enum, auto

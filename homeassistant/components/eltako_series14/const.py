@@ -1,6 +1,6 @@
-"""Constants for the Eltako (EnOcean) integration."""
+"""Constants for the Eltako Series 14 integration."""
 
-DOMAIN = "eltako_enocean"
+DOMAIN = "eltako_series14"
 MANUFACTURER = "Eltako"
 
 CONF_FAST_STATUS_CHANGE = "fast_status_change"

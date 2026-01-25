@@ -1,4 +1,4 @@
-"""The Eltako (EnOcean) integration."""
+"""The Eltako Series 14 integration."""
 
 import logging
 
@@ -17,19 +17,19 @@ from .const import (
     MANUFACTURER,
 )
 from .device import GATEWAY_MODELS, MODELS
-from .gateway import EnOceanGateway
+from .gateway import EltakoGateway
 
 _LOGGER = logging.getLogger(__name__)
 _PLATFORMS: list[Platform] = [Platform.SWITCH]
 
-type EltakoConfigEntry = ConfigEntry[EnOceanGateway]
+type EltakoConfigEntry = ConfigEntry[EltakoGateway]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EltakoConfigEntry) -> bool:
-    """Set up Eltako (EnOcean) from a config entry."""
+    """Set up Eltako Series 14 from a config entry."""
 
     # Set up gateway
-    enocean_gateway = EnOceanGateway(
+    gateway = EltakoGateway(
         GATEWAY_MODELS[entry.data[CONF_MODEL]],
         str(entry.data[CONF_SERIAL_PORT]),
         bool(entry.data[CONF_GATEWAY_AUTO_RECONNECT]),
@@ -37,10 +37,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: EltakoConfigEntry) -> bo
         bool(entry.data[CONF_FAST_STATUS_CHANGE]),
     )
     try:
-        await enocean_gateway.async_setup()
+        await gateway.async_setup()
     except Exception as e:
         raise ConfigEntryError("Gateway setup failed") from e
-    entry.runtime_data = enocean_gateway
+    entry.runtime_data = gateway
 
     # Register gateway
     device_registry = dr.async_get(hass)

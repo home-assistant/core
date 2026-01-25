@@ -1,4 +1,4 @@
-"""Config flows for the Eltako Enocean integration."""
+"""Config flows for the Eltako Series 14 integration."""
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -32,7 +32,7 @@ from .const import (
     ID_REGEX,
 )
 from .device import GATEWAY_MODELS, SWITCH_MODELS, ModelDefinition
-from .gateway import EnOceanGateway
+from .gateway import EltakoGateway
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ def _validate_gateway_path(user_input: dict[str, Any]):
 
 async def _async_validate_gateway(user_input: dict[str, Any]):
     """Return True if the gateway can be accessed."""
-    gateway = EnOceanGateway(
+    gateway = EltakoGateway(
         GATEWAY_MODELS[user_input[CONF_MODEL]],
         user_input[CONF_SERIAL_PORT],
         user_input[CONF_GATEWAY_AUTO_RECONNECT],

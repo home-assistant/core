@@ -1,4 +1,4 @@
-"""Test the Eltako (EnOcean) config flow."""
+"""Test the Eltako Series 14 config flow."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -6,7 +6,7 @@ import pytest
 from serial import SerialException
 
 from homeassistant import config_entries
-from homeassistant.components.eltako_enocean.const import (
+from homeassistant.components.eltako_series14.const import (
     CONF_FAST_STATUS_CHANGE,
     CONF_GATEWAY_AUTO_RECONNECT,
     CONF_GATEWAY_MESSAGE_DELAY,
@@ -81,7 +81,7 @@ class TestEltakoFlowHandler:
     ) -> None:
         """Test we handle missing usb ports."""
         with patch(
-            "homeassistant.components.eltako_enocean.config_flow.serial.tools.list_ports.comports",
+            "homeassistant.components.eltako_series14.config_flow.serial.tools.list_ports.comports",
             return_value=[],
         ):
             result = await hass.config_entries.flow.async_init(
@@ -100,7 +100,7 @@ class TestEltakoFlowHandler:
         )
 
         with patch(
-            "homeassistant.components.eltako_enocean.config_flow.serial.serial_for_url",
+            "homeassistant.components.eltako_series14.config_flow.serial.serial_for_url",
             side_effect=SerialException,
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -128,7 +128,7 @@ class TestEltakoFlowHandler:
         )
 
         with patch(
-            "homeassistant.components.eltako_enocean.config_flow._async_validate_gateway",
+            "homeassistant.components.eltako_series14.config_flow._async_validate_gateway",
             side_effect=RuntimeError,
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -146,7 +146,7 @@ class TestEltakoFlowHandler:
         )
 
         with patch(
-            "homeassistant.components.eltako_enocean.config_flow._async_validate_gateway",
+            "homeassistant.components.eltako_series14.config_flow._async_validate_gateway",
             side_effect=Exception,
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -402,7 +402,7 @@ class TestDeviceSubentryFlowHandler:
         subentry = next(iter(setup_default_entry.subentries.values()))
 
         with patch(
-            "homeassistant.components.eltako_enocean.config_flow.SWITCH_MODELS",
+            "homeassistant.components.eltako_series14.config_flow.SWITCH_MODELS",
             return_value={},
         ):
             result = await hass.config_entries.subentries.async_init(

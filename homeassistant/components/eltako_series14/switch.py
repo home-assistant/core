@@ -1,4 +1,4 @@
-"""Support for Eltako Enocean switches."""
+"""Support for Eltako Series 14 switches."""
 
 from dataclasses import dataclass
 import logging
