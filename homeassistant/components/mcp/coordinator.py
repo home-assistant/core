@@ -61,12 +61,12 @@ async def mcp_client(
     except ExceptionGroup as streamable_err:
         main_error = streamable_err.exceptions[0]
         # Method not Allowed likely means this is not a streamable HTTP server,
-        # but it may be an SSE server
+        # but it may be an SSE server. This is part of the MCP Transport
+        # backwards compatibility specification.
         if (
             isinstance(main_error, httpx.HTTPStatusError)
             and main_error.response.status_code == 405
         ):
-            # This is an SSE Server
             try:
                 async with (
                     sse_client(url=url, headers=headers) as streams,
