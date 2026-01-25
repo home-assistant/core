@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from datetime import date
 
-from env_canada.ec_cache import Cache
-import voluptuous as vol
-
 from env_canada import ECMap
+import voluptuous as vol
 from homeassistant.components.camera import Camera
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
@@ -93,15 +91,7 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECMap]], Camera):
         else:
             layer = self._layer_setting
 
-        # Clear cache entries for this radar location to force refresh with new layer
-        cache_prefix = self.radar_object._get_cache_prefix()
-        keys_to_delete = [
-            key
-            for key in Cache._cache
-            if key.startswith(cache_prefix) or key.startswith("capabilities-")
-        ]
-        for key in keys_to_delete:
-            del Cache._cache[key]
-
+        # Clear cache to force refresh with new layer
+        self.radar_object.clear_cache()
         self.radar_object.layer = layer
         await self.radar_object.update()

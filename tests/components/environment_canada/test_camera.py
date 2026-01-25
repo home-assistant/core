@@ -130,26 +130,12 @@ async def test_set_radar_type_clears_cache(
     radar_coordinator = config_entry.runtime_data.radar_coordinator
     radar_mock = radar_coordinator.ec_data
 
-    with patch(
-        "homeassistant.components.environment_canada.camera.Cache"
-    ) as cache_mock:
-        cache_mock._cache = {
-            "radar-prefix-key1": "value1",
-            "radar-prefix-key2": "value2",
-            "capabilities-key": "value3",
-            "other-key": "value4",
-        }
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_RADAR_TYPE,
+        {"entity_id": "camera.home_radar", "radar_type": "Rain"},
+        blocking=True,
+    )
 
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_RADAR_TYPE,
-            {"entity_id": "camera.home_radar", "radar_type": "Rain"},
-            blocking=True,
-        )
-
-        # Cache entries with radar prefix or capabilities should be deleted
-        assert "radar-prefix-key1" not in cache_mock._cache
-        assert "radar-prefix-key2" not in cache_mock._cache
-        assert "capabilities-key" not in cache_mock._cache
-        # Other keys should remain
-        assert "other-key" in cache_mock._cache
+    # Verify clear_cache was called on the radar object
+    radar_mock.clear_cache.assert_called_once()

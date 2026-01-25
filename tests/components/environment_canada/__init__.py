@@ -45,7 +45,7 @@ async def init_integration(hass: HomeAssistant, ec_data) -> MockConfigEntry:
     radar_mock.timestamp = datetime(2022, 10, 4, tzinfo=UTC)
     radar_mock.layer = "precip_type"
     radar_mock.metadata = {"attribution": "Data provided by Environment Canada"}
-    radar_mock._get_cache_prefix = MagicMock(return_value="radar-prefix")
+    radar_mock.clear_cache = MagicMock()
 
     with (
         patch(
