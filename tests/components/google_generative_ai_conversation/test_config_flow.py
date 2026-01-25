@@ -723,7 +723,7 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
-    current_llm_apis: list[str],
+    current_llm_apis: str | list[str],
     suggested_llm_apis: list[str],
     expected_options: list[str],
 ) -> None:
