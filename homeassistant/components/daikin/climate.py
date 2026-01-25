@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 import logging
-from typing import Any, Protocol
+from typing import Any
+
+from pydaikin.daikin_base import Appliance
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -43,16 +45,6 @@ type DaikinZone = Sequence[str | int]
 
 DAIKIN_ZONE_TEMP_HEAT = "lztemp_h"
 DAIKIN_ZONE_TEMP_COOL = "lztemp_c"
-
-
-class ZoneTemperatureDevice(Protocol):
-    """Typed interface for devices exposing zone temperature control."""
-
-    zones: list[DaikinZone] | None
-    target_temperature: float | str | None
-
-    def represent(self, key: str) -> tuple[object, list[str] | str]:
-        """Return decoded device data for the requested key."""
 
 
 HA_STATE_TO_DAIKIN = {
@@ -118,9 +110,7 @@ def _zone_is_configured(zone: DaikinZone) -> bool:
     return zone[0] != ZONE_NAME_UNCONFIGURED
 
 
-def _zone_temperature_lists(
-    device: ZoneTemperatureDevice,
-) -> tuple[list[str], list[str]]:
+def _zone_temperature_lists(device: Appliance) -> tuple[list[str], list[str]]:
     """Return the decoded zone temperature lists."""
     try:
         heating = device.represent(DAIKIN_ZONE_TEMP_HEAT)[1]
@@ -130,7 +120,7 @@ def _zone_temperature_lists(
     return (list(heating or []), list(cooling or []))
 
 
-def _supports_zone_temperature_control(device: ZoneTemperatureDevice) -> bool:
+def _supports_zone_temperature_control(device: Appliance) -> bool:
     """Return True if the device exposes zone temperature settings."""
     zones = device.zones
     if not zones:
@@ -144,15 +134,15 @@ def _supports_zone_temperature_control(device: ZoneTemperatureDevice) -> bool:
     )
 
 
-def _system_target_temperature(device: ZoneTemperatureDevice) -> float:
-    """Return the system target temperature with a fallback."""
+def _system_target_temperature(device: Appliance) -> float | None:
+    """Return the system target temperature when available."""
     target = device.target_temperature
     if target is None:
-        return 22.0
+        return None
     try:
         return float(target)
     except (TypeError, ValueError):
-        return 22.0
+        return None
 
 
 def _zone_temperature_from_list(values: list[str], zone_id: int) -> float | None:
@@ -425,17 +415,27 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum selectable temperature."""
-        return _system_target_temperature(self.device) - ZONE_TEMPERATURE_WINDOW
+        target = _system_target_temperature(self.device)
+        if target is None:
+            return super().min_temp
+        return target - ZONE_TEMPERATURE_WINDOW
 
     @property
     def max_temp(self) -> float:
         """Return the maximum selectable temperature."""
-        return _system_target_temperature(self.device) + ZONE_TEMPERATURE_WINDOW
+        target = _system_target_temperature(self.device)
+        if target is None:
+            return super().max_temp
+        return target + ZONE_TEMPERATURE_WINDOW
 
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return super().available and _supports_zone_temperature_control(self.device)
+        return (
+            super().available
+            and _supports_zone_temperature_control(self.device)
+            and _system_target_temperature(self.device) is not None
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -469,6 +469,8 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
 
         temperature_value = float(temperature)
         target = _system_target_temperature(self.device)
+        if target is None:
+            raise _zone_error("zone_parameters_unavailable")
         min_temp = target - ZONE_TEMPERATURE_WINDOW
         max_temp = target + ZONE_TEMPERATURE_WINDOW
         if not (min_temp <= temperature_value <= max_temp):
@@ -481,10 +483,17 @@ class DaikinZoneClimate(DaikinEntity, ClimateEntity):
                 },
             )
 
+        mode = self.hvac_mode
+        if mode == HVACMode.HEAT:
+            zone_key = DAIKIN_ZONE_TEMP_HEAT
+        elif mode == HVACMode.COOL:
+            zone_key = DAIKIN_ZONE_TEMP_COOL
+        else:
+            raise _zone_error("zone_parameters_unavailable")
+
         zone_value = str(round(temperature_value))
         try:
-            await self.device.set_zone(self._zone_id, DAIKIN_ZONE_TEMP_HEAT, zone_value)
-            await self.device.set_zone(self._zone_id, DAIKIN_ZONE_TEMP_COOL, zone_value)
+            await self.device.set_zone(self._zone_id, zone_key, zone_value)
         except (AttributeError, KeyError, NotImplementedError, TypeError) as err:
             raise _zone_error("zone_set_failed") from err
 

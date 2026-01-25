@@ -110,7 +110,7 @@ def test_zone_temperature_helpers() -> None:
 
         target_temperature = "bad"
 
-    assert _system_target_temperature(BadTemperature()) == 22.0
+    assert _system_target_temperature(BadTemperature()) is None
 
 
 def test_supports_zone_temperature_control() -> None:
@@ -195,7 +195,7 @@ async def test_async_setup_entry_skips_zone_climates_without_support(
 
 @pytest.mark.asyncio
 async def test_zone_climate_sets_temperature(hass: HomeAssistant) -> None:
-    """Setting the temperature updates both heating and cooling values."""
+    """Setting the temperature updates the active mode value."""
     entry = MockConfigEntry(domain="daikin", data={})
     coordinator = DaikinCoordinator(
         hass,
@@ -211,6 +211,32 @@ async def test_zone_climate_sets_temperature(hass: HomeAssistant) -> None:
     heating = coordinator.device.represent("lztemp_h")[1]
     cooling = coordinator.device.represent("lztemp_c")[1]
     assert heating[0] == "23"
+    assert cooling[0] == "22"
+
+
+@pytest.mark.asyncio
+async def test_zone_climate_sets_temperature_cooling(
+    hass: HomeAssistant,
+) -> None:
+    """Setting the temperature updates the cooling list when in cool mode."""
+    entry = MockConfigEntry(domain="daikin", data={})
+    coordinator = DaikinCoordinator(
+        hass,
+        entry,
+        FakeZoneDevice(
+            zones=[["Living", "1", 22], ["Office", "1", 21]],
+            mode="cool",
+        ),
+    )
+    # Avoid scheduling real refresh work in the test environment
+    coordinator.async_request_refresh = AsyncMock()
+    zone = DaikinZoneClimate(coordinator, 0)
+
+    await zone.async_set_temperature(**{ATTR_TEMPERATURE: 23})
+
+    heating = coordinator.device.represent("lztemp_h")[1]
+    cooling = coordinator.device.represent("lztemp_c")[1]
+    assert heating[0] == "22"
     assert cooling[0] == "23"
 
 
@@ -261,6 +287,19 @@ async def test_zone_climate_available_when_zone_disabled(hass: HomeAssistant) ->
     )
     zone = DaikinZoneClimate(coordinator, 0)
     assert zone.available
+
+
+def test_zone_climate_unavailable_without_target_temperature(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure zone climate is unavailable if target temperature is missing."""
+    entry = MockConfigEntry(domain="daikin", data={})
+    device = FakeZoneDevice(zones=[["Living", "1", 22]])
+    device.target_temperature = None
+    coordinator = DaikinCoordinator(hass, entry, device)
+    zone = DaikinZoneClimate(coordinator, 0)
+
+    assert not zone.available
 
 
 @pytest.mark.asyncio
