@@ -1,8 +1,6 @@
-FROM mcr.microsoft.com/vscode/devcontainers/javascript-node
+FROM mcr.microsoft.com/vscode/devcontainers/base:debian
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-ARG USERNAME=node
 
 RUN \
     apt-get update \
@@ -35,9 +33,7 @@ WORKDIR /usr/src
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-USER $USERNAME
-
-ENV VIRTUAL_ENV="/home/$USERNAME/.local/ha-venv"
+ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
 RUN --mount=type=bind,source=.python-version,target=.python-version \
     uv python install \
     && uv venv $VIRTUAL_ENV
