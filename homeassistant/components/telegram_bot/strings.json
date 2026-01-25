@@ -234,7 +234,7 @@
           "parse_mode": "Parse mode"
         },
         "data_description": {
-          "api_endpoint": "Telegram bot API server endpoint.\nDefault: `{default_api_endpoint}`.",
+          "api_endpoint": "Telegram bot API server endpoint.\nThe bot will be **locked out for 10 minutes** if you switch back to the default.\nDefault: `{default_api_endpoint}`.",
           "parse_mode": "Default parse mode for messages if not explicit in message data."
         },
         "title": "Configure Telegram bot"

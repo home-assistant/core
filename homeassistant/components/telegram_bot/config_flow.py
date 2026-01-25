@@ -178,11 +178,19 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 )
                 await bot.get_me()
 
-                # validation ok, logout existing bot
+                # validation ok
+                # logout existing bot only if the API endpoint is changed from the default to a custom value
                 service: TelegramNotificationService = self.config_entry.runtime_data
-                is_logged_out = await service.bot.log_out()
-                if not is_logged_out:
-                    errors["base"] = "bot_logout_failed"
+                if (
+                    user_input[ATTR_API_ENDPOINT] != DEFAULT_API_ENDPOINT
+                    and self.config_entry.options.get(
+                        ATTR_API_ENDPOINT, DEFAULT_API_ENDPOINT
+                    )
+                    == DEFAULT_API_ENDPOINT
+                ):
+                    is_logged_out = await service.bot.log_out()
+                    if not is_logged_out:
+                        errors["base"] = "bot_logout_failed"
             except TelegramError as err:
                 errors["base"] = "telegram_error"
                 description_placeholders[ERROR_MESSAGE] = str(err)
@@ -193,7 +201,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     data_schema=self.add_suggested_values_to_schema(
                         OPTIONS_SCHEMA, user_input
                     ),
-                    errors={"base": "telegram_error"},
+                    errors=errors,
                     description_placeholders=description_placeholders,
                 )
 

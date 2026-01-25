@@ -133,6 +133,7 @@ def mock_external_calls() -> Generator[None]:
         patch.object(BotMock, "send_animation", return_value=message),
         patch.object(BotMock, "send_location", return_value=message),
         patch.object(BotMock, "send_poll", return_value=message),
+        patch.object(BotMock, "log_out", return_value=True),
         patch("telegram.ext.Updater._bootstrap"),
     ):
         yield

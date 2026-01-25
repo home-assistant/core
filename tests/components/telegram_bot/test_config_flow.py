@@ -7,10 +7,12 @@ from telegram.constants import AccentColor
 from telegram.error import BadRequest, InvalidToken, NetworkError
 
 from homeassistant.components.telegram_bot.const import (
+    ATTR_API_ENDPOINT,
     ATTR_PARSER,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
+    DEFAULT_API_ENDPOINT,
     DOMAIN,
     PARSER_MD,
     PARSER_PLAIN_TEXT,
@@ -27,17 +29,102 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
+async def test_options_error(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test options flow with custom API server endpoint that fails."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        mock_broadcast_config_entry.entry_id
+    )
+    await hass.async_block_till_done()
+
+    assert result["step_id"] == "init"
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.get_me",
+        AsyncMock(side_effect=NetworkError("mock network error")),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                ATTR_API_ENDPOINT: "http://mock/bot",
+                ATTR_PARSER: PARSER_PLAIN_TEXT,
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": "telegram_error"}
+    assert result["description_placeholders"] == {
+        "default_api_endpoint": DEFAULT_API_ENDPOINT,
+        "error_message": "mock network error",
+    }
+
+
+async def test_options_logout_failed(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test options flow which fails to logout the existing bot."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        mock_broadcast_config_entry.entry_id
+    )
+    await hass.async_block_till_done()
+
+    assert result["step_id"] == "init"
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.log_out",
+        AsyncMock(return_value=False),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                ATTR_API_ENDPOINT: "http://mock/bot",
+                ATTR_PARSER: PARSER_PLAIN_TEXT,
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": "bot_logout_failed"}
+    assert result["description_placeholders"] == {
+        "default_api_endpoint": DEFAULT_API_ENDPOINT
+    }
+
+
 async def test_options_flow(
-    hass: HomeAssistant, mock_webhooks_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
 ) -> None:
     """Test options flow."""
 
-    mock_webhooks_config_entry.add_to_hass(hass)
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # test: no input
 
     result = await hass.config_entries.options.async_init(
-        mock_webhooks_config_entry.entry_id
+        mock_broadcast_config_entry.entry_id
     )
     await hass.async_block_till_done()
 
@@ -49,6 +136,7 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
+            ATTR_API_ENDPOINT: DEFAULT_API_ENDPOINT,
             ATTR_PARSER: PARSER_PLAIN_TEXT,
         },
     )
