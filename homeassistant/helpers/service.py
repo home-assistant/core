@@ -285,24 +285,14 @@ async def async_call_from_config(
     else:
         await hass.services.async_call(**params, blocking=blocking, context=context)
 
-
-@callback
-@bind_hass
-def async_prepare_call_from_config(
-    hass: HomeAssistant,
+def _extract_domain_service(
     config: ConfigType,
-    variables: TemplateVarsType = None,
-    validate_config: bool = False,
-) -> ServiceParams:
-    """Prepare to call a service based on a config hash."""
-    if validate_config:
-        try:
-            config = cv.SERVICE_SCHEMA(config)
-        except vol.Invalid as ex:
-            raise HomeAssistantError(
-                f"Invalid config for calling service: {ex}"
-            ) from ex
+    variables: TemplateVarsType,
+) -> tuple[str, str]:
+    """Extract and validate domain and service from config.
 
+    Handles both direct service definitions and templated service names.
+    """
     if CONF_ACTION in config:
         domain_service = config[CONF_ACTION]
     else:
@@ -322,47 +312,101 @@ def async_prepare_call_from_config(
             ) from ex
 
     domain, _, service = domain_service.partition(".")
+    return domain, service
 
-    target = {}
-    if CONF_TARGET in config:
-        conf = config[CONF_TARGET]
-        try:
-            if isinstance(conf, template.Template):
-                target.update(conf.async_render(variables))
-            else:
-                target.update(template.render_complex(conf, variables))
+def _process_target(
+    hass: HomeAssistant,
+    config: ConfigType,
+    variables: TemplateVarsType,
+) -> dict:
+    """Process and validate service target configuration."""
+    target: dict[str, Any] = {}
 
-            if CONF_ENTITY_ID in target:
-                registry = entity_registry.async_get(hass)
-                entity_ids = cv.comp_entity_ids_or_uuids(target[CONF_ENTITY_ID])
-                if entity_ids not in (ENTITY_MATCH_ALL, ENTITY_MATCH_NONE):
-                    entity_ids = entity_registry.async_validate_entity_ids(
-                        registry, entity_ids
-                    )
-                target[CONF_ENTITY_ID] = entity_ids
-        except TemplateError as ex:
-            raise HomeAssistantError(
-                f"Error rendering service target template: {ex}"
-            ) from ex
-        except vol.Invalid as ex:
-            raise HomeAssistantError(
-                f"Template rendered invalid entity IDs: {target[CONF_ENTITY_ID]}"
-            ) from ex
+    if CONF_TARGET not in config:
+        return target
 
-    service_data = {}
+    conf = config[CONF_TARGET]
+
+    try:
+        if isinstance(conf, template.Template):
+            target.update(conf.async_render(variables))
+        else:
+            target.update(template.render_complex(conf, variables))
+
+        if CONF_ENTITY_ID in target:
+            registry = entity_registry.async_get(hass)
+            entity_ids = cv.comp_entity_ids_or_uuids(target[CONF_ENTITY_ID])
+            if entity_ids not in (ENTITY_MATCH_ALL, ENTITY_MATCH_NONE):
+                entity_ids = entity_registry.async_validate_entity_ids(
+                    registry, entity_ids
+                )
+            target[CONF_ENTITY_ID] = entity_ids
+
+    except TemplateError as ex:
+        raise HomeAssistantError(
+            f"Error rendering service target template: {ex}"
+        ) from ex
+    except vol.Invalid as ex:
+        raise HomeAssistantError(
+            f"Template rendered invalid entity IDs: {target.get(CONF_ENTITY_ID)}"
+        ) from ex
+
+    return target
+
+def _process_service_data(
+    config: ConfigType,
+    variables: TemplateVarsType,
+) -> dict[str, Any]:
+    """Render and validate service data from config."""
+    service_data: dict[str, Any] = {}
 
     for conf in (CONF_SERVICE_DATA, CONF_SERVICE_DATA_TEMPLATE):
         if conf not in config:
             continue
+
         try:
             render = template.render_complex(config[conf], variables)
+
             if not isinstance(render, dict):
                 raise HomeAssistantError(
                     "Error rendering data template: Result is not a Dictionary"
                 )
+
             service_data.update(render)
+
         except TemplateError as ex:
-            raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
+            raise HomeAssistantError(
+                f"Error rendering data template: {ex}"
+            ) from ex
+
+    return service_data
+
+
+@callback
+@bind_hass
+def async_prepare_call_from_config(
+    hass: HomeAssistant,
+    config: ConfigType,
+    variables: TemplateVarsType = None,
+    validate_config: bool = False,
+) -> ServiceParams:
+    """Prepare parameters required to execute a service call from config.
+
+    This function validates the configuration, extracts the domain and service,
+    processes service target selection, and prepares service data.
+    """
+
+    if validate_config:
+        try:
+            config = cv.SERVICE_SCHEMA(config)
+        except vol.Invalid as ex:
+            raise HomeAssistantError(
+                f"Invalid config for calling service: {ex}"
+            ) from ex
+
+    domain, service = _extract_domain_service(config, variables)
+    target = _process_target(hass, config, variables)
+    service_data = _process_service_data(config, variables)
 
     if CONF_SERVICE_ENTITY_ID in config:
         if target:
@@ -376,6 +420,7 @@ def async_prepare_call_from_config(
         "service_data": service_data,
         "target": target,
     }
+
 
 
 @deprecated_hass_argument(breaks_in_ha_version="2026.10")
@@ -681,7 +726,18 @@ def _get_permissible_entity_candidates(
     target_all_entities: bool,
     all_referenced: set[str] | None,
 ) -> list[Entity]:
-    """Get entity candidates that the user is allowed to access."""
+    """Filter a list of entity IDs based on user permissions and context.
+
+    Internal helper to validate that the initiator of a service call has 
+    the necessary authorization to interact with the requested entities.
+
+    Args:
+        hass: The Home Assistant instance.
+        entity_ids: A set of candidate entity IDs to be checked.
+        context: The security context of the user or script making the call.
+
+    Returns:
+        A filtered set of entity IDs that the user is permitted to access."""
     if entity_perms is not None:
         # Check the permissions since entity_perms is set
         if target_all_entities:
@@ -711,12 +767,11 @@ def _get_permissible_entity_candidates(
     # entities so we do not need to check again.
     if TYPE_CHECKING:
         assert all_referenced is not None
-    if (
-        len(all_referenced) == 1
-        and (single_entity := list(all_referenced)[0])
-        and (entity := entities.get(single_entity)) is not None
-    ):
-        return [entity]
+    if len(all_referenced) == 1:
+        single_entity = next(iter(all_referenced))
+        entity = entities.get(single_entity)
+        if entity is not None:
+            return [entity]
 
     return [entities[entity_id] for entity_id in all_referenced.intersection(entities)]
 
@@ -731,9 +786,18 @@ async def entity_service_call(
     *,
     entity_device_classes: Iterable[str | None] | None = None,
 ) -> EntityServiceResponse | None:
-    """Handle an entity service call.
+    """Execute a service call against a specific entity.
 
-    Calls all platforms simultaneously.
+    This helper function handles the logic of dispatching a service request to 
+    an individual entity instance. It ensures that the service is supported 
+    by the entity and manages the asynchronous execution within the event loop.
+
+    Args:
+        hass: The Home Assistant instance.
+        entity: The target entity object to perform the service on.
+        service_call: The service call data including parameters and context.
+        clear_cache: If True, forces a refresh of the entity's internal state cache 
+            before or after the call.
     """
     entity_perms: Callable[[str, str], bool] | None = None
     return_response = call.return_response
@@ -1032,11 +1096,14 @@ def verify_domain_control(
 
 
 class ReloadServiceHelper[_T]:
-    """Helper for reload services.
+    """HHelper class to manage service reloads for integrations.
 
-    The helper has the following purposes:
-    - Make sure reloads do not happen in parallel
-    - Avoid redundant reloads of the same target
+    This class provides a standardized way to handle the 'reload' service logic, 
+    ensuring that configuration changes are picked up and entities are 
+    correctly re-initialized without restarting the entire Home Assistant process.
+
+    Attributes:
+        _on_reload: Coroutine function to be called when a reload is triggered.
     """
 
     def __init__(

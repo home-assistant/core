@@ -1,0 +1,41 @@
+
+📦 Repomix v1.11.1
+
+No custom config found at repomix.config.ts, repomix.config.mts, repomix.config.cts, repomix.config.js, repomix.config.mjs, repomix.config.cjs, repomix.config.json5, repomix.config.jsonc, repomix.config.json or global config at /Users/samio_ayman/.config/repomix/repomix.config.ts, /Users/samio_ayman/.config/repomix/repomix.config.mts, /Users/samio_ayman/.config/repomix/repomix.config.cts, /Users/samio_ayman/.config/repomix/repomix.config.js, /Users/samio_ayman/.config/repomix/repomix.config.mjs, /Users/samio_ayman/.config/repomix/repomix.config.cjs, /Users/samio_ayman/.config/repomix/repomix.config.json5, /Users/samio_ayman/.config/repomix/repomix.config.jsonc, /Users/samio_ayman/.config/repomix/repomix.config.json.
+You can add a config file for additional settings. Please check https://github.com/yamadashy/repomix for more information.
+[36m⠙[39m Collecting files...
+[2K[1A[2K[G[36m⠹[39m Running security check... (82/101) [2mselector.py[22m
+[2K[1A[2K[G[36m⠸[39m Processing files...
+[2K[1A[2K[G[36m⠼[39m Writing output file...
+[2K[1A[2K[G[36m⠴[39m Calculating metrics...
+[2K[1A[2K[G[36m⠦[39m Calculating metrics... (4/50) [2mtemplate/extensions/math.py[22m
+[2K[1A[2K[G[36m⠧[39m Calculating metrics... (40/50) [2mselector.py[22m
+[2K[1A[2K[G[36m⠇[39m Calculating metrics... (50/50) [2mtrigger.py[22m
+[2K[1A[2K[G[36m⠏[39m Calculating metrics... (50/50) [2mtrigger.py[22m
+[2K[1A[2K[G[32m✔[39m Packing completed successfully!
+
+📈 Top 5 Files by Token Count:
+──────────────────────────────
+1.  entity_registry.py (17,333 tokens, 85,786 chars, 5.8%)
+2.  script.py (16,114 tokens, 78,930 chars, 5.4%)
+3.  template/__init__.py (15,653 tokens, 70,613 chars, 5.2%)
+4.  device_registry.py (15,172 tokens, 76,291 chars, 5.1%)
+5.  config_validation.py (14,553 tokens, 65,605 chars, 4.9%)
+
+🔎 Security Check:
+──────────────────
+✔ No suspicious files detected.
+
+
+📊 Pack Summary:
+────────────────
+  Total Files: 101 files
+ Total Tokens: 299,757 tokens
+  Total Chars: 1,426,945 chars
+       Output: repomix-output.xml
+     Security: ✔ No suspicious files detected
+
+🎉 All Done!
+Your repository has been successfully packed.
+
+💡 Repomix is now available in your browser! Try it at https://repomix.com
