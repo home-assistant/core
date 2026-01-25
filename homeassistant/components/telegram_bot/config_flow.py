@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
-    OptionsFlow,
+    OptionsFlowWithReload,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
@@ -32,13 +32,15 @@ from homeassistant.helpers.selector import (
 )
 
 from . import initialize_bot
-from .bot import TelegramBotConfigEntry
+from .bot import TelegramBotConfigEntry, TelegramNotificationService
 from .const import (
+    ATTR_API_ENDPOINT,
     ATTR_PARSER,
     BOT_NAME,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
+    DEFAULT_API_ENDPOINT,
     DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
     ERROR_FIELD,
@@ -139,18 +141,22 @@ STEP_WEBHOOKS_DATA_SCHEMA: vol.Schema = vol.Schema(
 OPTIONS_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(
+            ATTR_API_ENDPOINT,
+            default=DEFAULT_API_ENDPOINT,
+        ): TextSelector(config=TextSelectorConfig(type=TextSelectorType.URL)),
+        vol.Required(
             ATTR_PARSER,
         ): SelectSelector(
             SelectSelectorConfig(
                 options=[PARSER_MD, PARSER_MD2, PARSER_HTML, PARSER_PLAIN_TEXT],
                 translation_key="parse_mode",
             )
-        )
+        ),
     }
 )
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Options flow."""
 
     async def async_step_init(
@@ -158,7 +164,39 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
 
+        errors: dict[str, str] = {}
+        description_placeholders = {"default_api_endpoint": DEFAULT_API_ENDPOINT}
+
         if user_input is not None:
+            try:
+                # validate bot
+                bot = await self.hass.async_add_executor_job(
+                    initialize_bot,
+                    self.hass,
+                    self.config_entry.data,
+                    MappingProxyType(user_input),
+                )
+                await bot.get_me()
+
+                # validation ok, logout existing bot
+                service: TelegramNotificationService = self.config_entry.runtime_data
+                is_logged_out = await service.bot.log_out()
+                if not is_logged_out:
+                    errors["base"] = "bot_logout_failed"
+            except TelegramError as err:
+                errors["base"] = "telegram_error"
+                description_placeholders[ERROR_MESSAGE] = str(err)
+
+            if errors:
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=self.add_suggested_values_to_schema(
+                        OPTIONS_SCHEMA, user_input
+                    ),
+                    errors={"base": "telegram_error"},
+                    description_placeholders=description_placeholders,
+                )
+
             return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
@@ -167,6 +205,7 @@ class OptionsFlowHandler(OptionsFlow):
                 OPTIONS_SCHEMA,
                 self.config_entry.options,
             ),
+            description_placeholders=description_placeholders,
         )
 
 
@@ -270,7 +309,10 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> str:
         try:
             bot = await self.hass.async_add_executor_job(
-                initialize_bot, self.hass, MappingProxyType(user_input)
+                initialize_bot,
+                self.hass,
+                MappingProxyType(user_input),
+                MappingProxyType({}),
             )
             self._bot = bot
 

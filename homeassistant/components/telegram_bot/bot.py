@@ -52,6 +52,7 @@ from homeassistant.util.json import JsonValueType
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
+    ATTR_API_ENDPOINT,
     ATTR_ARGS,
     ATTR_AUTHENTICATION,
     ATTR_CAPTION,
@@ -96,6 +97,7 @@ from .const import (
     ATTR_VERIFY_SSL,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
+    DEFAULT_API_ENDPOINT,
     DOMAIN,
     EVENT_TELEGRAM_ATTACHMENT,
     EVENT_TELEGRAM_CALLBACK,
@@ -1097,17 +1099,25 @@ class TelegramNotificationService:
             os.makedirs(directory_path, exist_ok=True)
 
 
-def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:
+def initialize_bot(
+    hass: HomeAssistant,
+    data: MappingProxyType[str, Any],
+    options: MappingProxyType[str, Any],
+) -> Bot:
     """Initialize telegram bot with proxy support."""
-    api_key: str = p_config[CONF_API_KEY]
-    proxy_url: str | None = p_config.get(CONF_PROXY_URL)
 
+    api_key: str = data[CONF_API_KEY]
+
+    proxy_url: str | None = data.get(CONF_PROXY_URL)
     if proxy_url is not None:
         proxy = httpx.Proxy(proxy_url)
         request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
     else:
         request = HTTPXRequest(connection_pool_size=8)
-    return Bot(token=api_key, request=request)
+
+    base_url = options.get(ATTR_API_ENDPOINT, DEFAULT_API_ENDPOINT)
+
+    return Bot(token=api_key, base_url=base_url, request=request)
 
 
 async def load_data(

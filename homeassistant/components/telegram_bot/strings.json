@@ -223,12 +223,18 @@
     }
   },
   "options": {
+    "error": {
+      "bot_logout_failed": "Failed to logout Telegram bot. Please try again later.",
+      "telegram_error": "[%key:component::telegram_bot::config::error::telegram_error%]"
+    },
     "step": {
       "init": {
         "data": {
+          "api_endpoint": "API endpoint",
           "parse_mode": "Parse mode"
         },
         "data_description": {
+          "api_endpoint": "Telegram bot API server endpoint.\nDefault: `{default_api_endpoint}`.",
           "parse_mode": "Default parse mode for messages if not explicit in message data."
         },
         "title": "Configure Telegram bot"
