@@ -83,6 +83,15 @@ class NINADataUpdateCoordinator(
             update_interval=SCAN_INTERVAL,
         )
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information for nina entries."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.config_entry.entry_id)},
+            manufacturer="NINA",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
     async def _async_update_data(self) -> dict[str, list[NinaWarningData]]:
         """Update data."""
         async with asyncio.timeout(10):

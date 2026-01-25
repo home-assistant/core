@@ -9,20 +9,15 @@ class NinaEntity(CoordinatorEntity[NINADataUpdateCoordinator]):
     """Base class for NINA entities."""
 
     def __init__(
-        self,
-        coordinator: NINADataUpdateCoordinator,
-        region: str,
-        region_name: str,
-        slot_id: int,
+        self, coordinator: NINADataUpdateCoordinator, region: str, slot_id: int
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
-        self._region = region
-        self._warning_index = slot_id - 1
+        self._region: str = region
+        self._warning_index: int = slot_id - 1
 
         self._attr_translation_placeholders = {
-            "region_name": region_name,
             "slot_id": str(slot_id),
         }
         self._attr_device_info = coordinator.device_info
