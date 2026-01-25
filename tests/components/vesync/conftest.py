@@ -144,6 +144,7 @@ def fan_fixture():
         cid="fan",
         device_type="fan",
         device_name="Test Fan",
+        product_type="fan",
         device_status="on",
         modes=[],
         connection_status="online",
@@ -157,6 +158,7 @@ def bulb_fixture():
     """Create a mock VeSync bulb fixture."""
     return Mock(
         VeSyncBulb,
+        product_type="bulb",
         cid="bulb",
         device_name="Test Bulb",
     )
@@ -167,6 +169,7 @@ def switch_fixture():
     """Create a mock VeSync switch fixture."""
     return Mock(
         VeSyncSwitch,
+        product_type="switch",
         is_dimmable=Mock(return_value=False),
     )
 
@@ -176,6 +179,7 @@ def dimmable_switch_fixture():
     """Create a mock VeSync switch fixture."""
     return Mock(
         VeSyncSwitch,
+        product_type="switch",
         is_dimmable=Mock(return_value=True),
     )
 
@@ -186,6 +190,7 @@ def outlet_fixture():
     return Mock(
         VeSyncOutlet,
         cid="outlet",
+        product_type="outlet",
         device_name="Test Outlet",
     )
 
@@ -203,6 +208,7 @@ def humidifier_fixture():
         },
         features=[HumidifierFeatures.NIGHTLIGHT],
         device_type="Classic200S",
+        product_type="humidifier",
         device_name="Humidifier 200s",
         device_status="on",
         mist_modes=["auto", "manual"],
@@ -239,6 +245,7 @@ def humidifier_300s_fixture():
         },
         features=[HumidifierFeatures.NIGHTLIGHT],
         device_type="Classic300S",
+        product_type="humidifier",
         device_name="Humidifier 300s",
         device_status="on",
         mist_modes=["auto", "manual"],

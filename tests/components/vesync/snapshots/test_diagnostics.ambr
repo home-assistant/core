@@ -84,7 +84,7 @@
         'mock_calls': list([
         ]),
         'pid': 'Method',
-        'product_type': 'Method',
+        'product_type': 'humidifier',
         'request_keys': 'Method',
         'reset_mock': 'Method',
         'return_value': 'Method',
@@ -514,7 +514,7 @@
     ]),
     'normal_mode': 'Method',
     'pid': 'Method',
-    'product_type': 'Method',
+    'product_type': 'fan',
     'request_keys': 'Method',
     'reset_mock': 'Method',
     'return_value': 'Method',
