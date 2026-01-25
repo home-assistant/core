@@ -1077,9 +1077,10 @@ async def _async_get_trigger_platform(
 ) -> tuple[str, TriggerProtocol]:
     from homeassistant.components import automation  # noqa: PLC0415
 
-    platform_and_sub_type = trigger_key.split(".")
-    platform = platform_and_sub_type[0]
-    platform = _PLATFORM_ALIASES.get(platform, platform)
+    if not (platform := hass.data[TRIGGERS].get(trigger_key)):
+        platform = _PLATFORM_ALIASES.get(trigger_key)
+    if not platform:
+        raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified")
 
     if automation.is_disabled_experimental_trigger(hass, platform):
         raise vol.Invalid(
@@ -1436,6 +1437,10 @@ async def async_get_all_descriptions(
         description = {"fields": yaml_description.get("fields", {})}
         if (target := yaml_description.get("target")) is not None:
             description["target"] = target
+
+        prefix, sep, _ = missing_trigger.partition(".")
+        if sep and domain != prefix:
+            description["translation_domain"] = domain
 
         new_descriptions_cache[missing_trigger] = description
     hass.data[TRIGGER_DESCRIPTION_CACHE] = new_descriptions_cache
