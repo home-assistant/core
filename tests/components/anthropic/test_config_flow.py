@@ -814,7 +814,7 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
     assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "init"
 
-    # Verify invalid option is suggested
+    # Only valid LLM APIs should be suggested and shown as options
     schema = subentry_flow["data_schema"].schema
     key = next(k for k in schema if k == CONF_LLM_HASS_API)
     assert key.description
