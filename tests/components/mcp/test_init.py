@@ -123,7 +123,7 @@ async def test_mcp_server_sse_transport_failure(
     """Test the integration fails to setup if the SSE transport fails.
 
     This exercises the case where the HTTP transport fails with method not
-    allow indicating an SSE server, then also fails with SSE.
+    allowed, indicating an SSE server, then also fails with SSE.
     """
     http_405 = httpx.HTTPStatusError(
         "Method not allowed", request=None, response=httpx.Response(405)
