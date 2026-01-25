@@ -19,6 +19,15 @@ from . import TOGRILL_SERVICE_INFO
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+def mock_sleep():
+    """Time is frozen, so ignore the sleeps."""
+    with patch(
+        "homeassistant.components.togrill.coordinator.asyncio.sleep", new=AsyncMock()
+    ):
+        yield
+
+
 @pytest.fixture
 def mock_entry() -> MockConfigEntry:
     """Create hass config fixture."""
