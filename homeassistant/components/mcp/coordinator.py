@@ -52,7 +52,7 @@ async def mcp_client(
         async with (
             streamable_http_client(
                 url=url,
-                http_client=create_async_httpx_client(hass),
+                http_client=create_async_httpx_client(hass, headers=headers),
             ) as (read_stream, write_stream, _),
             ClientSession(read_stream, write_stream) as session,
         ):
