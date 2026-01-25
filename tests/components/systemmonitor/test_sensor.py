@@ -641,16 +641,6 @@ async def test_no_duplicate_disk_entities(
     ("psutil_attr", "exception", "entity_id"),
     [
         (
-            "sensors_battery",
-            FileNotFoundError,
-            "sensor.system_monitor_battery",
-        ),
-        (
-            "sensors_battery",
-            AttributeError,
-            "sensor.system_monitor_battery",
-        ),
-        (
             "sensors_fans",
             AttributeError,
             "sensor.system_monitor_cpu_fan_fan_speed",
@@ -663,7 +653,7 @@ async def test_no_duplicate_disk_entities(
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensor_exception(
+async def test_sensor_with_param_exception(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_psutil: Mock,
@@ -676,3 +666,39 @@ async def test_sensor_exception(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
+
+
+@pytest.mark.parametrize(
+    ("psutil_attr", "exception", "entity_id"),
+    [
+        (
+            "sensors_battery",
+            FileNotFoundError,
+            "sensor.system_monitor_battery",
+        ),
+        (
+            "sensors_battery",
+            AttributeError,
+            "sensor.system_monitor_battery",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_without_param_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_psutil: Mock,
+    psutil_attr: str,
+    exception: Exception,
+    entity_id: str,
+) -> None:
+    """Test the sensor."""
+    setattr(mock_psutil, psutil_attr, PropertyMock(side_effect=exception))
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
