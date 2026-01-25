@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from env_canada import ECRadar
+from datetime import date
+
+from env_canada.ec_cache import Cache
 import voluptuous as vol
 
+from env_canada import ECMap
 from homeassistant.components.camera import Camera
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
@@ -19,7 +22,7 @@ from .coordinator import ECConfigEntry, ECDataUpdateCoordinator
 
 SERVICE_SET_RADAR_TYPE = "set_radar_type"
 SET_RADAR_TYPE_SCHEMA: VolDictType = {
-    vol.Required("radar_type"): vol.In(["Auto", "Rain", "Snow"]),
+    vol.Required("radar_type"): vol.In(["Auto", "Rain", "Snow", "Precip Type"]),
 }
 
 
@@ -40,13 +43,13 @@ async def async_setup_entry(
     )
 
 
-class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECRadar]], Camera):
+class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECMap]], Camera):
     """Implementation of an Environment Canada radar camera."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "radar"
 
-    def __init__(self, coordinator: ECDataUpdateCoordinator[ECRadar]) -> None:
+    def __init__(self, coordinator: ECDataUpdateCoordinator[ECMap]) -> None:
         """Initialize the camera."""
         super().__init__(coordinator)
         Camera.__init__(self)
@@ -56,6 +59,7 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECRadar]], Camera
         self._attr_attribution = self.radar_object.metadata["attribution"]
         self._attr_entity_registry_enabled_default = False
         self._attr_device_info = coordinator.device_info
+        self._layer_setting = "precip type"  # Track user's layer preference
 
         self.content_type = "image/gif"
 
@@ -78,5 +82,26 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECRadar]], Camera
 
     async def async_set_radar_type(self, radar_type: str):
         """Set the type of radar to retrieve."""
-        self.radar_object.precip_type = radar_type.lower()
+        self._layer_setting = radar_type.lower()
+
+        # Map radar type to layer, implementing auto logic
+        if self._layer_setting == "auto":
+            # Choose rain for months April through October, snow otherwise
+            layer = "rain" if date.today().month in range(4, 11) else "snow"
+        elif self._layer_setting == "precip type":
+            layer = "precip_type"
+        else:
+            layer = self._layer_setting
+
+        # Clear cache entries for this radar location to force refresh with new layer
+        cache_prefix = self.radar_object._get_cache_prefix()
+        keys_to_delete = [
+            key
+            for key in Cache._cache
+            if key.startswith(cache_prefix) or key.startswith("capabilities-")
+        ]
+        for key in keys_to_delete:
+            del Cache._cache[key]
+
+        self.radar_object.layer = layer
         await self.radar_object.update()
