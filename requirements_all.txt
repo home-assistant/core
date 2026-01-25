@@ -1451,7 +1451,7 @@ mbddns==0.1.2
 
 # homeassistant.components.mcp
 # homeassistant.components.mcp_server
-mcp==1.14.1
+mcp==1.26.0
 
 # homeassistant.components.minecraft_server
 mcstatus==12.1.0
@@ -3032,7 +3032,7 @@ tmb==0.0.4
 todoist-api-python==2.1.7
 
 # homeassistant.components.togrill
-togrill-bluetooth==0.8.0
+togrill-bluetooth==0.8.1
 
 # homeassistant.components.tolo
 tololib==1.2.2
