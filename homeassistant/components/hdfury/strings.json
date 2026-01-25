@@ -1,12 +1,17 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
+    "flow_title": "HDFury ({host})",
     "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up {host}?"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
