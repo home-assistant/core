@@ -129,33 +129,29 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
     def _handle_rendered_results(self) -> bool:
         """Get a rendered result and return the value."""
         # Handle any templates.
+        write_state = False
         for option, entity_template in self._templates.items():
             value = _SENTINEL
             if (rendered := self._rendered.get(option)) is not None:
                 value = rendered
 
-            if entity_template.validator:
-                value = entity_template.validator(rendered)
-
             # Capture templates that did not render a result due to an exception and
             # ensure the state object updates. _SENTINEL is used to differentiate
             # templates that render None.
             if value is _SENTINEL:
-                return True
+                write_state = True
+                continue
+
+            if entity_template.validator:
+                value = entity_template.validator(rendered)
 
             if entity_template.on_update:
                 entity_template.on_update(value)
             else:
                 setattr(self, entity_template.attribute, value)
-            return True
+            write_state = True
 
-        if len(self._rendered) > 0:
-            # In some cases, the entity may be state optimistic or
-            # attribute optimistic, in these scenarios the state needs
-            # to update.
-            return True
-
-        return False
+        return write_state
 
     @callback
     def _process_data(self) -> None:
@@ -189,6 +185,12 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
             # Check availability after rendering the results because the state
             # template could render the entity unavailable
             if not self.available:
+                write_state = True
+
+            if len(self._rendered) > 0:
+                # In some cases, the entity may be state optimistic or
+                # attribute optimistic, in these scenarios the state needs
+                # to update.
                 write_state = True
 
             if write_state:
