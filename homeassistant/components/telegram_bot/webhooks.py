@@ -19,6 +19,7 @@ from homeassistant.helpers.network import get_url
 
 from .bot import BaseTelegramBot, TelegramBotConfigEntry
 from .const import CONF_TRUSTED_NETWORKS
+from .helpers import get_base_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +44,10 @@ async def async_setup_platform(
     if not webhook_registered:
         raise ConfigEntryNotReady("Failed to register webhook with Telegram")
     _LOGGER.info(
-        "[%s %s] Webhook registered with %s", bot.username, bot.id, bot.base_url
+        "[%s %s] Webhook registered with %s",
+        bot.username,
+        bot.id,
+        get_base_url(bot),
     )
 
     hass.http.register_view(
