@@ -369,12 +369,27 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     @async_refresh_after
     async def async_select_source(self, source: str) -> None:
         """Select playback device."""
-        for device in self.devices.data:
-            if device.name == source:
-                if TYPE_CHECKING:
-                    assert device.device_id is not None
-                await self.coordinator.client.transfer_playback(device.device_id)
-                return
+
+        def _find_device():
+            for device in self.devices.data:
+                if device.name == source:
+                    return device
+            return None
+
+        device = _find_device()
+
+        if device is None:
+            await self.devices.async_refresh()
+
+        device = _find_device()
+
+        if device is None:
+            return
+
+        if TYPE_CHECKING:
+            assert device.device_id is not None
+
+        await self.coordinator.client.transfer_playback(device.device_id)
 
     @async_refresh_after
     async def async_set_shuffle(self, shuffle: bool) -> None:
