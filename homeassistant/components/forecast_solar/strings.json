@@ -52,11 +52,37 @@
     }
   },
   "options": {
+    "abort": {
+      "api_key_required": "An API key is required to configure multiple planes.",
+      "max_planes_reached": "Maximum number of planes reached (4 total).",
+      "no_planes_to_remove": "No additional planes configured to remove."
+    },
     "error": {
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
     },
     "step": {
+      "add_plane": {
+        "data": {
+          "azimuth": "[%key:component::forecast_solar::config::step::user::data::azimuth%]",
+          "declination": "[%key:component::forecast_solar::config::step::user::data::declination%]",
+          "modules_power": "[%key:component::forecast_solar::config::step::user::data::modules_power%]"
+        },
+        "description": "Add an additional solar plane. Multiple planes are supported with a Forecast.Solar API subscription."
+      },
       "init": {
+        "menu_options": {
+          "add_plane": "Add plane",
+          "remove_plane": "Remove plane",
+          "settings": "Settings"
+        }
+      },
+      "remove_plane": {
+        "data": {
+          "plane_indices": "Select planes to remove"
+        },
+        "description": "Remove additional solar planes. Multiple planes are supported with a Forecast.Solar API subscription."
+      },
+      "settings": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "azimuth": "[%key:component::forecast_solar::config::step::user::data::azimuth%]",
