@@ -1623,6 +1623,8 @@ build.json @home-assistant/supervisor
 /tests/components/tailscale/ @frenck
 /homeassistant/components/tailwind/ @frenck
 /tests/components/tailwind/ @frenck
+/homeassistant/components/takvim/ @TalhaKalabalik
+/tests/components/takvim/ @TalhaKalabalik
 /homeassistant/components/tami4/ @Guy293
 /tests/components/tami4/ @Guy293
 /homeassistant/components/tankerkoenig/ @guillempages @mib1185 @jpbede

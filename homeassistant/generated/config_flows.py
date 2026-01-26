@@ -677,6 +677,7 @@ FLOWS = {
         "tado",
         "tailscale",
         "tailwind",
+        "takvim",
         "tami4",
         "tankerkoenig",
         "tasmota",
