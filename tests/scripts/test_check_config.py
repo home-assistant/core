@@ -136,7 +136,6 @@ def test_secrets() -> None:
         "login_attempts_threshold": -1,
         "server_port": 8123,
         "ssl_profile": "modern",
-        "upload_limits": {},
         "use_x_frame_options": True,
     }
     assert res["secret_cache"] == {

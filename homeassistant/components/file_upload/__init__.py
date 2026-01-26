@@ -14,9 +14,9 @@ import tempfile
 from aiohttp import BodyPartReader, web
 import voluptuous as vol
 
-from homeassistant.components.http import KEY_HASS, HomeAssistantView, get_upload_limit
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import CONF_FILE_UPLOAD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -28,7 +28,7 @@ DOMAIN = "file_upload"
 _DATA: HassKey[FileUploadData] = HassKey(DOMAIN)
 
 ONE_MEGABYTE = 1024 * 1024
-DEFAULT_MAX_SIZE = 100 * ONE_MEGABYTE
+MAX_SIZE = 100 * ONE_MEGABYTE
 TEMP_DIR_NAME = f"home-assistant-{DOMAIN}"
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -129,12 +129,10 @@ class FileUploadView(HomeAssistantView):
 
     async def _upload_file(self, request: web.Request) -> web.Response:
         """Handle uploaded file."""
-        hass = request.app[KEY_HASS]
         # Increase max payload
-        request._client_max_size = get_upload_limit(  # noqa: SLF001
-            hass, CONF_FILE_UPLOAD, DEFAULT_MAX_SIZE
-        )
+        request._client_max_size = MAX_SIZE  # noqa: SLF001
 
+        hass = request.app[KEY_HASS]
         reader = await request.multipart()
         file_field_reader = await reader.next()
         filename: str | None

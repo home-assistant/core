@@ -10,7 +10,6 @@ from functools import partial
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
 import os
-import re
 import socket
 import ssl
 from tempfile import NamedTemporaryFile
@@ -32,11 +31,6 @@ from yarl import URL
 
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import (
-    CONF_DEFAULT,
-    CONF_FILE_UPLOAD,
-    CONF_IMAGE_UPLOAD,
-    CONF_MEDIA_SOURCE,
-    CONF_UPLOAD_LIMITS,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     SERVER_PORT,
@@ -63,7 +57,6 @@ from homeassistant.setup import (
 )
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 from homeassistant.util.async_ import create_eager_task
-from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
@@ -105,48 +98,6 @@ NO_LOGIN_ATTEMPT_THRESHOLD: Final = -1
 
 MAX_CLIENT_SIZE: Final = 1024**2 * 16
 MAX_LINE_SIZE: Final = 24570
-_UPLOAD_LIMITS: HassKey[dict[str, int]] = HassKey("http_upload_limits")
-
-_BYTE_SIZE_RE = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?\s*$")
-_BYTE_SIZE_MULTIPLIERS: Final[dict[str, int]] = {
-    "b": 1,
-    "byte": 1,
-    "bytes": 1,
-    "kb": 1000,
-    "mb": 1000**2,
-    "gb": 1000**3,
-    "kib": 1024,
-    "mib": 1024**2,
-    "gib": 1024**3,
-}
-
-
-def _byte_size(value: float | str) -> int:
-    """Return a size in bytes from a size string or number."""
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    if not isinstance(value, str):
-        raise vol.Invalid("Upload limit must be a number or a size string")
-
-    match = _BYTE_SIZE_RE.match(value)
-    if match is None:
-        raise vol.Invalid("Upload limit must be a number or a size string")
-
-    number_str, unit = match.groups()
-    number = float(number_str)
-    if number <= 0:
-        raise vol.Invalid("Upload limit must be greater than 0")
-
-    if unit is None:
-        return int(number)
-
-    multiplier = _BYTE_SIZE_MULTIPLIERS.get(unit.strip().lower())
-    if multiplier is None:
-        raise vol.Invalid("Upload limit unit is not supported")
-
-    return int(number * multiplier)
 
 
 STORAGE_KEY: Final = DOMAIN
@@ -183,20 +134,6 @@ HTTP_SCHEMA: Final = vol.All(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
             vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
-            vol.Optional(CONF_UPLOAD_LIMITS, default={}): vol.Schema(
-                {
-                    vol.Optional(CONF_DEFAULT): vol.All(_byte_size, vol.Range(min=1)),
-                    vol.Optional(CONF_FILE_UPLOAD): vol.All(
-                        _byte_size, vol.Range(min=1)
-                    ),
-                    vol.Optional(CONF_IMAGE_UPLOAD): vol.All(
-                        _byte_size, vol.Range(min=1)
-                    ),
-                    vol.Optional(CONF_MEDIA_SOURCE): vol.All(
-                        _byte_size, vol.Range(min=1)
-                    ),
-                }
-            ),
         }
     ),
 )
@@ -235,13 +172,6 @@ class ConfData(TypedDict, total=False):
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
-    upload_limits: dict[str, int]
-
-
-@callback
-def get_upload_limit(hass: HomeAssistant, key: str, default: int) -> int:
-    """Return the configured upload limit for a given key."""
-    return hass.data.get(_UPLOAD_LIMITS, {}).get(key, default)
 
 
 @bind_hass
@@ -303,8 +233,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
-    upload_limits = conf[CONF_UPLOAD_LIMITS]
-    hass.data[_UPLOAD_LIMITS] = upload_limits
 
     source_ip_task = create_eager_task(async_get_source_ip(hass))
 
@@ -317,7 +245,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ssl_key=ssl_key,
         trusted_proxies=trusted_proxies,
         ssl_profile=ssl_profile,
-        client_max_size=upload_limits.get(CONF_DEFAULT, MAX_CLIENT_SIZE),
     )
     await server.async_initialize(
         cors_origins=cors_origins,
@@ -440,12 +367,11 @@ class HomeAssistantHTTP:
         server_port: int,
         trusted_proxies: list[IPv4Network | IPv6Network],
         ssl_profile: str,
-        client_max_size: int,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
         self.app = HomeAssistantApplication(
             middlewares=[],
-            client_max_size=client_max_size,
+            client_max_size=MAX_CLIENT_SIZE,
             handler_args={
                 "max_line_size": MAX_LINE_SIZE,
                 "max_field_size": MAX_LINE_SIZE,

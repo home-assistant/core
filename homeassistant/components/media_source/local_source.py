@@ -16,7 +16,6 @@ import voluptuous as vol
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http import require_admin
 from homeassistant.components.media_player import BrowseError, MediaClass
-from homeassistant.const import CONF_MEDIA_SOURCE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
@@ -25,7 +24,7 @@ from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES, MEDIA_SOURCE_DATA
 from .error import Unresolvable
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
-DEFAULT_MAX_UPLOAD_SIZE = 1024 * 1024 * 20
+MAX_UPLOAD_SIZE = 1024 * 1024 * 20
 LOGGER = logging.getLogger(__name__)
 
 
@@ -351,9 +350,7 @@ class UploadMediaView(http.HomeAssistantView):
         hass = request.app[http.KEY_HASS]
 
         # Increase max payload
-        request._client_max_size = http.get_upload_limit(  # noqa: SLF001
-            hass, CONF_MEDIA_SOURCE, DEFAULT_MAX_UPLOAD_SIZE
-        )
+        request._client_max_size = MAX_UPLOAD_SIZE  # noqa: SLF001
 
         try:
             data = self.schema(dict(await request.post()))

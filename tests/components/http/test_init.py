@@ -14,7 +14,6 @@ import pytest
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import cloud, http
 from homeassistant.components.cloud import CloudNotAvailable
-from homeassistant.const import CONF_DEFAULT, CONF_MEDIA_SOURCE, CONF_UPLOAD_LIMITS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
@@ -119,25 +118,6 @@ async def test_homeassistant_assigned_to_app(hass: HomeAssistant) -> None:
     assert hass.http.app[KEY_HASS] == hass
     assert hass.http.app["hass"] == hass  # For backwards compatibility
     await hass.async_stop()
-
-
-async def test_upload_limits_config(hass: HomeAssistant) -> None:
-    """Test upload limits can be configured."""
-    assert await async_setup_component(
-        hass,
-        http.DOMAIN,
-        {
-            http.DOMAIN: {
-                CONF_UPLOAD_LIMITS: {
-                    CONF_DEFAULT: 2 * 1024,
-                    CONF_MEDIA_SOURCE: 3 * 1024,
-                }
-            }
-        },
-    )
-
-    assert hass.http.app._client_max_size == 2 * 1024
-    assert http.get_upload_limit(hass, CONF_MEDIA_SOURCE, 10 * 1024) == 3 * 1024
 
 
 async def test_not_log_password(
