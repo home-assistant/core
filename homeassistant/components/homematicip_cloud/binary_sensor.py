@@ -125,6 +125,8 @@ async def async_setup_entry(
             entities.append(HomematicipPresenceDetector(hap, device))
         if isinstance(device, SmokeDetector):
             entities.append(HomematicipSmokeDetector(hap, device))
+            if hasattr(device, "chamberDegraded"):
+                entities.append(HomematicipSmokeDetectorChamberDegraded(hap, device))
         if isinstance(device, WaterSensor):
             entities.append(HomematicipWaterDetector(hap, device))
         if isinstance(device, (RainSensor, WeatherSensorPlus, WeatherSensorPro)):
@@ -320,6 +322,23 @@ class HomematicipSmokeDetector(HomematicipGenericEntity, BinarySensorEntity):
                 == SmokeDetectorAlarmType.PRIMARY_ALARM
             )
         return False
+
+
+class HomematicipSmokeDetectorChamberDegraded(
+    HomematicipGenericEntity, BinarySensorEntity
+):
+    """Representation of the HomematicIP smoke detector chamber health."""
+
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize smoke detector chamber health sensor."""
+        super().__init__(hap, device, post="Chamber Degraded")
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if smoke chamber is degraded."""
+        return self._device.chamberDegraded
 
 
 class HomematicipWaterDetector(HomematicipGenericEntity, BinarySensorEntity):
