@@ -22,6 +22,16 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Create a mocked Green Planet Energy API."""
+    with patch(
+        "homeassistant.components.green_planet_energy.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
 def mock_api() -> Generator[MagicMock]:
     """Create a mocked Green Planet Energy API."""
     with (

@@ -1,6 +1,6 @@
 """Test the Green Planet Energy config flow."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from greenplanet_energy_api import (
     GreenPlanetEnergyAPIError,
@@ -8,37 +8,30 @@ from greenplanet_energy_api import (
 )
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.green_planet_energy.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
 
-async def test_form_user_init(hass: HomeAssistant) -> None:
-    """Test we get the user form."""
+
+async def test_form_create_entry(
+    hass: HomeAssistant, mock_api: MagicMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test creating an entry."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
     assert result["step_id"] == "user"
 
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-async def test_form_create_entry(hass: HomeAssistant, mock_api: MagicMock) -> None:
-    """Test creating an entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-    await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Green Planet Energy"
-    assert result2["data"] == {}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Green Planet Energy"
+    assert result["data"] == {}
 
 
 @pytest.mark.parametrize(
@@ -50,73 +43,45 @@ async def test_form_create_entry(hass: HomeAssistant, mock_api: MagicMock) -> No
     ],
 )
 async def test_form_errors_and_recovery(
-    hass: HomeAssistant, mock_api: MagicMock, exception: Exception, error_base: str
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    error_base: str,
 ) -> None:
     """Test handling errors and recovery."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     # Set the mock to raise an error
     mock_api.get_electricity_prices.side_effect = exception
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": error_base}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_base}
 
     # Reset the mock to not raise an error and test recovery
     mock_api.get_electricity_prices.side_effect = None
 
-    result3 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Green Planet Energy"
-    assert result3["data"] == {}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_already_configured(
-    hass: HomeAssistant, mock_api: MagicMock, mock_config_entry
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort if already configured."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
-
-
-async def test_single_instance_allowed(
-    hass: HomeAssistant, mock_api: MagicMock
-) -> None:
-    """Test we only allow a single config entry."""
-    # Create the first entry
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},
-    )
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Green Planet Energy"
-    await hass.async_block_till_done()
-
-    # Try to add a second entry
-    result3 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result3["type"] is FlowResultType.ABORT
-    assert result3["reason"] == "single_instance_allowed"

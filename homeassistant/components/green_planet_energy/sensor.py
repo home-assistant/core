@@ -14,7 +14,6 @@ from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -29,9 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 class GreenPlanetEnergySensorEntityDescription(SensorEntityDescription):
     """Describes Green Planet Energy sensor entity."""
 
-    value_fn: Callable[[GreenPlanetEnergyAPI, dict[str, Any]], float | None] | None = (
-        None
-    )
+    value_fn: Callable[[GreenPlanetEnergyAPI, dict[str, Any]], float | None]
 
 
 SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
@@ -48,6 +45,7 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         translation_key="lowest_price_day",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=4,
+        translation_placeholders={"time_range": "(06:00-18:00)"},
         value_fn=lambda api, data: api.get_lowest_price_day(data),
     ),
     GreenPlanetEnergySensorEntityDescription(
@@ -55,6 +53,7 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         translation_key="lowest_price_night",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=4,
+        translation_placeholders={"time_range": "(18:00-06:00)"},
         value_fn=lambda api, data: api.get_lowest_price_night(data),
     ),
     GreenPlanetEnergySensorEntityDescription(
@@ -76,7 +75,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        GreenPlanetEnergySensor(coordinator, description, config_entry)
+        GreenPlanetEnergySensor(coordinator, description)
         for description in SENSOR_DESCRIPTIONS
     )
 
@@ -93,7 +92,6 @@ class GreenPlanetEnergySensor(
         self,
         coordinator: GreenPlanetEnergyUpdateCoordinator,
         description: GreenPlanetEnergySensorEntityDescription,
-        config_entry: GreenPlanetEnergyConfigEntry,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -101,72 +99,14 @@ class GreenPlanetEnergySensor(
         # Use fixed unique_id with just the key for predictable entity IDs
         self._attr_unique_id = description.key
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, config_entry.entry_id)},
+            identifiers={(DOMAIN, DOMAIN)},
             name="Green Planet Energy",
             entry_type=DeviceEntryType.SERVICE,
         )
 
     @property
-    def name(self) -> str | UndefinedType | None:
-        """Return the name of the entity."""
-        base_name = super().name
-        if base_name is None or base_name is UNDEFINED:
-            return base_name
-        if self.entity_description.key == "gpe_lowest_price_day":
-            return f"{base_name} (06:00-18:00)"
-        if self.entity_description.key == "gpe_lowest_price_night":
-            return f"{base_name} (18:00-06:00)"
-        return base_name
-
-    @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        # Use value_fn to get calculated values
-        if self.entity_description.value_fn:
-            return self.entity_description.value_fn(
-                self.coordinator.api, self.coordinator.data
-            )
-
-        # All our sensors have value_fn
-        return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return additional state attributes."""
-        if self.entity_description.key == "gpe_highest_price_today":
-            _, hour = self.coordinator.api.get_highest_price_today_with_hour(
-                self.coordinator.data
-            )
-            return {
-                "time_slot": f"{hour:02d}:00-{hour + 1:02d}:00"
-                if hour is not None
-                else None,
-            }
-
-        if self.entity_description.key == "gpe_lowest_price_day":
-            _, hour = self.coordinator.api.get_lowest_price_day_with_hour(
-                self.coordinator.data
-            )
-            return {
-                "time_slot": f"{hour:02d}:00-{hour + 1:02d}:00"
-                if hour is not None
-                else None,
-            }
-
-        if self.entity_description.key == "gpe_lowest_price_night":
-            _, hour = self.coordinator.api.get_lowest_price_night_with_hour(
-                self.coordinator.data
-            )
-            return {
-                "time_slot": f"{hour:02d}:00-{hour + 1:02d}:00"
-                if hour is not None
-                else None,
-            }
-
-        if self.entity_description.key == "gpe_current_price":
-            current_hour = dt_util.now().hour
-            return {
-                "time_slot": f"{current_hour:02d}:00-{current_hour + 1:02d}:00",
-            }
-
-        return None
+        return self.entity_description.value_fn(
+            self.coordinator.api, self.coordinator.data
+        )

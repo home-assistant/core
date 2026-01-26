@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 4,
@@ -41,7 +42,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Green Planet Energy Current price',
-      'time_slot': '05:00-06:00',
       'unit_of_measurement': '€/kWh',
     }),
     'context': <ANY>,
@@ -73,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest price today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 4,
@@ -94,7 +95,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Green Planet Energy Highest price today',
-      'time_slot': '23:00-24:00',
       'unit_of_measurement': '€/kWh',
     }),
     'context': <ANY>,
@@ -126,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lowest price day (06:00-18:00)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 4,
@@ -147,7 +148,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Green Planet Energy Lowest price day (06:00-18:00)',
-      'time_slot': '06:00-07:00',
       'unit_of_measurement': '€/kWh',
     }),
     'context': <ANY>,
@@ -179,6 +179,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lowest price night (18:00-06:00)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 4,
@@ -200,7 +201,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Green Planet Energy Lowest price night (18:00-06:00)',
-      'time_slot': '00:00-01:00',
       'unit_of_measurement': '€/kWh',
     }),
     'context': <ANY>,

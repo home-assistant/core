@@ -23,10 +23,10 @@
         "name": "Highest price today"
       },
       "lowest_price_day": {
-        "name": "Lowest price day"
+        "name": "Lowest price day {time_range}"
       },
       "lowest_price_night": {
-        "name": "Lowest price night"
+        "name": "Lowest price night {time_range}"
       }
     }
   },
