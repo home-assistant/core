@@ -1,0 +1,18 @@
+{
+  "resultCode": "0000",
+  "result": {
+    "dataList": [
+      { "energyUsage": 10.0, "usedDate": "20241001" },
+      { "energyUsage": 20.0, "usedDate": "20241002" },
+      { "energyUsage": 30.0, "usedDate": "20241003" },
+      { "energyUsage": 40.0, "usedDate": "20241004" },
+      { "energyUsage": 50.0, "usedDate": "20241005" },
+      { "energyUsage": 60.0, "usedDate": "20241006" },
+      { "energyUsage": 70.0, "usedDate": "20241007" },
+      { "energyUsage": 80.0, "usedDate": "20241008" },
+      { "energyUsage": 90.0, "usedDate": "20241009" },
+      { "energyUsage": 100.0, "usedDate": "20241010" }
+    ],
+    "property": ["energyUsage"]
+  }
+}

@@ -1151,8 +1151,52 @@
     }
   },
   "exceptions": {
+    "command_not_supported": {
+      "message": "The command is not supported: {message}"
+    },
+    "end_date_before_start_date": {
+      "message": "End date must be after start date."
+    },
     "failed_to_connect_mqtt": {
       "message": "Failed to connect MQTT: {error}"
+    },
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided."
+    },
+    "invalid_device_id": {
+      "message": "Device for given device ID has not been configured."
+    }
+  },
+  "selector": {
+    "period_type": {
+      "options": {
+        "daily": "Daily",
+        "monthly": "Monthly"
+      }
+    }
+  },
+  "services": {
+    "get_energy_usage": {
+      "description": "Fetch energy usage by period. Retry after the next hour if rate-limited.",
+      "fields": {
+        "device_id": {
+          "description": "Select a device",
+          "name": "[%key:common::config_flow::data::device%]"
+        },
+        "end_date": {
+          "description": "Maximum of 31 days (daily basis) and 6 months (monthly basis)",
+          "name": "End"
+        },
+        "period": {
+          "description": "Select a daily or monthly options",
+          "name": "Period"
+        },
+        "start_date": {
+          "description": "Maximum of 31 days (daily basis) and 6 months (monthly basis)",
+          "name": "[%key:common::action::start%]"
+        }
+      },
+      "name": "Get energy usage"
     }
   }
 }
