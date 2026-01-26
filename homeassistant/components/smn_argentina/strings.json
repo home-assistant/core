@@ -1,0 +1,95 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This location is already configured."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to SMN. Please check your internet connection and try again.",
+      "unknown": "An unexpected error occurred. Please try again."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "name": "Location name"
+        },
+        "data_description": {
+          "latitude": "Latitude of the location",
+          "longitude": "Longitude of the location",
+          "name": "Name for this weather location"
+        },
+        "description": "Set up the Servicio Meteorológico Nacional de Argentina (SMN) weather integration.",
+        "title": "Configure SMN Weather"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "alert_altas_temperaturas": {
+        "name": "High temperature alert"
+      },
+      "alert_bajas_temperaturas": {
+        "name": "Low temperature alert"
+      },
+      "alert_ceniza_volcanica": {
+        "name": "Volcanic ash alert"
+      },
+      "alert_humo": {
+        "name": "Smoke alert"
+      },
+      "alert_lluvia": {
+        "name": "Rain alert"
+      },
+      "alert_nevada": {
+        "name": "Snow alert"
+      },
+      "alert_niebla": {
+        "name": "Fog alert"
+      },
+      "alert_polvo": {
+        "name": "Dust alert"
+      },
+      "alert_tormenta": {
+        "name": "Thunderstorm alert"
+      },
+      "alert_viento": {
+        "name": "Wind alert"
+      },
+      "alert_viento_zonda": {
+        "name": "Zonda wind alert"
+      },
+      "short_term_alert": {
+        "name": "Short-term alert"
+      },
+      "weather_alert": {
+        "name": "Weather alert"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "name": "Location name"
+        },
+        "description": "Update your SMN weather settings.",
+        "title": "Configure SMN Weather"
+      }
+    }
+  },
+  "services": {
+    "get_alerts_for_location": {
+      "description": "Queries weather alerts for a specific SMN location ID (for example Buenos Aires City: 4864). Returns active alerts with severity levels, descriptions, and instructions for use in automations.",
+      "fields": {
+        "location_id": {
+          "description": "The SMN location ID to fetch alerts for. Example: 4864 for Buenos Aires City.",
+          "name": "Location ID"
+        }
+      },
+      "name": "Get Alerts for Location"
+    }
+  }
+}
