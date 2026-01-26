@@ -19,6 +19,28 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import create_mock_config_entry
 
 
+async def test_form_without_credentials(hass: HomeAssistant, mock_nrgkick_api) -> None:
+    """Test we can set up successfully without credentials."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.nrgkick.async_setup_entry",
+        return_value=True,
+    ):
+        flow_id = result["flow_id"]
+        result2 = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {CONF_HOST: "192.168.1.100"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "NRGkick Test"
+    assert result2["data"] == {CONF_HOST: "192.168.1.100"}
+
+
 async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we can setup when authentication is required."""
     result = await hass.config_entries.flow.async_init(
@@ -67,28 +89,6 @@ async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
         CONF_PASSWORD: "test_pass",
     }
     mock_setup_entry.assert_called_once()
-
-
-async def test_form_without_credentials(hass: HomeAssistant, mock_nrgkick_api) -> None:
-    """Test we can setup without credentials."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.nrgkick.async_setup_entry",
-        return_value=True,
-    ):
-        flow_id = result["flow_id"]
-        result2 = await hass.config_entries.flow.async_configure(
-            flow_id,
-            {CONF_HOST: "192.168.1.100"},
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "NRGkick Test"
-    assert result2["data"] == {CONF_HOST: "192.168.1.100"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant, mock_nrgkick_api) -> None:
