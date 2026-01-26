@@ -47,6 +47,16 @@
       }
     },
     "sensor": {
+      "player_playing_time": {
+        "name": "{nickname} used screen time",
+        "state_attributes": {
+          "games": { "name": "Games" },
+          "image": { "name": "Image link" },
+          "playing_time": { "name": "Playing time" },
+          "shop": { "name": "Shop link" },
+          "title": { "name": "Title" }
+        }
+      },
       "playing_time": {
         "name": "Used screen time"
       },

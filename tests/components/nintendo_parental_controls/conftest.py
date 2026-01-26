@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pynintendoparental import NintendoParental
 from pynintendoparental.device import Device
 from pynintendoparental.enum import DeviceTimerMode
+from pynintendoparental.player import Player
 import pytest
 
 from homeassistant.components.nintendo_parental_controls.const import DOMAIN
@@ -27,7 +28,29 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_nintendo_device() -> Device:
+def mock_nintendo_player() -> Player:
+    """Return a mocked player."""
+    # This class has no async methods
+    mock = MagicMock(spec=Player)
+    mock.player_id = "testplayerid"
+    mock.nickname = "HA Gamer"
+    mock.apps = [
+        {
+            "playingTime": 15,
+            "meta": {
+                "title": "Test Game Name",
+                "imageUri": {"medium": "http://localhost/medium.png"},
+                "shopUri": "http://localhost/shop-test-game-name",
+            },
+        }
+    ]
+    mock.playing_time = 110
+    mock.player_image = "http://localhost/image.png"
+    return mock
+
+
+@pytest.fixture
+def mock_nintendo_device(mock_nintendo_player: Player) -> Device:
     """Return a mocked device."""
     mock = AsyncMock(spec=Device)
     mock.device_id = "testdevid"
@@ -49,6 +72,9 @@ def mock_nintendo_device() -> Device:
     mock.forced_termination_mode = True
     mock.model = "Test Model"
     mock.generation = "P00"
+    mock.players = {mock_nintendo_player.player_id: mock_nintendo_player}
+    mock.get_player = MagicMock()
+    mock.get_player.return_value = mock_nintendo_player
     return mock
 
 
