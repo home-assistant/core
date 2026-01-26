@@ -1,0 +1,114 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register any actions.
+  appropriate-polling:
+    status: exempt
+    comment: Integration does not poll.
+  brands: done
+  common-modules:
+    status: exempt
+    comment: Integration does not have any entities or coordinators.
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register any actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not have any entities.
+  entity-unique-id:
+    status: exempt
+    comment: Integration does not have any entities.
+  has-entity-name:
+    status: exempt
+    comment: Integration does not have any entities.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register any actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration does not have any configuration parameters.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: Integration does not have any entities.
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates:
+    status: exempt
+    comment: Integration does not make any entity updates.
+  reauthentication-flow: done
+  test-coverage: todo
+
+  # Gold
+  devices:
+    status: exempt
+    comment: Integration does not have any entities.
+  diagnostics:
+    status: exempt
+    comment: Integration does not have any data to diagnose.
+  discovery-update-info:
+    status: exempt
+    comment: Integration is a service.
+  discovery:
+    status: exempt
+    comment: Integration is a service.
+  docs-data-update:
+    status: exempt
+    comment: Integration does not update any data.
+  docs-examples:
+    status: exempt
+    comment: Integration only provides backup functionality.
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: exempt
+    comment: Integration does not support any devices.
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Integration does not use any devices.
+  entity-category:
+    status: exempt
+    comment: Integration does not have any entities.
+  entity-device-class:
+    status: exempt
+    comment: Integration does not have any entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Integration does not have any entities.
+  entity-translations:
+    status: exempt
+    comment: Integration does not have any entities.
+  exception-translations: todo
+  icon-translations:
+    status: exempt
+    comment: Integration does not have any entities.
+  reconfiguration-flow:
+    status: exempt
+    comment: Integration does not have any configuration options.
+  repair-issues:
+    status: exempt
+    comment: Integration does not have any repairs.
+  stale-devices:
+    status: exempt
+    comment: Integration does not have any devices.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

@@ -2105,6 +2105,9 @@ python-awair==0.2.5
 # homeassistant.components.bsblan
 python-bsblan==4.1.0
 
+# homeassistant.components.dropbox
+python-dropbox-api==0.1.2
+
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
 
