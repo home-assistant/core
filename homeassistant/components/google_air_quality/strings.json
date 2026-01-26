@@ -59,6 +59,27 @@
         "user": "Add location"
       },
       "step": {
+        "forecast": {
+          "data": {
+            "forecast": "Enable forecast for the next hour"
+          },
+          "data_description": {
+            "forecast": "Turn on the air-quality forecast for the next hour"
+          },
+          "description": "Configure the air-quality forecast settings.",
+          "sections": {
+            "section_addtitional_forecasts": {
+              "data": {
+                "additional_forecast_times": "Additional forecast time"
+              },
+              "data_description": {
+                "additional_forecast_times": "Hours for which the forecast should apply. Multiple selections allowed."
+              },
+              "name": "Additional forecast times"
+            }
+          },
+          "title": "Air-quality forecasts"
+        },
         "location": {
           "data": {
             "location": "[%key:common::config_flow::data::location%]",
@@ -72,6 +93,11 @@
           "title": "Air quality data location"
         }
       }
+    }
+  },
+  "device": {
+    "forecast": {
+      "name": "{location} forecast {forecast_period}h"
     }
   },
   "entity": {

@@ -165,6 +165,1845 @@
     'state': '0.26902',
   })
 # ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_carbon_monoxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_1h_carbon_monoxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
+    'original_icon': None,
+    'original_name': 'Carbon monoxide',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'forecast_1_co_10.1_20.1',
+    'unit_of_measurement': 'ppm',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_carbon_monoxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'carbon_monoxide',
+      'friendly_name': 'Home forecast 1h Carbon monoxide',
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_1h_carbon_monoxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.16418',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_lqi_de_category-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_good_air_quality',
+        'good_air_quality',
+        'moderate_air_quality',
+        'poor_air_quality',
+        'very_poor_air_quality',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_1h_lqi_de_category',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'LQI (DE) category',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'local_category',
+    'unique_id': 'forecast_1_local_category_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_lqi_de_category-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'enum',
+      'friendly_name': 'Home forecast 1h LQI (DE) category',
+      'options': list([
+        'very_good_air_quality',
+        'good_air_quality',
+        'moderate_air_quality',
+        'poor_air_quality',
+        'very_poor_air_quality',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_1h_lqi_de_category',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'very_good_air_quality',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_lqi_de_dominant_pollutant-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no2',
+        'o3',
+        'pm25',
+        'pm10',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_1h_lqi_de_dominant_pollutant',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'LQI (DE) dominant pollutant',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'local_dominant_pollutant',
+    'unique_id': 'forecast_1_local_dominant_pollutant_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_lqi_de_dominant_pollutant-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'enum',
+      'friendly_name': 'Home forecast 1h LQI (DE) dominant pollutant',
+      'options': list([
+        'no2',
+        'o3',
+        'pm25',
+        'pm10',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_1h_lqi_de_dominant_pollutant',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'o3',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_nitrogen_dioxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_1h_nitrogen_dioxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Nitrogen dioxide',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'nitrogen_dioxide',
+    'unique_id': 'forecast_1_no2_10.1_20.1',
+    'unit_of_measurement': 'ppb',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_nitrogen_dioxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'friendly_name': 'Home forecast 1h Nitrogen dioxide',
+      'unit_of_measurement': 'ppb',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_1h_nitrogen_dioxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.88',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_ozone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_1h_ozone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ozone',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ozone',
+    'unique_id': 'forecast_1_o3_10.1_20.1',
+    'unit_of_measurement': 'ppb',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_ozone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'friendly_name': 'Home forecast 1h Ozone',
+      'unit_of_measurement': 'ppb',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_1h_ozone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24.29',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_pm10-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_1h_pm10',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
+    'original_icon': None,
+    'original_name': 'PM10',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'forecast_1_pm10_10.1_20.1',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_pm10-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'pm10',
+      'friendly_name': 'Home forecast 1h PM10',
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_1h_pm10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.02',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_pm2_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_1h_pm2_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
+    'original_icon': None,
+    'original_name': 'PM2.5',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'forecast_1_pm25_10.1_20.1',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_pm2_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'pm25',
+      'friendly_name': 'Home forecast 1h PM2.5',
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_1h_pm2_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.32',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_sulphur_dioxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_1h_sulphur_dioxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sulphur dioxide',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sulphur_dioxide',
+    'unique_id': 'forecast_1_so2_10.1_20.1',
+    'unit_of_measurement': 'ppb',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_sulphur_dioxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'friendly_name': 'Home forecast 1h Sulphur dioxide',
+      'unit_of_measurement': 'ppb',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_1h_sulphur_dioxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.37',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_uaqi_category-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'excellent_air_quality',
+        'good_air_quality',
+        'moderate_air_quality',
+        'low_air_quality',
+        'poor_air_quality',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_1h_uaqi_category',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'UAQI category',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uaqi_category',
+    'unique_id': 'forecast_1_uaqi_category_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_uaqi_category-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'enum',
+      'friendly_name': 'Home forecast 1h UAQI category',
+      'options': list([
+        'excellent_air_quality',
+        'good_air_quality',
+        'moderate_air_quality',
+        'low_air_quality',
+        'poor_air_quality',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_1h_uaqi_category',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'excellent_air_quality',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_uaqi_dominant_pollutant-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'co',
+        'no2',
+        'o3',
+        'pm10',
+        'pm25',
+        'so2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_1h_uaqi_dominant_pollutant',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'UAQI dominant pollutant',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uaqi_dominant_pollutant',
+    'unique_id': 'forecast_1_uaqi_dominant_pollutant_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_uaqi_dominant_pollutant-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'enum',
+      'friendly_name': 'Home forecast 1h UAQI dominant pollutant',
+      'options': list([
+        'co',
+        'no2',
+        'o3',
+        'pm10',
+        'pm25',
+        'so2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_1h_uaqi_dominant_pollutant',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'o3',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_universal_air_quality_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_1h_universal_air_quality_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
+    'original_icon': None,
+    'original_name': 'Universal Air Quality Index',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uaqi',
+    'unique_id': 'forecast_1_uaqi_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_1h_universal_air_quality_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'aqi',
+      'friendly_name': 'Home forecast 1h Universal Air Quality Index',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_1h_universal_air_quality_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_carbon_monoxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_3h_carbon_monoxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
+    'original_icon': None,
+    'original_name': 'Carbon monoxide',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'forecast_3_co_10.1_20.1',
+    'unit_of_measurement': 'ppm',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_carbon_monoxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'carbon_monoxide',
+      'friendly_name': 'Home forecast 3h Carbon monoxide',
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_3h_carbon_monoxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.16418',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_lqi_de_category-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_good_air_quality',
+        'good_air_quality',
+        'moderate_air_quality',
+        'poor_air_quality',
+        'very_poor_air_quality',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_3h_lqi_de_category',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'LQI (DE) category',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'local_category',
+    'unique_id': 'forecast_3_local_category_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_lqi_de_category-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'enum',
+      'friendly_name': 'Home forecast 3h LQI (DE) category',
+      'options': list([
+        'very_good_air_quality',
+        'good_air_quality',
+        'moderate_air_quality',
+        'poor_air_quality',
+        'very_poor_air_quality',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_3h_lqi_de_category',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'very_good_air_quality',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_lqi_de_dominant_pollutant-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no2',
+        'o3',
+        'pm25',
+        'pm10',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_3h_lqi_de_dominant_pollutant',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'LQI (DE) dominant pollutant',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'local_dominant_pollutant',
+    'unique_id': 'forecast_3_local_dominant_pollutant_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_lqi_de_dominant_pollutant-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'enum',
+      'friendly_name': 'Home forecast 3h LQI (DE) dominant pollutant',
+      'options': list([
+        'no2',
+        'o3',
+        'pm25',
+        'pm10',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_3h_lqi_de_dominant_pollutant',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'o3',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_nitrogen_dioxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_3h_nitrogen_dioxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Nitrogen dioxide',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'nitrogen_dioxide',
+    'unique_id': 'forecast_3_no2_10.1_20.1',
+    'unit_of_measurement': 'ppb',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_nitrogen_dioxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'friendly_name': 'Home forecast 3h Nitrogen dioxide',
+      'unit_of_measurement': 'ppb',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_3h_nitrogen_dioxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.88',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_ozone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_3h_ozone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ozone',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ozone',
+    'unique_id': 'forecast_3_o3_10.1_20.1',
+    'unit_of_measurement': 'ppb',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_ozone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'friendly_name': 'Home forecast 3h Ozone',
+      'unit_of_measurement': 'ppb',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_3h_ozone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24.29',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_pm10-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_3h_pm10',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
+    'original_icon': None,
+    'original_name': 'PM10',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'forecast_3_pm10_10.1_20.1',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_pm10-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'pm10',
+      'friendly_name': 'Home forecast 3h PM10',
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_3h_pm10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.02',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_pm2_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_3h_pm2_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
+    'original_icon': None,
+    'original_name': 'PM2.5',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'forecast_3_pm25_10.1_20.1',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_pm2_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'pm25',
+      'friendly_name': 'Home forecast 3h PM2.5',
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_3h_pm2_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.32',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_sulphur_dioxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_3h_sulphur_dioxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sulphur dioxide',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sulphur_dioxide',
+    'unique_id': 'forecast_3_so2_10.1_20.1',
+    'unit_of_measurement': 'ppb',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_sulphur_dioxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'friendly_name': 'Home forecast 3h Sulphur dioxide',
+      'unit_of_measurement': 'ppb',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_3h_sulphur_dioxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.37',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_uaqi_category-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'excellent_air_quality',
+        'good_air_quality',
+        'moderate_air_quality',
+        'low_air_quality',
+        'poor_air_quality',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_3h_uaqi_category',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'UAQI category',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uaqi_category',
+    'unique_id': 'forecast_3_uaqi_category_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_uaqi_category-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'enum',
+      'friendly_name': 'Home forecast 3h UAQI category',
+      'options': list([
+        'excellent_air_quality',
+        'good_air_quality',
+        'moderate_air_quality',
+        'low_air_quality',
+        'poor_air_quality',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_3h_uaqi_category',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'excellent_air_quality',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_uaqi_dominant_pollutant-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'co',
+        'no2',
+        'o3',
+        'pm10',
+        'pm25',
+        'so2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_3h_uaqi_dominant_pollutant',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'UAQI dominant pollutant',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uaqi_dominant_pollutant',
+    'unique_id': 'forecast_3_uaqi_dominant_pollutant_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_uaqi_dominant_pollutant-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'enum',
+      'friendly_name': 'Home forecast 3h UAQI dominant pollutant',
+      'options': list([
+        'co',
+        'no2',
+        'o3',
+        'pm10',
+        'pm25',
+        'so2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_3h_uaqi_dominant_pollutant',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'o3',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_universal_air_quality_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_3h_universal_air_quality_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
+    'original_icon': None,
+    'original_name': 'Universal Air Quality Index',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uaqi',
+    'unique_id': 'forecast_3_uaqi_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_3h_universal_air_quality_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'aqi',
+      'friendly_name': 'Home forecast 3h Universal Air Quality Index',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_3h_universal_air_quality_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_carbon_monoxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_6h_carbon_monoxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
+    'original_icon': None,
+    'original_name': 'Carbon monoxide',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'forecast_6_co_10.1_20.1',
+    'unit_of_measurement': 'ppm',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_carbon_monoxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'carbon_monoxide',
+      'friendly_name': 'Home forecast 6h Carbon monoxide',
+      'unit_of_measurement': 'ppm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_6h_carbon_monoxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.16418',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_lqi_de_category-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_good_air_quality',
+        'good_air_quality',
+        'moderate_air_quality',
+        'poor_air_quality',
+        'very_poor_air_quality',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_6h_lqi_de_category',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'LQI (DE) category',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'local_category',
+    'unique_id': 'forecast_6_local_category_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_lqi_de_category-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'enum',
+      'friendly_name': 'Home forecast 6h LQI (DE) category',
+      'options': list([
+        'very_good_air_quality',
+        'good_air_quality',
+        'moderate_air_quality',
+        'poor_air_quality',
+        'very_poor_air_quality',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_6h_lqi_de_category',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'very_good_air_quality',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_lqi_de_dominant_pollutant-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no2',
+        'o3',
+        'pm25',
+        'pm10',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_6h_lqi_de_dominant_pollutant',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'LQI (DE) dominant pollutant',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'local_dominant_pollutant',
+    'unique_id': 'forecast_6_local_dominant_pollutant_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_lqi_de_dominant_pollutant-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'enum',
+      'friendly_name': 'Home forecast 6h LQI (DE) dominant pollutant',
+      'options': list([
+        'no2',
+        'o3',
+        'pm25',
+        'pm10',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_6h_lqi_de_dominant_pollutant',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'o3',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_nitrogen_dioxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_6h_nitrogen_dioxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Nitrogen dioxide',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'nitrogen_dioxide',
+    'unique_id': 'forecast_6_no2_10.1_20.1',
+    'unit_of_measurement': 'ppb',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_nitrogen_dioxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'friendly_name': 'Home forecast 6h Nitrogen dioxide',
+      'unit_of_measurement': 'ppb',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_6h_nitrogen_dioxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.88',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_ozone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_6h_ozone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ozone',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ozone',
+    'unique_id': 'forecast_6_o3_10.1_20.1',
+    'unit_of_measurement': 'ppb',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_ozone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'friendly_name': 'Home forecast 6h Ozone',
+      'unit_of_measurement': 'ppb',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_6h_ozone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24.29',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_pm10-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_6h_pm10',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
+    'original_icon': None,
+    'original_name': 'PM10',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'forecast_6_pm10_10.1_20.1',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_pm10-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'pm10',
+      'friendly_name': 'Home forecast 6h PM10',
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_6h_pm10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.02',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_pm2_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_6h_pm2_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
+    'original_icon': None,
+    'original_name': 'PM2.5',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'forecast_6_pm25_10.1_20.1',
+    'unit_of_measurement': 'μg/m³',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_pm2_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'pm25',
+      'friendly_name': 'Home forecast 6h PM2.5',
+      'unit_of_measurement': 'μg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_6h_pm2_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.32',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_sulphur_dioxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_6h_sulphur_dioxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sulphur dioxide',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sulphur_dioxide',
+    'unique_id': 'forecast_6_so2_10.1_20.1',
+    'unit_of_measurement': 'ppb',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_sulphur_dioxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'friendly_name': 'Home forecast 6h Sulphur dioxide',
+      'unit_of_measurement': 'ppb',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_6h_sulphur_dioxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.37',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_uaqi_category-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'excellent_air_quality',
+        'good_air_quality',
+        'moderate_air_quality',
+        'low_air_quality',
+        'poor_air_quality',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_6h_uaqi_category',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'UAQI category',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uaqi_category',
+    'unique_id': 'forecast_6_uaqi_category_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_uaqi_category-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'enum',
+      'friendly_name': 'Home forecast 6h UAQI category',
+      'options': list([
+        'excellent_air_quality',
+        'good_air_quality',
+        'moderate_air_quality',
+        'low_air_quality',
+        'poor_air_quality',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_6h_uaqi_category',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'excellent_air_quality',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_uaqi_dominant_pollutant-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'co',
+        'no2',
+        'o3',
+        'pm10',
+        'pm25',
+        'so2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_6h_uaqi_dominant_pollutant',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'UAQI dominant pollutant',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uaqi_dominant_pollutant',
+    'unique_id': 'forecast_6_uaqi_dominant_pollutant_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_uaqi_dominant_pollutant-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'enum',
+      'friendly_name': 'Home forecast 6h UAQI dominant pollutant',
+      'options': list([
+        'co',
+        'no2',
+        'o3',
+        'pm10',
+        'pm25',
+        'so2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_6h_uaqi_dominant_pollutant',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'o3',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_universal_air_quality_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_forecast_6h_universal_air_quality_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
+    'original_icon': None,
+    'original_name': 'Universal Air Quality Index',
+    'platform': 'google_air_quality',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uaqi',
+    'unique_id': 'forecast_6_uaqi_10.1_20.1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.home_forecast_6h_universal_air_quality_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Google Air Quality',
+      'device_class': 'aqi',
+      'friendly_name': 'Home forecast 6h Universal Air Quality Index',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_forecast_6h_universal_air_quality_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
 # name: test_sensor_snapshot[sensor.home_lqi_de_category-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
