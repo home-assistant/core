@@ -37,7 +37,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as tcv
+from . import TriggerUpdateCoordinator, validators as template_validators
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -227,7 +227,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
         self.setup_state_template(
             CONF_STATE,
             "_attr_current_cover_position",
-            tcv.strenum(
+            template_validators.strenum(
                 self, CONF_STATE, CoverState, CoverState.OPEN, CoverState.CLOSED
             ),
             self._update_opening_and_closing,
@@ -235,12 +235,12 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
         self.setup_template(
             CONF_POSITION,
             "_attr_current_cover_position",
-            tcv.number(self, CONF_POSITION, 0, 100),
+            template_validators.number(self, CONF_POSITION, 0, 100),
         )
         self.setup_template(
             CONF_TILT,
             "_attr_current_cover_tilt_position",
-            tcv.number(self, CONF_TILT, 0, 100),
+            template_validators.number(self, CONF_TILT, 0, 100),
         )
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
