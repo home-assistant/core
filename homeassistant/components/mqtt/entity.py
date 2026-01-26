@@ -79,6 +79,7 @@ from .const import (
     CONF_ENABLED_BY_DEFAULT,
     CONF_ENCODING,
     CONF_ENTITY_PICTURE,
+    CONF_GROUP,
     CONF_HW_VERSION,
     CONF_IDENTIFIERS,
     CONF_JSON_ATTRS_TEMPLATE,
@@ -136,6 +137,7 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "device_class",
     "device_info",
     "entity_category",
+    "entity_id",
     "entity_picture",
     "entity_registry_enabled_default",
     "extra_state_attributes",
@@ -475,6 +477,8 @@ class MqttAttributesMixin(Entity):
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
         self._attributes_sub_state: dict[str, EntitySubscription] = {}
+        if CONF_GROUP in config:
+            self._attr_included_unique_ids = config[CONF_GROUP]
         self._attributes_config = config
 
     async def async_added_to_hass(self) -> None:
@@ -546,7 +550,7 @@ class MqttAttributesMixin(Entity):
             _LOGGER.warning("Erroneous JSON: %s", payload)
         else:
             if isinstance(json_dict, dict):
-                filtered_dict = {
+                filtered_dict: dict[str, Any] = {
                     k: v
                     for k, v in json_dict.items()
                     if k not in MQTT_ATTRIBUTES_BLOCKED
