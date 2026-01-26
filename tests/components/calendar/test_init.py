@@ -634,8 +634,6 @@ async def test_calendar_initial_color_invalid(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that invalid _attr_initial_color is ignored."""
-    from .conftest import MockCalendarEntity
-
     # Test various invalid color formats
     invalid_colors = [
         "FF0000",  # Missing #
