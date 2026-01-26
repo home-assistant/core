@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
@@ -25,7 +26,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -208,6 +211,7 @@ class MinMaxSensor(SensorEntity):
     _attr_icon = ICON
     _attr_should_poll = False
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_device_class = None
 
     def __init__(
         self,
@@ -259,6 +263,7 @@ class MinMaxSensor(SensorEntity):
             )
             self._async_min_max_sensor_state_listener(state_event, update_state=False)
 
+        self._update_device_class()
         self._calc_values()
 
     @property
@@ -344,6 +349,34 @@ class MinMaxSensor(SensorEntity):
 
         self._calc_values()
         self.async_write_ha_state()
+
+    @callback
+    def _update_device_class(self) -> None:
+        """Update device_class based on source entities.
+        
+        If all source entities have the same device_class, inherit it.
+        Otherwise, leave device_class as None.
+        """
+        device_classes: list[SensorDeviceClass | None] = []
+        
+        for entity_id in self._entity_ids:
+            try:
+                device_class = get_device_class(self.hass, entity_id)
+                if device_class:
+                    device_classes.append(SensorDeviceClass(device_class))
+                else:
+                    device_classes.append(None)
+            except (HomeAssistantError, ValueError):
+                # If we can't get device class for any entity, don't set it
+                device_classes.append(None)
+        
+        # Only inherit device_class if all entities have the same non-None device_class
+        if device_classes and all(
+            dc is not None and dc == device_classes[0] for dc in device_classes
+        ):
+            self._attr_device_class = device_classes[0]
+        else:
+            self._attr_device_class = None
 
     @callback
     def _calc_values(self) -> None:
