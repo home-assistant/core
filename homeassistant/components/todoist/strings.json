@@ -68,6 +68,18 @@
           "description": "The name of the project this task should belong to.",
           "name": "Project"
         },
+        "reminder_date": {
+          "description": "When the user should be reminded of this task, in format YYYY-MM-DDTHH:MM:SS, in UTC timezone.",
+          "name": "Reminder date"
+        },
+        "reminder_date_lang": {
+          "description": "The language of 'Reminder date string'.",
+          "name": "Reminder date language"
+        },
+        "reminder_date_string": {
+          "description": "When the user should be reminded of this task, in natural language.",
+          "name": "Reminder date string"
+        },
         "section": {
           "description": "The name of a section within the project to add the task to.",
           "name": "Section"
