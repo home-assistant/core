@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/liebherr",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "loggers": ["pyairobotrest"],
+  "loggers": ["pyliebherrhomeapi"],
   "quality_scale": "bronze",
   "requirements": ["pyliebherrhomeapi==0.2.1"],
   "zeroconf": [
