@@ -415,7 +415,7 @@ async def _async_fetch_any(
         for future in asyncio.as_completed(tasks):
             try:
                 return await future
-            except HomeAssistantError as err:
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.debug("Fetch failed: %s", err)
                 if return_err is None:
                     return_err = err
