@@ -132,7 +132,6 @@ class FileUploadView(HomeAssistantView):
         # Increase max payload
         request._client_max_size = MAX_SIZE  # noqa: SLF001
 
-        hass = request.app[KEY_HASS]
         reader = await request.multipart()
         file_field_reader = await reader.next()
         filename: str | None
@@ -149,6 +148,7 @@ class FileUploadView(HomeAssistantView):
         except ValueError as err:
             raise web.HTTPBadRequest from err
 
+        hass = request.app[KEY_HASS]
         file_id = ulid_hex()
 
         if _DATA not in hass.data:
