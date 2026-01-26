@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 from xml.etree.ElementTree import ParseError
 
 from pyhik.constants import SENSOR_MAP
-from pyhik.hikvision import HikCamera
+from pyhik.hikvision import HikCamera, VideoChannel, get_video_channels
 import requests
 
 from homeassistant.config_entries import ConfigEntry
@@ -38,6 +38,10 @@ class HikvisionData:
     device_id: str
     device_name: str
     device_type: str
+    host: str
+    username: str
+    password: str
+    channels: dict[int, VideoChannel] = field(default_factory=dict)
 
 
 type HikvisionConfigEntry = ConfigEntry[HikvisionData]
@@ -68,11 +72,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
     device_name = camera.get_name or host
     device_type = camera.get_type or "Camera"
 
+    # For NVRs, fetch video channel information
+    channels: dict[int, VideoChannel] = {}
+    if device_type == "NVR":
+        channel_list = await hass.async_add_executor_job(
+            get_video_channels, host, port, username, password, ssl
+        )
+        channels = {ch.id: ch for ch in channel_list}
+        _LOGGER.debug("Found %d video channels", len(channels))
+
     entry.runtime_data = HikvisionData(
         camera=camera,
         device_id=device_id,
         device_name=device_name,
         device_type=device_type,
+        host=host,
+        username=username,
+        password=password,
+        channels=channels,
     )
 
     _LOGGER.debug(

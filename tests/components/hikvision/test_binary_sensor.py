@@ -126,6 +126,7 @@ async def test_binary_sensor_no_sensors(
     assert len(states) == 0
 
 
+@pytest.mark.parametrize("amount_of_channels", [2])
 async def test_binary_sensor_nvr_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
