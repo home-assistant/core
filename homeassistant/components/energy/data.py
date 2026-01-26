@@ -510,10 +510,10 @@ class EnergyManager:
 
         # For inverted or two-sensor config, set stat_rate to the generated entity_id
         entity_id = generate_entity_id("battery", config)
-        # entity_id is always generated for valid inverted/combined configs
-        # (schema validation ensures one of the methods is present)
-        assert entity_id is not None
-        return {**source, "stat_rate": entity_id}
+        if entity_id:
+            return {**source, "stat_rate": entity_id}
+
+        return source
 
     def _process_grid_power(
         self,

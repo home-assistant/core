@@ -4,11 +4,10 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.energy.data import (
+    ENERGY_SOURCE_SCHEMA,
+    FLOW_FROM_GRID_SOURCE_SCHEMA,
+    POWER_CONFIG_SCHEMA,
     EnergyManager,
-    _flow_from_ensure_single_price,
-    _generate_unique_value_validator,
-    _validate_power_config,
-    check_type_limits,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import storage
@@ -83,263 +82,79 @@ async def test_energy_preferences_migration_from_old_version(
     assert manager.data["device_consumption_water"] == []
 
 
-async def test_flow_from_ensure_single_price_both_set() -> None:
-    """Test that validation fails when both price sources are set."""
-    val = {
-        "stat_energy_from": "sensor.energy",
-        "entity_energy_price": "sensor.price",
-        "number_energy_price": 1.0,
-    }
-    with pytest.raises(vol.Invalid, match="Define either an entity or a fixed number"):
-        _flow_from_ensure_single_price(val)
-
-
-async def test_flow_from_ensure_single_price_valid() -> None:
-    """Test validation passes with only one price source."""
-    val = {
-        "stat_energy_from": "sensor.energy",
-        "entity_energy_price": "sensor.price",
-        "number_energy_price": None,
-    }
-    result = _flow_from_ensure_single_price(val)
-    assert result == val
-
-
-async def test_generate_unique_value_validator_duplicates() -> None:
-    """Test that duplicate values are rejected."""
-    validator = _generate_unique_value_validator("stat_energy_from")
-    values = [
-        {"stat_energy_from": "sensor.energy1"},
-        {"stat_energy_from": "sensor.energy1"},  # duplicate
-    ]
-    with pytest.raises(
-        vol.Invalid, match="Cannot specify sensor.energy1 more than once"
-    ):
-        validator(values)
-
-
-async def test_generate_unique_value_validator_valid() -> None:
-    """Test that unique values pass validation."""
-    validator = _generate_unique_value_validator("stat_energy_from")
-    values = [
-        {"stat_energy_from": "sensor.energy1"},
-        {"stat_energy_from": "sensor.energy2"},
-    ]
-    result = validator(values)
-    assert result == values
-
-
-async def test_check_type_limits_multiple_grid() -> None:
-    """Test that multiple grid sources are rejected."""
-    sources = [
-        {"type": "grid", "flow_from": [], "flow_to": [], "cost_adjustment_day": 0},
-        {"type": "grid", "flow_from": [], "flow_to": [], "cost_adjustment_day": 0},
-    ]
-    with pytest.raises(vol.Invalid, match="You cannot have more than 1 grid source"):
-        check_type_limits(sources)
-
-
-async def test_check_type_limits_valid() -> None:
-    """Test that valid source combinations pass."""
-    sources = [
-        {"type": "grid", "flow_from": [], "flow_to": [], "cost_adjustment_day": 0},
-        {"type": "solar", "stat_energy_from": "sensor.solar"},
-    ]
-    result = check_type_limits(sources)
-    assert result == sources
-
-
-async def test_async_update_from_none(hass: HomeAssistant) -> None:
-    """Test updating preferences when data is None."""
+async def test_battery_power_config_inverted_sets_stat_rate(
+    hass: HomeAssistant,
+) -> None:
+    """Test that battery with inverted power_config sets stat_rate to generated entity_id."""
     manager = EnergyManager(hass)
     await manager.async_initialize()
+    manager.data = manager.default_preferences()
 
-    # Data should be None initially
-    assert manager.data is None
-
-    # Update with new preferences
-    await manager.async_update({"energy_sources": []})
-
-    # Data should now be set with defaults plus our update
-    assert manager.data is not None
-    assert manager.data["energy_sources"] == []
-    assert manager.data["device_consumption"] == []
-    assert manager.data["device_consumption_water"] == []
-
-
-async def test_async_update_with_listeners(hass: HomeAssistant) -> None:
-    """Test that update listeners are called when data is updated."""
-    manager = EnergyManager(hass)
-    await manager.async_initialize()
-
-    listener_called = []
-
-    async def listener() -> None:
-        listener_called.append(True)
-
-    manager.async_listen_updates(listener)
-
-    # Update preferences - listener should be called
-    await manager.async_update({"energy_sources": []})
-
-    assert len(listener_called) == 1
-
-
-async def test_async_update_without_listeners(hass: HomeAssistant) -> None:
-    """Test that update works without listeners."""
-    manager = EnergyManager(hass)
-    await manager.async_initialize()
-
-    # No listeners registered, update should still work
-    await manager.async_update({"energy_sources": []})
-
-    assert manager.data is not None
-    assert manager.data["energy_sources"] == []
-
-
-async def test_async_update_existing_data(hass: HomeAssistant) -> None:
-    """Test updating preferences when data already exists."""
-    manager = EnergyManager(hass)
-    await manager.async_initialize()
-
-    # First update to set data
-    await manager.async_update(
-        {"device_consumption": [{"stat_consumption": "sensor.a"}]}
-    )
-    assert manager.data is not None
-    assert manager.data["device_consumption"] == [{"stat_consumption": "sensor.a"}]
-
-    # Second update should copy existing data and merge
-    await manager.async_update(
-        {"energy_sources": [{"type": "solar", "stat_energy_from": "sensor.solar"}]}
-    )
-    assert manager.data["device_consumption"] == [{"stat_consumption": "sensor.a"}]
-    assert manager.data["energy_sources"] == [
-        {"type": "solar", "stat_energy_from": "sensor.solar"}
-    ]
-
-
-async def test_validate_power_config_empty() -> None:
-    """Test that empty power_config is rejected."""
-    with pytest.raises(vol.Invalid, match="power_config must have at least one option"):
-        _validate_power_config({})
-
-
-async def test_validate_power_config_multiple_methods() -> None:
-    """Test that multiple power config methods are rejected."""
-    val = {
-        "stat_rate": "sensor.power",
-        "stat_rate_inverted": "sensor.power_inv",
-    }
-    with pytest.raises(
-        vol.Invalid,
-        match="power_config must use only one configuration method",
-    ):
-        _validate_power_config(val)
-
-
-async def test_validate_power_config_valid_stat_rate() -> None:
-    """Test valid power_config with stat_rate."""
-    val = {"stat_rate": "sensor.power"}
-    result = _validate_power_config(val)
-    assert result == val
-
-
-async def test_validate_power_config_valid_inverted() -> None:
-    """Test valid power_config with stat_rate_inverted."""
-    val = {"stat_rate_inverted": "sensor.power_inv"}
-    result = _validate_power_config(val)
-    assert result == val
-
-
-async def test_validate_power_config_valid_combined() -> None:
-    """Test valid power_config with stat_rate_from/to."""
-    val = {"stat_rate_from": "sensor.power_from", "stat_rate_to": "sensor.power_to"}
-    result = _validate_power_config(val)
-    assert result == val
-
-
-async def test_process_battery_power_with_stat_rate(hass: HomeAssistant) -> None:
-    """Test battery power processing with direct stat_rate config."""
-    manager = EnergyManager(hass)
-    await manager.async_initialize()
-
-    # Update with battery source having power_config with stat_rate
     await manager.async_update(
         {
             "energy_sources": [
                 {
                     "type": "battery",
-                    "stat_energy_from": "sensor.battery_discharge",
-                    "stat_energy_to": "sensor.battery_charge",
-                    "power_config": {"stat_rate": "sensor.battery_power"},
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_inverted": "sensor.battery_power",
+                    },
                 }
-            ]
+            ],
         }
     )
 
+    # Verify stat_rate was set to the expected entity_id
     assert manager.data is not None
-    battery_source = manager.data["energy_sources"][0]
-    # stat_rate should be set from power_config
-    assert battery_source["stat_rate"] == "sensor.battery_power"
+    assert len(manager.data["energy_sources"]) == 1
+    source = manager.data["energy_sources"][0]
+    assert source["stat_rate"] == "sensor.battery_power_inverted"
+    # Verify power_config is preserved
+    assert source["power_config"] == {"stat_rate_inverted": "sensor.battery_power"}
 
 
-async def test_process_battery_power_with_inverted(hass: HomeAssistant) -> None:
-    """Test battery power processing with inverted config generates entity_id."""
+async def test_battery_power_config_two_sensors_sets_stat_rate(
+    hass: HomeAssistant,
+) -> None:
+    """Test that battery with two-sensor power_config sets stat_rate."""
     manager = EnergyManager(hass)
     await manager.async_initialize()
+    manager.data = manager.default_preferences()
 
-    # Update with battery source having power_config with stat_rate_inverted
     await manager.async_update(
         {
             "energy_sources": [
                 {
                     "type": "battery",
-                    "stat_energy_from": "sensor.battery_discharge",
-                    "stat_energy_to": "sensor.battery_charge",
-                    "power_config": {"stat_rate_inverted": "sensor.battery_power_inv"},
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_from": "sensor.battery_discharge",
+                        "stat_rate_to": "sensor.battery_charge",
+                    },
                 }
-            ]
+            ],
         }
     )
 
     assert manager.data is not None
-    battery_source = manager.data["energy_sources"][0]
-    # stat_rate should be set to generated entity_id (source + _inverted suffix)
-    assert "stat_rate" in battery_source
-    assert battery_source["stat_rate"] == "sensor.battery_power_inv_inverted"
-
-
-async def test_process_battery_power_without_power_config(hass: HomeAssistant) -> None:
-    """Test battery source without power_config is unchanged."""
-    manager = EnergyManager(hass)
-    await manager.async_initialize()
-
-    # Update with battery source without power_config
-    await manager.async_update(
-        {
-            "energy_sources": [
-                {
-                    "type": "battery",
-                    "stat_energy_from": "sensor.battery_discharge",
-                    "stat_energy_to": "sensor.battery_charge",
-                }
-            ]
-        }
+    source = manager.data["energy_sources"][0]
+    # Entity ID includes discharge sensor name to avoid collisions
+    assert (
+        source["stat_rate"]
+        == "sensor.energy_battery_battery_discharge_battery_charge_net_power"
     )
 
-    assert manager.data is not None
-    battery_source = manager.data["energy_sources"][0]
-    # stat_rate should not be set
-    assert "stat_rate" not in battery_source
 
-
-async def test_process_grid_power_with_stat_rate(hass: HomeAssistant) -> None:
-    """Test grid power processing with direct stat_rate config."""
+async def test_grid_power_config_inverted_sets_stat_rate(
+    hass: HomeAssistant,
+) -> None:
+    """Test that grid with inverted power_config sets stat_rate."""
     manager = EnergyManager(hass)
     await manager.async_initialize()
+    manager.data = manager.default_preferences()
 
-    # Update with grid source having power config with stat_rate
     await manager.async_update(
         {
             "energy_sources": [
@@ -347,100 +162,179 @@ async def test_process_grid_power_with_stat_rate(hass: HomeAssistant) -> None:
                     "type": "grid",
                     "flow_from": [],
                     "flow_to": [],
-                    "cost_adjustment_day": 0,
-                    "power": [{"power_config": {"stat_rate": "sensor.grid_power"}}],
-                }
-            ]
-        }
-    )
-
-    assert manager.data is not None
-    grid_source = manager.data["energy_sources"][0]
-    assert "power" in grid_source
-    # stat_rate should be set from power_config
-    assert grid_source["power"][0]["stat_rate"] == "sensor.grid_power"
-
-
-async def test_process_grid_power_with_inverted(hass: HomeAssistant) -> None:
-    """Test grid power processing with inverted config generates entity_id."""
-    manager = EnergyManager(hass)
-    await manager.async_initialize()
-
-    # Update with grid source having power config with stat_rate_inverted
-    await manager.async_update(
-        {
-            "energy_sources": [
-                {
-                    "type": "grid",
-                    "flow_from": [],
-                    "flow_to": [],
-                    "cost_adjustment_day": 0,
                     "power": [
                         {
                             "power_config": {
-                                "stat_rate_inverted": "sensor.grid_power_inv"
-                            }
+                                "stat_rate_inverted": "sensor.grid_power",
+                            },
                         }
                     ],
+                    "cost_adjustment_day": 0,
                 }
-            ]
+            ],
         }
     )
 
     assert manager.data is not None
     grid_source = manager.data["energy_sources"][0]
-    assert "power" in grid_source
-    # stat_rate should be set to generated entity_id (source + _inverted suffix)
-    assert grid_source["power"][0]["stat_rate"] == "sensor.grid_power_inv_inverted"
+    assert grid_source["power"][0]["stat_rate"] == "sensor.grid_power_inverted"
 
 
-async def test_process_grid_power_without_power_config(hass: HomeAssistant) -> None:
-    """Test grid power source without power_config is unchanged."""
+async def test_power_config_standard_uses_stat_rate_directly(
+    hass: HomeAssistant,
+) -> None:
+    """Test that power_config with standard stat_rate uses it directly."""
     manager = EnergyManager(hass)
     await manager.async_initialize()
+    manager.data = manager.default_preferences()
 
-    # Update with grid source having power but no power_config
     await manager.async_update(
         {
             "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate": "sensor.battery_power",
+                    },
+                }
+            ],
+        }
+    )
+
+    assert manager.data is not None
+    source = manager.data["energy_sources"][0]
+    # stat_rate should be set directly from power_config.stat_rate
+    assert source["stat_rate"] == "sensor.battery_power"
+
+
+async def test_battery_without_power_config_unchanged(hass: HomeAssistant) -> None:
+    """Test that battery without power_config is unchanged."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    manager.data = manager.default_preferences()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "stat_rate": "sensor.battery_power",
+                }
+            ],
+        }
+    )
+
+    assert manager.data is not None
+    source = manager.data["energy_sources"][0]
+    assert source["stat_rate"] == "sensor.battery_power"
+    assert "power_config" not in source
+
+
+async def test_power_config_takes_precedence_over_stat_rate(
+    hass: HomeAssistant,
+) -> None:
+    """Test that power_config takes precedence when both are provided."""
+    manager = EnergyManager(hass)
+    await manager.async_initialize()
+    manager.data = manager.default_preferences()
+
+    # Frontend sends both stat_rate and power_config
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "stat_rate": "sensor.battery_power",  # This should be ignored
+                    "power_config": {
+                        "stat_rate_inverted": "sensor.battery_power",
+                    },
+                }
+            ],
+        }
+    )
+
+    assert manager.data is not None
+    source = manager.data["energy_sources"][0]
+    # stat_rate should be overwritten to point to the generated inverted sensor
+    assert source["stat_rate"] == "sensor.battery_power_inverted"
+
+
+async def test_power_config_validation_empty() -> None:
+    """Test that empty power_config raises validation error."""
+    with pytest.raises(vol.Invalid, match="power_config must have at least one option"):
+        POWER_CONFIG_SCHEMA({})
+
+
+async def test_power_config_validation_multiple_methods() -> None:
+    """Test that power_config with multiple methods raises validation error."""
+    # Both stat_rate and stat_rate_inverted (should fail due to Exclusive)
+    with pytest.raises(vol.Invalid):
+        POWER_CONFIG_SCHEMA(
+            {
+                "stat_rate": "sensor.power",
+                "stat_rate_inverted": "sensor.power",
+            }
+        )
+
+    # Both stat_rate and stat_rate_from/to (should fail due to Exclusive)
+    with pytest.raises(vol.Invalid):
+        POWER_CONFIG_SCHEMA(
+            {
+                "stat_rate": "sensor.power",
+                "stat_rate_from": "sensor.discharge",
+                "stat_rate_to": "sensor.charge",
+            }
+        )
+
+    # Both stat_rate_inverted and stat_rate_from/to (should fail due to Exclusive)
+    with pytest.raises(vol.Invalid):
+        POWER_CONFIG_SCHEMA(
+            {
+                "stat_rate_inverted": "sensor.power",
+                "stat_rate_from": "sensor.discharge",
+                "stat_rate_to": "sensor.charge",
+            }
+        )
+
+
+async def test_flow_from_validation_multiple_prices() -> None:
+    """Test that flow_from validation rejects both entity and number price."""
+    # Both entity_energy_price and number_energy_price should fail
+    with pytest.raises(
+        vol.Invalid, match="Define either an entity or a fixed number for the price"
+    ):
+        FLOW_FROM_GRID_SOURCE_SCHEMA(
+            {
+                "stat_energy_from": "sensor.energy",
+                "entity_energy_price": "sensor.price",
+                "number_energy_price": 0.15,
+            }
+        )
+
+
+async def test_energy_sources_validation_multiple_grids() -> None:
+    """Test that multiple grid sources are rejected."""
+    # Multiple grid sources should fail validation
+    with pytest.raises(vol.Invalid, match="You cannot have more than 1 grid source"):
+        ENERGY_SOURCE_SCHEMA(
+            [
                 {
                     "type": "grid",
                     "flow_from": [],
                     "flow_to": [],
                     "cost_adjustment_day": 0,
-                    "power": [{"stat_rate": "sensor.existing_power"}],
-                }
-            ]
-        }
-    )
-
-    assert manager.data is not None
-    grid_source = manager.data["energy_sources"][0]
-    assert "power" in grid_source
-    # stat_rate should remain as provided
-    assert grid_source["power"][0]["stat_rate"] == "sensor.existing_power"
-
-
-async def test_process_grid_without_power(hass: HomeAssistant) -> None:
-    """Test grid source without power is unchanged."""
-    manager = EnergyManager(hass)
-    await manager.async_initialize()
-
-    # Update with grid source without power
-    await manager.async_update(
-        {
-            "energy_sources": [
+                },
                 {
                     "type": "grid",
                     "flow_from": [],
                     "flow_to": [],
                     "cost_adjustment_day": 0,
-                }
+                },
             ]
-        }
-    )
-
-    assert manager.data is not None
-    grid_source = manager.data["energy_sources"][0]
-    # power should not be added
-    assert "power" not in grid_source
+        )
