@@ -152,10 +152,12 @@
     "step": {
       "init": {
         "data": {
-          "keep_master_light": "Add 'Main' control even with single LED segment"
+          "keep_master_light": "Add 'Main' control even with single LED segment",
+          "exclude_nightly": "Exclude nightly versions from updates"
         },
         "data_description": {
-          "keep_master_light": "Ensures the main light control is always available when you are dynamically adding and removing segments through automation."
+          "keep_master_light": "Ensures the main light control is always available when you are dynamically adding and removing segments through automation.",
+          "exclude_nightly": "When enabled, nightly (development) versions will not be shown as available updates. Only stable and beta releases will be offered."
         }
       }
     }
