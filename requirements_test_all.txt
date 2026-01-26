@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.19.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.76.0
+PySwitchbot==1.0.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -573,7 +573,7 @@ beautifulsoup4==4.13.3
 bimmer-connected[china]==0.17.3
 
 # homeassistant.components.esphome
-bleak-esphome==3.4.0
+bleak-esphome==3.4.1
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.4.3
@@ -795,7 +795,7 @@ energyzero==4.0.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.12.1
+env-canada==0.12.4
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1943,7 +1943,7 @@ pyotgw==2.2.2
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.19.4
+pyoverkiz==1.20.0
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
@@ -2173,7 +2173,7 @@ python-pooldose==0.8.2
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==4.2.1
+python-roborock==4.7.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.46
@@ -2615,7 +2615,7 @@ vegehub==0.1.26
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2026.1.1
+velbus-aio==2026.1.4
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
