@@ -4055,6 +4055,14 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
 
+    # Verify discovery notification shows home ID with network location
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert (
+        flows[0]["context"]["title_placeholders"]["name"]
+        == "127.0.0.1:3000, Home ID 1234"
+    )
+
     with (
         patch(
             "homeassistant.components.zwave_js.async_setup", return_value=True
