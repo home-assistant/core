@@ -27,7 +27,7 @@ _CONF_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -56,9 +56,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
         raise InvalidAuth from err
 
     title: str = list(response["body"].values())[0].get("user_name", "")
+    unique_id: str = list(response["body"].values())[0].get("user_id", "")
 
     # Return title to be used for hub name
-    return title
+    return (title, unique_id)
 
 
 class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -82,7 +83,7 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
 
             # Test connection
             try:
-                title: str = await validate_input(self.hass, user_input)
+                title, unique_id = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -91,6 +92,8 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "malformed_response"
             else:
                 # Connection Successful
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=title, data=user_input)
 
         # Show setup form
