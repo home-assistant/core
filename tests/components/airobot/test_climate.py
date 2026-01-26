@@ -210,7 +210,6 @@ async def test_climate_heating_state(
     assert state.attributes.get("hvac_action") == "heating"
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_climate_unavailable_on_update_failure(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
