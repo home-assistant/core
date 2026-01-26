@@ -473,7 +473,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_NAME: f"Home ID {home_id_display} at {self.ws_address}",
+                    CONF_NAME: f"{discovery_info.host}:{discovery_info.port}, Home ID {home_id_display}",
                 }
             }
         )
