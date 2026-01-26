@@ -93,6 +93,14 @@
           "stop": "mdi:stop"
         }
       },
+      "selected_zone": {
+        "state": {
+          "all": "mdi:card",
+          "lower": "mdi:dock-bottom",
+          "none": "mdi:card-outline",
+          "upper": "mdi:dock-top"
+        }
+      },
       "soil_level": {
         "default": "mdi:liquid-spot"
       },
@@ -101,6 +109,14 @@
       },
       "water_temperature": {
         "default": "mdi:water-thermometer"
+      },
+      "zone_booster": {
+        "state": {
+          "all": "mdi:card",
+          "left": "mdi:dock-left",
+          "none": "mdi:card-outline",
+          "right": "mdi:dock-right"
+        }
       }
     },
     "sensor": {
@@ -139,6 +155,9 @@
       }
     },
     "switch": {
+      "add_rinse": {
+        "default": "mdi:water-plus"
+      },
       "auto_cycle_link": {
         "default": "mdi:link-off",
         "state": {
@@ -158,11 +177,26 @@
           "on": "mdi:lightbulb-on"
         }
       },
+      "dry_plus": {
+        "default": "mdi:heat-wave"
+      },
+      "heated_dry": {
+        "default": "mdi:heat-wave"
+      },
+      "high_temp_wash": {
+        "default": "mdi:thermometer-plus"
+      },
+      "hot_air_dry": {
+        "default": "mdi:heat-wave"
+      },
       "ice_maker": {
         "default": "mdi:delete-variant"
       },
       "keep_fresh_mode": {
         "default": "mdi:creation"
+      },
+      "multi_tab": {
+        "default": "mdi:pill-multiple"
       },
       "power_cool": {
         "default": "mdi:snowflake-alert"
@@ -170,7 +204,13 @@
       "power_freeze": {
         "default": "mdi:snowflake"
       },
+      "rinse_plus": {
+        "default": "mdi:water-plus"
+      },
       "sanitize": {
+        "default": "mdi:lotion"
+      },
+      "sanitizing_wash": {
         "default": "mdi:lotion"
       },
       "sound_effect": {
@@ -179,6 +219,15 @@
           "off": "mdi:volume-off",
           "on": "mdi:volume-high"
         }
+      },
+      "speed_booster": {
+        "default": "mdi:fast-forward"
+      },
+      "steam_soak": {
+        "default": "mdi:weather-windy"
+      },
+      "storm_wash": {
+        "default": "mdi:weather-dust"
       },
       "wrinkle_prevent": {
         "default": "mdi:tumble-dryer",
