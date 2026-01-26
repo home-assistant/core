@@ -34,7 +34,7 @@ async def test_correct_flow(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result2["result"].unique_id == 12345
+    assert result2["result"].unique_id == "12345"
 
 
 async def test_form_cannot_connect(

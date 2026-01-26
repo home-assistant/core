@@ -47,7 +47,7 @@
   },
   "triggers": {
     "docked": {
-      "trigger": "mdi:home-import-outline"
+      "trigger": "mdi:home-outline"
     },
     "errored": {
       "trigger": "mdi:alert-circle-outline"
@@ -57,6 +57,9 @@
     },
     "started_cleaning": {
       "trigger": "mdi:play"
+    },
+    "started_returning": {
+      "trigger": "mdi:home-import-outline"
     }
   }
 }

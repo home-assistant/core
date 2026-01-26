@@ -129,7 +129,7 @@
   "title": "Vacuum",
   "triggers": {
     "docked": {
-      "description": "Triggers after one or more vacuums return to dock.",
+      "description": "Triggers after one or more vacuums have returned to dock.",
       "fields": {
         "behavior": {
           "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
@@ -167,6 +167,16 @@
         }
       },
       "name": "Vacuum cleaner started cleaning"
+    },
+    "started_returning": {
+      "description": "Triggers after one or more vacuums start returning to dock.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
+          "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Vacuum cleaner started returning to dock"
     }
   }
 }

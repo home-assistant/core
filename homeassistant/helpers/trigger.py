@@ -537,7 +537,7 @@ def _validate_range[_T: dict[str, Any]](
 
 _NUMBER_OR_ENTITY_CHOOSE_SCHEMA = vol.Schema(
     {
-        vol.Required("chosen_selector"): vol.In(["number", "entity"]),
+        vol.Required("active_choice"): vol.In(["number", "entity"]),
         vol.Optional("entity"): cv.entity_id,
         vol.Optional("number"): vol.Coerce(float),
     }
@@ -548,7 +548,7 @@ def _validate_number_or_entity(value: dict | float | str) -> float | str:
     """Validate number or entity selector result."""
     if isinstance(value, dict):
         _NUMBER_OR_ENTITY_CHOOSE_SCHEMA(value)
-        return value[value["chosen_selector"]]  # type: ignore[no-any-return]
+        return value[value["active_choice"]]  # type: ignore[no-any-return]
     return value
 
 
@@ -594,6 +594,8 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
     _above: None | float | str
     _below: None | float | str
 
+    _converter: Callable[[Any], float] = float
+
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the state trigger."""
         super().__init__(hass, config)
@@ -616,7 +618,7 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
             return False
 
         try:
-            current_value = float(_attribute_value)
+            current_value = self._converter(_attribute_value)
         except (TypeError, ValueError):
             # Attribute is not a valid number, don't trigger
             return False
@@ -683,7 +685,7 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
                 ),
                 vol.Optional(CONF_LOWER_LIMIT): _number_or_entity,
                 vol.Optional(CONF_UPPER_LIMIT): _number_or_entity,
-                vol.Required(CONF_THRESHOLD_TYPE): ThresholdType,
+                vol.Required(CONF_THRESHOLD_TYPE): vol.Coerce(ThresholdType),
             },
             _validate_range(CONF_LOWER_LIMIT, CONF_UPPER_LIMIT),
             _validate_limits_for_threshold_type,
@@ -705,6 +707,8 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
     _lower_limit: float | str | None = None
     _upper_limit: float | str | None = None
     _threshold_type: ThresholdType
+
+    _converter: Callable[[Any], float] = float
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the state trigger."""
@@ -741,7 +745,7 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
             return False
 
         try:
-            current_value = float(_attribute_value)
+            current_value = self._converter(_attribute_value)
         except (TypeError, ValueError):
             # Attribute is not a valid number, don't trigger
             return False
