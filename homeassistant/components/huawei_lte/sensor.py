@@ -276,13 +276,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                     {"0": "2G", "2": "3G", "7": "4G"}.get(x),
                     None,
                 ),
-                icon_fn=lambda x: (
-                    {
-                        "2G": "mdi:signal-2g",
-                        "3G": "mdi:signal-3g",
-                        "4G": "mdi:signal-4g",
-                    }.get(str(x), "mdi:signal")
-                ),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "nei_cellid": HuaweiSensorEntityDescription(
