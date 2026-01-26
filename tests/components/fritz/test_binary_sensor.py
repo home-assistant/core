@@ -26,7 +26,7 @@ async def test_binary_sensor_setup(
     fh_class_mock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test Fritz!Toolsbinary_sensor setup."""
+    """Test Fritz!Tools binary_sensor setup."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
@@ -48,12 +48,13 @@ async def test_binary_sensor_missing_state(
 
     entity_id = "binary_sensor.mock_title_connection"
 
-    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.BINARY_SENSOR]):
-        entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
-        entry.add_to_hass(hass)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.fritz.PLATFORMS", [Platform.BINARY_SENSOR]):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
     assert entry.state is ConfigEntryState.LOADED
 
     assert (state := hass.states.get(entity_id))
