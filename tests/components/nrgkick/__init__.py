@@ -2,11 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
-from contextlib import contextmanager
-from typing import Any
-from unittest.mock import patch
-
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -38,19 +33,7 @@ def create_mock_config_entry(
     )
 
 
-@contextmanager
-def patch_nrgkickapi(mock_api: Any) -> Generator[patch]:
-    """Patch the NRGkickAPI constructor used by the config flow."""
-
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_api,
-    ) as api_cls:
-        yield api_cls
-
-
 __all__ = [
     "async_setup_entry_with_return",
     "create_mock_config_entry",
-    "patch_nrgkickapi",
 ]

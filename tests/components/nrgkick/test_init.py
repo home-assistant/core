@@ -25,12 +25,7 @@ async def test_setup_entry(
     """Test successful setup of entry."""
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-        ),
-        patch("homeassistant.components.nrgkick.async_get_clientsession"),
-    ):
+    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
         # Use the config_entries.async_setup to properly set entry state
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -47,12 +42,7 @@ async def test_setup_entry_failed_connection(
 
     mock_nrgkick_api.get_info.side_effect = LibConnectionError("Connection failed")
 
-    with (
-        patch(
-            "homeassistant.components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-        ),
-        patch("homeassistant.components.nrgkick.async_get_clientsession"),
-    ):
+    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -65,12 +55,7 @@ async def test_unload_entry(
     """Test successful unload of entry."""
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-        ),
-        patch("homeassistant.components.nrgkick.async_get_clientsession"),
-    ):
+    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
         # Use proper setup to set entry state
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -88,23 +73,13 @@ async def test_reload_entry(
     """Test reload of entry."""
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-        ),
-        patch("homeassistant.components.nrgkick.async_get_clientsession"),
-    ):
+    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
         # Use proper setup to set entry state
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     # Test that reload calls the config_entries.async_reload
-    with (
-        patch(
-            "homeassistant.components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-        ),
-        patch("homeassistant.components.nrgkick.async_get_clientsession"),
-    ):
+    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
         assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -124,12 +99,7 @@ async def test_coordinator_update_success(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data
 
-    with (
-        patch(
-            "homeassistant.components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-        ),
-        patch("homeassistant.components.nrgkick.async_get_clientsession"),
-    ):
+    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
         # Use proper setup to set entry state
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -149,12 +119,8 @@ async def test_coordinator_update_failed(
     entry.add_to_hass(hass)
     mock_nrgkick_api.get_values.side_effect = LibConnectionError("Connection failed")
 
-    with patch(
-        "homeassistant.components.nrgkick.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
-        await async_setup_entry_with_return(hass, entry)
-        await hass.async_block_till_done()
+    await async_setup_entry_with_return(hass, entry)
+    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -167,11 +133,7 @@ async def test_coordinator_auth_failed(
     entry.add_to_hass(hass)
     mock_nrgkick_api.get_values.side_effect = LibAuthError("Auth failed")
 
-    with patch(
-        "homeassistant.components.nrgkick.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
-        await async_setup_entry_with_return(hass, entry)
-        await hass.async_block_till_done()
+    await async_setup_entry_with_return(hass, entry)
+    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY

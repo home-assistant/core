@@ -11,8 +11,6 @@ from homeassistant.components.nrgkick.api import NRGkickApiClientInvalidResponse
 from homeassistant.components.nrgkick.config_flow import _normalize_host, validate_input
 from homeassistant.core import HomeAssistant
 
-from . import patch_nrgkickapi
-
 
 @pytest.mark.parametrize(
     ("value", "expected"),
@@ -73,7 +71,10 @@ async def test_validate_input_fallback_name_and_serial_required(
     api.test_connection = AsyncMock(return_value=True)
     api.get_info = AsyncMock(return_value={"general": {"serial_number": "ABC"}})
 
-    with patch_nrgkickapi(api) as api_cls:
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=api,
+    ) as api_cls:
         info = await validate_input(hass, "192.168.1.100", username=None, password=None)
 
     assert info["title"] == "NRGkick"
@@ -87,7 +88,9 @@ async def test_validate_input_fallback_name_and_serial_required(
 
     api.get_info = AsyncMock(return_value={"general": {"device_name": "NRGkick"}})
     with (
-        patch_nrgkickapi(api),
+        patch(
+            "homeassistant.components.nrgkick.config_flow.NRGkickAPI", return_value=api
+        ),
         pytest.raises(NRGkickApiClientInvalidResponseError),
     ):
         await validate_input(hass, "192.168.1.100")

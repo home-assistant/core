@@ -18,7 +18,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import create_mock_config_entry, patch_nrgkickapi
+from . import create_mock_config_entry
 
 
 async def test_zeroconf_discovery(hass: HomeAssistant, mock_nrgkick_api) -> None:
@@ -41,12 +41,11 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_nrgkick_api) -> None
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        result = await hass.config_entries.flow.async_init(
-            "nrgkick",
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
 
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == "user_auth"
@@ -54,7 +53,6 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_nrgkick_api) -> None
     mock_nrgkick_api.test_connection.side_effect = None
 
     with (
-        patch_nrgkickapi(mock_nrgkick_api),
         patch(
             "homeassistant.components.nrgkick.async_setup_entry",
             return_value=True,
@@ -97,15 +95,13 @@ async def test_zeroconf_discovery_without_credentials(
         type="_nrgkick._tcp.local.",
     )
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        result = await hass.config_entries.flow.async_init(
-            "nrgkick",
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
 
     with (
-        patch_nrgkickapi(mock_nrgkick_api),
         patch(
             "homeassistant.components.nrgkick.async_setup_entry",
             return_value=True,
@@ -140,27 +136,25 @@ async def test_zeroconf_discovery_invalid_auth(
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        result = await hass.config_entries.flow.async_init(
-            "nrgkick",
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
 
-        flow_id = result.get("flow_id")
-        assert flow_id is not None
-        result2 = result
+    flow_id = result.get("flow_id")
+    assert flow_id is not None
+    result2 = result
 
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
     assert result2.get("step_id") == "user_auth"
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        flow_id = result2.get("flow_id")
-        assert flow_id is not None
-        result3 = await hass.config_entries.flow.async_configure(
-            flow_id,
-            {CONF_USERNAME: "wrong_user", CONF_PASSWORD: "wrong_pass"},
-        )
+    flow_id = result2.get("flow_id")
+    assert flow_id is not None
+    result3 = await hass.config_entries.flow.async_configure(
+        flow_id,
+        {CONF_USERNAME: "wrong_user", CONF_PASSWORD: "wrong_pass"},
+    )
 
     assert result3.get("type") == data_entry_flow.FlowResultType.FORM
     assert result3.get("errors") == {"base": "invalid_auth"}
@@ -184,19 +178,17 @@ async def test_zeroconf_discovery_unknown_exception(
         type="_nrgkick._tcp.local.",
     )
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        result = await hass.config_entries.flow.async_init(
-            "nrgkick",
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientError
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        flow_id = result.get("flow_id")
-        assert flow_id is not None
-        result2 = await hass.config_entries.flow.async_configure(flow_id, {})
+    flow_id = result.get("flow_id")
+    assert flow_id is not None
+    result2 = await hass.config_entries.flow.async_configure(flow_id, {})
 
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
     assert result2.get("errors") == {"base": "unknown"}
@@ -220,20 +212,18 @@ async def test_zeroconf_confirm_json_api_disabled(
         type="_nrgkick._tcp.local.",
     )
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        result = await hass.config_entries.flow.async_init(
-            "nrgkick",
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
     assert result.get("step_id") == "zeroconf_confirm"
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientApiDisabledError
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        flow_id = result.get("flow_id")
-        assert flow_id is not None
-        result2 = await hass.config_entries.flow.async_configure(flow_id, {})
+    flow_id = result.get("flow_id")
+    assert flow_id is not None
+    result2 = await hass.config_entries.flow.async_configure(flow_id, {})
 
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
     assert result2.get("errors") == {"base": "json_api_disabled"}
@@ -335,7 +325,6 @@ async def test_zeroconf_json_api_disabled_then_enabled(
     assert result.get("step_id") == "zeroconf_enable_json_api"
 
     with (
-        patch_nrgkickapi(mock_nrgkick_api),
         patch(
             "homeassistant.components.nrgkick.async_setup_entry",
             return_value=True,
@@ -380,10 +369,9 @@ async def test_zeroconf_json_api_disabled_auth_required_then_success(
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        flow_id = result.get("flow_id")
-        assert flow_id is not None
-        result2 = await hass.config_entries.flow.async_configure(flow_id, {})
+    flow_id = result.get("flow_id")
+    assert flow_id is not None
+    result2 = await hass.config_entries.flow.async_configure(flow_id, {})
 
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
     assert result2.get("step_id") == "user_auth"
@@ -391,7 +379,6 @@ async def test_zeroconf_json_api_disabled_auth_required_then_success(
     mock_nrgkick_api.test_connection.side_effect = None
 
     with (
-        patch_nrgkickapi(mock_nrgkick_api),
         patch("homeassistant.components.nrgkick.async_setup_entry", return_value=True),
     ):
         flow_id = result2.get("flow_id")
@@ -444,10 +431,9 @@ async def test_zeroconf_json_api_disabled_errors(
 
     mock_nrgkick_api.test_connection.side_effect = side_effect
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        flow_id = result.get("flow_id")
-        assert flow_id is not None
-        result2 = await hass.config_entries.flow.async_configure(flow_id, {})
+    flow_id = result.get("flow_id")
+    assert flow_id is not None
+    result2 = await hass.config_entries.flow.async_configure(flow_id, {})
 
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
     assert result2.get("errors") == {"base": expected}
@@ -481,10 +467,9 @@ async def test_zeroconf_json_api_still_disabled_reports_error(
     mock_nrgkick_api.test_connection.side_effect = None
     mock_nrgkick_api.get_info.side_effect = NRGkickApiClientApiDisabledError
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        flow_id = result.get("flow_id")
-        assert flow_id is not None
-        result2 = await hass.config_entries.flow.async_configure(flow_id, {})
+    flow_id = result.get("flow_id")
+    assert flow_id is not None
+    result2 = await hass.config_entries.flow.async_configure(flow_id, {})
 
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
     assert result2.get("step_id") == "zeroconf_enable_json_api"
@@ -526,22 +511,20 @@ async def test_zeroconf_enable_json_api_auth_errors(
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        flow_id = result.get("flow_id")
-        assert flow_id is not None
-        result2 = await hass.config_entries.flow.async_configure(flow_id, {})
+    flow_id = result.get("flow_id")
+    assert flow_id is not None
+    result2 = await hass.config_entries.flow.async_configure(flow_id, {})
 
     assert result2.get("step_id") == "user_auth"
 
     mock_nrgkick_api.test_connection.side_effect = side_effect
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        flow_id = result2.get("flow_id")
-        assert flow_id is not None
-        result3 = await hass.config_entries.flow.async_configure(
-            flow_id,
-            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
-        )
+    flow_id = result2.get("flow_id")
+    assert flow_id is not None
+    result3 = await hass.config_entries.flow.async_configure(
+        flow_id,
+        {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+    )
 
     assert result3.get("type") == data_entry_flow.FlowResultType.FORM
     assert result3.get("errors") == {"base": expected}
@@ -577,24 +560,22 @@ async def test_zeroconf_auth_errors(
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        result = await hass.config_entries.flow.async_init(
-            "nrgkick",
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
 
     assert result.get("step_id") == "user_auth"
 
     mock_nrgkick_api.test_connection.side_effect = second_side_effect
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        flow_id = result.get("flow_id")
-        assert flow_id is not None
-        result3 = await hass.config_entries.flow.async_configure(
-            flow_id,
-            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
-        )
+    flow_id = result.get("flow_id")
+    assert flow_id is not None
+    result3 = await hass.config_entries.flow.async_configure(
+        flow_id,
+        {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+    )
 
     assert result3.get("type") == data_entry_flow.FlowResultType.FORM
     assert result3.get("errors") == {"base": expected}
@@ -641,19 +622,17 @@ async def test_zeroconf_cannot_connect(hass: HomeAssistant, mock_nrgkick_api) ->
         type="_nrgkick._tcp.local.",
     )
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        result = await hass.config_entries.flow.async_init(
-            "nrgkick",
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientCommunicationError
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        flow_id = result.get("flow_id")
-        assert flow_id is not None
-        result2 = await hass.config_entries.flow.async_configure(flow_id, {})
+    flow_id = result.get("flow_id")
+    assert flow_id is not None
+    result2 = await hass.config_entries.flow.async_configure(flow_id, {})
 
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
     assert result2.get("errors") == {"base": "cannot_connect"}
@@ -679,12 +658,11 @@ async def test_zeroconf_auth_reports_cannot_connect(
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        result = await hass.config_entries.flow.async_init(
-            "nrgkick",
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
 
     assert result.get("step_id") == "user_auth"
 
@@ -692,13 +670,12 @@ async def test_zeroconf_auth_reports_cannot_connect(
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientCommunicationError
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        flow_id = result2.get("flow_id")
-        assert flow_id is not None
-        result3 = await hass.config_entries.flow.async_configure(
-            flow_id,
-            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
-        )
+    flow_id = result2.get("flow_id")
+    assert flow_id is not None
+    result3 = await hass.config_entries.flow.async_configure(
+        flow_id,
+        {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+    )
 
     assert result3.get("type") == data_entry_flow.FlowResultType.FORM
     assert result3.get("errors") == {"base": "cannot_connect"}
@@ -722,12 +699,11 @@ async def test_zeroconf_fallback_to_model_type(
         type="_nrgkick._tcp.local.",
     )
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        result = await hass.config_entries.flow.async_init(
-            "nrgkick",
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
 
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("description_placeholders") == {
@@ -753,12 +729,11 @@ async def test_zeroconf_fallback_to_default_name(
         type="_nrgkick._tcp.local.",
     )
 
-    with patch_nrgkickapi(mock_nrgkick_api):
-        result = await hass.config_entries.flow.async_init(
-            "nrgkick",
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
 
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
     placeholders = result.get("description_placeholders")

@@ -1,18 +1,13 @@
 """Tests for the NRGkick sensor platform."""
 
 from datetime import datetime, timedelta
+import json
 from unittest.mock import patch
 
-from nrgkick_api import (
-    ChargingStatus,
-    ConnectorType,
-    ErrorCode,
-    GridPhases,
-    RcdTriggerStatus,
-    WarningCode,
-)
+from nrgkick_api import ChargingStatus, ConnectorType, GridPhases
 import pytest
 
+from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     STATE_UNKNOWN,
@@ -24,70 +19,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
+from tests.common import load_fixture
+
 
 @pytest.fixture
 def mock_values_data_sensor():
     """Mock values data for sensor tests."""
-    return {
-        "powerflow": {
-            "total_active_power": 11000,
-            "l1": {
-                "voltage": 230.0,
-                "current": 16.0,
-                "active_power": 3680,
-                "reactive_power": 0,
-                "apparent_power": 3680,
-                "power_factor": 100,
-            },
-            "l2": {
-                "voltage": 230.0,
-                "current": 16.0,
-                "active_power": 3680,
-                "reactive_power": 0,
-                "apparent_power": 3680,
-                "power_factor": 100,
-            },
-            "l3": {
-                "voltage": 230.0,
-                "current": 16.0,
-                "active_power": 3680,
-                "reactive_power": 0,
-                "apparent_power": 3680,
-                "power_factor": 100,
-            },
-            "charging_voltage": 230.0,
-            "charging_current": 16.0,
-            "grid_frequency": 50.0,
-            "peak_power": 11000,
-            "total_reactive_power": 0,
-            "total_apparent_power": 11040,
-            "total_power_factor": 100,
-            "n": {"current": 0.0},
-        },
-        "general": {
-            # Use numeric (IntEnum) values to exercise mapping tables.
-            "status": ChargingStatus.CHARGING,
-            "charging_rate": 11.0,
-            "vehicle_connect_time": 100,
-            "vehicle_charging_time": 50,
-            "charge_count": 5,
-            "rcd_trigger": RcdTriggerStatus.NO_FAULT,
-            "warning_code": WarningCode.NO_WARNING,
-            "error_code": ErrorCode.NO_ERROR,
-        },
-        "temperatures": {
-            "housing": 35.0,
-            "connector_l1": 28.0,
-            "connector_l2": 29.0,
-            "connector_l3": 28.5,
-            "domestic_plug_1": 25.0,
-            "domestic_plug_2": 25.0,
-        },
-        "energy": {
-            "total_charged_energy": 100000,
-            "charged_energy": 5000,
-        },
-    }
+    return json.loads(load_fixture("values_sensor.json", DOMAIN))
 
 
 async def test_sensor_entities(
@@ -113,9 +51,6 @@ async def test_sensor_entities(
     # Setup entry
     now = datetime(2025, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC)
     with (
-        patch(
-            "homeassistant.components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-        ),
         patch("homeassistant.components.nrgkick.async_get_clientsession"),
         patch("homeassistant.components.nrgkick.sensor.utcnow", return_value=now),
     ):
@@ -211,9 +146,6 @@ async def test_mapped_unknown_values_become_state_unknown(
     mock_nrgkick_api.get_values.return_value = mock_values_data_sensor
 
     with (
-        patch(
-            "homeassistant.components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-        ),
         patch("homeassistant.components.nrgkick.async_get_clientsession"),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -262,12 +194,7 @@ async def test_cellular_and_gps_entities_are_gated_by_model_type(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data_sensor
 
-    with (
-        patch(
-            "homeassistant.components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-        ),
-        patch("homeassistant.components.nrgkick.async_get_clientsession"),
-    ):
+    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
