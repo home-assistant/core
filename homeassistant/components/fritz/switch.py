@@ -533,6 +533,7 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         if not self.ip_address:
             return False
         await self._avm_wrapper.async_set_allow_wan_access(self.ip_address, turn_on)
+        self._avm_wrapper.devices[self._mac].wan_access = turn_on
         self.async_write_ha_state()
         return True
 
