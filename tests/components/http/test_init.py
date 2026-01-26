@@ -703,26 +703,18 @@ async def test_ssl_issue_urls_configured(
         "hassio",
         "http_config",
         "expected_serverhost",
-        "expected_warning_count",
         "expected_issues",
     ),
     [
-        (False, {}, ["0.0.0.0", "::"], 0, set()),
-        (
-            False,
-            {"server_host": "0.0.0.0"},
-            ["0.0.0.0"],
-            1,
-            {("http", "server_host_deprecated")},
-        ),
-        (True, {}, ["0.0.0.0", "::"], 0, set()),
+        (False, {}, ["0.0.0.0", "::"], set()),
+        (False, {"server_host": "0.0.0.0"}, ["0.0.0.0"], set()),
+        (True, {}, ["0.0.0.0", "::"], set()),
         (
             True,
             {"server_host": "0.0.0.0"},
             [
                 "0.0.0.0",
             ],
-            1,
             {("http", "server_host_deprecated_hassio")},
         ),
     ],
@@ -733,7 +725,6 @@ async def test_server_host(
     issue_registry: ir.IssueRegistry,
     http_config: dict,
     expected_serverhost: list,
-    expected_warning_count: int,
     expected_issues: set[tuple[str, str]],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -761,13 +752,6 @@ async def test_server_host(
         backlog=128,
         reuse_address=None,
         reuse_port=None,
-    )
-
-    assert (
-        caplog.text.count(
-            "The 'server_host' option is deprecated, please remove it from your configuration"
-        )
-        == expected_warning_count
     )
 
     assert set(issue_registry.issues) == expected_issues
