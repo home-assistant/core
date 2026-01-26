@@ -5,10 +5,11 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any
 
 import aiotractive
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
@@ -20,21 +21,20 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
-    ATTR_ACTIVITY_LABEL,
-    ATTR_CALORIES,
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
     ATTR_MINUTES_DAY_SLEEP,
     ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_MINUTES_REST,
     ATTR_POWER_SAVING,
-    ATTR_SLEEP_LABEL,
     ATTR_TRACKER_STATE,
     CLIENT_ID,
+    DOMAIN,
     RECONNECT_INTERVAL,
     SERVER_UNAVAILABLE,
     SWITCH_KEY_MAP,
@@ -42,7 +42,6 @@ from .const import (
     TRACKER_HEALTH_OVERVIEW_UPDATED,
     TRACKER_POSITION_UPDATED,
     TRACKER_SWITCH_STATUS_UPDATED,
-    TRACKER_WELLNESS_STATUS_UPDATED,
 )
 
 PLATFORMS = [
@@ -129,6 +128,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
     )
     entry.async_on_unload(tractive.unsubscribe)
 
+    # Remove sensor entities that are no longer supported by the Tractive API
+    entity_reg = er.async_get(hass)
+    for item in filtered_trackables:
+        for key in ("activity_label", "calories", "sleep_label"):
+            if entity_id := entity_reg.async_get_entity_id(
+                SENSOR_PLATFORM, DOMAIN, f"{item.trackable['_id']}_{key}"
+            ):
+                entity_reg.async_remove(entity_id)
+
     return True
 
 
@@ -207,19 +215,6 @@ class TractiveClient:
 
         return not self._listen_task.cancelled()
 
-    async def trackable_objects(
-        self,
-    ) -> list[aiotractive.trackable_object.TrackableObject]:
-        """Get list of trackable objects."""
-        return cast(
-            list[aiotractive.trackable_object.TrackableObject],
-            await self._client.trackable_objects(),
-        )
-
-    def tracker(self, tracker_id: str) -> aiotractive.tracker.Tracker:
-        """Get tracker by id."""
-        return self._client.tracker(tracker_id)
-
     def subscribe(self) -> None:
         """Start event listener coroutine."""
         self._listen_task = asyncio.create_task(self._listen())
@@ -241,9 +236,6 @@ class TractiveClient:
                         server_was_unavailable = False
                     if event["message"] == "health_overview":
                         self.send_health_overview_update(event)
-                        continue
-                    if event["message"] == "wellness_overview":
-                        self._send_wellness_update(event)
                         continue
                     if (
                         "hardware" in event
@@ -312,34 +304,14 @@ class TractiveClient:
             TRACKER_SWITCH_STATUS_UPDATED, event["tracker_id"], payload
         )
 
-    def _send_wellness_update(self, event: dict[str, Any]) -> None:
-        sleep_day = None
-        sleep_night = None
-        if isinstance(event["sleep"], dict):
-            sleep_day = event["sleep"]["minutes_day_sleep"]
-            sleep_night = event["sleep"]["minutes_night_sleep"]
-        payload = {
-            ATTR_ACTIVITY_LABEL: event["wellness"].get("activity_label"),
-            ATTR_CALORIES: event["activity"]["calories"],
-            ATTR_DAILY_GOAL: event["activity"]["minutes_goal"],
-            ATTR_MINUTES_ACTIVE: event["activity"]["minutes_active"],
-            ATTR_MINUTES_DAY_SLEEP: sleep_day,
-            ATTR_MINUTES_NIGHT_SLEEP: sleep_night,
-            ATTR_MINUTES_REST: event["activity"]["minutes_rest"],
-            ATTR_SLEEP_LABEL: event["wellness"].get("sleep_label"),
-        }
-        self._dispatch_tracker_event(
-            TRACKER_WELLNESS_STATUS_UPDATED, event["pet_id"], payload
-        )
-
     def send_health_overview_update(self, event: dict[str, Any]) -> None:
         """Handle health_overview events from Tractive API."""
         # The health_overview response can be at root level or wrapped in 'content'
         # Handle both structures for compatibility
         data = event.get("content", event)
 
-        activity = data.get("activity", {})
-        sleep = data.get("sleep", {})
+        activity = data.get("activity") or {}
+        sleep = data.get("sleep") or {}
 
         payload = {
             ATTR_DAILY_GOAL: activity.get("minutesGoal"),

@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -91,6 +92,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -160,6 +162,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -216,6 +219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Roller left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -292,6 +296,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -360,6 +365,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -416,6 +422,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -472,6 +479,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -528,6 +536,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mop life time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -584,6 +593,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensor time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -640,6 +650,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -710,6 +721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -772,6 +784,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -822,6 +835,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning area',
     'options': dict({
     }),
     'original_device_class': None,
@@ -871,6 +885,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -933,6 +948,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current room',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -998,6 +1014,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dock error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1057,6 +1074,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maintenance brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1110,6 +1128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Strainer time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1163,6 +1182,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1219,6 +1239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last clean begin',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1268,6 +1289,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last clean end',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1317,6 +1339,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1373,6 +1396,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensor time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1429,6 +1453,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1531,6 +1556,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1625,6 +1651,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning area',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1676,6 +1703,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1725,6 +1753,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1837,6 +1866,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vacuum error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1941,6 +1971,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1991,6 +2022,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning area',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2040,6 +2072,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cleaning time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2102,6 +2135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current room',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2167,6 +2201,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dock error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2226,6 +2261,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maintenance brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2279,6 +2315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Strainer time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2332,6 +2369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2388,6 +2426,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last clean begin',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2437,6 +2476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last clean end',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2486,6 +2526,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Main brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2542,6 +2583,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensor time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2598,6 +2640,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Side brush time left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2700,6 +2743,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2794,6 +2838,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning area',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2845,6 +2890,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2894,6 +2940,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cleaning time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3006,6 +3053,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vacuum error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3110,6 +3158,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Countdown',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3184,6 +3233,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3249,6 +3299,8 @@
         'cooling',
         'under_delay_start',
         'done',
+        'aftercare',
+        'waiting_for_aftercare',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -3266,6 +3318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3296,6 +3349,8 @@
         'cooling',
         'under_delay_start',
         'done',
+        'aftercare',
+        'waiting_for_aftercare',
       ]),
     }),
     'context': <ANY>,
@@ -3327,6 +3382,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Washing left',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

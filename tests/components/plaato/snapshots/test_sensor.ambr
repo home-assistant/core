@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Alcohol By Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Batch Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -117,6 +119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -166,6 +169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Bubbles Per Minute',
     'options': dict({
     }),
     'original_device_class': None,
@@ -215,6 +219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Co2 Volume',
     'options': dict({
     }),
     'original_device_class': None,
@@ -263,6 +268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Original Gravity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -312,6 +318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Specific Gravity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -361,6 +368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Airlock Device_Name Temperature',
     'options': dict({
     }),
     'original_device_class': None,
@@ -409,6 +417,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Beer Left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -460,6 +469,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Last Pour Amount',
     'options': dict({
     }),
     'original_device_class': None,
@@ -512,6 +522,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Percent Beer Left',
     'options': dict({
     }),
     'original_device_class': None,
@@ -564,6 +575,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plaato Plaatodevicetype.Keg Device_Name Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
