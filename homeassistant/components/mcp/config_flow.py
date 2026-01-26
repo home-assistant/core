@@ -112,7 +112,7 @@ async def async_discover_authorization_server(
         for path in _authorization_server_discovery_paths(parsed_url)
     ]
     # Pick any successful response and propagate exceptions except for
-    # 404 where we fall back  to assuming some default paths.
+    # 404 where we fall back to assuming some default paths.
     try:
         response = await _async_fetch_any(hass, urls_to_try)
     except NotFoundError:
@@ -230,7 +230,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle the OAuth server discovery step.
 
         Since this OAuth server requires authentication, this step will attempt
-        to find the OAuth medata then run the OAuth authentication flow.
+        to find the OAuth metadata then run the OAuth authentication flow.
         """
         resource_metadata: ResourceMetadata | None = None
         try:
