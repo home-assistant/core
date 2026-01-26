@@ -28,3 +28,59 @@ get_requests:
         number:
           min: 0
           mode: box
+
+search_media:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    query:
+      required: true
+      selector:
+        text:
+    limit:
+      selector:
+        number:
+          min: 1
+          mode: box
+
+request_media:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    media_type:
+      required: true
+      selector:
+        select:
+          options:
+            - movie
+            - tv
+    tmdb_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+    seasons:
+      selector:
+        text:
+
+search_and_request:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    query:
+      required: true
+      selector:
+        text:
+    seasons:
+      selector:
+        text:

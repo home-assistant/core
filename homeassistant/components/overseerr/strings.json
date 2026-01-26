@@ -119,6 +119,9 @@
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
     },
+    "no_results": {
+      "message": "The provided query \"{query}\" did not yield any results."
+    },
     "not_loaded": {
       "message": "{target} is not loaded."
     }
@@ -163,6 +166,64 @@
         }
       },
       "name": "Get requests"
+    },
+    "request_media": {
+      "description": "Creates a media request in Overseerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance to create the request on.",
+          "name": "Overseerr instance"
+        },
+        "media_type": {
+          "description": "Type of media to request.",
+          "name": "Media type"
+        },
+        "seasons": {
+          "description": "For TV requests: seasons to request. Optional list of integers (e.g., [1, 2, 4]). If omitted, all seasons will be requested.",
+          "name": "Seasons"
+        },
+        "tmdb_id": {
+          "description": "The TMDB ID of the media to request.",
+          "name": "TMDB ID"
+        }
+      },
+      "name": "Request media"
+    },
+    "search_and_request": {
+      "description": "Searches for media and creates a request for the best match.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance to use.",
+          "name": "Overseerr instance"
+        },
+        "query": {
+          "description": "The search query.",
+          "name": "Query"
+        },
+        "seasons": {
+          "description": "For TV requests: seasons to request. Optional list of integers (e.g., [1, 2, 4]). If omitted, all seasons will be requested.",
+          "name": "Seasons"
+        }
+      },
+      "name": "Search and request"
+    },
+    "search_media": {
+      "description": "Searches for media in Overseerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance to search.",
+          "name": "Overseerr instance"
+        },
+        "limit": {
+          "description": "Maximum number of results to return.",
+          "name": "Limit"
+        },
+        "query": {
+          "description": "The search query.",
+          "name": "Query"
+        }
+      },
+      "name": "Search media"
     }
   }
 }
