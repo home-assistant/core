@@ -18,8 +18,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import create_mock_config_entry
-
 
 async def test_form_without_credentials(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we can set up successfully without credentials."""
@@ -266,16 +264,11 @@ async def test_form_errors(
     assert result["errors"] == {"base": expected_error}
 
 
-async def test_form_already_configured(hass: HomeAssistant, mock_nrgkick_api) -> None:
+async def test_form_already_configured(
+    hass: HomeAssistant, mock_config_entry, mock_nrgkick_api
+) -> None:
     """Test we handle already configured."""
-    entry = create_mock_config_entry(
-        domain=DOMAIN,
-        title="NRGkick Test",
-        data={CONF_HOST: "192.168.1.100"},
-        entry_id="test_entry",
-        unique_id="TEST123456",
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
