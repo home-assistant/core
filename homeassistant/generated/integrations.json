@@ -5187,6 +5187,13 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "powersensor": {
+      "name": "Powersensor",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
+    },
     "private_ble_device": {
       "name": "Private BLE Device",
       "integration_type": "device",

@@ -529,6 +529,7 @@ FLOWS = {
         "poolsense",
         "portainer",
         "powerfox",
+        "powersensor",
         "powerwall",
         "private_ble_device",
         "probe_plus",
