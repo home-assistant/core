@@ -7,9 +7,6 @@
       "benzene": {
         "default": "mdi:molecule"
       },
-      "nitrogen_monoxide": {
-        "default": "mdi:molecule"
-      },
       "non_methane_hydrocarbons": {
         "default": "mdi:molecule"
       }

@@ -361,6 +361,69 @@ async def test_async_get_user_site(mock_env_copy) -> None:
     assert ret == os.path.join(deps_dir, "lib_dir")
 
 
+async def test_async_get_installed_packages() -> None:
+    """Test async get installed packages."""
+    mock_output = b'[{"name": "package1", "version": "1.0.0"}, {"name": "package2", "version": "2.0.0"}]'
+
+    async_popen = MagicMock()
+    async_popen.returncode = 0
+
+    async def communicate(input=None):
+        return (mock_output, None)
+
+    async_popen.communicate = communicate
+
+    args = [sys.executable, "-m", "uv", "pip", "list", "--format", "json"]
+    with patch(
+        "homeassistant.util.package.asyncio.create_subprocess_exec",
+        return_value=async_popen,
+    ) as popen_mock:
+        ret = await package.async_get_installed_packages()
+
+    assert popen_mock.call_count == 1
+    assert popen_mock.call_args == call(
+        *args,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.DEVNULL,
+        close_fds=False,
+    )
+    assert ret == [
+        {"name": "package1", "version": "1.0.0"},
+        {"name": "package2", "version": "2.0.0"},
+    ]
+
+
+@pytest.mark.parametrize(
+    ("returncode", "stdout", "test_id"),
+    [
+        (1, b"", "nonzero_return"),
+        (0, b'{"name": "package1", "version": "1.0.0"}', "json_object"),
+        (0, b'"just a string"', "json_string"),
+    ],
+    ids=lambda x: x if isinstance(x, str) else None,
+)
+async def test_async_get_installed_packages_returns_empty(
+    returncode: int, stdout: bytes, test_id: str
+) -> None:
+    """Test async get installed packages returns empty list on errors."""
+    async_popen = MagicMock()
+    async_popen.returncode = returncode
+
+    async def communicate(input=None):
+        return (stdout, None)
+
+    async_popen.communicate = communicate
+
+    with patch(
+        "homeassistant.util.package.asyncio.create_subprocess_exec",
+        return_value=async_popen,
+    ):
+        ret = await package.async_get_installed_packages()
+
+    assert ret == []
+
+
 def test_check_package_global(caplog: pytest.LogCaptureFixture) -> None:
     """Test for an installed package."""
     pkg = metadata("homeassistant")
