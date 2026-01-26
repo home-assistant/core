@@ -30,6 +30,7 @@ from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     EntityCategory,
+    UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfMass,
     UnitOfPower,
@@ -62,6 +63,7 @@ from .utils import (
     get_condensers,
     get_device_serial,
     get_evaporators,
+    get_inverters,
     is_supported,
     normalize_state,
 )
@@ -1279,6 +1281,33 @@ EVAPORATOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
 )
 
+INVERTER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
+    ViCareSensorEntityDescription(
+        key="inverter_current",
+        translation_key="inverter_current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_getter=lambda api: api.getCurrent(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="inverter_power",
+        translation_key="inverter_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_getter=lambda api: api.getPower(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="inverter_temperature",
+        translation_key="inverter_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getTemperature(),
+        entity_registry_enabled_default=False,
+    ),
+)
+
 
 def _build_entities(
     device_list: list[ViCareDevice],
@@ -1305,6 +1334,7 @@ def _build_entities(
             (get_compressors(device.api), COMPRESSOR_SENSORS),
             (get_condensers(device.api), CONDENSER_SENSORS),
             (get_evaporators(device.api), EVAPORATOR_SENSORS),
+            (get_inverters(device.api), INVERTER_SENSORS),
         ):
             entities.extend(
                 ViCareSensor(
