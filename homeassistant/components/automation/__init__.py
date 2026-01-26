@@ -128,6 +128,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "device_tracker",
     "fan",
     "light",
+    "lock",
     "siren",
     "switch",
 }
