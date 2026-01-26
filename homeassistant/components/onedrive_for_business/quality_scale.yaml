@@ -1,0 +1,131 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not define any actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not define any actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id:
+    status: exempt
+    comment: |
+      This integration does not create entities.
+  has-entity-name:
+    status: exempt
+    comment: |
+      This integration does not create entities.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration does not have configuration parameters.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: |
+      This integration does not create entities.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: |
+      This integration does not create entities.
+  parallel-updates:
+    status: exempt
+    comment: |
+      This integration does not create entities.
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: |
+      This integration does not create entities.
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration is a cloud service and does not support discovery.
+  discovery:
+    status: exempt
+    comment: |
+      This integration is a cloud service and does not support discovery.
+  docs-data-update:
+    status: exempt
+    comment: |
+      This integration does not create entities.
+  docs-examples:
+    status: exempt
+    comment: |
+      This integration does not create entities or services.
+  docs-known-limitations:
+    status: exempt
+    comment: |
+      No known limitations.
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      This integration is a cloud service.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      This integration connects to a single service.
+  entity-category:
+    status: exempt
+    comment: |
+      This integration does not create entities.
+  entity-device-class:
+    status: exempt
+    comment: |
+      This integration does not create entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      This integration does not create entities.
+  entity-translations:
+    status: exempt
+    comment: |
+      This integration does not create entities.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: |
+      This integration does not create entities.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      No repairs yet.
+  stale-devices:
+    status: exempt
+    comment: |
+      This integration connects to a single service.
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
