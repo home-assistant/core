@@ -6,13 +6,16 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
@@ -388,3 +391,79 @@ async def test_climate_unknown_hvac_state(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes.get("hvac_action") is None
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
+)
+async def test_fan_mode_states(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test fan mode properties."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("fan_mode") == "auto"
+    assert state.attributes.get("fan_modes") == ["auto", "on", "circulate"]
+    assert state.attributes.get("supported_features") & ClimateEntityFeature.FAN_MODE
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
+)
+async def test_set_fan_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_c4_climate: MagicMock,
+) -> None:
+    """Test setting fan mode."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "on"},
+        blocking=True,
+    )
+    # Verify the Control4 API is called with the C4 format ("On" not "on")
+    mock_c4_climate.setFanMode.assert_called_once_with("On")
+
+
+@pytest.mark.parametrize(
+    "mock_climate_variables",
+    [
+        {
+            123: {
+                "HVAC_STATE": "idle",
+                "HVAC_MODE": "Heat",
+                "TEMPERATURE_F": 72.0,
+                "HUMIDITY": 50,
+                "COOL_SETPOINT_F": 75.0,
+                "HEAT_SETPOINT_F": 68.0,
+                # No FAN_MODE or FAN_MODES_LIST
+            }
+        }
+    ],
+)
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
+)
+async def test_fan_mode_not_supported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test fan mode feature not set when device doesn't support it."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("fan_mode") is None
+    assert state.attributes.get("fan_modes") is None
+    assert not (
+        state.attributes.get("supported_features") & ClimateEntityFeature.FAN_MODE
+    )
