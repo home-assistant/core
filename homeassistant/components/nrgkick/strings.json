@@ -111,7 +111,7 @@
         "name": "Domestic plug 2 temperature"
       },
       "error_code": {
-        "name": "Error code",
+        "name": "Error",
         "state": {
           "32a_attachment_on_16a_unit": "32A attachment on 16A unit",
           "attachment_overtemperature": "Attachment overtemperature",
@@ -270,7 +270,7 @@
         "name": "Vehicle connected since"
       },
       "warning_code": {
-        "name": "Warning code",
+        "name": "Warning",
         "state": {
           "blackout_protection": "Blackout protection",
           "energy_limit_reached": "Energy limit reached",
