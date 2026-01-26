@@ -50,6 +50,8 @@ async def async_setup_entry(
             coordinator,
             f"Relay #{i}",
             setup_switch(board_api, i, config_entry.data[f"relay_{i!s}"]),
+            config_entry.entry_id,
+            config_entry.data["host"],
         )
         for i in range(1, int(relay_count) + 1)
     )
@@ -58,11 +60,14 @@ async def async_setup_entry(
 class ProgettihwswSwitch(CoordinatorEntity, SwitchEntity):
     """Represent a switch entity."""
 
-    def __init__(self, coordinator, name, switch: Relay) -> None:
+    def __init__(
+        self, coordinator, name, switch: Relay, entry_id: str, host: str
+    ) -> None:
         """Initialize the values."""
         super().__init__(coordinator)
         self._switch = switch
         self._attr_name = name
+        self._attr_unique_id = f"{entry_id}_{host}_relay_{switch.id}"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -82,4 +87,4 @@ class ProgettihwswSwitch(CoordinatorEntity, SwitchEntity):
     @property
     def is_on(self):
         """Get switch state."""
-        return self.coordinator.data[self._switch.id]
+        return self.coordinator.data[self._switch.id - 1]
