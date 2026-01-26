@@ -39,7 +39,7 @@ class NinaWarningData:
     severity: str
     recommended_actions: str
     affected_areas: str
-    web: str
+    more_info_url: str
     sent: str
     start: str
     expires: str
@@ -149,6 +149,17 @@ class NINADataUpdateCoordinator(
                     )
                     continue
 
+                # pylint: disable=fixme
+                # TODO Add testcase
+                # TODO Service to get description
+                # TODO Service to get recommended actions
+
+                shorted_affected_areas: str = (
+                    affected_areas_string[0:250] + "..."
+                    if len(affected_areas_string) > 250
+                    else affected_areas_string
+                )
+
                 warning_data: NinaWarningData = NinaWarningData(
                     raw_warn.id,
                     raw_warn.headline,
@@ -156,7 +167,7 @@ class NINADataUpdateCoordinator(
                     raw_warn.sender,
                     raw_warn.severity,
                     " ".join([str(action) for action in raw_warn.recommended_actions]),
-                    affected_areas_string,
+                    shorted_affected_areas,
                     raw_warn.web or "",
                     raw_warn.sent or "",
                     raw_warn.start or "",
