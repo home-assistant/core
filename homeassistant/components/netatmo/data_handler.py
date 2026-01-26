@@ -169,6 +169,15 @@ class NetatmoDataHandler:
             )
         )
 
+        # Listen for schedule update events to refresh topology
+        self.config_entry.async_on_unload(
+            async_dispatcher_connect(
+                self.hass,
+                f"signal-{DOMAIN}-webhook-schedule",
+                self.handle_schedule_update,
+            )
+        )
+
         self.account = pyatmo.AsyncAccount(self._auth)
 
         await self.subscribe(ACCOUNT, ACCOUNT, None)
@@ -227,6 +236,46 @@ class NetatmoDataHandler:
         elif event["data"][WEBHOOK_PUSH_TYPE] in CAMERA_CONNECTION_WEBHOOKS:
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
             self.async_force_update(ACCOUNT)
+
+    async def handle_schedule_update(self, event: dict) -> None:
+        """Handle schedule update webhook events.
+
+        When a schedule is changed, we need to reload the complete topology
+        by calling async_update_topology on the account to get updated schedules.
+        """
+
+        data = event["data"]
+        home_id = data.get("home_id")
+
+        if not home_id:
+            _LOGGER.warning("Received schedule update event without home_id: %s", data)
+            return
+
+        # ignore simple schedule changes
+        if "schedule_id" in data:
+            return
+
+        _LOGGER.debug(
+            "Schedule update detected for home %s - reloading topology", home_id
+        )
+
+        # Force topology update to refresh all schedules
+        await self.async_fetch_data(ACCOUNT)
+
+        if home_id in self.account.homes:
+            # Update the schedules data for this home
+            self.hass.data[DOMAIN][DATA_SCHEDULES][home_id] = self.account.homes[
+                home_id
+            ].schedules
+
+            # Force update for all entities in this home
+            signal_home = f"{HOME}-{home_id}"
+
+            # Update status to fetch latest temperatures for climate entities
+            await self.async_fetch_data(signal_home)
+
+            if signal_home in self.publisher:
+                self.async_force_update(signal_home)
 
     async def async_fetch_data(self, signal_name: str) -> bool:
         """Fetch data and notify."""

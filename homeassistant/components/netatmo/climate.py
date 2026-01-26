@@ -448,6 +448,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                         self._boilerstatus = module.boiler_status
                         break
 
+        # Notify Home Assistant of the updated state
+        self.async_write_ha_state()
+
     async def _async_service_set_schedule(self, **kwargs: Any) -> None:
         schedule_name = kwargs.get(ATTR_SCHEDULE_NAME)
         schedule_id = None
