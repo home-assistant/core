@@ -31,5 +31,7 @@
   "iot_class": "cloud_polling",
   "loggers": ["ring_doorbell"],
   "quality_scale": "bronze",
-  "requirements": ["ring-doorbell==0.9.13"]
+  "requirements": [
+    "git+https://github.com/python-ring-doorbell/python-ring-doorbell.git@656bdaa"
+  ]
 }
