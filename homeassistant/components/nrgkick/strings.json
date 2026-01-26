@@ -51,7 +51,7 @@
           "gsm": "GSM",
           "lte_cat_m1": "LTE Cat-M1",
           "lte_nb_iot": "LTE NB-IoT",
-          "no_service": "No service",
+          "no_service": "No service"
         }
       },
       "cellular_operator": {
@@ -101,7 +101,6 @@
           "cee": "CEE",
           "domestic": "Domestic plug",
           "type2": "Type 2",
-          "unknown": "Unknown",
           "wall": "Wall socket"
         }
       },
@@ -141,7 +140,6 @@
           "underfrequency_detected": "Underfrequency detected",
           "undervoltage_detected": "Undervoltage detected",
           "undervoltage_without_pe_detected": "Undervoltage without PE detected",
-          "unknown": "Unknown",
           "unknown_frequency_type": "Unknown frequency type",
           "unknown_grid_type": "Unknown grid type",
           "unplug_detection_triggered": "Unplug detection triggered",
@@ -237,8 +235,7 @@
           "ac_60ma_fault": "AC 60mA fault",
           "dc_negative_6ma_fault": "DC -6mA fault",
           "dc_positive_6ma_fault": "DC +6mA fault",
-          "no_fault": "No fault",
-          "unknown": "Unknown"
+          "no_fault": "No fault"
         }
       },
       "status": {
@@ -248,7 +245,6 @@
           "connected": "Connected",
           "error": "Error",
           "standby": "Standby",
-          "unknown": "Unknown",
           "wakeup": "Wakeup"
         }
       },
@@ -287,7 +283,6 @@
           "no_comm_with_type2_attachment": "No communication with Type 2 attachment",
           "no_pe": "No protective earth",
           "no_warning": "No warning",
-          "unknown": "Unknown",
           "unsupported_charging_mode": "Unsupported charging mode"
         }
       }
