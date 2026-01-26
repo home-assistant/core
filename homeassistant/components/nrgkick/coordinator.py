@@ -25,7 +25,7 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 # Type alias for typed config entry with runtime_data.
-type NRGkickConfigEntry = ConfigEntry["NRGkickDataUpdateCoordinator"]
+type NRGkickConfigEntry = ConfigEntry[NRGkickDataUpdateCoordinator]
 
 
 def _coordinator_exception_handler[
