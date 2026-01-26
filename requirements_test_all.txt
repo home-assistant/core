@@ -1217,6 +1217,9 @@ lektricowifi==0.1
 # homeassistant.components.letpot
 letpot==0.6.4
 
+# homeassistant.components.levelhome
+level-ws-client==0.1.0
+
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.9
 

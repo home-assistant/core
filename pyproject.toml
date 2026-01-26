@@ -82,6 +82,7 @@ dependencies = [
   "yarl==1.22.0",
   "webrtc-models==0.3.0",
   "zeroconf==0.148.0",
+  "level-ws-client>=0.1.0",
 ]
 
 [project.urls]

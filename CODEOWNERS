@@ -909,6 +909,8 @@ build.json @home-assistant/supervisor
 /tests/components/lektrico/ @lektrico
 /homeassistant/components/letpot/ @jpelgrom
 /tests/components/letpot/ @jpelgrom
+/homeassistant/components/levelhome/ @albert-yang-level
+/tests/components/levelhome/ @albert-yang-level
 /homeassistant/components/lg_netcast/ @Drafteed @splinter98
 /tests/components/lg_netcast/ @Drafteed @splinter98
 /homeassistant/components/lg_thinq/ @LG-ThinQ-Integration
