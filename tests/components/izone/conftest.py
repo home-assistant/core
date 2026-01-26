@@ -1,19 +1,12 @@
 """Fixtures for iZone integration tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, Mock, patch
 
 from pizone import Controller, Zone
 import pytest
 
-from homeassistant.components.izone.const import (
-    DATA_DISCOVERY_SERVICE,
-    DISPATCH_CONTROLLER_DISCOVERED,
-    IZONE,
-)
-from homeassistant.components.izone.discovery import DiscoveryService
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.components.izone.const import IZONE
 
 from tests.common import MockConfigEntry
 
@@ -46,7 +39,6 @@ def create_mock_controller(
     zone_ctrl: int = 1,
     ras_mode: str = "master",
     free_air_enabled: bool = False,
-    zones: list[Zone] | None = None,
 ) -> Mock:
     """Create a mock Controller with configurable parameters."""
     controller = Mock(spec=Controller)
@@ -71,7 +63,6 @@ def create_mock_controller(
         Controller.Fan.HIGH,
         Controller.Fan.AUTO,
     ]
-    controller.zones = zones if zones is not None else []
     return controller
 
 
@@ -96,44 +87,33 @@ def create_mock_zone(
 
 
 @pytest.fixture
-async def setup_integration(
-    hass: HomeAssistant,
-) -> Generator[callable]:
-    """Set up iZone integration with mocked discovery service."""
+async def mock_discovery(
+    mock_controller: AsyncMock, mock_zones: list[AsyncMock]
+) -> AsyncGenerator[AsyncMock]:
+    """Create a mock discovery service with one controller and zones."""
+    mock_controller.zones = mock_zones
+    with patch(
+        "homeassistant.components.izone.discovery.pizone.discovery", autospec=True
+    ) as mock_disco:
+        mock_disco.return_value.start_discovery = AsyncMock()
+        mock_disco.return_value.controllers = {
+            mock_controller.device_uid: mock_controller
+        }
+        yield mock_disco
 
-    async def _setup(
-        config_entry: MockConfigEntry,
-        mock_pizone_disco: Mock,
-    ) -> Mock:
-        """Set up the integration with provided mocks."""
 
-        async def mock_start_discovery(hass: HomeAssistant) -> DiscoveryService:
-            # Create a real DiscoveryService but inject mock pizone disco
-            disco = DiscoveryService(hass)
-            disco.pi_disco = mock_pizone_disco
-            hass.data[DATA_DISCOVERY_SERVICE] = disco
-            return disco
+@pytest.fixture
+async def mock_zones() -> list[AsyncMock]:
+    """Create a list of mock zones."""
+    return [create_mock_zone(index=0, name="Living Room")]
 
-        with (
-            patch(
-                "homeassistant.components.izone.async_start_discovery_service",
-                side_effect=mock_start_discovery,
-            ),
-            patch(
-                "homeassistant.components.izone.discovery.pizone.discovery",
-                return_value=mock_pizone_disco,
-            ),
-        ):
-            config_entry.add_to_hass(hass)
-            await hass.config_entries.async_setup(config_entry.entry_id)
-            await hass.async_block_till_done()
 
-            # Trigger controller discovered for each controller in the mock disco
-            for controller in mock_pizone_disco.controllers.values():
-                async_dispatcher_send(hass, DISPATCH_CONTROLLER_DISCOVERED, controller)
-
-            await hass.async_block_till_done()
-
-        return mock_pizone_disco
-
-    return _setup
+@pytest.fixture
+async def mock_controller(mock_zones: list[AsyncMock]) -> AsyncMock:
+    """Create a mock controller."""
+    return create_mock_controller(
+        device_uid="test_controller_123",
+        ras_mode="master",
+        zone_ctrl=1,
+        zones_total=1,
+    )
