@@ -107,6 +107,52 @@ async def test_form_invalid_host_input(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_form_fallback_title_when_device_name_missing(
+    hass: HomeAssistant, mock_nrgkick_api
+) -> None:
+    """Test we fall back to a default title when device name is missing."""
+    mock_nrgkick_api.get_info.return_value = {"general": {"serial_number": "ABC"}}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.nrgkick.async_setup_entry",
+        return_value=True,
+    ):
+        flow_id = result["flow_id"]
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {CONF_HOST: "192.168.1.100"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "NRGkick"
+    assert result["data"] == {CONF_HOST: "192.168.1.100"}
+
+
+async def test_form_invalid_response_when_serial_missing(
+    hass: HomeAssistant, mock_nrgkick_api
+) -> None:
+    """Test we handle invalid device info response."""
+    mock_nrgkick_api.get_info.return_value = {"general": {"device_name": "NRGkick"}}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    flow_id = result["flow_id"]
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        {CONF_HOST: "192.168.1.100"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_response"}
+
+
 @pytest.mark.parametrize(
     "scenario",
     [

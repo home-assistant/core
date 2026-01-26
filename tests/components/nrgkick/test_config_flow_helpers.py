@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-from unittest.mock import ANY, AsyncMock, patch
-
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.nrgkick.api import NRGkickApiClientInvalidResponseError
-from homeassistant.components.nrgkick.config_flow import _normalize_host, validate_input
-from homeassistant.core import HomeAssistant
+from homeassistant.components.nrgkick.config_flow import _normalize_host
 
 
 @pytest.mark.parametrize(
@@ -31,36 +27,3 @@ def test_normalize_host_empty(value: str) -> None:
     """Test host normalization with empty input."""
     with pytest.raises(vol.Invalid):
         _normalize_host(value)
-
-
-async def test_validate_input_fallback_name_and_serial_required(
-    hass: HomeAssistant,
-) -> None:
-    """Test validate_input fallbacks and required fields."""
-    api = AsyncMock()
-    api.test_connection = AsyncMock(return_value=True)
-    api.get_info = AsyncMock(return_value={"general": {"serial_number": "ABC"}})
-
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=api,
-    ) as api_cls:
-        info = await validate_input(hass, "192.168.1.100", username=None, password=None)
-
-    assert info["title"] == "NRGkick"
-    assert info["serial"] == "ABC"
-    api_cls.assert_called_once_with(
-        host="192.168.1.100",
-        username=None,
-        password=None,
-        session=ANY,
-    )
-
-    api.get_info = AsyncMock(return_value={"general": {"device_name": "NRGkick"}})
-    with (
-        patch(
-            "homeassistant.components.nrgkick.config_flow.NRGkickAPI", return_value=api
-        ),
-        pytest.raises(NRGkickApiClientInvalidResponseError),
-    ):
-        await validate_input(hass, "192.168.1.100")
