@@ -14,14 +14,12 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components.calendar import DOMAIN, SERVICE_GET_EVENTS
-from homeassistant.components.calendar.const import CONF_COLOR
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.color import RGBColor
 
 from .conftest import MockCalendarEntity, MockConfigEntry
 
@@ -611,79 +609,62 @@ async def test_list_events_service_same_dates(
         )
 
 
-async def test_calendar_color_from_entity_options(
+async def test_calendar_initial_color_valid(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     test_entities: list[MockCalendarEntity],
 ) -> None:
-    """Test that the color is read from entity registry options."""
-    entity = test_entities[0]
+    """Test that _attr_initial_color creates initial entity options."""
+    # Entity 3 was created with a color
+    entity = test_entities[2]
 
-    # Initially no color is set
-    assert entity.color is None
-
-    # Set color via entity registry options
-    entity_registry.async_update_entity_options(
-        entity.entity_id, DOMAIN, {CONF_COLOR: [10, 20, 30]}
-    )
-    await hass.async_block_till_done()
-
-    # Verify color is stored in entity registry options
+    # Check that entity registry was populated with the color
     entry = entity_registry.async_get(entity.entity_id)
     assert entry is not None
-    assert entry.options.get(DOMAIN, {}).get(CONF_COLOR) == [10, 20, 30]
-
-    # Color should be accessible via the public property
-    assert entity.color == RGBColor(10, 20, 30)
+    assert entry.options.get(DOMAIN, {}).get("color") == "#FF0000"
 
     # Color should not be exposed in state attributes
     state = hass.states.get(entity.entity_id)
     assert state is not None
     assert "color" not in state.attributes
 
-    # Clear entity registry color
-    entity_registry.async_update_entity_options(entity.entity_id, DOMAIN, {})
-    await hass.async_block_till_done()
 
-    # Verify color is cleared in entity registry options
-    entry = entity_registry.async_get(entity.entity_id)
-    assert entry is not None
-    assert entry.options.get(DOMAIN, {}).get(CONF_COLOR) is None
-
-    # Color should be None when entity options are cleared
-    assert entity.color is None
-
-
-async def test_calendar_color_fallback_to_attr(
+async def test_calendar_initial_color_invalid(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that invalid _attr_initial_color is ignored."""
+    from .conftest import MockCalendarEntity
+
+    # Test various invalid color formats
+    invalid_colors = [
+        "FF0000",  # Missing #
+        "#FF00",  # Too short
+        "#FF00000",  # Too long
+        "#GGGGGG",  # Invalid hex
+        "red",  # Not hex
+        "",  # Empty
+    ]
+
+    for invalid_color in invalid_colors:
+        entity = MockCalendarEntity(
+            "Invalid Color Test",
+            [],
+            color=invalid_color,
+            unique_id=f"test_{invalid_color}",
+        )
+        # get_initial_entity_options should return None for invalid colors
+        assert entity.get_initial_entity_options() is None
+
+
+async def test_calendar_initial_color_none(
+    hass: HomeAssistant,
     test_entities: list[MockCalendarEntity],
 ) -> None:
-    """Test that color falls back to _attr_color when no entity option."""
+    """Test that entities without _attr_initial_color return None."""
+    # Entities 1 and 2 were created without a color
     entity = test_entities[0]
-
-    # Set _attr_color directly - this should be used as fallback
-    entity._attr_color = RGBColor(10, 20, 30)
-    entity.async_write_ha_state()
-    await hass.async_block_till_done()
-
-    # Color should be returned from _attr_color
-    assert entity.color == RGBColor(10, 20, 30)
-
-    # Now set entity registry option - it should take precedence
-    entity_registry.async_update_entity_options(
-        entity.entity_id, DOMAIN, {CONF_COLOR: [100, 150, 200]}
-    )
-    await hass.async_block_till_done()
-
-    # Entity registry option takes precedence over _attr_color
-    assert entity.color == RGBColor(100, 150, 200)
-
-    # Clear entity registry color - should fall back to _attr_color
-    entity_registry.async_update_entity_options(entity.entity_id, DOMAIN, {})
-    await hass.async_block_till_done()
-
-    assert entity.color == RGBColor(10, 20, 30)
+    assert entity.get_initial_entity_options() is None
 
 
 async def test_calendar_with_no_events(
@@ -695,9 +676,7 @@ async def test_calendar_with_no_events(
     state = hass.states.get(entity.entity_id)
     assert state is not None
     assert state.state == STATE_OFF
-    # Color should be accessible via entity property, not state attributes
-    assert entity.color == RGBColor(255, 0, 0)
-    # Color is no longer in state attributes
+    # Color is stored in entity registry options, not in state attributes
     assert "color" not in state.attributes
     assert "message" not in state.attributes
     assert "start_time" not in state.attributes

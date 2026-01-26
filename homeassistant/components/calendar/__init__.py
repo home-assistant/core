@@ -32,18 +32,16 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.color import RGBColor
 from homeassistant.util.json import JsonValueType
 
 from .const import (
-    CONF_COLOR,
     CONF_EVENT,
     DATA_COMPONENT,
     DOMAIN,
@@ -518,48 +516,20 @@ class CalendarEntity(Entity):
 
     _alarm_unsubs: list[CALLBACK_TYPE] | None = None
 
-    _attr_color: RGBColor | None = None
-    _calendar_option_color: RGBColor | None = None
+    _attr_initial_color: str | None = None
 
-    @property
-    def color(self) -> RGBColor | None:
-        """Return the color of the calendar entity as RGBColor.
+    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
+        """Return initial entity options."""
+        if self._attr_initial_color is None:
+            return None
 
-        First checks entity registry options, then falls back to _attr_color.
-        """
-        return self._calendar_option_color or self._attr_color
+        # Validate that it's a valid hex color string with # prefix
+        try:
+            validated_color = cv.color_hex(self._attr_initial_color)
+        except vol.Invalid:
+            return None
 
-    async def async_internal_added_to_hass(self) -> None:
-        """Call when the calendar entity is added to hass."""
-        await super().async_internal_added_to_hass()
-        if not self.registry_entry:
-            return
-        self._async_read_entity_options()
-
-    @callback
-    def async_registry_entry_updated(self) -> None:
-        """Run when the entity registry entry has been updated."""
-        self._async_read_entity_options()
-
-    @callback
-    def _async_read_entity_options(self) -> None:
-        """Read entity options from entity registry.
-
-        Called when the entity registry entry has been updated and before the
-        calendar is added to the state machine.
-        """
-        if not self.registry_entry:
-            return
-        if (
-            (calendar_options := self.registry_entry.options.get(DOMAIN))
-            and (color := calendar_options.get(CONF_COLOR))
-            and isinstance(color, list)
-            and len(color) == 3
-        ):
-            self._calendar_option_color = RGBColor(*color)
-            return
-
-        self._calendar_option_color = None
+        return {DOMAIN: {"color": validated_color}}
 
     @property
     def event(self) -> CalendarEvent | None:

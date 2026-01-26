@@ -12,8 +12,8 @@
       },
       "user": {
         "data": {
-          "calendar_name": "Calendar name",
-          "import": "Starting data"
+          "calendar_name": "Calendar Name",
+          "import": "Starting Data"
         },
         "description": "Please choose a name for your new calendar"
       }
