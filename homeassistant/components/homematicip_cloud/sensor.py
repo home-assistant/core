@@ -27,6 +27,7 @@ from homematicip.device import (
     PassageDetector,
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
+    SoilMoistureSensorInterface,
     SwitchMeasuring,
     TemperatureDifferenceSensor2,
     TemperatureHumiditySensorDisplay,
@@ -80,6 +81,13 @@ ATTR_RIGHT_COUNTER = "right_counter"
 ATTR_TEMPERATURE_OFFSET = "temperature_offset"
 ATTR_WIND_DIRECTION = "wind_direction"
 ATTR_WIND_DIRECTION_VARIATION = "wind_direction_variation_in_degree"
+ATTR_SOILTEMPERATURENEUTRALMAXIMUM = "soilTemperatureNeutralMaximum"
+ATTR_SOILTEMPERATURENEUTRALMINIMUM = "soilTemperatureNeutralMinimum"
+ATTR_SOILMOISTURERAWVALUE = "soilMoistureRawValue"
+ATTR_SOILMOISTUREMAXIMUMREFERENCE = "soilMoistureMaximumReference"
+ATTR_SOILMOISTUREMINIMUMREFERENCE = "soilMoistureMinimumReference"
+ATTR_SOILMOISTURENEUTRALMAXIMUM = "soilMoistureNeutralMaximum"
+ATTR_SOILMOISTURENEUTRALMINIMUM = "soilMoistureNeutralMinimum"
 ATTR_ESI_TYPE = "type"
 ESI_TYPE_UNKNOWN = "UNKNOWN"
 ESI_CONNECTED_SENSOR_TYPE_IEC = "ES_IEC"
@@ -98,6 +106,15 @@ ILLUMINATION_DEVICE_ATTRIBUTES = {
     "lowestIllumination": ATTR_LOWEST_ILLUMINATION,
     "highestIllumination": ATTR_HIGHEST_ILLUMINATION,
 }
+
+SOILMOISTURE_DEVICE_ATTRIBUTES = {
+    "soilMoistureRawValue": ATTR_SOILMOISTURERAWVALUE,
+    "soilMoistureMaximumReference": ATTR_SOILMOISTUREMAXIMUMREFERENCE,
+    "soilMoistureMinimumReference": ATTR_SOILMOISTUREMINIMUMREFERENCE,
+    "soilMoistureNeutralMaximum": ATTR_SOILMOISTURENEUTRALMAXIMUM,
+    "soilMoistureNeutralMinimum": ATTR_SOILMOISTURENEUTRALMINIMUM,
+}
+
 
 TILT_STATE_VALUES = ["neutral", "tilted", "non_neutral"]
 
@@ -134,6 +151,10 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
             HomematicipTemperatureSensor(hap, device),
             HomematicipHumiditySensor(hap, device),
             HomematicipAbsoluteHumiditySensor(hap, device),
+        ],
+        SoilMoistureSensorInterface: lambda device: [
+            HomematicipSoilTemperatureSensor(hap, device),
+            HomematicipSoilMoistureSensor(hap, device),
         ],
         RoomControlDeviceAnalog: lambda device: [
             HomematicipTemperatureSensor(hap, device),
@@ -541,6 +562,46 @@ class HomematicipTemperatureSensor(HomematicipGenericEntity, SensorEntity):
         return state_attr
 
 
+class HomematicipSoilTemperatureSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP SoilTemperatureSoil Temperature sensor."""
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the SoilTemperature device."""
+        super().__init__(hap, device, post="Soil Temperature")
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state."""
+        return getattr(self.functional_channel, "soilTemperature", None)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the SoilTemperature sensor."""
+        state_attr = super().extra_state_attributes
+
+        soilTemperatureNeutralMaximum = getattr(
+            self.functional_channel, "soilTemperatureNeutralMaximum", None
+        )
+        if soilTemperatureNeutralMaximum is not None:
+            state_attr[ATTR_SOILTEMPERATURENEUTRALMAXIMUM] = (
+                soilTemperatureNeutralMaximum
+            )
+
+        soilTemperatureNeutralMinimum = getattr(
+            self.functional_channel, "soilTemperatureNeutralMinimum", None
+        )
+        if soilTemperatureNeutralMinimum is not None:
+            state_attr[ATTR_SOILTEMPERATURENEUTRALMINIMUM] = (
+                soilTemperatureNeutralMinimum
+            )
+
+        return state_attr
+
+
 class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP absolute humidity sensor."""
 
@@ -569,6 +630,34 @@ class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
             return None
 
         return round(value, 3)
+
+
+class HomematicipSoilMoistureSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP Soil Moisture sensor."""
+
+    _attr_device_class = SensorDeviceClass.HUMIDITY
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize the SoilMoisture device."""
+        super().__init__(hap, device, post="Soil Moisture")
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state."""
+        return getattr(self.functional_channel, "soilMoisture", None)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the SoilMoisture sensor."""
+        state_attr = super().extra_state_attributes
+
+        for attr, attr_key in SOILMOISTURE_DEVICE_ATTRIBUTES.items():
+            if attr_value := getattr(self.functional_channel, attr, None):
+                state_attr[attr_key] = attr_value
+
+        return state_attr
 
 
 class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
