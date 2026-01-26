@@ -12,6 +12,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["pyairobotrest"],
-  "quality_scale": "gold",
+  "quality_scale": "platinum",
   "requirements": ["pyairobotrest==0.3.0"]
 }
