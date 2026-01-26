@@ -419,6 +419,9 @@ aiotankerkoenig==0.4.2
 # homeassistant.components.tedee
 aiotedee==0.2.25
 
+# homeassistant.components.telnet
+aiotelnet==1.1.0
+
 # homeassistant.components.tractive
 aiotractive==0.7.0
 

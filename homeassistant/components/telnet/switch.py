@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import Any
 
-import telnetlib  # pylint: disable=deprecated-module
+from aiotelnet import TelnetClient
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -53,8 +52,6 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA)}
 )
 
-SCAN_INTERVAL = timedelta(seconds=10)
-
 
 def setup_platform(
     hass: HomeAssistant,
@@ -91,6 +88,8 @@ def setup_platform(
 class TelnetSwitch(SwitchEntity):
     """Representation of a switch that can be toggled using telnet commands."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         object_id: str,
@@ -114,44 +113,54 @@ class TelnetSwitch(SwitchEntity):
         self._command_state = command_state
         self._value_template = value_template
         self._timeout = timeout
-        self._attr_should_poll = bool(command_state)
         self._attr_assumed_state = bool(command_state is None)
+        self._client = TelnetClient(
+            host=self._resource,
+            port=self._port,
+            timeout=self._timeout,
+            break_line=b"\r",
+            command_suffix="\\r",
+            message_handler=self._process_message,
+            auto_reconnect=True,
+            encoding="ASCII",
+            connect_callback=self.handle_connection_event,
+            disconnect_callback=self.handle_connection_event,
+        )
 
-    def _telnet_command(self, command: str) -> str | None:
-        try:
-            telnet = telnetlib.Telnet(self._resource, self._port)
-            telnet.write(command.encode("ASCII") + b"\r")
-            response = telnet.read_until(b"\r", timeout=self._timeout)
-        except OSError as error:
-            _LOGGER.error(
-                'Command "%s" failed with exception: %s', command, repr(error)
-            )
-            return None
-        _LOGGER.debug("telnet response: %s", response.decode("ASCII").strip())
-        return response.decode("ASCII").strip()
+    def handle_connection_event(self) -> None:
+        """Handle a connection event."""
+        self._attr_available = self._client.is_connected()
+        self.schedule_update_ha_state()
 
-    def update(self) -> None:
-        """Update device state."""
-        if not self._command_state:
+    async def _process_message(self, message: bytes) -> None:
+        """Process incoming message."""
+        if self.assumed_state:
             return
-        response = self._telnet_command(self._command_state)
-        if response and self._value_template:
-            rendered = self._value_template.render_with_possible_json_value(response)
-        else:
-            _LOGGER.warning("Empty response for command: %s", self._command_state)
-            return
-        self._attr_is_on = rendered == "True"
+        decoded = message.decode("ASCII").strip()
+        _LOGGER.debug("telnet response: %s", decoded)
+        if self._value_template:
+            rendered = self._value_template.render_with_possible_json_value(decoded)
+            self._attr_is_on = rendered == "True"
+            self.async_schedule_update_ha_state()
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        self._telnet_command(self._command_on)
+        await self._client.send_command(self._command_on)
         if self.assumed_state:
             self._attr_is_on = True
             self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self._telnet_command(self._command_off)
+        await self._client.send_command(self._command_off)
         if self.assumed_state:
             self._attr_is_on = False
             self.schedule_update_ha_state()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Call when entity is about to be removed from hass."""
+        await self._client.close()
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await self._client.connect()
