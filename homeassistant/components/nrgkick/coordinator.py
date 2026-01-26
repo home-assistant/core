@@ -103,15 +103,4 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
         control = await self.api.get_control()
         values = await self.api.get_values(raw=True)
 
-        if (
-            not isinstance(info, dict)
-            or not isinstance(control, dict)
-            or not isinstance(values, dict)
-        ):
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": "No data returned"},
-            )
-
         return NRGkickData(info=info, control=control, values=values)
