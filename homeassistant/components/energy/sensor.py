@@ -295,8 +295,9 @@ class SensorManager:
             return
 
         entity_id = generate_power_sensor_entity_id(source_type, power_config)
-        if not entity_id:
-            return
+        # entity_id is guaranteed to be non-None here because generate_power_sensor_entity_id
+        # and generate_power_sensor_unique_id return None under identical conditions
+        assert entity_id is not None
 
         sensor = EnergyPowerSensor(
             source_type,

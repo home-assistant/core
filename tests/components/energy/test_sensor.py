@@ -10,7 +10,12 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.energy import async_get_manager, data
-from homeassistant.components.energy.sensor import SensorManager
+from homeassistant.components.energy.sensor import (
+    EnergyCostSensor,
+    EnergyPowerSensor,
+    SensorManager,
+    SourceAdapter,
+)
 from homeassistant.components.recorder.core import Recorder
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.sensor import (
@@ -2743,3 +2748,133 @@ async def test_missing_price_entity(
     # Cost should be 150.0 (100 kWh * 1.5 EUR/kWh)
     state = hass.states.get("sensor.energy_consumption_cost")
     assert state.state == "150.0"
+
+
+async def test_sensor_manager_create_power_sensor_invalid_config(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test _create_or_keep_power_sensor with config that returns None unique_id."""
+    assert await async_setup_component(hass, "energy", {"energy": {}})
+    manager = await async_get_manager(hass)
+
+    # Create a SensorManager instance with a mock async_add_entities
+    def async_add_entities_mock(entities: list) -> None:
+        pass
+
+    sensor_manager = SensorManager(manager, async_add_entities_mock)
+
+    # Call _create_or_keep_power_sensor with a config that will return None unique_id
+    # (only has stat_rate, not inverted or combined)
+    to_add: list = []
+    to_remove: dict = {}
+    sensor_manager._create_or_keep_power_sensor(
+        "battery",
+        {"stat_rate": "sensor.power"},  # type: ignore[typeddict-item]
+        to_add,
+        to_remove,
+    )
+
+    # Nothing should be added since unique_id is None
+    assert len(to_add) == 0
+
+
+async def test_sensor_manager_create_power_sensor_already_exists(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test _create_or_keep_power_sensor when entity already exists in current_power_entities."""
+    assert await async_setup_component(hass, "energy", {"energy": {}})
+    manager = await async_get_manager(hass)
+
+    # Create a SensorManager instance with a mock async_add_entities
+    def async_add_entities_mock(entities: list) -> None:
+        pass
+
+    sensor_manager = SensorManager(manager, async_add_entities_mock)
+
+    power_config = {"stat_rate_inverted": "sensor.battery_power"}
+    unique_id = "energy_power_battery_inverted_sensor_battery_power"
+
+    # Pre-populate current_power_entities with a mock entry
+    sensor_manager.current_power_entities[unique_id] = None  # type: ignore[assignment]
+
+    to_add: list = []
+    to_remove: dict = {}
+    sensor_manager._create_or_keep_power_sensor(
+        "battery",
+        power_config,  # type: ignore[typeddict-item]
+        to_add,
+        to_remove,
+    )
+
+    # Nothing should be added since it already exists
+    assert len(to_add) == 0
+
+
+async def test_energy_cost_sensor_add_to_platform_abort(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test EnergyCostSensor.add_to_platform_abort sets the future."""
+    adapter = SourceAdapter(
+        source_type="grid",
+        flow_type="flow_from",
+        stat_energy_key="stat_energy_from",
+        total_money_key="stat_cost",
+        name_suffix="Cost",
+        entity_id_suffix="cost",
+    )
+    config = {
+        "stat_energy_from": "sensor.energy",
+        "stat_cost": None,
+        "entity_energy_price": "sensor.price",
+        "number_energy_price": None,
+    }
+
+    sensor = EnergyCostSensor(adapter, config)
+
+    # Future should not be done yet
+    assert not sensor.add_finished.done()
+
+    # Call abort
+    sensor.add_to_platform_abort()
+
+    # Future should now be done
+    assert sensor.add_finished.done()
+
+
+async def test_energy_power_sensor_add_to_platform_abort(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test EnergyPowerSensor.add_to_platform_abort sets the future."""
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config={"stat_rate_inverted": "sensor.battery_power"},
+        unique_id="test_unique_id",
+        entity_id="sensor.test_power",
+    )
+
+    # Future should not be done yet
+    assert not sensor.add_finished.done()
+
+    # Call abort
+    sensor.add_to_platform_abort()
+
+    # Future should now be done
+    assert sensor.add_finished.done()
+
+
+async def test_energy_power_sensor_available_fallback(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test EnergyPowerSensor.available returns True when neither inverted nor combined."""
+    # Create sensor with a config that makes neither _is_inverted nor _is_combined True
+    # This is technically defensive code since _needs_power_sensor guards against this
+    sensor = EnergyPowerSensor(
+        source_type="battery",
+        config={"stat_rate": "sensor.battery_power"},  # type: ignore[typeddict-item]
+        unique_id="test_unique_id",
+        entity_id="sensor.test_power",
+    )
+    sensor.hass = hass
+
+    # Should return True as fallback
+    assert sensor.available is True
