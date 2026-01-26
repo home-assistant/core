@@ -1,0 +1,30 @@
+{
+  "entity": {
+    "sensor": {
+      "current_l1": {
+        "default": "mdi:flash"
+      },
+      "current_l2": {
+        "default": "mdi:flash"
+      },
+      "current_l3": {
+        "default": "mdi:flash"
+      },
+      "voltage_l1": {
+        "default": "mdi:meter-electric"
+      },
+      "voltage_l2": {
+        "default": "mdi:meter-electric"
+      },
+      "voltage_l3": {
+        "default": "mdi:meter-electric"
+      },
+      "power": {
+        "default": "mdi:battery-charging-high"
+      },
+      "status": {
+        "default": "mdi:ev-plug-type2"
+      }
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "discovery_timeout": "No device responded to the discovery request.",
+      "invalid_discovery_data": "The received discovery data is invalid.",
+      "mqtt_not_configured": "MQTT is not configured. Please configure MQTT first",
+      "mqtt_not_connected": "MQTT is not connected. Ensure the MQTT broker is running and configured.",
+      "mqtt_subscription_failed": "Failed to subscribe to the MQTT topic for discovery.",
+      "no_discovery_data": "No discovery data received. Ensure the device is online and broadcasting."
+    },
+    "step": {
+      "select": {
+        "data": {
+          "serial_number": "Device serial number"
+        },
+        "data_description": {
+          "serial_number": "Select the device you want to add to Home Assistant"
+        },
+        "description": "Multiple Greencell devices were found (total: {count}). Please choose which one you want to configure.",
+        "title": "Select your device"
+      },
+      "user": {
+        "description": "The integration will try to discover your EVSE devices over MQTT.",
+        "title": "Set up your Greencell HabuDen EVSE"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_l1": {
+        "name": "Current phase L1"
+      },
+      "current_l2": {
+        "name": "Current phase L2"
+      },
+      "current_l3": {
+        "name": "Current phase L3"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "voltage_l1": {
+        "name": "Voltage phase L1"
+      },
+      "voltage_l2": {
+        "name": "Voltage phase L2"
+      },
+      "voltage_l3": {
+        "name": "Voltage phase L3"
+      }
+    }
+  }
+}

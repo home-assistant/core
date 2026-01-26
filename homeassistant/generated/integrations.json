@@ -2590,6 +2590,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "greencell": {
+      "name": "Greencell",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "greeneye_monitor": {
       "name": "GreenEye Monitor (GEM)",
       "integration_type": "hub",
