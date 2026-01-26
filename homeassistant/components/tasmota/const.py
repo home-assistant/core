@@ -19,6 +19,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
 
 TASMOTA_EVENT = "tasmota_event"
