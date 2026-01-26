@@ -1494,6 +1494,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor inlet pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1547,6 +1548,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor inlet temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1600,6 +1602,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor outlet temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1754,6 +1757,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condenser liquid temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1784,59 +1788,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25.9',
-  })
-# ---
-# name: test_all_entities[sensor.model1_current-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model1_current',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Current',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'inverter_current',
-    'unique_id': 'gateway1_deviceSerialVitocal250A-inverter_current-0',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_all_entities[sensor.model1_current-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'model1 Current',
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.model1_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
   })
 # ---
 # name: test_all_entities[sensor.model1_dhw_electricity_consumption_last_seven_days-entry]
@@ -2316,6 +2267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evaporator liquid temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2369,6 +2321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evaporator overheat temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2789,59 +2742,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12.2',
-  })
-# ---
-# name: test_all_entities[sensor.model1_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model1_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'inverter_power',
-    'unique_id': 'gateway1_deviceSerialVitocal250A-inverter_power-0',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_all_entities[sensor.model1_power-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'model1 Power',
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.model1_power',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
   })
 # ---
 # name: test_all_entities[sensor.model1_primary_circuit_supply_temperature-entry]
@@ -3283,59 +3183,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '29.8',
-  })
-# ---
-# name: test_all_entities[sensor.model1_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model1_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'inverter_temperature',
-    'unique_id': 'gateway1_deviceSerialVitocal250A-inverter_temperature-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_all_entities[sensor.model1_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'model1 Temperature',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.model1_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '26.3',
   })
 # ---
 # name: test_all_entities[sensor.model1_volumetric_flow-entry]
@@ -5296,60 +5143,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.4',
-  })
-# ---
-# name: test_all_entities[sensor.model4_signal_strength-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.model4_signal_strength',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Signal strength',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
-    'original_icon': None,
-    'original_name': 'Signal strength',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'gateway4_deviceId4-wifi_signal_strength',
-    'unit_of_measurement': 'dBm',
-  })
-# ---
-# name: test_all_entities[sensor.model4_signal_strength-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'model4 Signal strength',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.model4_signal_strength',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-41',
   })
 # ---
 # name: test_all_entities[sensor.model4_supply_fan_hours-entry]
