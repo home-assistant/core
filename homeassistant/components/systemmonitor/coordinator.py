@@ -282,7 +282,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             try:
                 battery = self._psutil.sensors_battery()
                 _LOGGER.debug("battery: %s", battery)
-            except AttributeError:
+            except (AttributeError, FileNotFoundError):
                 _LOGGER.debug("OS does not provide battery sensors")
 
         return {
