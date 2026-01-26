@@ -807,6 +807,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         # The lovelace app loops media to prevent timing out, don't show that
         if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
             return MediaPlayerState.PLAYING
+
         if (media_status := self._media_status()[0]) is not None:
             if media_status.player_state == MEDIA_PLAYER_STATE_PLAYING:
                 return MediaPlayerState.PLAYING
@@ -817,18 +818,18 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             if media_status.player_is_idle:
                 return MediaPlayerState.IDLE
 
-        if self._chromecast is not None and self._chromecast.is_idle:
-            # If library consider us idle, that is our off state
-            # it takes HDMI status into account for cast devices.
-            return MediaPlayerState.OFF
-
         if self.app_id in APP_IDS_UNRELIABLE_MEDIA_INFO:
             # Some apps don't report media status, show the player as playing
             return MediaPlayerState.PLAYING
 
-        if self.app_id is not None:
+        if self.app_id is not None and self.app_id != pychromecast.config.APP_BACKDROP:
             # We have an active app
             return MediaPlayerState.IDLE
+
+        if self._chromecast is not None and self._chromecast.is_idle:
+            # If library consider us idle, that is our off state
+            # it takes HDMI status into account for cast devices.
+            return MediaPlayerState.OFF
 
         return None
 
