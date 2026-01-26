@@ -1,5 +1,8 @@
 """Support for monitoring the Syncthing instance."""
 
+from collections.abc import Mapping
+from typing import Any
+
 import aiosyncthing
 
 from homeassistant.components.sensor import SensorEntity
@@ -11,6 +14,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
+from . import SyncthingClient
 from .const import (
     DEVICE_CONNECTED_RECEIVED,
     DEVICE_DISCONNECTED_RECEIVED,
@@ -102,7 +106,14 @@ class FolderSensor(SensorEntity):
         "state": "state",
     }
 
-    def __init__(self, syncthing, server_id, folder_id, folder_label, version):
+    def __init__(
+        self,
+        syncthing: SyncthingClient,
+        server_id: str,
+        folder_id: str,
+        folder_label: str,
+        version: str,
+    ) -> None:
         """Initialize the sensor."""
         self._syncthing = syncthing
         self._server_id = server_id
@@ -123,9 +134,9 @@ class FolderSensor(SensorEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> str:
         """Return the state of the sensor."""
-        return self._state["state"]
+        return self._state["state"] if self._state else "unknown"
 
     @property
     def available(self) -> bool:
@@ -133,7 +144,7 @@ class FolderSensor(SensorEntity):
         return self._state is not None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return self._state
 
@@ -242,7 +253,7 @@ class FolderSensor(SensorEntity):
 
         await self.async_update_status()
 
-    def _filter_state(self, state):
+    def _filter_state(self, state) -> dict:
         # Select only needed state attributes and map their names
         state = {
             self.STATE_ATTRIBUTES[key]: value
@@ -293,7 +304,14 @@ class DeviceSensor(SensorEntity):
         "state": "state",
     }
 
-    def __init__(self, syncthing, server_id, device_id, device_label, version):
+    def __init__(
+        self,
+        syncthing: SyncthingClient,
+        server_id: str,
+        device_id: str,
+        device_label: str,
+        version: str,
+    ) -> None:
         """Initialize the sensor."""
         self._syncthing = syncthing
         self._server_id = server_id
@@ -317,9 +335,9 @@ class DeviceSensor(SensorEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> str:
         """Return the state of the sensor."""
-        return self._state["state"]
+        return self._state["state"] if self._state else "unknown"
 
     @property
     def available(self) -> bool:
@@ -327,7 +345,7 @@ class DeviceSensor(SensorEntity):
         return self._state is not None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return self._state
 
@@ -335,17 +353,16 @@ class DeviceSensor(SensorEntity):
         """Request device status and update state."""
         try:
             state = await self._syncthing.config.devices(self._device_id)
-
-            if state["deviceID"] == self._server_id:
-                state["state"] = "online"
-            elif self._state is None:
-                state["state"] = "unknown"
-                self._state = state
-            else:
-                state["state"] = self._state.get("state", "unknown")
         except aiosyncthing.exceptions.SyncthingError:
             self._state = None
         else:
+            if state["deviceID"] == self._server_id:
+                state["state"] = "online"
+            else:
+                state["state"] = (
+                    self._state.get("state", "unknown") if self._state else "unknown"
+                )
+
             self._state = self._update_state(state)
 
         self.async_write_ha_state()
@@ -473,10 +490,11 @@ class DeviceSensor(SensorEntity):
 
         await self.async_update_status()
 
-    def _get_initial_device_state(self):
+    def _get_initial_device_state(self) -> dict:
         """Get initial device state from stored events on startup."""
-        state = "unknown"  # Default state
-        last_event = {"data": {}}
+        # Default state
+        state = "unknown" if self._server_id != self._device_id else "online"
+        last_event: Mapping[str, Any] = {"data": {}}
 
         for event in [
             e
@@ -499,7 +517,7 @@ class DeviceSensor(SensorEntity):
         last_event["data"]["state"] = state
         return self._update_state(last_event["data"])
 
-    def _update_state(self, updates):
+    def _update_state(self, updates) -> dict:
         # Select only needed state attributes and map their names
         state = self._state if self._state is not None else {}
 
