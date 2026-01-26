@@ -281,6 +281,27 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("NRGkick device %s does not have JSON API enabled", serial)
             return await self.async_step_zeroconf_enable_json_api()
 
+        # Proactively validate the device so we can immediately ask for
+        # credentials if authentication is required.
+        host = _normalize_host(self._discovered_host)
+        try:
+            await validate_input(self.hass, host)
+        except NRGkickApiClientAuthenticationError:
+            self._pending_host = host
+            return await self.async_step_user_auth()
+        except NRGkickApiClientApiDisabledError:
+            # mDNS metadata may be stale; fall back to the enable guidance.
+            return await self.async_step_zeroconf_enable_json_api()
+        except (
+            NRGkickApiClientCommunicationError,
+            NRGkickApiClientInvalidResponseError,
+        ):
+            # Device may be temporarily unavailable; allow the user to confirm
+            # and retry.
+            pass
+        except NRGkickApiClientError:
+            _LOGGER.exception("Unexpected error")
+
         # Proceed to confirmation step (no auth required upfront).
         return await self.async_step_zeroconf_confirm()
 

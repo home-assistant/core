@@ -18,7 +18,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
-from . import create_mock_config_entry
+from . import create_mock_config_entry, patch_nrgkickapi
 
 
 def test_schema_is_serializable() -> None:
@@ -40,10 +40,7 @@ async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
     with (
-        patch(
-            "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-            return_value=mock_nrgkick_api,
-        ),
+        patch_nrgkickapi(mock_nrgkick_api),
         patch(
             "homeassistant.components.nrgkick.async_setup_entry",
             return_value=True,
@@ -63,10 +60,7 @@ async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
     mock_nrgkick_api.test_connection.side_effect = None
 
     with (
-        patch(
-            "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-            return_value=mock_nrgkick_api,
-        ),
+        patch_nrgkickapi(mock_nrgkick_api),
         patch(
             "homeassistant.components.nrgkick.async_setup_entry",
             return_value=True,
@@ -100,10 +94,7 @@ async def test_form_without_credentials(hass: HomeAssistant, mock_nrgkick_api) -
     )
 
     with (
-        patch(
-            "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-            return_value=mock_nrgkick_api,
-        ),
+        patch_nrgkickapi(mock_nrgkick_api),
         patch(
             "homeassistant.components.nrgkick.async_setup_entry",
             return_value=True,
@@ -130,10 +121,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_nrgkick_api) -> Non
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientCommunicationError
 
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
+    with patch_nrgkickapi(mock_nrgkick_api):
         flow_id = result.get("flow_id")
         assert flow_id is not None
         result2 = await hass.config_entries.flow.async_configure(
@@ -170,10 +158,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, mock_nrgkick_api) -> None:
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
+    with patch_nrgkickapi(mock_nrgkick_api):
         flow_id = result.get("flow_id")
         assert flow_id is not None
         result2 = await hass.config_entries.flow.async_configure(
@@ -184,10 +169,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, mock_nrgkick_api) -> None:
     assert result2.get("type") == data_entry_flow.FlowResultType.FORM
     assert result2.get("step_id") == "user_auth"
 
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
+    with patch_nrgkickapi(mock_nrgkick_api):
         flow_id = result2.get("flow_id")
         assert flow_id is not None
         result3 = await hass.config_entries.flow.async_configure(
@@ -212,10 +194,7 @@ async def test_user_auth_step_cannot_connect(
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
+    with patch_nrgkickapi(mock_nrgkick_api):
         flow_id = result.get("flow_id")
         assert flow_id is not None
         result2 = await hass.config_entries.flow.async_configure(
@@ -228,10 +207,7 @@ async def test_user_auth_step_cannot_connect(
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientCommunicationError
 
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
+    with patch_nrgkickapi(mock_nrgkick_api):
         flow_id = result2.get("flow_id")
         assert flow_id is not None
         result3 = await hass.config_entries.flow.async_configure(
@@ -253,10 +229,7 @@ async def test_user_auth_step_unknown_error(
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
+    with patch_nrgkickapi(mock_nrgkick_api):
         flow_id = result.get("flow_id")
         assert flow_id is not None
         result2 = await hass.config_entries.flow.async_configure(
@@ -269,10 +242,7 @@ async def test_user_auth_step_unknown_error(
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientError
 
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
+    with patch_nrgkickapi(mock_nrgkick_api):
         flow_id = result2.get("flow_id")
         assert flow_id is not None
         result3 = await hass.config_entries.flow.async_configure(
@@ -292,10 +262,7 @@ async def test_form_unknown_exception(hass: HomeAssistant, mock_nrgkick_api) -> 
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientError
 
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
+    with patch_nrgkickapi(mock_nrgkick_api):
         flow_id = result.get("flow_id")
         assert flow_id is not None
         result2 = await hass.config_entries.flow.async_configure(
@@ -315,10 +282,7 @@ async def test_form_json_api_disabled(hass: HomeAssistant, mock_nrgkick_api) -> 
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientApiDisabledError
 
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
+    with patch_nrgkickapi(mock_nrgkick_api):
         flow_id = result.get("flow_id")
         assert flow_id is not None
         result2 = await hass.config_entries.flow.async_configure(
@@ -340,10 +304,7 @@ async def test_user_auth_step_json_api_disabled(
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
+    with patch_nrgkickapi(mock_nrgkick_api):
         flow_id = result.get("flow_id")
         assert flow_id is not None
         result2 = await hass.config_entries.flow.async_configure(
@@ -356,10 +317,7 @@ async def test_user_auth_step_json_api_disabled(
 
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientApiDisabledError
 
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
+    with patch_nrgkickapi(mock_nrgkick_api):
         flow_id = result2.get("flow_id")
         assert flow_id is not None
         result3 = await hass.config_entries.flow.async_configure(
@@ -386,10 +344,7 @@ async def test_form_already_configured(hass: HomeAssistant, mock_nrgkick_api) ->
         "nrgkick", context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
+    with patch_nrgkickapi(mock_nrgkick_api):
         flow_id = result.get("flow_id")
         assert flow_id is not None
         result2 = await hass.config_entries.flow.async_configure(
