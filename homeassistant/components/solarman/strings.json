@@ -5,28 +5,15 @@
         "title": "Configure Solarman Device",
         "description": "Enter the IP address of Solarman device to integrate with Home Assistant.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The IP address or hostname of the Solarman device.",
-          "port": "The TCP port of the Solarman device (default: 8080)."
+          "host": "The IP address or hostname of the Solarman device."
         }
       },
       "discovery_confirm": {
         "title": "Confirm",
         "description": "Do you want to set up {model} ({sn}) at {host}?"
-      },
-      "reconfigure": {
-        "description": "Update configuration for {title}.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
-        },
-        "data_description": {
-          "host": "[%key:component::solarman::config::step::user::data_description::host%]",
-          "port": "The TCP port of the Solarman device (default: 8080)."
-        }
       }
     },
     "error": {
@@ -36,7 +23,6 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "another_device": "The configured device is not the same found on this IP address"
     }
   },
@@ -47,12 +33,6 @@
       },
       "reverse_active_energy": {
         "name": "Reverse active energy"
-      },
-      "meter_sn": {
-        "name": "Meter SN"
-      },
-      "meter_version": {
-        "name": "Meter version"
       },
       "total_act_energy_lt": {
         "name": "Total actual energy low tariff"

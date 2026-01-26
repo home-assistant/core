@@ -14,7 +14,6 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 # Configure test constants
 TEST_HOST = "192.168.1.100"
 TEST_DEVICE_SN = "SN1234567890"
-TEST_FW_VERSION = "LSW3_01_E030_SS_00_00.00.00.03"
 TEST_MODEL = "SP-2W-EU"
 
 
@@ -133,7 +132,6 @@ async def test_zeroconf(hass: HomeAssistant, mock_solarman: AsyncMock) -> None:
             properties={
                 "product_type": "SP-2W-EU",
                 "serial": TEST_DEVICE_SN,
-                "fw_version": TEST_FW_VERSION
             },
         ),
     )
@@ -178,7 +176,6 @@ async def test_zeroconf_already_configured(
             properties={
                 "product_type": "SP-2W-EU",
                 "serial": TEST_DEVICE_SN,
-                "fw_version": TEST_FW_VERSION
             },
         ),
     )
@@ -217,7 +214,6 @@ async def test_zeroconf_ip_change(
                 properties={
                     "product_type": "SP-2W-EU",
                     "serial": TEST_DEVICE_SN,
-                    "fw_version": TEST_FW_VERSION
                 },
             ),
         )
@@ -263,7 +259,6 @@ async def test_zeroconf_error(
                 properties={
                     "product_type": "SP-2W-EU",
                     "serial": TEST_DEVICE_SN,
-                    "fw_version": TEST_FW_VERSION
                 },
             ),
         )

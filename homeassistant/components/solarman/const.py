@@ -13,7 +13,6 @@ PLATFORMS = [
 
 CONF_SERIAL = "serial"
 CONF_SN = "sn"
-CONF_FW_VERSION = "fw_version"
 CONF_FW = "fw"
 CONF_PRODUCT_TYPE = "product_type"
 

@@ -8,10 +8,8 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
-    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -23,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import SolarmanDeviceUpdateCoordinator
+from .coordinator import SolarmanDeviceUpdateCoordinator, SolarmanConfigEntry
 from .entity import SolarmanEntity
 
 PARALLEL_UPDATES = 1
@@ -61,16 +59,6 @@ SENSORS: Final = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    SensorEntityDescription(
-        key="SN",
-        translation_key="meter_sn",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="device_version",
-        translation_key="meter_version",
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="total_act_energy_LT",
@@ -265,10 +253,10 @@ SENSORS: Final = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SolarmanConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up sensors from a config entry."""
+    """Set up sensors from SolarmanConfigEntry."""
     async_add_entities(
         SolarmanSensorEntity(entry.runtime_data, description)
         for description in SENSORS

@@ -12,8 +12,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
-    CONF_FW,
-    CONF_FW_VERSION,
     CONF_PRODUCT_TYPE,
     CONF_SERIAL,
     CONF_SN,

@@ -671,54 +671,6 @@
     'state': '0',
   })
 # ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_meter_sn-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.p1_meter_reader_meter_sn',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Meter SN',
-    'platform': 'solarman',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sn',
-    'unique_id': 'SN1234567890_SN',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[P1-2W][sensor.p1_meter_reader_meter_sn-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'P1 Meter Reader Meter SN',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.p1_meter_reader_meter_sn',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'E0036003765928016',
-  })
-# ---
 # name: test_sensor[P1-2W][sensor.p1_meter_reader_total_actual_energy_low_tariff-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1610,54 +1562,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.03',
-  })
-# ---
-# name: test_sensor[gl meter][sensor.smart_meter_meter_sn-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.smart_meter_meter_sn',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Meter SN',
-    'platform': 'solarman',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sn',
-    'unique_id': 'SN1234567890_SN',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[gl meter][sensor.smart_meter_meter_sn-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Smart Meter Meter SN',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.smart_meter_meter_sn',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3310500113',
   })
 # ---
 # name: test_sensor[gl meter][sensor.smart_meter_power_factor-entry]

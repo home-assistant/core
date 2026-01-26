@@ -28,7 +28,6 @@ class SolarmanEntity(CoordinatorEntity[SolarmanDeviceUpdateCoordinator]):
             identifiers={(DOMAIN, sn)},
             name=MODEL_NAME_MAP[model],
             manufacturer="SOLARMAN",
-            sw_version=coordinator.fw_version,
             model=model,
             serial_number=sn,
         )
