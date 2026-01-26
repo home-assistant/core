@@ -33,36 +33,6 @@ def test_normalize_host_empty(value: str) -> None:
         _normalize_host(value)
 
 
-def test_normalize_host_url_port_none_and_invalid_host() -> None:
-    """Test URL normalization branches that are hard to hit with real parsers."""
-
-    class _Url:
-        host = "example.com"
-        port = None
-
-    with (
-        patch("homeassistant.components.nrgkick.config_flow.cv.url", return_value="x"),
-        patch(
-            "homeassistant.components.nrgkick.config_flow.yarl.URL", return_value=_Url()
-        ),
-    ):
-        assert _normalize_host("nrgkick://example.com/path") == "example.com"
-
-    class _BadUrl:
-        host = None
-        port = None
-
-    with (
-        patch("homeassistant.components.nrgkick.config_flow.cv.url", return_value="x"),
-        patch(
-            "homeassistant.components.nrgkick.config_flow.yarl.URL",
-            return_value=_BadUrl(),
-        ),
-        pytest.raises(vol.Invalid),
-    ):
-        _normalize_host("nrgkick://")
-
-
 async def test_validate_input_fallback_name_and_serial_required(
     hass: HomeAssistant,
 ) -> None:

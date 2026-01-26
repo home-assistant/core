@@ -50,7 +50,10 @@ def _normalize_host(value: str) -> str:
     if not value:
         raise vol.Invalid("host is required")
     if "://" in value:
-        url = yarl.URL(cv.url(value))
+        try:
+            url = yarl.URL(cv.url(value))
+        except ValueError as err:
+            raise vol.Invalid("invalid url") from err
         if not url.host:
             raise vol.Invalid("invalid url")
         if url.port is not None:
