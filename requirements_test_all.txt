@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.19.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.76.0
+PySwitchbot==1.0.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -573,7 +573,7 @@ beautifulsoup4==4.13.3
 bimmer-connected[china]==0.17.3
 
 # homeassistant.components.esphome
-bleak-esphome==3.4.0
+bleak-esphome==3.4.1
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.4.3
@@ -2615,7 +2615,7 @@ vegehub==0.1.26
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2026.1.1
+velbus-aio==2026.1.4
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
