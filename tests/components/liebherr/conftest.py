@@ -28,8 +28,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_API_KEY: "test-api-key"},
-        unique_id="test-api-key",
-        title="Mock Title",
+        title="Liebherr",
     )
 
 

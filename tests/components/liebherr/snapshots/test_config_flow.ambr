@@ -23,7 +23,6 @@
   FlowResultSnapshot({
     'context': dict({
       'source': 'user',
-      'unique_id': '4c806362b613f7496abf284146efd31da90e4b16169fe001841ca17290f427c4',
     }),
     'data': dict({
       'api_key': 'test-api-key',
@@ -53,7 +52,7 @@
       'subentries': list([
       ]),
       'title': 'Liebherr',
-      'unique_id': '4c806362b613f7496abf284146efd31da90e4b16169fe001841ca17290f427c4',
+      'unique_id': None,
       'version': 1,
     }),
     'subentries': tuple(
@@ -65,46 +64,11 @@
 # ---
 # name: test_form_already_configured
   FlowResultSnapshot({
-    'context': dict({
-      'source': 'user',
-      'unique_id': '4c806362b613f7496abf284146efd31da90e4b16169fe001841ca17290f427c4',
-    }),
-    'data': dict({
-      'api_key': 'test-api-key',
-    }),
-    'description': None,
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'liebherr',
-    'minor_version': 1,
-    'options': dict({
-    }),
-    'result': ConfigEntrySnapshot({
-      'data': dict({
-        'api_key': 'test-api-key',
-      }),
-      'disabled_by': None,
-      'discovery_keys': dict({
-      }),
-      'domain': 'liebherr',
-      'entry_id': <ANY>,
-      'minor_version': 1,
-      'options': dict({
-      }),
-      'pref_disable_new_entities': False,
-      'pref_disable_polling': False,
-      'source': 'user',
-      'subentries': list([
-      ]),
-      'title': 'Liebherr',
-      'unique_id': '4c806362b613f7496abf284146efd31da90e4b16169fe001841ca17290f427c4',
-      'version': 1,
-    }),
-    'subentries': tuple(
-    ),
-    'title': 'Liebherr',
-    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
-    'version': 1,
+    'reason': 'already_configured',
+    'type': <FlowResultType.ABORT: 'abort'>,
   })
 # ---
 # name: test_form_errors_with_recovery[side_effect0-invalid_auth]
@@ -132,7 +96,6 @@
   FlowResultSnapshot({
     'context': dict({
       'source': 'user',
-      'unique_id': '4c806362b613f7496abf284146efd31da90e4b16169fe001841ca17290f427c4',
     }),
     'data': dict({
       'api_key': 'test-api-key',
@@ -162,7 +125,7 @@
       'subentries': list([
       ]),
       'title': 'Liebherr',
-      'unique_id': '4c806362b613f7496abf284146efd31da90e4b16169fe001841ca17290f427c4',
+      'unique_id': None,
       'version': 1,
     }),
     'subentries': tuple(
@@ -197,7 +160,6 @@
   FlowResultSnapshot({
     'context': dict({
       'source': 'user',
-      'unique_id': '4c806362b613f7496abf284146efd31da90e4b16169fe001841ca17290f427c4',
     }),
     'data': dict({
       'api_key': 'test-api-key',
@@ -227,7 +189,7 @@
       'subentries': list([
       ]),
       'title': 'Liebherr',
-      'unique_id': '4c806362b613f7496abf284146efd31da90e4b16169fe001841ca17290f427c4',
+      'unique_id': None,
       'version': 1,
     }),
     'subentries': tuple(
@@ -262,7 +224,6 @@
   FlowResultSnapshot({
     'context': dict({
       'source': 'user',
-      'unique_id': '4c806362b613f7496abf284146efd31da90e4b16169fe001841ca17290f427c4',
     }),
     'data': dict({
       'api_key': 'test-api-key',
@@ -292,7 +253,7 @@
       'subentries': list([
       ]),
       'title': 'Liebherr',
-      'unique_id': '4c806362b613f7496abf284146efd31da90e4b16169fe001841ca17290f427c4',
+      'unique_id': None,
       'version': 1,
     }),
     'subentries': tuple(
@@ -309,5 +270,49 @@
     'handler': 'liebherr',
     'reason': 'no_devices',
     'type': <FlowResultType.ABORT: 'abort'>,
+  })
+# ---
+# name: test_zeroconf_discovery
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'zeroconf',
+      'unique_id': 'liebherr-fridge._http._tcp.local.',
+    }),
+    'data': dict({
+      'api_key': 'test-api-key',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'liebherr',
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'api_key': 'test-api-key',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'liebherr',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'zeroconf',
+      'subentries': list([
+      ]),
+      'title': 'Liebherr',
+      'unique_id': 'liebherr-fridge._http._tcp.local.',
+      'version': 1,
+    }),
+    'subentries': tuple(
+    ),
+    'title': 'Liebherr',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
   })
 # ---

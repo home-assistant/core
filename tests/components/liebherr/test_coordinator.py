@@ -11,7 +11,11 @@ import pytest
 
 from homeassistant.components.liebherr.coordinator import LiebherrCoordinator
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
@@ -32,6 +36,11 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.mark.parametrize(
     ("exception", "expected_error", "expected_match"),
     [
+        (
+            LiebherrAuthenticationError("Invalid API key"),
+            ConfigEntryAuthFailed,
+            "API key is no longer valid",
+        ),
         (
             LiebherrTimeoutError("Timeout"),
             UpdateFailed,
@@ -68,7 +77,7 @@ async def test_coordinator_update_errors(
     [
         (
             LiebherrAuthenticationError("Invalid API key"),
-            ConfigEntryAuthFailed,
+            ConfigEntryError,
             "Invalid API key",
         ),
         (

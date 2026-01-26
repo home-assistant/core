@@ -1,5 +1,6 @@
 """Test the liebherr config flow."""
 
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
 from pyliebherrhomeapi import Device, DeviceType
@@ -16,6 +17,7 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -26,6 +28,16 @@ MOCK_DEVICE = Device(
 )
 MOCK_API_KEY = "test-api-key"
 MOCK_USER_INPUT = {CONF_API_KEY: MOCK_API_KEY}
+
+MOCK_ZEROCONF_SERVICE_INFO = ZeroconfServiceInfo(
+    ip_address=ip_address("192.168.1.100"),
+    ip_addresses=[ip_address("192.168.1.100")],
+    port=80,
+    hostname="liebherr-device.local.",
+    type="_http._tcp.local.",
+    name="liebherr-fridge._http._tcp.local.",
+    properties={},
+)
 
 
 @pytest.fixture
@@ -141,7 +153,6 @@ async def test_form_already_configured(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_USER_INPUT,
-        unique_id=MOCK_API_KEY,
     )
     entry.add_to_hass(hass)
 
@@ -151,3 +162,46 @@ async def test_form_already_configured(
     )
     await hass.async_block_till_done()
     assert result == snapshot
+
+
+async def test_zeroconf_discovery(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_setup_entry: AsyncMock,
+    mock_get_devices: AsyncMock,
+) -> None:
+    """Test zeroconf discovery triggers the config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_SERVICE_INFO,
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await _complete_flow_successfully(
+        hass, result.get("flow_id"), mock_get_devices, mock_setup_entry
+    )
+    assert result == snapshot
+
+
+async def test_zeroconf_already_configured(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test zeroconf discovery aborts if already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_INPUT,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_SERVICE_INFO,
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from pyliebherrhomeapi import LiebherrClient
 from pyliebherrhomeapi.exceptions import (
     LiebherrAuthenticationError,
@@ -10,7 +12,7 @@ from pyliebherrhomeapi.exceptions import (
 
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
@@ -30,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
     try:
         devices = await client.get_devices()
     except LiebherrAuthenticationError as err:
-        raise ConfigEntryAuthFailed("Invalid API key") from err
+        raise ConfigEntryError("Invalid API key") from err
     except LiebherrConnectionError as err:
         raise ConfigEntryNotReady(f"Failed to connect to Liebherr API: {err}") from err
 
@@ -46,8 +48,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
             client=client,
             device_id=device.device_id,
         )
-        await coordinator.async_config_entry_first_refresh()
         coordinators[device.device_id] = coordinator
+
+    await asyncio.gather(
+        *(
+            coordinator.async_config_entry_first_refresh()
+            for coordinator in coordinators.values()
+        )
+    )
 
     # Store coordinators in runtime data
     entry.runtime_data = coordinators

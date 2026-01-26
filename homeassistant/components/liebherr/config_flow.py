@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import logging
 from typing import Any
 
@@ -16,6 +15,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -39,10 +39,7 @@ class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input[CONF_API_KEY] = user_input[CONF_API_KEY].strip()
 
-            # Set unique ID using hash of API key for privacy
-            unique_id = hashlib.sha256(user_input[CONF_API_KEY].encode()).hexdigest()
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
 
             try:
                 # Create a client and test the connection
@@ -70,3 +67,16 @@ class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        # Use the discovered device name as unique ID for this discovery flow
+        await self.async_set_unique_id(discovery_info.name)
+        self._abort_if_unique_id_configured()
+
+        # Also abort if any Liebherr entry exists (cloud API covers all devices)
+        self._async_abort_entries_match()
+
+        return await self.async_step_user()

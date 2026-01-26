@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from pyliebherrhomeapi import TemperatureControl, TemperatureUnit
 
@@ -101,20 +102,18 @@ class LiebherrSensor(LiebherrZoneEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        return (
-            self.entity_description.unit_fn(temp_control)
-            if (temp_control := self.temperature_control)
-            else None
-        )
+        temp_control = self.temperature_control
+        if TYPE_CHECKING:
+            assert temp_control
+        return self.entity_description.unit_fn(temp_control)
 
     @property
     def native_value(self) -> StateType:
         """Return the current value."""
-        return (
-            self.entity_description.value_fn(temp_control)
-            if (temp_control := self.temperature_control)
-            else None
-        )
+        temp_control = self.temperature_control
+        if TYPE_CHECKING:
+            assert temp_control
+        return self.entity_description.value_fn(temp_control)
 
     @property
     def available(self) -> bool:
