@@ -52,10 +52,13 @@ def make_test_trigger(*entities: str) -> dict:
 
 
 async def async_trigger(
-    hass: HomeAssistant, entity_id: str, state: str | None = None
+    hass: HomeAssistant,
+    entity_id: str,
+    state: str | None = None,
+    attributes: dict | None = None,
 ) -> None:
     """Trigger a state change."""
-    hass.states.async_set(entity_id, state)
+    hass.states.async_set(entity_id, state, attributes)
     await hass.async_block_till_done()
 
 
@@ -204,13 +207,19 @@ async def setup_and_test_unique_id(
     platform_setup: TemplatePlatformSetup,
     style: ConfigurationStyle,
     entity_config: ConfigType | None,
+    state_template: str | None = None,
 ) -> None:
     """Setup 2 entities with the same unique_id and verify only 1 entity is created.
 
     The entity_config not provide name or unique_id, those are added automatically.
     """
-    entity_config = {"unique_id": "not-so_-unique-anymore", **(entity_config or {})}
     if style == ConfigurationStyle.LEGACY:
+        state_config = {"value_template": state_template} if state_template else {}
+        entity_config = {
+            "unique_id": "not-so_-unique-anymore",
+            **(entity_config or {}),
+            **state_config,
+        }
         if platform_setup.legacy_slug is None:
             config = [
                 {"name": "template_entity_1", **entity_config},
@@ -224,7 +233,15 @@ async def setup_and_test_unique_id(
         await async_setup_legacy_platforms(
             hass, platform_setup.domain, platform_setup.legacy_slug, 1, config
         )
-    elif style == ConfigurationStyle.MODERN:
+        return
+
+    state_config = {"state": state_template} if state_template else {}
+    entity_config = {
+        "unique_id": "not-so_-unique-anymore",
+        **(entity_config or {}),
+        **state_config,
+    }
+    if style == ConfigurationStyle.MODERN:
         await async_setup_modern_state_format(
             hass,
             platform_setup.domain,
@@ -255,6 +272,7 @@ async def setup_and_test_nested_unique_id(
     style: ConfigurationStyle,
     entity_registry: er.EntityRegistry,
     entity_config: ConfigType | None,
+    state_template: str | None = None,
 ) -> None:
     """Setup 2 entities with unique unique_ids in a template section that contains a unique_id.
 
@@ -263,9 +281,10 @@ async def setup_and_test_nested_unique_id(
 
     The entity_config should not provide name or unique_id, those are added automatically.
     """
+    state_config = {"state": state_template} if state_template else {}
     entities = [
-        {"name": "test_a", "unique_id": "a", **(entity_config or {})},
-        {"name": "test_b", "unique_id": "b", **(entity_config or {})},
+        {"name": "test_a", "unique_id": "a", **(entity_config or {}), **state_config},
+        {"name": "test_b", "unique_id": "b", **(entity_config or {}), **state_config},
     ]
     extra_section_config = {"unique_id": "x"}
     if style == ConfigurationStyle.MODERN:
@@ -318,11 +337,6 @@ async def start_ha(
 async def caplog_setup_text(caplog: pytest.LogCaptureFixture) -> str:
     """Return setup log of integration."""
     return caplog.text
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 async def async_get_flow_preview_state(

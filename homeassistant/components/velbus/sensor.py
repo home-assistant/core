@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
-from velbusaio.channels import ButtonCounter, LightSensor, SensorNumber, Temperature
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from velbusaio.channels import ButtonCounter, SensorNumber, Temperature
+from velbusaio.properties import LightValue
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.core import HomeAssistant
@@ -17,6 +22,49 @@ from .entity import VelbusEntity
 
 PARALLEL_UPDATES = 0
 
+type VelbusSensorChannel = ButtonCounter | Temperature | LightValue | SensorNumber
+
+
+@dataclass(frozen=True, kw_only=True)
+class VelbusSensorEntityDescription(SensorEntityDescription):
+    """Describes Velbus sensor entity."""
+
+    value_fn: Callable[[VelbusSensorChannel], float | None] = lambda channel: float(
+        channel.get_state()
+    )
+    unit_fn: Callable[[VelbusSensorChannel], str | None] | None = None
+    unique_id_suffix: str = ""
+
+
+SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
+    "power": VelbusSensorEntityDescription(
+        key="power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        unit_fn=lambda channel: channel.get_unit(),
+    ),
+    "temperature": VelbusSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        unit_fn=lambda channel: channel.get_unit(),
+    ),
+    "measurement": VelbusSensorEntityDescription(
+        key="measurement",
+        state_class=SensorStateClass.MEASUREMENT,
+        unit_fn=lambda channel: channel.get_unit(),
+    ),
+    "counter": VelbusSensorEntityDescription(
+        key="counter",
+        device_class=SensorDeviceClass.ENERGY,
+        icon="mdi:counter",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda channel: float(channel.get_counter_state()),
+        unit_fn=lambda channel: channel.get_counter_unit(),
+        unique_id_suffix="-counter",
+    ),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -25,50 +73,52 @@ async def async_setup_entry(
 ) -> None:
     """Set up Velbus switch based on config_entry."""
     await entry.runtime_data.scan_task
-    entities = []
+    entities: list[VelbusSensor] = []
     for channel in entry.runtime_data.controller.get_all_sensor():
-        entities.append(VelbusSensor(channel))
+        # Determine which description to use for the main sensor
         if channel.is_counter_channel():
-            entities.append(VelbusSensor(channel, True))
+            description = SENSOR_DESCRIPTIONS["power"]
+        elif channel.is_temperature():
+            description = SENSOR_DESCRIPTIONS["temperature"]
+        else:
+            description = SENSOR_DESCRIPTIONS["measurement"]
+
+        entities.append(VelbusSensor(channel, description))
+
+        # Add counter entity if applicable
+        if channel.is_counter_channel():
+            entities.append(
+                VelbusSensor(channel, SENSOR_DESCRIPTIONS["counter"], is_counter=True)
+            )
+
     async_add_entities(entities)
 
 
 class VelbusSensor(VelbusEntity, SensorEntity):
     """Representation of a sensor."""
 
-    _channel: ButtonCounter | Temperature | LightSensor | SensorNumber
+    _channel: VelbusSensorChannel
+    entity_description: VelbusSensorEntityDescription
 
     def __init__(
         self,
-        channel: ButtonCounter | Temperature | LightSensor | SensorNumber,
-        counter: bool = False,
+        channel: VelbusSensorChannel,
+        description: VelbusSensorEntityDescription,
+        is_counter: bool = False,
     ) -> None:
         """Initialize a sensor Velbus entity."""
         super().__init__(channel)
-        self._is_counter: bool = counter
-        if self._is_counter:
-            self._attr_device_class = SensorDeviceClass.ENERGY
-            self._attr_icon = "mdi:counter"
+        self.entity_description = description
+        self._is_counter = is_counter
+        if description.unit_fn:
+            self._attr_native_unit_of_measurement = description.unit_fn(channel)
+        self._attr_unique_id = f"{self._attr_unique_id}{description.unique_id_suffix}"
+
+        # Modify name for counter entities
+        if is_counter:
             self._attr_name = f"{self._attr_name}-counter"
-            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-            self._attr_unique_id = f"{self._attr_unique_id}-counter"
-        elif channel.is_counter_channel():
-            self._attr_device_class = SensorDeviceClass.POWER
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-        elif channel.is_temperature():
-            self._attr_device_class = SensorDeviceClass.TEMPERATURE
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-        else:
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-        # unit
-        if self._is_counter:
-            self._attr_native_unit_of_measurement = channel.get_counter_unit()
-        else:
-            self._attr_native_unit_of_measurement = channel.get_unit()
 
     @property
     def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
-        if self._is_counter:
-            return float(self._channel.get_counter_state())
-        return float(self._channel.get_state())
+        return self.entity_description.value_fn(self._channel)
