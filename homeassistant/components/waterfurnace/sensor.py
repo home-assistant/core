@@ -10,13 +10,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, UnitOfPower, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from . import DOMAIN, UPDATE_TOPIC, WaterFurnaceData
+from . import DOMAIN
+from .coordinator import WaterFurnaceCoordinator
 
 SENSORS = [
     SensorEntityDescription(name="Furnace Mode", key="mode", icon="mdi:gauge"),
@@ -116,41 +117,33 @@ def setup_platform(
     if discovery_info is None:
         return
 
-    client = hass.data[DOMAIN]
+    coordinator = hass.data[DOMAIN]
 
-    add_entities(WaterFurnaceSensor(client, description) for description in SENSORS)
+    add_entities(
+        WaterFurnaceSensor(coordinator, description) for description in SENSORS
+    )
 
 
-class WaterFurnaceSensor(SensorEntity):
+class WaterFurnaceSensor(CoordinatorEntity[WaterFurnaceCoordinator], SensorEntity):
     """Implementing the Waterfurnace sensor."""
 
-    _attr_should_poll = False
+    entity_description: SensorEntityDescription
 
     def __init__(
-        self, client: WaterFurnaceData, description: SensorEntityDescription
+        self, coordinator: WaterFurnaceCoordinator, description: SensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
-        self.client = client
+        super().__init__(coordinator)
         self.entity_description = description
 
         # This ensures that the sensors are isolated per waterfurnace unit
         self.entity_id = ENTITY_ID_FORMAT.format(
-            f"wf_{slugify(self.client.unit)}_{slugify(description.key)}"
+            f"wf_{slugify(coordinator.unit)}_{slugify(description.key)}"
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, UPDATE_TOPIC, self.async_update_callback
-            )
-        )
-
-    @callback
-    def async_update_callback(self):
-        """Update state."""
-        if self.client.data is not None:
-            self._attr_native_value = getattr(
-                self.client.data, self.entity_description.key, None
-            )
-            self.async_write_ha_state()
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        if self.coordinator.data is None:
+            return None
+        return getattr(self.coordinator.data, self.entity_description.key, None)
