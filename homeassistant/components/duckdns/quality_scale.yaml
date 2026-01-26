@@ -16,7 +16,9 @@ rules:
   entity-event-setup:
     status: exempt
     comment: integration has no entities
-  entity-unique-id: done
+  entity-unique-id:
+    status: exempt
+    comment: integration has no entities
   has-entity-name:
     status: exempt
     comment: integration has no entities
