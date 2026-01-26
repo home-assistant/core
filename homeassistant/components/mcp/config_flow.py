@@ -45,7 +45,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 # Headers and regex for WWW-Authenticate parsing for rfc9728
 WWW_AUTHENTICATE_HEADER = "WWW-Authenticate"
-RESOURCE_METATADATA_REGEXP = r'resource_metadata="([^"]+)"'
+RESOURCE_METADATA_REGEXP = r'resource_metadata="([^"]+)"'
 OAUTH_PROTECTED_RESOURCE_ENDPOINT = "/.well-known/oauth-protected-resource"
 SCOPES_REGEXP = r'scope="([^"]+)"'
 
@@ -63,7 +63,7 @@ class AuthenticateHeader:
     ) -> AuthenticateHeader | None:
         """Create AuthenticateHeader from WWW-Authenticate header."""
         if not (header := error_response.headers.get(WWW_AUTHENTICATE_HEADER)) or not (
-            match := re.search(RESOURCE_METATADATA_REGEXP, header)
+            match := re.search(RESOURCE_METADATA_REGEXP, header)
         ):
             return None
         resource_metadata_url = str(URL(url).join(URL(match.group(1))))
