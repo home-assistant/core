@@ -52,35 +52,33 @@ class MatterSwitch(MatterEntity, SwitchEntity):
 
     _platform_translation_key = "switch"
 
+    def _get_command_for_value(self, value: bool) -> ClusterCommand:
+        """Get the appropriate command for the desired value.
+
+        Applies ha_to_device conversion if needed (e.g., for inverted logic like mute).
+        """
+        send_value = value
+        if value_convert := self.entity_description.ha_to_device:  # type: ignore[attr-defined]
+            send_value = value_convert(value)
+        return (
+            clusters.OnOff.Commands.On()
+            if send_value
+            else clusters.OnOff.Commands.Off()
+        )
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
-        # Start with True (HA wants to turn on)
-        # Apply ha_to_device conversion if needed (e.g., for inverted logic like mute)
-        value = True
-        if value_convert := getattr(self.entity_description, "ha_to_device", None):
-            value = value_convert(value)
-        command = (
-            clusters.OnOff.Commands.On() if value else clusters.OnOff.Commands.Off()
-        )
-        await self.send_device_command(command)
+        await self.send_device_command(self._get_command_for_value(True))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
-        # Start with False (HA wants to turn off)
-        # Apply ha_to_device conversion if needed (e.g., for inverted logic like mute)
-        value = False
-        if value_convert := getattr(self.entity_description, "ha_to_device", None):
-            value = value_convert(value)
-        command = (
-            clusters.OnOff.Commands.On() if value else clusters.OnOff.Commands.Off()
-        )
-        await self.send_device_command(command)
+        await self.send_device_command(self._get_command_for_value(False))
 
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
-        if value_convert := getattr(self.entity_description, "device_to_ha", None):
+        if value_convert := self.entity_description.device_to_ha:  # type: ignore[attr-defined]
             value = value_convert(value)
         self._attr_is_on = value
 
