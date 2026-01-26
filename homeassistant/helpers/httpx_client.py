@@ -117,7 +117,10 @@ def create_async_httpx_client(
         kwargs.setdefault("http2", True)
     client = HassHttpXAsyncClient(
         verify=ssl_context,
-        headers={USER_AGENT: SERVER_SOFTWARE},
+        headers={
+            USER_AGENT: SERVER_SOFTWARE,
+            **kwargs.pop("headers", {}),
+        },
         limits=DEFAULT_LIMITS,
         **kwargs,
     )
