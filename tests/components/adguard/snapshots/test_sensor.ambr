@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average processing speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries',
     'options': dict({
     }),
     'original_device_class': None,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries blocked',
     'options': dict({
     }),
     'original_device_class': None,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DNS queries blocked ratio',
     'options': dict({
     }),
     'original_device_class': None,
@@ -216,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Parental control blocked',
     'options': dict({
     }),
     'original_device_class': None,
@@ -265,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rules count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -314,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Safe browsing blocked',
     'options': dict({
     }),
     'original_device_class': None,
@@ -363,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Safe searches enforced',
     'options': dict({
     }),
     'original_device_class': None,
