@@ -76,18 +76,18 @@ from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util import language as language_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .agent_manager import get_agent_manager
+from .agent_manager import IntentSourceConfig, get_agent_manager
 from .chat_log import AssistantContent, ChatLog, ToolResultContent
 from .const import (
     DOMAIN,
     METADATA_CUSTOM_FILE,
     METADATA_CUSTOM_SENTENCE,
     ConversationEntityFeature,
+    IntentSource,
 )
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
-from .trigger import TriggerDetails
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,7 +126,7 @@ class SentenceTriggerResult:
 
     sentence: str
     sentence_template: str | None
-    matched_triggers: dict[int, RecognizeResult]
+    matched_triggers: dict[str, RecognizeResult]
 
 
 class IntentMatchingStage(Enum):
@@ -236,15 +236,19 @@ class DefaultAgent(ConversationEntity):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the default agent."""
         self.hass = hass
+
         self._lang_intents: dict[str, LanguageIntents | object] = {}
         self._load_intents_lock = asyncio.Lock()
 
         # Intents from common conversation config
-        self._config_intents: dict[str, Any] = {}
+        self._config_intents_config: IntentSourceConfig = {}
 
-        # Sentences that will trigger a callback (skipping intent recognition)
-        self._triggers_details: list[TriggerDetails] = []
+        # Intents from conversation triggers
         self._trigger_intents: Intents | None = None
+        self._trigger_intents_config: IntentSourceConfig = {}
+
+        # Subscription to intents updates
+        self._unsub_intents: Callable[[], None] | None = None
 
         # Slot lists for entities, areas, etc.
         self._slot_lists: dict[str, SlotList] | None = None
@@ -260,6 +264,33 @@ class DefaultAgent(ConversationEntity):
         # Shared configuration for fuzzy matching
         self.fuzzy_matching = True
         self._fuzzy_config: FuzzyConfig | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to intents updates when added to hass."""
+        self._unsub_intents = get_agent_manager(self.hass).subscribe_intents(
+            self._update_intents
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from intents updates when removed from hass."""
+        if self._unsub_intents is not None:
+            self._unsub_intents()
+            self._unsub_intents = None
+
+    @callback
+    def _update_intents(
+        self, intents_update: dict[IntentSource, IntentSourceConfig]
+    ) -> None:
+        """Handle intents update from agent_manager subscription."""
+        if IntentSource.CONFIG in intents_update:
+            self._config_intents_config = intents_update[IntentSource.CONFIG]
+            # Intents have changed, so we must clear the cache
+            self._intent_cache.clear()
+
+        if IntentSource.TRIGGER in intents_update:
+            self._trigger_intents_config = intents_update[IntentSource.TRIGGER]
+            # Force rebuild on next use
+            self._trigger_intents = None
 
     @property
     def supported_languages(self) -> list[str]:
@@ -1059,14 +1090,6 @@ class DefaultAgent(ConversationEntity):
         # Intents have changed, so we must clear the cache
         self._intent_cache.clear()
 
-    @callback
-    def update_config_intents(self, intents: dict[str, Any]) -> None:
-        """Update config intents."""
-        self._config_intents = intents
-
-        # Intents have changed, so we must clear the cache
-        self._intent_cache.clear()
-
     async def async_prepare(self, language: str | None = None) -> None:
         """Load intents for a language."""
         if language is None:
@@ -1193,7 +1216,7 @@ class DefaultAgent(ConversationEntity):
 
         merge_dict(
             intents_dict,
-            self._config_intents,
+            self._config_intents_config,
         )
 
         if not intents_dict:
@@ -1461,27 +1484,12 @@ class DefaultAgent(ConversationEntity):
 
         return response_template.async_render(response_args)
 
-    @callback
-    def update_triggers(self, triggers_details: list[TriggerDetails]) -> None:
-        """Update triggers."""
-        self._triggers_details = triggers_details
-
-        # Force rebuild on next use
-        self._trigger_intents = None
-
     def _rebuild_trigger_intents(self) -> None:
-        """Rebuild the HassIL intents object from the current trigger sentences."""
+        """Rebuild the HassIL intents object from the trigger intents dict."""
         intents_dict = {
             "language": self.hass.config.language,
-            "intents": {
-                # Use trigger data index as a virtual intent name for HassIL.
-                # This works because the intents are rebuilt on every
-                # register/unregister.
-                str(trigger_id): {"data": [{"sentences": trigger_details.sentences}]}
-                for trigger_id, trigger_details in enumerate(self._triggers_details)
-            },
+            **self._trigger_intents_config,
         }
-
         trigger_intents = Intents.from_dict(intents_dict)
 
         # Assume slot list references are wildcards
@@ -1496,7 +1504,7 @@ class DefaultAgent(ConversationEntity):
 
         self._trigger_intents = trigger_intents
 
-        _LOGGER.debug("Rebuilt trigger intents: %s", intents_dict)
+        _LOGGER.debug("Rebuilt trigger intents: %s", self._trigger_intents_config)
 
     async def async_recognize_sentence_trigger(
         self, user_input: ConversationInput
@@ -1506,7 +1514,7 @@ class DefaultAgent(ConversationEntity):
         Calls the registered callbacks if there's a match and returns a sentence
         trigger result.
         """
-        if not self._triggers_details:
+        if not self._trigger_intents_config.get("intents"):
             # No triggers registered
             return None
 
@@ -1516,18 +1524,18 @@ class DefaultAgent(ConversationEntity):
 
         assert self._trigger_intents is not None
 
-        matched_triggers: dict[int, RecognizeResult] = {}
+        matched_triggers: dict[str, RecognizeResult] = {}
         matched_template: str | None = None
         for result in recognize_all(user_input.text, self._trigger_intents):
             if result.intent_sentence is not None:
                 matched_template = result.intent_sentence.text
 
-            trigger_id = int(result.intent.name)
-            if trigger_id in matched_triggers:
+            trigger_intent_name = result.intent.name
+            if trigger_intent_name in matched_triggers:
                 # Already matched a sentence from this trigger
                 break
 
-            matched_triggers[trigger_id] = result
+            matched_triggers[trigger_intent_name] = result
 
         if not matched_triggers:
             # Sentence did not match any trigger sentences
@@ -1551,10 +1559,14 @@ class DefaultAgent(ConversationEntity):
         chat_log: ChatLog,
     ) -> str:
         """Run sentence trigger callbacks and return response text."""
+        manager = get_agent_manager(self.hass)
+
         # Gather callback responses in parallel
         trigger_callbacks = [
-            self._triggers_details[trigger_id].callback(user_input, trigger_result)
-            for trigger_id, trigger_result in result.matched_triggers.items()
+            trigger_callback(user_input, trigger_result)
+            for trigger_intent_name, trigger_result in result.matched_triggers.items()
+            if (trigger_callback := manager.get_trigger_callback(trigger_intent_name))
+            is not None
         ]
 
         tool_input = llm.ToolInput(
