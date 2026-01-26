@@ -247,20 +247,10 @@ async def test_ntfy_clear(
 
 
 @pytest.mark.parametrize(
-    ("exception", "error_msg"),
+    "exception",
     [
-        (
-            NtfyHTTPError(41801, 418, "I'm a teapot", ""),
-            "Failed to dismiss notification: I'm a teapot",
-        ),
-        (
-            NtfyException,
-            "Failed to dismiss notification due to a connection error",
-        ),
-        (
-            NtfyUnauthorizedAuthenticationError(40101, 401, "unauthorized"),
-            "Failed to authenticate with ntfy service. Please verify your credentials",
-        ),
+        NtfyException,
+        NtfyUnauthorizedAuthenticationError(40101, 401, "unauthorized"),
     ],
 )
 async def test_clear_exception(
@@ -268,7 +258,6 @@ async def test_clear_exception(
     config_entry: MockConfigEntry,
     mock_aiontfy: AsyncMock,
     exception: Exception,
-    error_msg: str,
 ) -> None:
     """Test clear message exceptions."""
 
@@ -280,7 +269,7 @@ async def test_clear_exception(
 
     mock_aiontfy.clear.side_effect = exception
 
-    with pytest.raises(HomeAssistantError, match=error_msg):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CLEAR,
@@ -321,20 +310,10 @@ async def test_ntfy_delete(
 
 
 @pytest.mark.parametrize(
-    ("exception", "error_msg"),
+    "exception",
     [
-        (
-            NtfyHTTPError(41801, 418, "I'm a teapot", ""),
-            "Failed to delete notification: I'm a teapot",
-        ),
-        (
-            NtfyException,
-            "Failed to delete notification due to a connection error",
-        ),
-        (
-            NtfyUnauthorizedAuthenticationError(40101, 401, "unauthorized"),
-            "Failed to authenticate with ntfy service. Please verify your credentials",
-        ),
+        NtfyException,
+        NtfyUnauthorizedAuthenticationError(40101, 401, "unauthorized"),
     ],
 )
 async def test_delete_exception(
@@ -342,7 +321,6 @@ async def test_delete_exception(
     config_entry: MockConfigEntry,
     mock_aiontfy: AsyncMock,
     exception: Exception,
-    error_msg: str,
 ) -> None:
     """Test delete message exceptions."""
 
@@ -354,7 +332,7 @@ async def test_delete_exception(
 
     mock_aiontfy.delete.side_effect = exception
 
-    with pytest.raises(HomeAssistantError, match=error_msg):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DELETE,

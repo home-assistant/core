@@ -267,11 +267,8 @@
     "authentication_error": {
       "message": "Failed to authenticate with ntfy service. Please verify your credentials"
     },
-    "clear_failed_exception": {
-      "message": "Failed to dismiss notification due to a connection error"
-    },
-    "clear_failed_request_error": {
-      "message": "Failed to dismiss notification: {error_msg}"
+    "clear_failed": {
+      "message": "Failed to dismiss notification"
     },
     "connection_error": {
       "message": "Failed to connect to ntfy service due to a connection error"
@@ -282,11 +279,8 @@
     "delay_no_email": {
       "message": "Delayed email notifications are not supported"
     },
-    "delete_failed_exception": {
-      "message": "Failed to delete notification due to a connection error"
-    },
-    "delete_failed_request_error": {
-      "message": "Failed to delete notification: {error_msg}"
+    "delete_failed": {
+      "message": "Failed to delete notification"
     },
     "entity_not_found": {
       "message": "The selected ntfy entity could not be found."

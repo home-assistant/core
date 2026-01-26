@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 from typing import Any
 
 from aiontfy import Message
@@ -29,6 +30,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import NtfyConfigEntry
 from .entity import NtfyBaseEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -175,15 +178,10 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                 translation_domain=DOMAIN,
                 translation_key="authentication_error",
             ) from e
-        except NtfyHTTPError as e:
-            raise HomeAssistantError(
-                translation_key="clear_failed_request_error",
-                translation_domain=DOMAIN,
-                translation_placeholders={"error_msg": e.error},
-            ) from e
         except NtfyException as e:
+            _LOGGER.debug("Exception:", exc_info=True)
             raise HomeAssistantError(
-                translation_key="clear_failed_exception",
+                translation_key="clear_failed",
                 translation_domain=DOMAIN,
             ) from e
 
@@ -200,14 +198,9 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                 translation_domain=DOMAIN,
                 translation_key="authentication_error",
             ) from e
-        except NtfyHTTPError as e:
-            raise HomeAssistantError(
-                translation_key="delete_failed_request_error",
-                translation_domain=DOMAIN,
-                translation_placeholders={"error_msg": e.error},
-            ) from e
         except NtfyException as e:
+            _LOGGER.debug("Exception:", exc_info=True)
             raise HomeAssistantError(
-                translation_key="delete_failed_exception",
+                translation_key="delete_failed",
                 translation_domain=DOMAIN,
             ) from e
