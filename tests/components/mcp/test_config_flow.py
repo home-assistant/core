@@ -37,9 +37,9 @@ MCP_SERVER_BASE_URL = "http://1.1.1.1:8080"
 OAUTH_DISCOVERY_ENDPOINT = (
     f"{MCP_SERVER_BASE_URL}/.well-known/oauth-authorization-server/mcp"
 )
-AUTHORIZARTION_SERVER = "https://example-auth-server.com"
+AUTHORIZATION_SERVER = "https://example-auth-server.com"
 OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT = (
-    f"{AUTHORIZARTION_SERVER}/.well-known/oauth-authorization-server"
+    f"{AUTHORIZATION_SERVER}/.well-known/oauth-authorization-server"
 )
 SCOPES_SUPPORTED = ["profile", "email", "phone"]
 OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE = httpx.Response(
@@ -47,7 +47,7 @@ OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE = httpx.Response(
     json={
         "resource": MCP_SERVER_URL,
         "authorization_servers": [
-            AUTHORIZARTION_SERVER,
+            AUTHORIZATION_SERVER,
         ],
         "scopes_supported": SCOPES_SUPPORTED,
         "bearer_methods_supported": ["header"],
@@ -589,7 +589,7 @@ async def test_authentication_discovery_via_header(
     [
         {
             "authorization_servers": [
-                AUTHORIZARTION_SERVER,
+                AUTHORIZATION_SERVER,
             ],
             "scopes_supported": SCOPES_SUPPORTED,
             "bearer_methods_supported": ["header"],
@@ -597,7 +597,7 @@ async def test_authentication_discovery_via_header(
         {
             "resource": "https://different-resource.com",
             "authorization_servers": [
-                AUTHORIZARTION_SERVER,
+                AUTHORIZATION_SERVER,
             ],
             "scopes_supported": SCOPES_SUPPORTED,
             "bearer_methods_supported": ["header"],
