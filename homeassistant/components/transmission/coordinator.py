@@ -39,7 +39,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         self,
         hass: HomeAssistant,
         entry: TransmissionConfigEntry,
-        api: transmission_rpc.Client,
+        api: transmission_rpc.Client | None,
     ) -> None:
         """Initialize the Transmission RPC API."""
         self.api = api
@@ -69,10 +69,14 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
     async def _async_update_data(self) -> SessionStats:
         """Update transmission data."""
+        if self.api is None:
+            raise UpdateFailed("Transmission client not available")
         return await self.hass.async_add_executor_job(self.update)
 
     def update(self) -> SessionStats:
         """Get the latest data from Transmission instance."""
+        if self.api is None:
+            raise UpdateFailed("Transmission client not available")
         try:
             data = self.api.session_stats()
             self.torrents = self.api.get_torrents()
@@ -88,6 +92,8 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
     def init_torrent_list(self) -> None:
         """Initialize torrent lists."""
+        if self.api is None:
+            return
         self.torrents = self.api.get_torrents()
         self._completed_torrents = [
             torrent for torrent in self.torrents if torrent.status == "seeding"
@@ -160,19 +166,21 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
     def start_torrents(self) -> None:
         """Start all torrents."""
-        if not self.torrents:
+        if self.api is None or not self.torrents:
             return
         self.api.start_all()
 
     def stop_torrents(self) -> None:
         """Stop all active torrents."""
-        if not self.torrents:
+        if self.api is None or not self.torrents:
             return
         torrent_ids: list[int | str] = [torrent.id for torrent in self.torrents]
         self.api.stop_torrent(torrent_ids)
 
     def set_alt_speed_enabled(self, is_enabled: bool) -> None:
         """Set the alternative speed flag."""
+        if self.api is None:
+            return
         self.api.set_session(alt_speed_enabled=is_enabled)
 
     def get_alt_speed_enabled(self) -> bool | None:

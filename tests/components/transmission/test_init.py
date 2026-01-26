@@ -51,18 +51,26 @@ async def test_config_flow_entry_migrate_1_1_to_1_2(
     assert entry.data[CONF_PATH] == DEFAULT_PATH
 
 
-async def test_setup_failed_connection_error(
+async def test_setup_server_unavailable(
     hass: HomeAssistant,
     mock_transmission_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test integration failed due to connection error."""
+    """Test integration loads even when server is unavailable."""
     mock_config_entry.add_to_hass(hass)
 
     mock_transmission_client.side_effect = TransmissionConnectError()
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    await hass.async_block_till_done()
+
+    # Integration should be loaded even if server is unavailable
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Entities should be unavailable
+    state = hass.states.get("sensor.transmission_status")
+    assert state is not None
+    assert state.state == "unavailable"
 
 
 async def test_setup_failed_auth_error(
