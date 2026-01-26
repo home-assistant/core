@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from functools import partial
 import logging
@@ -78,13 +79,24 @@ class EcovacsController:
     async def initialize(self) -> None:
         """Init controller."""
         try:
-            devices = await self._api_client.get_devices()
-            credentials = await self._authenticator.authenticate()
-            for device_info in devices.mqtt:
-                device = Device(device_info, self._authenticator)
-                mqtt = await self._get_mqtt_client()
-                await device.initialize(mqtt)
+            devices, credentials = await asyncio.gather(
+                self._api_client.get_devices(),
+                self._authenticator.authenticate(),
+            )
+            mqtt = await self._get_mqtt_client()
+            mqtt_devices = [Device(info, self._authenticator) for info in devices.mqtt]
+
+            # Initialize all devices concurrently
+            results = await asyncio.gather(
+                *(device.initialize(mqtt) for device in mqtt_devices),
+                return_exceptions=True,
+            )
+
+            # Keep only successful ones, we could also use extend and then end up with:
+            # self._devices.extend(mqtt_devices), I believe. But up to the ones who know the integration better. :)
+            for device, _ in zip(mqtt_devices, results, strict=False):
                 self._devices.append(device)
+
             for device_config in devices.xmpp:
                 bot = VacBot(
                     credentials.user_id,
@@ -96,6 +108,7 @@ class EcovacsController:
                     monitor=True,
                 )
                 self._legacy_devices.append(bot)
+
             for device_config in devices.not_supported:
                 _LOGGER.warning(
                     (
