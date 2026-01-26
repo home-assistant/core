@@ -376,14 +376,22 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_preset_modes = presets
 
         # Update active preset mode
-        self._attr_preset_mode = PRESET_NONE
-        if active_preset_handle := self.get_matter_attribute_value(
+        active_preset_handle = self.get_matter_attribute_value(
             clusters.Thermostat.Attributes.ActivePresetHandle
-        ):
+        )
+        if active_preset_handle is None:
+            # Explicitly no active preset selected on device
+            self._attr_preset_mode = PRESET_NONE
+        else:
+            self._attr_preset_mode = None
             for preset_name, handle in self._preset_handle_by_name.items():
                 if handle == active_preset_handle:
                     self._attr_preset_mode = preset_name
                     break
+            else:
+                # Device reports an active preset handle that we don't know
+                # Avoid reporting PRESET_NONE in that case to prevent stale values
+                self._attr_preset_mode = None
 
     @callback
     def _update_hvac_mode_and_action(self) -> None:
