@@ -11,9 +11,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .fixtures import (
-    CONFIGURED_NAME,
+    CONFIGURED_NAME_MYCO2,
     NOT_SENSIRION_SERVICE_INFO,
-    SENSIRION_SERVICE_INFO,
+    SENSIRION_SERVICE_INFO_MYCO2,
 )
 
 from tests.common import MockConfigEntry
@@ -29,7 +29,7 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=SENSIRION_SERVICE_INFO,
+        data=SENSIRION_SERVICE_INFO_MYCO2,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -40,8 +40,8 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={}
         )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == CONFIGURED_NAME
-    assert result2["result"].unique_id == SENSIRION_SERVICE_INFO.address
+    assert result2["title"] == CONFIGURED_NAME_MYCO2
+    assert result2["result"].unique_id == SENSIRION_SERVICE_INFO_MYCO2.address
 
 
 async def test_async_step_bluetooth_not_sensirion(hass: HomeAssistant) -> None:
@@ -69,7 +69,7 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     """Test setup from service info cache with devices found."""
     with patch(
         "homeassistant.components.sensirion_ble.config_flow.async_discovered_service_info",
-        return_value=[SENSIRION_SERVICE_INFO],
+        return_value=[SENSIRION_SERVICE_INFO_MYCO2],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -82,18 +82,18 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"address": SENSIRION_SERVICE_INFO.address},
+            user_input={"address": SENSIRION_SERVICE_INFO_MYCO2.address},
         )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == CONFIGURED_NAME
-    assert result2["result"].unique_id == SENSIRION_SERVICE_INFO.address
+    assert result2["title"] == CONFIGURED_NAME_MYCO2
+    assert result2["result"].unique_id == SENSIRION_SERVICE_INFO_MYCO2.address
 
 
 async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -> None:
     """Test the device gets added via another flow between steps."""
     with patch(
         "homeassistant.components.sensirion_ble.config_flow.async_discovered_service_info",
-        return_value=[SENSIRION_SERVICE_INFO],
+        return_value=[SENSIRION_SERVICE_INFO_MYCO2],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -104,7 +104,7 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=SENSIRION_SERVICE_INFO.address,
+        unique_id=SENSIRION_SERVICE_INFO_MYCO2.address,
     )
     entry.add_to_hass(hass)
 
@@ -113,7 +113,7 @@ async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"address": SENSIRION_SERVICE_INFO.address},
+            user_input={"address": SENSIRION_SERVICE_INFO_MYCO2.address},
         )
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
@@ -125,13 +125,13 @@ async def test_async_step_user_with_found_devices_already_setup(
     """Test setup from service info cache with devices found."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=SENSIRION_SERVICE_INFO.address,
+        unique_id=SENSIRION_SERVICE_INFO_MYCO2.address,
     )
     entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.sensirion_ble.config_flow.async_discovered_service_info",
-        return_value=[SENSIRION_SERVICE_INFO],
+        return_value=[SENSIRION_SERVICE_INFO_MYCO2],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -145,14 +145,14 @@ async def test_async_step_bluetooth_devices_already_setup(hass: HomeAssistant) -
     """Test we can't start a flow if there is already a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=SENSIRION_SERVICE_INFO.address,
+        unique_id=SENSIRION_SERVICE_INFO_MYCO2.address,
     )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=SENSIRION_SERVICE_INFO,
+        data=SENSIRION_SERVICE_INFO_MYCO2,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -163,7 +163,7 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=SENSIRION_SERVICE_INFO,
+        data=SENSIRION_SERVICE_INFO_MYCO2,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
@@ -171,7 +171,7 @@ async def test_async_step_bluetooth_already_in_progress(hass: HomeAssistant) -> 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=SENSIRION_SERVICE_INFO,
+        data=SENSIRION_SERVICE_INFO_MYCO2,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
@@ -184,14 +184,14 @@ async def test_async_step_user_takes_precedence_over_discovery(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=SENSIRION_SERVICE_INFO,
+        data=SENSIRION_SERVICE_INFO_MYCO2,
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
     with patch(
         "homeassistant.components.sensirion_ble.config_flow.async_discovered_service_info",
-        return_value=[SENSIRION_SERVICE_INFO],
+        return_value=[SENSIRION_SERVICE_INFO_MYCO2],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -204,19 +204,19 @@ async def test_async_step_user_takes_precedence_over_discovery(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"address": SENSIRION_SERVICE_INFO.address},
+            user_input={"address": SENSIRION_SERVICE_INFO_MYCO2.address},
         )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == CONFIGURED_NAME
+    assert result2["title"] == CONFIGURED_NAME_MYCO2
     assert result2["data"] == {}
-    assert result2["result"].unique_id == SENSIRION_SERVICE_INFO.address
+    assert result2["result"].unique_id == SENSIRION_SERVICE_INFO_MYCO2.address
 
 
 async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
     """Test the user initiated form can replace an ignored device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=SENSIRION_SERVICE_INFO.address,
+        unique_id=SENSIRION_SERVICE_INFO_MYCO2.address,
         source=SOURCE_IGNORE,
         data={},
     )
@@ -224,7 +224,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.sensirion_ble.config_flow.async_discovered_service_info",
-        return_value=[SENSIRION_SERVICE_INFO],
+        return_value=[SENSIRION_SERVICE_INFO_MYCO2],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -234,7 +234,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
 
     # Verify the ignored device is in the dropdown
     assert (
-        SENSIRION_SERVICE_INFO.address
+        SENSIRION_SERVICE_INFO_MYCO2.address
         in result["data_schema"].schema["address"].container
     )
 
@@ -243,9 +243,9 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"address": SENSIRION_SERVICE_INFO.address},
+            user_input={"address": SENSIRION_SERVICE_INFO_MYCO2.address},
         )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == CONFIGURED_NAME
+    assert result2["title"] == CONFIGURED_NAME_MYCO2
     assert result2["data"] == {}
-    assert result2["result"].unique_id == SENSIRION_SERVICE_INFO.address
+    assert result2["result"].unique_id == SENSIRION_SERVICE_INFO_MYCO2.address
