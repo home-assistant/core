@@ -485,6 +485,3 @@ def _async_create_yaml_mode_repair(hass: HomeAssistant) -> None:
         translation_key="yaml_mode_deprecated",
         translation_placeholders={"config_file": LOVELACE_CONFIG_FILE},
     )
-
-
-# End deprecation
