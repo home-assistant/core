@@ -418,7 +418,7 @@ def _async_get_full_entity_name(
     hass: HomeAssistant,
     *,
     device_id: str | None,
-    fallback: str | None = None,
+    fallback: str,
     has_entity_name: bool,
     name: str | None,
     original_name: str | None,
@@ -451,7 +451,7 @@ def _async_get_full_entity_name(
             name = f"{device_name} {name}"
 
     if not name:
-        return fallback or ""
+        return fallback
 
     return name
 
@@ -1017,11 +1017,11 @@ class EntityRegistry(BaseRegistry):
         object_id = _async_get_full_entity_name(
             self.hass,
             device_id=device_id,
+            fallback=f"{platform}_{unique_id}",
             has_entity_name=has_entity_name,
             name=name,
             original_name=object_id_base,
             overridden_name=suggested_object_id,
-            fallback=f"{platform}_{unique_id}",
         )
         return self.async_get_available_entity_id(
             domain,
@@ -1068,6 +1068,7 @@ class EntityRegistry(BaseRegistry):
         return _async_get_full_entity_name(
             self.hass,
             device_id=entry.device_id,
+            fallback="",
             has_entity_name=entry.has_entity_name,
             name=entry.name,
             original_name=original_name,
