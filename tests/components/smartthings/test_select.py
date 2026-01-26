@@ -220,3 +220,37 @@ async def test_select_option_as_integer(
         MAIN,
         argument=300,
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_wm_dw_01011"])
+async def test_select_option_with_wrong_dishwasher_machine_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    set_attribute_value(
+        devices,
+        Capability.REMOTE_CONTROL_STATUS,
+        Attribute.REMOTE_CONTROL_ENABLED,
+        "true",
+    )
+    set_attribute_value(
+        devices,
+        Capability.DISHWASHER_OPERATING_STATE,
+        Attribute.MACHINE_STATE,
+        "run",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Can only be updated when dishwasher machine state is stop",
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: "select.dishwasher_cycle", ATTR_OPTION: "auto"},
+            blocking=True,
+        )
+    devices.execute_device_command.assert_not_called()
