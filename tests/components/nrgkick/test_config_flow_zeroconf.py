@@ -23,6 +23,28 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from . import create_mock_config_entry
 
 
+def _make_discovery_info(
+    *,
+    properties: dict[str, str],
+    ip: str = "192.168.1.100",
+    name: str = "NRGkick Test._nrgkick._tcp.local.",
+    hostname: str = "nrgkick.local.",
+    port: int = 80,
+    type_: str = "_nrgkick._tcp.local.",
+) -> ZeroconfServiceInfo:
+    """Create zeroconf discovery info for tests."""
+    ip_addr = ip_address(ip)
+    return ZeroconfServiceInfo(
+        ip_address=ip_addr,
+        ip_addresses=[ip_addr],
+        hostname=hostname,
+        name=name,
+        port=port,
+        properties=properties,
+        type=type_,
+    )
+
+
 async def test_zeroconf_discovery(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test zeroconf discovery flow (auth required)."""
     discovery_info = ZeroconfServiceInfo(
@@ -116,94 +138,28 @@ async def test_zeroconf_discovery_without_credentials(
     assert result["data"] == {CONF_HOST: "192.168.1.100"}
 
 
-async def test_zeroconf_discovery_invalid_auth(
-    hass: HomeAssistant, mock_nrgkick_api
+@pytest.mark.parametrize(
+    ("side_effect", "expected"),
+    [
+        (NRGkickApiClientCommunicationError, "cannot_connect"),
+        (NRGkickApiClientError, "unknown"),
+        (NRGkickApiClientApiDisabledError, "json_api_disabled"),
+    ],
+    ids=["cannot_connect", "unknown", "json_api_disabled"],
+)
+async def test_zeroconf_confirm_errors(
+    hass: HomeAssistant,
+    mock_nrgkick_api,
+    side_effect: type[Exception],
+    expected: str,
 ) -> None:
-    """Test zeroconf auth step invalid_auth on wrong credentials."""
-    discovery_info = ZeroconfServiceInfo(
-        ip_address=ip_address("192.168.1.100"),
-        ip_addresses=[ip_address("192.168.1.100")],
-        hostname="nrgkick.local.",
-        name="NRGkick Test._nrgkick._tcp.local.",
-        port=80,
+    """Test zeroconf confirm step reports errors."""
+    discovery_info = _make_discovery_info(
         properties={
             "serial_number": "TEST123456",
             "device_name": "NRGkick Test",
             "json_api_enabled": "1",
-        },
-        type="_nrgkick._tcp.local.",
-    )
-
-    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user_auth"
-
-    flow_id = result["flow_id"]
-    result = await hass.config_entries.flow.async_configure(
-        flow_id,
-        {CONF_USERNAME: "wrong_user", CONF_PASSWORD: "wrong_pass"},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_zeroconf_discovery_unknown_exception(
-    hass: HomeAssistant, mock_nrgkick_api
-) -> None:
-    """Test zeroconf confirm step handles unexpected exception."""
-    discovery_info = ZeroconfServiceInfo(
-        ip_address=ip_address("192.168.1.100"),
-        ip_addresses=[ip_address("192.168.1.100")],
-        hostname="nrgkick.local.",
-        name="NRGkick Test._nrgkick._tcp.local.",
-        port=80,
-        properties={
-            "serial_number": "TEST123456",
-            "device_name": "NRGkick Test",
-            "json_api_enabled": "1",
-        },
-        type="_nrgkick._tcp.local.",
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
-    )
-
-    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientError
-
-    flow_id = result["flow_id"]
-    result = await hass.config_entries.flow.async_configure(flow_id, {})
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-
-async def test_zeroconf_confirm_json_api_disabled(
-    hass: HomeAssistant, mock_nrgkick_api
-) -> None:
-    """Test zeroconf confirm step handles JSON API disabled."""
-    discovery_info = ZeroconfServiceInfo(
-        ip_address=ip_address("192.168.1.100"),
-        ip_addresses=[ip_address("192.168.1.100")],
-        hostname="nrgkick.local.",
-        name="NRGkick Test._nrgkick._tcp.local.",
-        port=80,
-        properties={
-            "serial_number": "TEST123456",
-            "device_name": "NRGkick Test",
-            "json_api_enabled": "1",
-        },
-        type="_nrgkick._tcp.local.",
+        }
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -213,13 +169,13 @@ async def test_zeroconf_confirm_json_api_disabled(
     )
     assert result["step_id"] == "zeroconf_confirm"
 
-    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientApiDisabledError
+    mock_nrgkick_api.test_connection.side_effect = side_effect
 
     flow_id = result["flow_id"]
     result = await hass.config_entries.flow.async_configure(flow_id, {})
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "json_api_disabled"}
+    assert result["errors"] == {"base": expected}
 
 
 async def test_zeroconf_already_configured(
@@ -519,9 +475,12 @@ async def test_zeroconf_enable_json_api_auth_errors(
 @pytest.mark.parametrize(
     ("second_side_effect", "expected"),
     [
+        (NRGkickApiClientAuthenticationError, "invalid_auth"),
+        (NRGkickApiClientCommunicationError, "cannot_connect"),
         (NRGkickApiClientApiDisabledError, "json_api_disabled"),
         (NRGkickApiClientError, "unknown"),
     ],
+    ids=["invalid_auth", "cannot_connect", "json_api_disabled", "unknown"],
 )
 async def test_zeroconf_auth_errors(
     hass: HomeAssistant,
@@ -529,7 +488,7 @@ async def test_zeroconf_auth_errors(
     second_side_effect: type[Exception],
     expected: str,
 ) -> None:
-    """Test zeroconf auth step reports JSON API disabled and unknown errors."""
+    """Test zeroconf auth step reports errors."""
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.100"),
         ip_addresses=[ip_address("192.168.1.100")],
@@ -591,94 +550,38 @@ async def test_zeroconf_no_serial_number(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_serial_number"
 
 
-async def test_zeroconf_cannot_connect(hass: HomeAssistant, mock_nrgkick_api) -> None:
-    """Test zeroconf discovery with connection error."""
-    discovery_info = ZeroconfServiceInfo(
-        ip_address=ip_address("192.168.1.100"),
-        ip_addresses=[ip_address("192.168.1.100")],
-        hostname="nrgkick.local.",
-        name="NRGkick Test._nrgkick._tcp.local.",
-        port=80,
-        properties={
-            "serial_number": "TEST123456",
-            "device_name": "NRGkick Test",
-            "json_api_enabled": "1",
-        },
-        type="_nrgkick._tcp.local.",
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
-    )
-
-    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientCommunicationError
-
-    flow_id = result["flow_id"]
-    result = await hass.config_entries.flow.async_configure(flow_id, {})
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_zeroconf_auth_reports_cannot_connect(
-    hass: HomeAssistant, mock_nrgkick_api
+@pytest.mark.parametrize(
+    ("name", "properties", "expected_name"),
+    [
+        (
+            "NRGkick Gen2 SIM._nrgkick._tcp.local.",
+            {
+                "serial_number": "TEST123456",
+                "model_type": "NRGkick Gen2 SIM",
+                "json_api_enabled": "1",
+            },
+            "NRGkick Gen2 SIM",
+        ),
+        (
+            "Unknown Device._nrgkick._tcp.local.",
+            {
+                "serial_number": "TEST123456",
+                "json_api_enabled": "1",
+            },
+            "NRGkick",
+        ),
+    ],
+    ids=["model_type", "default_name"],
+)
+async def test_zeroconf_name_fallbacks(
+    hass: HomeAssistant,
+    mock_nrgkick_api,
+    name: str,
+    properties: dict[str, str],
+    expected_name: str,
 ) -> None:
-    """Test zeroconf auth step reports cannot_connect."""
-    discovery_info = ZeroconfServiceInfo(
-        ip_address=ip_address("192.168.1.100"),
-        ip_addresses=[ip_address("192.168.1.100")],
-        hostname="nrgkick.local.",
-        name="NRGkick Test._nrgkick._tcp.local.",
-        port=80,
-        properties={
-            "serial_number": "TEST123456",
-            "device_name": "NRGkick Test",
-            "json_api_enabled": "1",
-        },
-        type="_nrgkick._tcp.local.",
-    )
-
-    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
-    )
-
-    assert result["step_id"] == "user_auth"
-
-    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientCommunicationError
-
-    flow_id = result["flow_id"]
-    result = await hass.config_entries.flow.async_configure(
-        flow_id,
-        {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_zeroconf_fallback_to_model_type(
-    hass: HomeAssistant, mock_nrgkick_api
-) -> None:
-    """Test zeroconf discovery uses model_type when device_name is missing."""
-    discovery_info = ZeroconfServiceInfo(
-        ip_address=ip_address("192.168.1.100"),
-        ip_addresses=[ip_address("192.168.1.100")],
-        hostname="nrgkick.local.",
-        name="NRGkick Gen2 SIM._nrgkick._tcp.local.",
-        port=80,
-        properties={
-            "serial_number": "TEST123456",
-            "model_type": "NRGkick Gen2 SIM",
-            "json_api_enabled": "1",
-        },
-        type="_nrgkick._tcp.local.",
-    )
+    """Test zeroconf discovery uses fallbacks for device name."""
+    discovery_info = _make_discovery_info(name=name, properties=properties)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -688,36 +591,6 @@ async def test_zeroconf_fallback_to_model_type(
 
     assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {
-        "name": "NRGkick Gen2 SIM",
-        "device_ip": "192.168.1.100",
-    }
-
-
-async def test_zeroconf_fallback_to_default_name(
-    hass: HomeAssistant, mock_nrgkick_api
-) -> None:
-    """Test zeroconf when device_name and model_type are missing."""
-    discovery_info = ZeroconfServiceInfo(
-        ip_address=ip_address("192.168.1.100"),
-        ip_addresses=[ip_address("192.168.1.100")],
-        hostname="nrgkick.local.",
-        name="Unknown Device._nrgkick._tcp.local.",
-        port=80,
-        properties={
-            "serial_number": "TEST123456",
-            "json_api_enabled": "1",
-        },
-        type="_nrgkick._tcp.local.",
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["description_placeholders"] == {
-        "name": "NRGkick",
+        "name": expected_name,
         "device_ip": "192.168.1.100",
     }
