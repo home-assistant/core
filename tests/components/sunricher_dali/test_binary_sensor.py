@@ -6,7 +6,13 @@ from PySrDaliGateway import CallbackEventType
 from PySrDaliGateway.types import MotionState
 import pytest
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -58,7 +64,7 @@ async def test_occupancy_sensor_initial_state(
     """Test occupancy sensor initial state is OFF."""
     state = hass.states.get(TEST_OCCUPANCY_ENTITY_ID)
     assert state is not None
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -198,7 +204,7 @@ async def test_motion_sensor_initial_state(
     """Test motion sensor initial state is OFF."""
     state = hass.states.get(TEST_MOTION_ENTITY_ID)
     assert state is not None
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("init_integration")

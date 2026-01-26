@@ -51,14 +51,12 @@ class SunricherDaliMotionSensor(DaliDeviceEntity, BinarySensorEntity):
     """Instantaneous motion detection sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
-    _attr_translation_key = "motion"
 
     def __init__(self, device: Device) -> None:
         """Initialize the motion sensor."""
         super().__init__(device)
         self._device = device
         self._attr_unique_id = f"{device.dev_id}_motion"
-        self._attr_is_on = False
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.dev_id)},
             name=device.name,
@@ -95,14 +93,12 @@ class SunricherDaliOccupancySensor(DaliDeviceEntity, BinarySensorEntity):
     """Persistent occupancy detection sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
-    _attr_translation_key = "occupancy"
 
     def __init__(self, device: Device) -> None:
         """Initialize the occupancy sensor."""
         super().__init__(device)
         self._device = device
         self._attr_unique_id = f"{device.dev_id}_occupancy"
-        self._attr_is_on = False
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.dev_id)},
             name=device.name,
