@@ -201,6 +201,7 @@ FLOWS = {
         "escea",
         "esphome",
         "essent",
+        "eufy_security",
         "eufylife_ble",
         "evil_genius_labs",
         "ezviz",

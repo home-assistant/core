@@ -1,0 +1,12 @@
+{
+  "domain": "eufy_security",
+  "name": "Eufy Security",
+  "codeowners": ["@ptarjan"],
+  "config_flow": true,
+  "dependencies": ["ffmpeg", "stream"],
+  "documentation": "https://www.home-assistant.io/integrations/eufy_security",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "platinum",
+  "requirements": ["pyeufysecurity==0.4.3"]
+}

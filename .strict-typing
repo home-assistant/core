@@ -193,6 +193,7 @@ homeassistant.components.enigma2.*
 homeassistant.components.enphase_envoy.*
 homeassistant.components.eq3btsmart.*
 homeassistant.components.esphome.*
+homeassistant.components.eufy_security.*
 homeassistant.components.event.*
 homeassistant.components.evil_genius_labs.*
 homeassistant.components.evohome.*

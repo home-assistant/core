@@ -2029,6 +2029,9 @@ pyenvisalink==4.7
 # homeassistant.components.ephember
 pyephember2==0.4.12
 
+# homeassistant.components.eufy_security
+pyeufysecurity==0.4.3
+
 # homeassistant.components.everlights
 pyeverlights==0.1.0
 
