@@ -20,17 +20,17 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Line Crossing',
+    'object_id_base': 'Line crossing',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
     'original_icon': None,
-    'original_name': 'Line Crossing',
+    'original_name': 'Line crossing',
     'platform': 'hikvision',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'line_crossing',
     'unique_id': 'DS-2CD2142FWD-I20170101AAAA_Line Crossing_1',
     'unit_of_measurement': None,
   })
@@ -39,7 +39,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'motion',
-      'friendly_name': 'Front Camera Line Crossing',
+      'friendly_name': 'Front Camera Line crossing',
       'last_tripped_time': '2024-01-01T00:00:00Z',
     }),
     'context': <ANY>,
