@@ -1,7 +1,7 @@
 """Test the KNX config flow."""
 
 from contextlib import contextmanager
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
@@ -147,6 +147,23 @@ class GatewayScannerMock:
         """Mock async generator."""
         for gateway in self.found_gateways:
             yield gateway
+
+
+class XKNXTunnelMock:
+    """Mock minimal XKNX tunnel API."""
+
+    def __init__(self, throw: bool):
+        self.throw = throw
+
+    async def start(self):
+        if self.throw:
+            raise CommunicationError("")
+        yield None
+
+    async def stop(self):
+        if self.throw:
+            raise CommunicationError("")
+        yield None
 
 
 async def test_user_single_instance(hass: HomeAssistant) -> None:
@@ -652,21 +669,6 @@ async def test_tunneling_setup_manual_request_description_error(
             "base": "no_tunnel_discovered",
             "tunneling_type": "unsupported_tunnel_type",
         }
-    # No connection to gateway
-    with patch(
-        "homeassistant.components.knx.config_flow.request_description",
-        side_effect=CommunicationError(""),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP,
-                CONF_HOST: "192.168.0.1",
-                CONF_PORT: 3671,
-            },
-        )
-        assert result["step_id"] == "manual_tunnel"
-        assert result["errors"] == {"base": "cannot_connect"}
     # OK configuration
     with patch(
         "homeassistant.components.knx.config_flow.request_description",
@@ -684,6 +686,71 @@ async def test_tunneling_setup_manual_request_description_error(
                 CONF_PORT: 3671,
             },
         )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Tunneling TCP @ 192.168.0.1"
+    assert result["data"] == {
+        **DEFAULT_ENTRY_DATA,
+        CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP,
+        CONF_HOST: "192.168.0.1",
+        CONF_PORT: 3671,
+        CONF_KNX_TUNNEL_ENDPOINT_IA: None,
+        CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
+        CONF_KNX_SECURE_USER_ID: None,
+        CONF_KNX_SECURE_USER_PASSWORD: None,
+    }
+    knx_setup.assert_called_once()
+
+
+@patch(
+    "homeassistant.components.knx.config_flow.GatewayScanner",
+    return_value=GatewayScannerMock(),
+)
+@patch(
+    "homeassistant.components.knx.config_flow.request_description",
+    side_effect=CommunicationError(""),
+)
+async def test_tunneling_setup_manual_request_without_reachable_gateway(
+    request_description_mock: MagicMock,
+    gateway_scanner_mock: MagicMock,
+    hass: HomeAssistant,
+    knx_setup,
+) -> None:
+    """Test manual tunneling can work even if the gateway cannot answer a description."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    # Even if the connection to gateway fails on UDP description request, open a
+    # TCP tunnel to check before moving on:
+    with patch(
+        "xknx.XKNX",
+        # The TCP tunnel check failed.
+        return_value=XKNXTunnelMock(True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3671,
+            },
+        )
+        assert result["step_id"] == "manual_tunnel"
+        assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "xknx.XKNX",
+        return_value=XKNXTunnelMock(True), # The TCP tunnel check succeeded.
+
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3671,
+            },
+        )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Tunneling TCP @ 192.168.0.1"
     assert result["data"] == {
