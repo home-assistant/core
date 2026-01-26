@@ -126,9 +126,12 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "alarm_control_panel",
     "assist_satellite",
     "climate",
+    "device_tracker",
     "fan",
     "light",
+    "lock",
     "siren",
+    "switch",
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
