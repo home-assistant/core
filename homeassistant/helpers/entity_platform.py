@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
+    BatchedServiceCallback,
     CoreState,
     HomeAssistant,
     ServiceCall,
@@ -1084,6 +1085,32 @@ class EntityPlatform:
             description_placeholders=description_placeholders,
         )
 
+    @callback
+    def async_register_batched_service(
+        self,
+        service_name: str,
+        handler: BatchedServiceCallback,
+    ) -> None:
+        """Register a batched entity handler for a service on this platform.
+
+        The handler will be called with a list of entities and the ServiceCall.
+        """
+        if not self.hass:
+            raise HomeAssistantError("EntityPlatform has no HomeAssistant instance")
+
+        if self.config_entry is None:
+            raise HomeAssistantError(
+                "Cannot register batched service: platform has no config_entry"
+            )
+
+        # Delegate to the ServiceRegistry with the platform's domain
+        self.hass.services.async_register_batched_handler(
+            domain=self.domain,
+            service=service_name,
+            config_entry=self.config_entry,
+            handler=handler,
+        )
+
     async def _async_update_entity_states(self) -> None:
         """Update the states of all the polling entities.
 
@@ -1279,3 +1306,16 @@ def async_get_platforms(
         return []
 
     return hass.data[DATA_ENTITY_PLATFORM][integration_name]
+
+
+@callback
+def async_register_platform_batched_service(
+    service_name: str,
+    handler: BatchedServiceCallback,
+) -> None:
+    """Convenience wrapper to register a batched service for the current platform."""
+    platform = async_get_current_platform()
+    platform.async_register_batched_service(
+        service_name=service_name,
+        handler=handler,
+    )
