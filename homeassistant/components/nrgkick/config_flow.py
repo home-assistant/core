@@ -100,27 +100,13 @@ async def validate_input(
         # Raised by tests or other helpers; let it bubble.
         raise
     except NRGkickAuthenticationError as err:
-        raise NRGkickApiClientAuthenticationError(
-            translation_domain=DOMAIN,
-            translation_key="authentication_error",
-        ) from err
+        raise NRGkickApiClientAuthenticationError from err
     except NRGkickAPIDisabledError as err:
-        raise NRGkickApiClientApiDisabledError(
-            translation_domain=DOMAIN,
-            translation_key="json_api_disabled",
-        ) from err
+        raise NRGkickApiClientApiDisabledError from err
     except NRGkickConnectionError as err:
-        raise NRGkickApiClientCommunicationError(
-            translation_domain=DOMAIN,
-            translation_key="communication_error",
-            translation_placeholders={"error": str(err)},
-        ) from err
+        raise NRGkickApiClientCommunicationError from err
     except (TimeoutError, aiohttp.ClientError, OSError) as err:
-        raise NRGkickApiClientCommunicationError(
-            translation_domain=DOMAIN,
-            translation_key="communication_error",
-            translation_placeholders={"error": str(err)},
-        ) from err
+        raise NRGkickApiClientCommunicationError from err
 
     device_name = info.get("general", {}).get("device_name")
     if not device_name:
@@ -128,10 +114,7 @@ async def validate_input(
 
     serial = info.get("general", {}).get("serial_number")
     if not serial:
-        raise NRGkickApiClientInvalidResponseError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_response",
-        )
+        raise NRGkickApiClientInvalidResponseError
 
     return {
         "title": device_name,
