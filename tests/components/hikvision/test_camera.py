@@ -40,6 +40,7 @@ async def test_all_entities(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("amount_of_channels", [2])
 async def test_nvr_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -50,18 +51,6 @@ async def test_nvr_entities(
     """Test NVR camera entities with multiple channels."""
     mock_hikcamera.return_value.get_type = "NVR"
 
-    # Create mock VideoChannel objects
-    class MockVideoChannel:
-        def __init__(self, channel_id: int, name: str, enabled: bool = True) -> None:
-            self.id = channel_id
-            self.name = name
-            self.enabled = enabled
-
-    mock_hikcamera.mock_get_video_channels.return_value = [
-        MockVideoChannel(1, f"{TEST_DEVICE_NAME} Channel 1"),
-        MockVideoChannel(2, f"{TEST_DEVICE_NAME} Channel 2"),
-    ]
-
     with patch("random.SystemRandom.getrandbits", return_value=123123123123):
         await setup_integration(hass, mock_config_entry)
 
@@ -69,6 +58,7 @@ async def test_nvr_entities(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("amount_of_channels", [2])
 async def test_nvr_entities_with_channel_names(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -80,18 +70,6 @@ async def test_nvr_entities_with_channel_names(
     """Test NVR camera entities use custom channel names when available."""
     mock_hikcamera.return_value.get_type = "NVR"
 
-    # Create mock VideoChannel objects with custom names
-    class MockVideoChannel:
-        def __init__(self, channel_id: int, name: str, enabled: bool = True) -> None:
-            self.id = channel_id
-            self.name = name
-            self.enabled = enabled
-
-    mock_hikcamera.mock_get_video_channels.return_value = [
-        MockVideoChannel(1, "Front Door"),
-        MockVideoChannel(2, "Backyard"),
-    ]
-
     with patch("random.SystemRandom.getrandbits", return_value=123123123123):
         await setup_integration(hass, mock_config_entry)
 
@@ -102,13 +80,13 @@ async def test_nvr_entities_with_channel_names(
         identifiers={(DOMAIN, f"{TEST_DEVICE_ID}_1")}
     )
     assert device_1 is not None
-    assert device_1.name == "Front Door"
+    assert device_1.name == "Front Camera channel 1"
 
     device_2 = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{TEST_DEVICE_ID}_2")}
     )
     assert device_2 is not None
-    assert device_2.name == "Backyard"
+    assert device_2.name == "Front Camera channel 2"
 
 
 async def test_camera_device_info(
@@ -186,13 +164,17 @@ async def test_camera_stream_source(
 
     stream_url = await async_get_stream_source(hass, "camera.front_camera")
 
-    # Verify RTSP URL is constructed correctly
+    # Verify RTSP URL from library
     assert stream_url is not None
     assert stream_url.startswith("rtsp://")
     # Standalone camera uses stream channel 1
     assert f"@{TEST_HOST}:554/Streaming/Channels/1" in stream_url
 
+    # Verify get_stream_url was called with channel 1
+    mock_hikcamera.return_value.get_stream_url.assert_called_with(1)
 
+
+@pytest.mark.parametrize("amount_of_channels", [2])
 async def test_camera_stream_source_nvr(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -201,21 +183,13 @@ async def test_camera_stream_source_nvr(
     """Test NVR camera stream source URL."""
     mock_hikcamera.return_value.get_type = "NVR"
 
-    # Create mock VideoChannel for channel 2
-    class MockVideoChannel:
-        def __init__(self, channel_id: int, name: str, enabled: bool = True) -> None:
-            self.id = channel_id
-            self.name = name
-            self.enabled = enabled
-
-    mock_hikcamera.mock_get_video_channels.return_value = [
-        MockVideoChannel(2, f"{TEST_DEVICE_NAME} Channel 2"),
-    ]
-
     await setup_integration(hass, mock_config_entry)
 
     stream_url = await async_get_stream_source(hass, "camera.front_camera_channel_2")
 
     # NVR channel 2 should use stream channel 201 (2 * 100 + 1)
     assert stream_url is not None
-    assert f"@{TEST_HOST}:554/Streaming/Channels/201" in stream_url
+    assert f"@{TEST_HOST}:554/Streaming/Channels/1" in stream_url
+
+    # Verify get_stream_url was called with channel 2
+    mock_hikcamera.return_value.get_stream_url.assert_called_with(2)

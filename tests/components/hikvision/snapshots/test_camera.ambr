@@ -51,7 +51,7 @@
     'state': 'idle',
   })
 # ---
-# name: test_nvr_entities[camera.front_camera_channel_1-entry]
+# name: test_nvr_entities[2][camera.front_camera_channel_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -87,12 +87,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_nvr_entities[camera.front_camera_channel_1-state]
+# name: test_nvr_entities[2][camera.front_camera_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'access_token': '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.front_camera_channel_1?token=1caab5c3b3',
-      'friendly_name': 'Front Camera Channel 1',
+      'friendly_name': 'Front Camera channel 1',
       'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
@@ -103,7 +103,7 @@
     'state': 'idle',
   })
 # ---
-# name: test_nvr_entities[camera.front_camera_channel_2-entry]
+# name: test_nvr_entities[2][camera.front_camera_channel_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -139,12 +139,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_nvr_entities[camera.front_camera_channel_2-state]
+# name: test_nvr_entities[2][camera.front_camera_channel_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'access_token': '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.front_camera_channel_2?token=1caab5c3b3',
-      'friendly_name': 'Front Camera Channel 2',
+      'friendly_name': 'Front Camera channel 2',
       'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
@@ -155,7 +155,7 @@
     'state': 'idle',
   })
 # ---
-# name: test_nvr_entities_with_channel_names[camera.backyard-entry]
+# name: test_nvr_entities_with_channel_names[2][camera.front_camera_channel_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -168,59 +168,7 @@
     'disabled_by': None,
     'domain': 'camera',
     'entity_category': None,
-    'entity_id': 'camera.backyard',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'hikvision',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <CameraEntityFeature: 2>,
-    'translation_key': None,
-    'unique_id': 'DS-2CD2142FWD-I20170101AAAA_2',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_nvr_entities_with_channel_names[camera.backyard-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'access_token': '1caab5c3b3',
-      'entity_picture': '/api/camera_proxy/camera.backyard?token=1caab5c3b3',
-      'friendly_name': 'Backyard',
-      'supported_features': <CameraEntityFeature: 2>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'camera.backyard',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'idle',
-  })
-# ---
-# name: test_nvr_entities_with_channel_names[camera.front_door-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'camera',
-    'entity_category': None,
-    'entity_id': 'camera.front_door',
+    'entity_id': 'camera.front_camera_channel_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -243,16 +191,68 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_nvr_entities_with_channel_names[camera.front_door-state]
+# name: test_nvr_entities_with_channel_names[2][camera.front_camera_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'access_token': '1caab5c3b3',
-      'entity_picture': '/api/camera_proxy/camera.front_door?token=1caab5c3b3',
-      'friendly_name': 'Front Door',
+      'entity_picture': '/api/camera_proxy/camera.front_camera_channel_1?token=1caab5c3b3',
+      'friendly_name': 'Front Camera channel 1',
       'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
-    'entity_id': 'camera.front_door',
+    'entity_id': 'camera.front_camera_channel_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_nvr_entities_with_channel_names[2][camera.front_camera_channel_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.front_camera_channel_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'hikvision',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': None,
+    'unique_id': 'DS-2CD2142FWD-I20170101AAAA_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_nvr_entities_with_channel_names[2][camera.front_camera_channel_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'entity_picture': '/api/camera_proxy/camera.front_camera_channel_2?token=1caab5c3b3',
+      'friendly_name': 'Front Camera channel 2',
+      'supported_features': <CameraEntityFeature: 2>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.front_camera_channel_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -126,6 +126,7 @@ async def test_binary_sensor_no_sensors(
     assert len(states) == 0
 
 
+@pytest.mark.parametrize("amount_of_channels", [2])
 async def test_binary_sensor_nvr_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -136,18 +137,6 @@ async def test_binary_sensor_nvr_device(
     mock_hikcamera.return_value.current_event_states = {
         "Motion": [(True, 1), (False, 2)],
     }
-
-    # Create mock VideoChannel objects for NVR channels
-    class MockVideoChannel:
-        def __init__(self, channel_id: int, name: str, enabled: bool = True) -> None:
-            self.id = channel_id
-            self.name = name
-            self.enabled = enabled
-
-    mock_hikcamera.mock_get_video_channels.return_value = [
-        MockVideoChannel(1, "Front Camera Channel 1"),
-        MockVideoChannel(2, "Front Camera Channel 2"),
-    ]
 
     await setup_integration(hass, mock_config_entry)
 
