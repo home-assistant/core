@@ -1,7 +1,7 @@
 """Test the Airobot climate platform."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyairobotrest.const import MODE_AWAY, MODE_HOME
@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
@@ -210,19 +210,13 @@ async def test_climate_heating_state(
     assert state.attributes.get("hvac_action") == "heating"
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_climate_unavailable_on_update_failure(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test climate entity becomes unavailable when coordinator update fails."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.airobot.PLATFORMS", [Platform.CLIMATE]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
     # Initially available
     state = hass.states.get("climate.test_thermostat")
     assert state
@@ -238,7 +232,8 @@ async def test_climate_unavailable_on_update_failure(
 
     # Advance time to trigger coordinator update (30 second interval)
     freezer.tick(timedelta(seconds=30))
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Entity should now be unavailable
     state = hass.states.get("climate.test_thermostat")
