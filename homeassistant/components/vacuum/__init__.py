@@ -452,6 +452,8 @@ class StateVacuumEntity(
         """Return segments as seen by the user, when last mapping the areas.
 
         Returns None if no mapping has been saved yet.
+        This can be used by integrations to detect changes in segments reported
+        by the vacuum and create a repair issue.
         """
         if self.registry_entry is None:
             _LOGGER.error(
@@ -519,7 +521,7 @@ class StateVacuumEntity(
         Integrations should call this method when the vacuum reports
         different segments than what was previously mapped to areas.
 
-        The issue is non-fixable via the standard repair flow. The frontend
+        The issue is not fixable via the standard repair flow. The frontend
         will handle the fix by showing the segment mapping dialog.
         """
         if self.registry_entry is None:

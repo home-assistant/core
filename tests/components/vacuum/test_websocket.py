@@ -13,6 +13,7 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
+from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -85,7 +86,7 @@ async def test_get_segments_entity_not_found(
     )
     msg = await client.receive_json()
     assert not msg["success"]
-    assert msg["error"]["code"] == "entity_not_found"
+    assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
 @pytest.mark.usefixtures("config_flow_fixture")
@@ -121,4 +122,4 @@ async def test_get_segments_not_supported(
     )
     msg = await client.receive_json()
     assert not msg["success"]
-    assert msg["error"]["code"] == "entity_not_supported"
+    assert msg["error"]["code"] == ERR_NOT_SUPPORTED

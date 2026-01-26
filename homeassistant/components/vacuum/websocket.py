@@ -7,6 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 
@@ -36,14 +37,12 @@ async def handle_get_segments(
     entity_id = msg["entity_id"]
     entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
     if entity is None:
-        connection.send_error(
-            msg["id"], "entity_not_found", f"Entity {entity_id} not found"
-        )
+        connection.send_error(msg["id"], ERR_NOT_FOUND, f"Entity {entity_id} not found")
         return
 
     if VacuumEntityFeature.CLEAN_AREA not in entity.supported_features:
         connection.send_error(
-            msg["id"], "entity_not_supported", f"Entity {entity_id} not supported"
+            msg["id"], ERR_NOT_SUPPORTED, f"Entity {entity_id} not supported"
         )
         return
 
