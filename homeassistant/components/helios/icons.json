@@ -1,0 +1,16 @@
+{
+  "services": {
+    "set_profile": {
+      "service": "mdi:fan"
+    },
+    "set_profile_fan_speed_away": {
+      "service": "mdi:walk"
+    },
+    "set_profile_fan_speed_boost": {
+      "service": "mdi:speedometer"
+    },
+    "set_profile_fan_speed_home": {
+      "service": "mdi:home"
+    }
+  }
+}

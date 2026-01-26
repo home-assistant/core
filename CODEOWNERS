@@ -666,6 +666,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/hdmi_cec/ @inytar
 /tests/components/hdmi_cec/ @inytar
 /homeassistant/components/heatmiser/ @andylockran
+/homeassistant/components/helios/ @helios-ventilatoren-com
+/tests/components/helios/ @helios-ventilatoren-com
 /homeassistant/components/heos/ @andrewsayre
 /tests/components/heos/ @andrewsayre
 /homeassistant/components/here_travel_time/ @eifinger
