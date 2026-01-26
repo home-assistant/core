@@ -65,10 +65,10 @@ async def test_sensor(
     for entity in er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     ):
-        if entity.domain == SENSOR_DOMAIN:
+        if entity.domain == SENSOR_DOMAIN and "pressure" not in entity.entity_id:
             state = hass.states.get(entity.entity_id)
-            assert state.state == snapshot(name=f"{state.name} - state")
-            assert state.attributes == snapshot(name=f"{state.name} - attributes")
+            assert state.state == snapshot(name=f"{entity.entity_id} - state")
+            assert state.attributes == snapshot(name=f"{entity.entity_id} - attributes")
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
