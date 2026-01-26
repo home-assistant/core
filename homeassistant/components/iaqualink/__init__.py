@@ -116,7 +116,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
             name=system.name,
             identifiers={(DOMAIN, system.serial)},
             manufacturer="Jandy",
+            model=getattr(system, "model", None),
             serial_number=system.serial,
+            sw_version=getattr(system, "firmware_version", None),
         )
 
         for dev in devices.values():

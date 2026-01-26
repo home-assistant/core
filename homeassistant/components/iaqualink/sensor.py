@@ -33,7 +33,6 @@ class HassAqualinkSensor(AqualinkEntity[AqualinkSensor], SensorEntity):
     def __init__(self, dev: AqualinkSensor) -> None:
         """Initialize AquaLink sensor."""
         super().__init__(dev)
-        self._attr_name = dev.label
         if not dev.name.endswith("_temp"):
             return
         self._attr_device_class = SensorDeviceClass.TEMPERATURE

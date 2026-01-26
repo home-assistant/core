@@ -35,7 +35,7 @@ class HassAqualinkSwitch(AqualinkEntity[AqualinkSwitch], SwitchEntity):
     def __init__(self, dev: AqualinkSwitch) -> None:
         """Initialize AquaLink switch."""
         super().__init__(dev)
-        name = self._attr_name = dev.label
+        name = dev.label
         if name == "Cleaner":
             self._attr_icon = "mdi:robot-vacuum"
         elif name == "Waterfall" or name.endswith("Dscnt"):
