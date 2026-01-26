@@ -69,14 +69,13 @@
       'device_class': 'temperature',
       'friendly_name': 'Missing Control Fridge',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.missing_control_fridge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': 'unavailable',
   })
 # ---
 # name: test_single_zone_sensor
