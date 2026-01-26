@@ -37,7 +37,7 @@ from .const import (
     NETATMO_CREATE_BINARY_SENSOR,
     NETATMO_CREATE_WEATHER_BINARY_SENSOR,
 )
-from .data_handler import NetatmoDevice
+from .data_handler import SIGNAL_NAME, NetatmoDevice
 from .entity import NetatmoModuleEntity, NetatmoWeatherModuleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -192,6 +192,10 @@ DEVICE_CATEGORY_BINARY_SENSORS: Final[
     NetatmoDeviceCategory.weather: NETATMO_WEATHER_BINARY_SENSOR_DESCRIPTIONS,
 }
 
+DEVICE_CATEGORY_BINARY_PUBLISHERS: Final[list[NetatmoDeviceCategory]] = [
+    NetatmoDeviceCategory.opening,
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -300,6 +304,18 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
             device_key = description.device_key_fn(netatmo_device)
             if device_key is not None:
                 self._attr_translation_key = device_key
+
+        # Register publishers for the entity if needed (not already done in parent class - weather and air_care)
+        if self.device.device_category in DEVICE_CATEGORY_BINARY_PUBLISHERS:
+            self._publishers.extend(
+                [
+                    {
+                        "name": self.home.entity_id,
+                        "home_id": self.home.entity_id,
+                        SIGNAL_NAME: netatmo_device.signal_name,
+                    },
+                ]
+            )
 
     @callback
     def async_update_callback(self) -> None:
