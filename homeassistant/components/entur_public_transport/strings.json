@@ -1,0 +1,62 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_stop_id": "No valid stop IDs provided. Stop IDs must contain 'StopPlace' or 'Quay'.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_stop_id": "No valid stop IDs provided. Stop IDs must contain 'StopPlace' or 'Quay'.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "expand_platforms": "Expand platforms",
+          "line_whitelist": "Line whitelist",
+          "number_of_departures": "Number of departures",
+          "omit_non_boarding": "Omit non-boarding departures",
+          "show_on_map": "Show on map",
+          "stop_ids": "Stop IDs"
+        },
+        "data_description": {
+          "expand_platforms": "Automatically expand stop places to include all quays/platforms",
+          "line_whitelist": "Only show departures for these specific line IDs (leave empty for all lines)",
+          "number_of_departures": "Number of upcoming departures to include in attributes",
+          "omit_non_boarding": "Hide departures where boarding is not allowed (e.g., last stop)",
+          "show_on_map": "Include GPS coordinates in entity attributes for map display",
+          "stop_ids": "Enter one or more stop place IDs (e.g., NSR:StopPlace:337 or NSR:Quay:7203)"
+        },
+        "description": "Set up a stop place or quay to monitor departures from. You can find your stop ID on [Entur's travel planner](https://entur.no/)."
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue": {
+      "description": "Your Entur public transport integration is configured using the deprecated YAML method in `configuration.yaml`, which failed to import automatically due to: {error_reason}.\n\nTo continue using this integration, you must migrate to the UI configuration:\n\n1. Open your `configuration.yaml` file\n2. Remove the `entur_public_transport` sensor platform section\n3. Save the file and restart Home Assistant\n4. Go to **Settings** > **Devices & Services** > **Add Integration**\n5. Search for and add \"Entur public transport\"\n6. Configure your stop IDs using the setup wizard\n\nAfter completing these steps, your integration will be configured through the UI and this issue will be resolved.",
+      "title": "YAML configuration import failed"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "expand_platforms": "[%key:component::entur_public_transport::config::step::user::data::expand_platforms%]",
+          "line_whitelist": "[%key:component::entur_public_transport::config::step::user::data::line_whitelist%]",
+          "number_of_departures": "[%key:component::entur_public_transport::config::step::user::data::number_of_departures%]",
+          "omit_non_boarding": "[%key:component::entur_public_transport::config::step::user::data::omit_non_boarding%]",
+          "show_on_map": "[%key:component::entur_public_transport::config::step::user::data::show_on_map%]"
+        },
+        "data_description": {
+          "expand_platforms": "[%key:component::entur_public_transport::config::step::user::data_description::expand_platforms%]",
+          "line_whitelist": "[%key:component::entur_public_transport::config::step::user::data_description::line_whitelist%]",
+          "number_of_departures": "[%key:component::entur_public_transport::config::step::user::data_description::number_of_departures%]",
+          "omit_non_boarding": "[%key:component::entur_public_transport::config::step::user::data_description::omit_non_boarding%]",
+          "show_on_map": "[%key:component::entur_public_transport::config::step::user::data_description::show_on_map%]"
+        }
+      }
+    }
+  }
+}

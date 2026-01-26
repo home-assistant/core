@@ -794,6 +794,9 @@ energyzero==4.0.1
 # homeassistant.components.enocean
 enocean==0.50
 
+# homeassistant.components.entur_public_transport
+enturclient==0.2.4
+
 # homeassistant.components.environment_canada
 env-canada==0.12.4
 
