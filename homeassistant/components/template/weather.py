@@ -162,8 +162,8 @@ LEGACY_FIELDS = {
     CONF_WIND_SPEED_TEMPLATE: CONF_WIND_SPEED,
 }
 
-# These keys all have _template.  These fields will enter deprecation
-# after legacy templates are removed.
+# These options that are templates all have _template. These fields will
+# enter deprecation after legacy templates are removed.
 WEATHER_COMMON_LEGACY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
