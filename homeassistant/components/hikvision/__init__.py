@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from xml.etree.ElementTree import ParseError
 
+from pyhik.constants import SENSOR_MAP
 from pyhik.hikvision import HikCamera
 import requests
 
@@ -19,10 +21,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA]
 
 
 @dataclass
@@ -70,8 +75,59 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
         device_type=device_type,
     )
 
+    _LOGGER.debug(
+        "Device %s (type=%s) initial event_states: %s",
+        device_name,
+        device_type,
+        camera.current_event_states,
+    )
+
+    # For NVRs or devices with no detected events, try to fetch events from ISAPI
+    # Use broader notification methods for NVRs since they often use 'record' etc.
+    if device_type == "NVR" or not camera.current_event_states:
+        nvr_notification_methods = {"center", "HTTP", "record", "email", "beep"}
+
+        def fetch_and_inject_nvr_events() -> None:
+            """Fetch and inject NVR events in a single executor job."""
+            try:
+                nvr_events = camera.get_event_triggers(nvr_notification_methods)
+            except (requests.exceptions.RequestException, ParseError) as err:
+                _LOGGER.warning("Unable to fetch event triggers from %s: %s", host, err)
+                return
+
+            _LOGGER.debug("NVR events fetched with extended methods: %s", nvr_events)
+            if nvr_events:
+                # Map raw event type names to friendly names using SENSOR_MAP
+                mapped_events: dict[str, list[int]] = {}
+                for event_type, channels in nvr_events.items():
+                    friendly_name = SENSOR_MAP.get(event_type.lower(), event_type)
+                    if friendly_name in mapped_events:
+                        mapped_events[friendly_name].extend(channels)
+                    else:
+                        mapped_events[friendly_name] = list(channels)
+                _LOGGER.debug("Mapped NVR events: %s", mapped_events)
+                camera.inject_events(mapped_events)
+            else:
+                _LOGGER.debug(
+                    "No event triggers returned from %s. "
+                    "Ensure events are configured on the device",
+                    host,
+                )
+
+        await hass.async_add_executor_job(fetch_and_inject_nvr_events)
+
     # Start the event stream
     await hass.async_add_executor_job(camera.start_stream)
+
+    # Register the main device before platforms that use via_device
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, device_id)},
+        name=device_name,
+        manufacturer="Hikvision",
+        model=device_type,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

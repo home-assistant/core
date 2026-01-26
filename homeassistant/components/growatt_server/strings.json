@@ -13,7 +13,7 @@
       "password_auth": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
-          "url": "[%key:common::config_flow::data::url%]",
+          "url": "Server region",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "title": "Enter your Growatt login credentials"
@@ -26,7 +26,8 @@
       },
       "token_auth": {
         "data": {
-          "token": "API Token"
+          "token": "API Token",
+          "url": "Server region"
         },
         "description": "Token authentication is only supported for MIN/TLX devices. For other device types, please use username/password authentication.",
         "title": "Enter your API token"
@@ -529,6 +530,16 @@
         "battery_first": "Battery first",
         "grid_first": "Grid first",
         "load_first": "Load first"
+      }
+    },
+    "region": {
+      "options": {
+        "australia_new_zealand": "Australia and New Zealand",
+        "china": "China",
+        "era_server": "Era server (Atess Power)",
+        "north_america": "North America",
+        "other_regions": "Other regions",
+        "smten_server": "SMTEN server"
       }
     }
   },
