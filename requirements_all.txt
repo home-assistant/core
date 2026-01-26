@@ -114,8 +114,10 @@ RestrictedPython==8.1
 RtmAPI==0.7.2
 
 # homeassistant.components.recorder
-# homeassistant.components.sql
 SQLAlchemy==2.0.41
+
+# homeassistant.components.sql
+SQLAlchemy[asyncio]==2.0.41
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -327,6 +329,9 @@ aiomodernforms==0.1.8
 # homeassistant.components.yamaha_musiccast
 aiomusiccast==0.15.0
 
+# homeassistant.components.sql
+aiomysql==0.3.2
+
 # homeassistant.components.nanoleaf
 aionanoleaf==0.2.1
 
@@ -400,6 +405,9 @@ aioslimproto==3.0.0
 
 # homeassistant.components.solaredge
 aiosolaredge==0.2.0
+
+# homeassistant.components.sql
+aiosqlite==0.21.0
 
 # homeassistant.components.steamist
 aiosteamist==1.0.1
@@ -552,6 +560,9 @@ asyncarve==0.1.1
 
 # homeassistant.components.keyboard_remote
 asyncinotify==4.2.0
+
+# homeassistant.components.sql
+asyncpg==0.30.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
