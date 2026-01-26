@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import socket
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from psutil._common import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr
@@ -664,7 +664,7 @@ async def test_sensor_with_param_exception(
     entity_id: str,
 ) -> None:
     """Test the sensor."""
-    setattr(mock_psutil, psutil_attr, PropertyMock(side_effect=exception))
+    setattr(mock_psutil, psutil_attr, Mock(side_effect=exception))
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -697,7 +697,7 @@ async def test_sensor_without_param_exception(
     entity_id: str,
 ) -> None:
     """Test the sensor."""
-    setattr(mock_psutil, psutil_attr, PropertyMock(side_effect=exception))
+    setattr(mock_psutil, psutil_attr, Mock(side_effect=exception))
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
