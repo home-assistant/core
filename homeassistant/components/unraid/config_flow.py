@@ -34,13 +34,6 @@ class UnraidFlowError(Exception):
         super().__init__()
 
 
-class UnraidAbortFlow(Exception):
-    """Exception to abort the config flow with a reason."""
-
-    def __init__(self, reason: str) -> None:
-        """Initialize the abort."""
-        self.reason = reason
-        super().__init__()
 
 
 USER_SCHEMA = vol.Schema(
