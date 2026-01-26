@@ -1,8 +1,10 @@
 """Support for Netatmo binary sensors."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -18,7 +20,7 @@ from .common import (
     snapshot_platform_entities,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -115,6 +117,7 @@ async def test_doortag_opening_status_change(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     netatmo_auth: AsyncMock,
+    freezer: FrozenDateTimeFactory,
     doortag_status: str,
     expected: str,
 ) -> None:
@@ -122,8 +125,8 @@ async def test_doortag_opening_status_change(
     fake_post_hits = 0
     # Repeatedly used variables for the test and initial value from fixture
     doortag_entity_id = "12:34:56:00:86:99"
-    doortag_connectivity = True
-    doortag_opening = doortag_status
+    doortag_connectivity = False
+    doortag_opening = "no_news"
 
     def tag_modifier(payload):
         """This function will be called by common.py during ANY homestatus call."""
@@ -148,6 +151,7 @@ async def test_doortag_opening_status_change(
                 if isinstance(module, dict) and module.get("id") == doortag_entity_id:
                     module["reachable"] = doortag_connectivity
                     module["status"] = doortag_opening
+                    module["last_seen"] = int(dt_util.utcnow().timestamp())
                     break
 
     async def fake_tag_post(*args, **kwargs):
@@ -191,12 +195,29 @@ async def test_doortag_opening_status_change(
     _doortag_entity_opening = f"binary_sensor.{_doortag_entity}_window"
     _doortag_entity_connectivity = f"binary_sensor.{_doortag_entity}_connectivity"
 
-    # Check opening creation
-    assert hass.states.get(_doortag_entity_opening) is not None
     # Check connectivity creation
     assert hass.states.get(_doortag_entity_connectivity) is not None
+    # Check opening creation
+    assert hass.states.get(_doortag_entity_opening) is not None
 
-    # Check opening mocked state
-    assert hass.states.get(_doortag_entity_opening).state == expected
+    # Check connectivity initial state
+    assert hass.states.get(_doortag_entity_connectivity).state == "off"
+    # Check opening initial state
+    assert hass.states.get(_doortag_entity_opening).state == "unavailable"
+
+    # Change mocked status
+    doortag_connectivity = True
+    doortag_opening = doortag_status
+
+    # Trigger a polling cycle
+    freezer.tick(timedelta(minutes=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
     # Check connectivity mocked state
     assert hass.states.get(_doortag_entity_connectivity).state == "on"
+    # Check opening mocked state
+    assert hass.states.get(_doortag_entity_opening).state == expected
