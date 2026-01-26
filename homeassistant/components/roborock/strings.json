@@ -41,6 +41,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "clean_fluid_empty": {
+        "name": "Cleaning fluid"
+      },
       "in_cleaning": {
         "name": "Cleaning"
       },
@@ -55,9 +58,6 @@
       },
       "water_shortage": {
         "name": "Water shortage"
-      },
-      "clean_fluid_empty": {
-        "name": "Cleaning fluid"
       }
     },
     "button": {

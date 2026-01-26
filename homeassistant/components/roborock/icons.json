@@ -1,6 +1,9 @@
 {
   "entity": {
     "binary_sensor": {
+      "clean_fluid_empty": {
+        "default": "mdi:spray-bottle"
+      },
       "in_cleaning": {
         "default": "mdi:vacuum"
       },
@@ -15,9 +18,6 @@
       },
       "water_shortage": {
         "default": "mdi:water"
-      },
-      "clean_fluid_empty": {
-        "default": "mdi:spray-bottle"
       }
     },
     "button": {
