@@ -452,6 +452,8 @@ build.json @home-assistant/supervisor
 /tests/components/emulated_hue/ @bdraco @Tho85
 /homeassistant/components/emulated_kasa/ @kbickar
 /tests/components/emulated_kasa/ @kbickar
+/homeassistant/components/energenie_mi_home/ @lorenzowritescode
+/tests/components/energenie_mi_home/ @lorenzowritescode
 /homeassistant/components/energenie_power_sockets/ @gnumpi
 /tests/components/energenie_power_sockets/ @gnumpi
 /homeassistant/components/energy/ @home-assistant/core

@@ -1,0 +1,10 @@
+{
+  "domain": "energenie_mi_home",
+  "name": "Energenie Mi Home",
+  "codeowners": ["@lorenzowritescode"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/energenie_mi_home",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze"
+}
