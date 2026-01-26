@@ -3,12 +3,23 @@
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 
-from roborock.data import RoborockDockDustCollectionModeCode
+from roborock.data import (
+    RoborockDockDustCollectionModeCode,
+    RoborockEnum,
+    ZeoDryingMode,
+    ZeoMode,
+    ZeoProgram,
+    ZeoRinse,
+    ZeoSpin,
+    ZeoTemperature,
+)
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.home import HomeTrait
 from roborock.devices.traits.v1.maps import MapsTrait
 from roborock.exceptions import RoborockException
+from roborock.roborock_message import RoborockZeoProtocol
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -18,10 +29,16 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MAP_SLEEP
-from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
-from .entity import RoborockCoordinatedEntityV1
+from .coordinator import (
+    RoborockConfigEntry,
+    RoborockDataUpdateCoordinator,
+    RoborockDataUpdateCoordinatorA01,
+)
+from .entity import RoborockCoordinatedEntityA01, RoborockCoordinatedEntityV1
 
 PARALLEL_UPDATES = 0
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -42,6 +59,16 @@ class RoborockSelectDescription(SelectEntityDescription):
 
     is_dock_entity: bool = False
     """Whether this entity is for the dock."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class RoborockSelectDescriptionA01(SelectEntityDescription):
+    """Class to describe a Roborock A01 select entity."""
+
+    # The protocol that the select entity will send to the api.
+    data_protocol: RoborockZeoProtocol
+    # Enum class for the select entity
+    enum_class: type[RoborockEnum]
 
 
 SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
@@ -90,6 +117,52 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
 ]
 
 
+A01_SELECT_DESCRIPTIONS: list[RoborockSelectDescriptionA01] = [
+    RoborockSelectDescriptionA01(
+        key="program",
+        data_protocol=RoborockZeoProtocol.PROGRAM,
+        translation_key="program",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoProgram,
+    ),
+    RoborockSelectDescriptionA01(
+        key="mode",
+        data_protocol=RoborockZeoProtocol.MODE,
+        translation_key="mode",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoMode,
+    ),
+    RoborockSelectDescriptionA01(
+        key="temperature",
+        data_protocol=RoborockZeoProtocol.TEMP,
+        translation_key="temperature",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoTemperature,
+    ),
+    RoborockSelectDescriptionA01(
+        key="drying_mode",
+        data_protocol=RoborockZeoProtocol.DRYING_MODE,
+        translation_key="drying_mode",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoDryingMode,
+    ),
+    RoborockSelectDescriptionA01(
+        key="spin_level",
+        data_protocol=RoborockZeoProtocol.SPIN_LEVEL,
+        translation_key="spin_level",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoSpin,
+    ),
+    RoborockSelectDescriptionA01(
+        key="rinse_times",
+        data_protocol=RoborockZeoProtocol.RINSE_TIMES,
+        translation_key="rinse_times",
+        entity_category=EntityCategory.CONFIG,
+        enum_class=ZeoRinse,
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
@@ -113,6 +186,11 @@ async def async_setup_entry(
         for coordinator in config_entry.runtime_data.v1
         if (home_trait := coordinator.properties_api.home) is not None
         if (map_trait := coordinator.properties_api.maps) is not None
+    )
+    async_add_entities(
+        RoborockSelectEntityA01(coordinator, description)
+        for coordinator in config_entry.runtime_data.a01
+        for description in A01_SELECT_DESCRIPTIONS
     )
 
 
@@ -214,3 +292,58 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
         if current_map_info := self._home_trait.current_map_data:
             return current_map_info.name or f"Map {current_map_info.map_flag}"
         return None
+
+
+class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
+    """A class to let you set options on a Roborock A01 device."""
+
+    entity_description: RoborockSelectDescriptionA01
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinatorA01,
+        entity_description: RoborockSelectDescriptionA01,
+    ) -> None:
+        """Create an A01 select entity."""
+        self.entity_description = entity_description
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}",
+            coordinator,
+        )
+        self._attr_options = list(entity_description.enum_class.keys())
+
+    async def async_select_option(self, option: str) -> None:
+        """Set the option."""
+        try:
+            # Get the protocol value for the selected option
+            option_values = self.entity_description.enum_class.as_dict()
+            if option not in option_values:
+                raise ValueError(f"Invalid option: {option}")
+            value = option_values[option]
+            await self.coordinator.api.set_value(  # type: ignore[attr-defined]
+                self.entity_description.data_protocol,
+                value,
+            )
+            await self.coordinator.async_request_refresh()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="select_option_failed",
+            ) from err
+
+    @property
+    def current_option(self) -> str | None:
+        """Get the current status of the select entity from coordinator data."""
+        if self.entity_description.data_protocol not in self.coordinator.data:
+            return None
+
+        current_value = self.coordinator.data[self.entity_description.data_protocol]
+        if current_value is None:
+            return None
+        _LOGGER.debug(
+            "current_value: %s for %s",
+            current_value,
+            self.entity_description.key,
+        )
+        # Find the option name that matches the current value
+        return str(current_value)

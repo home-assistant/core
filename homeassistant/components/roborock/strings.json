@@ -58,6 +58,9 @@
       }
     },
     "button": {
+      "pause": {
+        "name": "Pause"
+      },
       "reset_air_filter_consumable": {
         "name": "Reset air filter consumable"
       },
@@ -69,6 +72,12 @@
       },
       "reset_side_brush_consumable": {
         "name": "Reset side brush consumable"
+      },
+      "shutdown": {
+        "name": "Shutdown"
+      },
+      "start": {
+        "name": "Start"
       }
     },
     "number": {
@@ -77,6 +86,16 @@
       }
     },
     "select": {
+      "drying_mode": {
+        "name": "Drying mode",
+        "state": {
+          "iron": "Iron",
+          "none": "No drying",
+          "quick": "Quick",
+          "store": "Store",
+          "time_dry": "Time dry"
+        }
+      },
       "dust_collection_mode": {
         "name": "Empty mode",
         "state": {
@@ -84,6 +103,19 @@
           "light": "Light",
           "max": "[%key:component::roborock::entity::select::mop_intensity::state::max%]",
           "smart": "Smart"
+        }
+      },
+      "mode": {
+        "name": "Operating mode",
+        "state": {
+          "drain": "Drain",
+          "dry": "Dry",
+          "heavy": "Heavy",
+          "pre_wash": "Pre-wash",
+          "rinse_spin": "Rinse & spin",
+          "spin": "Spin",
+          "wash": "Wash",
+          "wash_and_dry": "Wash and dry"
         }
       },
       "mop_intensity": {
@@ -115,8 +147,80 @@
           "standard": "Standard"
         }
       },
+      "program": {
+        "name": "Wash program",
+        "state": {
+          "air_refresh": "Air refresh",
+          "anti_allergen": "Anti-allergen",
+          "anti_mites": "Anti-mites",
+          "baby_care": "Baby care",
+          "bedding": "Bedding",
+          "boiling_wash": "Boiling wash",
+          "bra": "Bra",
+          "cotton_linen": "Cotton/Linen",
+          "custom": "Custom",
+          "down": "Down",
+          "down_clean": "Down clean",
+          "exo_40_60": "Exo 40/60",
+          "gentle": "Gentle",
+          "intensive": "Intensive",
+          "new_clothes": "New clothes",
+          "night": "Night",
+          "panties": "Panties",
+          "quick": "Quick",
+          "rinse_and_spin": "Rinse and spin",
+          "sanitize": "Sanitize",
+          "season": "Season",
+          "shirts": "Shirts",
+          "silk": "Silk",
+          "socks": "Socks",
+          "sportswear": "Sportswear",
+          "stain_removal": "Stain removal",
+          "standard": "Standard",
+          "synthetics": "Synthetics",
+          "t_shirts": "T-shirts",
+          "towels": "Towels",
+          "twenty_c": "20°C",
+          "underwear": "Underwear",
+          "warming": "Warming",
+          "wool": "Wool"
+        }
+      },
+      "rinse_times": {
+        "name": "Rinse times",
+        "state": {
+          "high": "4",
+          "low": "2",
+          "max": "5",
+          "mid": "3",
+          "min": "1",
+          "none": "Default"
+        }
+      },
       "selected_map": {
         "name": "Selected map"
+      },
+      "spin_level": {
+        "name": "Spin level",
+        "state": {
+          "high": "1000 RPM",
+          "max": "1400 RPM",
+          "mid": "800 RPM",
+          "none": "Default",
+          "very_high": "1200 RPM",
+          "very_low": "600 RPM"
+        }
+      },
+      "temperature": {
+        "name": "Water temperature",
+        "state": {
+          "30": "30°C",
+          "40": "40°C",
+          "60": "60°C",
+          "90": "90°C",
+          "auto": "Auto",
+          "cold": "Cold"
+        }
       }
     },
     "sensor": {
@@ -186,6 +290,21 @@
       "current_room": {
         "name": "Current room"
       },
+      "detergent_empty": {
+        "name": "Detergent empty",
+        "state": {
+          "available": "Available",
+          "empty": "Empty"
+        }
+      },
+      "detergent_type": {
+        "name": "Detergent type",
+        "state": {
+          "liquid": "Liquid",
+          "none": "None",
+          "powder": "Powder"
+        }
+      },
       "dock_error": {
         "name": "Dock error",
         "state": {
@@ -196,6 +315,29 @@
           "ok": "Ok",
           "waste_water_tank_full": "Waste water tank full",
           "water_empty": "Water empty"
+        }
+      },
+      "error": {
+        "name": "Error",
+        "state": {
+          "communication_error": "Communication error",
+          "door_lock_error": "Door lock error",
+          "drain_error": "Drain error",
+          "drying_error": "Drying error",
+          "drying_error_e_12": "Drying error E12",
+          "drying_error_e_13": "Drying error E13",
+          "drying_error_e_14": "Drying error E14",
+          "drying_error_e_15": "Drying error E15",
+          "drying_error_e_16": "Drying error E16",
+          "drying_error_restart": "Restart the washer",
+          "drying_error_water_flow": "Check water flow",
+          "heating_error": "Heating error",
+          "inverter_error": "Inverter error",
+          "none": "[%key:component::roborock::entity::sensor::vacuum_error::state::none%]",
+          "refill_error": "Refill error",
+          "spin_error": "Re-arrange clothes",
+          "temperature_error": "Temperature error",
+          "water_level_error": "Water level error"
         }
       },
       "filter_time_left": {
@@ -238,6 +380,35 @@
       "side_brush_time_left": {
         "name": "Side brush time left"
       },
+      "softener_empty": {
+        "name": "Softener empty",
+        "state": {
+          "available": "Available",
+          "empty": "Empty"
+        }
+      },
+      "softener_type": {
+        "name": "Softener type",
+        "state": {
+          "liquid": "Liquid",
+          "none": "None"
+        }
+      },
+      "state": {
+        "name": "State",
+        "state": {
+          "cooling": "Cooling",
+          "done": "Done",
+          "drying": "Drying",
+          "rinsing": "Rinsing",
+          "soaking": "Soaking",
+          "spinning": "Spinning",
+          "standby": "[%key:common::state::standby%]",
+          "under_delay_start": "Delayed start",
+          "washing": "Washing",
+          "weighing": "Weighing"
+        }
+      },
       "status": {
         "name": "Status",
         "state": {
@@ -275,6 +446,9 @@
       },
       "strainer_time_left": {
         "name": "Strainer time left"
+      },
+      "times_after_clean": {
+        "name": "Times after clean"
       },
       "total_cleaning_area": {
         "name": "Total cleaning area"
@@ -389,6 +563,9 @@
       "off_peak_switch": {
         "name": "Off-peak charging"
       },
+      "sound_setting": {
+        "name": "Sound setting"
+      },
       "status_indicator": {
         "name": "Status indicator light"
       }
@@ -432,6 +609,9 @@
     }
   },
   "exceptions": {
+    "button_press_failed": {
+      "message": "Failed to press button"
+    },
     "command_failed": {
       "message": "Error while calling {command}"
     },
@@ -459,6 +639,9 @@
     "position_not_found": {
       "message": "Robot position not found"
     },
+    "select_option_failed": {
+      "message": "Failed to set selected option"
+    },
     "update_data_fail": {
       "message": "Failed to update data"
     },
@@ -472,7 +655,6 @@
       "title": "Cloud API used"
     }
   },
-
   "options": {
     "step": {
       "drawables": {

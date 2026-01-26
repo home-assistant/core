@@ -16,7 +16,9 @@ from roborock.data import (
     RoborockErrorCode,
     RoborockStateCode,
     WorkStatusMapping,
+    ZeoDetergentType,
     ZeoError,
+    ZeoSoftenerType,
     ZeoState,
 )
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
@@ -66,6 +68,7 @@ class RoborockSensorDescriptionA01(SensorEntityDescription):
     """A class that describes Roborock sensors."""
 
     data_protocol: RoborockDyadDataProtocol | RoborockZeoProtocol
+    value_fn: Callable[[StateType], StateType] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -335,6 +338,47 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         options=ZeoError.keys(),
     ),
+    # Additional Zeo sensors
+    RoborockSensorDescriptionA01(
+        key="times_after_clean",
+        data_protocol=RoborockZeoProtocol.TIMES_AFTER_CLEAN,
+        translation_key="times_after_clean",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionA01(
+        key="detergent_empty",
+        data_protocol=RoborockZeoProtocol.DETERGENT_EMPTY,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="detergent_empty",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["empty", "available"],
+        value_fn=lambda x: "empty" if x else "available",
+    ),
+    RoborockSensorDescriptionA01(
+        key="softener_empty",
+        data_protocol=RoborockZeoProtocol.SOFTENER_EMPTY,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="softener_empty",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=["empty", "available"],
+        value_fn=lambda x: "empty" if x else "available",
+    ),
+    RoborockSensorDescriptionA01(
+        key="detergent_type",
+        data_protocol=RoborockZeoProtocol.DETERGENT_TYPE,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="detergent_type",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=ZeoDetergentType.keys(),
+    ),
+    RoborockSensorDescriptionA01(
+        key="softener_type",
+        data_protocol=RoborockZeoProtocol.SOFTENER_TYPE,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="softener_type",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=ZeoSoftenerType.keys(),
+    ),
 ]
 
 Q7_B01_SENSOR_DESCRIPTIONS = [
@@ -512,7 +556,10 @@ class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.coordinator.data[self.entity_description.data_protocol]
+        value = self.coordinator.data[self.entity_description.data_protocol]
+        if self.entity_description.value_fn is not None:
+            return self.entity_description.value_fn(value)
+        return value
 
 
 class RoborockSensorEntityB01(RoborockCoordinatedEntityB01, SensorEntity):
