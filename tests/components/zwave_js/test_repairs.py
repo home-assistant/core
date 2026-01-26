@@ -379,8 +379,8 @@ async def test_migrate_unique_id(
     assert data["description_placeholders"] == {
         "config_entry_title": "Z-Wave JS",
         "controller_model": "ZW090",
-        "new_unique_id": "3245146787",
-        "old_unique_id": old_unique_id,
+        "new_unique_id": "0xc16d02a3",
+        "old_unique_id": "0x075bcd15",
     }
 
     # Apply fix
@@ -446,8 +446,8 @@ async def test_migrate_unique_id_missing_config_entry(
     assert data["description_placeholders"] == {
         "config_entry_title": "Z-Wave JS",
         "controller_model": "ZW090",
-        "new_unique_id": "3245146787",
-        "old_unique_id": old_unique_id,
+        "new_unique_id": "0xc16d02a3",
+        "old_unique_id": "0x075bcd15",
     }
 
     # Apply fix

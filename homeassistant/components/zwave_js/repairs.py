@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
-from .helpers import async_get_node_from_device_id
+from .helpers import async_get_node_from_device_id, format_home_id_for_display
 
 
 class DeviceConfigFileChangedFlow(RepairsFlow):
@@ -62,13 +62,26 @@ class MigrateUniqueIDFlow(RepairsFlow):
 
     def __init__(self, data: dict[str, str]) -> None:
         """Initialize."""
+        # Format IDs for display
+
+        try:
+            new_unique_id_hex = format_home_id_for_display(int(data["new_unique_id"]))
+        except (ValueError, TypeError):
+            new_unique_id_hex = data["new_unique_id"]
+
+        try:
+            old_unique_id_hex = format_home_id_for_display(int(data["old_unique_id"]))
+        except (ValueError, TypeError):
+            old_unique_id_hex = data["old_unique_id"]
+
         self.description_placeholders: dict[str, str] = {
             "config_entry_title": data["config_entry_title"],
             "controller_model": data["controller_model"],
-            "new_unique_id": data["new_unique_id"],
-            "old_unique_id": data["old_unique_id"],
+            "new_unique_id": new_unique_id_hex,
+            "old_unique_id": old_unique_id_hex,
         }
         self._config_entry_id: str = data["config_entry_id"]
+        self._new_unique_id: str = data["new_unique_id"]
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -88,7 +101,7 @@ class MigrateUniqueIDFlow(RepairsFlow):
             if config_entry is not None:
                 self.hass.config_entries.async_update_entry(
                     config_entry,
-                    unique_id=self.description_placeholders["new_unique_id"],
+                    unique_id=self._new_unique_id,
                 )
                 self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
             return self.async_create_entry(data={})
