@@ -23,7 +23,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -1808,6 +1812,44 @@ async def test_entity_icon_and_entity_picture(
     await help_test_entity_icon_and_entity_picture(
         hass, mqtt_mock_entry, domain, config
     )
+
+
+async def test_icon_template_discovery(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test icon_template from MQTT discovery is rendered on state messages."""
+    await mqtt_mock_entry()
+
+    # Discovery payload with an icon_template that returns an icon when value>3
+    unique_id = "veryunique_icon"
+    config = {
+        "name": "test",
+        "state_topic": "test-topic",
+        "unique_id": unique_id,
+        "icon_template": "{{ 'mdi:greater' if (value|int) > 3 else '' }}",
+    }
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/sensor/{unique_id}/config", data)
+    await hass.async_block_till_done()
+
+    ent_registry = er.async_get(hass)
+    entity_id = ent_registry.async_get_entity_id(sensor.DOMAIN, mqtt.DOMAIN, unique_id)
+    assert entity_id is not None
+
+    # Send a state that yields empty icon -> attribute should be None
+    async_fire_mqtt_message(hass, "test-topic", "2")
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("icon") is None
+
+    # Send a state that yields an icon
+    async_fire_mqtt_message(hass, "test-topic", "5")
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("icon") == "mdi:greater"
 
 
 @pytest.mark.parametrize(

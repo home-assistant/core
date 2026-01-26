@@ -1,6 +1,7 @@
 """The tests for the MQTT switch platform."""
 
 import copy
+import json
 from typing import Any
 from unittest.mock import patch
 
@@ -15,6 +16,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     help_custom_config,
@@ -189,6 +191,44 @@ async def test_sending_inital_state_and_optimistic(
     state = hass.states.get("switch.test")
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+
+async def test_icon_template_discovery(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test icon_template from MQTT discovery is rendered on state messages."""
+    await mqtt_mock_entry()
+
+    unique_id = "veryunique_icon"
+    config = {
+        "name": "test",
+        "state_topic": "test-topic",
+        "command_topic": "test-cmd",
+        "unique_id": unique_id,
+        "icon_template": "{{ 'mdi:greater' if value == 'ON' else 'mdi:minus' }}",
+    }
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/switch/{unique_id}/config", data)
+    await hass.async_block_till_done()
+
+    ent_registry = er.async_get(hass)
+    entity_id = ent_registry.async_get_entity_id(switch.DOMAIN, mqtt.DOMAIN, unique_id)
+    assert entity_id is not None
+
+    # Send a state that yields empty icon -> attribute should be None
+    async_fire_mqtt_message(hass, "test-topic", "ON")
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("icon") == "mdi:greater"
+
+    # Send a state that yields an icon
+    async_fire_mqtt_message(hass, "test-topic", "OFF")
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("icon") == "mdi:minus"
 
 
 @pytest.mark.parametrize(

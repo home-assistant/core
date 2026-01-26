@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
+    CONF_ICON_TEMPLATE,
     CONF_NAME,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
@@ -37,7 +38,7 @@ from . import subscription
 from .config import MQTT_RO_SCHEMA
 from .const import CONF_OFF_DELAY, CONF_STATE_TOPIC, PAYLOAD_NONE
 from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
-from .models import MqttValueTemplate, ReceiveMessage
+from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,6 +60,7 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_OFF_DELAY): cv.positive_int,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -91,6 +93,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
     _expired: bool | None
     _expire_after: int | None
     _expiration_trigger: CALLBACK_TYPE | None = None
+    _icon_template: Any | None = None
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
@@ -155,6 +158,10 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             self._config.get(CONF_VALUE_TEMPLATE),
             entity=self,
         ).async_render_with_possible_json_value
+        if icon_template := self._config.get(CONF_ICON_TEMPLATE):
+            self._icon_template = MqttValueTemplate(
+                icon_template, entity=self
+            ).async_render_with_possible_json_value
 
     @callback
     def _off_delay_listener(self, now: datetime) -> None:
@@ -195,6 +202,23 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             )
             return
 
+        # Update icon from icon_template, if configured
+        if CONF_ICON_TEMPLATE in self._config and self._icon_template:
+            try:
+                icon = self._icon_template(msg.payload, PayloadSentinel.DEFAULT)
+            except Exception:  # Template errors are surfaced as various exceptions
+                _LOGGER.exception(
+                    "Error rendering icon template for %s", self.entity_id
+                )
+            else:
+                if icon is PayloadSentinel.DEFAULT:
+                    # Template chose to skip processing for this payload
+                    pass
+                elif isinstance(icon, str) and icon.strip():
+                    self._attr_icon = icon
+                else:
+                    self._attr_icon = None
+
         if payload == self._config[CONF_PAYLOAD_ON]:
             self._attr_is_on = True
         elif payload == self._config[CONF_PAYLOAD_OFF]:
@@ -230,11 +254,30 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 self.hass, off_delay, self._off_delay_listener
             )
 
+        # Update icon from icon_template, if configured
+        if CONF_ICON_TEMPLATE in self._config and self._icon_template:
+            try:
+                icon = self._icon_template(msg.payload, PayloadSentinel.DEFAULT)
+            except Exception:  # Template errors are surfaced as various exceptions
+                _LOGGER.exception(
+                    "Error rendering icon template for %s", self.entity_id
+                )
+            else:
+                if icon is PayloadSentinel.DEFAULT:
+                    # Template chose to skip processing for this payload
+                    pass
+                elif isinstance(icon, str) and icon.strip():
+                    self._attr_icon = icon
+                else:
+                    self._attr_icon = None
+
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
-            CONF_STATE_TOPIC, self._state_message_received, {"_attr_is_on", "_expired"}
+            CONF_STATE_TOPIC,
+            self._state_message_received,
+            {"_attr_is_on", "_expired", "_attr_icon"},
         )
 
     async def _subscribe_topics(self) -> None:

@@ -26,6 +26,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
+    CONF_ICON_TEMPLATE,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
@@ -80,6 +81,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),
+        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_OPTIONS): cv.ensure_list,
         vol.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
         vol.Optional(CONF_STATE_CLASS): vol.Any(STATE_CLASSES_SCHEMA, None),
@@ -200,6 +202,9 @@ class MqttSensor(MqttEntity, RestoreSensor):
     _last_reset_template: Callable[[ReceivePayloadType], ReceivePayloadType] | None = (
         None
     )
+    _icon_template: (
+        Callable[[ReceivePayloadType, PayloadSentinel], ReceivePayloadType] | None
+    ) = None
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
@@ -276,6 +281,10 @@ class MqttSensor(MqttEntity, RestoreSensor):
         if last_reset_template := config.get(CONF_LAST_RESET_VALUE_TEMPLATE):
             self._last_reset_template = MqttValueTemplate(
                 last_reset_template, entity=self
+            ).async_render_with_possible_json_value
+        if icon_template := config.get(CONF_ICON_TEMPLATE):
+            self._icon_template = MqttValueTemplate(
+                icon_template, entity=self
             ).async_render_with_possible_json_value
 
     @callback
@@ -370,6 +379,22 @@ class MqttSensor(MqttEntity, RestoreSensor):
         self._update_state(msg)
         if CONF_LAST_RESET_VALUE_TEMPLATE in self._config:
             self._update_last_reset(msg)
+        # Update icon from icon_template, if configured
+        if CONF_ICON_TEMPLATE in self._config and self._icon_template:
+            try:
+                icon = self._icon_template(msg.payload, PayloadSentinel.DEFAULT)
+            except Exception:  # Template errors are surfaced as various exceptions
+                _LOGGER.exception(
+                    "Error rendering icon template for %s", self.entity_id
+                )
+            else:
+                if icon is PayloadSentinel.DEFAULT:
+                    # Template chose to skip processing for this payload
+                    pass
+                elif isinstance(icon, str) and icon.strip():
+                    self._attr_icon = icon
+                else:
+                    self._attr_icon = None
 
     @callback
     def _prepare_subscribe_topics(self) -> None:
@@ -377,7 +402,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         self.add_subscription(
             CONF_STATE_TOPIC,
             self._state_message_received,
-            {"_attr_native_value", "_attr_last_reset", "_expired"},
+            {"_attr_native_value", "_attr_last_reset", "_expired", "_attr_icon"},
         )
 
     async def _subscribe_topics(self) -> None:
