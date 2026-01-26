@@ -241,10 +241,10 @@
       "status": {
         "name": "Status",
         "state": {
-          "charging": "Charging",
-          "connected": "Connected",
-          "error": "Error",
-          "standby": "Standby",
+          "charging": "[%key:common::state::charging%]",
+          "connected": "[%key:common::state::connected%]",
+          "error": "[%key:common::state::error%]",
+          "standby": "[%key:common::state::standby%]",
           "wakeup": "Wakeup"
         }
       },
