@@ -71,6 +71,7 @@ from .const import (
     ATTR_LAST_ACTION,
     ATTR_LAST_TRIGGERED,
     ATTR_VARIABLES,
+    ATTR_WAIT_FOR_START,
     CONF_FIELDS,
     CONF_TRACE,
     DOMAIN,
@@ -83,7 +84,10 @@ from .trace import trace_script
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
-    {vol.Optional(ATTR_VARIABLES): {str: cv.match_all}}
+    {
+        vol.Optional(ATTR_VARIABLES): {str: cv.match_all},
+        vol.Optional(ATTR_WAIT_FOR_START): cv.boolean,
+    }
 )
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
@@ -242,11 +246,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def turn_on_service(service: ServiceCall) -> None:
         """Call a service to turn script on."""
         variables = service.data.get(ATTR_VARIABLES)
+        wait_for_start = service.data.get(ATTR_WAIT_FOR_START, False)
         script_entities = await component.async_extract_from_service(service)
-        for script_entity in script_entities:
-            await script_entity.async_turn_on(
-                variables=variables, context=service.context, wait=False
+        if not script_entities:
+            return
+
+        await asyncio.gather(
+            *(
+                script_entity.async_turn_on(
+                    variables=variables,
+                    context=service.context,
+                    wait=False,
+                    wait_for_start=wait_for_start,
+                )
+                for script_entity in script_entities
             )
+        )
 
     async def turn_off_service(service: ServiceCall) -> None:
         """Cancel a script."""
@@ -664,10 +679,15 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         variables: dict[str, Any] | None = kwargs.get("variables")
         context: Context = kwargs["context"]
         wait: bool = kwargs.get("wait", True)
-        await self._async_start_run(variables, context, wait)
+        wait_for_start: bool = kwargs.get("wait_for_start", False)
+        await self._async_start_run(variables, context, wait, wait_for_start)
 
     async def _async_start_run(
-        self, variables: dict[str, Any] | None, context: Context, wait: bool
+        self,
+        variables: dict[str, Any] | None,
+        context: Context,
+        wait: bool,
+        wait_for_start: bool = False,
     ) -> ServiceResponse:
         """Start the run of a script."""
         self.async_set_context(context)
@@ -676,7 +696,6 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             {ATTR_NAME: self.script.name, ATTR_ENTITY_ID: self.entity_id},
             context=context,
         )
-        coro = self._async_run(variables, context)
         if wait:
             # If we are executing in parallel, we need to copy the script stack so
             # that if this script is called in parallel, it will not be seen in the
@@ -687,7 +706,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             if script_stack := script_stack_cv.get():
                 script_stack_cv.set(script_stack.copy())
 
-            script_result = await coro
+            script_result = await self._async_run(variables, context)
             return script_result.service_response if script_result else None
 
         # Caller does not want to wait for called script to finish so let script run in
@@ -696,14 +715,30 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         script_stack_cv.set([])
 
         self._changed.clear()
-        self.hass.async_create_task(coro, eager_start=True)
+        started_event = asyncio.Event() if wait_for_start else None
+
+        task = self.hass.async_create_task(
+            self._async_run(variables, context, started_event=started_event),
+            eager_start=True,
+        )
         # Wait for first state change so we can guarantee that
         # it is written to the State Machine before we return.
-        await self._changed.wait()
+        # Also monitor the task in case it finishes early (e.g., script cannot start).
+        wait_event = started_event if started_event else self._changed
+        wait_task = self.hass.async_create_task(wait_event.wait())
+        done, _ = await asyncio.wait(
+            [task, wait_task], return_when=asyncio.FIRST_COMPLETED
+        )
+        if wait_task not in done:
+            wait_task.cancel()
+
         return None
 
     async def _async_run(
-        self, variables: dict[str, Any] | None, context: Context
+        self,
+        variables: dict[str, Any] | None,
+        context: Context,
+        started_event: asyncio.Event | None = None,
     ) -> ScriptRunResult | None:
         with trace_script(
             self.hass,
@@ -720,7 +755,9 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
                 if state := self.hass.states.get(self.entity_id):
                     this = state.as_dict()
                 script_vars = {"this": this, **(variables or {})}
-                return await self.script.async_run(script_vars, context)
+                return await self.script.async_run(
+                    script_vars, context, started_event=started_event
+                )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop running the script.

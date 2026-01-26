@@ -413,12 +413,14 @@ class _ScriptRun:
         variables: ScriptRunVariables,
         context: Context | None,
         log_exceptions: bool,
+        started_event: asyncio.Event | None = None,
     ) -> None:
         self._hass = hass
         self._script = script
         self._variables = variables
         self._context = context
         self._log_exceptions = log_exceptions
+        self._started_event = started_event
         self._step = -1
         self._started = False
         self._stop = hass.loop.create_future()
@@ -444,6 +446,9 @@ class _ScriptRun:
     async def async_run(self) -> ScriptRunResult | None:
         """Run script."""
         self._started = True
+        if self._started_event:
+            self._started_event.set()
+
         # Push the script to the script execution stack
         if (script_stack := script_stack_cv.get()) is None:
             script_stack = []
@@ -1746,6 +1751,7 @@ class Script:
         run_variables: _VarsType | None = None,
         context: Context | None = None,
         started_action: Callable[..., Any] | None = None,
+        started_event: asyncio.Event | None = None,
     ) -> ScriptRunResult | None:
         """Run script."""
         if context is None:
@@ -1822,7 +1828,14 @@ class Script:
             cls = _ScriptRun
         else:
             cls = _QueuedScriptRun
-        run = cls(self._hass, self, variables, context, self._log_exceptions)
+        run = cls(
+            self._hass,
+            self,
+            variables,
+            context,
+            self._log_exceptions,
+            started_event=started_event,
+        )
         has_existing_runs = bool(self._runs)
         self._runs.append(run)
         if self.script_mode == SCRIPT_MODE_RESTART and has_existing_runs:
