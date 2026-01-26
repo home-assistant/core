@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -47,6 +48,7 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
         self._attr_unique_id = f"{serial}_{self._key}"
         device_info_typed = DeviceInfo(
             name=self.coordinator.config_entry.title,
+            configuration_url=f"http://{self.coordinator.config_entry.data[CONF_HOST]}",
             identifiers={(DOMAIN, serial)},
             serial_number=serial,
             manufacturer="DiniTech",

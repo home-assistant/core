@@ -20,6 +20,11 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .api import (
@@ -54,15 +59,21 @@ def _normalize_host(value: str) -> str:
     return value.strip("/").split("/", 1)[0]
 
 
-HOST_SCHEMA = vol.All(cv.string, vol.Strip, vol.Length(min=1))
-
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): HOST_SCHEMA})
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): TextSelector(TextSelectorConfig(autocomplete="off")),
+    }
+)
 
 
 STEP_AUTH_DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
+        vol.Optional(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(autocomplete="off")
+        ),
+        vol.Optional(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
     }
 )
 
