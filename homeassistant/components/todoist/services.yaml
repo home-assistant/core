@@ -56,3 +56,29 @@ new_task:
       example: "2019-10-22"
       selector:
         text:
+    reminder_date_string:
+      example: Tomorrow
+      selector:
+        text:
+    reminder_date_lang:
+      selector:
+        select:
+          options:
+            - "da"
+            - "de"
+            - "en"
+            - "es"
+            - "fr"
+            - "it"
+            - "ja"
+            - "ko"
+            - "nl"
+            - "pl"
+            - "pt"
+            - "ru"
+            - "sv"
+            - "zh"
+    reminder_date:
+      example: "2019-10-22T10:30:00"
+      selector:
+        text:
