@@ -1,0 +1,57 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "No supported devices found via Bluetooth.",
+      "not_supported": "Device is not supported."
+    },
+    "flow_title": "Setup {name} ({id}) as {model}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "Do you want to set up {name} ({id})?"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "Bluetooth name (MAC address) - model"
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery_health": {
+        "name": "Battery health"
+      },
+      "cycles": {
+        "name": "Cycles"
+      },
+      "delta_cell_voltage": {
+        "name": "Delta cell voltage"
+      },
+      "link_quality": {
+        "name": "Link quality"
+      },
+      "max_cell_voltage": {
+        "name": "Highest cell voltage"
+      },
+      "min_cell_voltage": {
+        "name": "Lowest cell voltage"
+      },
+      "runtime": {
+        "name": "Runtime"
+      }
+    }
+  },
+  "exceptions": {
+    "device_not_found": {
+      "message": "Could not find BMS ({MAC}) via Bluetooth."
+    },
+    "missing_unique_id": {
+      "message": "Missing unique ID for device."
+    }
+  }
+}

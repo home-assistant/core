@@ -208,6 +208,9 @@ aioazuredevops==2.2.2
 # homeassistant.components.baf
 aiobafi6==0.9.0
 
+# homeassistant.components.bms_ble
+aiobmsble==0.14.2
+
 # homeassistant.components.aws
 # homeassistant.components.aws_s3
 aiobotocore==2.21.1
