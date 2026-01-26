@@ -1,5 +1,6 @@
 """Coordinator to handle Opower connections."""
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any, cast
@@ -44,7 +45,17 @@ _LOGGER = logging.getLogger(__name__)
 type OpowerConfigEntry = ConfigEntry[OpowerCoordinator]
 
 
-class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
+@dataclass
+class OpowerData:
+    """Class to hold Opower data."""
+
+    account: Account
+    forecast: Forecast | None
+    last_changed: datetime | None
+    last_updated: datetime
+
+
+class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
     """Handle fetching Opower data, updating sensors and inserting statistics."""
 
     config_entry: OpowerConfigEntry
@@ -85,7 +96,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
 
     async def _async_update_data(
         self,
-    ) -> dict[str, Forecast]:
+    ) -> dict[str, OpowerData]:
         """Fetch data from API endpoint."""
         try:
             # Login expires after a few minutes.
@@ -98,24 +109,38 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         except CannotConnect as err:
             _LOGGER.error("Error during login: %s", err)
             raise UpdateFailed(f"Error during login: {err}") from err
-        try:
-            forecasts: list[Forecast] = await self.api.async_get_forecast()
-        except ApiException as err:
-            _LOGGER.error("Error getting forecasts: %s", err)
-            raise
-        _LOGGER.debug("Updating sensor data with: %s", forecasts)
-        # Because Opower provides historical usage/cost with a delay of a couple of days
-        # we need to insert data into statistics.
-        await self._insert_statistics()
-        return {forecast.account.utility_account_id: forecast for forecast in forecasts}
 
-    async def _insert_statistics(self) -> None:
-        """Insert Opower statistics."""
         try:
             accounts = await self.api.async_get_accounts()
         except ApiException as err:
             _LOGGER.error("Error getting accounts: %s", err)
             raise
+
+        try:
+            forecasts_list = await self.api.async_get_forecast()
+        except ApiException as err:
+            _LOGGER.error("Error getting forecasts: %s", err)
+            raise
+
+        forecasts = {f.account.utility_account_id: f for f in forecasts_list}
+        _LOGGER.debug("Updating sensor data with: %s", forecasts)
+
+        # Because Opower provides historical usage/cost with a delay of a couple of days
+        # we need to insert data into statistics.
+        last_changed_per_account = await self._insert_statistics(accounts)
+        return {
+            account.utility_account_id: OpowerData(
+                account=account,
+                forecast=forecasts.get(account.utility_account_id),
+                last_changed=last_changed_per_account.get(account.utility_account_id),
+                last_updated=dt_util.utcnow(),
+            )
+            for account in accounts
+        }
+
+    async def _insert_statistics(self, accounts: list[Account]) -> dict[str, datetime]:
+        """Insert Opower statistics."""
+        last_changed_per_account: dict[str, datetime] = {}
         for account in accounts:
             id_prefix = (
                 (
@@ -277,6 +302,15 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 return_sum = _safe_get_sum(stats.get(return_statistic_id, []))
                 last_stats_time = stats[consumption_statistic_id][0]["start"]
 
+            if cost_reads:
+                last_changed_per_account[account.utility_account_id] = cost_reads[
+                    -1
+                ].start_time
+            elif last_stats_time is not None:
+                last_changed_per_account[account.utility_account_id] = (
+                    dt_util.utc_from_timestamp(last_stats_time)
+                )
+
             cost_statistics = []
             compensation_statistics = []
             consumption_statistics = []
@@ -342,6 +376,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 return_statistic_id,
             )
             async_add_external_statistics(self.hass, return_metadata, return_statistics)
+
+        return last_changed_per_account
 
     async def _async_maybe_migrate_statistics(
         self,
