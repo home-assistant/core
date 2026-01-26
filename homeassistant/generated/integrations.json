@@ -5488,7 +5488,7 @@
           "name": "Raspberry Pi"
         },
         "rpi_power": {
-          "integration_type": "hub",
+          "integration_type": "hardware",
           "config_flow": true,
           "iot_class": "local_polling"
         },
