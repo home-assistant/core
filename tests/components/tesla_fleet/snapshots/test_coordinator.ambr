@@ -1,0 +1,79 @@
+# serializer version: 1
+# name: test_coordinator_first_run
+  defaultdict({
+    'tesla_fleet:123456_battery_energy_exported': list([
+      dict({
+        'end': 1685635200.0,
+        'start': 1685631600.0,
+        'state': 200.0,
+        'sum': 200.0,
+      }),
+      dict({
+        'end': 1685638800.0,
+        'start': 1685635200.0,
+        'state': 100.0,
+        'sum': 300.0,
+      }),
+    ]),
+    'tesla_fleet:123456_grid_energy_imported': list([
+      dict({
+        'end': 1685635200.0,
+        'start': 1685631600.0,
+        'state': 500.0,
+        'sum': 500.0,
+      }),
+      dict({
+        'end': 1685638800.0,
+        'start': 1685635200.0,
+        'state': 300.0,
+        'sum': 800.0,
+      }),
+    ]),
+    'tesla_fleet:123456_solar_energy_exported': list([
+      dict({
+        'end': 1685635200.0,
+        'start': 1685631600.0,
+        'state': 1000.0,
+        'sum': 1000.0,
+      }),
+      dict({
+        'end': 1685638800.0,
+        'start': 1685635200.0,
+        'state': 1500.0,
+        'sum': 2500.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_coordinator_subsequent_run
+  defaultdict({
+    'tesla_fleet:123456_grid_energy_imported': list([
+      dict({
+        'end': 1685635200.0,
+        'start': 1685631600.0,
+        'state': 500.0,
+        'sum': 500.0,
+      }),
+      dict({
+        'end': 1685638800.0,
+        'start': 1685635200.0,
+        'state': 300.0,
+        'sum': 800.0,
+      }),
+    ]),
+    'tesla_fleet:123456_solar_energy_exported': list([
+      dict({
+        'end': 1685635200.0,
+        'start': 1685631600.0,
+        'state': 1000.0,
+        'sum': 1000.0,
+      }),
+      dict({
+        'end': 1685638800.0,
+        'start': 1685635200.0,
+        'state': 2000.0,
+        'sum': 3000.0,
+      }),
+    ]),
+  })
+# ---

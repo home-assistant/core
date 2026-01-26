@@ -462,6 +462,9 @@ async def test_energy_history_refresh_ratelimited(
 
     await setup_platform(hass, normal_config_entry)
 
+    # No call during setup since async_config_entry_first_refresh is not called
+    assert mock_energy_history.call_count == 0
+
     mock_energy_history.side_effect = RateLimited(
         {"after": int(ENERGY_HISTORY_INTERVAL.total_seconds() + 10)}
     )

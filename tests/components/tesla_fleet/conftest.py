@@ -199,3 +199,22 @@ def mock_signed_command() -> Generator[AsyncMock]:
         return_value=COMMAND_OK,
     ) as mock_signed_command:
         yield mock_signed_command
+
+
+@pytest.fixture(autouse=True)
+def mock_recorder_functions() -> Generator[None]:
+    """Mock recorder functions used by energy history coordinator."""
+    with (
+        patch(
+            "homeassistant.components.tesla_fleet.coordinator.get_instance",
+        ) as mock_get_instance,
+        patch(
+            "homeassistant.components.tesla_fleet.coordinator.async_add_external_statistics",
+        ),
+    ):
+        # Mock the async_add_executor_job to return empty dict (no last stats)
+        # This is used by get_last_statistics and statistics_during_period
+        mock_get_instance.return_value.async_add_executor_job = AsyncMock(
+            return_value={}
+        )
+        yield

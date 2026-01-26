@@ -1,6 +1,7 @@
 {
   "domain": "tesla_fleet",
   "name": "Tesla Fleet",
+  "after_dependencies": ["recorder"],
   "codeowners": ["@Bre77"],
   "config_flow": true,
   "dependencies": ["application_credentials", "http"],
