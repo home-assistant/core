@@ -1,4 +1,4 @@
-stopped_playing:
+.trigger_common: &trigger_common
   target:
     entity:
       domain: media_player
@@ -13,3 +13,6 @@ stopped_playing:
             - first
             - last
             - any
+
+muted: *trigger_common
+stopped_playing: *trigger_common

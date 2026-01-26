@@ -106,6 +106,9 @@
     }
   },
   "triggers": {
+    "muted": {
+      "trigger": "mdi:volume-mute"
+    },
     "stopped_playing": {
       "trigger": "mdi:stop"
     }
