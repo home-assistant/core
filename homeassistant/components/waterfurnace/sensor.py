@@ -112,7 +112,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Waterfurnace sensors from a config entry."""
 
-    data_collector = WaterFurnaceData(hass, config_entry.runtime_data.client)
+    data_collector = WaterFurnaceData(hass, config_entry.runtime_data)
     data_collector.start()
 
     async_add_entities(

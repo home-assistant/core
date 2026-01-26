@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from asyncio import Task
 from datetime import timedelta
 import logging
 import threading
@@ -12,7 +11,7 @@ import voluptuous as vol
 from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFException
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -27,7 +26,6 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, INTEGRATION_TITLE, MAX_FAILS
-from .models import WaterFurnaceConfigEntry, WaterFurnaceData as WaterFurnaceConfigData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,74 +47,59 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+type WaterFurnaceConfigEntry = ConfigEntry[WaterFurnaceData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up WaterFurnace from yaml configuration."""
-    if DOMAIN in config:
+    """Import the WaterFurnace configuration from YAML."""
+    if DOMAIN not in config:
+        return True
 
-        def handle_import_result(task: Task[ConfigFlowResult]) -> None:
-            """Handle the result of the import flow."""
-            if task.cancelled():
-                return
+    hass.async_create_task(_async_setup(hass, config))
 
-            if exception := task.exception():
-                _LOGGER.exception(
-                    "Unexpected error during YAML import", exc_info=exception
-                )
-                return
+    return True
 
-            result = task.result()
 
-            if (
-                result.get("type") is FlowResultType.ABORT
-                and result.get("reason") != "already_configured"
-            ):
-                # Warn user that the import failed so they can fix it, or
-                # reconfigure manually.
-                ir.async_create_issue(
-                    hass,
-                    DOMAIN,
-                    f"deprecated_yaml_import_issue_{result.get('reason')}",
-                    # Give users ~6 months to fix before removing entirely
-                    breaks_in_ha_version="2026.7.0",
-                    is_fixable=False,
-                    issue_domain=DOMAIN,
-                    severity=ir.IssueSeverity.ERROR,
-                    translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
-                    translation_placeholders={
-                        "domain": DOMAIN,
-                        "integration_title": INTEGRATION_TITLE,
-                    },
-                )
-
-        task = hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config[DOMAIN],
-            )
-        )
-        task.add_done_callback(handle_import_result)
-
-        # Warn users that the yaml import will be removed in the future
+async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config[DOMAIN],
+    )
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
         ir.async_create_issue(
             hass,
-            HOMEASSISTANT_DOMAIN,
-            f"{DOMAIN}_deprecated_yaml",
-            # Give users ~6 months to fix before removing entirely
-            breaks_in_ha_version="2026.7.0",
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.8.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
             translation_placeholders={
                 "domain": DOMAIN,
                 "integration_title": INTEGRATION_TITLE,
             },
         )
+        return
 
-    return True
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2026.8.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
 
 
 async def async_setup_entry(
@@ -140,7 +123,7 @@ async def async_setup_entry(
             "Failed to connect to WaterFurnace service: No GWID found for device"
         )
 
-    entry.runtime_data = WaterFurnaceConfigData(client=client, gwid=client.gwid)
+    entry.runtime_data = client
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

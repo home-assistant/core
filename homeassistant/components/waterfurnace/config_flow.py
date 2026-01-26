@@ -10,7 +10,6 @@ from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFExcepti
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -63,7 +62,7 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=f"WaterFurnace {gwid}",
+                    title=f"WaterFurnace {username}",
                     data=user_input,
                 )
 
@@ -83,30 +82,24 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             # Login is a blocking call, run in executor
             await self.hass.async_add_executor_job(client.login)
-
-            gwid = client.gwid
-            if not gwid:
-                # This likely indicates a server-side change, or an implementation bug
-                return self.async_abort(reason="unknown")
+        except WFCredentialError:
+            return self.async_abort(reason="invalid_auth")
         except WFException:
             return self.async_abort(reason="cannot_connect")
         except Exception:
             _LOGGER.exception("Unexpected error importing WaterFurnace configuration")
             return self.async_abort(reason="unknown")
 
+        gwid = client.gwid
+        if not gwid:
+            # This likely indicates a server-side change, or an implementation bug
+            return self.async_abort(reason="cannot_connect")
+
         # Set unique ID based on GWID
         await self.async_set_unique_id(gwid)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=f"WaterFurnace {gwid}",
+            title=f"WaterFurnace {username}",
             data=import_data,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

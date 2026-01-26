@@ -24,21 +24,17 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_waterfurnace_client() -> Generator[Mock]:
     """Mock WaterFurnace client."""
-    with (
-        patch(
-            "homeassistant.components.waterfurnace.config_flow.WaterFurnace",
-            autospec=True,
-        ) as mock_client_class,
-    ):
+    with patch(
+        "homeassistant.components.waterfurnace.config_flow.WaterFurnace",
+        autospec=True,
+    ) as mock_client_class:
         mock_client = mock_client_class.return_value
 
-        mock_client.login = Mock()
         mock_client.gwid = "TEST_GWID_12345"
 
-        # Mock the read method (blocking call) with fixture data
         device_data = WFReading(load_json_object_fixture("device_data.json", DOMAIN))
 
-        mock_client.read = Mock(return_value=device_data)
+        mock_client.read.return_value = device_data
 
         yield mock_client
 
@@ -48,7 +44,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="WaterFurnace TEST_GWID_12345",
+        title="WaterFurnace test_user",
         data={
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_password",
