@@ -48,13 +48,13 @@ class MockCalendarEntity(CalendarEntity):
         self,
         name: str,
         events: list[CalendarEvent] | None = None,
-        color: str | None = None,
+        initial_color: str | None = None,
         unique_id: str | None = None,
     ) -> None:
         """Initialize entity."""
         self._attr_name = name.capitalize()
         self._events = events or []
-        self._attr_initial_color = color
+        self._attr_initial_color = initial_color
         self._attr_unique_id = unique_id
 
     @property
@@ -209,7 +209,7 @@ def create_test_entities() -> list[MockCalendarEntity]:
     entity2.async_get_events = AsyncMock(wraps=entity2.async_get_events)
 
     entity3 = MockCalendarEntity(
-        "Calendar 3", [], color="#FF0000", unique_id="calendar_3"
+        "Calendar 3", [], initial_color="#FF0000", unique_id="calendar_3"
     )
     entity3.async_get_events = AsyncMock(wraps=entity3.async_get_events)
 

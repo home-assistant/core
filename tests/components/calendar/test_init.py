@@ -615,10 +615,10 @@ async def test_calendar_initial_color_valid(
     test_entities: list[MockCalendarEntity],
 ) -> None:
     """Test that _attr_initial_color creates initial entity options."""
-    # Entity 3 was created with a color
+    # Entity 3 was created with an initial_color
     entity = test_entities[2]
 
-    # Check that entity registry was populated with the color
+    # Check that entity registry was populated with the initial_color
     entry = entity_registry.async_get(entity.entity_id)
     assert entry is not None
     assert entry.options.get(DOMAIN, {}).get("color") == "#FF0000"
@@ -634,8 +634,8 @@ async def test_calendar_initial_color_invalid(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that invalid _attr_initial_color is ignored."""
-    # Test various invalid color formats
-    invalid_colors = [
+    # Test various invalid initial_color formats
+    invalid_initial_colors = [
         "FF0000",  # Missing #
         "#FF00",  # Too short
         "#FF00000",  # Too long
@@ -644,14 +644,14 @@ async def test_calendar_initial_color_invalid(
         "",  # Empty
     ]
 
-    for invalid_color in invalid_colors:
+    for invalid_initial_color in invalid_initial_colors:
         entity = MockCalendarEntity(
             "Invalid Color Test",
             [],
-            color=invalid_color,
-            unique_id=f"test_{invalid_color}",
+            initial_color=invalid_initial_color,
+            unique_id=f"test_{invalid_initial_color}",
         )
-        # get_initial_entity_options should return None for invalid colors
+        # get_initial_entity_options should return None for invalid initial_colors
         assert entity.get_initial_entity_options() is None
 
 
@@ -660,7 +660,7 @@ async def test_calendar_initial_color_none(
     test_entities: list[MockCalendarEntity],
 ) -> None:
     """Test that entities without _attr_initial_color return None."""
-    # Entities 1 and 2 were created without a color
+    # Entities 1 and 2 were created without an initial_color
     entity = test_entities[0]
     assert entity.get_initial_entity_options() is None
 
