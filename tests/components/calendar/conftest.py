@@ -190,7 +190,7 @@ def create_test_entities() -> list[MockCalendarEntity]:
                 location="Future Location",
             )
         ],
-        unique_id="calendar_1",
+        unique_id="calendar_1_id",
     )
     entity1.async_get_events = AsyncMock(wraps=entity1.async_get_events)
 
@@ -204,7 +204,7 @@ def create_test_entities() -> list[MockCalendarEntity]:
                 summary="Current Event",
             )
         ],
-        unique_id="calendar_2",
+        unique_id="calendar_2_id",
     )
     entity2.async_get_events = AsyncMock(wraps=entity2.async_get_events)
 

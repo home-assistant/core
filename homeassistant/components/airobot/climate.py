@@ -63,6 +63,11 @@ class AirobotClimate(AirobotEntity, ClimateEntity):
     _attr_min_temp = SETPOINT_TEMP_MIN
     _attr_max_temp = SETPOINT_TEMP_MAX
 
+    def __init__(self, coordinator) -> None:
+        """Initialize the climate entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = coordinator.data.status.device_id
+
     @property
     def _status(self) -> ThermostatStatus:
         """Get status from coordinator data."""

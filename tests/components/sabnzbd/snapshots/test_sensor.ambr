@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free disk space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -134,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Left to download',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -190,6 +193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -246,6 +250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Overall total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -302,6 +307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Queue',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -358,6 +364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Queue count',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -412,6 +419,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -469,6 +477,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -519,6 +528,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total disk space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -575,6 +585,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

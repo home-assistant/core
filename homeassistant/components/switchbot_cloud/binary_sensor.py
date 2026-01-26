@@ -92,6 +92,18 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         CALIBRATION_DESCRIPTION,
         DOOR_OPEN_DESCRIPTION,
     ),
+    "Smart Lock Vision": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
+    "Smart Lock Vision Pro": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
+    "Smart Lock Pro Wifi": (
+        CALIBRATION_DESCRIPTION,
+        DOOR_OPEN_DESCRIPTION,
+    ),
     "Curtain": (CALIBRATION_DESCRIPTION,),
     "Curtain3": (CALIBRATION_DESCRIPTION,),
     "Roller Shade": (CALIBRATION_DESCRIPTION,),
