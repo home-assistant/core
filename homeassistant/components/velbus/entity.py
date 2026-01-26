@@ -7,6 +7,7 @@ from functools import wraps
 from typing import Any, Concatenate
 
 from velbusaio.channels import Channel as VelbusChannel
+from velbusaio.properties import Property as VelbusProperty
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,7 +28,7 @@ class VelbusEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll: bool = False
 
-    def __init__(self, channel: VelbusChannel) -> None:
+    def __init__(self, channel: VelbusChannel | VelbusProperty) -> None:
         """Initialize a Velbus entity."""
         self._channel = channel
         self._module_address = str(channel.get_module_address())
