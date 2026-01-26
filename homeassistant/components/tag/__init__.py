@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
+import contextlib
 import logging
 from typing import TYPE_CHECKING, Any, final
 import uuid
@@ -25,7 +27,15 @@ from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DEFAULT_NAME, DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, LOGGER, TAG_ID
+from .const import (
+    DEFAULT_NAME,
+    DEVICE_ID,
+    DOMAIN,
+    EVENT_TAG_SCANNED,
+    LOGGER,
+    TAG_ID,
+    TagScannedEventData,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -358,6 +368,71 @@ async def async_scan_tag(
             {TAG_ID: tag_id, LAST_SCANNED: dt_util.utcnow(), **extra_kwargs}
         )
     _LOGGER.debug("Tag: %s scanned by device: %s", tag_id, device_id)
+
+
+async def async_wait_for_tag_scan(
+    hass: HomeAssistant,
+    cancel_event: asyncio.Event | None = None,
+) -> TagScannedEventData | None:
+    """Wait for a tag to be scanned.
+
+    This helper allows integrations to wait for a tag scan event during
+    configuration flows or other setup processes.
+
+    Args:
+        hass: The Home Assistant instance.
+        cancel_event: Optional asyncio.Event that, when set, cancels the wait
+            and returns None.
+
+    Returns:
+        TagScannedEventData containing tag_id, name, and device_id if a tag
+        was scanned, or None if cancelled.
+
+    Example usage in a config flow:
+        cancel_event = asyncio.Event()
+        result = await async_wait_for_tag_scan(hass, cancel_event)
+        if result is not None:
+            tag_id = result["tag_id"]
+
+    """
+    future: asyncio.Future[TagScannedEventData] = hass.loop.create_future()
+
+    @callback
+    def _async_handle_tag_scanned(event: Any) -> None:
+        """Handle tag scanned event."""
+        if not future.done():
+            future.set_result(
+                TagScannedEventData(
+                    tag_id=event.data[TAG_ID],
+                    name=event.data.get(CONF_NAME),
+                    device_id=event.data.get(DEVICE_ID),
+                )
+            )
+
+    unsub = hass.bus.async_listen(EVENT_TAG_SCANNED, _async_handle_tag_scanned)
+
+    async def _wait_for_scan() -> TagScannedEventData:
+        """Wait for the tag scan future."""
+        return await future
+
+    try:
+        if cancel_event is not None:
+            cancel_task = hass.async_create_task(cancel_event.wait())
+            scan_task = hass.async_create_task(_wait_for_scan())
+            done, pending = await asyncio.wait(
+                {cancel_task, scan_task},
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            for task in pending:
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+            if cancel_task in done:
+                return None
+            return scan_task.result()
+        return await future
+    finally:
+        unsub()
 
 
 class TagEntity(Entity):
