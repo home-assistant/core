@@ -57,9 +57,7 @@ rules:
     comment: |
       This integration has a fixed single device.
   entity-category: done
-  entity-device-class:
-    status: todo
-    comment: Led count could receive unit of measurement
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
