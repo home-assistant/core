@@ -38,21 +38,25 @@ class VodafoneStationEntityDescription(SwitchEntityDescription):
 SWITCHES: Final = (
     VodafoneStationEntityDescription(
         key="main",
+        translation_key="main",
         band=WifiBand.BAND_2_4_GHZ,
         typology=WifiType.MAIN,
     ),
     VodafoneStationEntityDescription(
         key="guest",
+        translation_key="guest",
         band=WifiBand.BAND_2_4_GHZ,
         typology=WifiType.GUEST,
     ),
     VodafoneStationEntityDescription(
         key="main_5g",
+        translation_key="main_5g",
         band=WifiBand.BAND_5_GHZ,
         typology=WifiType.MAIN,
     ),
     VodafoneStationEntityDescription(
         key="guest_5g",
+        translation_key="guest_5g",
         band=WifiBand.BAND_5_GHZ,
         typology=WifiType.GUEST,
     ),
@@ -92,7 +96,6 @@ class VodafoneSwitchEntity(CoordinatorEntity[VodafoneStationRouter], SwitchEntit
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
-        self._attr_name = coordinator.data.wifi[WIFI_DATA][description.key]["ssid"]
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     async def _set_wifi_status(self, status: bool) -> None:

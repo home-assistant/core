@@ -47,8 +47,8 @@ async def test_all_entities(
 @pytest.mark.parametrize(
     ("wifi_key", "wifi_name", "wifi_state"),
     [
-        ("guest", "Wifi-Guest", "on"),
-        ("guest_5g", "Wifi-Guest 5GHz", "off"),
+        ("guest", "guest_network", "on"),
+        ("guest_5g", "guest_5ghz_network", "off"),
     ],
 )
 async def test_switch(
@@ -131,7 +131,7 @@ async def test_switch_fails(
             SWITCH_DOMAIN,
             SERVICE_TOGGLE,
             {
-                ATTR_ENTITY_ID: f"switch.vodafone_station_{TEST_SERIAL_NUMBER}_wifi_guest"
+                ATTR_ENTITY_ID: f"switch.vodafone_station_{TEST_SERIAL_NUMBER}_guest_5ghz_network"
             },
             blocking=True,
         )
