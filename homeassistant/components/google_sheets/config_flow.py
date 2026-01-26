@@ -34,7 +34,7 @@ class OAuth2FlowHandler(
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {
-            "scope": DEFAULT_ACCESS,
+            "scope": " ".join(DEFAULT_ACCESS),
             # Add params to ensure we get back a refresh token
             "access_type": "offline",
             "prompt": "consent",

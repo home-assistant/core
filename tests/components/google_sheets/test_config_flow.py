@@ -11,6 +11,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.google_sheets import DEFAULT_ACCESS
 from homeassistant.components.google_sheets.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -72,7 +73,7 @@ async def test_full_flow(
     assert result["url"] == (
         f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
+        f"&state={state}&scope={'+'.join(DEFAULT_ACCESS)}"
         "&access_type=offline&prompt=consent"
     )
 
@@ -139,7 +140,7 @@ async def test_create_sheet_error(
     assert result["url"] == (
         f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
+        f"&state={state}&scope={'+'.join(DEFAULT_ACCESS)}"
         "&access_type=offline&prompt=consent"
     )
 
@@ -208,7 +209,7 @@ async def test_reauth(
     assert result["url"] == (
         f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
+        f"&state={state}&scope={'+'.join(DEFAULT_ACCESS)}"
         "&access_type=offline&prompt=consent"
     )
     client = await hass_client_no_auth()
@@ -290,7 +291,7 @@ async def test_reauth_abort(
     assert result["url"] == (
         f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
+        f"&state={state}&scope={'+'.join(DEFAULT_ACCESS)}"
         "&access_type=offline&prompt=consent"
     )
     client = await hass_client_no_auth()
@@ -353,7 +354,7 @@ async def test_already_configured(
     assert result["url"] == (
         f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}&scope=https://www.googleapis.com/auth/drive.file"
+        f"&state={state}&scope={'+'.join(DEFAULT_ACCESS)}"
         "&access_type=offline&prompt=consent"
     )
 
