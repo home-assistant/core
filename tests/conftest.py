@@ -21,6 +21,7 @@ import threading
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
+import _pytest
 from aiohttp import client
 from aiohttp.resolver import AsyncResolver
 from aiohttp.test_utils import (
@@ -180,18 +181,27 @@ def pytest_runtest_setup() -> None:
     """Prepare pytest_socket and freezegun.
 
     pytest_socket:
-    Throw if tests attempt to open sockets.
+    - Throw if tests attempt to open sockets.
 
-    allow_unix_socket is set to True because it's needed by asyncio.
-    Important: socket_allow_hosts must be called before disable_socket, otherwise all
-    destinations will be allowed.
+    - allow_unix_socket is set to True because it's needed by asyncio.
+      Important: socket_allow_hosts must be called before disable_socket, otherwise all
+      destinations will be allowed.
+
+    - Replace pytest_socket.SocketBlockedError with a variant which inherits from
+      "pytest.Failed" instead of "RuntimeError" so that it is not caught when catching
+      and logging "Exception".
 
     freezegun:
-    Modified to include https://github.com/spulec/freezegun/pull/424 and improve class str.
+    - Modified to include https://github.com/spulec/freezegun/pull/424 and improve class str.
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
 
+    class SocketBlockedError(_pytest.outcomes.Failed):
+        def __init__(self, *_args, **_kwargs) -> None:
+            super().__init__("A test tried to use socket.socket.")
+
+    pytest_socket.SocketBlockedError = SocketBlockedError
     freezegun.api.FakeDate = patch_time.HAFakeDate  # type: ignore[attr-defined]
 
     freezegun.api.datetime_to_fakedatetime = patch_time.ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
