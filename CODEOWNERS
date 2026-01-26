@@ -641,6 +641,8 @@ build.json @home-assistant/supervisor
 /tests/components/gpsd/ @fabaff @jrieger
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche
+/homeassistant/components/green_planet_energy/ @petschni
+/tests/components/green_planet_energy/ @petschni
 /homeassistant/components/greeneye_monitor/ @jkeljo
 /tests/components/greeneye_monitor/ @jkeljo
 /homeassistant/components/group/ @home-assistant/core
