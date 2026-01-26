@@ -258,12 +258,11 @@ async def test_sensor_unavailable_when_control_missing(
         name="available"
     )
 
-    # Remove control and refresh
+    # Remove control and push updated data to the coordinator
     state_no_controls = DeviceState(device=device, controls=[])
     coordinators = config_entry.runtime_data
     for coordinator in coordinators.values():
-        coordinator.data = state_no_controls
-        await coordinator.async_refresh()
+        coordinator.async_set_updated_data(state_no_controls)
     await hass.async_block_till_done()
 
     # Should now be unavailable
