@@ -1,0 +1,96 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "missing_context": "Required setup data is missing. Please restart the configuration."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "select_city": {
+        "data": {
+          "city_id": "City"
+        },
+        "data_description": {
+          "city_id": "Select the city for prayer times"
+        },
+        "description": "Select your city. The integration will use this location ID."
+      },
+      "select_country": {
+        "data": {
+          "country_id": "Country"
+        },
+        "data_description": {
+          "country_id": "Choose a country to narrow the list"
+        },
+        "description": "Choose a country to filter states."
+      },
+      "select_state": {
+        "data": {
+          "state_id": "State"
+        },
+        "data_description": {
+          "state_id": "Choose a state to narrow the city list"
+        },
+        "description": "Choose a state to filter cities."
+      },
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Enter your Diyanet credentials. Next, select your country, state and city."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "asr": {
+        "name": "Asr prayer time"
+      },
+      "dhuhr": {
+        "name": "Dhuhr prayer time"
+      },
+      "fajr": {
+        "name": "Fajr prayer time"
+      },
+      "gregorian_date": {
+        "name": "Gregorian date"
+      },
+      "hijri_date": {
+        "name": "Hijri date"
+      },
+      "isha": {
+        "name": "Isha prayer time"
+      },
+      "maghrib": {
+        "name": "Maghrib prayer time"
+      },
+      "qibla_time": {
+        "name": "Qibla time"
+      },
+      "sunrise": {
+        "name": "Sunrise"
+      }
+    }
+  },
+  "services": {
+    "refresh": {
+      "description": "Fetch the latest prayer times now. If a config entry ID is provided, only that entry is refreshed.",
+      "fields": {
+        "config_entry_id": {
+          "description": "Optional: refresh only this specific Diyanet configuration entry",
+          "name": "Config entry ID"
+        }
+      },
+      "name": "Refresh prayer times"
+    }
+  }
+}

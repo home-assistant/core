@@ -1,0 +1,10 @@
+{
+  "domain": "diyanet",
+  "name": "Diyanet",
+  "codeowners": ["@mahdemir"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/diyanet",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": []
+}
