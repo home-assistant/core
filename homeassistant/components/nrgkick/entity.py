@@ -5,11 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -43,7 +39,7 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
         if (mac_address := network_info.get("mac_address")) and isinstance(
             mac_address, str
         ):
-            connections = {(CONNECTION_NETWORK_MAC, format_mac(mac_address))}
+            connections = {(CONNECTION_NETWORK_MAC, mac_address)}
 
         self._attr_unique_id = f"{serial}_{self._key}"
         device_info_typed = DeviceInfo(
