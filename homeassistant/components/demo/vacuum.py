@@ -7,6 +7,7 @@ from typing import Any
 
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
+    Segment,
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
@@ -45,9 +46,17 @@ SUPPORT_ALL_SERVICES = (
     | VacuumEntityFeature.LOCATE
     | VacuumEntityFeature.MAP
     | VacuumEntityFeature.CLEAN_SPOT
+    | VacuumEntityFeature.CLEAN_AREA
 )
 
 FAN_SPEEDS = ["min", "medium", "high", "max"]
+DEMO_SEGMENTS = [
+    Segment(id="living_room", name="Living room"),
+    Segment(id="kitchen", name="Kitchen"),
+    Segment(id="bedroom_1", name="Master bedroom", group="Bedrooms"),
+    Segment(id="bedroom_2", name="Guest bedroom", group="Bedrooms"),
+    Segment(id="bathroom", name="Bathroom"),
+]
 DEMO_VACUUM_COMPLETE = "Demo vacuum 0 ground floor"
 DEMO_VACUUM_MOST = "Demo vacuum 1 first floor"
 DEMO_VACUUM_BASIC = "Demo vacuum 2 second floor"
@@ -161,6 +170,18 @@ class StateDemoVacuum(StateVacuumEntity):
     ) -> None:
         """Send a command to the vacuum."""
         self._attr_activity = VacuumActivity.IDLE
+        self.async_write_ha_state()
+
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the list of segments."""
+        return DEMO_SEGMENTS
+
+    async def async_clean_segments(
+        self, segment_ids: list[str], **kwargs: Any
+    ) -> None:
+        """Clean the specified segments."""
+        self._attr_activity = VacuumActivity.CLEANING
+        self._cleaned_area += len(segment_ids) * 0.7
         self.async_write_ha_state()
 
     def __set_state_to_dock(self, _: datetime) -> None:
