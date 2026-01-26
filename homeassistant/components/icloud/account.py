@@ -151,7 +151,7 @@ class IcloudAccount:
                 )
 
         self._devices = {}
-        self.update_devices()
+        self.hass.add_job(self.update_devices)
 
     def update_devices(self) -> None:
         """Update iCloud devices."""
@@ -312,7 +312,7 @@ class IcloudAccount:
             return
 
         self.api.authenticate()
-        self.update_devices()
+        self.hass.add_job(self.update_devices)
 
     def get_devices_with_name(self, name: str) -> list[Any]:
         """Get devices by name."""
