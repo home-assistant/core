@@ -153,7 +153,7 @@ async def test_abort_if_oauth_implementation_unavailable(
     hass: HomeAssistant,
     flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
 ) -> None:
-    """Check flow abort when no implementations."""
+    """Check flow abort when implementation is unavailable."""
 
     async def mock_provider(
         hass: HomeAssistant, domain: str
