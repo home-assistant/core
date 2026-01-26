@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:toggle-switch-variant-off"
+    },
+    "is_on": {
+      "condition": "mdi:toggle-switch-variant"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:toggle-switch-variant",
