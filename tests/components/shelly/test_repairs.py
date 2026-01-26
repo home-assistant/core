@@ -2,7 +2,7 @@
 
 from unittest.mock import Mock, patch
 
-from aioshelly.const import MODEL_WALL_DISPLAY
+from aioshelly.const import MODEL_PLUG, MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import pytest
 
@@ -700,3 +700,19 @@ async def test_coiot_issue_ignore(
 
     assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
     assert issue.dismissed_version
+
+
+async def test_coiot_plug_1_no_issue_created(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test no repair issues when device is Shelly Plug 1."""
+
+    mock_block_device.model = MODEL_PLUG
+    issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 1)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

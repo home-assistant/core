@@ -174,6 +174,12 @@ def async_manage_coiot_unconfigured_issue(
         assert entry.runtime_data.block is not None
 
     device = entry.runtime_data.block.device
+
+    if device.model == MODEL_PLUG:
+        # Shelly Plug Gen 1 does not have CoIoT settings
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        return
+
     coiot_config = device.settings["coiot"]
     coiot_enabled = coiot_config.get("enabled")
 
@@ -431,7 +437,7 @@ async def async_create_fix_flow(
     else:
         device = entry.runtime_data.block.device
 
-    if "coiot_unconfigured" in issue_id and device.model != MODEL_PLUG:
+    if "coiot_unconfigured" in issue_id:
         return CoiotConfigureFlow(device)
 
     if (
