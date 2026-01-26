@@ -67,9 +67,9 @@ async def _handle_webhook(
         text = await request.text()
         base_result["json"] = json_loads(text) if text else {}
     else:
-        base_result["data"] = await request.post()
+        base_result["data"] = dict(await request.post())
 
-    base_result["query"] = request.query
+    base_result["query"] = dict(request.query)
     base_result["description"] = "webhook"
 
     triggers: dict[str, list[TriggerInstance]] = hass.data.setdefault(
