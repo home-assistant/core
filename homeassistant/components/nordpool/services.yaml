@@ -1,7 +1,6 @@
 get_prices_for_date:
   fields:
     config_entry:
-      required: true
       selector:
         config_entry:
           integration: nordpool
@@ -49,7 +48,6 @@ get_prices_for_date:
 get_price_indices_for_date:
   fields:
     config_entry:
-      required: true
       selector:
         config_entry:
           integration: nordpool
