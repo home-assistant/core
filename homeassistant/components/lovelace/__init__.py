@@ -459,10 +459,7 @@ async def _async_migrate_default_config(
         _LOGGER.exception("Failed to create dashboard entry during migration")
         return
 
-    # Save data to new location
     await new_store.async_save(old_data)
-
-    # Remove old file
     await old_store.async_remove()
 
     _LOGGER.info("Successfully migrated default lovelace config to dashboard entry")
