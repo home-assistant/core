@@ -5,6 +5,7 @@ from __future__ import annotations
 from ipaddress import ip_address
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.nrgkick.api import (
     NRGkickApiClientApiDisabledError,
@@ -12,6 +13,7 @@ from homeassistant.components.nrgkick.api import (
     NRGkickApiClientCommunicationError,
     NRGkickApiClientError,
 )
+from homeassistant.components.nrgkick.config_flow import _normalize_host
 from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -805,3 +807,24 @@ async def test_zeroconf_name_fallbacks(
         "name": expected_name,
         "device_ip": "192.168.1.100",
     }
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("http://example.com:1234/path", "example.com:1234"),
+        ("https://example.com/path", "example.com:443"),
+        ("example.com/some/path", "example.com"),
+        ("192.168.1.10/", "192.168.1.10"),
+    ],
+)
+def test_normalize_host(value: str, expected: str) -> None:
+    """Test host normalization."""
+    assert _normalize_host(value) == expected
+
+
+@pytest.mark.parametrize("value", ["", "   "])
+def test_normalize_host_empty(value: str) -> None:
+    """Test host normalization with empty input."""
+    with pytest.raises(vol.Invalid):
+        _normalize_host(value)
