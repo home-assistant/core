@@ -23,7 +23,6 @@ from .const import CONF_TRUSTED_NETWORKS
 _LOGGER = logging.getLogger(__name__)
 
 TELEGRAM_WEBHOOK_URL = "/api/telegram_webhooks"
-REMOVE_WEBHOOK_URL = ""
 SECRET_TOKEN_LENGTH = 32
 
 
@@ -39,9 +38,13 @@ async def async_setup_platform(
     pushbot = PushBot(hass, bot, config, secret_token)
 
     await pushbot.start_application()
+
     webhook_registered = await pushbot.register_webhook()
     if not webhook_registered:
         raise ConfigEntryNotReady("Failed to register webhook with Telegram")
+    _LOGGER.info(
+        "[%s %s] Webhook registered with %s", bot.username, bot.id, bot.base_url
+    )
 
     hass.http.register_view(
         PushBotView(
@@ -52,6 +55,8 @@ async def async_setup_platform(
             secret_token,
         )
     )
+
+    _LOGGER.info("[%s %s] Webhook bot ready", bot.username, bot.id)
     return pushbot
 
 
@@ -87,6 +92,7 @@ class PushBot(BaseTelegramBot):
     async def shutdown(self) -> None:
         """Shutdown the app."""
         await self.stop_application()
+        _LOGGER.info("[%s %s] Webhook bot shutdown", self.bot.username, self.bot.id)
 
     async def _try_to_set_webhook(self) -> bool:
         _LOGGER.debug("Registering webhook URL: %s", self.webhook_url)
@@ -117,14 +123,7 @@ class PushBot(BaseTelegramBot):
         # Some logging of Bot current status:
         _LOGGER.debug("telegram webhook status: %s", current_status)
 
-        result = await self._try_to_set_webhook()
-        if result:
-            _LOGGER.debug("Set new telegram webhook %s", self.webhook_url)
-        else:
-            _LOGGER.error("Set telegram webhook failed %s", self.webhook_url)
-            return False
-
-        return True
+        return await self._try_to_set_webhook()
 
     async def stop_application(self) -> None:
         """Handle gracefully stopping the Application object."""

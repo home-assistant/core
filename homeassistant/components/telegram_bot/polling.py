@@ -82,7 +82,12 @@ class PollBot(BaseTelegramBot):
                 error_callback=lambda error: error_callback(self.bot, error, None)
             )
         await self.application.start()
-        _LOGGER.info("[%s %s] Started polling", self.bot.username, self.bot.id)
+        _LOGGER.info(
+            "[%s %s] Started polling at %s",
+            self.bot.username,
+            self.bot.id,
+            self.bot.base_url,
+        )
 
     async def stop_polling(self) -> None:
         """Stop the polling task."""

@@ -193,6 +193,12 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                         self.config_entry.runtime_data
                     )
                     is_logged_out = await service.bot.log_out()
+                    _LOGGER.info(
+                        "[%s %s] Logged out: %s",
+                        service.bot.username,
+                        service.bot.id,
+                        is_logged_out,
+                    )
                     if not is_logged_out:
                         errors["base"] = "bot_logout_failed"
             except TelegramError as err:
