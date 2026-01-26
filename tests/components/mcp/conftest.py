@@ -25,7 +25,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 TEST_API_NAME = "Memory Server"
-MCP_SERVER_URL = "http://1.1.1.1:8080/sse"
+MCP_SERVER_URL = "http://1.1.1.1:8080/mcp"
 CLIENT_ID = "test-client-id"
 CLIENT_SECRET = "test-client-secret"
 AUTH_DOMAIN = "some-auth-domain"
