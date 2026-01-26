@@ -11,8 +11,13 @@ import voluptuous as vol
 
 from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    ATTR_TEMPERATURE,
     DOMAIN,
     SERVICE_SET_OPERATION_MODE,
+    SERVICE_SET_TEMPERATURE,
     SET_TEMPERATURE_SCHEMA,
     WaterHeaterEntity,
     WaterHeaterEntityDescription,
@@ -22,17 +27,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from tests.common import (
     MockConfigEntry,
+    MockEntity,
     MockModule,
     MockPlatform,
     async_mock_service,
     import_and_test_deprecated_constant,
     mock_integration,
     mock_platform,
+    setup_test_component_platform,
 )
 
 
@@ -40,14 +46,13 @@ async def test_set_temp_schema_no_req(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the set temperature schema with missing required data."""
-    domain = "climate"
     service = "test_set_temperature"
-    schema = cv.make_entity_service_schema(SET_TEMPERATURE_SCHEMA)
-    calls = async_mock_service(hass, domain, service, schema)
+    schema = SET_TEMPERATURE_SCHEMA
+    calls = async_mock_service(hass, DOMAIN, service, schema)
 
-    data = {"hvac_mode": "off", "entity_id": ["climate.test_id"]}
+    data = {"hvac_mode": "off", "entity_id": ["water_heater.test_id"]}
     with pytest.raises(vol.Invalid):
-        await hass.services.async_call(domain, service, data)
+        await hass.services.async_call(DOMAIN, service, data)
     await hass.async_block_till_done()
 
     assert len(calls) == 0
@@ -57,24 +62,23 @@ async def test_set_temp_schema(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the set temperature schema with ok required data."""
-    domain = "water_heater"
     service = "test_set_temperature"
-    schema = cv.make_entity_service_schema(SET_TEMPERATURE_SCHEMA)
-    calls = async_mock_service(hass, domain, service, schema)
+    schema = SET_TEMPERATURE_SCHEMA
+    calls = async_mock_service(hass, DOMAIN, service, schema)
 
     data = {
         "temperature": 20.0,
         "operation_mode": "gas",
         "entity_id": ["water_heater.test_id"],
     }
-    await hass.services.async_call(domain, service, data)
+    await hass.services.async_call(DOMAIN, service, data)
     await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[-1].data == data
 
 
-class MockWaterHeaterEntity(WaterHeaterEntity):
+class MockWaterHeaterEntity(MockEntity, WaterHeaterEntity):
     """Mock water heater device to use in tests."""
 
     _attr_operation_list: list[str] | None = ["off", "heat_pump", "gas"]
@@ -237,3 +241,158 @@ def test_deprecated_constants(
         replacement,
         "2026.1",
     )
+
+
+async def test_target_temp(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test set temp service with target temperature."""
+
+    class MockWaterHeaterEntityTemp(MockWaterHeaterEntity):
+        """Mock Water heater class."""
+
+        _attr_target_temperature = 15
+        _attr_current_temperature = 15
+        _attr_supported_features = (
+            WaterHeaterEntityFeature.ON_OFF
+            | WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        )
+
+        def set_temperature(self, **kwargs: Any) -> None:
+            """Set new target temperature."""
+            if ATTR_TEMPERATURE in kwargs:
+                self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]
+            if ATTR_TARGET_TEMP_HIGH in kwargs:
+                self._attr_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
+                self._attr_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
+            self.async_write_ha_state()
+
+    test_heater = MockWaterHeaterEntityTemp(
+        name="Test",
+        unique_id="unique_heater_test",
+    )
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[test_heater], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("water_heater.test")
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 15
+    assert state.attributes.get(ATTR_TEMPERATURE) == 15
+    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) is None
+    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) is None
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "water_heater.test",
+            ATTR_TEMPERATURE: "20",
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("water_heater.test")
+    assert state.attributes.get(ATTR_TEMPERATURE) == 20
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Set temperature action was used with the target temperature low/high parameter but the entity does not support it",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "water_heater.test",
+                ATTR_TARGET_TEMP_HIGH: "20",
+                ATTR_TARGET_TEMP_LOW: "15",
+            },
+            blocking=True,
+        )
+    assert (
+        str(exc.value)
+        == "Set temperature action was used with the target temperature low/high parameter but the entity does not support it"
+    )
+    assert (
+        exc.value.translation_key == "missing_target_temperature_range_entity_feature"
+    )
+
+
+async def test_target_temp_range(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test set temp service with target temperature range."""
+
+    class MockWaterHeaterEntityTemp(MockWaterHeaterEntity):
+        """Mock Water heater class."""
+
+        _attr_target_temperature = 15
+        _attr_target_temperature_low = 10
+        _attr_target_temperature_high = 20
+        _attr_current_temperature = 15
+        _attr_supported_features = (
+            WaterHeaterEntityFeature.ON_OFF
+            | WaterHeaterEntityFeature.TARGET_TEMPERATURE_RANGE
+        )
+
+        def set_temperature(self, **kwargs: Any) -> None:
+            """Set new target temperature."""
+            if ATTR_TEMPERATURE in kwargs:
+                self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]
+            if ATTR_TARGET_TEMP_HIGH in kwargs:
+                self._attr_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
+                self._attr_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
+            self.async_write_ha_state()
+
+    test_heater = MockWaterHeaterEntityTemp(
+        name="Test",
+        unique_id="unique_heater_test",
+    )
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[test_heater], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("water_heater.test")
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 15
+    assert state.attributes.get(ATTR_TEMPERATURE) == 15
+    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 20
+    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 10
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "water_heater.test",
+            ATTR_TARGET_TEMP_HIGH: "20",
+            ATTR_TARGET_TEMP_LOW: "15",
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("water_heater.test")
+    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 20
+    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 15
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Set temperature action was used with the target temperature parameter but the entity does not support it",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "water_heater.test",
+                ATTR_TEMPERATURE: "15",
+            },
+            blocking=True,
+        )
+    assert (
+        str(exc.value)
+        == "Set temperature action was used with the target temperature parameter but the entity does not support it"
+    )
+    assert exc.value.translation_key == "missing_target_temperature_entity_feature"
