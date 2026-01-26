@@ -2629,6 +2629,8 @@ victron-vrm==0.1.8
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
 
+# homeassistant.components.vitrea
+vitreaclient==0.2.0
 # homeassistant.components.watts
 visionpluspython==1.0.2
 

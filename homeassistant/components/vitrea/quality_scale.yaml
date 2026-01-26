@@ -1,0 +1,39 @@
+rules:
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions/services.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver level rules
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration has no user-configurable parameters in config flow.
+  docs-installation-parameters:
+    status: exempt
+    comment: Integration uses standard Home Assistant installation via UI configuration flow.
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Integration uses local push communication, no authentication credentials that can expire.
+  test-coverage: done
