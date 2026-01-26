@@ -28,10 +28,12 @@ from tests.common import MockConfigEntry
     ],
 )
 @pytest.mark.parametrize("timestamp", [False, True], ids=["no_timestamp", "timestamp"])
+@pytest.mark.parametrize("overwrite", [False, True], ids=["no_overwrite", "overwrite"])
 async def test_notify_file(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_is_allowed_path: MagicMock,
+    overwrite: bool,
     timestamp: bool,
     domain: str,
     service: str,
@@ -58,9 +60,11 @@ async def test_notify_file(
     m_open = mock_open()
     with (
         patch("homeassistant.components.file.notify.open", m_open, create=True),
-        patch("homeassistant.components.file.notify.os.stat") as mock_st,
+        patch("homeassistant.components.file.notify.os.path.exists") as mock_exist,
+        patch("homeassistant.components.file.notify.os.path.getsize") as mock_getsize,
     ):
-        mock_st.return_value.st_size = 0
+        mock_exist.return_value = False
+        mock_getsize.return_value = 0
         title = (
             f"{ATTR_TITLE_DEFAULT} notifications "
             f"(Log started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
@@ -69,7 +73,10 @@ async def test_notify_file(
         await hass.services.async_call(domain, service, params, blocking=True)
 
         assert m_open.call_count == 1
-        assert m_open.call_args == call(full_filename, "a", encoding="utf8")
+        if not overwrite:
+            assert m_open.call_args == call(full_filename, "a", encoding="utf8")
+        else:
+            assert m_open.call_args == call(full_filename, "w", encoding="utf8")
 
         assert m_open.return_value.write.call_count == 2
         if not timestamp:

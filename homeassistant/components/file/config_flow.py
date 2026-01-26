@@ -32,7 +32,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_TIMESTAMP, DOMAIN
+from .const import CONF_OVERWRITE, CONF_TIMESTAMP, DOMAIN
 
 BOOLEAN_SELECTOR = BooleanSelector(BooleanSelectorConfig())
 TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
@@ -48,6 +48,7 @@ FILE_OPTIONS_SCHEMAS = {
     Platform.NOTIFY.value: vol.Schema(
         {
             vol.Optional(CONF_TIMESTAMP, default=False): BOOLEAN_SELECTOR,
+            vol.Optional(CONF_OVERWRITE, default=False): BOOLEAN_SELECTOR,
         }
     ),
 }
