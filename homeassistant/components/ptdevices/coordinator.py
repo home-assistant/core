@@ -7,7 +7,7 @@ import logging
 from typing import Final
 
 import aioptdevices
-from aioptdevices.interface import Interface, PTDevicesResponse
+from aioptdevices.interface import Interface, PTDevicesResponseData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -29,7 +29,7 @@ UPDATE_INTERVAL = timedelta(seconds=60)
 type PTDevicesConfigEntry = ConfigEntry[PTDevicesCoordinator]
 
 
-class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
+class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
     """Class for interacting with PTDevices get_data."""
 
     config_entry: PTDevicesConfigEntry
@@ -58,7 +58,7 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
         self.interface = ptdevices_interface
         self.previous_devices: set[str] = set()
 
-    async def _async_update_data(self) -> PTDevicesResponse:
+    async def _async_update_data(self) -> PTDevicesResponseData:
         try:
             data = await self.interface.get_data()
         except aioptdevices.PTDevicesRequestError as err:
@@ -95,4 +95,4 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
                         remove_config_entry_id=self.config_entry.entry_id,
                     )
 
-        return data
+        return data["body"]

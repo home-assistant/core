@@ -124,11 +124,11 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     def _check_device() -> None:
-        current_devices = set(coordinator.data["body"].keys())
+        current_devices = set(coordinator.data.keys())
         new_devices = current_devices - coordinator.previous_devices
         if new_devices:
             for device_id in new_devices:
-                device = coordinator.data["body"][device_id]
+                device = coordinator.data[device_id]
                 async_add_entity(
                     PTDevicesSensorEntity(config_entry.runtime_data, sensor, device_id)
                     for sensor in SENSOR_DESCRIPTIONS
@@ -166,15 +166,15 @@ class PTDevicesSensorEntity(SensorEntity, CoordinatorEntity[PTDevicesCoordinator
             identifiers={(DOMAIN, self._device_id)},
             configuration_url=f"https://www.ptdevices.com/device/level/{self._device_id}",
             manufacturer="ParemTech inc.",
-            model=self.coordinator.data["body"][self._device_id].get(
+            model=self.coordinator.data[self._device_id].get(
                 "device_type",
                 None,
             ),
-            sw_version=self.coordinator.data["body"][self._device_id].get(
+            sw_version=self.coordinator.data[self._device_id].get(
                 "version",
                 None,
             ),
-            name=self.coordinator.data["body"][self._device_id].get(
+            name=self.coordinator.data[self._device_id].get(
                 "title",
                 None,
             ),
@@ -188,8 +188,7 @@ class PTDevicesSensorEntity(SensorEntity, CoordinatorEntity[PTDevicesCoordinator
         """Return True if entity is available."""
         return (
             super().available
-            and self.entity_description.key
-            in self.coordinator.data["body"][self._device_id]
+            and self.entity_description.key in self.coordinator.data[self._device_id]
         )
 
     @callback
@@ -200,7 +199,7 @@ class PTDevicesSensorEntity(SensorEntity, CoordinatorEntity[PTDevicesCoordinator
 
     def _update_attrs(self) -> None:
         """Update sensor attributes based on coordinator data."""
-        data = self.coordinator.data["body"][self._device_id]
+        data = self.coordinator.data[self._device_id]
         key = self.entity_description.key
 
         # If the key is not in the data received from the server, set the entity to unavailable and exit
