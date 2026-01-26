@@ -1,7 +1,9 @@
 """Test the Airobot climate platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyairobotrest.const import MODE_AWAY, MODE_HOME
 from pyairobotrest.exceptions import AirobotConnectionError, AirobotError
 from pyairobotrest.models import ThermostatSettings, ThermostatStatus
@@ -208,10 +210,12 @@ async def test_climate_heating_state(
     assert state.attributes.get("hvac_action") == "heating"
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_climate_unavailable_on_update_failure(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test climate entity becomes unavailable when coordinator update fails."""
     mock_config_entry.add_to_hass(hass)
@@ -233,8 +237,8 @@ async def test_climate_unavailable_on_update_failure(
         "Connection lost"
     )
 
-    # Trigger coordinator refresh
-    await mock_config_entry.runtime_data.async_refresh()
+    # Advance time to trigger coordinator update (30 second interval)
+    freezer.tick(timedelta(seconds=30))
     await hass.async_block_till_done()
 
     # Entity should now be unavailable
