@@ -380,10 +380,8 @@ class QubeComputedSensor(CoordinatorEntity, SensorEntity):
 class QubeStandbyPowerSensor(CoordinatorEntity, SensorEntity):
     """Standby power sensor."""
 
-    # ... (Keep existing implementation logic but simplified)
     _attr_should_poll = False
     _attr_has_entity_name = True
-    _attr_name = None  # Use translation key
 
     def __init__(
         self,
@@ -417,10 +415,8 @@ class QubeStandbyPowerSensor(CoordinatorEntity, SensorEntity):
 class QubeStandbyEnergySensor(CoordinatorEntity, RestoreSensor, SensorEntity):
     """Standby energy sensor."""
 
-    # Using simpler implementation for brevity in this rewrite
     _attr_should_poll = False
     _attr_has_entity_name = True
-    _attr_name = None  # Use translation key
 
     def __init__(
         self,
@@ -477,7 +473,6 @@ class QubeTotalEnergyIncludingStandbySensor(CoordinatorEntity, SensorEntity):
 
     _attr_should_poll = False
     _attr_has_entity_name = True
-    _attr_name = None  # Use translation key
 
     def __init__(
         self,

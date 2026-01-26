@@ -2,19 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from unittest.mock import AsyncMock, MagicMock, patch
 
-if TYPE_CHECKING:
-    import pytest
+from python_qube_heatpump.models import QubeState
 
-    from homeassistant.components.qube_heatpump.hub import QubeHub
-    from homeassistant.core import HomeAssistant
-
-from unittest.mock import AsyncMock
-
-from homeassistant.components.qube_heatpump import QubeData, async_unload_entry
-from homeassistant.components.qube_heatpump.const import CONF_HOST, DOMAIN, PLATFORMS
+from homeassistant.components.qube_heatpump.const import CONF_HOST, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -22,49 +16,82 @@ from tests.common import MockConfigEntry
 async def test_async_setup_entry_registers_integration(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup entry registers the integration and its hub."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
-        title="Qube Heat Pump",
-    )
-    entry.add_to_hass(hass)
+    """Test setup entry registers the integration and creates entities."""
+    state = QubeState()
+    state.temp_supply = 45.0
+    state.status_code = 1
 
-    # Use entry.runtime_data which is populated by async_setup_entry
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    client = MagicMock()
+    client.host = "1.2.3.4"
+    client.port = 502
+    client.unit = 1
+    client.connect = AsyncMock(return_value=True)
+    client.is_connected = True
+    client.close = AsyncMock(return_value=None)
+    client.get_all_data = AsyncMock(return_value=state)
 
-    assert entry.state is ConfigEntryState.LOADED
-    # Integration refactor uses runtime_data
-    assert entry.runtime_data is not None
-    assert entry.runtime_data.hub.host == "1.2.3.4"
+    with patch(
+        "homeassistant.components.qube_heatpump.hub.QubeClient",
+        return_value=client,
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={CONF_HOST: "1.2.3.4"},
+            title="Qube Heat Pump",
+        )
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Assert config entry state via ConfigEntry.state attribute
+        assert entry.state is ConfigEntryState.LOADED
+
+        # Assert entity state via core state machine
+        states = hass.states.async_all()
+        sensor_states = [s for s in states if s.entity_id.startswith("sensor.")]
+        assert len(sensor_states) > 0
 
 
 async def test_async_unload_entry_cleans_up(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
 ) -> None:
     """Ensure unload removes stored data and closes the hub."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "198.51.100.2"})
-    entry.add_to_hass(hass)
+    state = QubeState()
+    state.temp_supply = 45.0
+    state.status_code = 1
 
-    unload_platforms = AsyncMock(return_value=True)
-    monkeypatch.setattr(hass.config_entries, "async_unload_platforms", unload_platforms)
+    client = MagicMock()
+    client.host = "1.2.3.4"
+    client.port = 502
+    client.unit = 1
+    client.connect = AsyncMock(return_value=True)
+    client.is_connected = True
+    client.close = AsyncMock(return_value=None)
+    client.get_all_data = AsyncMock(return_value=state)
 
-    class DummyHub:
-        async def async_close(self) -> None:  # pragma: no cover - replaced by mock
-            return None
+    with patch(
+        "homeassistant.components.qube_heatpump.hub.QubeClient",
+        return_value=client,
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={CONF_HOST: "1.2.3.4"},
+            title="Qube Heat Pump",
+        )
+        entry.add_to_hass(hass)
 
-    hub = DummyHub()
-    hub.async_close = AsyncMock()  # type: ignore[method-assign]
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    entry.runtime_data = QubeData(
-        hub=cast("QubeHub", hub),
-        coordinator=AsyncMock(),
-        version="1.0.0",
-    )
+        assert entry.state is ConfigEntryState.LOADED
 
-    result = await async_unload_entry(hass, entry)
+        # Unload via config entries interface
+        result = await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert result is True
-    unload_platforms.assert_called_once_with(entry, PLATFORMS)
-    hub.async_close.assert_awaited()
+        assert result is True
+        # Assert config entry state after unload
+        assert entry.state is ConfigEntryState.NOT_LOADED
+        # Verify close was called
+        client.close.assert_called()
