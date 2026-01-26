@@ -1329,7 +1329,12 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
                 if field_data.get("required") and field not in _config:
                     raise vol.Invalid(f"Field {field} is required")
                 if field in _config:
-                    selector(field_data["selector"])(_config[field])  # type: ignore[operator]
+                    field_selector = field_data["selector"]
+                    # Handle both Selector instances and dict configs
+                    if isinstance(field_selector, Selector):
+                        field_selector(_config[field])  # type: ignore[operator]
+                    else:
+                        selector(field_selector)(_config[field])  # type: ignore[operator]
 
             for key in _config:
                 if key not in self.config["fields"]:
