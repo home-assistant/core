@@ -1,4 +1,24 @@
 # serializer version: 1
+# name: test_sensor[sensor.system_monitor - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor None',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_sensor[sensor.system_monitor - state]
+  '1200'
+# ---
+# name: test_sensor[sensor.system_monitor_2 - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor None',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_sensor[sensor.system_monitor_2 - state]
+  '1300'
+# ---
 # name: test_sensor[sensor.system_monitor_battery - attributes]
   ReadOnlyDict({
     'device_class': 'battery',
@@ -274,26 +294,6 @@
 # ---
 # name: test_sensor[sensor.system_monitor_network_throughput_out_eth1 - state]
   'unknown'
-# ---
-# name: test_sensor[sensor.system_monitor_none - attributes]
-  ReadOnlyDict({
-    'friendly_name': 'System Monitor None',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    'unit_of_measurement': 'rpm',
-  })
-# ---
-# name: test_sensor[sensor.system_monitor_none - state]
-  '1200'
-# ---
-# name: test_sensor[sensor.system_monitor_none_2 - attributes]
-  ReadOnlyDict({
-    'friendly_name': 'System Monitor None',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    'unit_of_measurement': 'rpm',
-  })
-# ---
-# name: test_sensor[sensor.system_monitor_none_2 - state]
-  '1300'
 # ---
 # name: test_sensor[sensor.system_monitor_open_file_descriptors_pip - attributes]
   ReadOnlyDict({
