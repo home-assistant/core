@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 
 from pyanglianwater.meter import SmartMeter
@@ -18,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import AnglianWaterConfigEntry, AnglianWaterUpdateCoordinator
 from .entity import AnglianWaterEntity
@@ -32,13 +34,14 @@ class AnglianWaterSensor(StrEnum):
     YESTERDAY_WATER_COST = "yesterday_water_cost"
     YESTERDAY_SEWERAGE_COST = "yesterday_sewerage_cost"
     LATEST_READING = "latest_reading"
+    LAST_UPDATED = "last_updated"
 
 
 @dataclass(frozen=True, kw_only=True)
 class AnglianWaterSensorEntityDescription(SensorEntityDescription):
     """Describes AnglianWater sensor entity."""
 
-    value_fn: Callable[[SmartMeter], float]
+    value_fn: Callable[[SmartMeter], float | datetime | None]
 
 
 ENTITY_DESCRIPTIONS: tuple[AnglianWaterSensorEntityDescription, ...] = (
@@ -74,6 +77,15 @@ ENTITY_DESCRIPTIONS: tuple[AnglianWaterSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
         value_fn=lambda entity: entity.yesterday_sewerage_cost,
         translation_key=AnglianWaterSensor.YESTERDAY_SEWERAGE_COST,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    AnglianWaterSensorEntityDescription(
+        key=AnglianWaterSensor.LAST_UPDATED,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda entity: dt_util.as_local(entity.last_updated)
+        if entity.last_updated
+        else None,
+        translation_key=AnglianWaterSensor.LAST_UPDATED,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -112,6 +124,6 @@ class AnglianWaterSensorEntity(AnglianWaterEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.smart_meter)
