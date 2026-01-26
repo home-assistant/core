@@ -1344,6 +1344,9 @@ keba-kecontact==1.3.0
 # homeassistant.components.kegtron
 kegtron-ble==1.0.2
 
+# homeassistant.components.kiosker
+kiosker-python-api==1.2.6
+
 # homeassistant.components.kiwi
 kiwiki-client==0.1.1
 

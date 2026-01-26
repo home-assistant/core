@@ -677,6 +677,11 @@ ZEROCONF = {
             "domain": "ipp",
         },
     ],
+    "_kiosker._tcp.local.": [
+        {
+            "domain": "kiosker",
+        },
+    ],
     "_kizbox._tcp.local.": [
         {
             "domain": "overkiz",

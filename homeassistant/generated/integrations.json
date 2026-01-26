@@ -3335,6 +3335,12 @@
       "config_flow": true,
       "iot_class": "assumed_state"
     },
+    "kiosker": {
+      "name": "Kiosker",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "kira": {
       "name": "Kira",
       "integration_type": "hub",
