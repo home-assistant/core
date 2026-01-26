@@ -4058,10 +4058,10 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     # Verify discovery notification shows home ID with network location
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    assert (
-        flows[0]["context"]["title_placeholders"]["name"]
-        == "127.0.0.1:3000, Home ID 1234"
-    )
+    flow = flows[0]
+    assert flow["context"]["title_placeholders"]["host"] == "127.0.0.1"
+    assert flow["context"]["title_placeholders"]["port"] == "3000"
+    assert flow["context"]["title_placeholders"]["home_id"] == "1234"
 
     with (
         patch(
