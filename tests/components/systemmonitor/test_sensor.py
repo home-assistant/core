@@ -70,6 +70,57 @@ async def test_sensor(
             assert state.state == snapshot(name=f"{entity.entity_id} - state")
             assert state.attributes == snapshot(name=f"{entity.entity_id} - attributes")
 
+    # Check PSI sensors explicitly as snapshots are not effective for them
+    # Check CPU pressure
+    state = hass.states.get("sensor.system_monitor_cpu_pressure_some_10s_average")
+    assert state.state == "1.1"
+    state = hass.states.get("sensor.system_monitor_cpu_pressure_some_60s_average")
+    assert state.state == "2.2"
+    state = hass.states.get("sensor.system_monitor_cpu_pressure_some_300s_average")
+    assert state.state == "3.3"
+    state = hass.states.get("sensor.system_monitor_cpu_pressure_some_total")
+    assert state.state == "12345"
+
+    # Check Memory pressure some
+    state = hass.states.get("sensor.system_monitor_memory_pressure_some_10s_average")
+    assert state.state == "4.4"
+    state = hass.states.get("sensor.system_monitor_memory_pressure_some_60s_average")
+    assert state.state == "5.5"
+    state = hass.states.get("sensor.system_monitor_memory_pressure_some_300s_average")
+    assert state.state == "6.6"
+    state = hass.states.get("sensor.system_monitor_memory_pressure_some_total")
+    assert state.state == "54321"
+
+    # Check Memory pressure full
+    state = hass.states.get("sensor.system_monitor_memory_pressure_full_10s_average")
+    assert state.state == "0.4"
+    state = hass.states.get("sensor.system_monitor_memory_pressure_full_60s_average")
+    assert state.state == "0.5"
+    state = hass.states.get("sensor.system_monitor_memory_pressure_full_300s_average")
+    assert state.state == "0.6"
+    state = hass.states.get("sensor.system_monitor_memory_pressure_full_total")
+    assert state.state == "432"
+
+    # Check IO pressure some
+    state = hass.states.get("sensor.system_monitor_io_pressure_some_10s_average")
+    assert state.state == "7.7"
+    state = hass.states.get("sensor.system_monitor_io_pressure_some_60s_average")
+    assert state.state == "8.8"
+    state = hass.states.get("sensor.system_monitor_io_pressure_some_300s_average")
+    assert state.state == "9.9"
+    state = hass.states.get("sensor.system_monitor_io_pressure_some_total")
+    assert state.state == "67890"
+
+    # Check IO pressure full
+    state = hass.states.get("sensor.system_monitor_io_pressure_full_10s_average")
+    assert state.state == "0.7"
+    state = hass.states.get("sensor.system_monitor_io_pressure_full_60s_average")
+    assert state.state == "0.8"
+    state = hass.states.get("sensor.system_monitor_io_pressure_full_300s_average")
+    assert state.state == "0.9"
+    state = hass.states.get("sensor.system_monitor_io_pressure_full_total")
+    assert state.state == "789"
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_process_sensor_not_loaded(
@@ -704,76 +755,6 @@ async def test_sensor_without_param_exception(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_psi_sensor(
-    hass: HomeAssistant,
-    mock_psutil: Mock,
-    mock_os: Mock,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the PSI sensor."""
-    mock_config_entry = MockConfigEntry(
-        title="System Monitor",
-        domain=DOMAIN,
-        data={},
-        options={},
-    )
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Check CPU pressure
-    state = hass.states.get("sensor.system_monitor_cpu_pressure_some_10s_average")
-    assert state.state == "1.1"
-    state = hass.states.get("sensor.system_monitor_cpu_pressure_some_60s_average")
-    assert state.state == "2.2"
-    state = hass.states.get("sensor.system_monitor_cpu_pressure_some_300s_average")
-    assert state.state == "3.3"
-    state = hass.states.get("sensor.system_monitor_cpu_pressure_some_total")
-    assert state.state == "12345"
-
-    # Check Memory pressure some
-    state = hass.states.get("sensor.system_monitor_memory_pressure_some_10s_average")
-    assert state.state == "4.4"
-    state = hass.states.get("sensor.system_monitor_memory_pressure_some_60s_average")
-    assert state.state == "5.5"
-    state = hass.states.get("sensor.system_monitor_memory_pressure_some_300s_average")
-    assert state.state == "6.6"
-    state = hass.states.get("sensor.system_monitor_memory_pressure_some_total")
-    assert state.state == "54321"
-
-    # Check Memory pressure full
-    state = hass.states.get("sensor.system_monitor_memory_pressure_full_10s_average")
-    assert state.state == "0.4"
-    state = hass.states.get("sensor.system_monitor_memory_pressure_full_60s_average")
-    assert state.state == "0.5"
-    state = hass.states.get("sensor.system_monitor_memory_pressure_full_300s_average")
-    assert state.state == "0.6"
-    state = hass.states.get("sensor.system_monitor_memory_pressure_full_total")
-    assert state.state == "432"
-
-    # Check IO pressure some
-    state = hass.states.get("sensor.system_monitor_io_pressure_some_10s_average")
-    assert state.state == "7.7"
-    state = hass.states.get("sensor.system_monitor_io_pressure_some_60s_average")
-    assert state.state == "8.8"
-    state = hass.states.get("sensor.system_monitor_io_pressure_some_300s_average")
-    assert state.state == "9.9"
-    state = hass.states.get("sensor.system_monitor_io_pressure_some_total")
-    assert state.state == "67890"
-
-    # Check IO pressure full
-    state = hass.states.get("sensor.system_monitor_io_pressure_full_10s_average")
-    assert state.state == "0.7"
-    state = hass.states.get("sensor.system_monitor_io_pressure_full_60s_average")
-    assert state.state == "0.8"
-    state = hass.states.get("sensor.system_monitor_io_pressure_full_300s_average")
-    assert state.state == "0.9"
-    state = hass.states.get("sensor.system_monitor_io_pressure_full_total")
-    assert state.state == "789"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
