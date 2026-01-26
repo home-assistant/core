@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import LIGHTWAVE_LINK
+from . import CONF_UNIQUE_ID, LIGHTWAVE_LINK
 
 MAX_BRIGHTNESS = 255
 
@@ -30,7 +30,8 @@ async def async_setup_platform(
 
     for device_id, device_config in discovery_info.items():
         name = device_config[CONF_NAME]
-        lights.append(LWRFLight(name, device_id, lwlink))
+        unique_id = device_config.get(CONF_UNIQUE_ID)
+        lights.append(LWRFLight(name, device_id, lwlink, unique_id))
 
     async_add_entities(lights)
 
@@ -42,12 +43,14 @@ class LWRFLight(LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_should_poll = False
 
-    def __init__(self, name, device_id, lwlink):
+    def __init__(self, name, device_id, lwlink, unique_id=None):
         """Initialize LWRFLight entity."""
         self._attr_name = name
         self._device_id = device_id
         self._attr_brightness = MAX_BRIGHTNESS
         self._lwlink = lwlink
+        if unique_id:
+            self._attr_unique_id = unique_id
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the LightWave light on."""

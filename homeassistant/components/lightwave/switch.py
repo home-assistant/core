@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import LIGHTWAVE_LINK
+from . import CONF_UNIQUE_ID, LIGHTWAVE_LINK
 
 
 async def async_setup_platform(
@@ -28,7 +28,8 @@ async def async_setup_platform(
 
     for device_id, device_config in discovery_info.items():
         name = device_config[CONF_NAME]
-        switches.append(LWRFSwitch(name, device_id, lwlink))
+        unique_id = device_config.get(CONF_UNIQUE_ID)
+        switches.append(LWRFSwitch(name, device_id, lwlink, unique_id))
 
     async_add_entities(switches)
 
@@ -38,11 +39,13 @@ class LWRFSwitch(SwitchEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, name, device_id, lwlink):
+    def __init__(self, name, device_id, lwlink, unique_id=None):
         """Initialize LWRFSwitch entity."""
         self._attr_name = name
         self._device_id = device_id
         self._lwlink = lwlink
+        if unique_id:
+            self._attr_unique_id = unique_id
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the LightWave switch on."""
