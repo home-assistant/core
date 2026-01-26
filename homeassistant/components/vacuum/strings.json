@@ -54,7 +54,7 @@
     "clean_area": {
       "description": "Tells the vacuum cleaner to clean an area.",
       "fields": {
-        "area_ids": {
+        "cleaning_area_id": {
           "description": "Areas to clean.",
           "name": "Areas"
         }

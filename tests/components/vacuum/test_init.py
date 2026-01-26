@@ -305,7 +305,7 @@ async def test_clean_area_service(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_CLEAN_AREA,
-        {"entity_id": mock_vacuum.entity_id, "area_ids": targeted_areas},
+        {"entity_id": mock_vacuum.entity_id, "cleaning_area_id": targeted_areas},
         blocking=True,
     )
 
@@ -348,7 +348,7 @@ async def test_clean_area_no_segments(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_CLEAN_AREA,
-        {"entity_id": mock_vacuum.entity_id, "area_ids": targeted_areas},
+        {"entity_id": mock_vacuum.entity_id, "cleaning_area_id": targeted_areas},
         blocking=True,
     )
 
@@ -364,7 +364,7 @@ async def test_clean_area_no_segments(
     await hass.services.async_call(
         DOMAIN,
         SERVICE_CLEAN_AREA,
-        {"entity_id": mock_vacuum.entity_id, "area_ids": targeted_areas},
+        {"entity_id": mock_vacuum.entity_id, "cleaning_area_id": targeted_areas},
         blocking=True,
     )
 

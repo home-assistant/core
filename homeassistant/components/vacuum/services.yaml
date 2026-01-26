@@ -76,7 +76,7 @@ clean_area:
       supported_features:
         - vacuum.VacuumEntityFeature.CLEAN_AREA
   fields:
-    area_ids:
+    cleaning_area_id:
       required: true
       selector:
         area:
