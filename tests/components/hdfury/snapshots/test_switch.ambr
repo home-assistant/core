@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto switch inputs',
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HTPC mode RX0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HTPC mode RX1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -164,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HTPC mode RX2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -212,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HTPC mode RX3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -260,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Infrared',
     'options': dict({
     }),
     'original_device_class': None,
@@ -308,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mute audio TX0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -356,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mute audio TX1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -404,6 +412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'OLED display',
     'options': dict({
     }),
     'original_device_class': None,
@@ -452,6 +461,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relay',
     'options': dict({
     }),
     'original_device_class': None,

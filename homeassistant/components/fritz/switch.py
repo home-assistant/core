@@ -499,13 +499,12 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseCoordinatorSwitch):
 class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
     """Defines a FRITZ!Box Tools DeviceProfile switch."""
 
-    _attr_icon = "mdi:router-wireless-settings"
+    _attr_translation_key = "internet_access"
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
         """Init Fritz profile."""
         super().__init__(avm_wrapper, device)
         self._attr_is_on: bool = False
-        self._name = f"{device.hostname} Internet Access"
         self._attr_unique_id = f"{self._mac}_internet_access"
         self._attr_entity_category = EntityCategory.CONFIG
 
@@ -534,6 +533,7 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         if not self.ip_address:
             return False
         await self._avm_wrapper.async_set_allow_wan_access(self.ip_address, turn_on)
+        self._avm_wrapper.devices[self._mac].wan_access = turn_on
         self.async_write_ha_state()
         return True
 
