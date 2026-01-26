@@ -5,6 +5,8 @@ from unittest.mock import MagicMock, patch
 
 from fritzconnection.core.processor import Service
 from fritzconnection.lib.fritzhosts import FritzHosts
+from fritzconnection.lib.fritzstatus import FritzStatus
+from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
 
 from .const import (
@@ -12,6 +14,9 @@ from .const import (
     MOCK_HOST_ATTRIBUTES_DATA,
     MOCK_MESH_DATA,
     MOCK_MODELNAME,
+    MOCK_STATUS_AVM_DEVICE_LOG_DATA,
+    MOCK_STATUS_CONNECTION_DATA,
+    MOCK_STATUS_DEVICE_INFO_DATA,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -120,4 +125,26 @@ def fh_class_mock():
     ) as result:
         result.get_mesh_topology = MagicMock(return_value=MOCK_MESH_DATA)
         result.get_hosts_attributes = MagicMock(return_value=MOCK_HOST_ATTRIBUTES_DATA)
+        yield result
+
+
+@pytest.fixture
+def fs_class_mock():
+    """Fixture that sets up a mocked FritzStatus class."""
+    with patch(
+        "homeassistant.components.fritz.coordinator.FritzStatus",
+        new=FritzStatus,
+    ) as result:
+        result.get_default_connection_service = MagicMock(
+            return_value=MOCK_STATUS_CONNECTION_DATA
+        )
+        result.get_device_info = MagicMock(
+            return_value=ArgumentNamespace(MOCK_STATUS_DEVICE_INFO_DATA)
+        )
+        result.get_monitor_data = MagicMock(return_value={})
+        result.get_cpu_temperatures = MagicMock(return_value=[42, 38])
+        result.get_avm_device_log = MagicMock(
+            return_value=MOCK_STATUS_AVM_DEVICE_LOG_DATA
+        )
+        result.has_wan_enabled = True
         yield result
