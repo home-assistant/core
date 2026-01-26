@@ -48,7 +48,9 @@ CONF_QUERY = "query"
 CONF_IMPORTS = "imports"
 
 DEFAULT_DATABASE = "home_assistant"
+DEFAULT_HOST = "localhost"
 DEFAULT_HOST_V2 = "us-west-2-1.aws.cloud2.influxdata.com"
+DEFAULT_PORT = 8086
 DEFAULT_SSL_V2 = True
 DEFAULT_BUCKET = "Home Assistant"
 DEFAULT_VERIFY_SSL = True
@@ -130,8 +132,8 @@ RENDERING_QUERY_ERROR_MESSAGE = "Could not render query template: %s."
 RENDERING_WHERE_MESSAGE = "Rendering where: %s."
 RENDERING_WHERE_ERROR_MESSAGE = "Could not render where template: %s."
 
+
 COMPONENT_CONFIG_SCHEMA_CONNECTION = {
-    # Connection config for V1 and V2 APIs.
     vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): vol.All(
         vol.Coerce(str),
         vol.In([DEFAULT_API_VERSION, API_VERSION_2]),
