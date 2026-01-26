@@ -9,6 +9,7 @@ import logging
 
 from pysqueezebox import Player, Server
 
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -22,15 +23,21 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
+    HomeAssistantError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
+    DeviceEntry,
     DeviceEntryType,
     format_mac,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import (
+    EntityRegistry,
+    async_entries_for_device,
+)
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.hass_dict import HassKey
 
@@ -250,3 +257,63 @@ async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) 
         hass.data.pop(SQUEEZEBOX_HASS_DATA)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: SqueezeboxConfigEntry,
+    device_entry: DeviceEntry,
+) -> bool:
+    """Allow removal of a Squeezebox player only if its media_player coordinator is unavailable."""
+
+    # Extract the player_id from the device identifiers and check if it's a service entry
+    player_ids, is_service = (
+        {id_ for domain, id_ in device_entry.identifiers if domain == DOMAIN},
+        device_entry.entry_type is DeviceEntryType.SERVICE,
+    )
+
+    if is_service:
+        raise HomeAssistantError(
+            f"Cannot remove Lyrion Music Server '{device_entry.name}' directly.  Please delete the associated config entry instead."
+        )
+
+    if not player_ids:
+        return False  # Not a Squeezebox device
+
+    # Get the entity registry
+    ent_reg: EntityRegistry = er.async_get(hass)
+
+    # Find all entities associated with this device
+    entities = async_entries_for_device(ent_reg, device_entry.id)
+
+    # Find the media_player entity for this device
+    mp_entries = [
+        entry
+        for entry in entities
+        if entry.domain == "media_player" and entry.platform == DOMAIN
+    ]
+
+    # If no media_player entity exists, it's safe to delete
+    if not mp_entries:
+        return True
+
+    # Resolve the actual entity instance
+    entity_comp = hass.data["entity_components"]["media_player"]
+    entity: MediaPlayerEntity | None = entity_comp.get_entity(mp_entries[0].entity_id)
+
+    # If we cannot resolve the entity, allow deletion
+    if entity is None:
+        return True
+
+    # The entity must expose a SqueezeBoxPlayerUpdateCoordinator
+    coordinator: SqueezeBoxPlayerUpdateCoordinator = entity.coordinator  # type: ignore[attr-defined]
+
+    # If the coordinator says the player is online, block deletion
+    if coordinator.available:
+        raise HomeAssistantError(
+            f"Cannot remove Squeezebox player '{coordinator.player_uuid}' "
+            "because it is currently online."
+        )
+
+    # Otherwise it's offline and safe to delete
+    return True
