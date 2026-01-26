@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
+import aiohttp
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPAuthenticationError,
     PSNAWPClientError,
@@ -19,6 +20,7 @@ from psnawp_api.core.psnawp_exceptions import (
 from psnawp_api.models import User
 from psnawp_api.models.group.group_datatypes import GroupDetails
 from psnawp_api.models.trophies import TrophyTitle
+import requests.exceptions
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_NAME
@@ -30,8 +32,9 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, MAX_CONSECUTIVE_TRANSIENT_FAILURES, UNAVAILABLE_AFTER_MINS
 from .helpers import PlaystationNetwork, PlaystationNetworkData
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,6 +58,8 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     config_entry: PlaystationNetworkConfigEntry
     _update_inverval: timedelta
+    _consecutive_failures: int
+    _last_success: datetime | None
 
     def __init__(
         self,
@@ -72,6 +77,8 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         )
 
         self.psn = psn
+        self._consecutive_failures = 0
+        self._last_success = None
 
     @abstractmethod
     async def update_data(self) -> _DataT:
@@ -79,8 +86,9 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     async def _async_update_data(self) -> _DataT:
         """Get the latest data from the PSN."""
+        now = dt_util.utcnow()
         try:
-            return await self.update_data()
+            data = await self.update_data()
         except PSNAWPAuthenticationError as error:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -91,6 +99,24 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from error
+        except (aiohttp.ClientError, requests.exceptions.RequestException) as error:
+            self._consecutive_failures += 1
+            too_many = self._consecutive_failures >= MAX_CONSECUTIVE_TRANSIENT_FAILURES
+            too_old = self._last_success is None or (
+                now - self._last_success
+            ) > timedelta(minutes=UNAVAILABLE_AFTER_MINS)
+
+            if self.data is None or (too_many or too_old):
+                raise
+            self.logger.warning(
+                "Transient error (%s). failures=%d; serving cached data",
+                error,
+                self._consecutive_failures,
+            )
+            return self.data
+        self._consecutive_failures = 0
+        self._last_success = now
+        return data
 
 
 class PlaystationNetworkUserDataCoordinator(
