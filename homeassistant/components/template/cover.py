@@ -230,7 +230,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
             template_validators.strenum(
                 self, CONF_STATE, CoverState, CoverState.OPEN, CoverState.CLOSED
             ),
-            self._update_opening_and_closing,
+            self._update_cover_state,
         )
         self.setup_template(
             CONF_POSITION,
@@ -272,7 +272,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
 
         return self._attr_current_cover_position == 0
 
-    def _update_opening_and_closing(self, state: CoverState | None) -> None:
+    def _update_cover_state(self, state: CoverState | None) -> None:
         """Update the state of the cover."""
         if state:
             if CONF_POSITION not in self._templates:
