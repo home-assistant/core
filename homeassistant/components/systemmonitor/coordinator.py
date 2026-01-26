@@ -221,7 +221,9 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
 
         if self._initial_update:
             # Boot time only needs to refresh on first pass
-            self.boot_time = dt_util.utc_from_timestamp(self._psutil.boot_time())
+            self.boot_time = dt_util.utc_from_timestamp(
+                self._psutil.boot_time(), tz=dt_util.get_default_time_zone()
+            )
             _LOGGER.debug("boot time: %s", self.boot_time)
 
         selected_processes: list[Process] = []
