@@ -495,6 +495,10 @@ class Entity(
     # The device entry for this entity
     device_entry: dr.DeviceEntry | None = None
 
+    # Cached friendly name as (original_name, computed_friendly_name)
+    # Invalidated on relevant registry changes
+    _cached_friendly_name: tuple[str | None, str | None] | None = None
+
     # Hold list for functions to call on remove.
     _on_remove: list[CALLBACK_TYPE] | None = None
 
@@ -1095,12 +1099,20 @@ class Entity(
         if original_name is UNDEFINED:
             original_name = None
 
-        if entry is None:
-            name = original_name
+        # Use cached friendly name if available and original_name hasn't changed.
+        # Cache is invalidated on relevant registry changes.
+        if (cached := self._cached_friendly_name) is not None and (
+            cached[0] == original_name
+        ):
+            name = cached[1]
         else:
-            name = er.async_get(self.hass).async_generate_full_name(
-                entry, original_name=original_name
-            )
+            if entry is None:
+                name = original_name
+            else:
+                name = er.async_get(self.hass).async_generate_full_name(
+                    entry, original_name=original_name
+                )
+            self._cached_friendly_name = (original_name, name)
 
         if name:
             attr[ATTR_FRIENDLY_NAME] = name
@@ -1530,6 +1542,11 @@ class Entity(
         if "device_id" in data["changes"]:
             self._async_subscribe_device_updates()
 
+        # Invalidate friendly name cache if relevant fields changed
+        changes = data["changes"]
+        if "name" in changes or "has_entity_name" in changes or "device_id" in changes:
+            self._cached_friendly_name = None
+
         ent_reg = er.async_get(self.hass)
         old = self.registry_entry
         registry_entry = ent_reg.async_get(data["entity_id"])
@@ -1581,6 +1598,7 @@ class Entity(
         if "name" not in data["changes"] and "name_by_user" not in data["changes"]:
             return
 
+        self._cached_friendly_name = None
         self.device_entry = dr.async_get(self.hass).async_get(data["device_id"])
         self.async_write_ha_state()
 
