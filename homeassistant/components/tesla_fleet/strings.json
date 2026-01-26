@@ -29,6 +29,9 @@
         "data": {
           "domain": "Domain"
         },
+        "data_description": {
+          "domain": "The domain that hosts your public key for Tesla Fleet API authentication."
+        },
         "description": "Enter the domain that will host your public key. This is typically the domain of the origin you specified during registration at {dashboard}.",
         "title": "Tesla Fleet domain registration"
       },
