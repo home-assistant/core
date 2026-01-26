@@ -16,6 +16,7 @@ import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -25,8 +26,15 @@ from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     CAMERA_WEB_SESSION_TIMEOUT,
@@ -41,7 +49,7 @@ from .const import (
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
-    from . import AmcrestDevice
+    from .models import AmcrestConfiguredDevice, AmcrestDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,6 +131,7 @@ CAMERA_SERVICES = {
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 
+# Platform setup for YAML config
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -136,6 +145,24 @@ async def async_setup_platform(
     name = discovery_info[CONF_NAME]
     device = hass.data[DATA_AMCREST][DEVICES][name]
     entity = AmcrestCam(name, device, get_ffmpeg_manager(hass))
+
+    async_add_entities([entity], True)
+
+
+# Platform setup for config flow
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up an Amcrest IP Camera."""
+
+    device = config_entry.runtime_data.device
+    coordinator = config_entry.runtime_data.coordinator
+    name = f"{device.name} Camera"
+    entity = AmcrestCoordinatedCamera(
+        name, device, coordinator, get_ffmpeg_manager(hass)
+    )
 
     async_add_entities([entity], True)
 
@@ -642,3 +669,111 @@ class AmcrestCam(Camera):
             log_update_error(
                 _LOGGER, "start" if start else "stop", self.name, "camera tour", error
             )
+
+
+class AmcrestCoordinatedCamera(CoordinatorEntity, AmcrestCam):
+    """An implementation of an Amcrest IP camera with a data update coordinator."""
+
+    def __init__(
+        self,
+        name: str,
+        device: AmcrestConfiguredDevice,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
+        ffmpeg: FFmpegManager,
+    ) -> None:
+        """Initialize an Amcrest camera with a coordinator."""
+        CoordinatorEntity.__init__(self, coordinator)
+        AmcrestCam.__init__(self, name, device, ffmpeg)
+        self._attr_device_info = device.device_info
+        # Use serial number for unique ID if available, otherwise fall back to device name
+        identifier = device.serial_number if device.serial_number else device.name
+        self._attr_unique_id = f"{identifier}_{name}"
+        self._device = device
+
+    async def async_update(self) -> None:
+        """Update entity status using coordinator data."""
+        if not self.available or not self.coordinator.data:
+            return
+
+        _LOGGER.debug("Updating %s camera from coordinator", self.name)
+
+        # Get data from coordinator instead of making individual API calls
+        data = self.coordinator.data
+
+        # Update camera attributes from coordinator data
+        if self._brand is None:
+            self._brand = str(data.get("brand", "unknown"))
+            _LOGGER.debug("Assigned brand=%s", self._brand)
+
+        if self._model is None:
+            self._model = str(data.get("model", "unknown"))
+            _LOGGER.debug("Assigned model=%s", self._model)
+
+        if self._attr_unique_id is None:
+            serial = str(data.get("serial", "")).strip()
+            if serial:
+                self._attr_unique_id = f"{serial}-{self._resolution}-{self._channel}"
+                _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
+
+        if self._rtsp_url is None:
+            self._rtsp_url = data.get("rtsp_url")
+
+        # Update camera states from coordinator data
+        self._attr_is_streaming = bool(data.get("is_streaming", False))
+        self._is_recording = str(data.get("is_recording", False)) == "Manual"
+        self._motion_detection_enabled = bool(
+            data.get("motion_detection_enabled", False)
+        )
+        self._audio_enabled = bool(data.get("audio_enabled", False))
+        self._motion_recording_enabled = bool(
+            data.get("motion_recording_enabled", False)
+        )
+        color_bw_index = int(data.get("color_bw", 0))
+        self._color_bw = (
+            _CBW[color_bw_index] if 0 <= color_bw_index < len(_CBW) else "unknown"
+        )
+
+    # Override methods that would normally make API calls to use coordinator data instead
+    async def _async_get_video(self) -> bool:
+        """Get video enabled status from coordinator data."""
+        if not self.coordinator.data:
+            return False
+        data = self.coordinator.data
+        return bool(data.get("is_streaming", False))
+
+    async def _async_get_recording(self) -> bool:
+        """Get recording status from coordinator data."""
+        if not self.coordinator.data:
+            return False
+        data = self.coordinator.data
+        is_recording = str(data.get("is_recording", False))
+        return is_recording == "Manual"
+
+    async def _async_get_motion_detection(self) -> bool:
+        """Get motion detection status from coordinator data."""
+        if not self.coordinator.data:
+            return False
+        data = self.coordinator.data
+        return bool(data.get("motion_detection_enabled", False))
+
+    async def _async_get_audio(self) -> bool:
+        """Get audio enabled status from coordinator data."""
+        if not self.coordinator.data:
+            return False
+        data = self.coordinator.data
+        return bool(data.get("audio_enabled", False))
+
+    async def _async_get_motion_recording(self) -> bool:
+        """Get motion recording status from coordinator data."""
+        if not self.coordinator.data:
+            return False
+        data = self.coordinator.data
+        return bool(data.get("motion_recording_enabled", False))
+
+    async def _async_get_color_mode(self) -> str:
+        """Get color mode from coordinator data."""
+        if not self.coordinator.data:
+            return "unknown"
+        data = self.coordinator.data
+        color_bw_index = int(data.get("color_bw", 0))
+        return _CBW[color_bw_index] if 0 <= color_bw_index < len(_CBW) else "unknown"
