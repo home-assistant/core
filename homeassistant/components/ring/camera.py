@@ -122,6 +122,10 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         if description.live_stream:
             self._attr_supported_features |= CameraEntityFeature.STREAM
 
+    async def stream_source(self) -> str | None:
+        """Return the source of the stream."""
+        return self._video_url
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
