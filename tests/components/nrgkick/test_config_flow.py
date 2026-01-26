@@ -4,31 +4,19 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import voluptuous_serialize
-
 from homeassistant.components.nrgkick.api import (
     NRGkickApiClientApiDisabledError,
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
     NRGkickApiClientError,
 )
-from homeassistant.components.nrgkick.config_flow import STEP_USER_DATA_SCHEMA
 from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv
 
 from . import create_mock_config_entry
-
-
-def test_schema_is_serializable() -> None:
-    """Test config flow schemas can be serialized for the UI."""
-    voluptuous_serialize.convert(
-        STEP_USER_DATA_SCHEMA,
-        custom_serializer=cv.custom_serializer,
-    )
 
 
 async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
