@@ -108,7 +108,7 @@
           "name": "Device trackers"
         }
       },
-      "name": "Cleanup client trackers"
+      "name": "Clean up client trackers"
     },
     "reconnect_client": {
       "description": "Tries to get wireless client to reconnect to Omada network.",
