@@ -1761,6 +1761,8 @@ build.json @home-assistant/supervisor
 /tests/components/vallox/ @andre-richter @slovdahl @viiru- @yozik04
 /homeassistant/components/valve/ @home-assistant/core
 /tests/components/valve/ @home-assistant/core
+/homeassistant/components/vasttrafik/ @zbrox
+/tests/components/vasttrafik/ @zbrox
 /homeassistant/components/vegehub/ @thulrus
 /tests/components/vegehub/ @thulrus
 /homeassistant/components/velbus/ @Cereal2nd @brefra
