@@ -20,7 +20,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, NANOLEAF_EVENT, TOUCH_GESTURE_TRIGGER_MAP, TOUCH_MODELS
+from .const import (
+    DOMAIN,
+    ESSENTIALS_MODEL_PREFIXES,
+    NANOLEAF_EVENT,
+    TOUCH_GESTURE_TRIGGER_MAP,
+    TOUCH_MODELS,
+)
 from .coordinator import NanoleafConfigEntry, NanoleafCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,10 +72,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: NanoleafConfigEntry) -> 
                 hass, f"nanoleaf_gesture_{nanoleaf.serial_no}", gesture_type
             )
 
+    # Essentials devices don't support effects events
+    model = nanoleaf.model or ""
+    is_essentials = model.startswith(ESSENTIALS_MODEL_PREFIXES)
+
     event_listener = asyncio.create_task(
         nanoleaf.listen_events(
             state_callback=light_event_callback,
-            effects_callback=light_event_callback,
+            effects_callback=None if is_essentials else light_event_callback,
             touch_callback=touch_event_callback if supports_touch else None,
         )
     )
