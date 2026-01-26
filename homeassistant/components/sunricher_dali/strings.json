@@ -27,10 +27,10 @@
   "entity": {
     "binary_sensor": {
       "motion": {
-        "name": "Motion"
+        "name": "[%key:component::binary_sensor::entity_component::motion::name%]"
       },
       "occupancy": {
-        "name": "Occupancy"
+        "name": "[%key:component::binary_sensor::entity_component::occupancy::name%]"
       }
     }
   }
