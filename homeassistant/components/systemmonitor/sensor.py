@@ -470,9 +470,11 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("memory", {})
-        .get("some", {})
-        .get("avg10"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("some", {})
+            .get("avg10")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "memory_pressure_some_avg60": SysMonitorSensorEntityDescription(
@@ -481,9 +483,11 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("memory", {})
-        .get("some", {})
-        .get("avg60"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("some", {})
+            .get("avg60")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "memory_pressure_some_avg300": SysMonitorSensorEntityDescription(
@@ -492,9 +496,11 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("memory", {})
-        .get("some", {})
-        .get("avg300"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("some", {})
+            .get("avg300")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "memory_pressure_some_total": SysMonitorSensorEntityDescription(
@@ -503,9 +509,11 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTime.MICROSECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:timer-outline",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("memory", {})
-        .get("some", {})
-        .get("total"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("some", {})
+            .get("total")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "memory_pressure_full_avg10": SysMonitorSensorEntityDescription(
@@ -514,9 +522,11 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("memory", {})
-        .get("full", {})
-        .get("avg10"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("full", {})
+            .get("avg10")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "memory_pressure_full_avg60": SysMonitorSensorEntityDescription(
@@ -525,9 +535,11 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("memory", {})
-        .get("full", {})
-        .get("avg60"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("full", {})
+            .get("avg60")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "memory_pressure_full_avg300": SysMonitorSensorEntityDescription(
@@ -536,9 +548,11 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("memory", {})
-        .get("full", {})
-        .get("avg300"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("full", {})
+            .get("avg300")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "memory_pressure_full_total": SysMonitorSensorEntityDescription(
@@ -547,9 +561,11 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTime.MICROSECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:timer-outline",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("memory", {})
-        .get("full", {})
-        .get("total"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("memory", {})
+            .get("full", {})
+            .get("total")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "io_pressure_some_avg10": SysMonitorSensorEntityDescription(
@@ -558,9 +574,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("io", {})
-        .get("some", {})
-        .get("avg10"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("some", {}).get("avg10")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "io_pressure_some_avg60": SysMonitorSensorEntityDescription(
@@ -569,9 +585,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("io", {})
-        .get("some", {})
-        .get("avg60"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("some", {}).get("avg60")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "io_pressure_some_avg300": SysMonitorSensorEntityDescription(
@@ -580,9 +596,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("io", {})
-        .get("some", {})
-        .get("avg300"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("some", {}).get("avg300")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "io_pressure_some_total": SysMonitorSensorEntityDescription(
@@ -591,9 +607,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTime.MICROSECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:timer-outline",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("io", {})
-        .get("some", {})
-        .get("total"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("some", {}).get("total")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "io_pressure_full_avg10": SysMonitorSensorEntityDescription(
@@ -602,9 +618,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("io", {})
-        .get("full", {})
-        .get("avg10"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("full", {}).get("avg10")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "io_pressure_full_avg60": SysMonitorSensorEntityDescription(
@@ -613,9 +629,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("io", {})
-        .get("full", {})
-        .get("avg60"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("full", {}).get("avg60")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "io_pressure_full_avg300": SysMonitorSensorEntityDescription(
@@ -624,9 +640,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("io", {})
-        .get("full", {})
-        .get("avg300"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("full", {}).get("avg300")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "io_pressure_full_total": SysMonitorSensorEntityDescription(
@@ -635,9 +651,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTime.MICROSECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:timer-outline",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("io", {})
-        .get("full", {})
-        .get("total"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("io", {}).get("full", {}).get("total")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "cpu_pressure_some_avg10": SysMonitorSensorEntityDescription(
@@ -646,9 +662,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("cpu", {})
-        .get("some", {})
-        .get("avg10"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("cpu", {}).get("some", {}).get("avg10")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "cpu_pressure_some_avg60": SysMonitorSensorEntityDescription(
@@ -657,9 +673,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("cpu", {})
-        .get("some", {})
-        .get("avg60"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("cpu", {}).get("some", {}).get("avg60")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "cpu_pressure_some_avg300": SysMonitorSensorEntityDescription(
@@ -668,9 +684,11 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gauge",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("cpu", {})
-        .get("some", {})
-        .get("avg300"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("cpu", {})
+            .get("some", {})
+            .get("avg300")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
     "cpu_pressure_some_total": SysMonitorSensorEntityDescription(
@@ -679,9 +697,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTime.MICROSECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:timer-outline",
-        value_fn=lambda entity: entity.coordinator.data.pressure.get("cpu", {})
-        .get("some", {})
-        .get("total"),
+        value_fn=lambda entity: (
+            entity.coordinator.data.pressure.get("cpu", {}).get("some", {}).get("total")
+        ),
         add_to_update=lambda entity: ("pressure", ""),
     ),
 }
