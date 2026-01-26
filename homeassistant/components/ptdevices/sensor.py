@@ -81,18 +81,6 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         translation_key=PTDevicesSensors.DEVICE_STATUS,
     ),
     SensorEntityDescription(
-        key=PTDevicesSensors.DEVICE_LAST_REPORT,
-        translation_key=PTDevicesSensors.DEVICE_LAST_REPORT,
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key=PTDevicesSensors.TX_LAST_REPORT,
-        translation_key=PTDevicesSensors.TX_LAST_REPORT,
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
         key=PTDevicesSensors.DEVICE_WIFI_STRENGTH,
         translation_key=PTDevicesSensors.DEVICE_WIFI_STRENGTH,
         native_unit_of_measurement=PERCENTAGE,
