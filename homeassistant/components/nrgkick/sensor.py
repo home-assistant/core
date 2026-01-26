@@ -791,6 +791,4 @@ class NRGkickSensor(NRGkickEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        data = self.coordinator.data
-        assert data is not None
-        return self.entity_description.value_fn(data)
+        return self.entity_description.value_fn(self.coordinator.data)
