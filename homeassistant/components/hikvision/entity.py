@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import HikvisionConfigEntry, HikvisionData
+from . import HikvisionConfigEntry
 from .const import DOMAIN
 
 
@@ -21,7 +21,7 @@ class HikvisionEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         super().__init__()
-        self._data: HikvisionData = entry.runtime_data
+        self._data = entry.runtime_data
         self._camera = self._data.camera
         self._channel = channel
 
@@ -37,7 +37,7 @@ class HikvisionEntity(Entity):
                     "channel_number": str(channel),
                 },
                 manufacturer="Hikvision",
-                model="NVR Channel",
+                model="NVR channel",
             )
         else:
             # Single camera device
