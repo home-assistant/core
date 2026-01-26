@@ -101,6 +101,9 @@
       "methanethiol": {
         "name": "Methanethiol"
       },
+      "mold": {
+        "name": "Mold index"
+      },
       "noise": {
         "name": "Noise"
       },
