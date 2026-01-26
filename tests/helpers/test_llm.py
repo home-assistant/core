@@ -706,6 +706,29 @@ For general knowledge questions not about the home: Answer truthfully from inter
         "result": exposed_entities_prompt,
     }
 
+    # Test GetEntity tool returns full state and attributes
+    # Use the previously created kitchen light entity
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetEntity",
+            tool_args={"entity_id": entry1.entity_id},
+        )
+    )
+    # The temperature attribute is a Decimal and should be converted to string
+    expected_attrs = {
+        "friendly_name": "Kitchen",
+        "temperature": "0.9",
+        "humidity": "65",
+    }
+    assert result == {
+        "success": True,
+        "result": {
+            "entity_id": entry1.entity_id,
+            "state": "on",
+            "attributes": expected_attrs,
+        },
+    }
+
     # Fake that request is made from a specific device ID with an area
     llm_context.device_id = device.id
     area_prompt = (
