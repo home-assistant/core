@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 type GPSDConfigEntry = ConfigEntry[AGPS3mechanism]
 
