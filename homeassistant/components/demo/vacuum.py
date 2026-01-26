@@ -187,9 +187,7 @@ class StateDemoVacuum(StateVacuumEntity):
         """Get the list of segments."""
         return DEMO_SEGMENTS
 
-    async def async_clean_segments(
-        self, segment_ids: list[str], **kwargs: Any
-    ) -> None:
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean the specified segments."""
         self._attr_activity = VacuumActivity.CLEANING
         self._cleaned_area += len(segment_ids) * 0.7
