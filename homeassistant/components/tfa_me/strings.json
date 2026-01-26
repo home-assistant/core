@@ -1,0 +1,91 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "Cannot connect to the station.",
+      "host_empty": "Invalid IP or station ID (empty).",
+      "invalid_host": "Invalid IP or station ID.",
+      "invalid_ip_host": "Invalid IP or station ID.",
+      "invalid_name_with_station_id": "Invalid value for name_with_station_id",
+      "missing_identifier": "The station ID is missing in JSON.",
+      "unknown": "Unexpected error."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "IP or host name",
+          "ip_address": "IP address or station ID",
+          "name_with_station_id": "Add station ID to device name. When you have only one station don't check this box."
+        },
+        "data_description": {
+          "ip_address": "Enter the IP address or mDNS hostname of your TFA.me station",
+          "name_with_station_id": "Whether adding station ID to device name or not."
+        },
+        "description": "Please enter IP or station ID of your TFA.me station.\n- 9 digit station ID: 'XXX-XXX-XXX'\n- mDNS name:'tfa-me-XXX-XXX-XXX.local'\n- Get IP: Press and hold button '+' for 5 seconds at your device.",
+        "title": "Setup TFA.me station"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "barometric_pressure": {
+        "name": "Barometric pressure"
+      },
+      "co2": {
+        "name": "CO2, Air aquality"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "lowbatt": {
+        "name": "Low battery"
+      },
+      "rain": {
+        "name": "Rain"
+      },
+      "rain_1_hour": {
+        "name": "Rain last hour"
+      },
+      "rain_24_hours": {
+        "name": "Rain last 24 hours"
+      },
+      "rain_relative": {
+        "name": "Relative rain"
+      },
+      "rssi": {
+        "name": "RSSI (Signal strength)"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_direction_deg": {
+        "name": "Wind direction deg"
+      },
+
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "wind_speed": {
+        "name": "Wind speed"
+      }
+    }
+  },
+
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "action_rain": "Reset all rain sensors",
+          "select_option": "Select an option:"
+        },
+        "data_description": {
+          "select_option": "Select an option"
+        },
+        "description": "Check box and press Submit to reset all rain last hour and rain last 24 hours rain values.",
+        "title": "Reset time-based rainfall amount"
+      }
+    }
+  }
+}

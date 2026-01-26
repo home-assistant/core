@@ -1,0 +1,103 @@
+{
+  "entity": {
+    "sensor": {
+      "barometric_pressure": {
+        "default": "mdi:gauge"
+      },
+      "co2": {
+        "default": "mdi:molecule-co2"
+      },
+      "humidity": {
+        "default": "mdi:water-percent",
+        "range": {
+          "0": "mdi:water-percent-alert",
+          "30.00001": "mdi:water-percent",
+          "65": "mdi:water-percent-alert"
+        }
+      },
+      "lowbatt": {
+        "default": "mdi:battery",
+        "state": {
+          "0": "mdi:battery",
+          "1": "mdi:battery-alert",
+          "2": "mdi:battery-sync",
+          "3": "mdi:battery-off"
+        }
+      },
+      "rain": {
+        "default": "mdi:weather-rainy"
+      },
+      "rain_1_hour": {
+        "default": "mdi:weather-sunny",
+        "range": {
+          "0": "mdi:weather-sunny",
+          "0.1": "mdi:weather-partly-rainy",
+          "0.5": "mdi:weather-rainy",
+          "4": "mdi:weather-pouring"
+        }
+      },
+      "rain_24_hours": {
+        "default": "mdi:weather-sunny",
+        "range": {
+          "0": "mdi:weather-sunny",
+          "0.1": "mdi:weather-partly-rainy",
+          "0.5": "mdi:weather-rainy",
+          "4": "mdi:weather-pouring"
+        }
+      },
+      "rain_relative": {
+        "default": "mdi:weather-sunny",
+        "range": {
+          "0": "mdi:weather-sunny",
+          "0.1": "mdi:weather-partly-rainy",
+          "0.5": "mdi:weather-rainy",
+          "4": "mdi:weather-pouring"
+        }
+      },
+      "rssi": {
+        "default": "mdi:wifi-strength-1",
+        "range": {
+          "0": "mdi:wifi-strength-1",
+          "100": "mdi:wifi-strength-2",
+          "150": "mdi:wifi-strength-3",
+          "220": "mdi:wifi-strength-4"
+        }
+      },
+      "temperature": {
+        "default": "mdi:thermometer",
+        "range": {
+          "-50": "mdi:thermometer-low",
+          "0.00001": "mdi:thermometer",
+          "25": "mdi:thermometer-high"
+        }
+      },
+      "wind_direction": {
+        "default": "mdi:compass-outline",
+        "state": {
+          "0": "mdi:arrow-down",
+          "1": "mdi:arrow-down",
+          "2": "mdi:arrow-bottom-left",
+          "3": "mdi:arrow-bottom-left",
+          "4": "mdi:arrow-left",
+          "5": "mdi:arrow-left",
+          "6": "mdi:arrow-top-left",
+          "7": "mdi:arrow-top-left",
+          "8": "mdi:arrow-up",
+          "9": "mdi:arrow-up",
+          "10": "mdi:arrow-top-right",
+          "11": "mdi:arrow-top-right",
+          "12": "mdi:arrow-right",
+          "13": "mdi:arrow-right",
+          "14": "mdi:arrow-bottom-right",
+          "15": "mdi:arrow-bottom-right"
+        }
+      },
+      "wind_gust": {
+        "default": "mdi:weather-windy-variant"
+      },
+      "wind_speed": {
+        "default": "mdi:weather-windy"
+      }
+    }
+  }
+}
