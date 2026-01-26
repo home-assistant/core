@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import asyncio
 
 from idasen_ha import Desk
 
@@ -40,6 +41,8 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
 
         self._expected_connected = False
         self._height: int | None = None
+        self._connecting = asyncio.Lock()
+        self._connected = False
 
         self._debouncer = Debouncer(
             hass=self.hass,
@@ -51,26 +54,35 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
 
     async def async_connect(self) -> bool:
         """Connect to desk."""
+        async with self._connecting:
+            if self._connected:
+                _LOGGER.debug("Desk %s already connected, skipping connect", self.address)
+                return True
+
         _LOGGER.debug("Trying to connect %s", self.address)
         self._expected_connected = True
+
         ble_device = bluetooth.async_ble_device_from_address(
             self.hass, self.address, connectable=True
         )
         if ble_device is None:
             _LOGGER.debug("No BLEDevice for %s", self.address)
             return False
+
         await self.desk.connect(ble_device)
+        self._connected = True
         return True
 
     async def async_disconnect(self) -> None:
         """Disconnect from desk."""
         self._expected_connected = False
+        self._connected = False
         _LOGGER.debug("Disconnecting from %s", self.address)
         await self.desk.disconnect()
 
     async def async_connect_if_expected(self) -> None:
         """Ensure that the desk is connected if that is the expected state."""
-        if self._expected_connected:
+        if self._expected_connected and not self._connected:
             await self.async_connect()
 
     @callback
