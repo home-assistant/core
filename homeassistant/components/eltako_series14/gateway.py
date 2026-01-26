@@ -57,30 +57,36 @@ class EltakoGateway:
 
         self._init_bus()
 
-    def subscribe_address(self, address: AddressExpression, callback: MessageCallback):
+    def subscribe_address(
+        self, address: AddressExpression, callback: MessageCallback
+    ) -> Callable[[], None]:
         """Register a callback for a specific address."""
         self.address_subscriptions.setdefault(address[0], []).append(callback)
         # Return an "unsubscribe" function
         return lambda: self.address_subscriptions[address[0]].remove(callback)
 
-    def subscribe_message_received(self, callback: Callable[[], None]):
+    def subscribe_message_received(
+        self, callback: Callable[[], None]
+    ) -> Callable[[], None]:
         """Register a callback for any message."""
         self.general_subscriptions.append(callback)
         # Return an "unsubscribe" function
         return lambda: self.general_subscriptions.remove(callback)
 
-    def susbcribe_connection_state(self, callback: GwConnectionCallback):
+    def susbcribe_connection_state(
+        self, callback: GwConnectionCallback
+    ) -> Callable[[], None]:
         """Register a callback for the gateway connection state."""
         self.connection_state_subscriptons.append(callback)
         callback(self._bus.is_active())
         # Return an "unsubscribe" function
         return lambda: self.connection_state_subscriptons.remove(callback)
 
-    def _fire_connection_state_changed_event(self, status: bool):
+    def _fire_connection_state_changed_event(self, status: bool) -> None:
         for callback in self.connection_state_subscriptons:
             callback(status)
 
-    def _init_bus(self):
+    def _init_bus(self) -> None:
         if self._device_model.is_bus_gw:
             self._bus = RS485SerialInterfaceV2(
                 self._serial_port,
@@ -94,24 +100,24 @@ class EltakoGateway:
 
         self._bus.set_status_changed_handler(self._fire_connection_state_changed_event)
 
-    def reconnect(self):
+    def reconnect(self) -> None:
         """Reconnecting the gateway."""
         self._bus.stop()
         self._init_bus()
         self._bus.start()
 
-    async def async_setup(self):
+    async def async_setup(self) -> None:
         """Initialize serial bus."""
         self._bus.start()
         _LOGGER.debug("%s was started", self._serial_port)
 
-    def unload(self):
+    def unload(self) -> None:
         """Unload the serial bus."""
         self._bus.stop()
         self._bus.join()
         _LOGGER.debug("%s was stopped", self._serial_port)
 
-    async def async_send_message_to_serial_bus(self, msg: ESP2Message):
+    async def async_send_message_to_serial_bus(self, msg: ESP2Message) -> None:
         """Send a message to the serial bus."""
         if self._bus.is_active():
             _LOGGER.debug("Send message: %s (%s)", msg, msg.serialize().hex())
@@ -119,7 +125,9 @@ class EltakoGateway:
         else:
             _LOGGER.warning("Serial port %s is not available", self._serial_port)
 
-    def _callback_receive_message_from_serial_bus(self, msg: ESP2Message | None = None):
+    def _callback_receive_message_from_serial_bus(
+        self, msg: ESP2Message | None = None
+    ) -> None:
         """Handle incoming messages."""
 
         if not msg:

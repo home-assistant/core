@@ -35,35 +35,37 @@ from .device import GATEWAY_MODELS, SWITCH_MODELS, ModelDefinition
 from .gateway import EltakoGateway
 
 _LOGGER = logging.getLogger(__name__)
+_SERIAL_VALIDATE_TIMEOUT = 0.1
 
 
-def _validate_enocean_id(user_input: dict[str, Any], key: str):
+def _validate_enocean_id(user_input: dict[str, Any], key: str) -> None:
     try:
         cv.matches_regex(ID_REGEX)(user_input[key])
     except vol.Invalid as e:
         raise InvalidIdFormat from e
 
 
-def _validate_sender(user_input: dict[str, Any]):
+def _validate_sender(user_input: dict[str, Any]) -> None:
     try:
         _validate_enocean_id(user_input, CONF_SENDER_ID)
     except InvalidIdFormat as e:
         raise InvalidSenderIdFormat from e
 
 
-def _validate_gateway_path(user_input: dict[str, Any]):
+def _validate_gateway_path(user_input: dict[str, Any]) -> None:
     """Return True if the provided path points to a valid serial port, False otherwise."""
 
-    serial_path: str = user_input[CONF_SERIAL_PORT]
-    gw_model = GATEWAY_MODELS[user_input[CONF_MODEL]]
-
     try:
-        serial.serial_for_url(serial_path, gw_model.baud_rate, timeout=0.1)
+        serial.serial_for_url(
+            url=user_input[CONF_SERIAL_PORT],
+            baudrate=GATEWAY_MODELS[user_input[CONF_MODEL]].baud_rate,
+            timeout=_SERIAL_VALIDATE_TIMEOUT,
+        )
     except serial.SerialException as e:
         raise InvalidGatewayPath from e
 
 
-async def _async_validate_gateway(user_input: dict[str, Any]):
+async def _async_validate_gateway(user_input: dict[str, Any]) -> None:
     """Return True if the gateway can be accessed."""
     gateway = EltakoGateway(
         GATEWAY_MODELS[user_input[CONF_MODEL]],
@@ -76,15 +78,12 @@ async def _async_validate_gateway(user_input: dict[str, Any]):
     gateway.unload()
 
 
-def _get_model_options(models: Mapping[str, ModelDefinition]):
+def _get_model_options(models: Mapping[str, ModelDefinition]) -> dict[str, str]:
     return {key: model.name for key, model in models.items()}
 
 
 class EltakoFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle the Eltako config flows."""
-
-    VERSION = 1
-    MINOR_VERSION = 0
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -127,34 +126,23 @@ class EltakoFlowHandler(ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_NAME): str,
-                vol.Required(CONF_ID): str,
+                vol.Required(CONF_NAME, default="Eltako Gateway"): str,
+                vol.Required(CONF_ID, default="00-00-B0-00"): str,
                 vol.Required(CONF_MODEL): vol.In(_get_model_options(GATEWAY_MODELS)),
                 vol.Required(CONF_SERIAL_PORT): vol.In(serial_ports),
-                vol.Required(CONF_GATEWAY_AUTO_RECONNECT): bool,
-                vol.Required(CONF_FAST_STATUS_CHANGE): bool,
-                vol.Required(CONF_GATEWAY_MESSAGE_DELAY): vol.All(
+                vol.Required(CONF_GATEWAY_AUTO_RECONNECT, default=True): bool,
+                vol.Required(CONF_FAST_STATUS_CHANGE, default=True): bool,
+                vol.Required(CONF_GATEWAY_MESSAGE_DELAY, default=0.01): vol.All(
                     vol.Coerce(float), vol.Range(min=0.0)
                 ),
             }
         )
-        suggested_values: dict[str, Any] = {
-            CONF_NAME: "Eltako Gateway",
-            CONF_ID: "00-00-B0-00",
-            CONF_GATEWAY_AUTO_RECONNECT: True,
-            CONF_FAST_STATUS_CHANGE: True,
-            CONF_GATEWAY_MESSAGE_DELAY: 0.01,
-        }
 
         if user_input:
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         elif self.source == SOURCE_RECONFIGURE:
             data_schema = self.add_suggested_values_to_schema(
                 data_schema, self._get_reconfigure_entry().data
-            )
-        else:
-            data_schema = self.add_suggested_values_to_schema(
-                data_schema, suggested_values
             )
 
         return self.async_show_form(
@@ -189,7 +177,7 @@ class DeviceTypeConfig:
 class DeviceSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for adding and modifying an device."""
 
-    def _error_entries_match(self, user_input: dict[str, Any]):
+    def _error_entries_match(self, user_input: dict[str, Any]) -> None:
         for subentry in self._get_entry().subentries.values():
             if self.source == SOURCE_RECONFIGURE:
                 if subentry == self._get_reconfigure_subentry():
@@ -210,14 +198,14 @@ class DeviceSubentryFlowHandler(ConfigSubentryFlow):
         device_type_config = DeviceTypeConfig(
             step_name="switch",
             models=SWITCH_MODELS,
-            extra_schema={vol.Required(CONF_SENDER_ID): str},
+            extra_schema={vol.Required(CONF_SENDER_ID, default="00-00-B0-01"): str},
             extra_validate=_validate_sender,
         )
         return await self._async_step_device_type(device_type_config, user_input)
 
     async def _async_step_device_type(
         self, device_type_config: DeviceTypeConfig, user_input: dict[str, Any] | None
-    ):
+    ) -> SubentryFlowResult:
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -247,25 +235,17 @@ class DeviceSubentryFlowHandler(ConfigSubentryFlow):
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_NAME): cv.string,
-                vol.Required(CONF_ID): str,
+                vol.Required(CONF_ID, default="00-00-00-01"): str,
                 vol.Required(CONF_MODEL): vol.In(model_options),
             }
         )
         data_schema = data_schema.extend(device_type_config.extra_schema)
-        suggested_values = {
-            CONF_ID: "00-00-00-01",
-            CONF_SENDER_ID: "00-00-B0-01",
-        }
 
         if user_input:
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         elif self.source == SOURCE_RECONFIGURE:
             data_schema = self.add_suggested_values_to_schema(
                 data_schema, self._get_reconfigure_subentry().data
-            )
-        else:
-            data_schema = self.add_suggested_values_to_schema(
-                data_schema, suggested_values
             )
 
         return self.async_show_form(

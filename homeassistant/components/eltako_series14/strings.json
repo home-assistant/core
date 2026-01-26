@@ -69,5 +69,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "gateway_setup_failed": {
+      "message": "Gateway setup failed"
+    }
   }
 }

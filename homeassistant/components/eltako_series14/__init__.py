@@ -31,15 +31,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: EltakoConfigEntry) -> bo
     # Set up gateway
     gateway = EltakoGateway(
         GATEWAY_MODELS[entry.data[CONF_MODEL]],
-        str(entry.data[CONF_SERIAL_PORT]),
-        bool(entry.data[CONF_GATEWAY_AUTO_RECONNECT]),
-        float(entry.data[CONF_GATEWAY_MESSAGE_DELAY]),
-        bool(entry.data[CONF_FAST_STATUS_CHANGE]),
+        entry.data[CONF_SERIAL_PORT],
+        entry.data[CONF_GATEWAY_AUTO_RECONNECT],
+        entry.data[CONF_GATEWAY_MESSAGE_DELAY],
+        entry.data[CONF_FAST_STATUS_CHANGE],
     )
     try:
         await gateway.async_setup()
     except Exception as e:
-        raise ConfigEntryError("Gateway setup failed") from e
+        raise ConfigEntryError("gateway_setup_failed") from e
     entry.runtime_data = gateway
 
     # Register gateway
@@ -78,10 +78,8 @@ async def async_reload_entry(hass: HomeAssistant, entry: EltakoConfigEntry) -> N
 async def async_unload_entry(hass: HomeAssistant, entry: EltakoConfigEntry) -> bool:
     """Unload a config entry."""
 
-    # Unload the platforms
     unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
-    # Unload the gateway
     if unload_ok:
         _LOGGER.debug("Unloading Eltako gateway: %s", entry.data[CONF_NAME])
         entry.runtime_data.unload()

@@ -60,6 +60,6 @@ class EltakoEntity(Entity):
         """Update the internal state of the device when a message arrives."""
         raise NotImplementedError("value_changed needs to be implemented")
 
-    async def async_send_message(self, msg: ESP2Message):
+    async def async_send_message(self, msg: ESP2Message) -> None:
         """Put message on RS485 bus. First the message is put onto HA event bus so that other automations can react on messages."""
         await self.gateway.async_send_message_to_serial_bus(msg)
