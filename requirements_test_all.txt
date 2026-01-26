@@ -795,7 +795,7 @@ energyzero==4.0.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.12.1
+env-canada==0.12.4
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -2173,7 +2173,7 @@ python-pooldose==0.8.2
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==4.2.1
+python-roborock==4.7.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.46
