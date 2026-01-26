@@ -1,7 +1,10 @@
 """Test Zeroconf component setup process."""
 
+from enum import Enum
+import sys
+from types import ModuleType
 from typing import Any
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import pytest
 from zeroconf import (
@@ -17,6 +20,7 @@ from homeassistant.components import zeroconf
 from homeassistant.components.zeroconf import discovery
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
+    EVENT_CORE_CONFIG_UPDATE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
@@ -25,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID,
     ZeroconfServiceInfo,
@@ -45,6 +50,23 @@ PROPERTIES = {
     b"non-utf8-value": NON_UTF8_VALUE,
     NON_ASCII_KEY: None,
 }
+
+
+def _get_property(info: AsyncServiceInfo, key: str) -> str:
+    """Helper to retrieve string properties regardless of key encoding."""
+    if key in info.properties:
+        value = info.properties[key]
+    elif (key_bytes := key.encode()) in info.properties:
+        value = info.properties[key_bytes]
+    else:
+        raise KeyError(key)  # pragma: no cover - mirrors original expectation
+
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode()
+    return value
+
 
 HOMEKIT_STATUS_UNPAIRED = b"1"
 HOMEKIT_STATUS_PAIRED = b"0"
@@ -1695,6 +1717,148 @@ async def test_zeroconf_rediscover_no_match(
 
         assert len(mock_service_browser.mock_calls) == 1
         assert len(mock_config_flow.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homeassistant_service_updates_on_cloud_signal(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Ensure cloud connection updates external_url in Zeroconf."""
+    hass.config.components.add("cloud")
+    hass.config.internal_url = "http://internal:8123"
+    external_url = "https://remote.example"
+
+    fake_cloud = ModuleType("homeassistant.components.cloud")
+    fake_signal = "cloud_signal"
+    connection = {"connected": False}
+
+    class FakeCloudState(Enum):
+        CLOUD_CONNECTED = "cloud_connected"
+        CLOUD_DISCONNECTED = "cloud_disconnected"
+
+    fake_cloud.CloudConnectionState = FakeCloudState
+    fake_cloud.SIGNAL_CLOUD_CONNECTION_STATE = fake_signal
+
+    class FakeCloudNotAvailable(Exception):
+        """Placeholder cloud error."""
+
+    def fake_async_remote_ui_url(_hass: HomeAssistant) -> str:
+        raise FakeCloudNotAvailable
+
+    fake_cloud.CloudNotAvailable = FakeCloudNotAvailable
+    fake_cloud.async_remote_ui_url = fake_async_remote_ui_url
+
+    def fake_async_is_connected(_hass: HomeAssistant) -> bool:
+        return connection["connected"]
+
+    fake_cloud.async_is_connected = fake_async_is_connected
+
+    with (
+        patch.dict(sys.modules, {"homeassistant.components.cloud": fake_cloud}),
+        patch(
+            "homeassistant.components.http.start_http_server_and_save_config",
+            AsyncMock(),
+        ),
+    ):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert mock_async_zeroconf.async_register_service.await_count == 1
+        initial_info = mock_async_zeroconf.async_register_service.await_args_list[
+            0
+        ].args[0]
+        assert _get_property(initial_info, "external_url") == ""
+        assert _get_property(initial_info, "base_url") == hass.config.internal_url
+        assert mock_async_zeroconf.async_update_service.await_count == 0
+
+        connection["connected"] = True
+        hass.config.external_url = external_url
+        async_dispatcher_send(hass, fake_signal, FakeCloudState.CLOUD_CONNECTED)
+        await hass.async_block_till_done()
+
+        assert mock_async_zeroconf.async_update_service.await_count >= 1
+        update_info = mock_async_zeroconf.async_update_service.await_args_list[-1].args[
+            0
+        ]
+        assert _get_property(update_info, "external_url") == external_url
+        assert _get_property(update_info, "base_url") == external_url
+
+        connection["connected"] = False
+        hass.config.external_url = None
+        async_dispatcher_send(
+            hass,
+            fake_signal,
+            FakeCloudState.CLOUD_DISCONNECTED,
+        )
+        await hass.async_block_till_done()
+
+        assert mock_async_zeroconf.async_update_service.await_count >= 2
+        post_disconnect_info = mock_async_zeroconf.async_update_service.await_args_list[
+            -1
+        ].args[0]
+        assert _get_property(post_disconnect_info, "external_url") == ""
+        assert (
+            _get_property(post_disconnect_info, "base_url") == hass.config.internal_url
+        )
+
+    assert mock_async_zeroconf.async_unregister_service.await_count == 0
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homeassistant_service_updates_on_config_change(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Ensure core config updates external_url in Zeroconf."""
+    hass.config.internal_url = "http://internal:8123"
+    assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert mock_async_zeroconf.async_register_service.await_count == 1
+    initial_info = mock_async_zeroconf.async_register_service.await_args_list[0].args[0]
+    assert _get_property(initial_info, "external_url") == ""
+    assert _get_property(initial_info, "base_url") == hass.config.internal_url
+
+    hass.config.external_url = "https://example.com"
+    hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, {})
+    await hass.async_block_till_done()
+
+    assert mock_async_zeroconf.async_update_service.await_count >= 1
+    updated_info = mock_async_zeroconf.async_update_service.await_args_list[-1].args[0]
+    assert _get_property(updated_info, "external_url") == hass.config.external_url
+    assert _get_property(updated_info, "base_url") == hass.config.external_url
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homeassistant_service_reregisters_on_location_change(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Ensure Zeroconf re-registers when the instance name changes."""
+    hass.config.location_name = "Maison"
+    assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert mock_async_zeroconf.async_register_service.await_count == 1
+    initial_info = mock_async_zeroconf.async_register_service.await_args_list[0].args[0]
+    assert _get_property(initial_info, "location_name") == "Maison"
+    assert initial_info.name.startswith("Maison")
+
+    hass.config.location_name = "Nouvelle Maison"
+    hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, {})
+    await hass.async_block_till_done()
+
+    assert mock_async_zeroconf.async_unregister_service.await_count == 1
+    assert mock_async_zeroconf.async_register_service.await_count == 2
+    assert mock_async_zeroconf.async_update_service.await_count == 0
+
+    updated_info = mock_async_zeroconf.async_register_service.await_args_list[1].args[0]
+    assert _get_property(updated_info, "location_name") == "Nouvelle Maison"
+    assert updated_info.name.startswith("Nouvelle Maison")
 
 
 @pytest.mark.parametrize(
