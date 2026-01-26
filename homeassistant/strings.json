@@ -127,6 +127,15 @@
       "model": "Model",
       "ui_managed": "Managed via UI"
     },
+    "selector": {
+      "trigger_behavior": {
+        "options": {
+          "any": "Any",
+          "first": "First",
+          "last": "Last"
+        }
+      }
+    },
     "state": {
       "active": "Active",
       "auto": "Auto",
