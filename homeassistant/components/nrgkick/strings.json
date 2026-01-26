@@ -52,7 +52,6 @@
           "lte_cat_m1": "LTE Cat-M1",
           "lte_nb_iot": "LTE NB-IoT",
           "no_service": "No service",
-          "unknown": "Unknown"
         }
       },
       "cellular_operator": {
