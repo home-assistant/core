@@ -33,7 +33,7 @@ def test_schema_is_serializable() -> None:
 async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we can setup when authentication is required."""
     result = await hass.config_entries.flow.async_init(
-        "nrgkick", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
