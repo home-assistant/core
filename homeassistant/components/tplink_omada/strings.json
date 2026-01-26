@@ -104,7 +104,7 @@
       "description": "Removes device tracker entities for clients that are no longer known to your Omada controller. This permanently deletes the entities and their history.",
       "fields": {
         "entity_id": {
-          "description": "Device tracker entities to check and remove if no longer in Omada. Leave empty to check all tplink_omada device trackers.",
+          "description": "Device tracker entities to check and remove if no longer in Omada. Leave empty to check all TP-Link Omada device trackers.",
           "name": "Device trackers"
         }
       },
