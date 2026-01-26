@@ -750,6 +750,8 @@ build.json @home-assistant/supervisor
 /tests/components/iaqualink/ @flz
 /homeassistant/components/icloud/ @Quentame @nzapponi
 /tests/components/icloud/ @Quentame @nzapponi
+/homeassistant/components/ics_2000/ @zefanjajobse
+/tests/components/ics_2000/ @zefanjajobse
 /homeassistant/components/idasen_desk/ @abmantis
 /tests/components/idasen_desk/ @abmantis
 /homeassistant/components/igloohome/ @keithle888

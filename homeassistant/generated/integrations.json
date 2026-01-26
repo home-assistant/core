@@ -2961,6 +2961,12 @@
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
+    "ics_2000": {
+      "name": "KlikAanKlikUit ICS-2000",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "idteck_prox": {
       "name": "IDTECK Proximity Reader",
       "integration_type": "hub",
