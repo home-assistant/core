@@ -7,13 +7,14 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.nrgkick.api import (
     NRGkickApiClientApiDisabledError,
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
     NRGkickApiClientError,
 )
+from homeassistant.components.nrgkick.const import DOMAIN
+from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -43,8 +44,8 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_nrgkick_api) -> None
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -96,8 +97,8 @@ async def test_zeroconf_discovery_without_credentials(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -136,8 +137,8 @@ async def test_zeroconf_discovery_invalid_auth(
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -176,8 +177,8 @@ async def test_zeroconf_discovery_unknown_exception(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -209,8 +210,8 @@ async def test_zeroconf_confirm_json_api_disabled(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
     assert result["step_id"] == "zeroconf_confirm"
@@ -229,7 +230,7 @@ async def test_zeroconf_already_configured(
 ) -> None:
     """Test zeroconf discovery when device is already configured."""
     entry = create_mock_config_entry(
-        domain="nrgkick",
+        domain=DOMAIN,
         title="NRGkick Test",
         data={CONF_HOST: "192.168.1.200"},
         entry_id="test_entry",
@@ -252,8 +253,8 @@ async def test_zeroconf_already_configured(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -279,8 +280,8 @@ async def test_zeroconf_json_api_disabled(hass: HomeAssistant) -> None:
     )
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -311,8 +312,8 @@ async def test_zeroconf_json_api_disabled_then_enabled(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -353,8 +354,8 @@ async def test_zeroconf_json_api_disabled_auth_required_then_success(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -415,8 +416,8 @@ async def test_zeroconf_json_api_disabled_errors(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
     assert result["step_id"] == "zeroconf_enable_json_api"
@@ -449,8 +450,8 @@ async def test_zeroconf_json_api_still_disabled_reports_error(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
     assert result["step_id"] == "zeroconf_enable_json_api"
@@ -494,8 +495,8 @@ async def test_zeroconf_enable_json_api_auth_errors(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -549,8 +550,8 @@ async def test_zeroconf_auth_errors(
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -584,8 +585,8 @@ async def test_zeroconf_no_serial_number(hass: HomeAssistant) -> None:
     )
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -610,8 +611,8 @@ async def test_zeroconf_cannot_connect(hass: HomeAssistant, mock_nrgkick_api) ->
     )
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -645,8 +646,8 @@ async def test_zeroconf_auth_reports_cannot_connect(
     mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -685,8 +686,8 @@ async def test_zeroconf_fallback_to_model_type(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
@@ -715,8 +716,8 @@ async def test_zeroconf_fallback_to_default_name(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "nrgkick",
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
         data=discovery_info,
     )
 

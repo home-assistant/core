@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -15,7 +16,7 @@ async def async_setup_entry_with_return(
 
 
 def create_mock_config_entry(
-    domain="nrgkick",
+    domain=DOMAIN,
     data=None,
     options=None,
     entry_id="test_entry",
