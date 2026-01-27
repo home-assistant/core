@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.frontend import DATA_PANELS
+from homeassistant.components.frontend import DATA_PANELS, EVENT_PANELS_UPDATED
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -156,6 +156,29 @@ class LovelaceStorage(LovelaceConfig):
         self._json_config = None
         self._config_updated()
         await self._store.async_save(self._data)
+        self._update_panel_config(config)
+
+    @callback
+    def _update_panel_config(self, config: dict[str, Any]) -> None:
+        """Update panel config with strategy URL if applicable."""
+        if self.url_path is None:
+            return
+
+        # Check if this is an iframe strategy dashboard
+        strategy = config.get("strategy", {})
+        if strategy.get("type") != "iframe":
+            return
+
+        url = strategy.get("url")
+        panels = self.hass.data.get(DATA_PANELS, {})
+        panel = panels.get(self.url_path)
+
+        if panel is None:
+            return
+
+        # Update panel config to include URL
+        panel.config = {**(panel.config or {}), "url": url} if url else panel.config
+        self.hass.bus.async_fire(EVENT_PANELS_UPDATED)
 
     async def async_delete(self) -> None:
         """Delete config."""
