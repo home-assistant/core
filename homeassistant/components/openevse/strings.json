@@ -1,0 +1,67 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This charger is already configured",
+      "unavailable_host": "Unable to connect to host"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password to access your OpenEVSE charger",
+          "username": "The username to access your OpenEVSE charger"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Enter the IP address of your OpenEVSE. Should match the address you used to set it up."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ambient_temp": {
+        "name": "Ambient temperature"
+      },
+      "charge_time": {
+        "name": "Charge time elapsed"
+      },
+      "ir_temp": {
+        "name": "IR temperature"
+      },
+      "rtc_temp": {
+        "name": "RTC temperature"
+      },
+      "status": {
+        "name": "Charging status"
+      },
+      "usage_session": {
+        "name": "Usage this session"
+      },
+      "usage_total": {
+        "name": "Total energy usage"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_unavailable_host": {
+      "description": "Configuring {integration_title} using YAML is being removed but there was a connection error while trying to import the YAML configuration.\n\nEnsure your OpenEVSE charger is accessible and restart Home Assistant to try again.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "yaml_deprecated": {
+      "description": "Configuring OpenEVSE using YAML is being removed. Your existing YAML configuration has been imported into the UI automatically. Remove the `openevse` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "OpenEVSE YAML configuration is deprecated"
+    }
+  }
+}

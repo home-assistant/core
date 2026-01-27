@@ -43,6 +43,9 @@
   },
   "entity": {
     "sensor": {
+      "energy_consumed": {
+        "name": "Energy consumed"
+      },
       "flow_temperature": {
         "name": "Flow temperature"
       },

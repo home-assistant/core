@@ -59,7 +59,9 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
     PortainerContainerSensorEntityDescription(
         key="memory_limit",
         translation_key="memory_limit",
-        value_fn=lambda data: data.stats.memory_stats.limit,
+        value_fn=lambda data: (
+            data.stats.memory_stats.limit if data.stats is not None else 0
+        ),
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -70,7 +72,9 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
     PortainerContainerSensorEntityDescription(
         key="memory_usage",
         translation_key="memory_usage",
-        value_fn=lambda data: data.stats.memory_stats.usage,
+        value_fn=lambda data: (
+            data.stats.memory_stats.usage if data.stats is not None else 0
+        ),
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.MEGABYTES,
@@ -83,7 +87,9 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         translation_key="memory_usage_percentage",
         value_fn=lambda data: (
             (data.stats.memory_stats.usage / data.stats.memory_stats.limit) * 100.0
-            if data.stats.memory_stats.limit > 0 and data.stats.memory_stats.usage > 0
+            if data.stats is not None
+            and data.stats.memory_stats.limit > 0
+            and data.stats.memory_stats.usage > 0
             else 0.0
         ),
         native_unit_of_measurement=PERCENTAGE,
@@ -96,7 +102,8 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         translation_key="cpu_usage_total",
         value_fn=lambda data: (
             (total_delta / system_delta) * data.stats.cpu_stats.online_cpus * 100.0
-            if (prev := data.stats_pre) is not None
+            if data.stats is not None
+            and (prev := data.stats_pre) is not None
             and (
                 system_delta := (
                     data.stats.cpu_stats.system_cpu_usage
@@ -254,7 +261,6 @@ async def async_setup_entry(
             )
             for (endpoint, container) in containers
             for entity_description in CONTAINER_SENSORS
-            if entity_description.value_fn(container) is not None
         )
 
     coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)
@@ -295,11 +301,6 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
     @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return super().available and self.endpoint_id in self.coordinator.data
-
-    @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.container_data)
@@ -321,11 +322,6 @@ class PortainerEndpointSensor(PortainerEndpointEntity, SensorEntity):
         super().__init__(device_info, coordinator)
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return super().available and self.device_id in self.coordinator.data
 
     @property
     def native_value(self) -> StateType:

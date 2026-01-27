@@ -31,6 +31,16 @@
           'total_volume': 1111.111,
         }),
       }),
+      dict({
+        'gas_meter': dict({
+          'consumption': 10.5,
+          'consumption_kwh': 10.5,
+          'current_consumption': 0.4,
+          'current_consumption_kwh': 4.0,
+          'sum': 10.5,
+          'sum_currency': 2.5,
+        }),
+      }),
     ]),
   })
 # ---

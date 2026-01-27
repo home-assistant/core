@@ -32,12 +32,10 @@ rules:
   docs-installation-parameters:
     status: exempt
     comment: No installation parameters beyond username password.
-  entity-unavailable:
-    status: todo
-    comment: We should also incorporate super().available to go unavailable when the coordinator update fails
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: todo
 
