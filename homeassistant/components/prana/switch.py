@@ -1,6 +1,9 @@
 """Switch platform for Prana integration."""
 
+from collections.abc import Callable
 from typing import Any
+
+from aioesphomeapi import dataclass
 
 from homeassistant.components.switch import (
     StrEnum,
@@ -10,7 +13,7 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PranaConfigEntry
+from . import PranaConfigEntry, PranaCoordinator
 from .entity import PranaBaseEntity, PranaEntityDescription
 
 PARALLEL_UPDATES = 1
@@ -28,30 +31,38 @@ class PranaSwitchType(StrEnum):
     WINTER = "winter"
 
 
+@dataclass(frozen=True, kw_only=True)
 class PranaSwitchEntityDescription(SwitchEntityDescription, PranaEntityDescription):
     """Description of a Prana switch entity."""
+
+    value_fn: Callable[[PranaCoordinator], bool]
 
 
 ENTITIES: tuple[PranaEntityDescription, ...] = (
     PranaSwitchEntityDescription(
         key=PranaSwitchType.BOUND,
         translation_key="bound",
+        value_fn=lambda coord: coord.data.bound,
     ),
     PranaSwitchEntityDescription(
         key=PranaSwitchType.HEATER,
         translation_key="heater",
+        value_fn=lambda coord: coord.data.heater,
     ),
     PranaSwitchEntityDescription(
         key=PranaSwitchType.AUTO,
         translation_key="auto",
+        value_fn=lambda coord: coord.data.auto,
     ),
     PranaSwitchEntityDescription(
         key=PranaSwitchType.AUTO_PLUS,
         translation_key="auto_plus",
+        value_fn=lambda coord: coord.data.auto_plus,
     ),
     PranaSwitchEntityDescription(
         key=PranaSwitchType.WINTER,
         translation_key="winter",
+        value_fn=lambda coord: coord.data.winter,
     ),
 )
 
@@ -71,10 +82,12 @@ async def async_setup_entry(
 class PranaSwitch(PranaBaseEntity, SwitchEntity):
     """Representation of a Prana switch (bound/heater/auto/etc)."""
 
+    entity_description: PranaSwitchEntityDescription
+
     @property
     def is_on(self) -> bool:
         """Return switch on/off state."""
-        value = getattr(self.coordinator.data, self.entity_description.key, False)
+        value = self.entity_description.value_fn(self.coordinator)
         return bool(value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:

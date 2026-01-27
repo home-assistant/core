@@ -33,12 +33,9 @@ def mock_prana_api() -> Generator[AsyncMock]:
     """Mock the Prana API client used by the integration."""
     with (
         patch(
-            "prana_local_api_client.prana_api_client.PranaLocalApiClient", autospec=True
-        ) as mock_api_class,
-        patch(
             "homeassistant.components.prana.config_flow.PranaLocalApiClient",
-            mock_api_class,
-        ),
+            autospec=True,
+        ) as mock_api_class,
         patch(
             "homeassistant.components.prana.coordinator.PranaLocalApiClient",
             mock_api_class,
@@ -48,10 +45,11 @@ def mock_prana_api() -> Generator[AsyncMock]:
         state_data = load_json_object_fixture("state.json", DOMAIN)
 
         device_info_obj = SimpleNamespace(**device_info_data)
+        state_obj = SimpleNamespace(**state_data)
 
         mock_api_class.return_value.get_device_info = AsyncMock(
             return_value=device_info_obj
         )
-        mock_api_class.return_value.get_state = AsyncMock(return_value=state_data)
+        mock_api_class.return_value.get_state = AsyncMock(return_value=state_obj)
 
         yield mock_api_class.return_value

@@ -41,10 +41,10 @@ class PranaBaseEntity(CoordinatorEntity[PranaCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
             manufacturer="Prana",
-            name=self.coordinator.device_info.label,
-            model=self.coordinator.device_info.pranaModel,
-            serial_number=self.coordinator.device_info.manufactureId,
-            sw_version=str(self.coordinator.device_info.fwVersion),
+            name=coordinator.device_info.label,
+            model=coordinator.device_info.pranaModel,
+            serial_number=coordinator.device_info.manufactureId,
+            sw_version=str(coordinator.device_info.fwVersion),
         )
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
         self.entity_description = description

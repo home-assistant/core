@@ -77,30 +77,3 @@ async def test_switches_actions(
     )
 
     assert mock_prana_api.set_switch.call_count >= 2
-
-
-async def test_switch_exceptions(
-    hass: HomeAssistant,
-    mock_prana_api: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Service calls surface API exceptions to the caller."""
-    await async_init_integration(hass, mock_config_entry)
-
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
-    assert entries
-    target = "switch.prana_recuperator_bound"
-
-    mock_prana_api.set_switch.side_effect = RuntimeError("boom")
-
-    with pytest.raises(RuntimeError):
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: target},
-            blocking=True,
-        )

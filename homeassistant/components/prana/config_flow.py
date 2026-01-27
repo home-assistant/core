@@ -9,7 +9,7 @@ from prana_local_api_client.prana_api_client import PranaLocalApiClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_BASE, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
@@ -78,7 +78,7 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
             except ValueError:
                 return self.async_abort(reason="invalid_device")
             except PranaApiCommunicationError:
-                errors = {CONF_BASE: "invalid_device_or_unreachable"}
+                errors = {"base": "invalid_device_or_unreachable"}
             if not errors:
                 return self.async_create_entry(
                     title=self._device_info.label,

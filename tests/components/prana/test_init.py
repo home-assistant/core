@@ -40,9 +40,4 @@ async def test_device_info_registered(
     )
 
     assert device is not None
-
-    snapshot_dict = device.dict_repr
-    for item in ("created_at", "modified_at", "id"):
-        snapshot_dict.pop(item, None)
-
-    assert snapshot == snapshot_dict
+    assert snapshot == device

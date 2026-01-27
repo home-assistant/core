@@ -17,6 +17,7 @@ from prana_local_api_client.prana_api_client import PranaLocalApiClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -51,7 +52,7 @@ class PranaCoordinator(DataUpdateCoordinator[PranaState]):
         try:
             self.device_info = await self.api_client.get_device_info()
         except PranaApiCommunicationError as err:
-            raise UpdateFailed("Could not fetch device info") from err
+            raise ConfigEntryNotReady("Could not fetch device info") from err
 
     async def _async_update_data(self) -> PranaState:
         """Fetch and normalize device state for all platforms."""
