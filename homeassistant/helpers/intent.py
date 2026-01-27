@@ -518,84 +518,23 @@ def _default_area_candidate_filter(
     return (candidate.area is not None) and (candidate.area.id in possible_area_ids)
 
 
-@callback
-def async_match_targets(  # noqa: C901
-    hass: HomeAssistant,
+
+def _filter_by_constraints_name_features_class(
     constraints: MatchTargetsConstraints,
-    preferences: MatchTargetsPreferences | None = None,
-    states: list[State] | None = None,
-    area_candidate_filter: Callable[
-        [MatchTargetsCandidate, Collection[str]], bool
-    ] = _default_area_candidate_filter,
-) -> MatchTargetsResult:
-    """Match entities based on constraints in order to handle an intent."""
-    preferences = preferences or MatchTargetsPreferences()
-    filtered_by_domain = False
-
-    if not states:
-        # Get all states and filter by domain
-        states = hass.states.async_all(constraints.domains)
-        filtered_by_domain = True
-        if not states:
-            return MatchTargetsResult(False, MatchFailedReason.DOMAIN)
-
-    candidates = [
-        MatchTargetsCandidate(
-            state=state,
-            is_exposed=(
-                async_should_expose(hass, constraints.assistant, state.entity_id)
-                if constraints.assistant
-                else True
-            ),
-        )
-        for state in states
-    ]
-
-    if constraints.domains and (not filtered_by_domain):
-        # Filter by domain (if we didn't already do it)
-        candidates = [c for c in candidates if c.state.domain in constraints.domains]
-        if not candidates:
-            return MatchTargetsResult(False, MatchFailedReason.DOMAIN)
-
-    if constraints.states:
-        # Filter by state
-        candidates = [c for c in candidates if c.state.state in constraints.states]
-        if not candidates:
-            return MatchTargetsResult(False, MatchFailedReason.STATE)
-
-    # Try to exit early so we can avoid registry lookups
-    if not (
-        constraints.name
-        or constraints.features
-        or constraints.device_classes
-        or constraints.area_name
-        or constraints.floor_name
-        or constraints.single_target
-    ):
-        if constraints.assistant:
-            # Check exposure
-            candidates = [c for c in candidates if c.is_exposed]
-            if not candidates:
-                return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
-
-        return MatchTargetsResult(True, states=[c.state for c in candidates])
-
-    # We need entity registry entries now
-    er = entity_registry.async_get(hass)
-    for candidate in candidates:
-        candidate.entity = er.async_get(candidate.state.entity_id)
-
+    candidates: list[MatchTargetsCandidate],
+) -> tuple[list[MatchTargetsCandidate], MatchTargetsResult | None]:
+    """Filter candidates by name, features, and device class constraints."""
     if constraints.name:
         # Filter by entity name or alias
         candidates = list(_filter_by_name(constraints.name, candidates))
         if not candidates:
-            return MatchTargetsResult(False, MatchFailedReason.NAME)
+            return candidates, MatchTargetsResult(False, MatchFailedReason.NAME)
 
     if constraints.features:
         # Filter by supported features
         candidates = list(_filter_by_features(constraints.features, candidates))
         if not candidates:
-            return MatchTargetsResult(False, MatchFailedReason.FEATURE)
+            return candidates, MatchTargetsResult(False, MatchFailedReason.FEATURE)
 
     if constraints.device_classes:
         # Filter by device class
@@ -603,9 +542,24 @@ def async_match_targets(  # noqa: C901
             _filter_by_device_classes(constraints.device_classes, candidates)
         )
         if not candidates:
-            return MatchTargetsResult(False, MatchFailedReason.DEVICE_CLASS)
+            return candidates, MatchTargetsResult(False, MatchFailedReason.DEVICE_CLASS)
 
-    # Check floor/area constraints
+    return candidates, None
+
+
+def _filter_by_constraints_floor_area(
+    hass: HomeAssistant,
+    constraints: MatchTargetsConstraints,
+    candidates: list[MatchTargetsCandidate],
+    area_candidate_filter: Callable[[MatchTargetsCandidate, Collection[str]], bool],
+) -> tuple[
+    list[MatchTargetsCandidate],
+    MatchTargetsResult | None,
+    bool,
+    list[area_registry.AreaEntry] | None,
+    list[floor_registry.FloorEntry] | None,
+]:
+    """Filter candidates by floor and area constraints."""
     targeted_floors: list[floor_registry.FloorEntry] | None = None
     targeted_areas: list[area_registry.AreaEntry] | None = None
 
@@ -623,10 +577,16 @@ def async_match_targets(  # noqa: C901
             fr = floor_registry.async_get(hass)
             targeted_floors = list(find_floors(constraints.floor_name, fr))
             if not targeted_floors:
-                return MatchTargetsResult(
-                    False,
-                    MatchFailedReason.INVALID_FLOOR,
-                    no_match_name=constraints.floor_name,
+                return (
+                    candidates,
+                    MatchTargetsResult(
+                        False,
+                        MatchFailedReason.INVALID_FLOOR,
+                        no_match_name=constraints.floor_name,
+                    ),
+                    areas_added,
+                    targeted_floors,
+                    targeted_areas,
                 )
 
             possible_floor_ids = {floor.floor_id for floor in targeted_floors}
@@ -640,8 +600,14 @@ def async_match_targets(  # noqa: C901
                 c for c in candidates if area_candidate_filter(c, possible_area_ids)
             ]
             if not candidates:
-                return MatchTargetsResult(
-                    False, MatchFailedReason.FLOOR, floors=targeted_floors
+                return (
+                    candidates,
+                    MatchTargetsResult(
+                        False, MatchFailedReason.FLOOR, floors=targeted_floors
+                    ),
+                    areas_added,
+                    targeted_floors,
+                    targeted_areas,
                 )
         else:
             # All areas are possible
@@ -650,10 +616,16 @@ def async_match_targets(  # noqa: C901
         if constraints.area_name:
             targeted_areas = list(find_areas(constraints.area_name, ar))
             if not targeted_areas:
-                return MatchTargetsResult(
-                    False,
-                    MatchFailedReason.INVALID_AREA,
-                    no_match_name=constraints.area_name,
+                return (
+                    candidates,
+                    MatchTargetsResult(
+                        False,
+                        MatchFailedReason.INVALID_AREA,
+                        no_match_name=constraints.area_name,
+                    ),
+                    areas_added,
+                    targeted_floors,
+                    targeted_areas,
                 )
 
             matching_area_ids = {area.id for area in targeted_areas}
@@ -664,9 +636,253 @@ def async_match_targets(  # noqa: C901
                 c for c in candidates if area_candidate_filter(c, possible_area_ids)
             ]
             if not candidates:
-                return MatchTargetsResult(
-                    False, MatchFailedReason.AREA, areas=targeted_areas
+                return (
+                    candidates,
+                    MatchTargetsResult(
+                        False, MatchFailedReason.AREA, areas=targeted_areas
+                    ),
+                    areas_added,
+                    targeted_floors,
+                    targeted_areas,
                 )
+
+    return candidates, None, areas_added, targeted_floors, targeted_areas
+
+
+def _handle_duplicates(
+    candidates: list[MatchTargetsCandidate],
+    preferences: MatchTargetsPreferences,
+    area_candidate_filter: Callable[[MatchTargetsCandidate, Collection[str]], bool],
+    targeted_areas: list[area_registry.AreaEntry] | None,
+    targeted_floors: list[floor_registry.FloorEntry] | None,
+) -> tuple[list[MatchTargetsCandidate], MatchTargetsResult | None]:
+    """Handle duplicate candidates by checking preferences."""
+    sorted_candidates = sorted(
+        [c for c in candidates if c.matched_name],
+        key=lambda c: c.matched_name or "",
+    )
+    final_candidates: list[MatchTargetsCandidate] = []
+    for name, group in groupby(sorted_candidates, key=lambda c: c.matched_name):
+        group_candidates = list(group)
+        if len(group_candidates) < 2:
+            # No duplicates for name
+            final_candidates.extend(group_candidates)
+            continue
+
+        # Try to disambiguate by preferences
+        if preferences.floor_id:
+            group_candidates = [
+                c
+                for c in group_candidates
+                if (c.area is not None)
+                and (c.area.floor_id == preferences.floor_id)
+            ]
+            if len(group_candidates) < 2:
+                # Disambiguated by floor
+                final_candidates.extend(group_candidates)
+                continue
+
+        if preferences.area_id:
+            group_candidates = [
+                c
+                for c in group_candidates
+                if area_candidate_filter(c, {preferences.area_id})
+            ]
+            if len(group_candidates) < 2:
+                # Disambiguated by area
+                final_candidates.extend(group_candidates)
+                continue
+
+        # Couldn't disambiguate duplicate names
+        return candidates, MatchTargetsResult(
+            False,
+            MatchFailedReason.DUPLICATE_NAME,
+            no_match_name=name,
+            areas=targeted_areas or [],
+            floors=targeted_floors or [],
+        )
+
+    if not final_candidates:
+        return candidates, MatchTargetsResult(
+            False,
+            MatchFailedReason.NAME,
+            areas=targeted_areas or [],
+            floors=targeted_floors or [],
+        )
+
+    return final_candidates, None
+
+
+def _get_candidates_by_constraints(
+    hass: HomeAssistant,
+    constraints: MatchTargetsConstraints,
+    states: list[State] | None,
+) -> tuple[list[MatchTargetsCandidate], MatchTargetsResult | None]:
+    """Get initial candidates filtered by domain and state."""
+    filtered_by_domain = False
+
+    if not states:
+        # Get all states and filter by domain
+        states = hass.states.async_all(constraints.domains)
+        filtered_by_domain = True
+        if not states:
+            return [], MatchTargetsResult(False, MatchFailedReason.DOMAIN)
+
+    candidates = [
+        MatchTargetsCandidate(
+            state=state,
+            is_exposed=(
+                async_should_expose(hass, constraints.assistant, state.entity_id)
+                if constraints.assistant
+                else True
+            ),
+        )
+        for state in states
+    ]
+
+    if constraints.domains and (not filtered_by_domain):
+        # Filter by domain (if we didn't already do it)
+        candidates = [c for c in candidates if c.state.domain in constraints.domains]
+        if not candidates:
+            return [], MatchTargetsResult(False, MatchFailedReason.DOMAIN)
+
+    if constraints.states:
+        # Filter by state
+        candidates = [c for c in candidates if c.state.state in constraints.states]
+        if not candidates:
+            return [], MatchTargetsResult(False, MatchFailedReason.STATE)
+
+    return candidates, None
+
+
+def _check_early_exit(
+    constraints: MatchTargetsConstraints,
+    candidates: list[MatchTargetsCandidate],
+) -> MatchTargetsResult | None:
+    """Check if we can exit early without registry lookups."""
+    if not (
+        constraints.name
+        or constraints.features
+        or constraints.device_classes
+        or constraints.area_name
+        or constraints.floor_name
+        or constraints.single_target
+    ):
+        if constraints.assistant:
+            # Check exposure
+            candidates = [c for c in candidates if c.is_exposed]
+            if not candidates:
+                return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
+
+        return MatchTargetsResult(True, states=[c.state for c in candidates])
+    return None
+
+
+def _handle_single_target(
+    hass: HomeAssistant,
+    constraints: MatchTargetsConstraints,
+    preferences: MatchTargetsPreferences,
+    candidates: list[MatchTargetsCandidate],
+    area_candidate_filter: Callable[[MatchTargetsCandidate, Collection[str]], bool],
+    areas_added: bool,
+) -> tuple[list[MatchTargetsCandidate], MatchTargetsResult | None, bool]:
+    """Handle single target constraint."""
+    if not constraints.single_target or len(candidates) <= 1:
+        return candidates, None, areas_added
+
+    # Find best match using preferences
+    if not (preferences.area_id or preferences.floor_id):
+        # No preferences
+        return (
+            candidates,
+            MatchTargetsResult(
+                False,
+                MatchFailedReason.MULTIPLE_TARGETS,
+                states=[c.state for c in candidates],
+            ),
+            areas_added,
+        )
+
+    if not areas_added:
+        ar = area_registry.async_get(hass)
+        dr = device_registry.async_get(hass)
+        _add_areas(ar, dr, candidates)
+        areas_added = True
+
+    filtered_candidates: list[MatchTargetsCandidate] = candidates
+    if preferences.area_id:
+        # Filter by area
+        filtered_candidates = [
+            c for c in candidates if area_candidate_filter(c, {preferences.area_id})
+        ]
+
+    if (len(filtered_candidates) > 1) and preferences.floor_id:
+        # Filter by floor
+        filtered_candidates = [
+            c
+            for c in candidates
+            if c.area and (c.area.floor_id == preferences.floor_id)
+        ]
+
+    if len(filtered_candidates) != 1:
+        # Filtering could not restrict to a single target
+        return (
+            candidates,
+            MatchTargetsResult(
+                False,
+                MatchFailedReason.MULTIPLE_TARGETS,
+                states=[c.state for c in candidates],
+            ),
+            areas_added,
+        )
+
+    return filtered_candidates, None, areas_added
+
+
+@callback
+def async_match_targets(  # noqa: C901
+    hass: HomeAssistant,
+    constraints: MatchTargetsConstraints,
+    preferences: MatchTargetsPreferences | None = None,
+    states: list[State] | None = None,
+    area_candidate_filter: Callable[
+        [MatchTargetsCandidate, Collection[str]], bool
+    ] = _default_area_candidate_filter,
+) -> MatchTargetsResult:
+    """Match entities based on constraints in order to handle an intent."""
+    preferences = preferences or MatchTargetsPreferences()
+
+    candidates, result = _get_candidates_by_constraints(hass, constraints, states)
+    if result:
+        return result
+
+    # Try to exit early so we can avoid registry lookups
+    if result := _check_early_exit(constraints, candidates):
+        return result
+
+    # We need entity registry entries now
+    er = entity_registry.async_get(hass)
+    for candidate in candidates:
+        candidate.entity = er.async_get(candidate.state.entity_id)
+
+    candidates, result = _filter_by_constraints_name_features_class(
+        constraints, candidates
+    )
+    if result:
+        return result
+
+    # Check floor/area constraints
+    (
+        candidates,
+        result,
+        areas_added,
+        targeted_floors,
+        targeted_areas,
+    ) = _filter_by_constraints_floor_area(
+        hass, constraints, candidates, area_candidate_filter
+    )
+    if result:
+        return result
 
     if constraints.assistant:
         # Check exposure
@@ -682,102 +898,21 @@ def async_match_targets(  # noqa: C901
             _add_areas(ar, dr, candidates)
             areas_added = True
 
-        sorted_candidates = sorted(
-            [c for c in candidates if c.matched_name],
-            key=lambda c: c.matched_name or "",
+        candidates, result = _handle_duplicates(
+            candidates,
+            preferences,
+            area_candidate_filter,
+            targeted_areas,
+            targeted_floors,
         )
-        final_candidates: list[MatchTargetsCandidate] = []
-        for name, group in groupby(sorted_candidates, key=lambda c: c.matched_name):
-            group_candidates = list(group)
-            if len(group_candidates) < 2:
-                # No duplicates for name
-                final_candidates.extend(group_candidates)
-                continue
+        if result:
+            return result
 
-            # Try to disambiguate by preferences
-            if preferences.floor_id:
-                group_candidates = [
-                    c
-                    for c in group_candidates
-                    if (c.area is not None)
-                    and (c.area.floor_id == preferences.floor_id)
-                ]
-                if len(group_candidates) < 2:
-                    # Disambiguated by floor
-                    final_candidates.extend(group_candidates)
-                    continue
-
-            if preferences.area_id:
-                group_candidates = [
-                    c
-                    for c in group_candidates
-                    if area_candidate_filter(c, {preferences.area_id})
-                ]
-                if len(group_candidates) < 2:
-                    # Disambiguated by area
-                    final_candidates.extend(group_candidates)
-                    continue
-
-            # Couldn't disambiguate duplicate names
-            return MatchTargetsResult(
-                False,
-                MatchFailedReason.DUPLICATE_NAME,
-                no_match_name=name,
-                areas=targeted_areas or [],
-                floors=targeted_floors or [],
-            )
-
-        if not final_candidates:
-            return MatchTargetsResult(
-                False,
-                MatchFailedReason.NAME,
-                areas=targeted_areas or [],
-                floors=targeted_floors or [],
-            )
-
-        candidates = final_candidates
-
-    if constraints.single_target and len(candidates) > 1:
-        # Find best match using preferences
-        if not (preferences.area_id or preferences.floor_id):
-            # No preferences
-            return MatchTargetsResult(
-                False,
-                MatchFailedReason.MULTIPLE_TARGETS,
-                states=[c.state for c in candidates],
-            )
-
-        if not areas_added:
-            ar = area_registry.async_get(hass)
-            dr = device_registry.async_get(hass)
-            _add_areas(ar, dr, candidates)
-            areas_added = True
-
-        filtered_candidates: list[MatchTargetsCandidate] = candidates
-        if preferences.area_id:
-            # Filter by area
-            filtered_candidates = [
-                c for c in candidates if area_candidate_filter(c, {preferences.area_id})
-            ]
-
-        if (len(filtered_candidates) > 1) and preferences.floor_id:
-            # Filter by floor
-            filtered_candidates = [
-                c
-                for c in candidates
-                if c.area and (c.area.floor_id == preferences.floor_id)
-            ]
-
-        if len(filtered_candidates) != 1:
-            # Filtering could not restrict to a single target
-            return MatchTargetsResult(
-                False,
-                MatchFailedReason.MULTIPLE_TARGETS,
-                states=[c.state for c in candidates],
-            )
-
-        # Filtering succeeded
-        candidates = filtered_candidates
+    candidates, result, areas_added = _handle_single_target(
+        hass, constraints, preferences, candidates, area_candidate_filter, areas_added
+    )
+    if result:
+        return result
 
     return MatchTargetsResult(
         True,
@@ -786,6 +921,8 @@ def async_match_targets(  # noqa: C901
         areas=targeted_areas or [],
         floors=targeted_floors or [],
     )
+
+
 
 
 @callback
