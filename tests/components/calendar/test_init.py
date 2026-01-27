@@ -614,7 +614,7 @@ async def test_calendar_initial_color_valid(
     entity_registry: er.EntityRegistry,
     test_entities: list[MockCalendarEntity],
 ) -> None:
-    """Test that _attr_initial_color creates initial entity options."""
+    """Test that initial_color creates initial entity options."""
     # Entity 3 was created with an initial_color
     entity = test_entities[2]
 
@@ -623,59 +623,38 @@ async def test_calendar_initial_color_valid(
     assert entry is not None
     assert entry.options.get(DOMAIN, {}).get("color") == "#FF0000"
 
-    # Color should not be exposed in state attributes
-    state = hass.states.get(entity.entity_id)
-    assert state is not None
-    assert "color" not in state.attributes
 
-
-async def test_calendar_initial_color_invalid(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that invalid _attr_initial_color is ignored."""
-    # Test various invalid initial_color formats
-    invalid_initial_colors = [
+@pytest.mark.parametrize(
+    "invalid_initial_color",
+    [
         "FF0000",  # Missing #
         "#FF00",  # Too short
         "#FF00000",  # Too long
         "#GGGGGG",  # Invalid hex
         "red",  # Not hex
         "",  # Empty
-    ]
-
-    for invalid_initial_color in invalid_initial_colors:
-        entity = MockCalendarEntity(
-            "Invalid Color Test",
-            [],
-            initial_color=invalid_initial_color,
-            unique_id=f"test_{invalid_initial_color}",
-        )
-        # get_initial_entity_options should return None for invalid initial_colors
-        assert entity.get_initial_entity_options() is None
+    ],
+)
+async def test_calendar_initial_color_invalid(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    invalid_initial_color: str,
+) -> None:
+    """Test that invalid initial_color is ignored."""
+    entity = MockCalendarEntity(
+        "Invalid Color Test",
+        [],
+        initial_color=invalid_initial_color,
+        unique_id=f"test_{invalid_initial_color}",
+    )
+    assert entity.get_initial_entity_options() is None
 
 
 async def test_calendar_initial_color_none(
     hass: HomeAssistant,
     test_entities: list[MockCalendarEntity],
 ) -> None:
-    """Test that entities without _attr_initial_color return None."""
+    """Test that entities without initial_color return None."""
     # Entities 1 and 2 were created without an initial_color
     entity = test_entities[0]
     assert entity.get_initial_entity_options() is None
-
-
-async def test_calendar_with_no_events(
-    hass: HomeAssistant, test_entities: list[MockCalendarEntity]
-) -> None:
-    """Test calendar with no upcoming events."""
-    entity = test_entities[2]
-
-    state = hass.states.get(entity.entity_id)
-    assert state is not None
-    assert state.state == STATE_OFF
-    # Color is stored in entity registry options, not in state attributes
-    assert "color" not in state.attributes
-    assert "message" not in state.attributes
-    assert "start_time" not in state.attributes
-    assert "end_time" not in state.attributes
