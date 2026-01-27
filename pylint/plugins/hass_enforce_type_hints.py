@@ -538,7 +538,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
     ],
     "services": [
         TypeHintMatch(
-            function_name="async_setup_service_actions",
+            function_name="async_register_service_actions",
             arg_types={
                 0: "HomeAssistant",
             },

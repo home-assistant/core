@@ -17,7 +17,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Diagnostics from a config entry."""
+    """Set up Service Actions integration."""
     await integration_platform.async_process_integration_platforms(
         hass, DOMAIN, _register_service_actions_platform
     )
