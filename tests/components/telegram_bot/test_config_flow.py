@@ -7,12 +7,11 @@ from telegram.constants import AccentColor
 from telegram.error import BadRequest, InvalidToken, NetworkError
 
 from homeassistant.components.telegram_bot.const import (
-    ATTR_API_ENDPOINT,
     ATTR_PARSER,
+    CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
-    DEFAULT_API_ENDPOINT,
     DOMAIN,
     PARSER_MD,
     PARSER_PLAIN_TEXT,
@@ -29,102 +28,17 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_options_error(
-    hass: HomeAssistant,
-    mock_broadcast_config_entry: MockConfigEntry,
-    mock_external_calls: None,
-) -> None:
-    """Test options flow with custom API server endpoint that fails."""
-
-    mock_broadcast_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(
-        mock_broadcast_config_entry.entry_id
-    )
-    await hass.async_block_till_done()
-
-    assert result["step_id"] == "init"
-    assert result["type"] is FlowResultType.FORM
-
-    with patch(
-        "homeassistant.components.telegram_bot.bot.Bot.get_me",
-        AsyncMock(side_effect=NetworkError("mock network error")),
-    ):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {
-                ATTR_API_ENDPOINT: "http://mock/bot",
-                ATTR_PARSER: PARSER_PLAIN_TEXT,
-            },
-        )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] == {"base": "telegram_error"}
-    assert result["description_placeholders"] == {
-        "default_api_endpoint": DEFAULT_API_ENDPOINT,
-        "error_message": "mock network error",
-    }
-
-
-async def test_options_logout_failed(
-    hass: HomeAssistant,
-    mock_broadcast_config_entry: MockConfigEntry,
-    mock_external_calls: None,
-) -> None:
-    """Test options flow which fails to logout the existing bot."""
-
-    mock_broadcast_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(
-        mock_broadcast_config_entry.entry_id
-    )
-    await hass.async_block_till_done()
-
-    assert result["step_id"] == "init"
-    assert result["type"] is FlowResultType.FORM
-
-    with patch(
-        "homeassistant.components.telegram_bot.bot.Bot.log_out",
-        AsyncMock(return_value=False),
-    ):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {
-                ATTR_API_ENDPOINT: "http://mock/bot",
-                ATTR_PARSER: PARSER_PLAIN_TEXT,
-            },
-        )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] == {"base": "bot_logout_failed"}
-    assert result["description_placeholders"] == {
-        "default_api_endpoint": DEFAULT_API_ENDPOINT
-    }
-
-
 async def test_options_flow(
-    hass: HomeAssistant,
-    mock_broadcast_config_entry: MockConfigEntry,
-    mock_external_calls: None,
+    hass: HomeAssistant, mock_webhooks_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow."""
 
-    mock_broadcast_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
-    await hass.async_block_till_done()
+    mock_webhooks_config_entry.add_to_hass(hass)
 
     # test: no input
 
     result = await hass.config_entries.options.async_init(
-        mock_broadcast_config_entry.entry_id
+        mock_webhooks_config_entry.entry_id
     )
     await hass.async_block_till_done()
 
@@ -136,7 +50,6 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            ATTR_API_ENDPOINT: DEFAULT_API_ENDPOINT,
             ATTR_PARSER: PARSER_PLAIN_TEXT,
         },
     )
@@ -283,6 +196,66 @@ async def test_reconfigure_flow_webhooks(
     assert mock_broadcast_config_entry.data[CONF_TRUSTED_NETWORKS] == [
         "149.154.160.0/20"
     ]
+
+
+async def test_reconfigure_flow_logout_failed(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test reconfigure flow for with change in API endpoint and logout failed."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await mock_broadcast_config_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    # test logout error
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.log_out",
+        AsyncMock(side_effect=NetworkError("mock network error")),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PLATFORM: PLATFORM_BROADCAST,
+                SECTION_ADVANCED_SETTINGS: {
+                    CONF_API_ENDPOINT: "http://mock/bot",
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert result["step_id"] == "reconfigure"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "telegram_error"}
+    assert result["description_placeholders"]["error_message"] == "mock network error"
+
+    # test unsuccessful logout
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.log_out",
+        AsyncMock(return_value=False),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PLATFORM: PLATFORM_BROADCAST,
+                SECTION_ADVANCED_SETTINGS: {
+                    CONF_API_ENDPOINT: "http://mock/bot",
+                },
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert result["step_id"] == "reconfigure"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "bot_logout_failed"}
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:

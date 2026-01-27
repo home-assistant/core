@@ -12,10 +12,11 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
-    OptionsFlowWithReload,
+    OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
@@ -34,9 +35,9 @@ from homeassistant.helpers.selector import (
 from . import initialize_bot
 from .bot import TelegramBotConfigEntry, TelegramNotificationService
 from .const import (
-    ATTR_API_ENDPOINT,
     ATTR_PARSER,
     BOT_NAME,
+    CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
@@ -64,6 +65,8 @@ DESCRIPTION_PLACEHOLDERS: dict[str, str] = {
     "getidsbot_username": "@GetIDs Bot",
     "getidsbot_url": "https://t.me/getidsbot",
     "socks_url": "socks5://username:password@proxy_ip:proxy_port",
+    # used in advanced settings section
+    "default_api_endpoint": DEFAULT_API_ENDPOINT,
 }
 
 STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
@@ -87,6 +90,12 @@ STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
         vol.Required(SECTION_ADVANCED_SETTINGS): section(
             vol.Schema(
                 {
+                    vol.Required(
+                        CONF_API_ENDPOINT,
+                        default=DEFAULT_API_ENDPOINT,
+                    ): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
                     vol.Optional(CONF_PROXY_URL): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
@@ -111,6 +120,12 @@ STEP_RECONFIGURE_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
         vol.Required(SECTION_ADVANCED_SETTINGS): section(
             vol.Schema(
                 {
+                    vol.Required(
+                        CONF_API_ENDPOINT,
+                        default=DEFAULT_API_ENDPOINT,
+                    ): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
                     vol.Optional(CONF_PROXY_URL): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
@@ -141,10 +156,6 @@ STEP_WEBHOOKS_DATA_SCHEMA: vol.Schema = vol.Schema(
 OPTIONS_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(
-            ATTR_API_ENDPOINT,
-            default=DEFAULT_API_ENDPOINT,
-        ): TextSelector(config=TextSelectorConfig(type=TextSelectorType.URL)),
-        vol.Required(
             ATTR_PARSER,
         ): SelectSelector(
             SelectSelectorConfig(
@@ -156,7 +167,7 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
 )
 
 
-class OptionsFlowHandler(OptionsFlowWithReload):
+class OptionsFlowHandler(OptionsFlow):
     """Options flow."""
 
     async def async_step_init(
@@ -164,57 +175,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage the options."""
 
-        errors: dict[str, str] = {}
-        description_placeholders = {"default_api_endpoint": DEFAULT_API_ENDPOINT}
-
         if user_input is not None:
-            try:
-                # validate bot
-                bot = await self.hass.async_add_executor_job(
-                    initialize_bot,
-                    self.hass,
-                    self.config_entry.data,
-                    MappingProxyType(user_input),
-                )
-                await bot.get_me()
-
-                # validation ok
-                # logout existing bot only if the API endpoint is changed from the default to a custom value
-                # logout will lockout the bot temporarily so we only want to do this when necessary
-                current_api_endpoint = self.config_entry.options.get(
-                    ATTR_API_ENDPOINT, DEFAULT_API_ENDPOINT
-                )
-                if (
-                    user_input[ATTR_API_ENDPOINT] != DEFAULT_API_ENDPOINT
-                    and user_input[ATTR_API_ENDPOINT] != current_api_endpoint
-                    and current_api_endpoint == DEFAULT_API_ENDPOINT
-                ):
-                    service: TelegramNotificationService = (
-                        self.config_entry.runtime_data
-                    )
-                    is_logged_out = await service.bot.log_out()
-                    _LOGGER.info(
-                        "[%s %s] Logged out: %s",
-                        service.bot.username,
-                        service.bot.id,
-                        is_logged_out,
-                    )
-                    if not is_logged_out:
-                        errors["base"] = "bot_logout_failed"
-            except TelegramError as err:
-                errors["base"] = "telegram_error"
-                description_placeholders[ERROR_MESSAGE] = str(err)
-
-            if errors:
-                return self.async_show_form(
-                    step_id="init",
-                    data_schema=self.add_suggested_values_to_schema(
-                        OPTIONS_SCHEMA, user_input
-                    ),
-                    errors=errors,
-                    description_placeholders=description_placeholders,
-                )
-
             return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
@@ -223,7 +184,6 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 OPTIONS_SCHEMA,
                 self.config_entry.options,
             ),
-            description_placeholders=description_placeholders,
         )
 
 
@@ -276,6 +236,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # validate connection to Telegram API
         errors: dict[str, str] = {}
+        user_input[CONF_API_ENDPOINT] = user_input[SECTION_ADVANCED_SETTINGS].get(
+            CONF_API_ENDPOINT, DEFAULT_API_ENDPOINT
+        )
         user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
             CONF_PROXY_URL
         )
@@ -327,10 +290,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> str:
         try:
             bot = await self.hass.async_add_executor_job(
-                initialize_bot,
-                self.hass,
-                MappingProxyType(user_input),
-                MappingProxyType({}),
+                initialize_bot, self.hass, MappingProxyType(user_input)
             )
             self._bot = bot
 
@@ -417,6 +377,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_PLATFORM: self._step_user_data[CONF_PLATFORM],
                 CONF_API_KEY: self._step_user_data[CONF_API_KEY],
+                CONF_API_ENDPOINT: self._step_user_data[SECTION_ADVANCED_SETTINGS].get(
+                    CONF_API_ENDPOINT, DEFAULT_API_ENDPOINT
+                ),
                 CONF_PROXY_URL: self._step_user_data[SECTION_ADVANCED_SETTINGS].get(
                     CONF_PROXY_URL
                 ),
@@ -488,6 +451,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         **self._get_reconfigure_entry().data,
                         SECTION_ADVANCED_SETTINGS: {
+                            CONF_API_ENDPOINT: self._get_reconfigure_entry().data.get(
+                                CONF_API_ENDPOINT, DEFAULT_API_ENDPOINT
+                            ),
                             CONF_PROXY_URL: self._get_reconfigure_entry().data.get(
                                 CONF_PROXY_URL
                             ),
@@ -500,6 +466,10 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_PROXY_URL
         )
 
+        user_input[CONF_API_ENDPOINT] = user_input[SECTION_ADVANCED_SETTINGS].get(
+            CONF_API_ENDPOINT
+        )
+
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = DESCRIPTION_PLACEHOLDERS.copy()
 
@@ -509,6 +479,34 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         self._bot_name = bot_name
 
+        existing_api_endpoint: str = self._get_reconfigure_entry().data.get(
+            CONF_API_ENDPOINT, DEFAULT_API_ENDPOINT
+        )
+        if (
+            self._get_reconfigure_entry().state == ConfigEntryState.LOADED
+            and user_input[CONF_API_ENDPOINT] != DEFAULT_API_ENDPOINT
+            and existing_api_endpoint == DEFAULT_API_ENDPOINT
+        ):
+            # logout existing bot from the official Telegram bot API
+            # logout is only used when changing the API endpoint from official to a custom one
+            # there is a 10-minute lockout period after logout so we only logout if necessary
+            try:
+                service: TelegramNotificationService = (
+                    self._get_reconfigure_entry().runtime_data
+                )
+                is_logged_out = await service.bot.log_out()
+                _LOGGER.info(
+                    "[%s %s] Logged out: %s",
+                    service.bot.username,
+                    service.bot.id,
+                    is_logged_out,
+                )
+                if not is_logged_out:
+                    errors["base"] = "bot_logout_failed"
+            except TelegramError as err:
+                errors["base"] = "telegram_error"
+                description_placeholders[ERROR_MESSAGE] = str(err)
+
         if errors:
             return self.async_show_form(
                 step_id="reconfigure",
@@ -517,6 +515,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         **user_input,
                         SECTION_ADVANCED_SETTINGS: {
+                            CONF_API_ENDPOINT: user_input.get(CONF_API_ENDPOINT),
                             CONF_PROXY_URL: user_input.get(CONF_PROXY_URL),
                         },
                     },

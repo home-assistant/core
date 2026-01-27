@@ -13,6 +13,7 @@ SUBENTRY_TYPE_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
 
+CONF_API_ENDPOINT = "api_endpoint"
 CONF_PROXY_URL = "proxy_url"
 CONF_TRUSTED_NETWORKS = "trusted_networks"
 
@@ -75,7 +76,6 @@ CHAT_ACTION_FIND_LOCATION = "find_location"
 CHAT_ACTION_RECORD_VIDEO_NOTE = "record_video_note"
 CHAT_ACTION_UPLOAD_VIDEO_NOTE = "upload_video_note"
 
-ATTR_API_ENDPOINT = "api_endpoint"
 ATTR_ARGS = "args"
 ATTR_AUTHENTICATION = "authentication"
 ATTR_CALLBACK_QUERY = "callback_query"

@@ -553,9 +553,7 @@ def _deprecate_timeout(hass: HomeAssistant, service: ServiceCall) -> None:
 
 async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
     """Create the Telegram bot from config entry."""
-    bot: Bot = await hass.async_add_executor_job(
-        initialize_bot, hass, entry.data, entry.options
-    )
+    bot: Bot = await hass.async_add_executor_job(initialize_bot, hass, entry.data)
     try:
         await bot.get_me()
     except InvalidToken as err:
@@ -580,7 +578,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     return True
+
+
+async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
+    """Handle config changes."""
+    entry.runtime_data.parse_mode = entry.options[ATTR_PARSER]
+
+    # reload entities
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
 async def async_unload_entry(
