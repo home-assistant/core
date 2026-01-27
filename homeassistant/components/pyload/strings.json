@@ -20,8 +20,8 @@
           "password": "[%key:component::pyload::config::step::user::data_description::password%]",
           "username": "[%key:component::pyload::config::step::user::data_description::username%]"
         },
-        "description": "Do you want to configure Home Assistant to connect to the pyLoad service provided by the add-on: {addon}?",
-        "title": "pyLoad via Home Assistant add-on"
+        "description": "Do you want to configure Home Assistant to connect to the pyLoad service provided by the app: {addon}?",
+        "title": "pyLoad via Home Assistant app"
       },
       "reauth_confirm": {
         "data": {
