@@ -526,7 +526,7 @@ def create_devices(
                 ATTR_SERIAL_NUMBER: device_identification[Attribute.SERIAL_NUMBER].value
             }
             if ATTR_MODEL_ID not in kwargs:
-                new_kwargs[ATTR_MODEL] = device_identification[
+                new_kwargs[ATTR_MODEL_ID] = device_identification[
                     Attribute.MODEL_NAME
                 ].value
             kwargs.update(new_kwargs)
