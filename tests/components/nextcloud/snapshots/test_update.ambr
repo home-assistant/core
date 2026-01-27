@@ -41,7 +41,7 @@
       'auto_update': False,
       'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/nextcloud/icon.png',
-      'friendly_name': 'my.nc_url.local None',
+      'friendly_name': 'my.nc_url.local',
       'in_progress': False,
       'installed_version': '28.0.4.1',
       'latest_version': '28.0.4.1',

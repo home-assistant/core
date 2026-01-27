@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -382,7 +382,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch):
         self,
         avm_wrapper: AvmWrapper,
         device_friendly_name: str,
-        port_mapping: dict[str, Any] | None,
+        port_mapping: dict[str, Any],
         port_name: str,
         idx: int,
         connection_type: str,
@@ -395,9 +395,6 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch):
         self.port_mapping = port_mapping  # dict in the format as it comes from fritzconnection. eg: {'NewRemoteHost': '0.0.0.0', 'NewExternalPort': 22, 'NewProtocol': 'TCP', 'NewInternalPort': 22, 'NewInternalClient': '192.168.178.31', 'NewEnabled': True, 'NewPortMappingDescription': 'Beast SSH ', 'NewLeaseDuration': 0}
         self._idx = idx  # needed for update routine
         self._attr_entity_category = EntityCategory.CONFIG
-
-        if port_mapping is None:
-            return
 
         switch_info = SwitchInfo(
             description=f"Port forward {port_name}",
@@ -438,9 +435,6 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch):
             self._attributes[attr] = self.port_mapping[key]
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> bool:
-        if self.port_mapping is None:
-            return False
-
         self.port_mapping["NewEnabled"] = "1" if turn_on else "0"
 
         resp = await self._avm_wrapper.async_add_port_mapping(
@@ -530,8 +524,8 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
 
     async def _async_handle_turn_on_off(self, turn_on: bool) -> bool:
         """Handle switch state change request."""
-        if not self.ip_address:
-            return False
+        if TYPE_CHECKING:
+            assert self.ip_address
         await self._avm_wrapper.async_set_allow_wan_access(self.ip_address, turn_on)
         self._avm_wrapper.devices[self._mac].wan_access = turn_on
         self.async_write_ha_state()
