@@ -688,6 +688,10 @@ class Entity(
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
+        if self._name_translation_key and not self.has_entity_name:
+            raise ValueError(
+                "Entity has a translation key but has_entity_name is False"
+            )
         if (
             self.has_entity_name
             and (name_translation_key := self._name_translation_key)
