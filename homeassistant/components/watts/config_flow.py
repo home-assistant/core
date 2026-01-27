@@ -18,6 +18,17 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Check we have the cloud integration set up."""
+        if "cloud" not in self.hass.config.components:
+            return self.async_abort(
+                reason="cloud_not_enabled",
+                description_placeholders={"default_config": "default_config"},
+            )
+        return await super().async_step_user(user_input)
+
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""

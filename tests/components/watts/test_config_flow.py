@@ -15,7 +15,22 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@pytest.fixture
+def use_cloud(hass: HomeAssistant) -> None:
+    """Set up the cloud component."""
+    hass.config.components.add("cloud")
+
+
+async def test_cloud_not_enabled(hass: HomeAssistant) -> None:
+    """Test config flow aborts when cloud is not enabled."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "cloud_not_enabled"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry", "use_cloud")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -66,7 +81,7 @@ async def test_full_flow(
         assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == "user123"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_invalid_token_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -107,7 +122,7 @@ async def test_invalid_token_flow(
         assert result.get("reason") == "invalid_token"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_oauth_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -139,7 +154,7 @@ async def test_oauth_error(
     assert result.get("reason") == "oauth_error"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_oauth_timeout(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -168,7 +183,7 @@ async def test_oauth_timeout(
     assert result.get("reason") == "oauth_timeout"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_oauth_invalid_response(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -197,7 +212,7 @@ async def test_oauth_invalid_response(
     assert result.get("reason") == "oauth_failed"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_unique_config_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
