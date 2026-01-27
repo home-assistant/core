@@ -1642,6 +1642,9 @@ oemthermostat==1.1.1
 # homeassistant.components.ohme
 ohme==1.6.0
 
+# homeassistant.components.olarm
+olarmflowclient==1.0.5
+
 # homeassistant.components.ollama
 ollama==0.5.1
 

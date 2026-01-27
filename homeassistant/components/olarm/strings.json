@@ -1,0 +1,56 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "authorize_url_timeout": "Timeout generating authorize URL.",
+      "missing_configuration": "The component is not configured. Please follow the documentation.",
+      "no_systems_found": "No Olarm systems found in your account. Please ensure you have enabled public API access in the Olarm account for your system",
+      "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+      "oauth_data_missing": "OAuth data is missing. Please restart the configuration flow.",
+      "oauth_error": "Received invalid token data.",
+      "oauth_failed": "Error while obtaining access token.",
+      "oauth_timeout": "Timeout resolving OAuth token.",
+      "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+      "user_rejected_authorize": "Account linking rejected: {error}"
+    },
+    "create_entry": {
+      "default": "Successfully authenticated"
+    },
+    "error": {
+      "invalid_auth": "Invalid authentication, please try again.",
+      "oauth_failed": "OAuth authentication failed, please try again."
+    },
+    "step": {
+      "system": {
+        "data": {
+          "select_system": "System"
+        },
+        "data_description": {
+          "select_system": "The Olarm system you would like to integrate"
+        },
+        "description": "Choose the Olarm system you would like to integrate. If your system is not listed, please ensure you have enabled public API access in your Olarm account for that system.",
+        "title": "Select system"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ac_power": {
+        "name": "AC power"
+      },
+      "zone": {
+        "name": "Zone {zone_number} {zone_label}"
+      },
+      "zone_bypass": {
+        "name": "Zone {zone_number} {zone_label} bypassed"
+      }
+    }
+  },
+  "issues": {
+    "mqtt_disconnected": {
+      "description": "The MQTT connection to the Olarm service has been lost: {reason}\n\nThe integration will automatically attempt to reconnect in the background. If this issue persists, check your internet connection and verify the Olarm service is operational.\n\nThis issue will clear automatically when the connection is restored.",
+      "title": "MQTT connection to Olarm service lost"
+    }
+  }
+}
