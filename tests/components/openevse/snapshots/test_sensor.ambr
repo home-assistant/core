@@ -77,6 +77,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -187,6 +188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -243,6 +245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -348,6 +351,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -404,6 +408,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -460,6 +465,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -516,6 +522,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily energy usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -573,6 +580,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Divert mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -623,6 +631,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'ESP temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -677,6 +686,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -732,6 +742,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GFCI trip count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -838,6 +849,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Manual override',
     'options': dict({
     }),
     'original_device_class': None,
@@ -886,6 +898,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum amperage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -939,6 +952,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -992,6 +1006,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum amperage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1045,6 +1060,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1095,6 +1111,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly energy usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1154,6 +1171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'No ground trip count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1260,6 +1278,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Service level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1310,6 +1329,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Shaper available current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1366,6 +1386,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Shaper live power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1420,6 +1441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Shaper maximum power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1452,54 +1474,6 @@
     'state': '11000',
   })
 # ---
-# name: test_entities[sensor.openevse_mock_config_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.openevse_mock_config_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'State',
-    'platform': 'openevse',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'state',
-    'unique_id': 'deadbeeffeed-state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entities[sensor.openevse_mock_config_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'openevse_mock_config State',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.openevse_mock_config_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'active',
-  })
-# ---
 # name: test_entities[sensor.openevse_mock_config_stuck_relay_trip_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1523,6 +1497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Stuck relay trip count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1632,6 +1607,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1745,6 +1721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vehicle charge completion',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1794,6 +1771,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vehicle connected',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1844,6 +1822,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vehicle range',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1900,6 +1879,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vehicle state of charge',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1953,6 +1933,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly energy usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2012,6 +1993,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'WiFi signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -2065,6 +2047,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly energy usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

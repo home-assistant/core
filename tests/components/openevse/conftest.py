@@ -33,7 +33,6 @@ def mock_charger() -> Generator[MagicMock]:
         }
         # Status sensors
         charger.status = "Charging"
-        charger.state = "active"
         charger.vehicle = "connected"
         charger.mode = "STA"
         charger.charge_mode = "fast"

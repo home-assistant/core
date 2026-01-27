@@ -115,9 +115,6 @@
       "smoothed_available_current": {
         "name": "Smoothed available current"
       },
-      "state": {
-        "name": "State"
-      },
       "status": {
         "name": "Charging status"
       },

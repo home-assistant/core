@@ -68,12 +68,6 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         value_fn=lambda ev: ev.status,
     ),
     OpenEVSESensorDescription(
-        key="state",
-        translation_key="state",
-        value_fn=lambda ev: ev.state,
-        entity_registry_enabled_default=False,
-    ),
-    OpenEVSESensorDescription(
         key="vehicle",
         translation_key="vehicle",
         value_fn=lambda ev: ev.vehicle,
