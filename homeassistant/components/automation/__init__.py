@@ -127,6 +127,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "assist_satellite",
     "device_tracker",
     "fan",
+    "lawn_mower",
     "light",
     "lock",
     "siren",
