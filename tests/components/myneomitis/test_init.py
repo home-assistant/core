@@ -14,21 +14,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-
-class DummyEntry:
-    """Dummy class to simulate a ConfigEntry."""
-
-    def __init__(self, entry_id: str, data: dict) -> None:
-        """Initialize the DummyEntry."""
-        self.entry_id = entry_id
-        self.data = data
-        self.unique_id = entry_id
-        self.runtime_data = None
-        self._on_unload_callbacks: list = []
-
-    def async_on_unload(self, callback) -> None:
-        """Register a callback to be called when the entry is unloaded."""
-        self._on_unload_callbacks.append(callback)
+from tests.common import MockConfigEntry
 
 
 async def test_minimal_setup(hass: HomeAssistant) -> None:
@@ -73,7 +59,9 @@ async def test_minimal_setup(hass: HomeAssistant) -> None:
 
 async def test_setup_entry_raises_on_login_fail(hass: HomeAssistant) -> None:
     """Test that async_setup_entry raises ConfigEntryNotReady if login fails."""
-    entry = DummyEntry("test-entry", {"email": "a@b.c", "password": "pw"})
+    entry = MockConfigEntry(
+        domain="myneomitis", data={"email": "a@b.c", "password": "pw"}
+    )
 
     with patch("pyaxencoapi.PyAxencoAPI") as api_cls:
         api = api_cls.return_value
@@ -85,7 +73,9 @@ async def test_setup_entry_raises_on_login_fail(hass: HomeAssistant) -> None:
 
 async def test_unload_entry_success(hass: HomeAssistant) -> None:
     """Test that async_unload_entry unloads and disconnects cleanly."""
-    entry = DummyEntry("test-entry", {"email": "u@v.w", "password": "pw"})
+    entry = MockConfigEntry(
+        domain="myneomitis", data={"email": "u@v.w", "password": "pw"}
+    )
 
     api = AsyncMock()
     entry.runtime_data = MyNeomitisRuntimeData(api=api, devices=[])
@@ -99,7 +89,9 @@ async def test_unload_entry_success(hass: HomeAssistant) -> None:
 
 async def test_unload_entry_failure(hass: HomeAssistant) -> None:
     """Test that async_unload_entry returns False if unload fails."""
-    entry = DummyEntry("test-entry", {"email": "u@v.w", "password": "pw"})
+    entry = MockConfigEntry(
+        domain="myneomitis", data={"email": "u@v.w", "password": "pw"}
+    )
     api = AsyncMock()
     entry.runtime_data = MyNeomitisRuntimeData(api=api, devices=[])
 
@@ -114,7 +106,9 @@ async def test_setup_entry_success_populates_data_and_forwards(
     hass: HomeAssistant,
 ) -> None:
     """Test happy path async_setup_entry."""
-    entry = DummyEntry("e1", {"email": "u@d.e", "password": "pw"})
+    entry = MockConfigEntry(
+        domain="myneomitis", data={"email": "u@d.e", "password": "pw"}
+    )
 
     with (
         patch("pyaxencoapi.PyAxencoAPI") as api_cls,
@@ -144,7 +138,9 @@ async def test_setup_entry_failure_raises_on_any_api_error(
     hass: HomeAssistant, fail_method: str
 ) -> None:
     """If any API method fails, ConfigEntryNotReady is raised."""
-    entry = DummyEntry("e2", {"email": "a@b.c", "password": "pw"})
+    entry = MockConfigEntry(
+        domain="myneomitis", data={"email": "a@b.c", "password": "pw"}
+    )
     with patch("pyaxencoapi.PyAxencoAPI") as api_cls:
         api = api_cls.return_value
 
@@ -163,7 +159,9 @@ async def test_unload_entry_logs_on_disconnect_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """When disconnecting the websocket fails, an error is logged."""
-    entry = DummyEntry("e3", {"email": "x@y.z", "password": "pw"})
+    entry = MockConfigEntry(
+        domain="myneomitis", data={"email": "x@y.z", "password": "pw"}
+    )
 
     api = AsyncMock()
     api.disconnect_websocket = AsyncMock(side_effect=TimeoutError("to"))
@@ -180,7 +178,9 @@ async def test_unload_entry_logs_on_disconnect_error(
 async def test_homeassistant_stop_disconnects_websocket(hass: HomeAssistant) -> None:
     """Test that WebSocket is disconnected on Home Assistant stop event."""
 
-    entry = DummyEntry("e4", {"email": "u@d.e", "password": "pw"})
+    entry = MockConfigEntry(
+        domain="myneomitis", data={"email": "u@d.e", "password": "pw"}
+    )
 
     with (
         patch("pyaxencoapi.PyAxencoAPI") as api_cls,
@@ -209,7 +209,9 @@ async def test_homeassistant_stop_logs_on_disconnect_error(
 ) -> None:
     """Test that WebSocket disconnect errors are logged on HA stop."""
 
-    entry = DummyEntry("e5", {"email": "u@d.e", "password": "pw"})
+    entry = MockConfigEntry(
+        domain="myneomitis", data={"email": "u@d.e", "password": "pw"}
+    )
 
     with (
         patch("pyaxencoapi.PyAxencoAPI") as api_cls,
