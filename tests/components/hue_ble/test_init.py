@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from bleak.backends.device import BLEDevice
+from HueBLE import ConnectionError, HueBleError
 import pytest
 
 from homeassistant.components.hue_ble.const import DOMAIN
@@ -29,29 +30,29 @@ from tests.components.bluetooth import generate_ble_device
             None,
             2,
             True,
-            True,
+            None,
             "The light was not found.",
         ),
         (
             None,
             0,
             True,
-            True,
+            None,
             "No Bluetooth scanners are available to search for the light.",
         ),
         (
             generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
             2,
             False,
-            True,
+            ConnectionError,
             "Device found but unable to connect.",
         ),
         (
             generate_ble_device(TEST_DEVICE_MAC, TEST_DEVICE_NAME),
             2,
             True,
-            False,
-            "Device found but unable to connect.",
+            HueBleError,
+            "Device found and connected but unable to poll values from it.",
         ),
     ],
     ids=["no_device", "no_scanners", "error_connect", "error_poll"],
@@ -61,8 +62,8 @@ async def test_setup_error(
     caplog: pytest.LogCaptureFixture,
     ble_device: BLEDevice | None,
     scanner_count: int,
-    connect_result: bool,
-    poll_state_result: bool,
+    connect_result: Exception | None,
+    poll_state_result: Exception | None,
     message: str,
 ) -> None:
     """Test that ConfigEntryNotReady is raised if there is an error condition."""
@@ -80,11 +81,11 @@ async def test_setup_error(
         ),
         patch(
             "homeassistant.components.hue_ble.HueBleLight.connect",
-            return_value=connect_result,
+            side_effect=[connect_result],
         ),
         patch(
             "homeassistant.components.hue_ble.HueBleLight.poll_state",
-            return_value=poll_state_result,
+            side_effect=[poll_state_result],
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, {}) is True
@@ -111,11 +112,11 @@ async def test_setup(
         ),
         patch(
             "homeassistant.components.hue_ble.HueBleLight.connect",
-            return_value=True,
+            return_value=None,
         ),
         patch(
             "homeassistant.components.hue_ble.HueBleLight.poll_state",
-            return_value=True,
+            return_value=None,
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, {}) is True

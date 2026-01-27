@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, cast
 
-from aioshelly.const import RPC_GENERATIONS
+from aioshelly.const import MODEL_FLOOD_G4, RPC_GENERATIONS
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_PLATFORM,
@@ -30,7 +30,7 @@ from .entity import (
     ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
     ShellySleepingRpcAttributeEntity,
-    async_setup_entry_attribute_entities,
+    async_setup_entry_block,
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
@@ -127,7 +127,7 @@ class RpcBluTrvBinarySensor(RpcBinarySensor):
         )
 
 
-SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
+BLOCK_SENSORS: dict[tuple[str, str], BlockBinarySensorDescription] = {
     ("device", "overtemp"): BlockBinarySensorDescription(
         key="device|overtemp",
         translation_key="overheating",
@@ -335,6 +335,7 @@ RPC_SENSORS: Final = {
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         supported=lambda status: status.get("alarm") is not None,
+        models={MODEL_FLOOD_G4},
     ),
     "presence_num_objects": RpcBinarySensorDescription(
         key="presence",
@@ -372,19 +373,19 @@ def _async_setup_block_entry(
 ) -> None:
     """Set up entities for BLOCK device."""
     if config_entry.data[CONF_SLEEP_PERIOD]:
-        async_setup_entry_attribute_entities(
+        async_setup_entry_block(
             hass,
             config_entry,
             async_add_entities,
-            SENSORS,
+            BLOCK_SENSORS,
             BlockSleepingBinarySensor,
         )
     else:
-        async_setup_entry_attribute_entities(
+        async_setup_entry_block(
             hass,
             config_entry,
             async_add_entities,
-            SENSORS,
+            BLOCK_SENSORS,
             BlockBinarySensor,
         )
         async_setup_entry_rest(

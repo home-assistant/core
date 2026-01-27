@@ -49,7 +49,7 @@ from homeassistant.helpers.service import (
 from homeassistant.helpers.signal import KEY_HA_STOP
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.target import (
-    TargetSelectorData,
+    TargetSelection,
     async_extract_referenced_entity_ids,
 )
 from homeassistant.helpers.template import async_load_custom_templates
@@ -115,7 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     async def async_handle_turn_service(service: ServiceCall) -> None:
         """Handle calls to homeassistant.turn_on/off."""
         referenced = async_extract_referenced_entity_ids(
-            hass, TargetSelectorData(service.data)
+            hass, TargetSelection(service.data)
         )
         all_referenced = referenced.referenced | referenced.indirectly_referenced
 

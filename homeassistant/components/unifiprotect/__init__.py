@@ -15,7 +15,7 @@ from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 # diagnostics module will not be imported in the executor.
 from uiprotect.test_util.anonymize import anonymize_data  # noqa: F401
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -40,7 +40,7 @@ from .const import (
     PLATFORMS,
 )
 from .data import ProtectData, UFPConfigEntry
-from .discovery import async_start_discovery
+from .discovery import DATA_UNIFIPROTECT, UniFiProtectRuntimeData, async_start_discovery
 from .migrate import async_migrate_data
 from .services import async_setup_services
 from .utils import (
@@ -64,6 +64,8 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the UniFi Protect."""
+    # Initialize domain data structure (setdefault in case discovery already started)
+    hass.data.setdefault(DATA_UNIFIPROTECT, UniFiProtectRuntimeData())
     # Only start discovery once regardless of how many entries they have
     async_setup_services(hass)
     async_start_discovery(hass)
@@ -79,11 +81,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     try:
         await protect.update()
     except NotAuthorized as err:
-        retry_key = f"{entry.entry_id}_auth"
-        retries = hass.data.setdefault(DOMAIN, {}).get(retry_key, 0)
+        domain_data = hass.data.setdefault(DATA_UNIFIPROTECT, UniFiProtectRuntimeData())
+        retries = domain_data.auth_retries.get(entry.entry_id, 0)
         if retries < AUTH_RETRIES:
             retries += 1
-            hass.data[DOMAIN][retry_key] = retries
+            domain_data.auth_retries[entry.entry_id] = retries
             raise ConfigEntryNotReady from err
         raise ConfigEntryAuthFailed(err) from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
@@ -158,6 +160,22 @@ async def _async_setup_entry(
 ) -> None:
     await async_migrate_data(hass, entry, data_service.api, bootstrap)
     data_service.async_setup()
+
+    # Create the NVR device before loading platforms
+    # This ensures via_device references work for all device entities
+    nvr = bootstrap.nvr
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, nvr.mac)},
+        identifiers={(DOMAIN, nvr.mac)},
+        manufacturer="Ubiquiti",
+        name=nvr.display_name,
+        model=nvr.type,
+        sw_version=str(nvr.version),
+        configuration_url=nvr.api.base_url,
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     hass.http.register_view(ThumbnailProxyView(hass))
     hass.http.register_view(SnapshotProxyView(hass))
@@ -208,7 +226,7 @@ async def async_remove_config_entry_device(
     return True
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     """Migrate entry."""
     _LOGGER.debug("Migrating configuration from version %s", entry.version)
 

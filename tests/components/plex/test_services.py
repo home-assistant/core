@@ -130,6 +130,10 @@ async def test_lookup_media_for_other_integrations(
         PLEX_URI_SCHEME
         + '{"library_name": "Music", "artist_name": "Artist", "shuffle": 1}'
     )
+    CONTENT_ID_CONTINUOUS = (
+        PLEX_URI_SCHEME
+        + '{"library_name": "Music", "artist_name": "Artist", "continuous": 1}'
+    )
 
     # Test with no Plex integration available
     with pytest.raises(HomeAssistantError) as excinfo:
@@ -158,6 +162,7 @@ async def test_lookup_media_for_other_integrations(
     )
     assert isinstance(result.media, plexapi.audio.Artist)
     assert not result.shuffle
+    assert not result.continuous
 
     # Test media key payload without playqueue
     result = process_plex_payload(
@@ -179,6 +184,13 @@ async def test_lookup_media_for_other_integrations(
     )
     assert isinstance(result.media, plexapi.audio.Artist)
     assert result.shuffle
+
+    # Test continuous without playqueue
+    result = process_plex_payload(
+        hass, MediaType.MUSIC, CONTENT_ID_CONTINUOUS, supports_playqueues=False
+    )
+    assert isinstance(result.media, plexapi.audio.Artist)
+    assert result.continuous
 
     # Test with media not found
     with patch(
@@ -208,6 +220,10 @@ async def test_lookup_media_for_other_integrations(
     result = process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID_SHUFFLE)
     assert isinstance(result.media, plexapi.playqueue.PlayQueue)
 
+    # Test playqueue is created with continuous
+    result = process_plex_payload(hass, MediaType.MUSIC, CONTENT_ID_CONTINUOUS)
+    assert isinstance(result.media, plexapi.playqueue.PlayQueue)
+
 
 async def test_lookup_media_with_urls(hass: HomeAssistant, mock_plex_server) -> None:
     """Test media lookup for media_player.play_media calls from cast/sonos."""
@@ -227,4 +243,13 @@ async def test_lookup_media_with_urls(hass: HomeAssistant, mock_plex_server) -> 
     )
     assert isinstance(result.media, plexapi.audio.Track)
     assert result.shuffle is True
+    assert result.offset == 0
+
+    # Test URL format with continuous
+    CONTENT_ID_URL_WITH_CONTINUOUS = CONTENT_ID_URL + "?continuous=1"
+    result = process_plex_payload(
+        hass, MediaType.MUSIC, CONTENT_ID_URL_WITH_CONTINUOUS, supports_playqueues=False
+    )
+    assert isinstance(result.media, plexapi.audio.Track)
+    assert result.continuous is True
     assert result.offset == 0

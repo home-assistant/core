@@ -108,9 +108,8 @@ class AnglianWaterSensorEntity(AnglianWaterEntity, SensorEntity):
         description: AnglianWaterSensorEntityDescription,
     ) -> None:
         """Initialize Anglian Water sensor."""
-        super().__init__(coordinator, smart_meter)
+        super().__init__(coordinator, smart_meter, description.key)
         self.entity_description = description
-        self._attr_unique_id = f"{smart_meter.serial_number}_{description.key}"
 
     @property
     def native_value(self) -> float | None:

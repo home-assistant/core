@@ -4,8 +4,8 @@
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nmbs",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pyrail"],
-  "quality_scale": "legacy",
   "requirements": ["pyrail==0.4.1"]
 }

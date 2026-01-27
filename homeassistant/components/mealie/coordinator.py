@@ -16,6 +16,7 @@ from aiomealie import (
     ShoppingList,
     Statistics,
 )
+from awesomeversion import AwesomeVersion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,6 +34,7 @@ class MealieData:
     """Mealie data type."""
 
     client: MealieClient
+    version: AwesomeVersion
     mealplan_coordinator: MealieMealplanCoordinator
     shoppinglist_coordinator: MealieShoppingListCoordinator
     statistics_coordinator: MealieStatisticsCoordinator

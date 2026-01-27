@@ -554,3 +554,30 @@ async def test_wall_display_screen_buttons(
         blocking=True,
     )
     mock_rpc_device.wall_display_set_screen.assert_called_once_with(value=value)
+
+
+async def test_rpc_remove_restart_button_for_sleeping_devices(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    device_registry: DeviceRegistry,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test RPC remove restart button for sleeping devices."""
+    config_entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
+    device_entry = register_device(device_registry, config_entry)
+    entity_id = register_entity(
+        hass,
+        BUTTON_DOMAIN,
+        "test_name_restart",
+        "reboot",
+        config_entry,
+        device_id=device_entry.id,
+    )
+
+    assert entity_registry.async_get(entity_id) is not None
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id) is None

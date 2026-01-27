@@ -113,13 +113,13 @@ class MockBridge:
         """Activate smart away."""
         self.smart_away_state = "Enabled"
         for callback in self._smart_away_subscribers:
-            callback()
+            callback(self.smart_away_state)
 
     async def _deactivate(self):
         """Deactivate smart away."""
         self.smart_away_state = "Disabled"
         for callback in self._smart_away_subscribers:
-            callback()
+            callback(self.smart_away_state)
 
     async def connect(self):
         """Connect the mock bridge."""

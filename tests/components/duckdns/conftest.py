@@ -12,6 +12,7 @@ from tests.common import MockConfigEntry
 
 TEST_SUBDOMAIN = "homeassistant"
 TEST_TOKEN = "123e4567-e89b-12d3-a456-426614174000"
+NEW_TOKEN = "11111111-2222-3333-4444-55555555"
 
 
 @pytest.fixture
@@ -42,7 +43,7 @@ def mock_update_duckdns() -> Generator[AsyncMock]:
     """Mock _update_duckdns."""
 
     with patch(
-        "homeassistant.components.duckdns.config_flow._update_duckdns",
+        "homeassistant.components.duckdns.config_flow.update_duckdns",
         return_value=True,
     ) as mock:
         yield mock

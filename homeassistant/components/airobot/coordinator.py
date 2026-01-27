@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -11,6 +12,7 @@ from pyairobotrest.exceptions import AirobotAuthError, AirobotConnectionError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -51,9 +53,19 @@ class AirobotDataUpdateCoordinator(DataUpdateCoordinator[AirobotData]):
     async def _async_update_data(self) -> AirobotData:
         """Fetch data from API endpoint."""
         try:
-            status = await self.client.get_statuses()
-            settings = await self.client.get_settings()
-        except (AirobotAuthError, AirobotConnectionError) as err:
-            raise UpdateFailed(f"Failed to communicate with device: {err}") from err
+            status, settings = await asyncio.gather(
+                self.client.get_statuses(),
+                self.client.get_settings(),
+            )
+        except AirobotAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
+        except AirobotConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+            ) from err
 
         return AirobotData(status=status, settings=settings)

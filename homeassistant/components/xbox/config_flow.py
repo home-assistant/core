@@ -8,11 +8,26 @@ from httpx import AsyncClient
 from pythonxbox.api.client import XboxLiveClient
 from pythonxbox.authentication.manager import AuthenticationManager
 from pythonxbox.authentication.models import OAuth2TokenResponse
+import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigEntryState,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
+)
+from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+)
 
-from .const import DOMAIN
+from .const import CONF_XUID, DOMAIN
+from .coordinator import XboxConfigEntry
 
 
 class OAuth2FlowHandler(
@@ -22,7 +37,7 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @property
     def logger(self) -> logging.Logger:
@@ -34,6 +49,14 @@ class OAuth2FlowHandler(
         """Extra data that needs to be appended to the authorize url."""
         scopes = ["Xboxlive.signin", "Xboxlive.offline_access"]
         return {"scope": " ".join(scopes)}
+
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {"friend": FriendSubentryFlowHandler}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -65,6 +88,14 @@ class OAuth2FlowHandler(
             )
 
         self._abort_if_unique_id_configured()
+
+        config_entries = self.hass.config_entries.async_entries(DOMAIN)
+        for entry in config_entries:
+            if client.xuid in {
+                subentry.unique_id for subentry in entry.subentries.values()
+            }:
+                return self.async_abort(reason="already_configured_as_subentry")
+
         return self.async_create_entry(title=me.people[0].gamertag, data=data)
 
     async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
@@ -78,3 +109,63 @@ class OAuth2FlowHandler(
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
+
+
+class FriendSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding a friend."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Subentry user flow."""
+        config_entry: XboxConfigEntry = self._get_entry()
+        if config_entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="config_entry_not_loaded")
+
+        client = config_entry.runtime_data.presence.client
+        friends_list = await client.people.get_friends_own()
+
+        if user_input is not None:
+            config_entries = self.hass.config_entries.async_entries(DOMAIN)
+            if user_input[CONF_XUID] in {entry.unique_id for entry in config_entries}:
+                return self.async_abort(reason="already_configured_as_entry")
+            for entry in config_entries:
+                if user_input[CONF_XUID] in {
+                    subentry.unique_id for subentry in entry.subentries.values()
+                }:
+                    return self.async_abort(reason="already_configured")
+
+            return self.async_create_entry(
+                title=next(
+                    f.gamertag
+                    for f in friends_list.people
+                    if f.xuid == user_input[CONF_XUID]
+                ),
+                data={},
+                unique_id=user_input[CONF_XUID],
+            )
+
+        if not friends_list.people:
+            return self.async_abort(reason="no_friends")
+
+        options = [
+            SelectOptionDict(
+                value=friend.xuid,
+                label=friend.gamertag,
+            )
+            for friend in friends_list.people
+        ]
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_XUID): SelectSelector(
+                            SelectSelectorConfig(options=options)
+                        )
+                    }
+                ),
+                user_input,
+            ),
+        )

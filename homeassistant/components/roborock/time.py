@@ -7,7 +7,7 @@ from datetime import time
 import logging
 from typing import Any
 
-from roborock.data import DnDTimer
+from roborock.data import DnDTimer, ValleyElectricityTimer
 from roborock.exceptions import RoborockException
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
@@ -80,13 +80,14 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
         key="off_peak_start",
         translation_key="off_peak_start",
         trait=lambda api: api.valley_electricity_timer,
-        update_value=lambda trait, desired_time: trait.update_value(
-            [
-                desired_time.hour,
-                desired_time.minute,
-                trait.end_hour,
-                trait.end_minute,
-            ]
+        update_value=lambda trait, desired_time: trait.set_timer(
+            ValleyElectricityTimer(
+                enabled=trait.enabled,
+                start_hour=desired_time.hour,
+                start_minute=desired_time.minute,
+                end_hour=trait.end_hour,
+                end_minute=trait.end_minute,
+            )
         ),
         get_value=lambda trait: datetime.time(
             hour=trait.start_hour, minute=trait.start_minute
@@ -98,13 +99,14 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
         key="off_peak_end",
         translation_key="off_peak_end",
         trait=lambda api: api.valley_electricity_timer,
-        update_value=lambda trait, desired_time: trait.update_value(
-            [
-                trait.start_hour,
-                trait.start_minute,
-                desired_time.hour,
-                desired_time.minute,
-            ]
+        update_value=lambda trait, desired_time: trait.set_timer(
+            ValleyElectricityTimer(
+                enabled=trait.enabled,
+                start_hour=trait.start_hour,
+                start_minute=trait.start_minute,
+                end_hour=desired_time.hour,
+                end_minute=desired_time.minute,
+            )
         ),
         get_value=lambda trait: datetime.time(
             hour=trait.end_hour, minute=trait.end_minute

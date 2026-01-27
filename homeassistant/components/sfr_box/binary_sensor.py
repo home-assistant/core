@@ -97,6 +97,4 @@ class SFRBoxBinarySensor[_T](SFRCoordinatorEntity[_T], BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the native value of the device."""
-        if self.coordinator.data is None:
-            return None
         return self.entity_description.value_fn(self.coordinator.data)

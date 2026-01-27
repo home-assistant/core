@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'MQTT up since',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power supply mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -131,6 +133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -182,6 +185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Up since',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -233,6 +237,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume flow rate',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -289,6 +294,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water meter duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -345,6 +351,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water meter volume',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -401,6 +408,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -457,6 +465,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -511,6 +520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi up since',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,

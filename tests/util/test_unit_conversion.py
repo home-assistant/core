@@ -56,11 +56,15 @@ from homeassistant.util.unit_conversion import (
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
+    NitrogenDioxideConcentrationConverter,
+    NitrogenMonoxideConcentrationConverter,
+    OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
+    SulphurDioxideConcentrationConverter,
     TemperatureConverter,
     TemperatureDeltaConverter,
     UnitlessRatioConverter,
@@ -91,6 +95,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         InformationConverter,
         MassConverter,
         ApparentPowerConverter,
+        OzoneConcentrationConverter,
         PowerConverter,
         PressureConverter,
         ReactiveEnergyConverter,
@@ -102,6 +107,9 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         EnergyDistanceConverter,
         VolumeConverter,
         VolumeFlowRateConverter,
+        NitrogenDioxideConcentrationConverter,
+        NitrogenMonoxideConcentrationConverter,
+        SulphurDioxideConcentrationConverter,
     )
 }
 
@@ -158,6 +166,21 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         1000,
     ),
+    NitrogenDioxideConcentrationConverter: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        1.912503,
+    ),
+    NitrogenMonoxideConcentrationConverter: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        1.247389,
+    ),
+    OzoneConcentrationConverter: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        1.995417,
+    ),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
     PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
     ReactiveEnergyConverter: (
@@ -174,6 +197,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.MILES_PER_HOUR,
         1.609343,
+    ),
+    SulphurDioxideConcentrationConverter: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        2.6633,
     ),
     TemperatureConverter: (
         UnitOfTemperature.CELSIUS,
@@ -295,7 +323,32 @@ _CONVERTED_VALUE: dict[
         ),
     ],
     CarbonMonoxideConcentrationConverter: [
+        # PPB to other units
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            0.001,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            1.16441,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            0.00116441,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
         # PPM to other units
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            1000,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
         (
             1,
             CONCENTRATION_PARTS_PER_MILLION,
@@ -308,24 +361,17 @@ _CONVERTED_VALUE: dict[
             1164.41,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
-        # MILLIGRAMS_PER_CUBIC_METER to other units
-        (
-            120,
-            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-            103.05655,
-            CONCENTRATION_PARTS_PER_MILLION,
-        ),
-        (
-            120,
-            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-            120000,
-            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        ),
         # MICROGRAMS_PER_CUBIC_METER to other units
         (
             120000,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            103.05655,
+            103056.5,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+        (
+            120000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            103.0565,
             CONCENTRATION_PARTS_PER_MILLION,
         ),
         (
@@ -333,6 +379,53 @@ _CONVERTED_VALUE: dict[
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             120,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
+        # MILLIGRAMS_PER_CUBIC_METER to other units
+        (
+            120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            103056.5,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+        (
+            120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            103.0565,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            120000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+    ],
+    NitrogenDioxideConcentrationConverter: [
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            1.912503,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            62.744976,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+    ],
+    NitrogenMonoxideConcentrationConverter: [
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            1.247389,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            96.200906,
+            CONCENTRATION_PARTS_PER_BILLION,
         ),
     ],
     ConductivityConverter: [
@@ -670,6 +763,20 @@ _CONVERTED_VALUE: dict[
         (1, UnitOfMass.STONES, 14, UnitOfMass.POUNDS),
         (1, UnitOfMass.STONES, 224, UnitOfMass.OUNCES),
     ],
+    OzoneConcentrationConverter: [
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            1.995417,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            60.1378,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+    ],
     PowerConverter: [
         (10, UnitOfPower.KILO_WATT, 10000, UnitOfPower.WATT),
         (10, UnitOfPower.MEGA_WATT, 10e6, UnitOfPower.WATT),
@@ -845,6 +952,20 @@ _CONVERTED_VALUE: dict[
         (5, UnitOfSpeed.FEET_PER_SECOND, 1.524, UnitOfSpeed.METERS_PER_SECOND),
         # float(round(((20.7 m/s / 0.836) ** 2) ** (1 / 3))) = 8.0Bft
         (20.7, UnitOfSpeed.METERS_PER_SECOND, 8.0, UnitOfSpeed.BEAUFORT),
+    ],
+    SulphurDioxideConcentrationConverter: [
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            2.6633,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            45.056879,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
     ],
     TemperatureConverter: [
         (100, UnitOfTemperature.CELSIUS, 212, UnitOfTemperature.FAHRENHEIT),
@@ -1054,6 +1175,12 @@ _CONVERTED_VALUE: dict[
             10,
             UnitOfVolumeFlowRate.LITERS_PER_SECOND,
         ),
+        (
+            24,
+            UnitOfVolumeFlowRate.GALLONS_PER_DAY,
+            1,
+            UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
+        ),
     ],
 }
 
@@ -1258,6 +1385,58 @@ def test_unit_conversion_factory_allow_none_with_none() -> None:
         )(None)
         is None
     )
+    assert (
+        EnergyDistanceConverter.converter_factory_allow_none(
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+        )(0)
+        is None
+    )
+    assert (
+        EnergyDistanceConverter.converter_factory_allow_none(
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            UnitOfEnergyDistance.WATT_HOUR_PER_KM,
+        )(0)
+        == 0
+    )
+    assert (
+        EnergyDistanceConverter.converter_factory_allow_none(
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+        )(0.0)
+        == 0.0
+    )
+    assert (
+        EnergyDistanceConverter.converter_factory_allow_none(
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+        )(0)
+        == 0.0
+    )
+
+
+def test_unit_conversion_factory_allow_none_with_zero_for_inverse_units() -> None:
+    """Test converter_factory_allow_none returns None for zero with inverse units."""
+    # Test EnergyDistanceConverter with inverse units (kWh/100km <-> km/kWh)
+    assert (
+        EnergyDistanceConverter.converter_factory_allow_none(
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+        )(0)
+        is None
+    )
+    assert (
+        EnergyDistanceConverter.converter_factory_allow_none(
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+        )(0)
+        is None
+    )
+    # Test with non-zero value to ensure normal conversion still works
+    assert EnergyDistanceConverter.converter_factory_allow_none(
+        UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+    )(25) == pytest.approx(4)
 
 
 @pytest.mark.parametrize(

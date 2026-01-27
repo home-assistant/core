@@ -5264,7 +5264,7 @@ async def test_addon_rf_region_new_network(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "rf_region"
 
     # Check that all expected RF regions are available
@@ -5435,7 +5435,7 @@ async def test_addon_rf_region_migrate_network(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "rf_region"
 
     result = await hass.config_entries.flow.async_configure(

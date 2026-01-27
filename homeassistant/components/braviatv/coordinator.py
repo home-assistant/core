@@ -22,7 +22,7 @@ from homeassistant.components.media_player import MediaType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -56,8 +56,31 @@ def catch_braviatv_errors[_BraviaTVCoordinatorT: BraviaTVCoordinator, **_P](
         """Catch Bravia errors and log message."""
         try:
             await func(self, *args, **kwargs)
+        except BraviaNotFound as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_error_not_found",
+                translation_placeholders={
+                    "device": self.config_entry.title,
+                },
+            ) from err
+        except (BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_error_offline",
+                translation_placeholders={
+                    "device": self.config_entry.title,
+                },
+            ) from err
         except BraviaError as err:
-            _LOGGER.error("Command error: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_error",
+                translation_placeholders={
+                    "device": self.config_entry.title,
+                    "error": repr(err),
+                },
+            ) from err
         await self.async_request_refresh()
 
     return wrapper
@@ -165,17 +188,35 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             if self.skipped_updates < 10:
                 self.connected = False
                 self.skipped_updates += 1
-                _LOGGER.debug("Update skipped, Bravia API service is reloading")
+                _LOGGER.debug(
+                    "Update for %s skipped: the Bravia API service is reloading",
+                    self.config_entry.title,
+                )
                 return
-            raise UpdateFailed("Error communicating with device") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error_not_found",
+                translation_placeholders={
+                    "device": self.config_entry.title,
+                },
+            ) from err
         except (BraviaConnectionError, BraviaConnectionTimeout, BraviaTurnedOff):
             self.is_on = False
             self.connected = False
-            _LOGGER.debug("Update skipped, Bravia TV is off")
+            _LOGGER.debug(
+                "Update for %s skipped: the TV is turned off", self.config_entry.title
+            )
         except BraviaError as err:
             self.is_on = False
             self.connected = False
-            raise UpdateFailed("Error communicating with device") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={
+                    "device": self.config_entry.title,
+                    "error": repr(err),
+                },
+            ) from err
 
     async def async_update_volume(self) -> None:
         """Update volume information."""

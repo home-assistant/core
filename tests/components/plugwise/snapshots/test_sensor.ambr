@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -134,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -190,6 +193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -246,6 +250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -302,6 +307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -358,6 +364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -411,6 +418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -464,6 +472,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -520,6 +529,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -576,6 +586,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -629,6 +640,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -682,6 +694,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -738,6 +751,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -794,6 +808,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -847,6 +862,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -903,6 +919,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -959,6 +976,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1015,6 +1033,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1071,6 +1090,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1127,6 +1147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intended boiler temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1183,6 +1204,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1216,6 +1238,120 @@
     'state': '37.0',
   })
 # ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.test_electricity_consumed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_electricity_consumed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity consumed',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Electricity consumed',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_consumed',
+    'unique_id': 'e8ef2a01ed3b4139a53bf749204fe6b4-electricity_consumed',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.test_electricity_consumed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Test Electricity consumed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_electricity_consumed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16.5',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.test_electricity_produced-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_electricity_produced',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity produced',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Electricity produced',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_produced',
+    'unique_id': 'e8ef2a01ed3b4139a53bf749204fe6b4-electricity_produced',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.test_electricity_produced-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Test Electricity produced',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_electricity_produced',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.tom_badkamer_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1239,6 +1375,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1292,6 +1429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1348,6 +1486,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1404,6 +1543,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature difference',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1460,6 +1600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Valve position',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1489,6 +1630,177 @@
     'state': '100.0',
   })
 # ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.vloerverwarming_electricity_consumed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.vloerverwarming_electricity_consumed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity consumed',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Electricity consumed',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_consumed',
+    'unique_id': 'c9293d1d68ee48fc8843c6f0dee2b6be-electricity_consumed',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.vloerverwarming_electricity_consumed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Vloerverwarming Electricity consumed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vloerverwarming_electricity_consumed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '45.0',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.vloerverwarming_electricity_produced-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.vloerverwarming_electricity_produced',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Electricity produced',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Electricity produced',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'electricity_produced',
+    'unique_id': 'c9293d1d68ee48fc8843c6f0dee2b6be-electricity_produced',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.vloerverwarming_electricity_produced-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Vloerverwarming Electricity produced',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vloerverwarming_electricity_produced',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.vloerverwarming_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.vloerverwarming_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'c9293d1d68ee48fc8843c6f0dee2b6be-temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_adam_sensor_snapshot[platforms0-False-m_adam_heating][sensor.vloerverwarming_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Vloerverwarming Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vloerverwarming_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.1',
+  })
+# ---
 # name: test_anna_p1_sensor_snapshot[platforms0][sensor.anna_illuminance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1512,6 +1824,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -1565,6 +1878,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1621,6 +1935,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1677,6 +1992,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intended boiler temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1733,6 +2049,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Modulation level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1785,6 +2102,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1841,6 +2159,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1897,6 +2216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed off-peak cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1953,6 +2273,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed off-peak interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2009,6 +2330,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed off-peak point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2065,6 +2387,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed peak cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2121,6 +2444,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed peak interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2177,6 +2501,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed peak point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2233,6 +2558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity phase one consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2289,6 +2615,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity phase one produced',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2345,6 +2672,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced off-peak cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2401,6 +2729,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced off-peak interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2457,6 +2786,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced off-peak point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2513,6 +2843,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced peak cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2569,6 +2900,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced peak interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2625,6 +2957,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced peak point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2681,6 +3014,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas consumed cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2737,6 +3071,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas consumed interval',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2789,6 +3124,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Net electricity cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2845,6 +3181,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Net electricity point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2901,6 +3238,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase one',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2957,6 +3295,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3013,6 +3352,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooling setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3069,6 +3409,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3125,6 +3466,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -3178,6 +3520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3234,6 +3577,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3290,6 +3634,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intended boiler temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3346,6 +3691,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Modulation level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3398,6 +3744,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3454,6 +3801,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Return temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3510,6 +3858,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3566,6 +3915,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3622,6 +3972,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outdoor temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3678,6 +4029,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed off-peak cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3734,6 +4086,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed off-peak interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3790,6 +4143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed off-peak point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3846,6 +4200,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed peak cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3902,6 +4257,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed peak interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3958,6 +4314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed peak point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4014,6 +4371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity phase one consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4070,6 +4428,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity phase one produced',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4126,6 +4485,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity phase three consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4182,6 +4542,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity phase three produced',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4238,6 +4599,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity phase two consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4294,6 +4656,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity phase two produced',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4350,6 +4713,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced off-peak cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4406,6 +4770,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced off-peak interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4462,6 +4827,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced off-peak point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4518,6 +4884,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced peak cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4574,6 +4941,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced peak interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4630,6 +4998,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced peak point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4686,6 +5055,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas consumed cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4742,6 +5112,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gas consumed interval',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4794,6 +5165,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Net electricity cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4850,6 +5222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Net electricity point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4906,6 +5279,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase one',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4962,6 +5336,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase three',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5018,6 +5393,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage phase two',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5074,6 +5450,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed off-peak cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5130,6 +5507,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed off-peak interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5186,6 +5564,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed off-peak point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5242,6 +5621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed peak cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5298,6 +5678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed peak interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5354,6 +5735,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed peak point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5410,6 +5792,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity phase one consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5466,6 +5849,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity phase one produced',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5522,6 +5906,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced off-peak cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5578,6 +5963,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced off-peak interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5634,6 +6020,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced off-peak point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5690,6 +6077,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced peak cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5746,6 +6134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced peak interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5802,6 +6191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced peak point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5858,6 +6248,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Net electricity cumulative',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5914,6 +6305,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Net electricity point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5970,6 +6362,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6026,6 +6419,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6082,6 +6476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6138,6 +6533,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6194,6 +6590,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6250,6 +6647,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6306,6 +6704,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6362,6 +6761,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6418,6 +6818,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6474,6 +6875,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6530,6 +6932,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6586,6 +6989,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6642,6 +7046,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6698,6 +7103,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity consumed interval',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6754,6 +7160,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity produced',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

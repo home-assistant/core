@@ -431,25 +431,13 @@ class DefaultAgent(ConversationEntity):
     ) -> ConversationResult:
         """Handle a message."""
         response: intent.IntentResponse | None = None
-        tool_input: llm.ToolInput | None = None
-        tool_result: dict[str, Any] = {}
 
         # Check if a trigger matched
         if trigger_result := await self.async_recognize_sentence_trigger(user_input):
             # Process callbacks and get response
             response_text = await self._handle_trigger_result(
-                trigger_result, user_input
+                trigger_result, user_input, chat_log
             )
-
-            # Create tool result
-            tool_input = llm.ToolInput(
-                tool_name="trigger_sentence",
-                tool_args={},
-                external=True,
-            )
-            tool_result = {
-                "response": response_text,
-            }
 
             # Convert to conversation result
             response = intent.IntentResponse(
@@ -462,40 +450,7 @@ class DefaultAgent(ConversationEntity):
             intent_result = await self.async_recognize_intent(user_input)
 
             response = await self._async_process_intent_result(
-                intent_result, user_input
-            )
-
-            if response.response_type != intent.IntentResponseType.ERROR:
-                assert intent_result is not None
-                assert intent_result.intent is not None
-                # Create external tool call for the intent
-                tool_input = llm.ToolInput(
-                    tool_name=intent_result.intent.name,
-                    tool_args={
-                        entity.name: entity.value or entity.text
-                        for entity in intent_result.entities_list
-                    },
-                    external=True,
-                )
-                # Create tool result from intent response
-                tool_result = llm.IntentResponseDict(response)
-
-        # Add tool call and result to chat log if we have one
-        if tool_input is not None:
-            chat_log.async_add_assistant_content_without_tools(
-                AssistantContent(
-                    agent_id=user_input.agent_id,
-                    content=None,
-                    tool_calls=[tool_input],
-                )
-            )
-            chat_log.async_add_assistant_content_without_tools(
-                ToolResultContent(
-                    agent_id=user_input.agent_id,
-                    tool_call_id=tool_input.id,
-                    tool_name=tool_input.tool_name,
-                    tool_result=tool_result,
-                )
+                intent_result, user_input, chat_log
             )
 
         speech: str = response.speech.get("plain", {}).get("speech", "")
@@ -514,6 +469,7 @@ class DefaultAgent(ConversationEntity):
         self,
         result: RecognizeResult | None,
         user_input: ConversationInput,
+        chat_log: ChatLog,
     ) -> intent.IntentResponse:
         """Process user input with intents."""
         language = user_input.language or self.hass.config.language
@@ -576,11 +532,20 @@ class DefaultAgent(ConversationEntity):
             ConversationTraceEventType.TOOL_CALL,
             {
                 "intent_name": result.intent.name,
-                "slots": {
-                    entity.name: entity.value or entity.text
-                    for entity in result.entities_list
-                },
+                "slots": {entity.name: entity.value for entity in result.entities_list},
             },
+        )
+        tool_input = llm.ToolInput(
+            tool_name=result.intent.name,
+            tool_args={entity.name: entity.value for entity in result.entities_list},
+            external=True,
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id=user_input.agent_id,
+                content=None,
+                tool_calls=[tool_input],
+            )
         )
 
         try:
@@ -643,6 +608,16 @@ class DefaultAgent(ConversationEntity):
                     language, response_template, intent_response, result
                 )
                 intent_response.async_set_speech(speech)
+
+        tool_result = llm.IntentResponseDict(intent_response)
+        chat_log.async_add_assistant_content_without_tools(
+            ToolResultContent(
+                agent_id=user_input.agent_id,
+                tool_call_id=tool_input.id,
+                tool_name=tool_input.tool_name,
+                tool_result=tool_result,
+            )
+        )
 
         return intent_response
 
@@ -1570,15 +1545,30 @@ class DefaultAgent(ConversationEntity):
         )
 
     async def _handle_trigger_result(
-        self, result: SentenceTriggerResult, user_input: ConversationInput
+        self,
+        result: SentenceTriggerResult,
+        user_input: ConversationInput,
+        chat_log: ChatLog,
     ) -> str:
         """Run sentence trigger callbacks and return response text."""
-
         # Gather callback responses in parallel
         trigger_callbacks = [
             self._triggers_details[trigger_id].callback(user_input, trigger_result)
             for trigger_id, trigger_result in result.matched_triggers.items()
         ]
+
+        tool_input = llm.ToolInput(
+            tool_name="trigger_sentence",
+            tool_args={},
+            external=True,
+        )
+        chat_log.async_add_assistant_content_without_tools(
+            AssistantContent(
+                agent_id=user_input.agent_id,
+                content=None,
+                tool_calls=[tool_input],
+            )
+        )
 
         # Use first non-empty result as response.
         #
@@ -1608,23 +1598,38 @@ class DefaultAgent(ConversationEntity):
                 f"component.{DOMAIN}.conversation.agent.done", "Done"
             )
 
+        tool_result: dict[str, Any] = {"response": response_text}
+        chat_log.async_add_assistant_content_without_tools(
+            ToolResultContent(
+                agent_id=user_input.agent_id,
+                tool_call_id=tool_input.id,
+                tool_name=tool_input.tool_name,
+                tool_result=tool_result,
+            )
+        )
+
         return response_text
 
     async def async_handle_sentence_triggers(
-        self, user_input: ConversationInput
+        self,
+        user_input: ConversationInput,
+        chat_log: ChatLog,
     ) -> str | None:
         """Try to input sentence against sentence triggers and return response text.
 
         Returns None if no match occurred.
         """
         if trigger_result := await self.async_recognize_sentence_trigger(user_input):
-            return await self._handle_trigger_result(trigger_result, user_input)
+            return await self._handle_trigger_result(
+                trigger_result, user_input, chat_log
+            )
 
         return None
 
     async def async_handle_intents(
         self,
         user_input: ConversationInput,
+        chat_log: ChatLog,
         *,
         intent_filter: Callable[[RecognizeResult], bool] | None = None,
     ) -> intent.IntentResponse | None:
@@ -1640,7 +1645,7 @@ class DefaultAgent(ConversationEntity):
             # No error message on failed match
             return None
 
-        response = await self._async_process_intent_result(result, user_input)
+        response = await self._async_process_intent_result(result, user_input, chat_log)
         if (
             response.response_type == intent.IntentResponseType.ERROR
             and response.error_code

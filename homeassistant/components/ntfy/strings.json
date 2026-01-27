@@ -1,6 +1,7 @@
 {
   "common": {
     "add_topic_description": "Set up a topic for notifications.",
+    "sequence_id": "Sequence ID",
     "topic": "Topic"
   },
   "config": {
@@ -171,6 +172,9 @@
           "icon": { "name": "Icon" },
           "message": { "name": "Message" },
           "priority": { "name": "Priority" },
+          "sequence_id": {
+            "name": "[%key:component::ntfy::common::sequence_id%]"
+          },
           "tags": { "name": "Tags" },
           "time": { "name": "Time" },
           "title": { "name": "Title" },
@@ -345,7 +349,7 @@
           "name": "Icon URL"
         },
         "markdown": {
-          "description": "Enable Markdown formatting for the message body. See the Markdown guide for syntax details: https://www.markdownguide.org/basic-syntax/.",
+          "description": "Enable Markdown formatting for the message body. See the [Markdown guide]({markdown_guide_url}) for syntax details.",
           "name": "Format as Markdown"
         },
         "message": {
@@ -356,8 +360,12 @@
           "description": "All messages have a priority that defines how urgently your phone notifies you, depending on the configured vibration patterns, notification sounds, and visibility in the notification drawer or pop-over.",
           "name": "Message priority"
         },
+        "sequence_id": {
+          "description": "Enter a message or sequence ID to update an existing notification, or specify a sequence ID to reference later when updating, clearing (mark as read and dismiss), or deleting a notification.",
+          "name": "[%key:component::ntfy::common::sequence_id%]"
+        },
         "tags": {
-          "description": "Add tags or emojis to the notification. Emojis (using shortcodes like smile) will appear in the notification title or message. Other tags will be displayed below the notification content.",
+          "description": "Add tags or emojis to the notification. Emojis (using shortcodes like `smile`) will appear in the notification title or message. Other tags will be displayed below the notification content. See the [emoji short code reference]({emoji_reference_url}) for a list of supported emojis.",
           "name": "Tags/Emojis"
         },
         "title": {

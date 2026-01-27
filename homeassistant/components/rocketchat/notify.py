@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from rocketchat_API.APIExceptions.RocketExceptions import (
     RocketAuthenticationException,
@@ -69,7 +70,7 @@ class RocketChatNotificationService(BaseNotificationService):
         self._room = room
         self._server = RocketChat(username, password, server_url=url)
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to Rocket.Chat."""
         data = kwargs.get(ATTR_DATA) or {}
         resp = self._server.chat_post_message(message, channel=self._room, **data)

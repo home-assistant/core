@@ -33,7 +33,7 @@ async def test_config_not_ready(
 ) -> None:
     """Test for setup failure if an API call fails."""
     mock_config_entry.add_to_hass(hass)
-    mock_api.async_air_quality.side_effect = GoogleAirQualityApiError()
+    mock_api.async_get_current_conditions.side_effect = GoogleAirQualityApiError()
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 

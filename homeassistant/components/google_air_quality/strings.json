@@ -47,21 +47,26 @@
   "config_subentries": {
     "location": {
       "abort": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
         "unable_to_fetch": "[%key:component::google_air_quality::common::unable_to_fetch%]"
       },
       "entry_type": "Air quality location",
       "error": {
-        "no_data_for_location": "Information is unavailable for this location. Please try a different location.",
+        "location_already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+        "location_name_already_configured": "Location name already configured.",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "initiate_flow": {
         "user": "Add location"
       },
       "step": {
-        "user": {
+        "location": {
           "data": {
-            "location": "[%key:common::config_flow::data::location%]"
+            "location": "[%key:common::config_flow::data::location%]",
+            "name": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "location": "[%key:component::google_air_quality::config::step::user::data_description::location%]",
+            "name": "[%key:component::google_air_quality::config::step::user::data_description::name%]"
           },
           "description": "Select the coordinates for which you want to create an entry.",
           "title": "Air quality data location"
@@ -71,6 +76,12 @@
   },
   "entity": {
     "sensor": {
+      "ammonia": {
+        "name": "Ammonia"
+      },
+      "benzene": {
+        "name": "Benzene"
+      },
       "local_aqi": {
         "name": "{local_aqi} AQI"
       },
@@ -83,16 +94,16 @@
           "1b_good_air_quality": "1B - Good air quality",
           "2_cyan": "2 - Cyan",
           "2_light_green": "2 - Light green",
-          "2_orange": "4 - Orange",
-          "2_red": "5 - Red",
-          "2_yellow": "3 - Yellow",
           "2a_acceptable_air_quality": "2A - Acceptable air quality",
           "2b_acceptable_air_quality": "2B - Acceptable air quality",
           "3_green": "3 - Green",
+          "3_yellow": "3 - Yellow",
           "3a_aggravated_air_quality": "3A - Aggravated air quality",
           "3b_bad_air_quality": "3B - Bad air quality",
+          "4_orange": "4 - Orange",
           "4_yellow_watch": "4 - Yellow/Watch",
           "5_orange_alert": "5 - Orange/Alert",
+          "5_red": "5 - Red",
           "6_red_alert": "6 - Red/Alert+",
           "10_33": "10-33% of guideline",
           "33_66": "33-66% of guideline",
@@ -132,7 +143,6 @@
           "heavily_polluted": "Heavily polluted",
           "heavy_air_pollution": "Heavy air pollution",
           "high_air_pollution": "High air pollution",
-          "high_air_quality": "High air pollution",
           "high_health_risk": "High health risk",
           "horrible_air_quality": "Horrible air quality",
           "light_air_pollution": "Light air pollution",
@@ -165,20 +175,18 @@
           "slightly_polluted": "Slightly polluted",
           "sufficient_air_quality": "Sufficient air quality",
           "unfavorable_air_quality": "Unfavorable air quality",
-          "unfavorable_sensitive": "Unfavorable air quality for sensitive groups",
+          "unfavorable_air_quality_for_sensitive_groups": "Unfavorable air quality for sensitive groups",
           "unhealthy_air_quality": "Unhealthy air quality",
           "unhealthy_sensitive": "Unhealthy air quality for sensitive groups",
           "unsatisfactory_air_quality": "Unsatisfactory air quality",
           "very_bad_air_quality": "Very bad air quality",
           "very_good_air_quality": "Very good air quality",
           "very_high_air_pollution": "Very high air pollution",
-          "very_high_air_quality": "Very High air pollution",
           "very_high_health_risk": "Very high health risk",
           "very_low_air_pollution": "Very low air pollution",
           "very_polluted": "Very polluted",
           "very_poor_air_quality": "Very poor air quality",
           "very_unfavorable_air_quality": "Very unfavorable air quality",
-          "very_unhealthy": "Very unhealthy air quality",
           "very_unhealthy_air_quality": "Very unhealthy air quality",
           "warning_air_pollution": "Warning level air pollution"
         }
@@ -187,6 +195,9 @@
         "name": "{local_aqi} dominant pollutant",
         "state": {
           "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "nh3": "[%key:component::google_air_quality::entity::sensor::ammonia::name%]",
+          "nmhc": "[%key:component::google_air_quality::entity::sensor::non_methane_hydrocarbons::name%]",
+          "no": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]",
           "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
           "o3": "[%key:component::sensor::entity_component::ozone::name%]",
           "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
@@ -194,14 +205,8 @@
           "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
         }
       },
-      "nitrogen_dioxide": {
-        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
-      },
-      "ozone": {
-        "name": "[%key:component::sensor::entity_component::ozone::name%]"
-      },
-      "sulphur_dioxide": {
-        "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+      "non_methane_hydrocarbons": {
+        "name": "Non-methane hydrocarbons"
       },
       "uaqi": {
         "name": "Universal Air Quality Index"

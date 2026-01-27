@@ -1,0 +1,64 @@
+[
+  {
+    "id": "mow.DE-BW-S-SE018-20211102-18-001",
+    "headline": "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen",
+    "severity": "Minor",
+    "description": "Die Zahl der mit dem Corona-Virus infizierten Menschen steigt gegenwärtig stark an. Es wächst daher die Gefahr einer weiteren Verbreitung der Infektion und - je nach Einzelfall - auch von schweren Erkrankungen.",
+    "sender": null,
+    "affected_areas": [
+      "Bundesland: Freie Hansestadt Bremen, Land Berlin, Land Hessen, Land Nordrhein-Westfalen, Land Brandenburg, Freistaat Bayern, Land Mecklenburg-Vorpommern, Land Rheinland-Pfalz, Freistaat Sachsen, Land Schleswig-Holstein, Freie und Hansestadt Hamburg, Freistaat Thüringen, Land Niedersachsen, Land Saarland, Land Sachsen-Anhalt, Land Baden-Württemberg"
+    ],
+    "recommended_actions": ["Waschen sich regelmäßig und gründlich die Hände."],
+    "web": null,
+    "sent": "2021-11-02T20:07:16+01:00",
+    "start": null,
+    "expires": null
+  },
+  {
+    "id": "mow.DE-NW-BN-SE030-20201014-30-000",
+    "headline": "Ausfall Notruf 112",
+    "severity": "Minor",
+    "description": "Es treten Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus westlicher Richtung auf. In Schauernähe sowie in exponierten Lagen muss mit schweren Sturmböen bis 90 km/h (25m/s, 48kn, Bft 10) gerechnet werden.",
+    "sender": "Deutscher Wetterdienst",
+    "affected_areas": [
+      "Gemeinde Oberreichenbach, Gemeinde Neuweiler, Stadt Nagold, Stadt Neubulach, Gemeinde Schömberg, Gemeinde Simmersfeld, Gemeinde Simmozheim, Gemeinde Rohrdorf, Gemeinde Ostelsheim, Gemeinde Ebhausen, Gemeinde Egenhausen, Gemeinde Dobel, Stadt Bad Liebenzell, Stadt Solingen, Stadt Haiterbach, Stadt Bad Herrenalb, Gemeinde Höfen an der Enz, Gemeinde Gechingen, Gemeinde Enzklösterle, Gemeinde Gutach (Schwarzwaldbahn) und 3392 weitere."
+    ],
+    "recommended_actions": [],
+    "web": "https://www.wettergefahren.de",
+    "sent": "2021-10-11T05:20:00+01:00",
+    "start": "2021-11-01T05:20:00+01:00",
+    "expires": "3021-11-22T05:19:00+01:00"
+  },
+  {
+    "id": "mow.DE-NW-BN-SE030-20201014-30-011",
+    "headline": "Ausfall Notruf 112",
+    "severity": "Minor",
+    "description": "Es treten Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus westlicher Richtung auf. In Schauernähe sowie in exponierten Lagen muss mit schweren Sturmböen bis 90 km/h (25m/s, 48kn, Bft 10) gerechnet werden.",
+    "sender": "Deutscher Wetterdienst",
+    "affected_areas": [
+      "Gemeinde Oberreichenbach, Gemeinde Neuweiler, Stadt Nagold, Stadt Neubulach, Gemeinde Schömberg, Gemeinde Simmersfeld, Gemeinde Simmozheim, Gemeinde Rohrdorf, Gemeinde Ostelsheim, Gemeinde Ebhausen, Gemeinde Egenhausen, Gemeinde Dobel, Stadt Bad Liebenzell, Stadt Solingen, Stadt Haiterbach, Stadt Bad Herrenalb, Gemeinde Höfen an der Enz, Gemeinde Gechingen, Gemeinde Enzklösterle, Gemeinde Gutach (Schwarzwaldbahn) und 3392 weitere."
+    ],
+    "recommended_actions": [
+      "ACHTUNG! Hinweis auf mögliche Gefahren: Es können zum Beispiel einzelne Äste herabstürzen. Achten Sie besonders auf herabfallende Gegenstände."
+    ],
+    "web": "https://www.wettergefahren.de",
+    "sent": "2021-10-11T05:21:00+01:00",
+    "start": "2021-11-01T05:20:00+01:00",
+    "expires": "3021-11-22T05:19:00+01:00"
+  },
+  {
+    "id": "biw.BIWAPP-69634",
+    "headline": "Geflügelpest im Landkreis Cuxhaven - Teile des Landkreises Osterholz zur Überwachungszone erklärt",
+    "severity": "Minor",
+    "description": "In Beverstedt im Landkreis Cuxhaven ist am 20. Juli 2022 in einer Geflügelhaltung der Ausbruch der Geflügelpest (Vogelgrippe, Aviäre Influenza) amtlich festgestellt worden. Durch die geografische Nähe des Ausbruchsbetriebes zum Gebiet des Landkreises Osterholz musste das Veterinäramt des Landkreises zum Schutz vor einer Ausbreitung der Geflügelpest auch für sein Gebiet ein Restriktionsgebiet festlegen. Rund um den Ausbruchsort wurde eine Überwachungszone ausgewiesen. Eine entsprechende Tierseuchenbehördliche Allgemeinverfügung wurde vom Landkreis Osterholz erlassen und tritt am 23.07.2022 in Kraft.<br> <br>Die Überwachungszone mit einem Radius von mindestens zehn Kilometern um den Ausbruchsbetrieb erstreckt sich im Landkreis Osterholz innerhalb der Samtgemeinde Hambergen auf die Mitgliedsgemeinden Axstedt, Holste und Lübberstedt. Die vorgenannten Gemeinden sind vollständig zur Überwachungszone erklärt worden. Der genaue Grenzverlauf des Gebietes kann auch der interaktiven Karte im Internet entnommen werden.<br> <br>In der Überwachungszone liegen im Landkreis Osterholz rund 70 Geflügelhaltungen mit einem Gesamtbestand von rund 1.800 Tieren. Sie alle unterliegen mit der Allgemeinverfügung der sogenannten amtlichen Beobachtung. Für die Betriebe sind die Biosicherheitsmaßnahmen einzuhalten. Dazu zählen insbesondere Hygienemaßnahmen im laufenden Betrieb und eine ordnungsgemäße Schadnagerbekämpfung.<br> <br>Das Verbringen von Vögeln, Fleisch von Geflügel, Eiern und sonstige Nebenprodukte von Geflügel in und aus Betrieben in der Überwachungszone ist verboten. Auch Geflügeltransporte sind in der Überwachungszone verboten. Jeder Verdacht der Erkrankung auf Geflügelpest ist zudem dem Veterinäramt des Landkreises Osterholz unter der E-Mail-Adresse veterinaeramt@landkreis-osterholz.de sofort zu melden. Alle Hinweise, die innerhalb der Überwachungszone zu beachten sind, sind unter www.landkreis-osterholz.de/gefluegelpest zusammengefasst dargestellt.<br> <br>Die Veterinärbehörde weist zudem darauf hin, dass sämtliche Geflügelhaltungen – Hühner, Enten, Gänse, Fasane, Perlhühner, Rebhühner, Truthühner, Wachteln oder Laufvögel – der zuständigen Behörde angezeigt werden müssen. Wer dies bisher noch nicht gemacht hat und über keine Registriernummer für seinen Geflügelbestand verfügt, sollte die Meldung über das Veterinäramt umgehend nachholen.<br> <br>Das Beobachtungsgebiet kann frühestens 30 Tage nach der Grobreinigung des Ausbruchsbetriebes wieder aufgehoben werden. Hierüber wird der Landkreis Osterholz informieren.<br> <br>Die Allgemeinverfügung, eine Übersicht zur Überwachungszone und weitere Hinweise sind auf der Internetseite unter www.landkreis-osterholz.de/gefluegelpest zu finden.",
+    "sender": null,
+    "affected_areas": [
+      "Axstedt, Gnarrenburg, Grasberg, Hagen im Bremischen, Hambergen, Hepstedt, Holste, Lilienthal, Lübberstedt, Osterholz-Scharmbeck, Ritterhude, Schwanewede, Vollersode, Worpswede"
+    ],
+    "recommended_actions": [],
+    "web": null,
+    "sent": "1999-08-07T10:59:00+02:00",
+    "start": null,
+    "expires": "2002-08-07T10:59:00+02:00"
+  }
+]

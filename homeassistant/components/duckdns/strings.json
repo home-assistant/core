@@ -1,13 +1,23 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "update_failed": "Updating Duck DNS failed"
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "access_token": "[%key:component::duckdns::config::step::user::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "[%key:component::duckdns::config::step::user::data_description::access_token%]"
+        },
+        "title": "Re-configure {name}"
+      },
       "user": {
         "data": {
           "access_token": "Token",
@@ -22,11 +32,17 @@
     }
   },
   "exceptions": {
+    "connection_error": {
+      "message": "Updating Duck DNS domain {domain} failed due to a connection error"
+    },
     "entry_not_found": {
       "message": "Duck DNS integration entry not found"
     },
     "entry_not_selected": {
       "message": "Duck DNS integration entry not selected"
+    },
+    "update_failed": {
+      "message": "Updating Duck DNS domain {domain} failed"
     }
   },
   "issues": {

@@ -1,15 +1,17 @@
 """Provides triggers for lawn mowers."""
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.trigger import Trigger, make_entity_state_trigger
+from homeassistant.helpers.trigger import Trigger, make_entity_target_state_trigger
 
 from .const import DOMAIN, LawnMowerActivity
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "docked": make_entity_state_trigger(DOMAIN, LawnMowerActivity.DOCKED),
-    "errored": make_entity_state_trigger(DOMAIN, LawnMowerActivity.ERROR),
-    "paused_mowing": make_entity_state_trigger(DOMAIN, LawnMowerActivity.PAUSED),
-    "started_mowing": make_entity_state_trigger(DOMAIN, LawnMowerActivity.MOWING),
+    "docked": make_entity_target_state_trigger(DOMAIN, LawnMowerActivity.DOCKED),
+    "errored": make_entity_target_state_trigger(DOMAIN, LawnMowerActivity.ERROR),
+    "paused_mowing": make_entity_target_state_trigger(DOMAIN, LawnMowerActivity.PAUSED),
+    "started_mowing": make_entity_target_state_trigger(
+        DOMAIN, LawnMowerActivity.MOWING
+    ),
 }
 
 

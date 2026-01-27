@@ -5,9 +5,9 @@ from dataclasses import dataclass
 import logging
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -15,7 +15,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import is_humidifier, is_outlet, is_purifier
 from .const import (
-    DOMAIN,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
@@ -25,12 +24,10 @@ from .const import (
     PURIFIER_NIGHT_LIGHT_LEVEL_DIM,
     PURIFIER_NIGHT_LIGHT_LEVEL_OFF,
     PURIFIER_NIGHT_LIGHT_LEVEL_ON,
-    VS_COORDINATOR,
     VS_DEVICES,
     VS_DISCOVERY,
-    VS_MANAGER,
 )
-from .coordinator import VeSyncDataCoordinator
+from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,6 +41,8 @@ VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP = {
 HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP = {
     v: k for k, v in VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.items()
 }
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -107,15 +106,15 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VesyncConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up select entities."""
 
-    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+    coordinator = config_entry.runtime_data
 
     @callback
-    def discover(devices):
+    def discover(devices: list[VeSyncBaseDevice]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -124,16 +123,16 @@ async def async_setup_entry(
     )
 
     _setup_entities(
-        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+        config_entry.runtime_data.manager.devices, async_add_entities, coordinator
     )
 
 
 @callback
 def _setup_entities(
-    devices: list[VeSyncBaseDevice],
+    devices: DeviceContainer | list[VeSyncBaseDevice],
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
-):
+) -> None:
     """Add select entities."""
 
     async_add_entities(
@@ -169,4 +168,4 @@ class VeSyncSelectEntity(VeSyncBaseEntity, SelectEntity):
         """Set an option."""
         if not await self.entity_description.select_option_fn(self.device, option):
             raise HomeAssistantError(self.device.last_response.message)
-        await self.coordinator.async_request_refresh()
+        self.async_write_ha_state()

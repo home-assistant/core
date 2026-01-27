@@ -418,6 +418,88 @@ class BooleanSelector(Selector[BooleanSelectorConfig]):
         return value
 
 
+def reject_nested_choose_selector(config: dict[str, Any]) -> dict[str, Any]:
+    """Reject nested choose selectors."""
+    for choice in config.get("choices", {}).values():
+        if isinstance(choice["selector"], dict):
+            selector_type, _ = _get_selector_type_and_class(choice["selector"])
+            if selector_type == "choose":
+                raise vol.Invalid("Nested choose selectors are not allowed")
+    return config
+
+
+class ChooseSelectorChoiceConfig(TypedDict, total=False):
+    """Class to represent a choose selector choice config."""
+
+    selector: Required[Selector | dict[str, Any]]
+
+
+class ChooseSelectorConfig(BaseSelectorConfig):
+    """Class to represent a choose selector config."""
+
+    choices: Required[dict[str, ChooseSelectorChoiceConfig]]
+    translation_key: str
+
+
+@SELECTORS.register("choose")
+class ChooseSelector(Selector[ChooseSelectorConfig]):
+    """Selector allowing to choose one of several selectors."""
+
+    selector_type = "choose"
+
+    CONFIG_SCHEMA = vol.All(
+        make_selector_config_schema(
+            {
+                vol.Required("choices"): {
+                    str: {
+                        vol.Required("selector"): vol.Any(Selector, validate_selector),
+                    }
+                },
+                vol.Optional("translation_key"): cv.string,
+            },
+        ),
+        reject_nested_choose_selector,
+    )
+
+    def __init__(self, config: ChooseSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def serialize(self) -> dict[str, dict[str, ChooseSelectorConfig]]:
+        """Serialize ChooseSelectorConfig for voluptuous_serialize."""
+        _config = deepcopy(self.config)
+        if "choices" in _config:
+            for choice in _config["choices"].values():
+                if isinstance(choice["selector"], Selector):
+                    choice["selector"] = choice["selector"].serialize()["selector"]
+        return {"selector": {self.selector_type: _config}}
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        if not isinstance(data, dict):
+            for choice in self.config["choices"].values():
+                try:
+                    validated = selector(choice["selector"])(data)  # type: ignore[operator]
+                except (vol.Invalid, vol.MultipleInvalid):
+                    continue
+                else:
+                    return validated
+
+            raise vol.Invalid("Value does not match any choice selector")
+
+        if "active_choice" not in data:
+            raise vol.Invalid("Missing active_choice key")
+        if data["active_choice"] not in data:
+            raise vol.Invalid("Missing value for active choice")
+
+        choices = self.config.get("choices", {})
+        if data["active_choice"] not in choices:
+            raise vol.Invalid("Invalid active_choice key")
+        return selector(choices[data["active_choice"]]["selector"])(  # type: ignore[operator]
+            data[data["active_choice"]]
+        )
+
+
 class ColorRGBSelectorConfig(BaseSelectorConfig):
     """Class to represent a color RGB selector config."""
 
@@ -1223,14 +1305,10 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         _config = deepcopy(self.config)
         if "fields" in _config:
             for field_items in _config["fields"].values():
-                if isinstance(field_items["selector"], ObjectSelector):
-                    field_items["selector"] = field_items["selector"].serialize()
-                elif isinstance(field_items["selector"], Selector):
-                    field_items["selector"] = {
-                        field_items["selector"].selector_type: field_items[
-                            "selector"
-                        ].config
-                    }
+                if isinstance(field_items["selector"], Selector):
+                    field_items["selector"] = field_items["selector"].serialize()[
+                        "selector"
+                    ]
         return {"selector": {self.selector_type: _config}}
 
     def __call__(self, data: Any) -> Any:

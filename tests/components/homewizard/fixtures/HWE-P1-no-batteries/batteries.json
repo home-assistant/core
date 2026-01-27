@@ -1,0 +1,9 @@
+{
+  "mode": "zero",
+  "permissions": ["charge_allowed", "discharge_allowed"],
+  "battery_count": 0,
+  "power_w": 0,
+  "target_power_w": 0,
+  "max_consumption_w": 0,
+  "max_production_w": 0
+}

@@ -6,7 +6,8 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from powerfox import PowerfoxConnectionError
+from powerfox import DeviceReport, PowerfoxConnectionError
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
@@ -19,6 +20,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_sensors(
     hass: HomeAssistant,
     mock_powerfox_client: AsyncMock,
@@ -51,3 +53,17 @@ async def test_update_failed(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.poweropti_energy_usage").state == STATE_UNAVAILABLE
+
+
+async def test_skips_gas_sensors_when_report_missing(
+    hass: HomeAssistant,
+    mock_powerfox_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test gas sensors are not created when report lacks gas data."""
+    mock_powerfox_client.report.return_value = DeviceReport(gas=None)
+
+    with patch("homeassistant.components.powerfox.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.gasopti_gas_consumption_today") is None

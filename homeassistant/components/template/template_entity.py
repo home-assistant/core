@@ -181,9 +181,6 @@ class TemplateEntity(AbstractTemplateEntity):
         self._run_variables: ScriptVariables | dict
         self._attribute_templates = config.get(CONF_ATTRIBUTES)
         self._availability_template = config.get(CONF_AVAILABILITY)
-        self._icon_template = config.get(CONF_ICON)
-        self._entity_picture_template = config.get(CONF_PICTURE)
-        self._friendly_name_template = config.get(CONF_NAME)
         self._run_variables = config.get(CONF_VARIABLES, {})
         self._blueprint_inputs = config.get("raw_blueprint_inputs")
 
@@ -208,27 +205,28 @@ class TemplateEntity(AbstractTemplateEntity):
         )
         variables = {"this": DummyState(), **variables}
 
-        # Try to render the name as it can influence the entity ID
+        self.add_template(
+            CONF_AVAILABILITY, "_attr_available", on_update=self._update_available
+        )
+
+        # Render name, icon, and picture early. name is rendered early because it influences
+        # the entity_id.  icon and picture are rendered early to ensure they are populated even
+        # if the entity renders unavailable.
         self._attr_name = None
-        if self._friendly_name_template:
-            with contextlib.suppress(TemplateError):
-                self._attr_name = self._friendly_name_template.async_render(
-                    variables=variables, parse_result=False
-                )
-
-        # Templates will not render while the entity is unavailable, try to render the
-        # icon and picture templates.
-        if self._entity_picture_template:
-            with contextlib.suppress(TemplateError):
-                self._attr_entity_picture = self._entity_picture_template.async_render(
-                    variables=variables, parse_result=False
-                )
-
-        if self._icon_template:
-            with contextlib.suppress(TemplateError):
-                self._attr_icon = self._icon_template.async_render(
-                    variables=variables, parse_result=False
-                )
+        for option, attribute, validator in (
+            (CONF_ICON, "_attr_icon", vol.Or(cv.whitespace, cv.icon)),
+            (CONF_PICTURE, "_attr_entity_picture", cv.string),
+            (CONF_NAME, "_attr_name", cv.string),
+        ):
+            if template := self.add_template(
+                option, attribute, validator, add_if_static=option != CONF_NAME
+            ):
+                with contextlib.suppress(TemplateError):
+                    setattr(
+                        self,
+                        attribute,
+                        template.async_render(variables=variables, parse_result=False),
+                    )
 
     @callback
     def _update_available(self, result: str | TemplateError) -> None:
@@ -277,6 +275,57 @@ class TemplateEntity(AbstractTemplateEntity):
                 "this": TemplateStateFromEntityId(self.hass, self.entity_id),
             },
         )
+
+    def setup_state_template(
+        self,
+        option: str,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+    ) -> None:
+        """Set up a template that manages the main state of the entity."""
+
+        @callback
+        def _update_state(result: Any) -> None:
+            if isinstance(result, TemplateError):
+                setattr(self, attribute, None)
+                if self._availability_template:
+                    return
+
+                self._attr_available = False
+                return
+
+            state = validator(result) if validator else result
+            if on_update:
+                on_update(state)
+            else:
+                setattr(self, attribute, state)
+
+        self.add_template(option, attribute, on_update=_update_state)
+
+    def setup_template(
+        self,
+        option: str,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+    ):
+        """Set up a template that manages any property or attribute of the entity.
+
+        Parameters
+        ----------
+        option
+            The configuration key provided by ConfigFlow or the yaml option
+        attribute
+            The name of the attribute to link to. This attribute must exist
+            unless a custom on_update method is supplied.
+        validator:
+            Optional function that validates the rendered result.
+        on_update:
+            Called to store the template result rather than storing it
+            the supplied attribute. Passed the result of the validator.
+        """
+        self.add_template(option, attribute, validator, on_update, True)
 
     def add_template_attribute(
         self,
@@ -417,30 +466,20 @@ class TemplateEntity(AbstractTemplateEntity):
     @callback
     def _async_setup_templates(self) -> None:
         """Set up templates."""
-        if self._availability_template is not None:
-            self.add_template_attribute(
-                "_attr_available",
-                self._availability_template,
-                None,
-                self._update_available,
-            )
+
+        # Handle attributes as a dictionary.
         if self._attribute_templates is not None:
             for key, value in self._attribute_templates.items():
                 self._add_attribute_template(key, value)
-        if self._icon_template is not None:
+
+        # Iterate all dynamic templates and add listeners.
+        for entity_template in self._templates.values():
             self.add_template_attribute(
-                "_attr_icon", self._icon_template, vol.Or(cv.whitespace, cv.icon)
-            )
-        if self._entity_picture_template is not None:
-            self.add_template_attribute(
-                "_attr_entity_picture", self._entity_picture_template, cv.string
-            )
-        if (
-            self._friendly_name_template is not None
-            and not self._friendly_name_template.is_static
-        ):
-            self.add_template_attribute(
-                "_attr_name", self._friendly_name_template, cv.string
+                entity_template.attribute,
+                entity_template.template,
+                entity_template.validator,
+                entity_template.on_update,
+                entity_template.none_on_template_error,
             )
 
     @callback

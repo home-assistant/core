@@ -1,7 +1,7 @@
 """Support for VeSync humidifiers."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
@@ -12,24 +12,20 @@ from homeassistant.components.humidifier import (
     HumidifierEntity,
     HumidifierEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    DOMAIN,
-    VS_COORDINATOR,
     VS_DEVICES,
     VS_DISCOVERY,
     VS_HUMIDIFIER_MODE_AUTO,
     VS_HUMIDIFIER_MODE_HUMIDITY,
     VS_HUMIDIFIER_MODE_MANUAL,
     VS_HUMIDIFIER_MODE_SLEEP,
-    VS_MANAGER,
 )
-from .coordinator import VeSyncDataCoordinator
+from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,18 +38,20 @@ VS_TO_HA_MODE_MAP = {
     VS_HUMIDIFIER_MODE_SLEEP: MODE_SLEEP,
 }
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VesyncConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the VeSync humidifier platform."""
 
-    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+    coordinator = config_entry.runtime_data
 
     @callback
-    def discover(devices):
+    def discover(devices: list[VeSyncBaseDevice]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -62,7 +60,7 @@ async def async_setup_entry(
     )
 
     _setup_entities(
-        hass.data[DOMAIN][VS_MANAGER].devices.humidifiers,
+        config_entry.runtime_data.manager.devices.humidifiers,
         async_add_entities,
         coordinator,
     )
@@ -73,7 +71,7 @@ def _setup_entities(
     devices: list[VeSyncBaseDevice],
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
-):
+) -> None:
     """Add humidifier entities."""
     async_add_entities(VeSyncHumidifierHA(dev, coordinator) for dev in devices)
 
@@ -132,11 +130,15 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     @property
     def current_humidity(self) -> int:
         """Return the current humidity."""
+        if TYPE_CHECKING:
+            assert self.device.state.humidity is not None
         return self.device.state.humidity
 
     @property
     def target_humidity(self) -> int:
         """Return the humidity we try to reach."""
+        if TYPE_CHECKING:
+            assert self.device.state.auto_humidity is not None
         return self.device.state.auto_humidity
 
     @property
@@ -166,11 +168,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
             # We successfully changed the mode. Consider it a success even if display operation fails.
             await self.device.toggle_display(False)
 
-        # Changing mode while humidifier is off actually turns it on, as per the app. But
-        # the library does not seem to update the device_status. It is also possible that
-        # other attributes get updated. Scheduling a forced refresh to get device status.
-        # updated.
-        self.schedule_update_ha_state(force_refresh=True)
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -178,7 +176,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         if not success:
             raise HomeAssistantError(self.device.last_response.message)
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
@@ -186,7 +184,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         if not success:
             raise HomeAssistantError(self.device.last_response.message)
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool:

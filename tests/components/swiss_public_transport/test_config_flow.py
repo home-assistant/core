@@ -129,7 +129,7 @@ async def test_flow_user_init_data_success(
         )
 
         if time_mode_input:
-            assert result["type"] == FlowResultType.FORM
+            assert result["type"] is FlowResultType.FORM
             if CONF_TIME_FIXED in time_mode_input:
                 assert result["step_id"] == "time_fixed"
             if CONF_TIME_OFFSET in time_mode_input:
@@ -139,7 +139,7 @@ async def test_flow_user_init_data_success(
                 user_input=time_mode_input,
             )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == config_title
 
         assert result["data"] == {**user_input, **(time_mode_input or {})}
@@ -182,7 +182,7 @@ async def test_flow_user_init_data_error_and_recover_on_step_1(
             user_input=MOCK_USER_DATA_STEP,
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == "test_start test_destination"
 
         assert result["data"] == MOCK_USER_DATA_STEP
@@ -222,7 +222,7 @@ async def test_flow_user_init_data_error_and_recover_on_step_2(
             result["flow_id"],
             user_input=MOCK_USER_DATA_STEP_TIME_FIXED,
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "time_fixed"
 
     with patch(
@@ -246,7 +246,7 @@ async def test_flow_user_init_data_error_and_recover_on_step_2(
             user_input=user_input,
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == "test_start test_destination at 18:03:00"
 
 

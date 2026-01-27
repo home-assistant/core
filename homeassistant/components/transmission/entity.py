@@ -26,5 +26,4 @@ class TransmissionEntity(CoordinatorEntity[TransmissionDataUpdateCoordinator]):
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            manufacturer="Transmission",
         )

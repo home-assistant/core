@@ -18,17 +18,21 @@ _LOGGER = logging.getLogger(__name__)
 class AnglianWaterEntity(CoordinatorEntity[AnglianWaterUpdateCoordinator]):
     """Defines a Anglian Water entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: AnglianWaterUpdateCoordinator,
         smart_meter: SmartMeter,
+        key: str,
     ) -> None:
         """Initialize Anglian Water entity."""
         super().__init__(coordinator)
         self.smart_meter = smart_meter
+        self._attr_unique_id = f"{smart_meter.serial_number}_{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, smart_meter.serial_number)},
-            name="Smart Water Meter",
+            name=smart_meter.serial_number,
             manufacturer="Anglian Water",
             serial_number=smart_meter.serial_number,
         )

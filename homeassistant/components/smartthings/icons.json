@@ -53,6 +53,17 @@
         }
       }
     },
+    "fan": {
+      "hood": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "smart": "mdi:brain"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "freezer_temperature": {
         "default": "mdi:snowflake-thermometer"

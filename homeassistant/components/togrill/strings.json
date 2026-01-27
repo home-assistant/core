@@ -98,6 +98,11 @@
           "well_done": "Well done"
         }
       }
+    },
+    "sensor": {
+      "ambient_temperature": {
+        "name": "Ambient temperature"
+      }
     }
   },
   "exceptions": {

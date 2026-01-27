@@ -21,7 +21,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 19
+  Built-in integrations: 22
   Custom integrations: 1
   
   <details><summary>Built-in integrations</summary>
@@ -32,7 +32,9 @@
   auth | Auth
   binary_sensor | Binary Sensor
   cloud | Home Assistant Cloud
+  cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
+  cloud.conversation | Unknown
   cloud.stt | Unknown
   cloud.tts | Unknown
   conversation | Conversation
@@ -46,6 +48,7 @@
   stt | Speech-to-text (STT)
   system_health | System Health
   tts | Text-to-speech (TTS)
+  web_rtc | WebRTC
   webhook | Webhook
   
   </details>
@@ -81,6 +84,17 @@
   can_reach_cert_server | Exception: Unexpected exception
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok
+  
+  </details>
+  
+  ## Installed packages
+  
+  <details><summary>Installed packages</summary>
+  
+  Package | Version
+  --- | ---
+  hass-nabucasa | 1.2.3
+  homeassistant | 3.2.1
   
   </details>
   
@@ -120,7 +134,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 19
+  Built-in integrations: 22
   Custom integrations: 0
   
   <details><summary>Built-in integrations</summary>
@@ -131,7 +145,9 @@
   auth | Auth
   binary_sensor | Binary Sensor
   cloud | Home Assistant Cloud
+  cloud.ai_task | Unknown
   cloud.binary_sensor | Unknown
+  cloud.conversation | Unknown
   cloud.stt | Unknown
   cloud.tts | Unknown
   conversation | Conversation
@@ -145,6 +161,7 @@
   stt | Speech-to-text (STT)
   system_health | System Health
   tts | Text-to-speech (TTS)
+  web_rtc | WebRTC
   webhook | Webhook
   
   </details>
@@ -172,6 +189,17 @@
   can_reach_cert_server | Exception: Unexpected exception
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok
+  
+  </details>
+  
+  ## Installed packages
+  
+  <details><summary>Installed packages</summary>
+  
+  Package | Version
+  --- | ---
+  hass-nabucasa | 1.2.3
+  homeassistant | 3.2.1
   
   </details>
   
@@ -237,6 +265,17 @@
   can_reach_cert_server | Exception: Unexpected exception
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok
+  
+  </details>
+  
+  ## Installed packages
+  
+  <details><summary>Installed packages</summary>
+  
+  Package | Version
+  --- | ---
+  hass-nabucasa | 1.2.3
+  homeassistant | 3.2.1
   
   </details>
   

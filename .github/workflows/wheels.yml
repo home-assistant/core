@@ -31,11 +31,11 @@ jobs:
     steps:
       - &checkout
         name: Checkout the repository
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -74,7 +74,7 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: &actions-upload-artifact actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: &actions-upload-artifact actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: env_file
           path: ./.env_file
@@ -119,7 +119,7 @@ jobs:
 
       - &download-env-file
         name: Download env_file
-        uses: &actions-download-artifact actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: &actions-download-artifact actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: env_file
 
@@ -136,7 +136,7 @@ jobs:
           sed -i "/uv/d" requirements_diff.txt
 
       - name: Build wheels
-        uses: &home-assistant-wheels home-assistant/wheels@6066c17a2a4aafcf7bdfeae01717f63adfcdba98 # 2025.11.0
+        uses: &home-assistant-wheels home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2

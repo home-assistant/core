@@ -7,7 +7,7 @@ from typing import Final
 
 from google_air_quality_api.api import GoogleAirQualityApi
 from google_air_quality_api.exceptions import GoogleAirQualityApiError
-from google_air_quality_api.model import AirQualityData
+from google_air_quality_api.model import AirQualityCurrentConditionsData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
@@ -23,7 +23,9 @@ UPDATE_INTERVAL: Final = timedelta(hours=1)
 type GoogleAirQualityConfigEntry = ConfigEntry[GoogleAirQualityRuntimeData]
 
 
-class GoogleAirQualityUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
+class GoogleAirQualityUpdateCoordinator(
+    DataUpdateCoordinator[AirQualityCurrentConditionsData]
+):
     """Coordinator for fetching Google AirQuality data."""
 
     config_entry: GoogleAirQualityConfigEntry
@@ -48,10 +50,10 @@ class GoogleAirQualityUpdateCoordinator(DataUpdateCoordinator[AirQualityData]):
         self.lat = subentry.data[CONF_LATITUDE]
         self.long = subentry.data[CONF_LONGITUDE]
 
-    async def _async_update_data(self) -> AirQualityData:
+    async def _async_update_data(self) -> AirQualityCurrentConditionsData:
         """Fetch air quality data for this coordinate."""
         try:
-            return await self.client.async_air_quality(self.lat, self.long)
+            return await self.client.async_get_current_conditions(self.lat, self.long)
         except GoogleAirQualityApiError as ex:
             _LOGGER.debug("Cannot fetch air quality data: %s", str(ex))
             raise UpdateFailed(

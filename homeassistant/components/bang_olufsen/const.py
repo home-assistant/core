@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
 )
 
 
-class BangOlufsenSource:
+class BeoSource:
     """Class used for associating device source ids with friendly names. May not include all sources."""
 
     DEEZER: Final[Source] = Source(name="Deezer", id="deezer")
@@ -22,17 +22,18 @@ class BangOlufsenSource:
     NET_RADIO: Final[Source] = Source(name="B&O Radio", id="netRadio")
     SPDIF: Final[Source] = Source(name="Optical", id="spdif")
     TIDAL: Final[Source] = Source(name="Tidal", id="tidal")
+    TV: Final[Source] = Source(name="TV", id="tv")
     UNKNOWN: Final[Source] = Source(name="Unknown Source", id="unknown")
     URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
 
 
-BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
+BEO_STATES: dict[str, MediaPlayerState] = {
     # Dict used for translating device states to Home Assistant states.
     "started": MediaPlayerState.PLAYING,
     "buffering": MediaPlayerState.PLAYING,
     "idle": MediaPlayerState.IDLE,
     "paused": MediaPlayerState.PAUSED,
-    "stopped": MediaPlayerState.PAUSED,
+    "stopped": MediaPlayerState.IDLE,
     "ended": MediaPlayerState.PAUSED,
     "error": MediaPlayerState.IDLE,
     # A device's initial state is "unknown" and should be treated as "idle"
@@ -40,30 +41,31 @@ BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
 }
 
 # Dict used for translating Home Assistant settings to device repeat settings.
-BANG_OLUFSEN_REPEAT_FROM_HA: dict[RepeatMode, str] = {
+BEO_REPEAT_FROM_HA: dict[RepeatMode, str] = {
     RepeatMode.ALL: "all",
     RepeatMode.ONE: "track",
     RepeatMode.OFF: "none",
 }
 # Dict used for translating device repeat settings to Home Assistant settings.
-BANG_OLUFSEN_REPEAT_TO_HA: dict[str, RepeatMode] = {
-    value: key for key, value in BANG_OLUFSEN_REPEAT_FROM_HA.items()
+BEO_REPEAT_TO_HA: dict[str, RepeatMode] = {
+    value: key for key, value in BEO_REPEAT_FROM_HA.items()
 }
 
 
 # Media types for play_media
-class BangOlufsenMediaType(StrEnum):
+class BeoMediaType(StrEnum):
     """Bang & Olufsen specific media types."""
 
-    FAVOURITE = "favourite"
     DEEZER = "deezer"
+    FAVOURITE = "favourite"
+    OVERLAY_TTS = "overlay_tts"
     RADIO = "radio"
     TIDAL = "tidal"
     TTS = "provider"
-    OVERLAY_TTS = "overlay_tts"
+    TV = "tv"
 
 
-class BangOlufsenModel(StrEnum):
+class BeoModel(StrEnum):
     """Enum for compatible model names."""
 
     # Mozart devices
@@ -82,7 +84,7 @@ class BangOlufsenModel(StrEnum):
     BEOREMOTE_ONE = "Beoremote One"
 
 
-class BangOlufsenAttribute(StrEnum):
+class BeoAttribute(StrEnum):
     """Enum for extra_state_attribute keys."""
 
     BEOLINK = "beolink"
@@ -93,7 +95,7 @@ class BangOlufsenAttribute(StrEnum):
 
 
 # Physical "buttons" on devices
-class BangOlufsenButtons(StrEnum):
+class BeoButtons(StrEnum):
     """Enum for device buttons."""
 
     BLUETOOTH = "Bluetooth"
@@ -113,6 +115,7 @@ class WebsocketNotification(StrEnum):
     """Enum for WebSocket notification types."""
 
     ACTIVE_LISTENING_MODE = "active_listening_mode"
+    BATTERY = "battery"
     BEO_REMOTE_BUTTON = "beo_remote_button"
     BUTTON = "button"
     PLAYBACK_ERROR = "playback_error"
@@ -140,7 +143,7 @@ class WebsocketNotification(StrEnum):
 DOMAIN: Final[str] = "bang_olufsen"
 
 # Default values for configuration.
-DEFAULT_MODEL: Final[str] = BangOlufsenModel.BEOSOUND_BALANCE
+DEFAULT_MODEL: Final[str] = BeoModel.BEOSOUND_BALANCE
 
 # Configuration.
 CONF_SERIAL_NUMBER: Final = "serial_number"
@@ -148,7 +151,7 @@ CONF_BEOLINK_JID: Final = "jid"
 
 # Models to choose from in manual configuration.
 SELECTABLE_MODELS: list[str] = [
-    model.value for model in BangOlufsenModel if model != BangOlufsenModel.BEOREMOTE_ONE
+    model.value for model in BeoModel if model != BeoModel.BEOREMOTE_ONE
 ]
 
 MANUFACTURER: Final[str] = "Bang & Olufsen"
@@ -160,15 +163,15 @@ ATTR_ITEM_NUMBER: Final[str] = "in"
 ATTR_FRIENDLY_NAME: Final[str] = "fn"
 
 # Power states.
-BANG_OLUFSEN_ON: Final[str] = "on"
+BEO_ON: Final[str] = "on"
 
 VALID_MEDIA_TYPES: Final[tuple] = (
-    BangOlufsenMediaType.FAVOURITE,
-    BangOlufsenMediaType.DEEZER,
-    BangOlufsenMediaType.RADIO,
-    BangOlufsenMediaType.TTS,
-    BangOlufsenMediaType.TIDAL,
-    BangOlufsenMediaType.OVERLAY_TTS,
+    BeoMediaType.FAVOURITE,
+    BeoMediaType.DEEZER,
+    BeoMediaType.RADIO,
+    BeoMediaType.TTS,
+    BeoMediaType.TIDAL,
+    BeoMediaType.OVERLAY_TTS,
     MediaType.MUSIC,
     MediaType.URL,
     MediaType.CHANNEL,
@@ -246,7 +249,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
 )
 
 # Device events
-BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
+BEO_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
 # Dict used to translate native Bang & Olufsen event names to string.json compatible ones
 EVENT_TRANSLATION_MAP: dict[str, str] = {
@@ -263,7 +266,7 @@ EVENT_TRANSLATION_MAP: dict[str, str] = {
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
 
-DEVICE_BUTTONS: Final[list[str]] = [x.value for x in BangOlufsenButtons]
+DEVICE_BUTTONS: Final[list[str]] = [x.value for x in BeoButtons]
 
 
 DEVICE_BUTTON_EVENTS: Final[list[str]] = [

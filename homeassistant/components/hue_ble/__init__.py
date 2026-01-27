@@ -2,7 +2,7 @@
 
 import logging
 
-from HueBLE import HueBleLight
+from HueBLE import ConnectionError, HueBleError, HueBleLight
 
 from homeassistant.components.bluetooth import (
     async_ble_device_from_address,
@@ -38,8 +38,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueBLEConfigEntry) -> bo
 
     light = HueBleLight(ble_device)
 
-    if not await light.connect() or not await light.poll_state():
-        raise ConfigEntryNotReady("Device found but unable to connect.")
+    try:
+        await light.connect()
+        await light.poll_state()
+    except ConnectionError as e:
+        raise ConfigEntryNotReady("Device found but unable to connect.") from e
+    except HueBleError as e:
+        raise ConfigEntryNotReady(
+            "Device found and connected but unable to poll values from it."
+        ) from e
 
     entry.runtime_data = light
 

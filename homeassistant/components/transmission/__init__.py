@@ -26,7 +26,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_PATH, DEFAULT_SSL, DOMAIN
@@ -92,6 +97,19 @@ async def async_setup_entry(
         raise ConfigEntryNotReady from error
     except (AuthenticationError, UnknownError) as error:
         raise ConfigEntryAuthFailed from error
+
+    protocol: Final = "https" if config_entry.data[CONF_SSL] else "http"
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, config_entry.entry_id)},
+        manufacturer="Transmission",
+        entry_type=DeviceEntryType.SERVICE,
+        sw_version=api.server_version,
+        configuration_url=(
+            f"{protocol}://{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}"
+        ),
+    )
 
     coordinator = TransmissionDataUpdateCoordinator(hass, config_entry, api)
     await hass.async_add_executor_job(coordinator.init_torrent_list)

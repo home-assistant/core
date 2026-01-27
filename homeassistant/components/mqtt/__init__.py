@@ -378,31 +378,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate the options from config entry data."""
-    _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
+    _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
     data: dict[str, Any] = dict(entry.data)
     options: dict[str, Any] = dict(entry.options)
-    if entry.version > 1:
+    if entry.version > 2 or (entry.version == 2 and entry.minor_version > 1):
         # This means the user has downgraded from a future version
+        # We allow read support for version 2.1
         return False
 
     if entry.version == 1 and entry.minor_version < 2:
-        # Can be removed when config entry is bumped to version 2.1
-        # with HA Core 2026.1.0. Read support for version 2.1 is expected before 2026.1
-        # From 2026.1 we will write version 2.1
+        # Can be removed when the config entry is bumped to version 2.1
+        # with HA Core 2026.7.0. Read support for version 2.1 is expected with 2026.1
+        # From 2026.7 we will write version 2.1
         for key in ENTRY_OPTION_FIELDS:
             if key not in data:
                 continue
             options[key] = data.pop(key)
+        # Write version 1.2 for backwards compatibility
         hass.config_entries.async_update_entry(
             entry,
             data=data,
             options=options,
-            version=CONFIG_ENTRY_VERSION,
-            minor_version=CONFIG_ENTRY_MINOR_VERSION,
+            version=1,
+            minor_version=2,
         )
 
     _LOGGER.debug(
-        "Migration to version %s:%s successful", entry.version, entry.minor_version
+        "Migration to version %s.%s successful", entry.version, entry.minor_version
     )
     return True
 
