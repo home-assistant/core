@@ -387,6 +387,16 @@ BATTERY_SENSOR_DESCRIPTION = NetatmoSensorEntityDescription(
     device_class=SensorDeviceClass.BATTERY,
 )
 
+ROOM_THERM_TEMPERATURE_DESCRIPTION = NetatmoSensorEntityDescription(
+    key="therm_measured_temperature",
+    netatmo_name="therm_measured_temperature",
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    state_class=SensorStateClass.MEASUREMENT,
+    device_class=SensorDeviceClass.TEMPERATURE,
+    suggested_display_precision=1,
+    translation_key="therm_measured_temperature",
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -443,11 +453,21 @@ async def async_setup_entry(
             msg = f"No climate type found for this room: {netatmo_device.room.name}"
             _LOGGER.debug(msg)
             return
-        async_add_entities(
+
+        # Create sensors for features in room.features (e.g., humidity)
+        entities: list[NetatmoRoomSensor] = [
             NetatmoRoomSensor(netatmo_device, description)
             for description in SENSOR_TYPES
             if description.key in netatmo_device.room.features
-        )
+        ]
+
+        # Create thermostat temperature sensor if room has therm_measured_temperature
+        if netatmo_device.room.therm_measured_temperature is not None:
+            entities.append(
+                NetatmoRoomSensor(netatmo_device, ROOM_THERM_TEMPERATURE_DESCRIPTION)
+            )
+
+        async_add_entities(entities)
 
     entry.async_on_unload(
         async_dispatcher_connect(
