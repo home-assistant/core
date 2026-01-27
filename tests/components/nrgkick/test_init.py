@@ -8,9 +8,11 @@ from nrgkick_api import (
 )
 import pytest
 
+from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import async_setup_integration, create_mock_config_entry
 
@@ -24,7 +26,14 @@ async def test_setup_entry(
     await async_setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data is not None
+
+    entity_registry = er.async_get(hass)
+    unique_id = f"{mock_config_entry.unique_id}_rated_current"
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == 32.0
 
 
 async def test_setup_entry_failed_connection(
@@ -70,11 +79,15 @@ async def test_coordinator_update_success(
     # Use proper setup to set entry state
     await async_setup_integration(hass, mock_config_entry)
 
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.data is not None
-    assert coordinator.data.info == mock_info_data
-    assert coordinator.data.control == mock_control_data
-    assert coordinator.data.values == mock_values_data
+    # Validate coordinator refresh via the state machine (entities have values).
+    entity_registry = er.async_get(hass)
+    unique_id = f"{mock_config_entry.unique_id}_rated_current"
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == 32.0
 
 
 async def test_coordinator_update_failed(

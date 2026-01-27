@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
 from . import async_setup_integration
@@ -61,6 +62,12 @@ async def test_sensor_entities(
         unique_id = f"TEST123456_{key}"
         entity_id = entity_registry.async_get_entity_id("sensor", "nrgkick", unique_id)
         return hass.states.get(entity_id) if entity_id else None
+
+    def get_entity_id_by_key(key: str) -> str:
+        unique_id = f"TEST123456_{key}"
+        entity_id = entity_registry.async_get_entity_id("sensor", "nrgkick", unique_id)
+        assert entity_id is not None
+        return entity_id
 
     # Test power sensor with attributes
     state = get_state_by_key("total_active_power")
@@ -112,10 +119,11 @@ async def test_sensor_entities(
 
     # Defensive: if the API returns an unexpected type for a nested section,
     # the entity should fall back to unknown (native_value=None).
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator is not None
-    coordinator.data.values["powerflow"] = "not-a-dict"
-    coordinator.async_set_updated_data(coordinator.data)
+    bad_values = dict(mock_values_data_sensor)
+    bad_values["powerflow"] = "not-a-dict"
+    mock_nrgkick_api.get_values.return_value = bad_values
+
+    await async_update_entity(hass, get_entity_id_by_key("charging_current"))
     await hass.async_block_till_done()
 
     state = get_state_by_key("charging_current")
