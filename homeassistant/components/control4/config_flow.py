@@ -63,9 +63,9 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
         password = user_input[CONF_PASSWORD]
 
         # Step 1: Authenticate with Control4 cloud API
+        account_session = aiohttp_client.async_get_clientsession(self.hass)
+        account = C4Account(username, password, account_session)
         try:
-            account_session = aiohttp_client.async_get_clientsession(self.hass)
-            account = C4Account(username, password, account_session)
             await account.getAccountBearerToken()
 
             account_controllers = await account.getAccountControllers()
@@ -74,11 +74,8 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
             director_bearer_token = (
                 await account.getDirectorBearerToken(controller_unique_id)
             )["token"]
-        except BadCredentials:
-            errors["base"] = "credentials_invalid"
-            return errors, data, description_placeholders
-        except Unauthorized:
-            errors["base"] = "api_auth_failed"
+        except (BadCredentials, Unauthorized):
+            errors["base"] = "invalid_auth"
             return errors, data, description_placeholders
         except NotFound:
             errors["base"] = "controller_not_found"
@@ -91,11 +88,11 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
             return errors, data, description_placeholders
 
         # Step 2: Connect to local Control4 Director
+        director_session = aiohttp_client.async_get_clientsession(
+            self.hass, verify_ssl=False
+        )
+        director = C4Director(host, director_bearer_token, director_session)
         try:
-            director_session = aiohttp_client.async_get_clientsession(
-                self.hass, verify_ssl=False
-            )
-            director = C4Director(host, director_bearer_token, director_session)
             await director.getAllItemInfo()
         except Unauthorized:
             errors["base"] = "director_auth_failed"
