@@ -212,7 +212,7 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_show_form(
                     step_id="hassio_confirm",
                     description_placeholders={
-                        "app": self._hassio_discovery.config["addon"]
+                        "addon": self._hassio_discovery.config["addon"]
                     },
                 )
             return self.async_create_entry(
@@ -229,6 +229,6 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_REAUTH_DATA_SCHEMA, suggested_values=user_input
             ),
-            description_placeholders={"app": self._hassio_discovery.config["addon"]},
+            description_placeholders={"addon": self._hassio_discovery.config["addon"]},
             errors=errors if user_input is not None else None,
         )

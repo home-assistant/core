@@ -18,7 +18,7 @@
         "data_description": {
           "api_key": "[%key:component::uptime_kuma::config::step::user::data_description::api_key%]"
         },
-        "description": "Do you want to configure Home Assistant to connect to the Uptime Kuma service provided by the app: {app}?",
+        "description": "Do you want to configure Home Assistant to connect to the Uptime Kuma service provided by the app: {addon}?",
         "title": "Uptime Kuma via Home Assistant app"
       },
       "reauth_confirm": {
