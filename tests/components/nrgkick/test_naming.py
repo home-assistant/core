@@ -1,10 +1,17 @@
 """Tests for NRGkick device naming and fallback logic."""
 
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import async_setup_integration
+
+from tests.common import snapshot_platform
+
+pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
 
 async def test_device_name_fallback(
@@ -14,6 +21,9 @@ async def test_device_name_fallback(
     mock_info_data,
     mock_control_data,
     mock_values_data,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that device name is taken from the entry title."""
     mock_config_entry.add_to_hass(hass)
@@ -27,24 +37,13 @@ async def test_device_name_fallback(
 
     await async_setup_integration(hass, mock_config_entry, add_to_hass=False)
 
-    # Verify device registry
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_info_data["general"]["serial_number"])}
     )
-    assert device
-    assert device.name == "NRGkick"
+    assert device is not None
+    assert device == snapshot(name="device")
 
-    # Verify entity ID generation (should use default name)
-    # With has_entity_name=True, if device name is "NRGkick",
-    # entity ID should be sensor.nrgkick_total_active_power
-    entity_registry = er.async_get(hass)
-    unique_id = f"{mock_info_data['general']['serial_number']}_total_active_power"
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-    assert entity_id
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.translation_key == "total_active_power"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_device_name_custom(
@@ -54,6 +53,9 @@ async def test_device_name_custom(
     mock_info_data,
     mock_control_data,
     mock_values_data,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that custom device name is taken from the entry title."""
     mock_config_entry.add_to_hass(hass)
@@ -67,21 +69,10 @@ async def test_device_name_custom(
 
     await async_setup_integration(hass, mock_config_entry, add_to_hass=False)
 
-    # Verify device registry
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_info_data["general"]["serial_number"])}
     )
-    assert device
-    assert device.name == "Garage Charger"
+    assert device is not None
+    assert device == snapshot(name="device")
 
-    # Verify entity ID generation
-    # With has_entity_name=True, if device name is "Garage Charger",
-    # entity ID should be sensor.garage_charger_total_active_power
-    entity_registry = er.async_get(hass)
-    unique_id = f"{mock_info_data['general']['serial_number']}_total_active_power"
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-    assert entity_id
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.translation_key == "total_active_power"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
