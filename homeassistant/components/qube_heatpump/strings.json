@@ -273,7 +273,7 @@
         "name": "DHW controller enabled"
       },
       "flow": {
-        "name": "Measured Flow"
+        "name": "Measured flow"
       },
       "generalmng_acumulatedpwr": {
         "name": "Total electric consumption (excl. standby)"
