@@ -6,6 +6,7 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
+      "bot_logout_failed": "Failed to logout Telegram bot. Please try again later.",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "invalid_proxy_url": "{proxy_url_error}",
       "invalid_trusted_networks": "Invalid trusted network: {error_message}",
@@ -34,9 +35,11 @@
         "sections": {
           "advanced_settings": {
             "data": {
+              "api_endpoint": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data::api_endpoint%]",
               "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data::proxy_url%]"
             },
             "data_description": {
+              "api_endpoint": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data_description::api_endpoint%]",
               "proxy_url": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::data_description::proxy_url%]"
             },
             "name": "[%key:component::telegram_bot::config::step::user::sections::advanced_settings::name%]"
@@ -57,9 +60,11 @@
         "sections": {
           "advanced_settings": {
             "data": {
+              "api_endpoint": "API endpoint",
               "proxy_url": "Proxy URL"
             },
             "data_description": {
+              "api_endpoint": "Telegram bot API server endpoint.\nThe bot will be **locked out for 10 minutes** if you switch back to the default.\nDefault: `{default_api_endpoint}`.",
               "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n({socks_url})"
             },
             "name": "Advanced settings"
@@ -226,9 +231,11 @@
     "step": {
       "init": {
         "data": {
+          "api_endpoint": "API endpoint",
           "parse_mode": "Parse mode"
         },
         "data_description": {
+          "api_endpoint": "Telegram bot API server endpoint.\nThe bot will be **locked out for 10 minutes** if you switch back to the default.\nDefault: `{default_api_endpoint}`.",
           "parse_mode": "Default parse mode for messages if not explicit in message data."
         },
         "title": "Configure Telegram bot"

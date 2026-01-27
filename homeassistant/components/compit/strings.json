@@ -148,64 +148,108 @@
         "state": {
           "cooling": "Cooling",
           "holiday": "Holiday",
+    "select": {
+      "aero_by_pass": {
+        "name": "Bypass",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      },
+      "buffer_mode": {
+        "name": "Buffer mode",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
+          "manual": "[%key:common::state::manual%]",
+          "schedule": "Schedule"
+        }
+      },
+      "dhw_circulation": {
+        "name": "Domestic hot water circulation",
+        "state": {
+          "constant": "Constant",
+          "disabled": "[%key:common::state::disabled%]",
+          "schedule": "Schedule"
+        }
+      },
+      "heating_source_of_correction": {
+        "name": "Heating source of correction",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
           "nano_nr_1": "Nano 1",
           "nano_nr_2": "Nano 2",
           "nano_nr_3": "Nano 3",
           "nano_nr_4": "Nano 4",
           "nano_nr_5": "Nano 5",
-          "off": "[%key:common::state::off%]",
-          "on": "[%key:common::state::on%]",
-          "summer": "Summer",
-          "winter": "Winter"
+          "no_corrections": "No corrections",
+          "schedule": "Schedule",
+          "thermostat": "Thermostat"
         }
       },
-      "pm10_level": {
-        "name": "PM10 level",
+      "language": {
+        "name": "Language",
         "state": {
-          "exceeded": "Exceeded",
-          "normal": "[%key:common::state::normal%]",
-          "warning": "Warning"
+          "english": "English",
+          "polish": "Polish"
         }
       },
-      "pm25_level": {
-        "name": "PM2.5 level",
+      "mixer_mode": {
+        "name": "Mixer mode",
         "state": {
-          "exceeded": "Exceeded",
-          "normal": "[%key:common::state::normal%]",
-          "warning": "Warning"
+          "nano_nr_1": "Nano 1",
+          "nano_nr_2": "Nano 2",
+          "nano_nr_3": "Nano 3",
+          "nano_nr_4": "Nano 4",
+          "nano_nr_5": "Nano 5",
+          "no_corrections": "No corrections",
+          "schedule": "Schedule",
+          "thermostat": "Thermostat"
         }
       },
-      "protection_temperature": {
-        "name": "Protection temperature"
-      },
-      "return_circuit_temperature": {
-        "name": "Return circuit temperature"
-      },
-      "tank_temperature_t2": {
-        "name": "Tank bottom T2 temperature"
-      },
-      "tank_temperature_t3": {
-        "name": "Tank top T3 temperature"
-      },
-      "tank_temperature_t4": {
-        "name": "Tank T4 temperature"
-      },
-      "target_heating_temperature": {
-        "name": "Target heating temperature"
-      },
-      "upper_source_temperature": {
-        "name": "Upper source temperature"
-      },
-      "ventilation_alarm": {
-        "name": "Ventilation alarm",
+      "mixer_mode_zone": {
+        "name": "Zone {zone} mixer mode",
         "state": {
-          "ahu_alarm": "AHU alarm",
-          "bot_alarm": "BOT alarm",
-          "damaged_exhaust_sensor": "Damaged exhaust sensor",
-          "damaged_preheater_sensor": "Damaged preheater sensor",
-          "damaged_supply_and_exhaust_sensors": "Damaged supply and exhaust sensors",
-          "damaged_supply_sensor": "Damaged supply sensor",
-          "no_alarm": "No alarm"
+          "disabled": "[%key:common::state::disabled%]",
+          "nano_nr_1": "Nano 1",
+          "nano_nr_2": "Nano 2",
+          "nano_nr_3": "Nano 3",
+          "nano_nr_4": "Nano 4",
+          "nano_nr_5": "Nano 5",
+          "no_corrections": "No corrections",
+          "schedule": "Schedule",
+          "thermostat": "Thermostat",
+          "without_thermostat": "Without thermostat"
+        }
+      },
+      "nano_work_mode": {
+        "name": "Nano work mode",
+        "state": {
+          "christmas": "Christmas",
+          "manual_0": "Manual 0",
+          "manual_1": "Manual 1",
+          "manual_2": "Manual 2",
+          "manual_3": "Manual 3",
+          "out_of_home": "Out of home",
+          "schedule": "Schedule"
+        }
+      },
+      "operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "disabled": "[%key:common::state::disabled%]",
+          "eco": "Eco",
+          "hybrid": "Hybrid"
+        }
+      },
+      "solarcomp_operating_mode": {
+        "name": "Operating mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "de_icing": "De-icing",
+          "disabled": "[%key:common::state::disabled%]",
+          "holiday": "Holiday"
         }
       },
       "ventilation_gear": {

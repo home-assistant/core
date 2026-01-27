@@ -1,5 +1,5 @@
 publish:
-  target:
+  target: &target
     entity:
       domain: notify
       integration: ntfy
@@ -93,3 +93,15 @@ publish:
       selector:
         text:
       example: "Mc3otamDNcpJ"
+clear:
+  target: *target
+  fields:
+    sequence_id: &sequence_id
+      required: true
+      selector:
+        text:
+      example: "Mc3otamDNcpJ"
+delete:
+  target: *target
+  fields:
+    sequence_id: *sequence_id
