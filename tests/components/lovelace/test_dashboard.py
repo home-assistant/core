@@ -38,9 +38,8 @@ async def test_lovelace_from_storage_new_installation(
     """Test new installation has default lovelace panel but no dashboard entry."""
     assert await async_setup_component(hass, "lovelace", {})
 
-    # Default lovelace panel is registered for frontend availability
+    # Default lovelace panel is registered for backward compatibility
     assert "lovelace" in hass.data[frontend.DATA_PANELS]
-    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "storage"}
 
     client = await hass_ws_client(hass)
 
@@ -181,7 +180,6 @@ async def test_lovelace_dashboard_deleted_re_registers_panel(
 
     # But the lovelace panel should still be registered (re-registered as default)
     assert "lovelace" in hass.data[frontend.DATA_PANELS]
-    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "storage"}
 
 
 async def test_lovelace_migration_skipped_when_both_files_exist(
@@ -509,9 +507,8 @@ async def test_storage_dashboards(
     """Test we load lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})
 
-    # Default lovelace panel is registered for frontend availability
+    # Default lovelace panel is registered for backward compatibility
     assert "lovelace" in hass.data[frontend.DATA_PANELS]
-    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "storage"}
 
     client = await hass_ws_client(hass)
 

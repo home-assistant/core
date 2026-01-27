@@ -142,7 +142,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     yaml_resources = config[DOMAIN].get(CONF_RESOURCES)
 
     # Deprecated - Remove in 2026.8
-    # For YAML mode, register the default panel (temporary until user migrates)
+    # For YAML mode, register the default panel in yaml mode (temporary until user migrates)
     if mode == MODE_YAML:
         frontend.async_register_built_in_panel(
             hass,
@@ -153,7 +153,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             sidebar_default_visible=False,
         )
         _async_create_yaml_mode_repair(hass)
-    # End deprecation
 
     async def reload_resources_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml resources."""
@@ -251,11 +250,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await hass.data[LOVELACE_DATA].dashboards.pop(url_path).async_delete()
             # Re-register default lovelace panel if the "lovelace" dashboard was deleted
             if url_path == DOMAIN:
-                frontend.async_register_built_in_panel(
-                    hass,
-                    DOMAIN,
-                    config={"mode": MODE_STORAGE},
-                )
+                _async_ensure_default_panel(hass)
             return
 
         if change_type == collection.CHANGE_ADDED:
@@ -304,17 +299,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if mode == MODE_STORAGE:
         await _async_migrate_default_config(hass, dashboards_collection)
 
-    # Register default lovelace panel if no panel exists yet
-    # (new installation without YAML mode and no migrated dashboard)
-    if (
-        frontend.DATA_PANELS not in hass.data
-        or DOMAIN not in hass.data[frontend.DATA_PANELS]
-    ):
-        frontend.async_register_built_in_panel(
-            hass,
-            DOMAIN,
-            config={"mode": MODE_STORAGE},
-        )
+    # Ensure lovelace panel is always registered for backwards compatibility
+    _async_ensure_default_panel(hass)
 
     dashboard.DashboardsCollectionWebSocket(
         dashboards_collection,
@@ -353,6 +339,16 @@ async def create_yaml_resource_col(
                 yaml_resources = ll_conf[CONF_RESOURCES]
 
     return resources.ResourceYAMLCollection(yaml_resources or [])
+
+
+@callback
+def _async_ensure_default_panel(hass: HomeAssistant) -> None:
+    """Ensure a default lovelace panel is registered for backward compatibility."""
+    if (
+        frontend.DATA_PANELS not in hass.data
+        or DOMAIN not in hass.data[frontend.DATA_PANELS]
+    ):
+        frontend.async_register_built_in_panel(hass, DOMAIN)
 
 
 @callback
