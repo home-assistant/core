@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
+from pymystrom.pir import MyStromPir
 from pymystrom.switch import MyStromSwitch
 
 from homeassistant.components.sensor import (
@@ -16,13 +17,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    LIGHT_LUX,
     EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -30,29 +32,57 @@ from .const import DOMAIN, MANUFACTURER
 from .models import MyStromConfigEntry
 
 
-@dataclass(frozen=True)
-class MyStromSwitchSensorEntityDescription(SensorEntityDescription):
-    """Class describing mystrom switch sensor entities."""
+@dataclass(frozen=True, kw_only=True)
+class MyStromSensorEntityDescription[_DeviceT](SensorEntityDescription):
+    """Class describing mystrom sensor entities."""
 
-    value_fn: Callable[[MyStromSwitch], float | None] = lambda _: None
+    value_fn: Callable[[_DeviceT], float | None]
 
 
-SENSOR_TYPES: tuple[MyStromSwitchSensorEntityDescription, ...] = (
-    MyStromSwitchSensorEntityDescription(
+SENSOR_TYPES_PIR: tuple[MyStromSensorEntityDescription[MyStromPir], ...] = (
+    MyStromSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_fn=(
+            lambda device: (
+                float(device.temperature_compensated)
+                if device.temperature_compensated is not None
+                else None
+            )
+        ),
+    ),
+    MyStromSensorEntityDescription(
+        key="illuminance",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=LIGHT_LUX,
+        value_fn=(
+            lambda device: (
+                float(device.intensity) if device.intensity is not None else None
+            )
+        ),
+    ),
+)
+
+
+SENSOR_TYPES_SWITCH: tuple[MyStromSensorEntityDescription[MyStromSwitch], ...] = (
+    MyStromSensorEntityDescription(
         key="avg_consumption",
         translation_key="avg_consumption",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         value_fn=lambda device: device.consumedWs,
     ),
-    MyStromSwitchSensorEntityDescription(
+    MyStromSensorEntityDescription(
         key="consumption",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         value_fn=lambda device: device.consumption,
     ),
-    MyStromSwitchSensorEntityDescription(
+    MyStromSensorEntityDescription(
         key="energy_since_boot",
         translation_key="energy_since_boot",
         device_class=SensorDeviceClass.ENERGY,
@@ -61,7 +91,7 @@ SENSOR_TYPES: tuple[MyStromSwitchSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_fn=lambda device: device.energy_since_boot,
     ),
-    MyStromSwitchSensorEntityDescription(
+    MyStromSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -77,16 +107,29 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the myStrom entities."""
-    device: MyStromSwitch = entry.runtime_data.device
+    device = entry.runtime_data.device
+    info = entry.runtime_data.info
 
-    entities: list[MyStromSensorBase] = [
-        MyStromSwitchSensor(device, entry.title, description)
-        for description in SENSOR_TYPES
-        if description.value_fn(device) is not None
-    ]
-
-    if device.time_since_boot is not None:
-        entities.append(MyStromSwitchUptimeSensor(device, entry.title))
+    entities: list[MyStromSensorBase] = []
+    match device:
+        case MyStromPir():
+            entities = [
+                MyStromSensor(device, entry.title, description, info["mac"])
+                for description in SENSOR_TYPES_PIR
+                if description.value_fn(device) is not None
+            ]
+        case MyStromSwitch():
+            entities = [
+                MyStromSensor(device, entry.title, description, info["mac"])
+                for description in SENSOR_TYPES_SWITCH
+                if description.value_fn(device) is not None
+            ]
+            if device.time_since_boot is not None:
+                entities.append(
+                    MyStromSwitchUptimeSensor(device, entry.title, info["mac"])
+                )
+        case _:
+            entities = []
 
     async_add_entities(entities)
 
@@ -101,31 +144,36 @@ class MyStromSensorBase(SensorEntity):
         device: MyStromSwitch,
         name: str,
         key: str,
+        mac: str,
     ) -> None:
         """Initialize the sensor."""
-        self._attr_unique_id = f"{device.mac}-{key}"
+        self.device = device
+        self._attr_unique_id = f"{mac}-{key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.mac)},
+            identifiers={(DOMAIN, mac)},
+            connections={(CONNECTION_NETWORK_MAC, mac)},
             name=name,
             manufacturer=MANUFACTURER,
-            sw_version=device.firmware,
+            sw_version=getattr(device, "firmware", None),
         )
 
 
-class MyStromSwitchSensor(MyStromSensorBase):
+class MyStromSensor[_DeviceT](MyStromSensorBase):
     """Representation of the consumption or temperature of a myStrom switch/plug."""
 
-    entity_description: MyStromSwitchSensorEntityDescription
+    entity_description: MyStromSensorEntityDescription[_DeviceT]
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        device: MyStromSwitch,
+        device: _DeviceT,
         name: str,
-        description: MyStromSwitchSensorEntityDescription,
+        description: MyStromSensorEntityDescription[_DeviceT],
+        mac: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device, name, description.key)
-        self.device = device
+        super().__init__(device, name, description.key, mac)
         self.entity_description = description
 
     @property
@@ -148,10 +196,10 @@ class MyStromSwitchUptimeSensor(MyStromSensorBase):
         self,
         device: MyStromSwitch,
         name: str,
+        mac: str,
     ) -> None:
         """Initialize the uptime sensor."""
-        super().__init__(device, name, self.entity_description.key)
-        self.device = device
+        super().__init__(device, name, self.entity_description.key, mac)
         self._last_value: datetime | None = None
         self._last_attributes: dict[str, Any] = {}
 
