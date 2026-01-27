@@ -76,6 +76,16 @@ ILLUMINANCE_SENSOR_DATA: dict[str, Any] = {
 # Light device data for energy sensor testing (reuse first device from DEVICE_DATA)
 LIGHT_DEVICE_DATA: dict[str, Any] = DEVICE_DATA[0]
 
+MOTION_SENSOR_DATA: dict[str, Any] = {
+    "dev_id": "02010000106A242121110E",
+    "dev_type": "0201",
+    "name": "Motion Sensor 0000-10",
+    "model": "DALI Motion Sensor",
+    "color_mode": None,
+    "address": 10,
+    "channel": 0,
+}
+
 
 @pytest.fixture
 async def init_integration(
@@ -149,6 +159,12 @@ def mock_illuminance_device() -> MagicMock:
 def mock_light_device() -> MagicMock:
     """Return a mocked light device for energy sensor testing."""
     return _create_mock_device(LIGHT_DEVICE_DATA)
+
+
+@pytest.fixture
+def mock_motion_sensor_device() -> MagicMock:
+    """Return a mocked motion sensor device."""
+    return _create_mock_device(MOTION_SENSOR_DATA)
 
 
 def _create_scene_device_property(
