@@ -136,15 +136,12 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] | None = None
         if user_input is not None:
-            description_placeholders = {"device_ip": user_input.get(CONF_HOST, "")}
             try:
                 host = _normalize_host(user_input[CONF_HOST])
             except vol.Invalid:
                 errors["base"] = "cannot_connect"
             else:
-                description_placeholders["device_ip"] = host
                 try:
                     info = await validate_input(self.hass, host)
                 except NRGkickApiClientApiDisabledError:
@@ -172,7 +169,6 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
-            description_placeholders=description_placeholders,
         )
 
     async def async_step_user_auth(
