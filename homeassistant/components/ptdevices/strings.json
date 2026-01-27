@@ -45,7 +45,15 @@
         "name": "Last RX report"
       },
       "status": {
-        "name": "Status"
+        "name": "Status",
+        "state": {
+          "not_connected": "Not Connected",
+          "not_connected_yet": "Not Connected Yet",
+          "press_transmitter_connect_button": "Press Transmitter Connect Button",
+          "transmitter_not_reporting": "Transmitter Not Reporting",
+          "unknown": "Unknown",
+          "working": "Working"
+        }
       },
       "tx_reported": {
         "name": "Last TX report"
