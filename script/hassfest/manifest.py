@@ -110,6 +110,7 @@ NO_IOT_CLASS = [
     "schedule",
     "script",
     "search",
+    "services",
     "system_health",
     "system_log",
     "tag",

@@ -2175,6 +2175,7 @@ NO_QUALITY_SCALE = [
     "schedule",
     "script",
     "search",
+    "services",
     "system_health",
     "system_log",
     "tag",
