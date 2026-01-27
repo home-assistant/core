@@ -967,7 +967,7 @@ MOCK_HOST_ATTRIBUTES_DATA = [
 MOCK_CALL_DEFLECTION_DATA = {
     "X_AVM-DE_OnTel1": {
         "GetDeflections": {
-            "NewDeflectionList": "<List><Item><DeflectionId>0</DeflectionId><Enable>0</Enable><Type>fromAll</Type><Number></Number><DeflectionToNumber>+1234657890</DeflectionToNumber><Mode>eImmediately</Mode><Outgoing></Outgoing><PhonebookID></PhonebookID></Item></List>"
+            "NewDeflectionList": "<List><Item><DeflectionId>0</DeflectionId><Enable>1</Enable><Type>fromAll</Type><Number></Number><DeflectionToNumber>+1234657890</DeflectionToNumber><Mode>eImmediately</Mode><Outgoing></Outgoing><PhonebookID></PhonebookID></Item></List>"
         }
     }
 }
