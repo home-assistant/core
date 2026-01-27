@@ -15,6 +15,7 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.IMAGE,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 
