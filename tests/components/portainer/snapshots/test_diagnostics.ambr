@@ -22,7 +22,7 @@
       ]),
       'title': 'Portainer test',
       'unique_id': 'test_api_token',
-      'version': 2,
+      'version': 4,
     }),
     'coordinator': dict({
       'endpoints': list([
