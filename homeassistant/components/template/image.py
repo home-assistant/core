@@ -180,3 +180,4 @@ class TriggerImageEntity(TriggerEntity, AbstractTemplateImage):
         """Process new data."""
         super()._process_data()
         self._handle_state(self._rendered.get(CONF_URL))
+        self.async_write_ha_state()

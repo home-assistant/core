@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:fan-off"
+    },
+    "is_on": {
+      "condition": "mdi:fan"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:fan",

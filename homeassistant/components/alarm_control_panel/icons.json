@@ -1,4 +1,27 @@
 {
+  "conditions": {
+    "is_armed": {
+      "condition": "mdi:shield"
+    },
+    "is_armed_away": {
+      "condition": "mdi:shield-lock"
+    },
+    "is_armed_home": {
+      "condition": "mdi:shield-home"
+    },
+    "is_armed_night": {
+      "condition": "mdi:shield-moon"
+    },
+    "is_armed_vacation": {
+      "condition": "mdi:shield-airplane"
+    },
+    "is_disarmed": {
+      "condition": "mdi:shield-off"
+    },
+    "is_triggered": {
+      "condition": "mdi:bell-ring"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:shield",

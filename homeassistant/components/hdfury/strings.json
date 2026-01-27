@@ -1,12 +1,17 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
+    "flow_title": "HDFury ({host})",
     "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up {host}?"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -19,6 +24,11 @@
     }
   },
   "entity": {
+    "button": {
+      "issue_hotplug": {
+        "name": "Issue hotplug"
+      }
+    },
     "select": {
       "opmode": {
         "name": "Operation mode",
@@ -50,6 +60,82 @@
           "3": "Input 3",
           "4": "Copy TX0"
         }
+      }
+    },
+    "sensor": {
+      "aud0": {
+        "name": "Audio TX0"
+      },
+      "aud1": {
+        "name": "Audio TX1"
+      },
+      "audout": {
+        "name": "Audio output"
+      },
+      "earcrx": {
+        "name": "eARC/ARC status"
+      },
+      "edida0": {
+        "name": "EDID TXA0"
+      },
+      "edida1": {
+        "name": "EDID TXA1"
+      },
+      "edida2": {
+        "name": "EDID AUDA"
+      },
+      "rx0": {
+        "name": "Input RX0"
+      },
+      "rx1": {
+        "name": "Input RX1"
+      },
+      "sink0": {
+        "name": "EDID TX0"
+      },
+      "sink1": {
+        "name": "EDID TX1"
+      },
+      "sink2": {
+        "name": "EDID AUD"
+      },
+      "tx0": {
+        "name": "Output TX0"
+      },
+      "tx1": {
+        "name": "Output TX1"
+      }
+    },
+    "switch": {
+      "autosw": {
+        "name": "Auto switch inputs"
+      },
+      "htpcmode0": {
+        "name": "HTPC mode RX0"
+      },
+      "htpcmode1": {
+        "name": "HTPC mode RX1"
+      },
+      "htpcmode2": {
+        "name": "HTPC mode RX2"
+      },
+      "htpcmode3": {
+        "name": "HTPC mode RX3"
+      },
+      "iractive": {
+        "name": "Infrared"
+      },
+      "mutetx0": {
+        "name": "Mute audio TX0"
+      },
+      "mutetx1": {
+        "name": "Mute audio TX1"
+      },
+      "oled": {
+        "name": "OLED display"
+      },
+      "relay": {
+        "name": "Relay"
       }
     }
   },

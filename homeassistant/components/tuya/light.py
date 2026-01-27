@@ -242,6 +242,13 @@ LIGHTS: dict[DeviceCategory, tuple[TuyaLightEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.CWWSQ: (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            translation_key="light",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.DC: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,

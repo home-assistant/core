@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Altitude',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -81,6 +82,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Atmospheric pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -140,6 +142,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -196,6 +199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -252,6 +256,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -305,6 +310,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -358,6 +364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -414,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vapor pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -470,6 +478,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Altitude',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -529,6 +538,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Atmospheric pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -588,6 +598,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -644,6 +655,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -700,6 +712,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -753,6 +766,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -806,6 +820,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -862,6 +877,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vapor pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -918,6 +934,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Altitude',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -977,6 +994,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Atmospheric pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1036,6 +1054,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1092,6 +1111,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1148,6 +1168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1201,6 +1222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -1254,6 +1276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1310,6 +1333,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vapor pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

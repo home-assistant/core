@@ -29,7 +29,9 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfMass,
     UnitOfPower,
@@ -62,6 +64,7 @@ from .utils import (
     get_condensers,
     get_device_serial,
     get_evaporators,
+    get_inverters,
     is_supported,
     normalize_state,
 )
@@ -971,6 +974,15 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getBatteryLevel(),
     ),
     ViCareSensorEntityDescription(
+        key="wifi_signal_strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        value_getter=lambda api: api.getWifiSignalStrength(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
         key="zigbee_signal_strength",
         translation_key="zigbee_signal_strength",
         state_class=SensorStateClass.MEASUREMENT,
@@ -1204,8 +1216,8 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="compressor_inlet_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getCompressorInletTemperature(),
-        unit_getter=lambda api: api.getCompressorInletTemperatureUnit(),
+        value_getter=lambda api: api.getInletTemperature(),
+        unit_getter=lambda api: api.getInletTemperatureUnit(),
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -1213,8 +1225,8 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="compressor_outlet_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getCompressorOutletTemperature(),
-        unit_getter=lambda api: api.getCompressorOutletTemperatureUnit(),
+        value_getter=lambda api: api.getOutletTemperature(),
+        unit_getter=lambda api: api.getOutletTemperatureUnit(),
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -1222,8 +1234,8 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="compressor_inlet_pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.BAR,
-        value_getter=lambda api: api.getCompressorInletPressure(),
-        unit_getter=lambda api: api.getCompressorInletPressureUnit(),
+        value_getter=lambda api: api.getInletPressure(),
+        unit_getter=lambda api: api.getInletPressureUnit(),
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -1231,8 +1243,8 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="compressor_outlet_pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.BAR,
-        value_getter=lambda api: api.getCompressorOutletPressure(),
-        unit_getter=lambda api: api.getCompressorOutletPressureUnit(),
+        value_getter=lambda api: api.getOutletPressure(),
+        unit_getter=lambda api: api.getOutletPressureUnit(),
         entity_registry_enabled_default=False,
     ),
 )
@@ -1243,8 +1255,8 @@ CONDENSER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="condenser_liquid_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getCondensorLiquidTemperature(),
-        unit_getter=lambda api: api.getCondensorLiquidTemperatureUnit(),
+        value_getter=lambda api: api.getLiquidTemperature(),
+        unit_getter=lambda api: api.getLiquidTemperatureUnit(),
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -1252,8 +1264,8 @@ CONDENSER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="condenser_subcooling_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getCondensorSubcoolingTemperature(),
-        unit_getter=lambda api: api.getCondensorSubcoolingTemperatureUnit(),
+        value_getter=lambda api: api.getSubcoolingTemperature(),
+        unit_getter=lambda api: api.getSubcoolingTemperatureUnit(),
         entity_registry_enabled_default=False,
     ),
 )
@@ -1264,8 +1276,8 @@ EVAPORATOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="evaporator_overheat_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getEvaporatorOverheatTemperature(),
-        unit_getter=lambda api: api.getEvaporatorOverheatTemperatureUnit(),
+        value_getter=lambda api: api.getOverheatTemperature(),
+        unit_getter=lambda api: api.getOverheatTemperatureUnit(),
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -1273,8 +1285,35 @@ EVAPORATOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="evaporator_liquid_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getEvaporatorLiquidTemperature(),
-        unit_getter=lambda api: api.getEvaporatorLiquidTemperatureUnit(),
+        value_getter=lambda api: api.getLiquidTemperature(),
+        unit_getter=lambda api: api.getLiquidTemperatureUnit(),
+        entity_registry_enabled_default=False,
+    ),
+)
+
+INVERTER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
+    ViCareSensorEntityDescription(
+        key="inverter_current",
+        translation_key="inverter_current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_getter=lambda api: api.getCurrent(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="inverter_power",
+        translation_key="inverter_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_getter=lambda api: api.getPower(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="inverter_temperature",
+        translation_key="inverter_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getTemperature(),
         entity_registry_enabled_default=False,
     ),
 )
@@ -1305,6 +1344,7 @@ def _build_entities(
             (get_compressors(device.api), COMPRESSOR_SENSORS),
             (get_condensers(device.api), CONDENSER_SENSORS),
             (get_evaporators(device.api), EVAPORATOR_SENSORS),
+            (get_inverters(device.api), INVERTER_SENSORS),
         ):
             entities.extend(
                 ViCareSensor(
