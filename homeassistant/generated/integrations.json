@@ -2937,6 +2937,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "hwam": {
+      "name": "HWAM\u00ae SmartControl\u2122",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "hydrawise": {
       "name": "Hunter Hydrawise",
       "integration_type": "hub",
