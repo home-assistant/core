@@ -34,11 +34,12 @@ async def test_system_health_info_autogen(hass: HomeAssistant) -> None:
     assert info == {"dashboards": 1, "mode": "auto-gen", "resources": 0}
 
 
-async def test_system_health_info_storage(
+async def test_system_health_info_storage_migration(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """Test system health info endpoint."""
+    """Test system health info endpoint after migration from old storage."""
     assert await async_setup_component(hass, "system_health", {})
+    # Pre-populate old storage format (triggers migration)
     hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {
         "key": "lovelace",
         "version": 1,
@@ -47,7 +48,8 @@ async def test_system_health_info_storage(
     assert await async_setup_component(hass, "lovelace", {})
     await hass.async_block_till_done()
     info = await get_system_health_info(hass, "lovelace")
-    assert info == {"dashboards": 1, "mode": "storage", "resources": 0, "views": 0}
+    # After migration: default dashboard (auto-gen) + migrated "lovelace" dashboard (storage with data)
+    assert info == {"dashboards": 2, "mode": "storage", "resources": 0, "views": 0}
 
 
 async def test_system_health_info_yaml(hass: HomeAssistant) -> None:
