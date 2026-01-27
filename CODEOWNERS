@@ -46,7 +46,6 @@ build.json @home-assistant/supervisor
 /tests/components/accuweather/ @bieniu
 /homeassistant/components/acmeda/ @atmurray
 /tests/components/acmeda/ @atmurray
-/homeassistant/components/actions/ @home-assistant/core
 /homeassistant/components/actron_air/ @kclif9 @JagadishDhanamjayam
 /tests/components/actron_air/ @kclif9 @JagadishDhanamjayam
 /homeassistant/components/adax/ @danielhiversen @lazytarget
@@ -1461,6 +1460,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/senz/ @milanmeu
 /tests/components/senz/ @milanmeu
 /homeassistant/components/serial/ @fabaff
+/homeassistant/components/services/ @home-assistant/core
 /homeassistant/components/seven_segments/ @fabaff
 /homeassistant/components/seventeentrack/ @shaiu
 /tests/components/seventeentrack/ @shaiu
