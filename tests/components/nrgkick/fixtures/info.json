@@ -1,0 +1,34 @@
+{
+  "general": {
+    "device_name": "NRGkick Test",
+    "serial_number": "TEST123456",
+    "model_type": "NRGkick Gen2 SIM",
+    "rated_current": 32.0,
+    "json_api_version": "v1"
+  },
+  "connector": {
+    "type": "TYPE2",
+    "serial_number": "CONN123",
+    "max_current": 32.0,
+    "phase_count": 3
+  },
+  "cellular": { "mode": 3, "rssi": -85, "operator": "Test operator" },
+  "grid": {
+    "voltage": 230,
+    "frequency": 50.0,
+    "phases": "L1, L2, L3"
+  },
+  "network": {
+    "ip_address": "192.168.1.100",
+    "mac_address": "AA:BB:CC:DD:EE:FF",
+    "wifi_ssid": "TestNetwork",
+    "wifi_rssi": -45
+  },
+  "hardware": {
+    "smartmodule_version": "4.0.0.0",
+    "bluetooth_version": "1.2.3"
+  },
+  "software": {
+    "firmware_version": "2.1.0"
+  }
+}

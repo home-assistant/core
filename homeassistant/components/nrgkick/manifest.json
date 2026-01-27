@@ -1,0 +1,12 @@
+{
+  "domain": "nrgkick",
+  "name": "NRGkick",
+  "codeowners": ["@andijakl"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nrgkick",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["nrgkick-api==1.6.0"],
+  "zeroconf": ["_nrgkick._tcp.local."]
+}
