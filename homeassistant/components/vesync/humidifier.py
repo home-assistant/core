@@ -130,7 +130,6 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     @property
     def current_humidity(self) -> int:
         """Return the current humidity."""
-
         if TYPE_CHECKING:
             assert self.device.state.humidity is not None
         return self.device.state.humidity
