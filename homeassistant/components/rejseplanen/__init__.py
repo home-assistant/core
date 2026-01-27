@@ -25,11 +25,8 @@ async def async_setup_entry(
     """Set up Rejseplanen from a config entry."""
     coordinator = RejseplanenDataUpdateCoordinator(hass, config_entry)
 
-    await coordinator.async_config_entry_first_refresh()
-
     config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
     # Register update listener for subentry changes - but use minimal reload
     config_entry.async_on_unload(
         config_entry.add_update_listener(_async_update_listener)

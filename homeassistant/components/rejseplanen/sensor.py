@@ -283,14 +283,8 @@ def _get_departures_list_attributes(departures: list[Departure]) -> dict[str, An
     """Get structured departures data for dashboard display."""
     current_departures = _get_current_departures(departures)
 
-    if not current_departures:
-        return {"departures": [], "last_updated": datetime.now().isoformat()}
-
-    tz = zoneinfo.ZoneInfo("Europe/Copenhagen")
-
     return {
         "total_departures": len(current_departures),
-        "last_updated": datetime.now(tz).isoformat(),
     }
 
 

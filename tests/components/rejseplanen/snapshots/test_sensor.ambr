@@ -1,0 +1,639 @@
+# serializer version: 1
+# name: test_sensor_snapshot[sensor.gym_delayed_by-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gym_delayed_by',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Delayed by',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:bus',
+    'original_name': 'Delayed by',
+    'platform': 'rejseplanen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'delay',
+    'unique_id': 'gym-subentry-id_delay',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.gym_delayed_by-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by rejseplanen.dk',
+      'device_class': 'duration',
+      'friendly_name': 'Gym Delayed by',
+      'icon': 'mdi:bus',
+      'stop_id': 456789,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gym_delayed_by',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.gym_departing_from_track-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gym_departing_from_track',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Departing from track',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bus',
+    'original_name': 'Departing from track',
+    'platform': 'rejseplanen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'track',
+    'unique_id': 'gym-subentry-id_track',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.gym_departing_from_track-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by rejseplanen.dk',
+      'friendly_name': 'Gym Departing from track',
+      'icon': 'mdi:bus',
+      'stop_id': 456789,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gym_departing_from_track',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.gym_departing_in-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gym_departing_in',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Departing in',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:bus',
+    'original_name': 'Departing in',
+    'platform': 'rejseplanen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_time',
+    'unique_id': 'gym-subentry-id_departure_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.gym_departing_in-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by rejseplanen.dk',
+      'device_class': 'timestamp',
+      'friendly_name': 'Gym Departing in',
+      'icon': 'mdi:bus',
+      'stop_id': 456789,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gym_departing_in',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.gym_line-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gym_line',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Line',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bus',
+    'original_name': 'Line',
+    'platform': 'rejseplanen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'line',
+    'unique_id': 'gym-subentry-id_line',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.gym_line-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by rejseplanen.dk',
+      'friendly_name': 'Gym Line',
+      'icon': 'mdi:bus',
+      'stop_id': 456789,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gym_line',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.gym_number_of_departures-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gym_number_of_departures',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Number of departures',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bus',
+    'original_name': 'Number of departures',
+    'platform': 'rejseplanen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'no_departures',
+    'unique_id': 'gym-subentry-id_departures',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.gym_number_of_departures-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by rejseplanen.dk',
+      'friendly_name': 'Gym Number of departures',
+      'icon': 'mdi:bus',
+      'stop_id': 456789,
+      'total_departures': 0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gym_number_of_departures',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.gym_towards-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gym_towards',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Towards',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bus',
+    'original_name': 'Towards',
+    'platform': 'rejseplanen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'gym-subentry-id_direction',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.gym_towards-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by rejseplanen.dk',
+      'friendly_name': 'Gym Towards',
+      'icon': 'mdi:bus',
+      'stop_id': 456789,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gym_towards',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.work_delayed_by-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.work_delayed_by',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Delayed by',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:bus',
+    'original_name': 'Delayed by',
+    'platform': 'rejseplanen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'delay',
+    'unique_id': 'work-subentry-id_delay',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.work_delayed_by-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by rejseplanen.dk',
+      'device_class': 'duration',
+      'friendly_name': 'Work Delayed by',
+      'icon': 'mdi:bus',
+      'stop_id': 123456,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.work_delayed_by',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.work_departing_from_track-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.work_departing_from_track',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Departing from track',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bus',
+    'original_name': 'Departing from track',
+    'platform': 'rejseplanen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'track',
+    'unique_id': 'work-subentry-id_track',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.work_departing_from_track-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by rejseplanen.dk',
+      'friendly_name': 'Work Departing from track',
+      'icon': 'mdi:bus',
+      'stop_id': 123456,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.work_departing_from_track',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.work_departing_in-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.work_departing_in',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Departing in',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:bus',
+    'original_name': 'Departing in',
+    'platform': 'rejseplanen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'departure_time',
+    'unique_id': 'work-subentry-id_departure_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.work_departing_in-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by rejseplanen.dk',
+      'device_class': 'timestamp',
+      'friendly_name': 'Work Departing in',
+      'icon': 'mdi:bus',
+      'stop_id': 123456,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.work_departing_in',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.work_line-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.work_line',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Line',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bus',
+    'original_name': 'Line',
+    'platform': 'rejseplanen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'line',
+    'unique_id': 'work-subentry-id_line',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.work_line-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by rejseplanen.dk',
+      'friendly_name': 'Work Line',
+      'icon': 'mdi:bus',
+      'stop_id': 123456,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.work_line',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.work_number_of_departures-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.work_number_of_departures',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Number of departures',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bus',
+    'original_name': 'Number of departures',
+    'platform': 'rejseplanen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'no_departures',
+    'unique_id': 'work-subentry-id_departures',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.work_number_of_departures-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by rejseplanen.dk',
+      'friendly_name': 'Work Number of departures',
+      'icon': 'mdi:bus',
+      'stop_id': 123456,
+      'total_departures': 0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.work_number_of_departures',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.work_towards-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.work_towards',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Towards',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:bus',
+    'original_name': 'Towards',
+    'platform': 'rejseplanen',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'work-subentry-id_direction',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.work_towards-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by rejseplanen.dk',
+      'friendly_name': 'Work Towards',
+      'icon': 'mdi:bus',
+      'stop_id': 123456,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.work_towards',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
