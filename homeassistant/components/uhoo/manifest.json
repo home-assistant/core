@@ -1,0 +1,10 @@
+{
+  "domain": "uhoo",
+  "name": "uHoo",
+  "codeowners": ["@getuhoo", "@joshsmonta"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/uhooair",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["uhooapi==1.2.6"]
+}
