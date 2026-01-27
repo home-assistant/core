@@ -1,4 +1,18 @@
 {
+  "conditions": {
+    "is_drying": {
+      "condition": "mdi:arrow-down-bold"
+    },
+    "is_humidifying": {
+      "condition": "mdi:arrow-up-bold"
+    },
+    "is_off": {
+      "condition": "mdi:air-humidifier-off"
+    },
+    "is_on": {
+      "condition": "mdi:air-humidifier"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:air-humidifier",
