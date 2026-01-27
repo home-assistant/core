@@ -6,7 +6,7 @@ from jaraco.abode.exceptions import Exception as AbodeException
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 
@@ -70,9 +70,8 @@ def _trigger_automation(call: ServiceCall) -> None:
         dispatcher_send(call.hass, signal)
 
 
-@callback
-def async_setup_services(hass: HomeAssistant) -> None:
-    """Home Assistant services."""
+async def async_register_service_actions(hass: HomeAssistant) -> None:
+    """Register service actions."""
 
     hass.services.async_register(
         DOMAIN, SERVICE_SETTINGS, _change_setting, schema=CHANGE_SETTING_SCHEMA

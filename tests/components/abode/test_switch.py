@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.components.abode.const import DOMAIN
 from homeassistant.components.abode.services import SERVICE_TRIGGER_AUTOMATION
+from homeassistant.components.services import DOMAIN as SERVICES_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -14,6 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
 
@@ -113,6 +115,7 @@ async def test_turn_automation_on(hass: HomeAssistant) -> None:
 
 async def test_trigger_automation(hass: HomeAssistant) -> None:
     """Test the trigger automation service."""
+    await async_setup_component(hass, SERVICES_DOMAIN, {})
     await setup_platform(hass, SWITCH_DOMAIN)
 
     with patch("jaraco.abode.automation.Automation.trigger") as mock:

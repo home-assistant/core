@@ -4,9 +4,11 @@ from unittest.mock import patch
 
 from homeassistant.components.abode.const import DOMAIN
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN, CameraState
+from homeassistant.components.services import DOMAIN as SERVICES_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
 
@@ -31,6 +33,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
 
 async def test_capture_image(hass: HomeAssistant) -> None:
     """Test the camera capture image service."""
+    await async_setup_component(hass, SERVICES_DOMAIN, {})
     await setup_platform(hass, CAMERA_DOMAIN)
 
     with patch("jaraco.abode.devices.camera.Camera.capture") as mock_capture:

@@ -78,6 +78,7 @@ BASE_PRELOAD_PLATFORMS = [
     "media_source",
     "recorder",
     "repairs",
+    "services",
     "system_health",
     "trigger",
 ]

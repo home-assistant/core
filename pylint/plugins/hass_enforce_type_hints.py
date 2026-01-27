@@ -536,6 +536,16 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             mandatory=True,
         ),
     ],
+    "services": [
+        TypeHintMatch(
+            function_name="async_setup_service_actions",
+            arg_types={
+                0: "HomeAssistant",
+            },
+            return_type="None",
+            mandatory=True,
+        ),
+    ],
 }
 
 _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
