@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "An account with this name is already configured.",
+      "reauth_successful": "Reauthentication successful."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Sequence API. Please check your internet connection and try again.",
+      "invalid_auth": "Invalid access token. Please check your token and try again.",
+      "unknown": "Unexpected error occurred. Please try again."
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "access_token": "Access Token"
+        },
+        "data_description": {
+          "access_token": "Your updated Sequence API access token"
+        },
+        "description": "Please enter your Sequence API access token to reauthenticate.",
+        "title": "Reauthenticate Sequence"
+      },
+      "user": {
+        "data": {
+          "access_token": "Access Token",
+          "name": "Name"
+        },
+        "data_description": {
+          "access_token": "Your Sequence API access token from the developer dashboard",
+          "name": "A name to identify this Sequence account (e.g., Personal, Business)"
+        },
+        "description": "Enter your Sequence API access token to connect your account.",
+        "title": "Set up Sequence"
+      }
+    }
+  }
+}
