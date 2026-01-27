@@ -2,12 +2,13 @@
 
 from unittest.mock import Mock, patch
 
-from aioshelly.const import MODEL_WALL_DISPLAY
+from aioshelly.const import MODEL_PLUG, MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 import pytest
 
 from homeassistant.components.shelly.const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
+    COIOT_UNCONFIGURED_ISSUE_ID,
     CONF_BLE_SCANNER_MODE,
     DEPRECATED_FIRMWARE_ISSUE_ID,
     DOMAIN,
@@ -18,6 +19,7 @@ from homeassistant.components.shelly.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_MAC, init_integration
@@ -458,7 +460,8 @@ async def test_open_wifi_ap_issue_ignore(
     assert result["reason"] == "issue_ignored"
     assert mock_rpc_device.wifi_setconfig.call_count == 0
 
-    assert issue_registry.async_get_issue(DOMAIN, issue_id).dismissed_version
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.dismissed_version
 
 
 @pytest.mark.parametrize(
@@ -500,3 +503,216 @@ async def test_other_fixable_issues(
 
     result = await process_repair_fix_flow(client, flow_id)
     assert result["type"] == "create_entry"
+
+
+async def test_coiot_missing_or_wrong_peer_issue(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_block_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test repair issues handling wrong or missing CoIoT configuration."""
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "coiot",
+        {"enabled": False, "update_period": 15, "peer": "wrong.peer.address"},
+    )
+    issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 1)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 1
+
+    await async_process_repairs_platforms(hass)
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = result["flow_id"]
+    assert result["step_id"] == "init"
+    assert result["type"] == "menu"
+
+    result = await process_repair_fix_flow(client, flow_id, {"next_step_id": "confirm"})
+
+    assert result["type"] == "create_entry"
+    assert mock_block_device.configure_coiot_protocol.call_count == 1
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0
+
+
+async def test_coiot_exception(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_block_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test no repair issues handling up-to-date CoIoT configuration."""
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "coiot",
+        {"enabled": True, "update_period": 15, "peer": "correct.peer.address"},
+    )
+    issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 1)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 1
+
+    await async_process_repairs_platforms(hass)
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = result["flow_id"]
+    assert result["step_id"] == "init"
+    assert result["type"] == "menu"
+
+    mock_block_device.configure_coiot_protocol.side_effect = DeviceConnectionError
+    result = await process_repair_fix_flow(client, flow_id, {"next_step_id": "confirm"})
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+    assert mock_block_device.configure_coiot_protocol.call_count == 1
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 1
+
+
+async def test_coiot_configured_no_issue_created(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test no repair issues when CoIoT configuration is missing."""
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "coiot",
+        {"enabled": True, "update_period": 15, "peer": "10.10.10.10"},
+    )
+    issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 1)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_coiot_key_missing_no_issue_created(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test no repair issues when CoIoT configuration is missing."""
+    monkeypatch.delitem(
+        mock_block_device.settings,
+        "coiot",
+    )
+    issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 1)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_coiot_no_hass_url(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_block_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test no repair issues handling up-to-date CoIoT configuration."""
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "coiot",
+        {"enabled": True, "update_period": 15, "peer": "correct.peer.address"},
+    )
+    issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 1)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 1
+
+    await async_process_repairs_platforms(hass)
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = result["flow_id"]
+    assert result["step_id"] == "init"
+    assert result["type"] == "menu"
+
+    with patch(
+        "homeassistant.components.shelly.utils.get_url",
+        side_effect=NoURLAvailableError(),
+    ):
+        result = await process_repair_fix_flow(
+            client, flow_id, {"next_step_id": "confirm"}
+        )
+
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_configure"
+        assert mock_block_device.configure_coiot_protocol.call_count == 0
+
+        assert issue_registry.async_get_issue(DOMAIN, issue_id)
+        assert len(issue_registry.issues) == 1
+
+
+async def test_coiot_issue_ignore(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_block_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test ignoring the CoIoT unconfigured issue."""
+    issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
+
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 1)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 1
+
+    await async_process_repairs_platforms(hass)
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = result["flow_id"]
+    assert result["step_id"] == "init"
+    assert result["type"] == "menu"
+
+    result = await process_repair_fix_flow(client, flow_id, {"next_step_id": "ignore"})
+    assert result["type"] == "abort"
+    assert result["reason"] == "issue_ignored"
+    assert mock_block_device.configure_coiot_protocol.call_count == 0
+
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.dismissed_version
+
+
+async def test_coiot_plug_1_no_issue_created(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test no repair issues when device is Shelly Plug 1."""
+
+    mock_block_device.model = MODEL_PLUG
+    issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 1)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

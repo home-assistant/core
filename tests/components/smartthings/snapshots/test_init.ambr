@@ -613,11 +613,11 @@
     }),
     'manufacturer': None,
     'model': None,
-    'model_id': None,
+    'model_id': 'NZ64B5046GK',
     'name': 'Induction Hob',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': 'B8C878DX900290H',
     'sw_version': None,
     'via_device_id': None,
   })
