@@ -1,7 +1,7 @@
 """Support for VeSync humidifiers."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
@@ -130,11 +130,15 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     @property
     def current_humidity(self) -> int:
         """Return the current humidity."""
+        if TYPE_CHECKING:
+            assert self.device.state.humidity is not None
         return self.device.state.humidity
 
     @property
     def target_humidity(self) -> int:
         """Return the humidity we try to reach."""
+        if TYPE_CHECKING:
+            assert self.device.state.auto_humidity is not None
         return self.device.state.auto_humidity
 
     @property
