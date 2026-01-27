@@ -1,7 +1,61 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted vacuum cleaners.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted vacuum cleaners to trigger on.",
     "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_cleaning": {
+      "description": "Tests if one or more vacuum cleaners are cleaning.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
+          "name": "[%key:component::vacuum::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Vacuum cleaner is cleaning"
+    },
+    "is_docked": {
+      "description": "Tests if one or more vacuum cleaners are docked.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
+          "name": "[%key:component::vacuum::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Vacuum cleaner is docked"
+    },
+    "is_encountering_an_error": {
+      "description": "Tests if one or more vacuum cleaners are encountering an error.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
+          "name": "[%key:component::vacuum::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Vacuum cleaner is encountering an error"
+    },
+    "is_paused": {
+      "description": "Tests if one or more vacuum cleaners are paused.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
+          "name": "[%key:component::vacuum::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Vacuum cleaner is paused"
+    },
+    "is_returning": {
+      "description": "Tests if one or more vacuum cleaners are returning to the dock.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
+          "name": "[%key:component::vacuum::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Vacuum cleaner is returning"
+    }
   },
   "device_automation": {
     "action_type": {
@@ -36,6 +90,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",
