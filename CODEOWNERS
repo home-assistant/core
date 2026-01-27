@@ -677,6 +677,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/hikvisioncam/ @fbradyirl
 /homeassistant/components/hisense_aehw4a1/ @bannhead
 /tests/components/hisense_aehw4a1/ @bannhead
+/homeassistant/components/hisense_connectlife/ @qingshi688
+/tests/components/hisense_connectlife/ @qingshi688
 /homeassistant/components/history/ @home-assistant/core
 /tests/components/history/ @home-assistant/core
 /homeassistant/components/hive/ @Rendili @KJonline

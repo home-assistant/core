@@ -2752,6 +2752,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "hisense_connectlife": {
+      "name": "Hisense ConnectLife",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "hitron_coda": {
       "name": "Rogers Hitron CODA",
       "integration_type": "hub",

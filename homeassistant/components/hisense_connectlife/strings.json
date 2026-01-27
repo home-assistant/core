@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "authorize_url_fail": "Error generating authorization URL.",
+      "missing_configuration": "The component is not configured. Please follow the documentation.",
+      "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+      "oauth_error": "Received invalid token data.",
+      "single_instance_allowed": "Already configured. Only a single instance is allowed."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "confirm_auth": "Yes, I want to authenticate"
+        },
+        "description": "You are about to connect your Hisense AC ({app_name}) to Home Assistant.\n\nApplication ID: {app_id}\n\nPlease make sure your Home Assistant instance is accessible via:\n{oauth_callback_url}\n\nClick SUBMIT to start the authentication process.",
+        "title": "Connect to Hisense AC"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "refresh_failed": "Failed to refresh device list",
+      "token_refresh_failed": "Failed to refresh token"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "refresh_devices": "Refresh device list",
+          "refresh_token": "Refresh authentication token"
+        },
+        "description": "{message}",
+        "title": "Hisense AC Options"
+      }
+    }
+  }
+}

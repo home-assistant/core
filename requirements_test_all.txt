@@ -659,6 +659,9 @@ compit-inext-api==0.6.0
 # homeassistant.components.concord232
 concord232==0.15.1
 
+# homeassistant.components.hisense_connectlife
+connectlife-cloud==0.3.3
+
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
 
