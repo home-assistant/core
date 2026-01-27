@@ -78,7 +78,7 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECMap]], Camera):
         }
         return self.radar_object.image
 
-    async def async_set_radar_type(self, radar_type: str):
+    async def async_set_radar_type(self, radar_type: str) -> None:
         """Set the type of radar to retrieve."""
         self._layer_setting = radar_type.lower()
 
@@ -94,4 +94,6 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECMap]], Camera):
         # Clear cache to force refresh with new layer
         self.radar_object.clear_cache()
         self.radar_object.layer = layer
+        self.radar_object.clear_cache()
+        self.radar_object.precip_type = radar_type.lower()
         await self.radar_object.update()
