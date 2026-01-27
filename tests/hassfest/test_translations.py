@@ -411,3 +411,21 @@ def test_gen_strings_schema(
     validated = schema(SAMPLE_STRINGS)
 
     assert validated == SAMPLE_STRINGS
+
+
+@pytest.mark.parametrize(
+    "translation_string",
+    [
+        "An example is: https://example.com.",
+        "www.example.com",
+        "http://example.com:8080",
+        "WWW.EXAMPLE.COM",
+        "HTTPS://www.example.com",
+    ],
+)
+def test_no_placeholders_used_for_urls(translation_string: str) -> None:
+    """Test that translation strings containing URLs are rejected."""
+    schema = vol.Schema(translations.translation_value_validator)
+
+    with pytest.raises(vol.Invalid):
+        schema(translation_string)
