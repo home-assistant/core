@@ -1,0 +1,51 @@
+"""The Leneda coordinator for handling meter data and statistics."""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from leneda import LenedaClient
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import CONF_API_TOKEN, CONF_ENERGY_ID, DOMAIN, SCAN_INTERVAL
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class LenedaCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
+    """Handle fetching Leneda data, updating sensors and inserting statistics."""
+
+    config_entry: ConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+    ) -> None:
+        """Initialize the coordinator for all metering point subentries.
+
+        Args:
+            hass: Home Assistant instance
+            config_entry: Configuration entry
+
+        """
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
+        self.api_token, self.energy_id = (
+            config_entry.data[CONF_API_TOKEN],
+            config_entry.data[CONF_ENERGY_ID],
+        )
+
+        self.client = LenedaClient(
+            api_key=self.api_token,
+            energy_id=self.energy_id,
+        )
