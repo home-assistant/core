@@ -66,9 +66,6 @@
       "current_power": {
         "name": "Current power"
       },
-      "divert_mode": {
-        "name": "Divert mode"
-      },
       "esp_temp": {
         "name": "ESP temperature"
       },
