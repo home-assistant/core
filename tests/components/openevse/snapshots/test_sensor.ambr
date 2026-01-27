@@ -507,7 +507,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10.0',
+    'state': '10000',
   })
 # ---
 # name: test_entities[sensor.openevse_mock_config_esp_temperature-entry]
@@ -949,7 +949,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '200.0',
+    'state': '200000',
   })
 # ---
 # name: test_entities[sensor.openevse_mock_config_no_ground_trip_count-entry]
@@ -1453,7 +1453,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '500.0',
+    'state': '500000',
   })
 # ---
 # name: test_entities[sensor.openevse_mock_config_uptime-entry]
@@ -1788,7 +1788,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '50000',
   })
 # ---
 # name: test_entities[sensor.openevse_mock_config_yearly_energy_usage-entry]
@@ -1848,6 +1848,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2000.0',
+    'state': '2000000',
   })
 # ---
