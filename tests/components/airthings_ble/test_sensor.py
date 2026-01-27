@@ -327,8 +327,7 @@ async def test_disabled_translation_keys_corentium_home_2(
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False
 
-    await hass.config_entries.async_forward_entry_unload(entry, Platform.SENSOR)
-    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
+    await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -372,8 +371,7 @@ async def test_connectivity_mode_non_string_value(
     assert entity_id is not None
 
     entity_registry.async_update_entity(entity_id, disabled_by=None)
-    await hass.config_entries.async_forward_entry_unload(entry, Platform.SENSOR)
-    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
+    await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
