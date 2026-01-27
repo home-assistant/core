@@ -182,12 +182,12 @@ async def test_lovelace_dashboard_deleted_re_registers_panel(
     assert "lovelace" in hass.data[frontend.DATA_PANELS]
 
 
-async def test_lovelace_migration_skipped_when_both_files_exist(
+async def test_lovelace_migration_completes_when_both_files_exist(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test migration is skipped when both old and new storage files exist."""
+    """Test migration completes when both old and new storage files exist."""
     # Pre-populate both old and new storage (simulating incomplete migration)
     hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {
         "version": 1,
@@ -202,12 +202,22 @@ async def test_lovelace_migration_skipped_when_both_files_exist(
 
     assert await async_setup_component(hass, "lovelace", {})
 
-    # No dashboard should be created (migration skipped)
+    # Dashboard should be created, completing the incomplete migration
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == []
+    assert len(response["result"]) == 1
+    assert response["result"][0]["url_path"] == "lovelace"
+
+    # New storage data should be preserved (not overwritten with old data)
+    await client.send_json({"id": 6, "type": "lovelace/config", "url_path": "lovelace"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"views": [{"title": "New"}]}
+
+    # Old storage key should be removed
+    assert dashboard.CONFIG_STORAGE_KEY_DEFAULT not in hass_storage
 
 
 async def test_lovelace_migration_skipped_when_already_migrated(

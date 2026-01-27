@@ -398,19 +398,19 @@ async def _async_migrate_default_config(
     """Migrate default lovelace storage config to a named dashboard entry.
 
     This migration:
-    1. Checks if .storage/lovelace exists with data
-    2. Checks if a dashboard with url_path "lovelace" already exists (skip if so)
-    3. Checks if .storage/lovelace.lovelace already exists (skip if so - incomplete migration)
-    4. Creates a new dashboard entry with url_path "lovelace"
-    5. Copies data to .storage/lovelace.lovelace
-    6. Removes old .storage/lovelace file
+    1. Skips if a dashboard with url_path "lovelace" already exists
+    2. Skips if .storage/lovelace has no data
+    3. Creates a new dashboard entry with url_path "lovelace"
+    4. Copies data to .storage/lovelace.lovelace (if not already present)
+    5. Removes old .storage/lovelace file
+    6. Sets the default panel to "lovelace" if not already configured
     """
-    # Check if already migrated (dashboard with url_path "lovelace" exists)
+    # 1. Skip if already migrated (dashboard with url_path "lovelace" exists)
     for item in dashboards_collection.async_items():
         if item.get(CONF_URL_PATH) == DOMAIN:
             return
 
-    # Check if old storage data exists
+    # 2. Skip if old storage data does not exist
     old_store = Store[dict[str, Any]](
         hass, dashboard.CONFIG_STORAGE_VERSION, dashboard.CONFIG_STORAGE_KEY_DEFAULT
     )
@@ -418,22 +418,9 @@ async def _async_migrate_default_config(
     if old_data is None or old_data.get("config") is None:
         return
 
-    # Check if new storage data already exists (incomplete previous migration)
-    new_store = Store[dict[str, Any]](
-        hass,
-        dashboard.CONFIG_STORAGE_VERSION,
-        dashboard.CONFIG_STORAGE_KEY.format(DOMAIN),
-    )
-    new_data = await new_store.async_load()
-    if new_data is not None:
-        _LOGGER.warning(
-            "Both old and new lovelace storage files exist, skipping migration"
-        )
-        return
-
     _LOGGER.info("Migrating default lovelace config to dashboard entry")
 
-    # Get translated title for the dashboard
+    # 3. Create dashboard entry
     translations = await async_get_translations(
         hass, hass.config.language, "dashboard", {onboarding.DOMAIN}
     )
@@ -441,7 +428,6 @@ async def _async_migrate_default_config(
         "component.onboarding.dashboard.overview.title", "Overview"
     )
 
-    # Create dashboard entry
     try:
         await dashboards_collection.async_create_item(
             {
@@ -455,12 +441,21 @@ async def _async_migrate_default_config(
         _LOGGER.exception("Failed to create dashboard entry during migration")
         return
 
-    await new_store.async_save(old_data)
+    # 4. Copy data to new storage (if not already present)
+    new_store = Store[dict[str, Any]](
+        hass,
+        dashboard.CONFIG_STORAGE_VERSION,
+        dashboard.CONFIG_STORAGE_KEY.format(DOMAIN),
+    )
+    if await new_store.async_load() is None:
+        await new_store.async_save(old_data)
+
+    # 5. Remove old storage file
     await old_store.async_remove()
 
     _LOGGER.info("Successfully migrated default lovelace config to dashboard entry")
 
-    # Set default panel to lovelace if not already configured
+    # 6. Set default panel to lovelace if not already configured
     system_store = await frontend.async_system_store(hass)
     if system_store.data.get("default_panel") is None:
         await system_store.async_set_item("default_panel", DOMAIN)
