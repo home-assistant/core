@@ -518,14 +518,19 @@ class CalendarEntity(Entity):
 
     _attr_initial_color: str | None = None
 
+    @property
+    def initial_color(self) -> str | None:
+        """Return the initial color for the calendar entity."""
+        return self._attr_initial_color
+
     def get_initial_entity_options(self) -> er.EntityOptionsType | None:
         """Return initial entity options."""
-        if self._attr_initial_color is None:
+        if self.initial_color is None:
             return None
 
         # Validate that it's a valid hex color string with # prefix
         try:
-            validated_color = cv.color_hex(self._attr_initial_color)
+            validated_color = cv.color_hex(self.initial_color)
         except vol.Invalid:
             return None
 
