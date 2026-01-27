@@ -268,10 +268,6 @@ async def test_function_call(
     system_text = " ".join(block["text"] for block in system if "text" in block)
     assert "You are a voice assistant for Home Assistant." in system_text
 
-    tools = mock_create_stream.mock_calls[1][2]["tools"]
-    assert isinstance(tools[-1], dict)
-    assert tools[-1]["cache_control"] == {"type": "ephemeral"}
-
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
@@ -553,38 +549,6 @@ async def test_extended_thinking(
     assert len(chat_log.content) == 3
     assert chat_log.content[1].content == "hello"
     assert chat_log.content[2].content == "Hello, how can I help you today?"
-
-
-async def test_last_message_content_has_cache_control(
-    hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
-    mock_init_component,
-    mock_create_stream: AsyncMock,
-) -> None:
-    """Ensure the last message content is tagged with cache_control."""
-    context = Context()
-    mock_create_stream.return_value = [
-        create_content_block(0, ["Response"]),
-    ]
-
-    await conversation.async_converse(
-        hass,
-        "First message",
-        None,
-        context,
-        agent_id="conversation.claude_conversation",
-    )
-
-    messages = mock_create_stream.mock_calls[0][2]["messages"]
-    assert messages
-    last_msg = messages[-1]
-
-    content = last_msg["content"]
-    assert isinstance(content, list)
-    last_block = content[-1]
-    assert last_block["type"] == "text"
-    if "cache_control" in last_block:
-        assert last_block["cache_control"] == {"type": "ephemeral"}
 
 
 @freeze_time("2024-05-24 12:00:00")

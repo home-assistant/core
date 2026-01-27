@@ -678,23 +678,6 @@ class AnthropicBaseLLMEntity(Entity):
                 )
             )
 
-        # Add cache_control to the last message to cache the conversation history
-        if messages:
-            last_msg = messages[-1]
-            last_msg_content = last_msg["content"]
-            if isinstance(last_msg_content, str):
-                last_msg["content"] = [
-                    TextBlockParam(
-                        type="text",
-                        text=last_msg_content,
-                        cache_control={"type": "ephemeral"},
-                    )
-                ]
-            elif isinstance(last_msg_content, list) and last_msg_content:
-                last_block = last_msg_content[-1]
-                if isinstance(last_block, dict):
-                    last_block["cache_control"] = {"type": "ephemeral"}
-
         if structure and structure_name:
             structure_name = slugify(structure_name)
             if model_args["thinking"]["type"] == "disabled":
@@ -742,10 +725,6 @@ class AnthropicBaseLLMEntity(Entity):
             )
 
         if tools:
-            # Add cache_control to last tool for efficient caching
-            last_tool = tools[-1]
-            if isinstance(last_tool, dict):
-                last_tool["cache_control"] = {"type": "ephemeral"}
             model_args["tools"] = tools
 
         client = self.entry.runtime_data

@@ -76,15 +76,7 @@
 # name: test_extended_thinking_tool_call.1
   list([
     dict({
-      'content': list([
-        dict({
-          'cache_control': dict({
-            'type': 'ephemeral',
-          }),
-          'text': 'Please call the test function',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Please call the test function',
       'role': 'user',
     }),
     dict({
@@ -142,15 +134,7 @@
 # name: test_history_conversion[content0]
   list([
     dict({
-      'content': list([
-        dict({
-          'cache_control': dict({
-            'type': 'ephemeral',
-          }),
-          'text': 'Are you sure?',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Are you sure?',
       'role': 'user',
     }),
     dict({
@@ -180,15 +164,7 @@
       'role': 'assistant',
     }),
     dict({
-      'content': list([
-        dict({
-          'cache_control': dict({
-            'type': 'ephemeral',
-          }),
-          'text': 'Are you sure?',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Are you sure?',
       'role': 'user',
     }),
     dict({
@@ -231,15 +207,7 @@
       'role': 'assistant',
     }),
     dict({
-      'content': list([
-        dict({
-          'cache_control': dict({
-            'type': 'ephemeral',
-          }),
-          'text': 'Are you sure?',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Are you sure?',
       'role': 'user',
     }),
     dict({
@@ -290,15 +258,7 @@
       'role': 'assistant',
     }),
     dict({
-      'content': list([
-        dict({
-          'cache_control': dict({
-            'type': 'ephemeral',
-          }),
-          'text': 'Are you sure?',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Are you sure?',
       'role': 'user',
     }),
     dict({
@@ -371,15 +331,7 @@
       'role': 'assistant',
     }),
     dict({
-      'content': list([
-        dict({
-          'cache_control': dict({
-            'type': 'ephemeral',
-          }),
-          'text': 'Are you sure?',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Are you sure?',
       'role': 'user',
     }),
     dict({
@@ -487,7 +439,7 @@
         }),
         dict({
           'text': '''
-            
+
             Those are the main headlines making news today.
           ''',
           'type': 'text',
@@ -496,15 +448,7 @@
       'role': 'assistant',
     }),
     dict({
-      'content': list([
-        dict({
-          'cache_control': dict({
-            'type': 'ephemeral',
-          }),
-          'text': 'Are you sure?',
-          'type': 'text',
-        }),
-      ]),
+      'content': 'Are you sure?',
       'role': 'user',
     }),
     dict({
