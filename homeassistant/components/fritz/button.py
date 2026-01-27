@@ -164,13 +164,12 @@ def _async_wol_buttons_list(
 class FritzBoxWOLButton(FritzDeviceBase, ButtonEntity):
     """Defines a FRITZ!Box Tools Wake On LAN button."""
 
-    _attr_icon = "mdi:lan-pending"
     _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "wake_on_lan"
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
         """Initialize Fritz!Box WOL button."""
         super().__init__(avm_wrapper, device)
-        self._name = f"{self.hostname} Wake on LAN"
         self._attr_unique_id = f"{self._mac}_wake_on_lan"
         self._is_available = True
 

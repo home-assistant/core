@@ -87,6 +87,17 @@
   
   </details>
   
+  ## Installed packages
+  
+  <details><summary>Installed packages</summary>
+  
+  Package | Version
+  --- | ---
+  hass-nabucasa | 1.2.3
+  homeassistant | 3.2.1
+  
+  </details>
+  
   ## Full logs
   
   <details><summary>Logs</summary>
@@ -181,6 +192,17 @@
   
   </details>
   
+  ## Installed packages
+  
+  <details><summary>Installed packages</summary>
+  
+  Package | Version
+  --- | ---
+  hass-nabucasa | 1.2.3
+  homeassistant | 3.2.1
+  
+  </details>
+  
   ## Full logs
   
   <details><summary>Logs</summary>
@@ -243,6 +265,17 @@
   can_reach_cert_server | Exception: Unexpected exception
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok
+  
+  </details>
+  
+  ## Installed packages
+  
+  <details><summary>Installed packages</summary>
+  
+  Package | Version
+  --- | ---
+  hass-nabucasa | 1.2.3
+  homeassistant | 3.2.1
   
   </details>
   

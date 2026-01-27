@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -97,6 +98,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Constant flow speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -181,6 +183,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Day speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -254,6 +257,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -326,6 +330,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High pulse speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -410,6 +415,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low pulse speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -494,6 +500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Manual speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -578,6 +585,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Night speed',
     'options': dict({
     }),
     'original_device_class': None,

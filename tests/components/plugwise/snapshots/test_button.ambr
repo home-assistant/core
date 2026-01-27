@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reboot',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,

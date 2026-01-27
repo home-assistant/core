@@ -85,9 +85,9 @@
       }
     },
     "moving": {
-      "default": "mdi:arrow-right",
+      "default": "mdi:octagon",
       "state": {
-        "on": "mdi:octagon"
+        "on": "mdi:arrow-right"
       }
     },
     "occupancy": {

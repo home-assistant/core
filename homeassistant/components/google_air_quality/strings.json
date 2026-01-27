@@ -106,6 +106,12 @@
   },
   "entity": {
     "sensor": {
+      "ammonia": {
+        "name": "Ammonia"
+      },
+      "benzene": {
+        "name": "Benzene"
+      },
       "local_aqi": {
         "name": "{local_aqi} AQI"
       },
@@ -219,6 +225,9 @@
         "name": "{local_aqi} dominant pollutant",
         "state": {
           "co": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+          "nh3": "[%key:component::google_air_quality::entity::sensor::ammonia::name%]",
+          "nmhc": "[%key:component::google_air_quality::entity::sensor::non_methane_hydrocarbons::name%]",
+          "no": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]",
           "no2": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
           "o3": "[%key:component::sensor::entity_component::ozone::name%]",
           "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
@@ -226,14 +235,8 @@
           "so2": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
         }
       },
-      "nitrogen_dioxide": {
-        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
-      },
-      "ozone": {
-        "name": "[%key:component::sensor::entity_component::ozone::name%]"
-      },
-      "sulphur_dioxide": {
-        "name": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]"
+      "non_methane_hydrocarbons": {
+        "name": "Non-methane hydrocarbons"
       },
       "uaqi": {
         "name": "Universal Air Quality Index"
