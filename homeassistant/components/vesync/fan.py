@@ -183,7 +183,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the fan."""
-        attr = {}
+        attr: dict[str, Any] = {}
 
         if hasattr(self.device.state, "active_time"):
             attr["active_time"] = self.device.state.active_time
@@ -213,7 +213,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
                 self.device.state.nightlight_status, "value", None
             )
         if hasattr(self.device.state, "mode"):
-            attr["mode"] = getattr(self.device.state.mode, "value", None)
+            attr["mode"] = self.device.state.mode
 
         return attr
 
