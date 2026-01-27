@@ -11,11 +11,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
-from . import UPDATE_TOPIC, WaterFurnaceConfigEntry, WaterFurnaceData
+from . import DOMAIN, UPDATE_TOPIC, WaterFurnaceConfigEntry, WaterFurnaceData
 
 SENSORS = [
     SensorEntityDescription(name="Furnace Mode", key="mode", icon="mdi:gauge"),
@@ -124,6 +125,7 @@ class WaterFurnaceSensor(SensorEntity):
     """Implementing the Waterfurnace sensor."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self, client: WaterFurnaceData, description: SensorEntityDescription
@@ -136,6 +138,33 @@ class WaterFurnaceSensor(SensorEntity):
         self.entity_id = ENTITY_ID_FORMAT.format(
             f"wf_{slugify(self.client.unit)}_{slugify(description.key)}"
         )
+        self._attr_unique_id = f"{self.client.unit}_{description.key}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information."""
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.client.unit)},
+            manufacturer="WaterFurnace",
+        )
+
+        if self.client.client.devices:
+            for device in self.client.client.devices:
+                if device.gwid == self.client.unit:
+                    if device.description:
+                        # Eg. Series 7
+                        device_info["model"] = device.description
+                    if device.awlabctypedesc:
+                        # Eg. Series 7, 5 Ton
+                        device_info["name"] = device.awlabctypedesc
+
+                    break
+
+        # Fallback name if no information found
+        if "name" not in device_info:
+            device_info["name"] = "WaterFurnace System"
+
+        return device_info
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
