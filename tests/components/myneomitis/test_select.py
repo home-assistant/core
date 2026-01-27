@@ -2,19 +2,13 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
-import pytest
-
-from homeassistant.components.myneomitis import MyNeomitisRuntimeData
-from homeassistant.components.myneomitis.select import (
-    SELECT_TYPES,
-    MyNeoSelect,
-    async_setup_entry,
-)
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.myneomitis.select import SELECT_TYPES, MyNeoSelect
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from tests.common import MockConfigEntry
 
 
-@pytest.mark.asyncio
 async def test_myneo_relay_select_basic_behavior(hass: HomeAssistant) -> None:
     """Test initialization and behavior of MyNeoSelect with relais mode."""
     device = {
@@ -58,7 +52,6 @@ async def test_myneo_relay_select_basic_behavior(hass: HomeAssistant) -> None:
     assert select.current_option == "off"
 
 
-@pytest.mark.asyncio
 async def test_myneo_select_preset_modes(hass: HomeAssistant) -> None:
     """Test initialization and behavior of MyNeoSelect with preset modes."""
     device = {
@@ -86,7 +79,6 @@ async def test_myneo_select_preset_modes(hass: HomeAssistant) -> None:
     assert select.current_option == "eco"
 
 
-@pytest.mark.asyncio
 async def test_myneo_select_ufh_modes(hass: HomeAssistant) -> None:
     """Test initialization and behavior of MyNeoSelect with UFH modes."""
     device = {
@@ -114,7 +106,6 @@ async def test_myneo_select_ufh_modes(hass: HomeAssistant) -> None:
     assert select.current_option == "cooling"
 
 
-@pytest.mark.asyncio
 async def test_select_option_with_invalid_option(hass: HomeAssistant) -> None:
     """Test that selecting an invalid option logs a warning and does not change the state."""
     device = {
@@ -138,7 +129,6 @@ async def test_select_option_with_invalid_option(hass: HomeAssistant) -> None:
         mock_warn.assert_called_once()
 
 
-@pytest.mark.asyncio
 async def test_ufh_handle_ws_update_and_sub_device(hass: HomeAssistant) -> None:
     """Test UFH device websocket updates and sub-device mode setting."""
     device = {
@@ -171,7 +161,6 @@ async def test_ufh_handle_ws_update_and_sub_device(hass: HomeAssistant) -> None:
         assert select.available is True
 
 
-@pytest.mark.asyncio
 async def test_setup_entry_filters_unsupported_devices(hass: HomeAssistant) -> None:
     """Test that async_setup_entry filters out unsupported device models."""
     devices = [
@@ -193,37 +182,28 @@ async def test_setup_entry_filters_unsupported_devices(hass: HomeAssistant) -> N
         },
     ]
 
-    mock_api = Mock()
-    mock_api.register_listener = Mock()
+    with patch("pyaxencoapi.PyAxencoAPI") as api_cls:
+        api = api_cls.return_value
+        api.login = AsyncMock()
+        api.connect_websocket = AsyncMock()
+        api.get_devices = AsyncMock(return_value=devices)
+        api.disconnect_websocket = AsyncMock()
 
-    entry = ConfigEntry(
-        version=1,
-        minor_version=1,
-        entry_id="test-entry",
-        domain="myneomitis",
-        title="MyNeomitis",
-        data={"email": "test@test.com", "password": "secret"},
-        options={},
-        source="user",
-        unique_id="uid",
-        discovery_keys=[],
-        subentries_data={},
-    )
-    entry.runtime_data = MyNeomitisRuntimeData(api=mock_api, devices=devices)
+        entry = MockConfigEntry(
+            domain="myneomitis", data={"email": "test@test.com", "password": "secret"}
+        )
+        entry.add_to_hass(hass)
 
-    added_entities = []
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    def fake_add(entities):
-        added_entities.extend(entities)
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
-    await async_setup_entry(hass, entry, fake_add)
-
-    # Only 1 entity should be added (the supported EWS device)
-    assert len(added_entities) == 1
-    assert added_entities[0].unique_id == "supported1"
+    assert len(entries) == 1
+    assert entries[0].unique_id == "supported1"
 
 
-@pytest.mark.asyncio
 async def test_handle_ws_update_empty_state(hass: HomeAssistant) -> None:
     """Test handle_ws_update with empty state does nothing."""
     device = {
@@ -244,13 +224,12 @@ async def test_handle_ws_update_empty_state(hass: HomeAssistant) -> None:
 
     with patch.object(select, "async_write_ha_state") as mock_write:
         select.handle_ws_update({})
-        # Should not write state for empty update
+
         mock_write.assert_not_called()
 
     assert select.current_option == initial_option
 
 
-@pytest.mark.asyncio
 async def test_handle_ws_update_with_program_update(hass: HomeAssistant) -> None:
     """Test handle_ws_update updates program data."""
     device = {
@@ -277,7 +256,6 @@ async def test_handle_ws_update_with_program_update(hass: HomeAssistant) -> None
     assert select._program["TUE"] == [1, 2, 3]
 
 
-@pytest.mark.asyncio
 async def test_create_entity_with_pilote_device(hass: HomeAssistant) -> None:
     """Test that EWS device without relayMode creates pilote entity."""
     device = {
@@ -289,36 +267,32 @@ async def test_create_entity_with_pilote_device(hass: HomeAssistant) -> None:
         "program": {"data": {}},
     }
 
-    mock_api = Mock()
-    mock_api.register_listener = Mock()
+    with patch("pyaxencoapi.PyAxencoAPI") as api_cls:
+        api = api_cls.return_value
+        api.login = AsyncMock()
+        api.connect_websocket = AsyncMock()
+        api.get_devices = AsyncMock(return_value=[device])
+        api.disconnect_websocket = AsyncMock()
 
-    entry = ConfigEntry(
-        version=1,
-        minor_version=1,
-        entry_id="test-entry",
-        domain="myneomitis",
-        title="MyNeomitis",
-        data={"email": "test@test.com", "password": "secret"},
-        options={},
-        source="user",
-        unique_id="uid",
-        discovery_keys=[],
-        subentries_data={},
-    )
-    entry.runtime_data = MyNeomitisRuntimeData(api=mock_api, devices=[device])
+        entry = MockConfigEntry(
+            domain="myneomitis", data={"email": "test@test.com", "password": "secret"}
+        )
+        entry.add_to_hass(hass)
 
-    added_entities = []
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    def fake_add(entities):
-        added_entities.extend(entities)
-
-    await async_setup_entry(hass, entry, fake_add)
-
-    assert len(added_entities) == 1
-    assert added_entities[0].entity_description.key == "pilote"
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert len(entries) == 1
+    state = hass.states.get(entries[0].entity_id)
+    assert state is not None
+    assert "options" in state.attributes
+    assert "comfort" in state.attributes[
+        "options"
+    ] or "comfort" in state.attributes.get("options", [])
 
 
-@pytest.mark.asyncio
 async def test_create_entity_with_ufh_device(hass: HomeAssistant) -> None:
     """Test that UFH device creates UFH entity."""
     device = {
@@ -330,36 +304,32 @@ async def test_create_entity_with_ufh_device(hass: HomeAssistant) -> None:
         "program": {"data": {}},
     }
 
-    mock_api = Mock()
-    mock_api.register_listener = Mock()
+    with patch("pyaxencoapi.PyAxencoAPI") as api_cls:
+        api = api_cls.return_value
+        api.login = AsyncMock()
+        api.connect_websocket = AsyncMock()
+        api.get_devices = AsyncMock(return_value=[device])
+        api.disconnect_websocket = AsyncMock()
 
-    entry = ConfigEntry(
-        version=1,
-        minor_version=1,
-        entry_id="test-entry",
-        domain="myneomitis",
-        title="MyNeomitis",
-        data={"email": "test@test.com", "password": "secret"},
-        options={},
-        source="user",
-        unique_id="uid",
-        discovery_keys=[],
-        subentries_data={},
-    )
-    entry.runtime_data = MyNeomitisRuntimeData(api=mock_api, devices=[device])
+        entry = MockConfigEntry(
+            domain="myneomitis", data={"email": "test@test.com", "password": "secret"}
+        )
+        entry.add_to_hass(hass)
 
-    added_entities = []
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    def fake_add(entities):
-        added_entities.extend(entities)
-
-    await async_setup_entry(hass, entry, fake_add)
-
-    assert len(added_entities) == 1
-    assert added_entities[0].entity_description.key == "ufh"
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert len(entries) == 1
+    state = hass.states.get(entries[0].entity_id)
+    assert state is not None
+    assert "options" in state.attributes
+    assert "heating" in state.attributes[
+        "options"
+    ] or "heating" in state.attributes.get("options", [])
 
 
-@pytest.mark.asyncio
 async def test_create_entity_with_relais_device(hass: HomeAssistant) -> None:
     """Test that EWS device with relayMode creates relais entity."""
     device = {
@@ -371,30 +341,25 @@ async def test_create_entity_with_relais_device(hass: HomeAssistant) -> None:
         "program": {"data": {}},
     }
 
-    mock_api = Mock()
-    mock_api.register_listener = Mock()
+    with patch("pyaxencoapi.PyAxencoAPI") as api_cls:
+        api = api_cls.return_value
+        api.login = AsyncMock()
+        api.connect_websocket = AsyncMock()
+        api.get_devices = AsyncMock(return_value=[device])
+        api.disconnect_websocket = AsyncMock()
 
-    entry = ConfigEntry(
-        version=1,
-        minor_version=1,
-        entry_id="test-entry",
-        domain="myneomitis",
-        title="MyNeomitis",
-        data={"email": "test@test.com", "password": "secret"},
-        options={},
-        source="user",
-        unique_id="uid",
-        discovery_keys=[],
-        subentries_data={},
-    )
-    entry.runtime_data = MyNeomitisRuntimeData(api=mock_api, devices=[device])
+        entry = MockConfigEntry(
+            domain="myneomitis", data={"email": "test@test.com", "password": "secret"}
+        )
+        entry.add_to_hass(hass)
 
-    added_entities = []
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    def fake_add(entities):
-        added_entities.extend(entities)
-
-    await async_setup_entry(hass, entry, fake_add)
-
-    assert len(added_entities) == 1
-    assert added_entities[0].entity_description.key == "relais"
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    assert len(entries) == 1
+    state = hass.states.get(entries[0].entity_id)
+    assert state is not None
+    assert "options" in state.attributes
+    assert any(opt in state.attributes["options"] for opt in ("on", "off", "auto"))

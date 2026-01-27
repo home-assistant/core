@@ -31,7 +31,6 @@ class DummyEntry:
         self._on_unload_callbacks.append(callback)
 
 
-@pytest.mark.asyncio
 async def test_minimal_setup(hass: HomeAssistant) -> None:
     """Test the minimal setup of the MyNeomitis integration."""
 
@@ -65,13 +64,13 @@ async def test_minimal_setup(hass: HomeAssistant) -> None:
         mock_api.login = AsyncMock()
         mock_api.connect_websocket = AsyncMock()
         mock_api.get_devices = AsyncMock(return_value=[])
+        mock_api.disconnect_websocket = AsyncMock()
 
         result = await async_setup_entry(hass, entry)
 
     assert result is True
 
 
-@pytest.mark.asyncio
 async def test_setup_entry_raises_on_login_fail(hass: HomeAssistant) -> None:
     """Test that async_setup_entry raises ConfigEntryNotReady if login fails."""
     entry = DummyEntry("test-entry", {"email": "a@b.c", "password": "pw"})
@@ -84,7 +83,6 @@ async def test_setup_entry_raises_on_login_fail(hass: HomeAssistant) -> None:
             await async_setup_entry(hass, entry)
 
 
-@pytest.mark.asyncio
 async def test_unload_entry_success(hass: HomeAssistant) -> None:
     """Test that async_unload_entry unloads and disconnects cleanly."""
     entry = DummyEntry("test-entry", {"email": "u@v.w", "password": "pw"})
@@ -99,7 +97,6 @@ async def test_unload_entry_success(hass: HomeAssistant) -> None:
     api.disconnect_websocket.assert_awaited_once()
 
 
-@pytest.mark.asyncio
 async def test_unload_entry_failure(hass: HomeAssistant) -> None:
     """Test that async_unload_entry returns False if unload fails."""
     entry = DummyEntry("test-entry", {"email": "u@v.w", "password": "pw"})
@@ -113,7 +110,6 @@ async def test_unload_entry_failure(hass: HomeAssistant) -> None:
     api.disconnect_websocket.assert_not_awaited()
 
 
-@pytest.mark.asyncio
 async def test_setup_entry_success_populates_data_and_forwards(
     hass: HomeAssistant,
 ) -> None:
@@ -132,6 +128,7 @@ async def test_setup_entry_success_populates_data_and_forwards(
         api.login = AsyncMock()
         api.connect_websocket = AsyncMock()
         api.get_devices = AsyncMock(return_value=[{"id": 1}, {"id": 2}])
+        api.disconnect_websocket = AsyncMock()
 
         result = await async_setup_entry(hass, entry)
 
@@ -142,7 +139,6 @@ async def test_setup_entry_success_populates_data_and_forwards(
         forward.assert_awaited_once()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("fail_method", ["login", "connect_websocket", "get_devices"])
 async def test_setup_entry_failure_raises_on_any_api_error(
     hass: HomeAssistant, fail_method: str
@@ -151,18 +147,18 @@ async def test_setup_entry_failure_raises_on_any_api_error(
     entry = DummyEntry("e2", {"email": "a@b.c", "password": "pw"})
     with patch("pyaxencoapi.PyAxencoAPI") as api_cls:
         api = api_cls.return_value
-        # Mock all methods as AsyncMock first
+
         api.login = AsyncMock()
         api.connect_websocket = AsyncMock()
         api.get_devices = AsyncMock()
-        # Then override the failing one
+        api.disconnect_websocket = AsyncMock()
+
         setattr(api, fail_method, AsyncMock(side_effect=ConnectionError("boom")))
 
         with pytest.raises(ConfigEntryNotReady):
             await async_setup_entry(hass, entry)
 
 
-@pytest.mark.asyncio
 async def test_unload_entry_logs_on_disconnect_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -181,7 +177,6 @@ async def test_unload_entry_logs_on_disconnect_error(
     assert "Error while disconnecting WebSocket" in caplog.text
 
 
-@pytest.mark.asyncio
 async def test_homeassistant_stop_disconnects_websocket(hass: HomeAssistant) -> None:
     """Test that WebSocket is disconnected on Home Assistant stop event."""
 
@@ -203,14 +198,12 @@ async def test_homeassistant_stop_disconnects_websocket(hass: HomeAssistant) -> 
 
         await async_setup_entry(hass, entry)
 
-        # Fire the Home Assistant stop event
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
 
         api.disconnect_websocket.assert_awaited_once()
 
 
-@pytest.mark.asyncio
 async def test_homeassistant_stop_logs_on_disconnect_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -237,7 +230,7 @@ async def test_homeassistant_stop_logs_on_disconnect_error(
         await async_setup_entry(hass, entry)
 
         caplog.set_level("ERROR")
-        # Fire the Home Assistant stop event
+
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
 

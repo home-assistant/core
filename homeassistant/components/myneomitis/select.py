@@ -12,7 +12,6 @@ from typing import Any
 from pyaxencoapi import PyAxencoAPI
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -141,7 +140,7 @@ class MyNeoSelect(SelectEntity):
         self.entity_description = description
         self._api = api
         self._device = device
-        self._attr_unique_id = f"{device['_id']}"
+        self._attr_unique_id = device["_id"]
         self._attr_available = device["connected"]
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, device["_id"])},
@@ -152,7 +151,7 @@ class MyNeoSelect(SelectEntity):
         # Set current option based on device state
         current_mode = device.get("state", {}).get(description.state_key)
         self._attr_current_option = description.reverse_preset_mode_map.get(
-            current_mode, STATE_UNKNOWN
+            current_mode
         )
 
         self._program = device.get("program", {}).get("data", {})
@@ -182,9 +181,7 @@ class MyNeoSelect(SelectEntity):
             mode = new_state.get(state_key)
             if mode is not None:
                 self._attr_current_option = (
-                    self.entity_description.reverse_preset_mode_map.get(
-                        mode, STATE_UNKNOWN
-                    )
+                    self.entity_description.reverse_preset_mode_map.get(mode)
                 )
 
         self.async_write_ha_state()

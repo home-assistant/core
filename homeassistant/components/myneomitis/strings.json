@@ -28,57 +28,28 @@
       "pilote": {
         "state": {
           "antifrost": "Frost protection",
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "boost": "Boost",
           "comfort": "Comfort",
+          "comfort_plus": "Comfort +",
           "eco": "Eco",
           "eco_1": "Eco -1",
           "eco_2": "Eco -2",
-          "standby": "Standby"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "antifrost": "mdi:snowflake",
-              "auto": "mdi:refresh-auto",
-              "boost": "mdi:rocket-launch",
-              "comfort": "mdi:fire",
-              "eco": "mdi:leaf",
-              "eco_1": "mdi:leaf",
-              "eco_2": "mdi:leaf",
-              "standby": "mdi:toggle-switch-off-outline"
-            }
-          }
+          "setpoint": "Setpoint",
+          "standby": "[%key:common::state::standby%]"
         }
       },
       "relais": {
         "state": {
-          "auto": "Auto",
-          "off": "Off",
-          "on": "On"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "auto": "mdi:refresh-auto",
-              "off": "mdi:toggle-switch-off-outline",
-              "on": "mdi:toggle-switch"
-            }
-          }
+          "auto": "[%key:common::state::auto%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       },
       "ufh": {
         "state": {
           "cooling": "Cooling",
           "heating": "Heating"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "cooling": "mdi:snowflake",
-              "heating": "mdi:fire"
-            }
-          }
         }
       }
     }
