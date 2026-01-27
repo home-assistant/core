@@ -68,11 +68,6 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         value_fn=lambda ev: ev.status,
     ),
     OpenEVSESensorDescription(
-        key="vehicle",
-        translation_key="vehicle",
-        value_fn=lambda ev: ev.vehicle,
-    ),
-    OpenEVSESensorDescription(
         key="mode",
         translation_key="mode",
         value_fn=lambda ev: ev.mode,
@@ -86,11 +81,6 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         key="divert_mode",
         translation_key="divert_mode",
         value_fn=lambda ev: ev.divertmode,
-    ),
-    OpenEVSESensorDescription(
-        key="manual_override",
-        translation_key="manual_override",
-        value_fn=lambda ev: ev.manual_override,
     ),
     OpenEVSESensorDescription(
         key="service_level",

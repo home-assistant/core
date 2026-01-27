@@ -1,0 +1,100 @@
+# serializer version: 1
+# name: test_entities[binary_sensor.openevse_mock_config_manual_override-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.openevse_mock_config_manual_override',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Manual override',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Manual override',
+    'platform': 'openevse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'manual_override',
+    'unique_id': 'deadbeeffeed-manual_override',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.openevse_mock_config_manual_override-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'openevse_mock_config Manual override',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.openevse_mock_config_manual_override',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.openevse_mock_config_vehicle_connected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.openevse_mock_config_vehicle_connected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicle connected',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Vehicle connected',
+    'platform': 'openevse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle',
+    'unique_id': 'deadbeeffeed-vehicle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.openevse_mock_config_vehicle_connected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'openevse_mock_config Vehicle connected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.openevse_mock_config_vehicle_connected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

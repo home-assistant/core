@@ -33,11 +33,11 @@ def mock_charger() -> Generator[MagicMock]:
         }
         # Status sensors
         charger.status = "Charging"
-        charger.vehicle = "connected"
+        charger.vehicle = True
         charger.mode = "STA"
         charger.charge_mode = "fast"
         charger.divertmode = "normal"
-        charger.manual_override = "disabled"
+        charger.manual_override = False
         charger.ota_update = "none"
         charger.service_level = "L2"
         # Timing sensors

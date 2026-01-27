@@ -30,6 +30,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "manual_override": {
+        "name": "Manual override"
+      },
+      "vehicle": {
+        "name": "Vehicle connected"
+      }
+    },
     "sensor": {
       "ambient_temp": {
         "name": "Ambient temperature"
@@ -75,9 +83,6 @@
       },
       "ir_temp": {
         "name": "IR temperature"
-      },
-      "manual_override": {
-        "name": "Manual override"
       },
       "max_amps": {
         "name": "Maximum amperage"
@@ -141,9 +146,6 @@
       },
       "usage_total": {
         "name": "Total energy usage"
-      },
-      "vehicle": {
-        "name": "Vehicle connected"
       },
       "vehicle_eta": {
         "name": "Vehicle charge completion"
