@@ -1158,6 +1158,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/ollama/ @synesthesiam
 /tests/components/ollama/ @synesthesiam
 /homeassistant/components/ombi/ @larssont
+/homeassistant/components/omie/ @luuuis
+/tests/components/omie/ @luuuis
 /homeassistant/components/onboarding/ @home-assistant/core
 /tests/components/onboarding/ @home-assistant/core
 /homeassistant/components/ondilo_ico/ @JeromeHXP

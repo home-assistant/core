@@ -4712,6 +4712,13 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "omie": {
+      "name": "OMIE - Spain and Portugal electricity prices",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
+    },
     "omnilogic": {
       "name": "Hayward Omnilogic",
       "integration_type": "hub",
