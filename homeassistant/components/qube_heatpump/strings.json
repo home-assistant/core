@@ -386,7 +386,7 @@
         "state": {
           "alarm": "Alarm",
           "compressor_shutdown": "Compressor shutdown",
-          "compressor_startup": "Compressor start up",
+          "compressor_startup": "Compressor startup",
           "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
           "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
           "heating_dhw": "Heating DHW",
