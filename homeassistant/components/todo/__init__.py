@@ -36,6 +36,7 @@ from .const import (
     ATTR_DUE_DATE,
     ATTR_DUE_DATETIME,
     ATTR_ITEM,
+    ATTR_PRIORITY,
     ATTR_RENAME,
     ATTR_STATUS,
     DATA_COMPONENT,
@@ -88,6 +89,12 @@ TODO_ITEM_FIELDS = [
         validation=vol.Any(cv.string, None),
         todo_item_field=ATTR_DESCRIPTION,
         required_feature=TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
+    ),
+    TodoItemFieldDescription(
+        service_field=ATTR_PRIORITY,
+        validation=vol.Any(vol.All(cv.positive_int, vol.Range(min=1, max=9)), None),
+        todo_item_field=ATTR_PRIORITY,
+        required_feature=TodoListEntityFeature.SET_PRIORITY_ON_ITEM,
     ),
 ]
 
@@ -229,6 +236,9 @@ class TodoItem:
 
     completed: datetime.datetime | None = None
     """The date and time that a to-do item was marked completed."""
+
+    priority: int | None = None
+    """The priority of the to-do item (1=highest, 9=lowest, None=undefined)."""
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
