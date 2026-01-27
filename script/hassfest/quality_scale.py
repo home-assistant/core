@@ -392,7 +392,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "freebox",
     "freedns",
     "freedompro",
-    "fritzbox",
     "fritzbox_callmonitor",
     "frontier_silicon",
     "fujitsu_fglair",
