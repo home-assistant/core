@@ -57,7 +57,7 @@
         }
       },
       "provision_failed": {
-        "description": "The device did not connect to {ssid}. This may be due to an incorrect password or the network being out of range. Would you like to try again?"
+        "description": "{name} did not connect to {ssid}: {error}. This may be due to an incorrect password or the network being out of range. Would you like to try again?"
       },
       "reauth_confirm": {
         "data": {
@@ -112,7 +112,7 @@
         "description": "Select a WiFi network and enter the password to provision the device."
       },
       "wifi_scan_failed": {
-        "description": "Failed to scan for WiFi networks via Bluetooth. The device may be out of range or Bluetooth connection failed. Would you like to try again?"
+        "description": "Failed to scan for WiFi networks on {name} via Bluetooth: {error}. The device may be out of range or Bluetooth connection failed. Would you like to try again?"
       }
     }
   },
