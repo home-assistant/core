@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'offline',
         'standby',
         'water_check',
         'heating',
@@ -53,6 +54,7 @@
       'device_class': 'enum',
       'friendly_name': 'Test Model',
       'options': list([
+        'offline',
         'standby',
         'water_check',
         'heating',

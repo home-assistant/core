@@ -7,5 +7,10 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "silver",
-  "requirements": ["hdfury==1.4.2"]
+  "requirements": ["hdfury==1.4.2"],
+  "zeroconf": [
+    { "name": "diva-*", "type": "_http._tcp.local." },
+    { "name": "vertex2-*", "type": "_http._tcp.local." },
+    { "name": "vrroom-*", "type": "_http._tcp.local." }
+  ]
 }
