@@ -21,6 +21,7 @@ from homeassistant.components.homeassistant import async_set_stop_handler
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_NAME,
     EVENT_CORE_CONFIG_UPDATE,
     HASSIO_USER_NAME,
@@ -34,11 +35,13 @@ from homeassistant.core import (
     async_get_hass_or_none,
     callback,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     discovery_flow,
     issue_registry as ir,
+    selector,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
@@ -90,6 +93,7 @@ from .const import (
     DATA_SUPERVISOR_INFO,
     DOMAIN,
     HASSIO_UPDATE_INTERVAL,
+    SupervisorEntityModel,
 )
 from .coordinator import (
     HassioDataUpdateCoordinator,
@@ -141,6 +145,7 @@ SERVICE_BACKUP_FULL = "backup_full"
 SERVICE_BACKUP_PARTIAL = "backup_partial"
 SERVICE_RESTORE_FULL = "restore_full"
 SERVICE_RESTORE_PARTIAL = "restore_partial"
+SERVICE_MOUNT_RELOAD = "mount_reload"
 
 VALID_ADDON_SLUG = vol.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
 
@@ -202,6 +207,19 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
+    }
+)
+
+SCHEMA_MOUNT_RELOAD = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): selector.DeviceSelector(
+            selector.DeviceSelectorConfig(
+                filter=selector.DeviceFilterSelectorConfig(
+                    integration=DOMAIN,
+                    model=SupervisorEntityModel.MOUNT,
+                )
+            )
+        )
     }
 )
 
@@ -409,6 +427,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         hass.services.async_register(
             DOMAIN, service, async_service_handler, schema=settings.schema
         )
+
+    dev_reg = dr.async_get(hass)
+
+    async def async_mount_reload(service: ServiceCall) -> None:
+        """Handle service calls for Hass.io."""
+        # These conditions are always true as they were verified by SCHEMA_MOUNT_RELOAD.
+        if (device := dev_reg.async_get(service.data[ATTR_DEVICE_ID])) and device.name:
+            try:
+                await supervisor_client.mounts.reload_mount(device.name)
+            except SupervisorError as error:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="mount_reload_error",
+                    translation_placeholders={"name": device.name, "error": str(error)},
+                ) from error
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_MOUNT_RELOAD, async_mount_reload, SCHEMA_MOUNT_RELOAD
+    )
 
     async def update_info_data(_: datetime | None = None) -> None:
         """Update last available supervisor information."""

@@ -2,11 +2,19 @@
 
 from datetime import timedelta
 import os
+from pathlib import PurePath
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsStats
+from aiohasupervisor.models.mounts import (
+    CIFSMountResponse,
+    MountsInfo,
+    MountState,
+    MountType,
+    MountUsage,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from voluptuous import Invalid
@@ -27,6 +35,7 @@ from homeassistant.components.hassio.const import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.setup import async_setup_component
@@ -501,6 +510,7 @@ async def test_service_register(hass: HomeAssistant) -> None:
     assert hass.services.has_service("hassio", "backup_partial")
     assert hass.services.has_service("hassio", "restore_full")
     assert hass.services.has_service("hassio", "restore_partial")
+    assert hass.services.has_service("hassio", "mount_reload")
 
 
 @pytest.mark.freeze_time("2021-11-13 11:48:00")
@@ -1413,3 +1423,66 @@ async def test_deprecated_installation_issue_supported_board(
         await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 0
+
+
+async def mount_reload_test_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> dr.DeviceEntry:
+    """Set up mount reload test and return the device entry."""
+    supervisor_client.mounts.info = AsyncMock(
+        return_value=MountsInfo(
+            default_backup_mount=None,
+            mounts=[
+                CIFSMountResponse(
+                    share="files",
+                    server="1.2.3.4",
+                    name="NAS",
+                    type=MountType.CIFS,
+                    usage=MountUsage.SHARE,
+                    read_only=False,
+                    state=MountState.ACTIVE,
+                    user_path=PurePath("/share/nas"),
+                )
+            ],
+        )
+    )
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "mount_NAS")})
+    assert device is not None
+    return device
+
+
+async def test_mount_reload_action(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount service call."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    await hass.services.async_call("hassio", "mount_reload", {"device_id": device.id})
+    supervisor_client.mounts.reload_mount.assert_awaited_once_with("NAS")
+
+
+async def test_mount_reload_action_failure(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test reload_mount service call failure."""
+    device = await mount_reload_test_setup(hass, device_registry, supervisor_client)
+    supervisor_client.mounts.reload_mount = AsyncMock(
+        side_effect=SupervisorError("test failure")
+    )
+    with pytest.raises(HomeAssistantError) as exc:
+        await hass.services.async_call(
+            "hassio", "mount_reload", {"device_id": device.id}, blocking=True
+        )
+    assert str(exc.value) == "Failed to reload mount NAS: test failure"
