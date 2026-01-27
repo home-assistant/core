@@ -112,7 +112,7 @@ class SensorEntityDescription(EntityDescription, frozen_or_thawed=True):
     last_reset: datetime | None = None
     native_unit_of_measurement: str | None = None
     options: list[str] | None = None
-    state_class: SensorStateClass | str | None = None
+    state_class: SensorStateClass | None = None
     suggested_display_precision: int | None = None
     suggested_unit_of_measurement: str | None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
@@ -120,7 +120,7 @@ class SensorEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 def _numeric_state_expected(
     device_class: SensorDeviceClass | None,
-    state_class: SensorStateClass | str | None,
+    state_class: SensorStateClass | None,
     native_unit_of_measurement: str | None,
     suggested_display_precision: int | None,
 ) -> bool:
@@ -188,7 +188,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType | date | datetime | Decimal = None
     _attr_options: list[str] | None
-    _attr_state_class: SensorStateClass | str | None
+    _attr_state_class: SensorStateClass | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
     _attr_suggested_display_precision: int | None
     _attr_suggested_unit_of_measurement: str | None
@@ -329,7 +329,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return None
 
     @cached_property
-    def state_class(self) -> SensorStateClass | str | None:
+    def state_class(self) -> SensorStateClass | None:
         """Return the state class of this entity, if any."""
         if hasattr(self, "_attr_state_class"):
             return self._attr_state_class
