@@ -1227,7 +1227,7 @@ home-assistant-intents==2026.1.6
 homelink-integration-api==0.0.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.4.0
+homematicip==2.5.0
 
 # homeassistant.components.horizon
 horimote==0.4.1
