@@ -206,7 +206,7 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("min_entity_id") is None
     assert state.attributes.get("max_entity_id") is None
 
@@ -215,20 +215,20 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.test_max")
     assert state.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
+    assert state.attributes.get("max_entity_id") == entity_ids[1]
 
     hass.states.async_set(entity_ids[2], STATE_UNKNOWN)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
     assert state.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
-    assert entity_ids[1] == state.attributes.get("max_entity_id")
+    assert state.attributes.get("max_entity_id") == entity_ids[1]
 
     hass.states.async_set(entity_ids[1], STATE_UNAVAILABLE)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("min_entity_id") is None
     assert state.attributes.get("max_entity_id") is None
 
@@ -281,14 +281,14 @@ async def test_reload(hass: HomeAssistant) -> None:
         (STATES_ONE_MISSING, "17.0"),
         (STATES_ONE_UNKNOWN, "17.0"),
         (STATES_ONE_UNAVAILABLE, "17.0"),
-        (STATES_ALL_ERROR, STATE_UNAVAILABLE),
+        (STATES_ALL_ERROR, STATE_UNKNOWN),
         (STATES_ALL_MISSING, STATE_UNAVAILABLE),
-        (STATES_ALL_UNKNOWN, STATE_UNAVAILABLE),
+        (STATES_ALL_UNKNOWN, STATE_UNKNOWN),
         (STATES_ALL_UNAVAILABLE, STATE_UNAVAILABLE),
         (STATES_MIX_MISSING_UNAVAILABLE, STATE_UNAVAILABLE),
-        (STATES_MIX_MISSING_UNKNOWN, STATE_UNAVAILABLE),
-        (STATES_MIX_UNAVAILABLE_UNKNOWN, STATE_UNAVAILABLE),
-        (STATES_MIX_MISSING_UNAVAILABLE_UNKNOWN, STATE_UNAVAILABLE),
+        (STATES_MIX_MISSING_UNKNOWN, STATE_UNKNOWN),
+        (STATES_MIX_UNAVAILABLE_UNKNOWN, STATE_UNKNOWN),
+        (STATES_MIX_MISSING_UNAVAILABLE_UNKNOWN, STATE_UNKNOWN),
     ],
 )
 async def test_sensor_incorrect_state_with_ignore_non_numeric(
@@ -339,17 +339,17 @@ async def test_sensor_incorrect_state_with_ignore_non_numeric(
     ("states_list", "expected_group_state", "error_count"),
     [
         (STATES_ONE_ERROR, STATE_UNKNOWN, 1),
-        (STATES_ONE_MISSING, "17.0", 0),
+        (STATES_ONE_MISSING, STATE_UNKNOWN, 0),
         (STATES_ONE_UNKNOWN, STATE_UNKNOWN, 1),
         (STATES_ONE_UNAVAILABLE, STATE_UNKNOWN, 1),
-        (STATES_ALL_ERROR, STATE_UNAVAILABLE, 3),
+        (STATES_ALL_ERROR, STATE_UNKNOWN, 3),
         (STATES_ALL_MISSING, STATE_UNAVAILABLE, 0),
-        (STATES_ALL_UNKNOWN, STATE_UNAVAILABLE, 3),
+        (STATES_ALL_UNKNOWN, STATE_UNKNOWN, 3),
         (STATES_ALL_UNAVAILABLE, STATE_UNAVAILABLE, 3),
-        (STATES_MIX_MISSING_UNKNOWN, STATE_UNAVAILABLE, 2),
-        (STATES_MIX_UNAVAILABLE_UNKNOWN, STATE_UNAVAILABLE, 3),
         (STATES_MIX_MISSING_UNAVAILABLE, STATE_UNAVAILABLE, 2),
-        (STATES_MIX_MISSING_UNAVAILABLE_UNKNOWN, STATE_UNAVAILABLE, 2),
+        (STATES_MIX_MISSING_UNKNOWN, STATE_UNKNOWN, 2),
+        (STATES_MIX_UNAVAILABLE_UNKNOWN, STATE_UNKNOWN, 3),
+        (STATES_MIX_MISSING_UNAVAILABLE_UNKNOWN, STATE_UNKNOWN, 2),
     ],
 )
 async def test_sensor_incorrect_state_with_not_ignore_non_numeric(
@@ -402,17 +402,17 @@ async def test_sensor_incorrect_state_with_not_ignore_non_numeric(
     ("states_list", "expected_group_state"),
     [
         (STATES_ONE_ERROR, STATE_UNKNOWN),
-        (STATES_ONE_MISSING, "32.3"),
+        (STATES_ONE_MISSING, STATE_UNKNOWN),
         (STATES_ONE_UNKNOWN, STATE_UNKNOWN),
         (STATES_ONE_UNAVAILABLE, STATE_UNKNOWN),
-        (STATES_ALL_ERROR, STATE_UNAVAILABLE),
+        (STATES_ALL_ERROR, STATE_UNKNOWN),
         (STATES_ALL_MISSING, STATE_UNAVAILABLE),
-        (STATES_ALL_UNKNOWN, STATE_UNAVAILABLE),
+        (STATES_ALL_UNKNOWN, STATE_UNKNOWN),
         (STATES_ALL_UNAVAILABLE, STATE_UNAVAILABLE),
         (STATES_MIX_MISSING_UNAVAILABLE, STATE_UNAVAILABLE),
-        (STATES_MIX_MISSING_UNKNOWN, STATE_UNAVAILABLE),
-        (STATES_MIX_UNAVAILABLE_UNKNOWN, STATE_UNAVAILABLE),
-        (STATES_MIX_MISSING_UNAVAILABLE_UNKNOWN, STATE_UNAVAILABLE),
+        (STATES_MIX_MISSING_UNKNOWN, STATE_UNKNOWN),
+        (STATES_MIX_UNAVAILABLE_UNKNOWN, STATE_UNKNOWN),
+        (STATES_MIX_MISSING_UNAVAILABLE_UNKNOWN, STATE_UNKNOWN),
     ],
 )
 async def test_sensor_require_all_states(
@@ -740,7 +740,7 @@ async def test_sensor_calculated_result_fails_on_uom(hass: HomeAssistant) -> Non
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_sum")
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("device_class") == "energy"
     assert state.attributes.get("state_class") == "total"
     assert state.attributes.get("unit_of_measurement") is None
@@ -847,12 +847,18 @@ async def test_last_sensor(hass: HomeAssistant) -> None:
 
     entity_ids = config["sensor"]["entities"]
 
+    for entity_id in entity_ids[1:]:
+        hass.states.async_set(entity_id, "0.0")
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test_last")
+        assert state.state == STATE_UNKNOWN
+
     for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
         hass.states.async_set(entity_id, str(value))
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test_last")
-        assert str(float(value)) == state.state
-        assert entity_id == state.attributes.get("last_entity_id")
+        assert state.state == str(float(value))
+        assert state.attributes.get("last_entity_id") == entity_id
 
 
 async def test_sensors_attributes_added_when_entity_info_available(

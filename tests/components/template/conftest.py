@@ -52,10 +52,13 @@ def make_test_trigger(*entities: str) -> dict:
 
 
 async def async_trigger(
-    hass: HomeAssistant, entity_id: str, state: str | None = None
+    hass: HomeAssistant,
+    entity_id: str,
+    state: str | None = None,
+    attributes: dict | None = None,
 ) -> None:
     """Trigger a state change."""
-    hass.states.async_set(entity_id, state)
+    hass.states.async_set(entity_id, state, attributes)
     await hass.async_block_till_done()
 
 
@@ -333,11 +336,6 @@ async def start_ha(
 async def caplog_setup_text(caplog: pytest.LogCaptureFixture) -> str:
     """Return setup log of integration."""
     return caplog.text
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 async def async_get_flow_preview_state(

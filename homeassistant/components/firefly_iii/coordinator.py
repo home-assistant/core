@@ -98,14 +98,14 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
         end_date = now
 
         try:
-            accounts = await self.firefly.get_accounts()
-
             (
+                accounts,
                 categories,
                 primary_currency,
                 budgets,
                 bills,
             ) = await asyncio.gather(
+                self.firefly.get_accounts(),
                 self.firefly.get_categories(),
                 self.firefly.get_currency_primary(),
                 self.firefly.get_budgets(start=start_date, end=end_date),

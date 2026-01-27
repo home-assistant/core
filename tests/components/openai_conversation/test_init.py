@@ -25,7 +25,12 @@ from homeassistant.components.openai_conversation.const import (
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CONVERSATION_OPTIONS,
 )
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigSubentryData
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigSubentryData,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -250,16 +255,6 @@ async def test_invalid_config_entry(
             "Connection error",
         ),
         (
-            AuthenticationError(
-                response=httpx.Response(
-                    status_code=500, request=httpx.Request(method="GET", url="test")
-                ),
-                body=None,
-                message="",
-            ),
-            "Invalid API key",
-        ),
-        (
             BadRequestError(
                 response=httpx.Response(
                     status_code=500, request=httpx.Request(method="GET", url="test")
@@ -286,6 +281,27 @@ async def test_init_error(
         assert await async_setup_component(hass, "openai_conversation", {})
         await hass.async_block_till_done()
         assert error in caplog.text
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_init_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test auth error during init errors."""
+    with patch(
+        "openai.resources.models.AsyncModels.list",
+        side_effect=AuthenticationError(
+            response=httpx.Response(
+                status_code=500, request=httpx.Request(method="GET", url="test")
+            ),
+            body=None,
+            message="",
+        ),
+    ):
+        assert await async_setup_component(hass, "openai_conversation", {})
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(
@@ -545,6 +561,56 @@ async def test_generate_content_service_error(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("service_name", "patch_path"),
+    [
+        ("generate_image", "openai.resources.images.AsyncImages.generate"),
+        ("generate_content", "openai.resources.responses.AsyncResponses.create"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_service_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    service_name: str,
+    patch_path: str,
+) -> None:
+    """Test generate content service handles errors."""
+    with (
+        patch(
+            patch_path,
+            side_effect=AuthenticationError(
+                response=httpx.Response(
+                    status_code=401, request=httpx.Request(method="GET", url="")
+                ),
+                body=None,
+                message="Reason",
+            ),
+        ),
+        pytest.raises(HomeAssistantError, match="Authentication error"),
+    ):
+        await hass.services.async_call(
+            "openai_conversation",
+            service_name,
+            {
+                "config_entry": mock_config_entry.entry_id,
+                "prompt": "Image of an epic fail",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert "context" in flow
+    assert flow["context"]["source"] == SOURCE_REAUTH
+    assert flow["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_migration_from_v1(

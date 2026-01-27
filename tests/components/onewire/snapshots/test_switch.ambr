@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output',
     'options': dict({
     }),
     'original_device_class': None,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch A',
     'options': dict({
     }),
     'original_device_class': None,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch B',
     'options': dict({
     }),
     'original_device_class': None,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output A',
     'options': dict({
     }),
     'original_device_class': None,
@@ -216,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output B',
     'options': dict({
     }),
     'original_device_class': None,
@@ -265,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current A/D control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -314,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -363,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -412,6 +420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -461,6 +470,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -510,6 +520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -559,6 +570,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 5',
     'options': dict({
     }),
     'original_device_class': None,
@@ -608,6 +620,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 6',
     'options': dict({
     }),
     'original_device_class': None,
@@ -657,6 +670,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Latch 7',
     'options': dict({
     }),
     'original_device_class': None,
@@ -706,6 +720,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -755,6 +770,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -804,6 +820,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -853,6 +870,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -902,6 +920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -951,6 +970,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 5',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1000,6 +1020,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 6',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1049,6 +1070,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output 7',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1098,6 +1120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output A',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1147,6 +1170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Programmed input-output B',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1196,6 +1220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current A/D control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1245,6 +1270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leaf sensor 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1294,6 +1320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leaf sensor 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1343,6 +1370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leaf sensor 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1392,6 +1420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leaf sensor 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1441,6 +1470,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture sensor 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1490,6 +1520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture sensor 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1539,6 +1570,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture sensor 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1588,6 +1620,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moisture sensor 3',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1637,6 +1670,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub branch 0',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1686,6 +1720,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub branch 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1735,6 +1770,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub branch 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1784,6 +1820,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hub branch 3',
     'options': dict({
     }),
     'original_device_class': None,

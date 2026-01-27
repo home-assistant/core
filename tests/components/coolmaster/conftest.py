@@ -41,7 +41,46 @@ TEST_UNITS: dict[str, dict[str, Any]] = {
         "clean_filter": True,
         "swing": "horizontal",
     },
+    "L1.102": {
+        "is_on": True,
+        "thermostat": 20,
+        "temperature": 25,
+        "temperature_unit": "celsius",
+        "fan_speed": "vlow",
+        "mode": "cool",
+        "error_code": None,
+        "clean_filter": False,
+        "swing": None,
+    },
+    "L1.103": {
+        "is_on": True,
+        "thermostat": 25,
+        "temperature": 25,
+        "temperature_unit": "celsius",
+        "fan_speed": "Med",  # Test case insensitivity for fan speed
+        "mode": "cool",
+        "error_code": None,
+        "clean_filter": False,
+        "swing": None,
+    },
+    "L1.104": {
+        "is_on": True,
+        "thermostat": 25,
+        "temperature": 25,
+        "temperature_unit": "celsius",
+        "fan_speed": "ULTRA",  # Test unknown fan speed handling
+        "mode": "cool",
+        "error_code": None,
+        "clean_filter": False,
+        "swing": None,
+    },
 }
+
+
+@pytest.fixture
+def unit_count():
+    """Fixture to expose the number of pre-defined units."""
+    return len(TEST_UNITS)
 
 
 class CoolMasterNetUnitMock:

@@ -120,7 +120,7 @@
     {
       "label": "Generate Requirements",
       "type": "shell",
-      "command": "./script/gen_requirements_all.py",
+      "command": "${command:python.interpreterPath} -m script.gen_requirements_all",
       "group": {
         "kind": "build",
         "isDefault": true

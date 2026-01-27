@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -12,7 +10,6 @@ from . import MAC, setup_mock_device
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.asyncio
 async def test_migrate_camera_entities_unique_ids(hass: HomeAssistant) -> None:
     """Test that camera entities unique ids get migrated properly."""
     config_entry = MockConfigEntry(domain="onvif", unique_id=MAC)

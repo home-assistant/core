@@ -49,7 +49,7 @@
           "name": "[%key:component::light::common::condition_behavior_name%]"
         }
       },
-      "name": "If a light is off"
+      "name": "Light is off"
     },
     "is_on": {
       "description": "Tests if one or more lights are on.",
@@ -59,7 +59,7 @@
           "name": "[%key:component::light::common::condition_behavior_name%]"
         }
       },
-      "name": "If a light is on"
+      "name": "Light is on"
     }
   },
   "device_automation": {
