@@ -157,7 +157,7 @@ class ProxmoxNodeBinarySensor(ProxmoxNodeEntity, BinarySensorEntity):
         self.entity_description = entity_description
         super().__init__(coordinator, node_data)
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}_{entity_description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{node_data.node['id']}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:
@@ -181,7 +181,7 @@ class ProxmoxVMBinarySensor(ProxmoxVMEntity, BinarySensorEntity):
         self.entity_description = entity_description
         super().__init__(coordinator, vm_data, node_data)
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self._node_name}_vm_{self.device_id}_{entity_description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:
@@ -205,7 +205,7 @@ class ProxmoxContainerBinarySensor(ProxmoxContainerEntity, BinarySensorEntity):
         self.entity_description = entity_description
         super().__init__(coordinator, container_data, node_data)
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self._node_name}_container_{self.device_id}_{entity_description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_id}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:

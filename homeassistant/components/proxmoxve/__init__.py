@@ -17,7 +17,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -133,12 +137,40 @@ async def _async_setup(hass: HomeAssistant, config: ConfigType) -> None:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> bool:
     """Set up a ProxmoxVE from a config entry."""
-
     coordinator = ProxmoxCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> bool:
+    """Migrate old config entries."""
+
+    # Migration for only the old binary sensors to new unique_id format
+    if entry.version < 2:
+        ent_reg = er.async_get(hass)
+        for entity_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+            # Old format: unique_id=f"proxmox_{node_name}_{vm_id}_running"
+            # New format: unique_id=f{coordinator.config_entry.entry_id}_{self._node_name}_{self.device_id}_{entity_description.key}"
+
+            new_unique_id = (
+                f"{entry.entry_id}_{entity_entry.unique_id.split('_')[-2]}_status"
+            )
+
+            _LOGGER.debug(
+                "Migrating entity %s from old unique_id %s to new unique_id %s",
+                entity_entry.entity_id,
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            ent_reg.async_update_entity(
+                entity_entry.entity_id, new_unique_id=new_unique_id
+            )
+
+        hass.config_entries.async_update_entry(entry, version=2)
 
     return True
 

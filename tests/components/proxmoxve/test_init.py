@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -111,3 +112,74 @@ async def test_setup_exceptions(
     mock_proxmox_client.nodes.get.side_effect = exception
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state == expected_state
+
+
+async def test_migration_v1_to_v2(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test migration from version 1 to 2."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        unique_id="1",
+        data={
+            CONF_HOST: "http://test_host",
+            CONF_PORT: 8006,
+            CONF_REALM: "pam",
+            CONF_USERNAME: "test_user@pam",
+            CONF_PASSWORD: "test_password",
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    entry.add_to_hass(hass)
+    assert entry.version == 1
+
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    vm_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, f"{entry.entry_id}_vm_100")},
+        name="Test VM",
+    )
+
+    container_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, f"{entry.entry_id}_container_200")},
+        name="Test Container",
+    )
+
+    vm_entity = entity_registry.async_get_or_create(
+        domain="binary_sensor",
+        platform=DOMAIN,
+        unique_id="proxmox_pve1_100_running",
+        config_entry=entry,
+        device_id=vm_device.id,
+        original_name="Test VM Binary Sensor",
+    )
+
+    container_entity = entity_registry.async_get_or_create(
+        domain="binary_sensor",
+        platform=DOMAIN,
+        unique_id="proxmox_pve1_200_running",
+        config_entry=entry,
+        device_id=container_device.id,
+        original_name="Test Container Binary Sensor",
+    )
+
+    assert vm_entity.unique_id == "proxmox_pve1_100_running"
+    assert container_entity.unique_id == "proxmox_pve1_200_running"
+
+    # Run migration
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.version == 2
+
+    vm_entity_after = entity_registry.async_get(vm_entity.entity_id)
+    container_entity_after = entity_registry.async_get(container_entity.entity_id)
+
+    assert vm_entity_after.unique_id == f"{entry.entry_id}_100_status"
+    assert container_entity_after.unique_id == f"{entry.entry_id}_200_status"
