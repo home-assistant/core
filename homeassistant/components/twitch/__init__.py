@@ -7,6 +7,7 @@ from typing import cast
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from twitchAPI.twitch import Twitch
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -54,6 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bo
     await client.set_user_authentication(access_token, scope=OAUTH_SCOPES)
 
     coordinator = TwitchCoordinator(hass, client, session, entry)
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -61,6 +64,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: TwitchConfigEntry) -> None:
+    # Don't reload integration while we're still setting up or unloading
+    if entry.state is not ConfigEntryState.LOADED:
+        return
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bool:
