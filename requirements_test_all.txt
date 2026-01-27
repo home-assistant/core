@@ -1136,7 +1136,7 @@ imgw_pib==2.0.1
 incomfort-client==0.6.11
 
 # homeassistant.components.influxdb
-influxdb-client==1.48.0
+influxdb-client==1.50.0
 
 # homeassistant.components.influxdb
 influxdb==5.3.1
