@@ -31,5 +31,33 @@
         "title": "Connect to Compit iNext"
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "airing": {
+        "name": "Airing"
+      },
+      "co2_alert": {
+        "name": "CO2 alert"
+      },
+      "co2_level": {
+        "name": "CO2 level"
+      },
+      "dust_alert": {
+        "name": "Dust alert"
+      },
+      "has_battery": {
+        "name": "Has battery"
+      },
+      "has_external_power": {
+        "name": "Has external power"
+      },
+      "pump_status": {
+        "name": "Pump status"
+      },
+      "temperature_alert": {
+        "name": "Temperature alert"
+      }
+    }
   }
 }

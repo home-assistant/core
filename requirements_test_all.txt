@@ -654,7 +654,7 @@ colorlog==6.10.1
 colorthief==0.2.1
 
 # homeassistant.components.compit
-compit-inext-api==0.4.2
+compit-inext-api==0.6.0
 
 # homeassistant.components.concord232
 concord232==0.15.1

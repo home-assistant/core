@@ -1,0 +1,33 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "airing": {
+        "default": "mdi:window-open-variant"
+      },
+      "battery_charge_status": {
+        "default": "mdi:battery-charging"
+      },
+      "co2_alert": {
+        "default": "mdi:alert"
+      },
+      "co2_level": {
+        "default": "mdi:molecule-co2"
+      },
+      "dust_alert": {
+        "default": "mdi:alert"
+      },
+      "has_battery": {
+        "default": "mdi:battery"
+      },
+      "has_external_power": {
+        "default": "mdi:power-plug"
+      },
+      "pump_status": {
+        "default": "mdi:pump"
+      },
+      "temperature_alert": {
+        "default": "mdi:alert"
+      }
+    }
+  }
+}
