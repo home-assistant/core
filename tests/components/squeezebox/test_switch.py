@@ -74,13 +74,13 @@ async def test_switch_state(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the state of the switch."""
-    assert hass.states.get(f"switch.none_alarm_{TEST_ALARM_ID}").state == "on"
+    assert hass.states.get(f"switch.alarm_{TEST_ALARM_ID}").state == "on"
 
     mock_alarms_player.alarms[0]["enabled"] = False
     freezer.tick(timedelta(seconds=PLAYER_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get(f"switch.none_alarm_{TEST_ALARM_ID}").state == "off"
+    assert hass.states.get(f"switch.alarm_{TEST_ALARM_ID}").state == "off"
 
 
 async def test_switch_deleted(
@@ -89,13 +89,13 @@ async def test_switch_deleted(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test detecting switch deleted."""
-    assert hass.states.get(f"switch.none_alarm_{TEST_ALARM_ID}").state == "on"
+    assert hass.states.get(f"switch.alarm_{TEST_ALARM_ID}").state == "on"
 
     mock_alarms_player.alarms = []
     freezer.tick(timedelta(seconds=PLAYER_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get(f"switch.none_alarm_{TEST_ALARM_ID}") is None
+    assert hass.states.get(f"switch.alarm_{TEST_ALARM_ID}") is None
 
 
 async def test_turn_on(
@@ -106,7 +106,7 @@ async def test_turn_on(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {CONF_ENTITY_ID: f"switch.none_alarm_{TEST_ALARM_ID}"},
+        {CONF_ENTITY_ID: f"switch.alarm_{TEST_ALARM_ID}"},
         blocking=True,
     )
     mock_alarms_player.async_update_alarm.assert_called_once_with(
@@ -122,7 +122,7 @@ async def test_turn_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {CONF_ENTITY_ID: f"switch.none_alarm_{TEST_ALARM_ID}"},
+        {CONF_ENTITY_ID: f"switch.alarm_{TEST_ALARM_ID}"},
         blocking=True,
     )
     mock_alarms_player.async_update_alarm.assert_called_once_with(
@@ -137,14 +137,14 @@ async def test_alarms_enabled_state(
 ) -> None:
     """Test the alarms enabled switch."""
 
-    assert hass.states.get("switch.none_alarms_enabled").state == "on"
+    assert hass.states.get("switch.alarms_enabled").state == "on"
 
     mock_alarms_player.alarms_enabled = False
     freezer.tick(timedelta(seconds=PLAYER_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.none_alarms_enabled").state == "off"
+    assert hass.states.get("switch.alarms_enabled").state == "off"
 
 
 async def test_alarms_enabled_turn_on(
@@ -155,7 +155,7 @@ async def test_alarms_enabled_turn_on(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {CONF_ENTITY_ID: "switch.none_alarms_enabled"},
+        {CONF_ENTITY_ID: "switch.alarms_enabled"},
         blocking=True,
     )
     mock_alarms_player.async_set_alarms_enabled.assert_called_once_with(True)
@@ -169,7 +169,7 @@ async def test_alarms_enabled_turn_off(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {CONF_ENTITY_ID: "switch.none_alarms_enabled"},
+        {CONF_ENTITY_ID: "switch.alarms_enabled"},
         blocking=True,
     )
     mock_alarms_player.async_set_alarms_enabled.assert_called_once_with(False)
