@@ -1,7 +1,5 @@
 """Common entity for VeSync Component."""
 
-from typing import Generic, TypeVar
-
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -10,10 +8,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import VeSyncDataCoordinator
 
-T = TypeVar("T", bound=VeSyncBaseDevice)
 
-
-class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator], Generic[T]):
+class VeSyncBaseEntity[T: VeSyncBaseDevice](CoordinatorEntity[VeSyncDataCoordinator]):
     """Base class for VeSync Entity Representations."""
 
     _attr_has_entity_name = True
