@@ -131,8 +131,10 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "lawn_mower",
     "light",
     "lock",
+    "person",
     "siren",
     "switch",
+    "vacuum",
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
