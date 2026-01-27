@@ -332,6 +332,8 @@ build.json @home-assistant/supervisor
 /tests/components/date/ @home-assistant/core
 /homeassistant/components/datetime/ @home-assistant/core
 /tests/components/datetime/ @home-assistant/core
+/homeassistant/components/daybetter_services/ @THDayBetter
+/tests/components/daybetter_services/ @THDayBetter
 /homeassistant/components/deako/ @sebirdman @balake @deakolights
 /tests/components/deako/ @sebirdman @balake @deakolights
 /homeassistant/components/debugpy/ @frenck

@@ -135,6 +135,7 @@ FLOWS = {
         "cync",
         "daikin",
         "datadog",
+        "daybetter_services",
         "deako",
         "deconz",
         "deluge",
