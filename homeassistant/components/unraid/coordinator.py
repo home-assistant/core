@@ -16,7 +16,7 @@ from unraid_api.models import ServerInfo, SystemMetrics
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +72,8 @@ class UnraidSystemCoordinator(DataUpdateCoordinator[UnraidSystemData]):
         try:
             metrics = await self.api_client.get_system_metrics()
         except UnraidAuthenticationError as err:
-            raise ConfigEntryAuthFailed("Authentication failed") from err
+            # Use ConfigEntryError until reauth flow is implemented
+            raise ConfigEntryError("Authentication failed") from err
         except UnraidConnectionError as err:
             raise UpdateFailed("Connection error") from err
         except UnraidAPIError as err:
