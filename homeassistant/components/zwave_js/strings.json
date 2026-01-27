@@ -30,7 +30,7 @@
       "invalid_ws_url": "Invalid websocket URL",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "flow_title": "{name}",
+    "flow_title": "Network {home_id} at {host}:{port}",
     "progress": {
       "backup_nvm": "Please wait while the network backup completes",
       "install_addon": "Installation can take several minutes",
