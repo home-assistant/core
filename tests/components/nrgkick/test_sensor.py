@@ -1,20 +1,15 @@
 """Tests for the NRGkick sensor platform."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import json
 from unittest.mock import patch
 
 from nrgkick_api import ChargingStatus, ConnectorType, GridPhases
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nrgkick.const import DOMAIN
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import (
-    STATE_UNKNOWN,
-    UnitOfPower,
-    UnitOfSpeed,
-    UnitOfTemperature,
-)
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -22,7 +17,9 @@ from homeassistant.util import dt as dt_util
 
 from . import async_setup_integration
 
-from tests.common import load_fixture
+from tests.common import load_fixture, snapshot_platform
+
+pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
 
 @pytest.fixture
@@ -38,6 +35,8 @@ async def test_sensor_entities(
     mock_info_data,
     mock_control_data,
     mock_values_data_sensor,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test sensor entities."""
 
@@ -55,67 +54,13 @@ async def test_sensor_entities(
     with patch("homeassistant.components.nrgkick.sensor.utcnow", return_value=now):
         await async_setup_integration(hass, mock_config_entry)
 
-    # Helper to get state by unique ID
-    entity_registry = er.async_get(hass)
-
-    def get_state_by_key(key):
-        unique_id = f"TEST123456_{key}"
-        entity_id = entity_registry.async_get_entity_id("sensor", "nrgkick", unique_id)
-        return hass.states.get(entity_id) if entity_id else None
-
     def get_entity_id_by_key(key: str) -> str:
         unique_id = f"TEST123456_{key}"
         entity_id = entity_registry.async_get_entity_id("sensor", "nrgkick", unique_id)
         assert entity_id is not None
         return entity_id
 
-    # Test power sensor with attributes
-    state = get_state_by_key("total_active_power")
-    assert state is not None
-    assert float(state.state) == 11000.0
-    assert state.attributes["unit_of_measurement"] == UnitOfPower.WATT
-    assert state.attributes["device_class"] == SensorDeviceClass.POWER
-
-    # Test temperature sensor
-    state = get_state_by_key("housing_temperature")
-    assert state is not None
-    assert float(state.state) == 35.0
-    assert state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
-
-    # Test charging rate sensor (range added per hour)
-    state = get_state_by_key("charging_rate")
-    assert state is not None
-    assert float(state.state) == 11.0
-    assert state.attributes["unit_of_measurement"] == UnitOfSpeed.KILOMETERS_PER_HOUR
-
-    # Test derived timestamp sensor (invariant to polling cadence)
-    state = get_state_by_key("vehicle_connected_since")
-    assert state is not None
-    assert state.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
-    assert dt_util.parse_datetime(state.state) == now - timedelta(seconds=100)
-
-    # Test mapped sensors (API returns numeric codes, mapped to translation keys)
-    mapped_sensors = {
-        "status": "charging",
-        "rcd_trigger": "no_fault",
-        "warning_code": "no_warning",
-        "error_code": "no_error",
-        "connector_type": "type2",
-    }
-    for key, expected in mapped_sensors.items():
-        state = get_state_by_key(key)
-        assert state is not None, f"{key}: state not found"
-        assert state.state == expected, f"{key}: expected {expected}, got {state.state}"
-
-    # Test numeric sensors
-    numeric_sensors = {
-        "rated_current": 32.0,
-        "charging_current": 16.0,
-    }
-    for key, expected in numeric_sensors.items():
-        state = get_state_by_key(key)
-        assert state is not None, f"{key}: state not found"
-        assert float(state.state) == expected, f"{key}: expected {expected}"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
     # Defensive: if the API returns an unexpected type for a nested section,
     # the entity should fall back to unknown (native_value=None).
@@ -126,7 +71,7 @@ async def test_sensor_entities(
     await async_update_entity(hass, get_entity_id_by_key("charging_current"))
     await hass.async_block_till_done()
 
-    state = get_state_by_key("charging_current")
+    state = hass.states.get(get_entity_id_by_key("charging_current"))
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
