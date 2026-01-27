@@ -4061,7 +4061,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     flow = flows[0]
     assert flow["context"]["title_placeholders"]["host"] == "127.0.0.1"
     assert flow["context"]["title_placeholders"]["port"] == "3000"
-    assert flow["context"]["title_placeholders"]["home_id"] == "1234"
+    assert flow["context"]["title_placeholders"]["home_id"] == "0x000004d2"  # 1234
 
     with (
         patch(
