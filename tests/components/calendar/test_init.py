@@ -16,6 +16,7 @@ import voluptuous as vol
 from homeassistant.components.calendar import DOMAIN, SERVICE_GET_EVENTS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -123,6 +124,7 @@ async def test_calendars_http_api(
     assert data == [
         {"entity_id": "calendar.calendar_1", "name": "Calendar 1"},
         {"entity_id": "calendar.calendar_2", "name": "Calendar 2"},
+        {"entity_id": "calendar.calendar_3", "name": "Calendar 3"},
     ]
 
 
@@ -604,3 +606,54 @@ async def test_list_events_service_same_dates(
             blocking=True,
             return_response=True,
         )
+
+
+async def test_calendar_initial_color_valid(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test that initial_color creates initial entity options."""
+    # Entity 3 was created with an initial_color
+    entity = test_entities[2]
+
+    # Check that entity registry was populated with the initial_color
+    entry = entity_registry.async_get(entity.entity_id)
+    assert entry is not None
+    assert entry.options.get(DOMAIN, {}).get("color") == "#FF0000"
+
+
+@pytest.mark.parametrize(
+    "invalid_initial_color",
+    [
+        "FF0000",  # Missing #
+        "#FF00",  # Too short
+        "#FF00000",  # Too long
+        "#GGGGGG",  # Invalid hex
+        "red",  # Not hex
+        "",  # Empty
+    ],
+)
+async def test_calendar_initial_color_invalid(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    invalid_initial_color: str,
+) -> None:
+    """Test that invalid initial_color is ignored."""
+    entity = MockCalendarEntity(
+        "Invalid Color Test",
+        [],
+        initial_color=invalid_initial_color,
+        unique_id=f"test_{invalid_initial_color}",
+    )
+    assert entity.get_initial_entity_options() is None
+
+
+async def test_calendar_initial_color_none(
+    hass: HomeAssistant,
+    test_entities: list[MockCalendarEntity],
+) -> None:
+    """Test that entities without initial_color return None."""
+    # Entities 1 and 2 were created without an initial_color
+    entity = test_entities[0]
+    assert entity.get_initial_entity_options() is None
