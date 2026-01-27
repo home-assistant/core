@@ -54,17 +54,6 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_reload_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nrgkick_api
-) -> None:
-    """Test reload of entry."""
-    await async_setup_integration(hass, mock_config_entry)
-
-    # Test that reload calls the config_entries.async_reload
-    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-
 async def test_coordinator_update_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
