@@ -221,7 +221,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             # Ignore servers running as Home Assistant app
             # (they should be discovered through hassio discovery instead)
             if server_info.homeassistant_addon:
-                LOGGER.debug("Ignoring app server in zeroconf discovery")
+                LOGGER.debug("Ignoring HA app server in zeroconf discovery")
                 return self.async_abort(reason="already_discovered_addon")
 
         self.url = server_info.base_url
