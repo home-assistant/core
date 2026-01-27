@@ -237,10 +237,13 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             )
             for api in llm.async_get_apis(self.hass)
         ]
-        if (suggested_llm_apis := options.get(CONF_LLM_HASS_API)) and isinstance(
-            suggested_llm_apis, str
-        ):
-            options[CONF_LLM_HASS_API] = [suggested_llm_apis]
+        if suggested_llm_apis := options.get(CONF_LLM_HASS_API):
+            if isinstance(suggested_llm_apis, str):
+                suggested_llm_apis = [suggested_llm_apis]
+            valid_apis = {api.id for api in llm.async_get_apis(self.hass)}
+            options[CONF_LLM_HASS_API] = [
+                api for api in suggested_llm_apis if api in valid_apis
+            ]
 
         step_schema: VolDictType = {}
 
