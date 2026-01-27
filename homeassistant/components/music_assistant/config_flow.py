@@ -160,7 +160,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         except InvalidServerVersion:
             return self.async_abort(reason="invalid_server_version")
         except MusicAssistantClientException:
-            LOGGER.exception("Unexpected exception during app discovery")
+            LOGGER.exception("Unexpected exception during HA app discovery")
             return self.async_abort(reason="unknown")
 
         # We trust the token from hassio discovery and validate it during setup
