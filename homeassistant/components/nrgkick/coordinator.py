@@ -18,6 +18,7 @@ from nrgkick_api import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -42,12 +43,12 @@ def _coordinator_exception_handler[
         try:
             return await func(self, *args, **kwargs)
         except NRGkickAuthenticationError as error:
-            raise UpdateFailed(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="authentication_error",
             ) from error
         except NRGkickAPIDisabledError as error:
-            raise UpdateFailed(
+            raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="json_api_disabled",
             ) from error

@@ -1,4 +1,170 @@
 # serializer version: 1
+# name: test_sensor_entities[sensor.nrgkick_test_cellular_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_service',
+        'gsm',
+        'lte_cat_m1',
+        'lte_nb_iot',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.nrgkick_test_cellular_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cellular mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Cellular mode',
+    'platform': 'nrgkick',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cellular_mode',
+    'unique_id': 'TEST123456_cellular_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.nrgkick_test_cellular_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'NRGkick Test Cellular mode',
+      'options': list([
+        'no_service',
+        'gsm',
+        'lte_cat_m1',
+        'lte_nb_iot',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nrgkick_test_cellular_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities[sensor.nrgkick_test_cellular_operator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.nrgkick_test_cellular_operator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cellular operator',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cellular operator',
+    'platform': 'nrgkick',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cellular_operator',
+    'unique_id': 'TEST123456_cellular_operator',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities[sensor.nrgkick_test_cellular_operator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'NRGkick Test Cellular operator',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nrgkick_test_cellular_operator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities[sensor.nrgkick_test_cellular_signal_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.nrgkick_test_cellular_signal_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cellular signal strength',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Cellular signal strength',
+    'platform': 'nrgkick',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cellular_rssi',
+    'unique_id': 'TEST123456_cellular_rssi',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensor_entities[sensor.nrgkick_test_cellular_signal_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'NRGkick Test Cellular signal strength',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nrgkick_test_cellular_signal_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_entities[sensor.nrgkick_test_charge_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2947,7 +3113,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-12-31T23:58:20+00:00',
+    'state': '2023-10-20T23:58:20+00:00',
   })
 # ---
 # name: test_sensor_entities[sensor.nrgkick_test_warning-entry]

@@ -2,111 +2,77 @@
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock
+
 from nrgkick_api import (
-    NRGkickAuthenticationError as LibAuthError,
-    NRGkickConnectionError as LibConnectionError,
+    NRGkickAPIDisabledError,
+    NRGkickAuthenticationError,
+    NRGkickConnectionError,
 )
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
-from . import async_setup_integration, create_mock_config_entry
+from . import setup_integration
 
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nrgkick_api
+async def test_load_unload_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nrgkick_api: AsyncMock
 ) -> None:
-    """Test successful setup of entry."""
-    await async_setup_integration(hass, mock_config_entry)
+    """Test successful load and unload of entry."""
+    await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    entity_registry: er.EntityRegistry = er.async_get(hass)
-    unique_id = f"{mock_config_entry.unique_id}_rated_current"
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-    assert entity_id is not None
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert float(state.state) == 32.0
-
-
-async def test_setup_entry_failed_connection(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nrgkick_api
-) -> None:
-    """Test setup entry with failed connection."""
-    mock_config_entry.add_to_hass(hass)
-
-    mock_nrgkick_api.get_info.side_effect = LibConnectionError("Connection failed")
-
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_unload_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nrgkick_api
-) -> None:
-    """Test successful unload of entry."""
-    await async_setup_integration(hass, mock_config_entry)
-
-    # Use the config_entries.async_unload for proper state management
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_coordinator_update_success(
+@pytest.mark.parametrize(
+    ("exception", "state"),
+    [
+        (NRGkickAuthenticationError, ConfigEntryState.SETUP_ERROR),
+        (NRGkickAPIDisabledError, ConfigEntryState.SETUP_ERROR),
+        (NRGkickConnectionError, ConfigEntryState.SETUP_RETRY),
+        (TimeoutError, ConfigEntryState.SETUP_RETRY),
+        (OSError, ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_entry_setup_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_nrgkick_api,
-    mock_info_data,
-    mock_control_data,
-    mock_values_data,
+    mock_nrgkick_api: AsyncMock,
+    exception: Exception,
+    state: ConfigEntryState,
 ) -> None:
-    """Test successful coordinator update."""
-    mock_nrgkick_api.get_info.return_value = mock_info_data
-    mock_nrgkick_api.get_control.return_value = mock_control_data
-    mock_nrgkick_api.get_values.return_value = mock_values_data
+    """Test setup entry with failed connection."""
+    mock_nrgkick_api.get_info.side_effect = exception
 
-    # Use proper setup to set entry state
-    await async_setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
-    # Validate coordinator refresh via the state machine (entities have values).
-    entity_registry: er.EntityRegistry = er.async_get(hass)
-    unique_id = f"{mock_config_entry.unique_id}_rated_current"
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-    assert entity_id is not None
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert float(state.state) == 32.0
+    assert mock_config_entry.state is state
 
 
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        LibConnectionError("Connection failed"),
-        LibAuthError("Auth failed"),
-    ],
-    ids=["connection", "auth"],
-)
-async def test_coordinator_update_fails_and_retries(
+async def test_device(
     hass: HomeAssistant,
-    mock_nrgkick_api,
-    side_effect: Exception,
+    mock_config_entry: MockConfigEntry,
+    mock_nrgkick_api: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test coordinator update failures trigger a setup retry."""
-    entry = create_mock_config_entry(data={CONF_HOST: "192.168.1.100"})
-    mock_nrgkick_api.get_values.side_effect = side_effect
+    """Test successful load and unload of entry."""
+    await setup_integration(hass, mock_config_entry)
 
-    await async_setup_integration(hass, entry)
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    )
+    assert device is not None
+    assert device == snapshot

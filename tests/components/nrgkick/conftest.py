@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from nrgkick_api import ConnectorType, GridPhases
 import pytest
 
 from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -75,16 +75,19 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_info_data() -> dict[str, Any]:
     """Mock device info data."""
-    return json.loads(load_fixture("info.json", DOMAIN))
+    res = load_json_object_fixture("info.json", DOMAIN)
+    res["connector"]["type"] = ConnectorType.TYPE2
+    res["grid"]["phases"] = GridPhases.L1_L2_L3
+    return res
 
 
 @pytest.fixture
 def mock_control_data() -> dict[str, Any]:
     """Mock control data."""
-    return json.loads(load_fixture("control.json", DOMAIN))
+    return load_json_object_fixture("control.json", DOMAIN)
 
 
 @pytest.fixture
 def mock_values_data() -> dict[str, Any]:
     """Mock values data."""
-    return json.loads(load_fixture("values.json", DOMAIN))
+    return load_json_object_fixture("values_sensor.json", DOMAIN)
