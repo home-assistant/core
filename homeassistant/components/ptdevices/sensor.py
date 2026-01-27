@@ -148,7 +148,7 @@ async def async_setup_entry(
 PARALLEL_UPDATES = 0
 
 
-class PTDevicesSensorEntity(SensorEntity, CoordinatorEntity[PTDevicesCoordinator]):
+class PTDevicesSensorEntity(CoordinatorEntity[PTDevicesCoordinator], SensorEntity):
     """Sensor entity for PTDevices Integration."""
 
     _attr_has_entity_name = True
