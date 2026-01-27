@@ -153,9 +153,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) ->
     if entry.version < 2:
         ent_reg = er.async_get(hass)
         for entity_entry in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
-            # Old format: unique_id=f"proxmox_{node_name}_{vm_id}_running"
-            # New format: unique_id=f{coordinator.config_entry.entry_id}_{self._node_name}_{self.device_id}_{entity_description.key}"
-
             new_unique_id = (
                 f"{entry.entry_id}_{entity_entry.unique_id.split('_')[-2]}_status"
             )

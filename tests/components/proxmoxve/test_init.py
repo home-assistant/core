@@ -172,7 +172,6 @@ async def test_migration_v1_to_v2(
     assert vm_entity.unique_id == "proxmox_pve1_100_running"
     assert container_entity.unique_id == "proxmox_pve1_200_running"
 
-    # Run migration
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
