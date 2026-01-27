@@ -52,9 +52,10 @@ def _get_nested_dict_value(data: Any, *keys: str) -> Any:
     """Safely get a nested value from dict-like API responses."""
     current: Any = data
     for key in keys:
-        if not isinstance(current, dict):
+        try:
+            current = current.get(key)
+        except AttributeError:
             return None
-        current = current.get(key)
     return current
 
 
@@ -82,10 +83,13 @@ def _seconds_to_stable_timestamp(value: StateType) -> datetime | None:
     This is used for durations that represent "seconds since X" coming from the
     device. Converting to a timestamp avoids UI drift due to polling cadence.
     """
-    if not isinstance(value, int):
+    if value is None:
         return None
 
-    return _seconds_to_stable_datetime(value)
+    try:
+        return _seconds_to_stable_datetime(cast(int, value))
+    except (TypeError, OverflowError):
+        return None
 
 
 def _map_code_to_translation_key(
@@ -98,10 +102,12 @@ def _map_code_to_translation_key(
     fields used as sensor states.
 
     """
-    if not isinstance(value, int):
+    if value is None:
         return None
 
-    return mapping.get(value)
+    # The API returns ints (including IntEnum). Use a cast to satisfy typing
+    # without paying for repeated runtime type checks in this hot path.
+    return mapping.get(cast(int, value))
 
 
 def _enum_options_from_mapping(mapping: Mapping[int, str | None]) -> list[str]:
