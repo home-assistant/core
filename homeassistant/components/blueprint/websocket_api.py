@@ -27,6 +27,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_delete_blueprint)
     websocket_api.async_register_command(hass, ws_import_blueprint)
     websocket_api.async_register_command(hass, ws_list_blueprints)
+    websocket_api.async_register_command(hass, ws_get_blueprint)
     websocket_api.async_register_command(hass, ws_save_blueprint)
     websocket_api.async_register_command(hass, ws_substitute_blueprint)
 
@@ -99,6 +100,32 @@ async def ws_list_blueprints(
 
 
 @websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "blueprint/get",
+        vol.Required("domain"): cv.string,
+        vol.Required("path"): cv.string,
+    }
+)
+@websocket_api.async_response
+async def ws_get_blueprint(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get one blueprint."""
+    domain_blueprints: dict[str, models.DomainBlueprints] = hass.data.get(DOMAIN, {})
+
+    if msg["domain"] not in domain_blueprints:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_INVALID_FORMAT, "Unsupported domain"
+        )
+        return
+
+    result = await domain_blueprints[msg["domain"]].async_get_blueprint(msg["path"])
+    connection.send_result(msg["id"], {"yaml": result.yaml()})
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/import",

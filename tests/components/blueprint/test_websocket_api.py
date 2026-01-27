@@ -668,3 +668,85 @@ async def test_substituting_blueprint_inputs_incomplete_input_2(
         "code": "unknown_error",
         "message": "No substitution found for input blah",
     }
+
+
+_TEST_GET_BLUEPRINT_EXPECTED_BLUEPRINT_YAML = """blueprint:
+  name: Call service based on event
+  domain: automation
+  input:
+    trigger_event:
+      selector:
+        text:
+          multiline: false
+          multiple: false
+    service_to_call:
+    a_number:
+      selector:
+        number:
+          mode: box
+          step: 1.0
+triggers:
+  trigger: event
+  event_type: !input trigger_event
+actions:
+  service: !input service_to_call
+  entity_id: light.kitchen
+"""
+
+
+async def test_get_blueprint(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting the details of a blueprint that does exist."""
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "blueprint/get",
+            "domain": "automation",
+            "path": "test_event_service.yaml",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"yaml": _TEST_GET_BLUEPRINT_EXPECTED_BLUEPRINT_YAML}
+
+
+async def test_get_blueprint_doesnt_exist(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting the details of a blueprint that does not exist."""
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "blueprint/get", "domain": "automation", "path": "foo.yaml"}
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "home_assistant_error",
+        "message": "Failed to load blueprint: Unable to find foo.yaml",
+    }
+
+
+async def test_get_blueprint_domain_doesnt_exist(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test getting the details of a blueprint that does not exist."""
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "blueprint/get", "domain": "thisdomaindoesntexist", "path": "foo.yaml"}
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "invalid_format",
+        "message": "Unsupported domain",
+    }
