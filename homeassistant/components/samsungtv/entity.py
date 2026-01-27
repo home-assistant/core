@@ -99,7 +99,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
                 DOMAIN,
                 DEPRECATED_IMPLICIT_WAKE_ON_LAN.format(self._mac),
                 is_fixable=False,
-                breaks_in_ha_version="2026.7.0",
+                breaks_in_ha_version="2026.8.0",
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="deprecated_implicit_wake_on_lan",
                 translation_placeholders={
