@@ -56,7 +56,7 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
-from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers import condition as condition_helper, config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.issue_registry import (
@@ -125,9 +125,18 @@ NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
 _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "alarm_control_panel",
     "assist_satellite",
+    "climate",
+    "device_tracker",
     "fan",
+    "humidifier",
+    "lawn_mower",
     "light",
+    "lock",
+    "media_player",
+    "person",
     "siren",
+    "switch",
+    "vacuum",
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
@@ -554,7 +563,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         automation_id: str | None,
         name: str,
         trigger_config: list[ConfigType],
-        cond_func: IfAction | None,
+        condition: IfAction | None,
         action_script: Script,
         initial_state: bool | None,
         variables: ScriptVariables | None,
@@ -567,7 +576,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._attr_name = name
         self._trigger_config = trigger_config
         self._async_detach_triggers: CALLBACK_TYPE | None = None
-        self._cond_func = cond_func
+        self._condition = condition
         self.action_script = action_script
         self.action_script.change_listener = self.async_write_ha_state
         self._initial_state = initial_state
@@ -602,9 +611,11 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Return a set of referenced labels."""
         referenced = self.action_script.referenced_labels
 
-        if self._cond_func is not None:
-            for conf in self._cond_func.config:
-                referenced |= condition.async_extract_targets(conf, ATTR_LABEL_ID)
+        if self._condition is not None:
+            for conf in self._condition.config:
+                referenced |= condition_helper.async_extract_targets(
+                    conf, ATTR_LABEL_ID
+                )
 
         for conf in self._trigger_config:
             referenced |= set(_get_targets_from_trigger_config(conf, ATTR_LABEL_ID))
@@ -615,9 +626,11 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Return a set of referenced floors."""
         referenced = self.action_script.referenced_floors
 
-        if self._cond_func is not None:
-            for conf in self._cond_func.config:
-                referenced |= condition.async_extract_targets(conf, ATTR_FLOOR_ID)
+        if self._condition is not None:
+            for conf in self._condition.config:
+                referenced |= condition_helper.async_extract_targets(
+                    conf, ATTR_FLOOR_ID
+                )
 
         for conf in self._trigger_config:
             referenced |= set(_get_targets_from_trigger_config(conf, ATTR_FLOOR_ID))
@@ -628,9 +641,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Return a set of referenced areas."""
         referenced = self.action_script.referenced_areas
 
-        if self._cond_func is not None:
-            for conf in self._cond_func.config:
-                referenced |= condition.async_extract_targets(conf, ATTR_AREA_ID)
+        if self._condition is not None:
+            for conf in self._condition.config:
+                referenced |= condition_helper.async_extract_targets(conf, ATTR_AREA_ID)
 
         for conf in self._trigger_config:
             referenced |= set(_get_targets_from_trigger_config(conf, ATTR_AREA_ID))
@@ -648,9 +661,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Return a set of referenced devices."""
         referenced = self.action_script.referenced_devices
 
-        if self._cond_func is not None:
-            for conf in self._cond_func.config:
-                referenced |= condition.async_extract_devices(conf)
+        if self._condition is not None:
+            for conf in self._condition.config:
+                referenced |= condition_helper.async_extract_devices(conf)
 
         for conf in self._trigger_config:
             referenced |= set(_trigger_extract_devices(conf))
@@ -662,9 +675,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Return a set of referenced entities."""
         referenced = self.action_script.referenced_entities
 
-        if self._cond_func is not None:
-            for conf in self._cond_func.config:
-                referenced |= condition.async_extract_entities(conf)
+        if self._condition is not None:
+            for conf in self._condition.config:
+                referenced |= condition_helper.async_extract_entities(conf)
 
         for conf in self._trigger_config:
             for entity_id in _trigger_extract_entities(conf):
@@ -784,8 +797,8 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
             if (
                 not skip_condition
-                and self._cond_func is not None
-                and not self._cond_func(variables)
+                and self._condition is not None
+                and not self._condition(variables)
             ):
                 self._logger.debug(
                     "Conditions not met, aborting automation. Condition summary: %s",
@@ -1047,12 +1060,12 @@ async def _create_automation_entities(
         )
 
         if CONF_CONDITIONS in config_block:
-            cond_func = await _async_process_if(hass, name, config_block)
+            condition = await _async_process_if(hass, name, config_block)
 
-            if cond_func is None:
+            if condition is None:
                 continue
         else:
-            cond_func = None
+            condition = None
 
         # Add trigger variables to variables
         variables = None
@@ -1070,7 +1083,7 @@ async def _create_automation_entities(
             automation_id,
             name,
             config_block[CONF_TRIGGERS],
-            cond_func,
+            condition,
             action_script,
             initial_state,
             variables,
@@ -1212,7 +1225,7 @@ async def _async_process_if(
     if_configs = config[CONF_CONDITIONS]
 
     try:
-        if_action = await condition.async_conditions_from_config(
+        if_action = await condition_helper.async_conditions_from_config(
             hass, if_configs, LOGGER, name
         )
     except HomeAssistantError as ex:

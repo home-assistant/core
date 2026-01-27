@@ -47,7 +47,7 @@ MCP_DISCOVERY_HEADERS = {
     "MCP-Protocol-Version": "2025-03-26",
 }
 
-EXAMPLE_URL = "http://example/sse"
+EXAMPLE_URL = "http://example/mcp"
 
 
 @dataclass
@@ -122,7 +122,7 @@ async def validate_input(
     except vol.Invalid as error:
         raise InvalidUrl from error
     try:
-        async with mcp_client(url, token_manager=token_manager) as session:
+        async with mcp_client(hass, url, token_manager=token_manager) as session:
             response = await session.initialize()
     except httpx.TimeoutException as error:
         _LOGGER.info("Timeout connecting to MCP server: %s", error)

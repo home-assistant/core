@@ -29,6 +29,7 @@ class MockDeviceListener(DeviceListener):
         hass: HomeAssistant,
         device: CustomerDevice,
         updated_status_properties: dict[str, Any] | None = None,
+        dp_timestamps: dict[str, int] | None = None,
     ) -> None:
         """Mock update device method."""
         property_list: list[str] = []
@@ -40,7 +41,7 @@ class MockDeviceListener(DeviceListener):
                     )
                 device.status[key] = value
                 property_list.append(key)
-        self.update_device(device, property_list)
+        self.update_device(device, property_list, dp_timestamps)
         await hass.async_block_till_done()
 
 
