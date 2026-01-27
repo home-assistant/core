@@ -220,6 +220,13 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("ch4_MIPEX"),
     ),
     AirQEntityDescription(
+        key="mold",
+        translation_key="mold",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("mold"),
+    ),
+    AirQEntityDescription(
         key="n2o",
         device_class=SensorDeviceClass.NITROUS_OXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,

@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from mcstatus import BedrockServer, JavaServer
+from mcstatus import BedrockServer, JavaServer, LegacyServer
 from mcstatus.responses import BedrockStatusResponse, JavaStatusResponse
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -16,6 +16,7 @@ from .const import (
     TEST_BEDROCK_STATUS_RESPONSE,
     TEST_HOST,
     TEST_JAVA_STATUS_RESPONSE,
+    TEST_LEGACY_JAVA_STATUS_RESPONSE,
     TEST_PORT,
 )
 
@@ -36,6 +37,12 @@ from tests.common import async_fire_time_changed
             BedrockServer,
             "lookup",
             TEST_BEDROCK_STATUS_RESPONSE,
+        ),
+        (
+            "legacy_java_mock_config_entry",
+            LegacyServer,
+            "async_lookup",
+            TEST_LEGACY_JAVA_STATUS_RESPONSE,
         ),
     ],
 )
@@ -83,6 +90,12 @@ async def test_binary_sensor(
             BedrockServer,
             "lookup",
             TEST_BEDROCK_STATUS_RESPONSE,
+        ),
+        (
+            "legacy_java_mock_config_entry",
+            LegacyServer,
+            "async_lookup",
+            TEST_LEGACY_JAVA_STATUS_RESPONSE,
         ),
     ],
 )
@@ -134,6 +147,12 @@ async def test_binary_sensor_update(
             BedrockServer,
             "lookup",
             TEST_BEDROCK_STATUS_RESPONSE,
+        ),
+        (
+            "legacy_java_mock_config_entry",
+            LegacyServer,
+            "async_lookup",
+            TEST_LEGACY_JAVA_STATUS_RESPONSE,
         ),
     ],
 )

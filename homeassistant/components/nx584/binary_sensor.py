@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from typing import Any
 
 from nx584 import client as nx584_client
 import requests
@@ -28,8 +29,7 @@ CONF_EXCLUDE_ZONES = "exclude_zones"
 CONF_ZONE_TYPES = "zone_types"
 
 DEFAULT_HOST = "localhost"
-DEFAULT_PORT = "5007"
-DEFAULT_SSL = False
+DEFAULT_PORT = 5007
 
 ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
 
@@ -53,10 +53,10 @@ def setup_platform(
 ) -> None:
     """Set up the NX584 binary sensor platform."""
 
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    exclude = config[CONF_EXCLUDE_ZONES]
-    zone_types = config[CONF_ZONE_TYPES]
+    host: str = config[CONF_HOST]
+    port: int = config[CONF_PORT]
+    exclude: list[int] = config[CONF_EXCLUDE_ZONES]
+    zone_types: dict[int, BinarySensorDeviceClass] = config[CONF_ZONE_TYPES]
 
     try:
         client = nx584_client.Client(f"http://{host}:{port}")
@@ -90,15 +90,12 @@ class NX584ZoneSensor(BinarySensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, zone, zone_type):
+    def __init__(
+        self, zone: dict[str, Any], zone_type: BinarySensorDeviceClass
+    ) -> None:
         """Initialize the nx594 binary sensor."""
         self._zone = zone
-        self._zone_type = zone_type
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return self._zone_type
+        self._attr_device_class = zone_type
 
     @property
     def name(self):
@@ -112,7 +109,7 @@ class NX584ZoneSensor(BinarySensorEntity):
         return self._zone["state"]
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             "zone_number": self._zone["number"],

@@ -101,6 +101,7 @@ async def test_event(
         "time": datetime(2025, 3, 28, 17, 58, 46, tzinfo=UTC),
         "title": "Title",
         "topic": "mytopic",
+        "sequence_id": "Mc3otamDNcpJ",
     }
 
 

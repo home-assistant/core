@@ -1,8 +1,8 @@
 """Support for Ness D8X/D16X devices."""
 
-from collections import namedtuple
 import datetime
 import logging
+from typing import NamedTuple
 
 from nessclient import ArmingMode, ArmingState, Client
 import voluptuous as vol
@@ -25,11 +25,12 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ness_alarm"
-DATA_NESS = "ness_alarm"
+DATA_NESS: HassKey[Client] = HassKey(DOMAIN)
 
 CONF_DEVICE_PORT = "port"
 CONF_INFER_ARMING_STATE = "infer_arming_state"
@@ -44,7 +45,13 @@ DEFAULT_INFER_ARMING_STATE = False
 SIGNAL_ZONE_CHANGED = "ness_alarm.zone_changed"
 SIGNAL_ARMING_STATE_CHANGED = "ness_alarm.arming_state_changed"
 
-ZoneChangedData = namedtuple("ZoneChangedData", ["zone_id", "state"])  # noqa: PYI024
+
+class ZoneChangedData(NamedTuple):
+    """Data for a zone state change."""
+
+    zone_id: int
+    state: bool
+
 
 DEFAULT_ZONE_TYPE = BinarySensorDeviceClass.MOTION
 ZONE_SCHEMA = vol.Schema(

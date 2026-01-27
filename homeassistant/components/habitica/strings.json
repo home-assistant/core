@@ -83,6 +83,9 @@
       "invalid_credentials": "Input is incomplete. You must provide either your login details or an API token",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
+    },
     "step": {
       "advanced": {
         "data": {

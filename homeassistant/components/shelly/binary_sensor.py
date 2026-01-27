@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, cast
 
-from aioshelly.const import RPC_GENERATIONS
+from aioshelly.const import MODEL_FLOOD_G4, RPC_GENERATIONS
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_PLATFORM,
@@ -335,6 +335,7 @@ RPC_SENSORS: Final = {
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         supported=lambda status: status.get("alarm") is not None,
+        models={MODEL_FLOOD_G4},
     ),
     "presence_num_objects": RpcBinarySensorDescription(
         key="presence",

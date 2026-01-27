@@ -1,0 +1,20 @@
+.condition_common: &condition_common
+  target:
+    entity:
+      domain: lawn_mower
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
+
+is_docked: *condition_common
+is_encountering_an_error: *condition_common
+is_mowing: *condition_common
+is_paused: *condition_common
+is_returning: *condition_common

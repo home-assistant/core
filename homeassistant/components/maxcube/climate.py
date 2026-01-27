@@ -192,7 +192,7 @@ class MaxCubeClimate(ClimateEntity):
         self._set_target(None, temp)
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return the current preset mode."""
         if self._device.mode == MAX_DEVICE_MODE_MANUAL:
             if self._device.target_temperature == self._device.comfort_temperature:

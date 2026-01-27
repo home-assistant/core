@@ -16,7 +16,7 @@ from aiohasupervisor.models import GreenOptions, YellowOptions  # noqa: F401
 import voluptuous as vol
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components import panel_custom
+from homeassistant.components import frontend, panel_custom
 from homeassistant.components.homeassistant import async_set_stop_handler
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
@@ -292,6 +292,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         return False
 
     async_load_websocket_api(hass)
+    frontend.async_register_built_in_panel(hass, "app")
 
     host = os.environ["SUPERVISOR"]
     websession = async_get_clientsession(hass)

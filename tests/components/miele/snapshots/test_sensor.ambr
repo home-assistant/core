@@ -355,7 +355,7 @@
     'state': 'own_program',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_rinse_aid_level-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -368,7 +368,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -391,21 +391,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_rinse_aid_level-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rinse aid level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_salt_level-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -418,7 +418,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -441,21 +441,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_salt_level-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Salt level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_1_level-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -468,7 +468,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -491,21 +491,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_1_level-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_1_level_2-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -518,7 +518,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -541,21 +541,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_1_level_2-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_2_level-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -568,7 +568,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -591,21 +591,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_2_level-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_2_level_2-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -618,7 +618,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -641,14 +641,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_2_level_2-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1828,7 +1828,7 @@
     'state': 'off',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_rinse_aid_level-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1841,7 +1841,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1864,21 +1864,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_rinse_aid_level-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rinse aid level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_salt_level-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1891,7 +1891,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1914,21 +1914,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_salt_level-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Salt level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_1_level-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1941,7 +1941,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1964,21 +1964,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_1_level-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_1_level_2-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1991,7 +1991,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2014,21 +2014,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_1_level_2-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_2_level-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2041,7 +2041,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2064,21 +2064,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_2_level-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_2_level_2-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2091,7 +2091,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2114,14 +2114,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_2_level_2-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2487,7 +2487,7 @@
     'state': '-18.0',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_rinse_aid_level-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2500,7 +2500,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2523,21 +2523,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_rinse_aid_level-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rinse aid level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_salt_level-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2550,7 +2550,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2573,21 +2573,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_salt_level-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Salt level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_1_level-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2600,7 +2600,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2623,21 +2623,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_1_level-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_1_level_2-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2650,7 +2650,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2673,21 +2673,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_1_level_2-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_2_level-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2700,7 +2700,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2723,21 +2723,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_2_level-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_2_level_2-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2750,7 +2750,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2773,14 +2773,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_2_level_2-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3376,7 +3376,7 @@
     'state': 'plate_step_boost',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_rinse_aid_level-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3389,7 +3389,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3412,21 +3412,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_rinse_aid_level-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rinse aid level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_salt_level-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3439,7 +3439,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3462,21 +3462,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_salt_level-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Salt level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_1_level-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3489,7 +3489,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3512,21 +3512,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_1_level-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_1_level_2-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3539,7 +3539,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3562,21 +3562,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_1_level_2-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_2_level-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3589,7 +3589,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3612,21 +3612,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_2_level-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_2_level_2-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3639,7 +3639,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3662,14 +3662,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_2_level_2-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3921,7 +3921,7 @@
     'state': 'off',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_rinse_aid_level-entry]
+# name: test_sensor_states[platforms0][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3934,7 +3934,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3957,21 +3957,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_rinse_aid_level-state]
+# name: test_sensor_states[platforms0][sensor.rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rinse aid level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_salt_level-entry]
+# name: test_sensor_states[platforms0][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3984,7 +3984,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4007,21 +4007,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_salt_level-state]
+# name: test_sensor_states[platforms0][sensor.salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Salt level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_twindos_1_level-entry]
+# name: test_sensor_states[platforms0][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4034,7 +4034,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4057,21 +4057,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_twindos_1_level-state]
+# name: test_sensor_states[platforms0][sensor.twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_twindos_2_level-entry]
+# name: test_sensor_states[platforms0][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4084,7 +4084,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4107,14 +4107,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_twindos_2_level-state]
+# name: test_sensor_states[platforms0][sensor.twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6633,7 +6633,7 @@
     'state': 'off',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_rinse_aid_level-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6646,7 +6646,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6669,21 +6669,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_rinse_aid_level-state]
+# name: test_sensor_states_api_push[platforms0][sensor.rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rinse aid level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_salt_level-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6696,7 +6696,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6719,21 +6719,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_salt_level-state]
+# name: test_sensor_states_api_push[platforms0][sensor.salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Salt level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_twindos_1_level-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6746,7 +6746,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6769,21 +6769,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_twindos_1_level-state]
+# name: test_sensor_states_api_push[platforms0][sensor.twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_twindos_2_level-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6796,7 +6796,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6819,14 +6819,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_twindos_2_level-state]
+# name: test_sensor_states_api_push[platforms0][sensor.twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -9100,7 +9100,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_rinse_aid_level-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9113,7 +9113,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9136,21 +9136,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_rinse_aid_level-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rinse aid level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_salt_level-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9163,7 +9163,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9186,21 +9186,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_salt_level-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Salt level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_1_level-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9213,7 +9213,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9236,21 +9236,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_1_level-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_1_level_2-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9263,7 +9263,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9286,21 +9286,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_1_level_2-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_2_level-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9313,7 +9313,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9336,21 +9336,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_2_level-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_2_level_2-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9363,7 +9363,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9386,14 +9386,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_2_level_2-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

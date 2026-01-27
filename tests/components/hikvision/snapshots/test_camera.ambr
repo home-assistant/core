@@ -51,7 +51,7 @@
     'state': 'idle',
   })
 # ---
-# name: test_nvr_entities[camera.front_camera_channel_1-entry]
+# name: test_nvr_entities[2][camera.front_camera_channel_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -87,7 +87,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_nvr_entities[camera.front_camera_channel_1-state]
+# name: test_nvr_entities[2][camera.front_camera_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'access_token': '1caab5c3b3',
@@ -103,7 +103,7 @@
     'state': 'idle',
   })
 # ---
-# name: test_nvr_entities[camera.front_camera_channel_2-entry]
+# name: test_nvr_entities[2][camera.front_camera_channel_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -139,7 +139,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_nvr_entities[camera.front_camera_channel_2-state]
+# name: test_nvr_entities[2][camera.front_camera_channel_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'access_token': '1caab5c3b3',

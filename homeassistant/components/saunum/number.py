@@ -133,11 +133,7 @@ class LeilSaunaNumber(LeilSaunaEntity, NumberEntity):
         except SaunumException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="set_value_failed",
-                translation_placeholders={
-                    "entity": self.entity_description.key,
-                    "value": str(value),
-                },
+                translation_key=f"set_{self.entity_description.key}_failed",
             ) from err
 
         await self.coordinator.async_request_refresh()

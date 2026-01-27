@@ -1,6 +1,5 @@
 """The tests for Philips TV device triggers."""
 
-import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -10,11 +9,6 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_get_device_automations
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 async def test_get_triggers(hass: HomeAssistant, mock_device) -> None:

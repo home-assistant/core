@@ -28,6 +28,7 @@
         "oauth2_authorize_url_timeout": "Timeout generating authorize URL.",
         "oauth2_error": "Received invalid token data.",
         "oauth2_failed": "Error while obtaining access token.",
+        "oauth2_implementation_unavailable": "No OAuth2 implementations are currently available.",
         "oauth2_missing_configuration": "The component is not configured. Please follow the documentation.",
         "oauth2_missing_credentials": "The integration requires application credentials.",
         "oauth2_no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
@@ -84,6 +85,9 @@
         "invalid_host": "Invalid hostname or IP address",
         "timeout_connect": "Timeout establishing connection",
         "unknown": "Unexpected error"
+      },
+      "initiate_flow": {
+        "account": "Add account"
       },
       "title": {
         "oauth2_pick_implementation": "Pick authentication method",

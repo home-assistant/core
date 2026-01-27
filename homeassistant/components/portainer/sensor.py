@@ -301,15 +301,6 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
     @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return (
-            super().available
-            and self.endpoint_id in self.coordinator.data
-            and self.device_name in self.coordinator.data[self.endpoint_id].containers
-        )
-
-    @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.container_data)
@@ -331,11 +322,6 @@ class PortainerEndpointSensor(PortainerEndpointEntity, SensorEntity):
         super().__init__(device_info, coordinator)
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return super().available and self.device_id in self.coordinator.data
 
     @property
     def native_value(self) -> StateType:

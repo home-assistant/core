@@ -355,16 +355,3 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
         """Restore last state."""
         await super().async_added_to_hass()
         await self._async_handle_restored_state()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle update of the data."""
-        self._process_data()
-
-        if not self.available:
-            self.async_write_ha_state()
-            return
-
-        if self.handle_rendered_result(CONF_STATE):
-            self.async_set_context(self.coordinator.data["context"])
-            self.async_write_ha_state()

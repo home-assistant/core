@@ -43,6 +43,7 @@ ATTR_ICON = "icon"
 ATTR_MARKDOWN = "markdown"
 ATTR_PRIORITY = "priority"
 ATTR_TAGS = "tags"
+ATTR_SEQUENCE_ID = "sequence_id"
 
 SERVICE_PUBLISH_SCHEMA = cv.make_entity_service_schema(
     {
@@ -60,6 +61,7 @@ SERVICE_PUBLISH_SCHEMA = cv.make_entity_service_schema(
         vol.Optional(ATTR_EMAIL): vol.Email(),
         vol.Optional(ATTR_CALL): cv.string,
         vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
+        vol.Optional(ATTR_SEQUENCE_ID): cv.string,
     }
 )
 
@@ -82,7 +84,8 @@ async def async_setup_entry(
         SERVICE_PUBLISH_SCHEMA,
         "publish",
         description_placeholders={
-            "markdown_guide_url": "https://www.markdownguide.org/basic-syntax/"
+            "markdown_guide_url": "https://www.markdownguide.org/basic-syntax/",
+            "emoji_reference_url": "https://docs.ntfy.sh/emojis/",
         },
     )
 

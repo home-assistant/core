@@ -67,8 +67,6 @@ from .const import (
     BASE_PLATFORMS,
     FORMAT_DATETIME,
     KEY_DATA_LOGGING as DATA_LOGGING,
-    REQUIRED_NEXT_PYTHON_HA_RELEASE,
-    REQUIRED_NEXT_PYTHON_VER,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .core_config import async_process_ha_core_config
@@ -516,38 +514,6 @@ async def async_from_config_dict(
 
     stop = monotonic()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
-
-    if (
-        REQUIRED_NEXT_PYTHON_HA_RELEASE
-        and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER
-    ):
-        current_python_version = ".".join(str(x) for x in sys.version_info[:3])
-        required_python_version = ".".join(str(x) for x in REQUIRED_NEXT_PYTHON_VER[:2])
-        _LOGGER.warning(
-            (
-                "Support for the running Python version %s is deprecated and "
-                "will be removed in Home Assistant %s; "
-                "Please upgrade Python to %s"
-            ),
-            current_python_version,
-            REQUIRED_NEXT_PYTHON_HA_RELEASE,
-            required_python_version,
-        )
-        issue_registry.async_create_issue(
-            hass,
-            core.DOMAIN,
-            f"python_version_{required_python_version}",
-            is_fixable=False,
-            severity=issue_registry.IssueSeverity.WARNING,
-            breaks_in_ha_version=REQUIRED_NEXT_PYTHON_HA_RELEASE,
-            translation_key="python_version",
-            translation_placeholders={
-                "current_python_version": current_python_version,
-                "required_python_version": required_python_version,
-                "breaks_in_ha_version": REQUIRED_NEXT_PYTHON_HA_RELEASE,
-            },
-        )
-
     return hass
 
 

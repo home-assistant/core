@@ -236,8 +236,8 @@ BINARY_SENSOR_OPTIONS = {
             "on",
             {"one": "on", "two": "off"},
             {},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             {},
         ),
         (
@@ -458,8 +458,8 @@ async def test_config_flow(
         (
             "select",
             {"state": "{{ states('select.one') }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
         ),
         (
             "update",
@@ -734,8 +734,8 @@ async def test_config_flow_device(
             {"state": "{{ states('select.two') }}"},
             ["on", "off"],
             {"one": "on", "two": "off"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             "state",
         ),
         (
@@ -1606,8 +1606,8 @@ async def test_option_flow_sensor_preview_config_entry_removed(
         (
             "select",
             {"state": "{{ states('select.one') }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
         ),
         (
             "switch",

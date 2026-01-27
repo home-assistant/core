@@ -218,10 +218,10 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
     async def _handle_state_update(
         self,
         updated_status_properties: list[str] | None,
-        dp_timestamps: dict | None = None,
+        dp_timestamps: dict[str, int] | None,
     ) -> None:
         if self._dpcode_wrapper.skip_update(
-            self.device, updated_status_properties
+            self.device, updated_status_properties, dp_timestamps
         ) or not (event_data := self._dpcode_wrapper.read_device_status(self.device)):
             return
 

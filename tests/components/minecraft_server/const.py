@@ -8,6 +8,9 @@ from mcstatus.responses import (
     JavaStatusPlayers,
     JavaStatusResponse,
     JavaStatusVersion,
+    LegacyStatusPlayers,
+    LegacyStatusResponse,
+    LegacyStatusVersion,
     RawJavaResponse,
     RawJavaResponsePlayer,
     RawJavaResponsePlayers,
@@ -80,4 +83,11 @@ TEST_BEDROCK_DATA = MinecraftServerData(
     edition="Dummy Edition",
     game_mode="Dummy Game Mode",
     map_name="Dummy Map Name",
+)
+
+TEST_LEGACY_JAVA_STATUS_RESPONSE = LegacyStatusResponse(
+    players=LegacyStatusPlayers(online=3, max=10),
+    version=LegacyStatusVersion(name="1.6.4", protocol=78),
+    motd=Motd.parse("Dummy MOTD"),
+    latency=5,
 )

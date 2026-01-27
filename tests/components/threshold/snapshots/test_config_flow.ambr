@@ -2,7 +2,6 @@
 # name: test_config_flow_preview_success[missing_entity_id]
   dict({
     'attributes': dict({
-      'friendly_name': '',
     }),
     'state': 'unavailable',
   })

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import voluptuous as vol
+from wirelesstagpy import SensorTag, constants as WT_CONSTANTS
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
@@ -16,53 +17,24 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, SIGNAL_BINARY_EVENT_UPDATE
+from . import WirelessTagPlatform
+from .const import SIGNAL_BINARY_EVENT_UPDATE, WIRELESSTAG_DATA
 from .entity import WirelessTagBaseSensor
 from .util import async_migrate_unique_id
-
-# On means in range, Off means out of range
-SENSOR_PRESENCE = "presence"
-
-# On means motion detected, Off means clear
-SENSOR_MOTION = "motion"
-
-# On means open, Off means closed
-SENSOR_DOOR = "door"
-
-# On means temperature become too cold, Off means normal
-SENSOR_COLD = "cold"
-
-# On means hot, Off means normal
-SENSOR_HEAT = "heat"
-
-# On means too dry (humidity), Off means normal
-SENSOR_DRY = "dry"
-
-# On means too wet (humidity), Off means normal
-SENSOR_WET = "wet"
-
-# On means light detected, Off means no light
-SENSOR_LIGHT = "light"
-
-# On means moisture detected (wet), Off means no moisture (dry)
-SENSOR_MOISTURE = "moisture"
-
-# On means tag battery is low, Off means normal
-SENSOR_BATTERY = "battery"
 
 # Sensor types: Name, device_class, push notification type representing 'on',
 # attr to check
 SENSOR_TYPES = {
-    SENSOR_PRESENCE: "Presence",
-    SENSOR_MOTION: "Motion",
-    SENSOR_DOOR: "Door",
-    SENSOR_COLD: "Cold",
-    SENSOR_HEAT: "Heat",
-    SENSOR_DRY: "Too dry",
-    SENSOR_WET: "Too wet",
-    SENSOR_LIGHT: "Light",
-    SENSOR_MOISTURE: "Leak",
-    SENSOR_BATTERY: "Low Battery",
+    WT_CONSTANTS.EVENT_PRESENCE: BinarySensorDeviceClass.PRESENCE,
+    WT_CONSTANTS.EVENT_MOTION: BinarySensorDeviceClass.MOTION,
+    WT_CONSTANTS.EVENT_DOOR: BinarySensorDeviceClass.DOOR,
+    WT_CONSTANTS.EVENT_COLD: BinarySensorDeviceClass.COLD,
+    WT_CONSTANTS.EVENT_HEAT: BinarySensorDeviceClass.HEAT,
+    WT_CONSTANTS.EVENT_DRY: None,
+    WT_CONSTANTS.EVENT_WET: None,
+    WT_CONSTANTS.EVENT_LIGHT: BinarySensorDeviceClass.LIGHT,
+    WT_CONSTANTS.EVENT_MOISTURE: BinarySensorDeviceClass.MOISTURE,
+    WT_CONSTANTS.EVENT_BATTERY: BinarySensorDeviceClass.BATTERY,
 }
 
 
@@ -82,7 +54,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the platform for a WirelessTags."""
-    platform = hass.data[DOMAIN]
+    platform = hass.data[WIRELESSTAG_DATA]
 
     sensors = []
     tags = platform.tags
@@ -99,11 +71,14 @@ async def async_setup_platform(
 class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
     """A binary sensor implementation for WirelessTags."""
 
-    def __init__(self, api, tag, sensor_type):
+    def __init__(
+        self, api: WirelessTagPlatform, tag: SensorTag, sensor_type: str
+    ) -> None:
         """Initialize a binary sensor for a Wireless Sensor Tags."""
         super().__init__(api, tag)
         self._sensor_type = sensor_type
         self._name = f"{self._tag.name} {self.event.human_readable_name}"
+        self._attr_device_class = SENSOR_TYPES[sensor_type]
         self._attr_unique_id = f"{self._uuid}_{self._sensor_type}"
 
     async def async_added_to_hass(self) -> None:
@@ -123,11 +98,6 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
     def is_on(self):
         """Return True if the binary sensor is on."""
         return self._state == STATE_ON
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Return the class of the binary sensor."""
-        return self._sensor_type
 
     @property
     def event(self):

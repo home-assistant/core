@@ -33,18 +33,14 @@ async def async_setup_platform(
 
     configured_zones = discovery_info[CONF_ZONES]
 
-    devices = []
-
-    for zone_config in configured_zones:
-        zone_type = zone_config[CONF_ZONE_TYPE]
-        zone_name = zone_config[CONF_ZONE_NAME]
-        zone_id = zone_config[CONF_ZONE_ID]
-        device = NessZoneBinarySensor(
-            zone_id=zone_id, name=zone_name, zone_type=zone_type
+    async_add_entities(
+        NessZoneBinarySensor(
+            zone_id=zone_config[CONF_ZONE_ID],
+            name=zone_config[CONF_ZONE_NAME],
+            zone_type=zone_config[CONF_ZONE_TYPE],
         )
-        devices.append(device)
-
-    async_add_entities(devices)
+        for zone_config in configured_zones
+    )
 
 
 class NessZoneBinarySensor(BinarySensorEntity):
@@ -52,12 +48,14 @@ class NessZoneBinarySensor(BinarySensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, zone_id, name, zone_type):
+    def __init__(
+        self, zone_id: int, name: str, zone_type: BinarySensorDeviceClass
+    ) -> None:
         """Initialize the binary_sensor."""
         self._zone_id = zone_id
-        self._name = name
-        self._type = zone_type
-        self._state = 0
+        self._attr_name = name
+        self._attr_device_class = zone_type
+        self._attr_is_on = False
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -67,24 +65,9 @@ class NessZoneBinarySensor(BinarySensorEntity):
             )
         )
 
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if sensor is on."""
-        return self._state == 1
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return self._type
-
     @callback
-    def _handle_zone_change(self, data: ZoneChangedData):
+    def _handle_zone_change(self, data: ZoneChangedData) -> None:
         """Handle zone state update."""
         if self._zone_id == data.zone_id:
-            self._state = data.state
+            self._attr_is_on = data.state
             self.async_write_ha_state()

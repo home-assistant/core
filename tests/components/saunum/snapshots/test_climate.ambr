@@ -17,6 +17,12 @@
       ]),
       'max_temp': 100,
       'min_temp': 40,
+      'preset_modes': list([
+        'type_1',
+        'type_2',
+        'type_3',
+      ]),
+      'target_temp_step': 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -42,8 +48,8 @@
     'platform': 'saunum',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 9>,
-    'translation_key': None,
+    'supported_features': <ClimateEntityFeature: 25>,
+    'translation_key': 'saunum_climate',
     'unique_id': '01K98T2T85R5GN0ZHYV25VFMMA',
     'unit_of_measurement': None,
   })
@@ -51,7 +57,7 @@
 # name: test_entities[climate.saunum_leil-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 75.0,
+      'current_temperature': 75,
       'fan_mode': 'medium',
       'fan_modes': list([
         'off',
@@ -67,7 +73,14 @@
       ]),
       'max_temp': 100,
       'min_temp': 40,
-      'supported_features': <ClimateEntityFeature: 9>,
+      'preset_mode': 'type_1',
+      'preset_modes': list([
+        'type_1',
+        'type_2',
+        'type_3',
+      ]),
+      'supported_features': <ClimateEntityFeature: 25>,
+      'target_temp_step': 1.0,
       'temperature': 80,
     }),
     'context': <ANY>,

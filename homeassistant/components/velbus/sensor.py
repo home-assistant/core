@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from velbusaio.channels import ButtonCounter, LightSensor, SensorNumber, Temperature
+from velbusaio.channels import ButtonCounter, SensorNumber, Temperature
+from velbusaio.properties import LightValue
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,7 +22,7 @@ from .entity import VelbusEntity
 
 PARALLEL_UPDATES = 0
 
-type VelbusSensorChannel = ButtonCounter | Temperature | LightSensor | SensorNumber
+type VelbusSensorChannel = ButtonCounter | Temperature | LightValue | SensorNumber
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -31,9 +32,7 @@ class VelbusSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[VelbusSensorChannel], float | None] = lambda channel: float(
         channel.get_state()
     )
-    unit_fn: Callable[[VelbusSensorChannel], str | None] = (
-        lambda channel: channel.get_unit()
-    )
+    unit_fn: Callable[[VelbusSensorChannel], str | None] | None = None
     unique_id_suffix: str = ""
 
 
@@ -42,15 +41,18 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        unit_fn=lambda channel: channel.get_unit(),
     ),
     "temperature": VelbusSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        unit_fn=lambda channel: channel.get_unit(),
     ),
     "measurement": VelbusSensorEntityDescription(
         key="measurement",
         state_class=SensorStateClass.MEASUREMENT,
+        unit_fn=lambda channel: channel.get_unit(),
     ),
     "counter": VelbusSensorEntityDescription(
         key="counter",
@@ -108,7 +110,8 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         super().__init__(channel)
         self.entity_description = description
         self._is_counter = is_counter
-        self._attr_native_unit_of_measurement = description.unit_fn(channel)
+        if description.unit_fn:
+            self._attr_native_unit_of_measurement = description.unit_fn(channel)
         self._attr_unique_id = f"{self._attr_unique_id}{description.unique_id_suffix}"
 
         # Modify name for counter entities

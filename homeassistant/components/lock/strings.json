@@ -1,7 +1,51 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted locks.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted locks to trigger on.",
     "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_jammed": {
+      "description": "Tests if one or more locks are jammed.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lock::common::condition_behavior_description%]",
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Lock is jammed"
+    },
+    "is_locked": {
+      "description": "Tests if one or more locks are locked.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lock::common::condition_behavior_description%]",
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Lock is locked"
+    },
+    "is_open": {
+      "description": "Tests if one or more locks are open.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lock::common::condition_behavior_description%]",
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Lock is open"
+    },
+    "is_unlocked": {
+      "description": "Tests if one or more locks are unlocked.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lock::common::condition_behavior_description%]",
+          "name": "[%key:component::lock::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Lock is unlocked"
+    }
   },
   "device_automation": {
     "action_type": {
@@ -55,6 +99,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",

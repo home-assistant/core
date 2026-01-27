@@ -159,6 +159,11 @@ class FritzDevice:
         """Return device wan access."""
         return self._wan_access
 
+    @wan_access.setter
+    def wan_access(self, allowed: bool) -> None:
+        """Set device wan access."""
+        self._wan_access = allowed
+
 
 class SwitchInfo(TypedDict):
     """FRITZ!Box switch info class."""
