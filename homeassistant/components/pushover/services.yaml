@@ -1,0 +1,6 @@
+cancel:
+  fields:
+    data:
+      example: '{ "tag": "tagname" }'
+      selector:
+        object:
