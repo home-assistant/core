@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evening',
     'options': dict({
     }),
     'original_device_class': None,
@@ -94,6 +95,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Evening enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -144,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extra water on hot days',
     'options': dict({
     }),
     'original_device_class': None,
@@ -193,6 +196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flower box',
     'options': dict({
     }),
     'original_device_class': None,
@@ -256,6 +260,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flower box enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -306,6 +311,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Freeze protection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -355,6 +361,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Landscaping',
     'options': dict({
     }),
     'original_device_class': None,
@@ -418,6 +425,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Landscaping enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -468,6 +476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Morning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -542,6 +551,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Morning enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -592,6 +602,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test',
     'options': dict({
     }),
     'original_device_class': None,
@@ -655,6 +666,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Test enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -705,6 +717,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 10',
     'options': dict({
     }),
     'original_device_class': None,
@@ -768,6 +781,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 10 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -818,6 +832,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 11',
     'options': dict({
     }),
     'original_device_class': None,
@@ -881,6 +896,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 11 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -931,6 +947,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 12',
     'options': dict({
     }),
     'original_device_class': None,
@@ -994,6 +1011,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 12 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1044,6 +1062,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 4',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1107,6 +1126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 4 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1157,6 +1177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 5',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1220,6 +1241,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 5 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1270,6 +1292,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 6',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1333,6 +1356,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 6 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1383,6 +1407,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 7',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1446,6 +1471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 7 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1496,6 +1522,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 8',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1559,6 +1586,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 8 enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1609,6 +1637,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 9',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1672,6 +1701,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone 9 enabled',
     'options': dict({
     }),
     'original_device_class': None,

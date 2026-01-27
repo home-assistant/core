@@ -141,7 +141,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 self._all_region_codes_sorted = swap_key_value(
-                    await nina.getAllRegionalCodes()
+                    await nina.get_all_regional_codes()
                 )
             except ApiError:
                 return self.async_abort(reason="no_fetch")
@@ -221,7 +221,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
             try:
                 self._all_region_codes_sorted = swap_key_value(
-                    await nina.getAllRegionalCodes()
+                    await nina.get_all_regional_codes()
                 )
             except ApiError:
                 return self.async_abort(reason="no_fetch")

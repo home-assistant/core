@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Keypad',
     'options': dict({
     }),
     'original_device_class': None,

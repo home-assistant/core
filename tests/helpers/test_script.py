@@ -4210,6 +4210,16 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
                 },
                 {"action": "test.script", "data": {"without": "label_id"}},
                 {
+                    "condition": "light.is_on",
+                    "target": {"label_id": "label_condition_target"},
+                },
+                {
+                    "condition": "light.is_on",
+                    "target": {
+                        "label_id": ["label_condition_list_1", "label_condition_list_2"]
+                    },
+                },
+                {
                     "choose": [
                         {
                             "conditions": "{{ true == false }}",
@@ -4221,7 +4231,10 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
                             ],
                         },
                         {
-                            "conditions": "{{ true == false }}",
+                            "conditions": {
+                                "condition": "light.is_on",
+                                "target": {"label_id": "label_choice_2_cond"},
+                            },
                             "sequence": [
                                 {
                                     "action": "test.script",
@@ -4240,7 +4253,10 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
                 {"event": "test_event"},
                 {"delay": "{{ delay_period }}"},
                 {
-                    "if": [],
+                    "if": {
+                        "condition": "light.is_on",
+                        "target": {"label_id": "label_if_cond"},
+                    },
                     "then": [
                         {
                             "action": "test.script",
@@ -4277,17 +4293,22 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
     )
     assert script_obj.referenced_labels == {
         "label_choice_1_seq",
+        "label_choice_2_cond",
         "label_choice_2_seq",
+        "label_condition_list_1",
+        "label_condition_list_2",
+        "label_condition_target",
         "label_default_seq",
+        "label_if_cond",
+        "label_if_else",
+        "label_if_then",
         "label_in_data_template",
         "label_in_target",
+        "label_parallel",
+        "label_sequence",
         "label_service_list_1",
         "label_service_list_2",
         "label_service_not_list",
-        "label_if_then",
-        "label_if_else",
-        "label_parallel",
-        "label_sequence",
     }
     # Test we cache results.
     assert script_obj.referenced_labels is script_obj.referenced_labels
@@ -4321,6 +4342,16 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
                 },
                 {"action": "test.script", "data": {"without": "floor_id"}},
                 {
+                    "condition": "light.is_on",
+                    "target": {"floor_id": "floor_condition_target"},
+                },
+                {
+                    "condition": "light.is_on",
+                    "target": {
+                        "floor_id": ["floor_condition_list_1", "floor_condition_list_2"]
+                    },
+                },
+                {
                     "choose": [
                         {
                             "conditions": "{{ true == false }}",
@@ -4332,7 +4363,10 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
                             ],
                         },
                         {
-                            "conditions": "{{ true == false }}",
+                            "conditions": {
+                                "condition": "light.is_on",
+                                "target": {"floor_id": "floor_choice_2_cond"},
+                            },
                             "sequence": [
                                 {
                                     "action": "test.script",
@@ -4351,7 +4385,10 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
                 {"event": "test_event"},
                 {"delay": "{{ delay_period }}"},
                 {
-                    "if": [],
+                    "if": {
+                        "condition": "light.is_on",
+                        "target": {"floor_id": "floor_if_cond"},
+                    },
                     "then": [
                         {
                             "action": "test.script",
@@ -4388,16 +4425,21 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
     )
     assert script_obj.referenced_floors == {
         "floor_choice_1_seq",
+        "floor_choice_2_cond",
         "floor_choice_2_seq",
+        "floor_condition_list_1",
+        "floor_condition_list_2",
+        "floor_condition_target",
         "floor_default_seq",
+        "floor_if_cond",
+        "floor_if_else",
+        "floor_if_then",
         "floor_in_data_template",
         "floor_in_target",
-        "floor_service_list",
-        "floor_service_not_list",
-        "floor_if_then",
-        "floor_if_else",
         "floor_parallel",
         "floor_sequence",
+        "floor_service_list",
+        "floor_service_not_list",
     }
     # Test we cache results.
     assert script_obj.referenced_floors is script_obj.referenced_floors
@@ -4431,6 +4473,16 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
                 },
                 {"action": "test.script", "data": {"without": "area_id"}},
                 {
+                    "condition": "light.is_on",
+                    "target": {"area_id": "area_condition_target"},
+                },
+                {
+                    "condition": "light.is_on",
+                    "target": {
+                        "area_id": ["area_condition_list_1", "area_condition_list_2"]
+                    },
+                },
+                {
                     "choose": [
                         {
                             "conditions": "{{ true == false }}",
@@ -4442,7 +4494,10 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
                             ],
                         },
                         {
-                            "conditions": "{{ true == false }}",
+                            "conditions": {
+                                "condition": "light.is_on",
+                                "target": {"area_id": "area_choice_2_cond"},
+                            },
                             "sequence": [
                                 {
                                     "action": "test.script",
@@ -4461,7 +4516,10 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
                 {"event": "test_event"},
                 {"delay": "{{ delay_period }}"},
                 {
-                    "if": [],
+                    "if": {
+                        "condition": "light.is_on",
+                        "target": {"area_id": "area_if_cond"},
+                    },
                     "then": [
                         {
                             "action": "test.script",
@@ -4498,16 +4556,21 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
     )
     assert script_obj.referenced_areas == {
         "area_choice_1_seq",
+        "area_choice_2_cond",
         "area_choice_2_seq",
+        "area_condition_list_1",
+        "area_condition_list_2",
+        "area_condition_target",
         "area_default_seq",
+        "area_if_cond",
+        "area_if_else",
+        "area_if_then",
         "area_in_data_template",
         "area_in_target",
-        "area_service_list",
-        "area_service_not_list",
-        "area_if_then",
-        "area_if_else",
         "area_parallel",
         "area_sequence",
+        "area_service_list",
+        "area_service_not_list",
         # 'area_service_template',  # no area extraction from template
     }
     # Test we cache results.
@@ -4609,6 +4672,19 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "condition": "light.is_on",
+                    "target": {"entity_id": "light.condition_target"},
+                },
+                {
+                    "condition": "light.is_on",
+                    "target": {
+                        "entity_id": [
+                            "light.condition_list_1",
+                            "light.condition_list_2",
+                        ]
+                    },
+                },
+                {
                     "sequence": [
                         {
                             "action": "test.script",
@@ -4626,6 +4702,9 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
         "light.choice_1_seq",
         "light.choice_2_cond",
         "light.choice_2_seq",
+        "light.condition_list_1",
+        "light.condition_list_2",
+        "light.condition_target",
         "light.default_seq",
         "light.direct_entity_referenced",
         "light.entity_in_data_template",
@@ -4655,6 +4734,19 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
                     "condition": "device",
                     "device_id": "condition-dev-id",
                     "domain": "switch",
+                },
+                {
+                    "condition": "light.is_on",
+                    "target": {"device_id": "condition-target-dev-id"},
+                },
+                {
+                    "condition": "light.is_on",
+                    "target": {
+                        "device_id": [
+                            "condition-target-list-1",
+                            "condition-target-list-2",
+                        ]
+                    },
                 },
                 {
                     "action": "test.script",
@@ -4753,6 +4845,9 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
         "choice-2-cond-dev-id",
         "choice-2-seq-device-target",
         "condition-dev-id",
+        "condition-target-dev-id",
+        "condition-target-list-1",
+        "condition-target-list-2",
         "data-string-id",
         "data-template-string-id",
         "default-device-target",

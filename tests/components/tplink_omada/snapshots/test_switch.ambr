@@ -85,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 1 PoE',
     'options': dict({
     }),
     'original_device_class': None,
@@ -133,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port 2 (Renamed Port) PoE',
     'options': dict({
     }),
     'original_device_class': None,

@@ -74,5 +74,5 @@ async def test_sensor_updates_on_hour_tick(
 
     assert (
         hass.states.get("sensor.essent_current_electricity_market_price").state
-        == "0.10417"
+        == "0.24535"
     )

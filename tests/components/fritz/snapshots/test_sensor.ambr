@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connection uptime',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -71,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Download throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -125,6 +127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'External IP',
     'options': dict({
     }),
     'original_device_class': None,
@@ -173,6 +176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'External IPv6',
     'options': dict({
     }),
     'original_device_class': None,
@@ -223,6 +227,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GB received',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -279,6 +284,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GB sent',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -333,6 +339,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -382,6 +389,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link download noise margin',
     'options': dict({
     }),
     'original_device_class': None,
@@ -431,6 +439,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link download power attenuation',
     'options': dict({
     }),
     'original_device_class': None,
@@ -480,6 +489,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link download throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -533,6 +543,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link upload noise margin',
     'options': dict({
     }),
     'original_device_class': None,
@@ -582,6 +593,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link upload power attenuation',
     'options': dict({
     }),
     'original_device_class': None,
@@ -631,6 +643,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Link upload throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -684,6 +697,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max connection download throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -737,6 +751,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max connection upload throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -792,6 +807,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Upload throughput',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -848,6 +864,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

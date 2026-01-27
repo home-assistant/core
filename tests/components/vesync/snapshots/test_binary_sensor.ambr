@@ -378,6 +378,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -411,6 +412,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -509,6 +511,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -542,6 +545,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -640,6 +644,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -673,6 +678,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
