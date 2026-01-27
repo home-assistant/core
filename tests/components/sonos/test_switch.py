@@ -3,13 +3,12 @@
 from copy import copy
 from datetime import timedelta
 import logging
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from soco.exceptions import SoCoException
 
 from homeassistant.components.sonos import DOMAIN
-from homeassistant.components.sonos.alarms import SonosAlarms
 from homeassistant.components.sonos.const import (
     DATA_SONOS_DISCOVERY_MANAGER,
     MODEL_SONOS_ARC_ULTRA,
@@ -47,10 +46,7 @@ from .conftest import (
     create_rendering_control_event,
 )
 
-from tests.common import (
-    MockConfigEntry,  # For mock config entries in HA tests
-    async_fire_time_changed,
-)
+from tests.common import async_fire_time_changed
 
 
 async def test_entity_registry(
@@ -344,6 +340,7 @@ async def test_alarm_change_device(
     device = device_registry.async_get(alarm_14.device_id)
     assert device.name == soco_br.get_speaker_info()["zone_name"]
 
+
 async def test_alarm_update_other_exception_does_not_crash_setup(
     hass: HomeAssistant,
     async_setup_sonos,
@@ -357,20 +354,24 @@ async def test_alarm_update_other_exception_does_not_crash_setup(
 
     # Integration should still load entities
     assert "switch.sonos_alarm_14" not in entity_registry.entities
-@pytest.mark.asyncio
-async def test_alarm_update_exception_logs_warning(  
-    hass: HomeAssistant,  
-    async_setup_sonos,  
-    entity_registry: er.EntityRegistry,  
-    soco: MockSoCo,
-    caplog : pytest.LogCaptureFixture,
-) -> None:  
-    """Test other SoCoExceptions during alarm update causes speaker to not be setup."""  
-    soco.alarmClock.ListAlarms.side_effect = SoCoException("Alarm list UID does not match household")
-    with caplog.at_level(logging.WARNING):
-        await async_setup_sonos()  
-        await hass.async_block_till_done()  
 
-    # Integration should not load entities  
-    assert "switch.sonos_alarm_14" not in entity_registry.entities  
+
+@pytest.mark.asyncio
+async def test_alarm_update_exception_logs_warning(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    entity_registry: er.EntityRegistry,
+    soco: MockSoCo,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test other SoCoExceptions during alarm update causes speaker to not be setup."""
+    soco.alarmClock.ListAlarms.side_effect = SoCoException(
+        "Alarm list UID does not match household"
+    )
+    with caplog.at_level(logging.WARNING):
+        await async_setup_sonos()
+        await hass.async_block_till_done()
+
+    # Integration should not load entities
+    assert "switch.sonos_alarm_14" not in entity_registry.entities
     assert "cannot be updated due to a household mismatch" in caplog.text
