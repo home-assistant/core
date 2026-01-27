@@ -56,7 +56,7 @@ async def test_cellular_and_gps_entities_are_gated_by_model_type(
 ) -> None:
     """Test that cellular entities are only created for SIM-capable models."""
 
-    mock_nrgkick_api.get_info.return_value["general"]["model_type"] = "Gen2"
+    mock_nrgkick_api.get_info.return_value["general"]["model_type"] = "NRGkick Gen2"
 
     await setup_integration(hass, mock_config_entry)
 

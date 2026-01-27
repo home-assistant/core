@@ -2,7 +2,7 @@
   "general": {
     "device_name": "NRGkick Test",
     "serial_number": "TEST123456",
-    "model_type": "Gen2 SIM",
+    "model_type": "NRGkick Gen2 SIM",
     "rated_current": 32.0,
     "json_api_version": "v1"
   },
@@ -12,7 +12,7 @@
     "max_current": 32.0,
     "phase_count": 3
   },
-  "cellular": { "mode": null, "rssi": null, "operator": null },
+  "cellular": { "mode": 3, "rssi": -85, "operator": "Test operator" },
   "grid": {
     "voltage": 230,
     "frequency": 50.0,

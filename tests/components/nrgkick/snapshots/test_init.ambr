@@ -24,7 +24,7 @@
     'labels': set({
     }),
     'manufacturer': 'DiniTech',
-    'model': 'Gen2 SIM',
+    'model': 'NRGkick Gen2 SIM',
     'model_id': None,
     'name': 'NRGkick Test',
     'name_by_user': None,

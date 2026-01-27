@@ -59,7 +59,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'lte_cat_m1',
   })
 # ---
 # name: test_sensor_entities[sensor.nrgkick_test_cellular_operator-entry]
@@ -108,7 +108,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'Test operator',
   })
 # ---
 # name: test_sensor_entities[sensor.nrgkick_test_cellular_signal_strength-entry]
@@ -162,7 +162,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '-85',
   })
 # ---
 # name: test_sensor_entities[sensor.nrgkick_test_charge_count-entry]
