@@ -14,19 +14,16 @@ from electrolux_group_developer_sdk.client.failed_connection_exception import (
     FailedConnectionException,
 )
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .api import ElectroluxApiClient
 from .const import CONF_REFRESH_TOKEN, DOMAIN, NEW_APPLIANCE, USER_AGENT
 from .coordinator import ElectroluxDataUpdateCoordinator
-
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -207,8 +204,3 @@ async def _check_for_new_devices(
 
         if device_entry:
             device_registry.async_remove_device(device_entry.id)
-            persistent_notification.async_create(
-                hass,
-                f"Electrolux appliance {device_entry.name} removed.",
-                title="Electrolux",
-            )

@@ -1,15 +1,11 @@
 {
   "config": {
     "abort": {
-      "added_to_existing_entry": "The appliance is added.",
-      "already_configured": "This Electrolux account is already configured.",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "missing_id": "The appliance id is missing.",
-      "wrong_account": "The account is wrong."
+      "already_configured": "This Electrolux account is already configured."
     },
     "error": {
-      "auth_failed": "Authentication failed. Please check your credentials.",
       "cannot_connect": "Unable to connect to the Electrolux API. Please check credentials and try again.",
+      "invalid_auth": "Authentication failed. Please check your credentials.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -38,13 +34,6 @@
       "appliance_state": {
         "name": "Appliance state"
       },
-      "connection_state": {
-        "name": "Connection state",
-        "state": {
-          "connected": "Connected",
-          "disconnected": "Disconnected"
-        }
-      },
       "display_temperature": {
         "name": "Current temperature"
       },
@@ -64,12 +53,6 @@
           "enabled": "Enabled",
           "not_safety_relevant_enabled": "Not safety relevant enabled"
         }
-      },
-      "running_time": {
-        "name": "Running time"
-      },
-      "start_at": {
-        "name": "Start at"
       }
     }
   }
