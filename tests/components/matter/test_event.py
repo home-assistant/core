@@ -118,3 +118,80 @@ async def test_generic_switch_multi_node(
     )
     state = hass.states.get("event.mock_generic_switch_button_1")
     assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_2"
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_door_lock_event_entity(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test event entity for a DoorLock node."""
+    state = hass.states.get("event.mock_door_lock_lock_event")
+    assert state
+    assert state.state == "unknown"
+    assert set(state.attributes[ATTR_EVENT_TYPES]) == {
+        "door_lock_alarm",
+        "lock_operation",
+        "lock_operation_error",
+    }
+
+    # Test LockOperation event (event_id=2)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            cluster_id=257,
+            event_id=2,
+            event_number=0,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data={"operationSource": 7, "userIndex": 1},
+        ),
+    )
+    state = hass.states.get("event.mock_door_lock_lock_event")
+    assert state.attributes[ATTR_EVENT_TYPE] == "lock_operation"
+
+    # Test LockOperationError event (event_id=3)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            cluster_id=257,
+            event_id=3,
+            event_number=1,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data={"operationSource": 3, "operationError": 1},
+        ),
+    )
+    state = hass.states.get("event.mock_door_lock_lock_event")
+    assert state.attributes[ATTR_EVENT_TYPE] == "lock_operation_error"
+
+    # Test DoorLockAlarm event (event_id=0)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            cluster_id=257,
+            event_id=0,
+            event_number=2,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data={"alarmCode": 0},
+        ),
+    )
+    state = hass.states.get("event.mock_door_lock_lock_event")
+    assert state.attributes[ATTR_EVENT_TYPE] == "door_lock_alarm"

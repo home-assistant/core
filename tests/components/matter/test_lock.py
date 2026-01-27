@@ -84,7 +84,7 @@ async def test_lock(
 
     state = hass.states.get("lock.mock_door_lock")
     assert state
-    assert state.state == LockState.UNLOCKED
+    assert state.state == LockState.JAMMED
 
     set_node_attribute(matter_node, 1, 257, 0, 2)
     await trigger_subscription_callback(hass, matter_client)
@@ -253,7 +253,7 @@ async def test_lock_with_unbolt(
 
     state = hass.states.get("lock.mock_door_lock_with_unbolt")
     assert state
-    assert state.state == LockState.UNLOCKED
+    assert state.state == LockState.JAMMED
 
     set_node_attribute(matter_node, 1, 257, 0, 3)
     await trigger_subscription_callback(hass, matter_client)
@@ -261,6 +261,90 @@ async def test_lock_with_unbolt(
     state = hass.states.get("lock.mock_door_lock_with_unbolt")
     assert state
     assert state.state == LockState.OPEN
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_lock_not_fully_locked_transitions(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test NotFullyLocked state transitions."""
+    # Set to NotFullyLocked (value 0)
+    set_node_attribute(matter_node, 1, 257, 0, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == LockState.JAMMED
+
+    # Transition from JAMMED to LOCKED
+    set_node_attribute(matter_node, 1, 257, 0, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == LockState.LOCKED
+
+    # Back to NotFullyLocked
+    set_node_attribute(matter_node, 1, 257, 0, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == LockState.JAMMED
+
+    # Transition from JAMMED to UNLOCKED
+    set_node_attribute(matter_node, 1, 257, 0, 2)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("lock.mock_door_lock")
+    assert state
+    assert state.state == LockState.UNLOCKED
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_lock_event_attribution_with_user(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test lock event attribution includes user index."""
+    # Test with userIndex present
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            cluster_id=257,
+            event_id=2,
+            event_number=0,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data={"operationSource": 3, "userIndex": 5},
+        ),
+    )
+    state = hass.states.get("lock.mock_door_lock")
+    assert state.attributes[ATTR_CHANGED_BY] == "Keypad (User 5)"
+
+    # Test without userIndex (backward compatible)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            cluster_id=257,
+            event_id=2,
+            event_number=1,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data={"operationSource": 7},
+        ),
+    )
+    state = hass.states.get("lock.mock_door_lock")
+    assert state.attributes[ATTR_CHANGED_BY] == "Remote"
 
 
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
@@ -321,3 +405,113 @@ async def test_clear_lock_usercode(
         ),
         timed_request_timeout_ms=1000,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_get_lock_user(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test getting user info from a Matter lock."""
+    # Mock the response for an existing user
+    mock_response = MagicMock()
+    mock_response.userName = "Test User"
+    mock_response.userUniqueID = 1234
+    mock_response.userStatus = 1
+    mock_response.userType = 0
+    mock_response.credentialRule = 0
+    mock_response.nextUserIndex = 2
+    matter_client.send_device_command.return_value = mock_response
+
+    response = await hass.services.async_call(
+        "matter",
+        "get_lock_user",
+        {
+            "entity_id": "lock.mock_door_lock",
+            "user_index": 1,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    result = response["lock.mock_door_lock"]
+    assert result["exists"] is True
+    assert result["user_name"] == "Test User"
+    assert result["user_unique_id"] == 1234
+    assert result["user_index"] == 1
+    assert result["next_user_index"] == 2
+    assert matter_client.send_device_command.call_count == 1
+    matter_client.send_device_command.reset_mock()
+
+    # Mock the response for a non-existing user (None response)
+    matter_client.send_device_command.return_value = None
+
+    response = await hass.services.async_call(
+        "matter",
+        "get_lock_user",
+        {
+            "entity_id": "lock.mock_door_lock",
+            "user_index": 99,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    result = response["lock.mock_door_lock"]
+    assert result["exists"] is False
+    assert result["user_index"] == 99
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_get_credential_status(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test getting credential status from a Matter lock."""
+    # Mock the response for an existing credential
+    mock_response = MagicMock()
+    mock_response.credentialExists = True
+    mock_response.userIndex = 1
+    mock_response.creatorFabricIndex = 1
+    mock_response.lastModifiedFabricIndex = 1
+    mock_response.nextCredentialIndex = 2
+    matter_client.send_device_command.return_value = mock_response
+
+    response = await hass.services.async_call(
+        "matter",
+        "get_credential_status",
+        {
+            "entity_id": "lock.mock_door_lock",
+            "credential_type": 1,
+            "credential_index": 1,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    result = response["lock.mock_door_lock"]
+    assert result["exists"] is True
+    assert result["user_index"] == 1
+    assert result["credential_type"] == 1
+    assert result["credential_index"] == 1
+    assert result["next_credential_index"] == 2
+    assert matter_client.send_device_command.call_count == 1
+    matter_client.send_device_command.reset_mock()
+
+    # Mock the response for a non-existing credential (None response)
+    matter_client.send_device_command.return_value = None
+
+    response = await hass.services.async_call(
+        "matter",
+        "get_credential_status",
+        {
+            "entity_id": "lock.mock_door_lock",
+            "credential_type": 1,
+            "credential_index": 99,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    result = response["lock.mock_door_lock"]
+    assert result["exists"] is False
+    assert result["credential_type"] == 1
+    assert result["credential_index"] == 99

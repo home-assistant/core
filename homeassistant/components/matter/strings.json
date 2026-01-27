@@ -169,6 +169,18 @@
             }
           }
         }
+      },
+      "door_lock": {
+        "name": "Lock event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "door_lock_alarm": "Alarm",
+              "lock_operation": "Lock operation",
+              "lock_operation_error": "Lock operation error"
+            }
+          }
+        }
       }
     },
     "fan": {
@@ -660,6 +672,30 @@
         }
       },
       "name": "Clear lock usercode"
+    },
+    "get_lock_user": {
+      "description": "Gets user information from a Matter lock.",
+      "fields": {
+        "user_index": {
+          "description": "The user index to query (1-65534).",
+          "name": "User index"
+        }
+      },
+      "name": "Get lock user"
+    },
+    "get_credential_status": {
+      "description": "Gets credential status from a Matter lock.",
+      "fields": {
+        "credential_type": {
+          "description": "The credential type (0=ProgrammingPIN, 1=PIN, 2=RFID, 3=Fingerprint, 4=FingerVein, 5=Face).",
+          "name": "Credential type"
+        },
+        "credential_index": {
+          "description": "The credential index to query.",
+          "name": "Credential index"
+        }
+      },
+      "name": "Get credential status"
     }
   }
 }

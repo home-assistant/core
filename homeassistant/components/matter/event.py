@@ -134,6 +134,57 @@ class MatterEventEntity(MatterEntity, EventEntity):
         self.async_write_ha_state()
 
 
+# DoorLock event type mapping
+DOOR_LOCK_EVENT_TYPES_MAP = {
+    # mapping from raw DoorLock event id's to translation keys
+    0: "door_lock_alarm",  # clusters.DoorLock.Events.DoorLockAlarm
+    2: "lock_operation",  # clusters.DoorLock.Events.LockOperation
+    3: "lock_operation_error",  # clusters.DoorLock.Events.LockOperationError
+}
+
+
+class MatterDoorLockEventEntity(MatterEntity, EventEntity):
+    """Representation of a Matter DoorLock Event entity."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the entity."""
+        super().__init__(*args, **kwargs)
+        self._attr_event_types = list(DOOR_LOCK_EVENT_TYPES_MAP.values())
+
+    async def async_added_to_hass(self) -> None:
+        """Handle being added to Home Assistant."""
+        await super().async_added_to_hass()
+
+        # subscribe to NodeEvent events
+        self._unsubscribes.append(
+            self.matter_client.subscribe_events(
+                callback=self._on_matter_node_event,
+                event_filter=EventType.NODE_EVENT,
+                node_filter=self._endpoint.node.node_id,
+            )
+        )
+
+    def _update_from_device(self) -> None:
+        """Call when Node attribute(s) changed."""
+
+    @callback
+    def _on_matter_node_event(
+        self,
+        event: EventType,
+        data: MatterNodeEvent,
+    ) -> None:
+        """Call on NodeEvent."""
+        if data.endpoint_id != self._endpoint.endpoint_id:
+            return
+        if data.cluster_id != clusters.DoorLock.id:
+            return
+        event_type = DOOR_LOCK_EVENT_TYPES_MAP.get(data.event_id)
+        if event_type is None or event_type not in self.event_types:
+            return
+        self._trigger_event(event_type, data.data)
+        self.async_write_ha_state()
+
+
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
@@ -154,5 +205,15 @@ DISCOVERY_SCHEMAS = [
             clusters.FixedLabel.Attributes.LabelList,
         ),
         allow_multi=True,  # also used for sensor (current position) entity
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.EVENT,
+        entity_description=MatterEventEntityDescription(
+            key="DoorLockEvent",
+            translation_key="door_lock",
+        ),
+        entity_class=MatterDoorLockEventEntity,
+        required_attributes=(clusters.DoorLock.Attributes.LockState,),
+        allow_multi=True,  # also used for lock entity
     ),
 ]

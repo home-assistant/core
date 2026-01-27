@@ -106,9 +106,15 @@ class MatterLock(MatterEntity, LockEntity):
             ):  # Lock cluster event 2
                 # update the changed_by attribute to indicate lock operation source
                 operation_source: int = node_event_data.get("operationSource", -1)
-                self._attr_changed_by = DOOR_LOCK_OPERATION_SOURCE.get(
+                source_text = DOOR_LOCK_OPERATION_SOURCE.get(
                     operation_source, "Unknown"
                 )
+                # include user index if available for attribution
+                user_index: int | None = node_event_data.get("userIndex")
+                if user_index is not None:
+                    self._attr_changed_by = f"{source_text} (User {user_index})"
+                else:
+                    self._attr_changed_by = source_text
                 self.async_write_ha_state()
 
     @property
@@ -214,6 +220,61 @@ class MatterLock(MatterEntity, LockEntity):
             timed_request_timeout_ms=1000,
         )
 
+    async def async_get_user(self, user_index: int) -> dict[str, Any]:
+        """Get user information from the lock."""
+        result = await self.matter_client.send_device_command(
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
+            command=clusters.DoorLock.Commands.GetUser(
+                userIndex=user_index,
+            ),
+        )
+        if result is None:
+            return {"user_index": user_index, "exists": False}
+        return {
+            "user_index": user_index,
+            "exists": True,
+            "user_name": getattr(result, "userName", None),
+            "user_unique_id": getattr(result, "userUniqueID", None),
+            "user_status": getattr(result, "userStatus", None),
+            "user_type": getattr(result, "userType", None),
+            "credential_rule": getattr(result, "credentialRule", None),
+            "next_user_index": getattr(result, "nextUserIndex", None),
+        }
+
+    async def async_get_credential_status(
+        self, credential_type: int, credential_index: int
+    ) -> dict[str, Any]:
+        """Get credential status from the lock."""
+        credential = clusters.DoorLock.Structs.CredentialStruct(
+            credentialType=credential_type,
+            credentialIndex=credential_index,
+        )
+        result = await self.matter_client.send_device_command(
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
+            command=clusters.DoorLock.Commands.GetCredentialStatus(
+                credential=credential,
+            ),
+        )
+        if result is None:
+            return {
+                "credential_type": credential_type,
+                "credential_index": credential_index,
+                "exists": False,
+            }
+        return {
+            "credential_type": credential_type,
+            "credential_index": credential_index,
+            "exists": getattr(result, "credentialExists", False),
+            "user_index": getattr(result, "userIndex", None),
+            "creator_fabric_index": getattr(result, "creatorFabricIndex", None),
+            "last_modified_fabric_index": getattr(
+                result, "lastModifiedFabricIndex", None
+            ),
+            "next_credential_index": getattr(result, "nextCredentialIndex", None),
+        }
+
     @callback
     def _update_from_device(self) -> None:
         """Update the entity from the device."""
@@ -232,20 +293,25 @@ class MatterLock(MatterEntity, LockEntity):
         if lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
             self._attr_is_locked = False
             self._attr_is_open = True
+            self._attr_is_jammed = False
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
             self._attr_is_locked = True
             self._attr_is_open = False
-        elif lock_state in (
-            clusters.DoorLock.Enums.DlLockState.kUnlocked,
-            clusters.DoorLock.Enums.DlLockState.kNotFullyLocked,
-        ):
+            self._attr_is_jammed = False
+        elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlocked:
             self._attr_is_locked = False
             self._attr_is_open = False
+            self._attr_is_jammed = False
+        elif lock_state == clusters.DoorLock.Enums.DlLockState.kNotFullyLocked:
+            self._attr_is_locked = False
+            self._attr_is_open = False
+            self._attr_is_jammed = True
         else:
             # Treat any other state as unknown.
             # NOTE: A null state can happen during device startup.
             self._attr_is_locked = None
             self._attr_is_open = None
+            self._attr_is_jammed = None
 
     @callback
     def _reset_optimistic_state(self, write_state: bool = True) -> None:

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_events[aqara_sensor_w100][event.climate_sensor_w100_button_3-entry]
+# name: test_events[aqara_sensor_w100][event.climate_sensor_w100_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -19,7 +19,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.climate_sensor_w100_button_3',
+    'entity_id': 'event.climate_sensor_w100_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -31,7 +31,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (3)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -41,7 +41,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[aqara_sensor_w100][event.climate_sensor_w100_button_3-state]
+# name: test_events[aqara_sensor_w100][event.climate_sensor_w100_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -52,17 +52,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Climate Sensor W100 Button (3)',
+      'friendly_name': 'Climate Sensor W100 None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.climate_sensor_w100_button_3',
+    'entity_id': 'event.climate_sensor_w100_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[aqara_sensor_w100][event.climate_sensor_w100_button_4-entry]
+# name: test_events[aqara_sensor_w100][event.climate_sensor_w100_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -82,7 +82,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.climate_sensor_w100_button_4',
+    'entity_id': 'event.climate_sensor_w100_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -94,7 +94,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (4)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -104,7 +104,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[aqara_sensor_w100][event.climate_sensor_w100_button_4-state]
+# name: test_events[aqara_sensor_w100][event.climate_sensor_w100_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -115,17 +115,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Climate Sensor W100 Button (4)',
+      'friendly_name': 'Climate Sensor W100 None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.climate_sensor_w100_button_4',
+    'entity_id': 'event.climate_sensor_w100_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[aqara_sensor_w100][event.climate_sensor_w100_button_5-entry]
+# name: test_events[aqara_sensor_w100][event.climate_sensor_w100_none_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -145,7 +145,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.climate_sensor_w100_button_5',
+    'entity_id': 'event.climate_sensor_w100_none_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -157,7 +157,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (5)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -167,7 +167,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[aqara_sensor_w100][event.climate_sensor_w100_button_5-state]
+# name: test_events[aqara_sensor_w100][event.climate_sensor_w100_none_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -178,17 +178,197 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Climate Sensor W100 Button (5)',
+      'friendly_name': 'Climate Sensor W100 None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.climate_sensor_w100_button_5',
+    'entity_id': 'event.climate_sensor_w100_none_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[generic_switch][event.mock_generic_switch_button-entry]
+# name: test_events[aqara_u200][event.aqara_smart_lock_u200_none-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'door_lock_alarm',
+        'lock_operation',
+        'lock_operation_error',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.aqara_smart_lock_u200_none',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock',
+    'unique_id': '00000000000004D2-0000000000000014-MatterNodeDevice-1-DoorLockEvent-257-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[aqara_u200][event.aqara_smart_lock_u200_none-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'door_lock_alarm',
+        'lock_operation',
+        'lock_operation_error',
+      ]),
+      'friendly_name': 'Aqara Smart Lock U200 None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.aqara_smart_lock_u200_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[door_lock][event.mock_door_lock_none-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'door_lock_alarm',
+        'lock_operation',
+        'lock_operation_error',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.mock_door_lock_none',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockEvent-257-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[door_lock][event.mock_door_lock_none-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'door_lock_alarm',
+        'lock_operation',
+        'lock_operation_error',
+      ]),
+      'friendly_name': 'Mock Door Lock None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.mock_door_lock_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[door_lock_with_unbolt][event.mock_door_lock_with_unbolt_none-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'door_lock_alarm',
+        'lock_operation',
+        'lock_operation_error',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.mock_door_lock_with_unbolt_none',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockEvent-257-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[door_lock_with_unbolt][event.mock_door_lock_with_unbolt_none-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'door_lock_alarm',
+        'lock_operation',
+        'lock_operation_error',
+      ]),
+      'friendly_name': 'Mock Door Lock with unbolt None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.mock_door_lock_with_unbolt_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[generic_switch][event.mock_generic_switch_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -208,7 +388,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.mock_generic_switch_button',
+    'entity_id': 'event.mock_generic_switch_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -220,7 +400,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -230,7 +410,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[generic_switch][event.mock_generic_switch_button-state]
+# name: test_events[generic_switch][event.mock_generic_switch_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -241,17 +421,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Mock Generic Switch Button',
+      'friendly_name': 'Mock Generic Switch None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.mock_generic_switch_button',
+    'entity_id': 'event.mock_generic_switch_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[generic_switch_multi][event.mock_generic_switch_button_1-entry]
+# name: test_events[generic_switch_multi][event.mock_generic_switch_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -271,7 +451,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.mock_generic_switch_button_1',
+    'entity_id': 'event.mock_generic_switch_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -283,7 +463,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (1)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -293,7 +473,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[generic_switch_multi][event.mock_generic_switch_button_1-state]
+# name: test_events[generic_switch_multi][event.mock_generic_switch_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -304,17 +484,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Mock Generic Switch Button (1)',
+      'friendly_name': 'Mock Generic Switch None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.mock_generic_switch_button_1',
+    'entity_id': 'event.mock_generic_switch_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[generic_switch_multi][event.mock_generic_switch_button_2-entry]
+# name: test_events[generic_switch_multi][event.mock_generic_switch_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -336,7 +516,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.mock_generic_switch_button_2',
+    'entity_id': 'event.mock_generic_switch_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -348,7 +528,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (2)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -358,7 +538,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[generic_switch_multi][event.mock_generic_switch_button_2-state]
+# name: test_events[generic_switch_multi][event.mock_generic_switch_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -371,17 +551,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Mock Generic Switch Button (2)',
+      'friendly_name': 'Mock Generic Switch None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.mock_generic_switch_button_2',
+    'entity_id': 'event.mock_generic_switch_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_1-entry]
+# name: test_events[haojai_switch][event.hjmt_6b_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -401,7 +581,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.hjmt_6b_button_1',
+    'entity_id': 'event.hjmt_6b_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -413,7 +593,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (1)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -423,7 +603,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_1-state]
+# name: test_events[haojai_switch][event.hjmt_6b_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -434,17 +614,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'HJMT-6B Button (1)',
+      'friendly_name': 'HJMT-6B None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.hjmt_6b_button_1',
+    'entity_id': 'event.hjmt_6b_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_2-entry]
+# name: test_events[haojai_switch][event.hjmt_6b_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -464,7 +644,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.hjmt_6b_button_2',
+    'entity_id': 'event.hjmt_6b_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -476,7 +656,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (2)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -486,7 +666,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_2-state]
+# name: test_events[haojai_switch][event.hjmt_6b_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -497,17 +677,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'HJMT-6B Button (2)',
+      'friendly_name': 'HJMT-6B None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.hjmt_6b_button_2',
+    'entity_id': 'event.hjmt_6b_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_3-entry]
+# name: test_events[haojai_switch][event.hjmt_6b_none_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -527,7 +707,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.hjmt_6b_button_3',
+    'entity_id': 'event.hjmt_6b_none_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -539,7 +719,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (3)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -549,7 +729,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_3-state]
+# name: test_events[haojai_switch][event.hjmt_6b_none_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -560,17 +740,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'HJMT-6B Button (3)',
+      'friendly_name': 'HJMT-6B None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.hjmt_6b_button_3',
+    'entity_id': 'event.hjmt_6b_none_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_4-entry]
+# name: test_events[haojai_switch][event.hjmt_6b_none_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -590,7 +770,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.hjmt_6b_button_4',
+    'entity_id': 'event.hjmt_6b_none_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -602,7 +782,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (4)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -612,7 +792,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_4-state]
+# name: test_events[haojai_switch][event.hjmt_6b_none_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -623,17 +803,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'HJMT-6B Button (4)',
+      'friendly_name': 'HJMT-6B None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.hjmt_6b_button_4',
+    'entity_id': 'event.hjmt_6b_none_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_5-entry]
+# name: test_events[haojai_switch][event.hjmt_6b_none_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -653,7 +833,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.hjmt_6b_button_5',
+    'entity_id': 'event.hjmt_6b_none_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -665,7 +845,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (5)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -675,7 +855,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_5-state]
+# name: test_events[haojai_switch][event.hjmt_6b_none_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -686,17 +866,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'HJMT-6B Button (5)',
+      'friendly_name': 'HJMT-6B None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.hjmt_6b_button_5',
+    'entity_id': 'event.hjmt_6b_none_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_6-entry]
+# name: test_events[haojai_switch][event.hjmt_6b_none_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -716,7 +896,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.hjmt_6b_button_6',
+    'entity_id': 'event.hjmt_6b_none_6',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -728,7 +908,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (6)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -738,7 +918,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[haojai_switch][event.hjmt_6b_button_6-state]
+# name: test_events[haojai_switch][event.hjmt_6b_none_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -749,17 +929,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'HJMT-6B Button (6)',
+      'friendly_name': 'HJMT-6B None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.hjmt_6b_button_6',
+    'entity_id': 'event.hjmt_6b_none_6',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_1-entry]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -783,7 +963,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.bilresa_scroll_wheel_button_1',
+    'entity_id': 'event.bilresa_scroll_wheel_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -795,7 +975,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (1)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -805,7 +985,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_1-state]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -820,17 +1000,17 @@
         'multi_press_7',
         'multi_press_8',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (1)',
+      'friendly_name': 'BILRESA scroll wheel None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.bilresa_scroll_wheel_button_1',
+    'entity_id': 'event.bilresa_scroll_wheel_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_2-entry]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -854,7 +1034,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.bilresa_scroll_wheel_button_2',
+    'entity_id': 'event.bilresa_scroll_wheel_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -866,7 +1046,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (2)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -876,7 +1056,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_2-state]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -891,17 +1071,17 @@
         'multi_press_7',
         'multi_press_8',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (2)',
+      'friendly_name': 'BILRESA scroll wheel None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.bilresa_scroll_wheel_button_2',
+    'entity_id': 'event.bilresa_scroll_wheel_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_3-entry]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -922,7 +1102,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.bilresa_scroll_wheel_button_3',
+    'entity_id': 'event.bilresa_scroll_wheel_none_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -934,7 +1114,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (3)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -944,7 +1124,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_3-state]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -956,17 +1136,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (3)',
+      'friendly_name': 'BILRESA scroll wheel None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.bilresa_scroll_wheel_button_3',
+    'entity_id': 'event.bilresa_scroll_wheel_none_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_4-entry]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -990,7 +1170,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.bilresa_scroll_wheel_button_4',
+    'entity_id': 'event.bilresa_scroll_wheel_none_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1002,7 +1182,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (4)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1012,7 +1192,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_4-state]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -1027,17 +1207,17 @@
         'multi_press_7',
         'multi_press_8',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (4)',
+      'friendly_name': 'BILRESA scroll wheel None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.bilresa_scroll_wheel_button_4',
+    'entity_id': 'event.bilresa_scroll_wheel_none_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_5-entry]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1061,7 +1241,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.bilresa_scroll_wheel_button_5',
+    'entity_id': 'event.bilresa_scroll_wheel_none_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1073,7 +1253,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (5)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1083,7 +1263,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_5-state]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -1098,17 +1278,17 @@
         'multi_press_7',
         'multi_press_8',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (5)',
+      'friendly_name': 'BILRESA scroll wheel None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.bilresa_scroll_wheel_button_5',
+    'entity_id': 'event.bilresa_scroll_wheel_none_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_6-entry]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1129,7 +1309,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.bilresa_scroll_wheel_button_6',
+    'entity_id': 'event.bilresa_scroll_wheel_none_6',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1141,7 +1321,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (6)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1151,7 +1331,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_6-state]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -1163,17 +1343,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (6)',
+      'friendly_name': 'BILRESA scroll wheel None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.bilresa_scroll_wheel_button_6',
+    'entity_id': 'event.bilresa_scroll_wheel_none_6',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_7-entry]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_7-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1197,7 +1377,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.bilresa_scroll_wheel_button_7',
+    'entity_id': 'event.bilresa_scroll_wheel_none_7',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1209,7 +1389,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (7)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1219,7 +1399,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_7-state]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -1234,17 +1414,17 @@
         'multi_press_7',
         'multi_press_8',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (7)',
+      'friendly_name': 'BILRESA scroll wheel None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.bilresa_scroll_wheel_button_7',
+    'entity_id': 'event.bilresa_scroll_wheel_none_7',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_8-entry]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_8-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1268,7 +1448,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.bilresa_scroll_wheel_button_8',
+    'entity_id': 'event.bilresa_scroll_wheel_none_8',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1280,7 +1460,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (8)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1290,7 +1470,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_8-state]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -1305,17 +1485,17 @@
         'multi_press_7',
         'multi_press_8',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (8)',
+      'friendly_name': 'BILRESA scroll wheel None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.bilresa_scroll_wheel_button_8',
+    'entity_id': 'event.bilresa_scroll_wheel_none_8',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_9-entry]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_9-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1336,7 +1516,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.bilresa_scroll_wheel_button_9',
+    'entity_id': 'event.bilresa_scroll_wheel_none_9',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1348,7 +1528,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (9)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1358,7 +1538,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_button_9-state]
+# name: test_events[ikea_scroll_wheel][event.bilresa_scroll_wheel_none_9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -1370,17 +1550,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'BILRESA scroll wheel Button (9)',
+      'friendly_name': 'BILRESA scroll wheel None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.bilresa_scroll_wheel_button_9',
+    'entity_id': 'event.bilresa_scroll_wheel_none_9',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[inovelli_vtm30][event.white_series_onoff_switch_button_config-entry]
+# name: test_events[inovelli_vtm30][event.white_series_onoff_switch_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1403,7 +1583,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.white_series_onoff_switch_button_config',
+    'entity_id': 'event.white_series_onoff_switch_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1415,145 +1595,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (Config)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-5-GenericSwitch-59-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_events[inovelli_vtm30][event.white_series_onoff_switch_button_config-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
-        'multi_press_1',
-        'multi_press_2',
-        'multi_press_3',
-        'multi_press_4',
-        'multi_press_5',
-        'long_press',
-        'long_release',
-      ]),
-      'friendly_name': 'White Series OnOff Switch Button (Config)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'event.white_series_onoff_switch_button_config',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_events[inovelli_vtm30][event.white_series_onoff_switch_button_down-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'event_types': list([
-        'multi_press_1',
-        'multi_press_2',
-        'multi_press_3',
-        'multi_press_4',
-        'multi_press_5',
-        'long_press',
-        'long_release',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'event',
-    'entity_category': None,
-    'entity_id': 'event.white_series_onoff_switch_button_down',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
-    'original_icon': None,
-    'original_name': 'Button (Down)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'button',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-4-GenericSwitch-59-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_events[inovelli_vtm30][event.white_series_onoff_switch_button_down-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
-        'multi_press_1',
-        'multi_press_2',
-        'multi_press_3',
-        'multi_press_4',
-        'multi_press_5',
-        'long_press',
-        'long_release',
-      ]),
-      'friendly_name': 'White Series OnOff Switch Button (Down)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'event.white_series_onoff_switch_button_down',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_events[inovelli_vtm30][event.white_series_onoff_switch_button_up-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'event_types': list([
-        'multi_press_1',
-        'multi_press_2',
-        'multi_press_3',
-        'multi_press_4',
-        'multi_press_5',
-        'long_press',
-        'long_release',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'event',
-    'entity_category': None,
-    'entity_id': 'event.white_series_onoff_switch_button_up',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
-    'original_icon': None,
-    'original_name': 'Button (Up)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1563,7 +1605,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[inovelli_vtm30][event.white_series_onoff_switch_button_up-state]
+# name: test_events[inovelli_vtm30][event.white_series_onoff_switch_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -1577,17 +1619,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'White Series OnOff Switch Button (Up)',
+      'friendly_name': 'White Series OnOff Switch None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.white_series_onoff_switch_button_up',
+    'entity_id': 'event.white_series_onoff_switch_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[multi_endpoint_light][event.inovelli_button_config-entry]
+# name: test_events[inovelli_vtm30][event.white_series_onoff_switch_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1610,7 +1652,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.inovelli_button_config',
+    'entity_id': 'event.white_series_onoff_switch_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1622,17 +1664,17 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (Config)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-5-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-4-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[multi_endpoint_light][event.inovelli_button_config-state]
+# name: test_events[inovelli_vtm30][event.white_series_onoff_switch_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -1646,17 +1688,17 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Inovelli Button (Config)',
+      'friendly_name': 'White Series OnOff Switch None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.inovelli_button_config',
+    'entity_id': 'event.white_series_onoff_switch_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[multi_endpoint_light][event.inovelli_button_down-entry]
+# name: test_events[inovelli_vtm30][event.white_series_onoff_switch_none_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1679,7 +1721,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.inovelli_button_down',
+    'entity_id': 'event.white_series_onoff_switch_none_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1691,17 +1733,17 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (Down)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'button',
-    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-4-GenericSwitch-59-1',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-5-GenericSwitch-59-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[multi_endpoint_light][event.inovelli_button_down-state]
+# name: test_events[inovelli_vtm30][event.white_series_onoff_switch_none_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -1715,17 +1757,77 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Inovelli Button (Down)',
+      'friendly_name': 'White Series OnOff Switch None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.inovelli_button_down',
+    'entity_id': 'event.white_series_onoff_switch_none_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[multi_endpoint_light][event.inovelli_button_up-entry]
+# name: test_events[mock_lock][event.mock_lock_none-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'door_lock_alarm',
+        'lock_operation',
+        'lock_operation_error',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.mock_lock_none',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockEvent-257-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[mock_lock][event.mock_lock_none-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'door_lock_alarm',
+        'lock_operation',
+        'lock_operation_error',
+      ]),
+      'friendly_name': 'Mock Lock None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.mock_lock_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[multi_endpoint_light][event.inovelli_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1748,7 +1850,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.inovelli_button_up',
+    'entity_id': 'event.inovelli_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1760,7 +1862,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button (Up)',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1770,7 +1872,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[multi_endpoint_light][event.inovelli_button_up-state]
+# name: test_events[multi_endpoint_light][event.inovelli_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -1784,17 +1886,215 @@
         'long_press',
         'long_release',
       ]),
-      'friendly_name': 'Inovelli Button (Up)',
+      'friendly_name': 'Inovelli None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.inovelli_button_up',
+    'entity_id': 'event.inovelli_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_events[silabs_light_switch][event.light_switch_example_button-entry]
+# name: test_events[multi_endpoint_light][event.inovelli_none_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'multi_press_3',
+        'multi_press_4',
+        'multi_press_5',
+        'long_press',
+        'long_release',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.inovelli_none_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-4-GenericSwitch-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[multi_endpoint_light][event.inovelli_none_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'multi_press_3',
+        'multi_press_4',
+        'multi_press_5',
+        'long_press',
+        'long_release',
+      ]),
+      'friendly_name': 'Inovelli None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.inovelli_none_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[multi_endpoint_light][event.inovelli_none_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'multi_press_3',
+        'multi_press_4',
+        'multi_press_5',
+        'long_press',
+        'long_release',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.inovelli_none_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'button',
+    'unique_id': '00000000000004D2-00000000000000C5-MatterNodeDevice-5-GenericSwitch-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[multi_endpoint_light][event.inovelli_none_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'multi_press_1',
+        'multi_press_2',
+        'multi_press_3',
+        'multi_press_4',
+        'multi_press_5',
+        'long_press',
+        'long_release',
+      ]),
+      'friendly_name': 'Inovelli None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.inovelli_none_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[secuyou_smart_lock][event.secuyou_smart_lock_none-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'door_lock_alarm',
+        'lock_operation',
+        'lock_operation_error',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.secuyou_smart_lock_none',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_lock',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-DoorLockEvent-257-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[secuyou_smart_lock][event.secuyou_smart_lock_none-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'door_lock_alarm',
+        'lock_operation',
+        'lock_operation_error',
+      ]),
+      'friendly_name': 'Secuyou Smart Lock None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.secuyou_smart_lock_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_events[silabs_light_switch][event.light_switch_example_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1812,7 +2112,7 @@
     'disabled_by': None,
     'domain': 'event',
     'entity_category': None,
-    'entity_id': 'event.light_switch_example_button',
+    'entity_id': 'event.light_switch_example_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1824,7 +2124,7 @@
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
     'original_icon': None,
-    'original_name': 'Button',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1834,7 +2134,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_events[silabs_light_switch][event.light_switch_example_button-state]
+# name: test_events[silabs_light_switch][event.light_switch_example_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
@@ -1843,10 +2143,10 @@
         'initial_press',
         'short_release',
       ]),
-      'friendly_name': 'Light switch example Button',
+      'friendly_name': 'Light switch example None',
     }),
     'context': <ANY>,
-    'entity_id': 'event.light_switch_example_button',
+    'entity_id': 'event.light_switch_example_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

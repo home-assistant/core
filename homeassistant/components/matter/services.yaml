@@ -60,3 +60,41 @@ clear_lock_usercode:
           min: 1
           max: 255
           mode: box
+
+get_lock_user:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    user_index:
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 65534
+          mode: box
+
+get_credential_status:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    credential_type:
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 8
+          mode: box
+    credential_index:
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 0
+          max: 65534
+          mode: box
