@@ -1,0 +1,25 @@
+{
+  "domain": "mammotion",
+  "name": "Mammotion",
+  "bluetooth": [
+    {
+      "connectable": true,
+      "local_name": "Luba-*",
+      "service_uuid": "0000ffff-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": true,
+      "local_name": "Yuka-*",
+      "service_uuid": "0000ffff-0000-1000-8000-00805f9b34fb"
+    }
+  ],
+  "codeowners": ["@mikey0000"],
+  "config_flow": true,
+  "dependencies": ["bluetooth"],
+  "documentation": "https://www.home-assistant.io/integrations/mammotion",
+  "integration_type": "device",
+  "iot_class": "cloud_polling",
+  "loggers": ["pymammotion"],
+  "quality_scale": "bronze",
+  "requirements": ["pymammotion==0.5.70"]
+}

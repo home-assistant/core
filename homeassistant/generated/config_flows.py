@@ -399,6 +399,7 @@ FLOWS = {
         "lyric",
         "madvr",
         "mailgun",
+        "mammotion",
         "mastodon",
         "matter",
         "mcp",
