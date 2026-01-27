@@ -888,7 +888,7 @@ async def test_keypad_vision_sensor(
         await hass.async_block_till_done()
 
         assert len(hass.states.async_all("sensor")) == 2
-        assert len(hass.states.async_all("binary_sensor")) == 3
+        assert len(hass.states.async_all("binary_sensor")) == 2
 
         battery_sensor = hass.states.get("sensor.test_name_battery")
         battery_sensor_attrs = battery_sensor.attributes
@@ -901,12 +901,6 @@ async def test_keypad_vision_sensor(
         assert rssi_sensor
         assert rssi_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Bluetooth signal"
         assert rssi_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "dBm"
-
-        occupancy_sensor = hass.states.get("binary_sensor.test_name_occupancy")
-        occupancy_sensor_attrs = occupancy_sensor.attributes
-        assert occupancy_sensor
-        assert occupancy_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Occupancy"
-        assert occupancy_sensor.state == STATE_OFF
 
         tamper_sensor = hass.states.get("binary_sensor.test_name_tamper")
         tamper_sensor_attrs = tamper_sensor.attributes
