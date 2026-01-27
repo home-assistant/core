@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Audio issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -73,6 +74,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Available requests',
     'options': dict({
     }),
     'original_device_class': None,
@@ -125,6 +127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Closed issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -176,6 +179,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Declined requests',
     'options': dict({
     }),
     'original_device_class': None,
@@ -228,6 +232,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Movie requests',
     'options': dict({
     }),
     'original_device_class': None,
@@ -280,6 +285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Open issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -331,6 +337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pending requests',
     'options': dict({
     }),
     'original_device_class': None,
@@ -383,6 +390,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Processing requests',
     'options': dict({
     }),
     'original_device_class': None,
@@ -435,6 +443,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Subtitle issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -486,6 +495,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total issues',
     'options': dict({
     }),
     'original_device_class': None,
@@ -537,6 +547,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total requests',
     'options': dict({
     }),
     'original_device_class': None,
@@ -589,6 +600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TV requests',
     'options': dict({
     }),
     'original_device_class': None,
@@ -641,6 +653,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Video issues',
     'options': dict({
     }),
     'original_device_class': None,

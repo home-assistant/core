@@ -178,6 +178,7 @@ class OneDriveBackupAgent(BackupAgent):
                 file,
                 upload_chunk_size=upload_chunk_size,
                 session=async_get_clientsession(self._hass),
+                smart_chunk_size=True,
             )
         except HashMismatchError as err:
             raise BackupAgentError(

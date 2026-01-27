@@ -1034,7 +1034,7 @@ def _async_setup_device_registry(
         and dashboard.data
         and dashboard.data.get(device_info.name)
     ):
-        configuration_url = f"homeassistant://hassio/ingress/{dashboard.addon_slug}"
+        configuration_url = f"homeassistant://app/{dashboard.addon_slug}"
 
     manufacturer = "espressif"
     if device_info.manufacturer:

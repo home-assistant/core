@@ -2,46 +2,142 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.openevse.const import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_sensor_setup(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test the sensor entities."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_disabled_by_default_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test the disabled by default sensor entities."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    state = hass.states.get("sensor.openevse_mock_config_ir_temperature")
+    assert state is None
+
+    entry = entity_registry.async_get("sensor.openevse_mock_config_ir_temperature")
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    state = hass.states.get("sensor.openevse_mock_config_rtc_temperature")
+    assert state is None
+
+    entry = entity_registry.async_get("sensor.openevse_mock_config_rtc_temperature")
+    assert entry
+    assert entry.disabled
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+async def test_sensor_unavailable_on_coordinator_timeout(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_charger: MagicMock,
 ) -> None:
-    """Test setting up the sensor platform."""
+    """Test sensors become unavailable when coordinator times out."""
     mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.charging_status")
-    assert state is not None
-    assert state.state == "Charging"
+    state = hass.states.get("sensor.openevse_mock_config_charging_status")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
 
-    state = hass.states.get("sensor.charge_time_elapsed")
-    assert state is not None
-    assert state.state == "60.0"
+    mock_charger.update.side_effect = TimeoutError("Connection timed out")
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.ambient_temperature")
-    assert state is not None
-    assert state.state == "25.5"
+    state = hass.states.get("sensor.openevse_mock_config_charging_status")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
-    state = hass.states.get("sensor.usage_this_session")
-    assert state is not None
-    assert state.state == "15.0"
 
-    state = hass.states.get("sensor.total_usage")
-    assert state is not None
-    assert state.state == "500.0"
+async def test_yaml_import_success(
+    hass: HomeAssistant,
+    mock_charger: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test successful YAML import creates deprecated_yaml issue."""
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {"platform": DOMAIN, CONF_HOST: "192.168.1.100"}},
+    )
+    await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.ir_temperature")
-    assert state is not None
-    assert state.state == "30.2"
+    issue = issue_registry.async_get_issue("homeassistant", "deprecated_yaml")
+    assert issue is not None
+    assert issue.issue_domain == DOMAIN
 
-    state = hass.states.get("sensor.rtc_temperature")
-    assert state is not None
-    assert state.state == "28.7"
+
+async def test_yaml_import_unavailable_host(
+    hass: HomeAssistant,
+    mock_charger: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test YAML import with unavailable host creates domain-specific issue."""
+    mock_charger.test_and_get.side_effect = TimeoutError("Connection timed out")
+
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {"platform": DOMAIN, CONF_HOST: "192.168.1.100"}},
+    )
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_unavailable_host"
+    )
+    assert issue is not None
+
+
+async def test_yaml_import_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test YAML import when already configured creates deprecated_yaml issue."""
+    # Only add the entry, don't set it up - this allows the YAML platform setup
+    # to run while the config flow will still see the existing entry
+    mock_config_entry.add_to_hass(hass)
+
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {"platform": DOMAIN, CONF_HOST: "192.168.1.100"}},
+    )
+    await hass.async_block_till_done()
+
+    # When already configured, it should still create deprecated_yaml issue
+    issue = issue_registry.async_get_issue("homeassistant", "deprecated_yaml")
+    assert issue is not None
+    assert issue.issue_domain == DOMAIN

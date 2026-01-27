@@ -73,8 +73,8 @@ rules:
     comment: Integration controls a single device; no dynamic device discovery needed.
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession:
     status: exempt
     comment: Integration uses Modbus TCP protocol and does not make HTTP requests.
-  strict-typing: todo
+  strict-typing: done

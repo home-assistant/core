@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 
+import dateutil
+
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import (
@@ -179,6 +181,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     LAST_S_TEST: SensorEntityDescription(
         key=LAST_S_TEST,
         translation_key="last_self_test",
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
     "lastxfer": SensorEntityDescription(
         key="lastxfer",
@@ -232,6 +235,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "masterupd": SensorEntityDescription(
         key="masterupd",
         translation_key="master_update",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "maxlinev": SensorEntityDescription(
@@ -365,6 +369,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "starttime": SensorEntityDescription(
         key="starttime",
         translation_key="startup_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "statflag": SensorEntityDescription(
@@ -416,16 +421,19 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "xoffbat": SensorEntityDescription(
         key="xoffbat",
         translation_key="transfer_from_battery",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "xoffbatt": SensorEntityDescription(
         key="xoffbatt",
         translation_key="transfer_from_battery",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "xonbatt": SensorEntityDescription(
         key="xonbatt",
         translation_key="transfer_to_battery",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
@@ -529,7 +537,13 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
             self._attr_native_value = None
             return
 
-        self._attr_native_value, inferred_unit = infer_unit(self.coordinator.data[key])
+        data = self.coordinator.data[key]
+
+        if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
+            self._attr_native_value = dateutil.parser.parse(data)
+            return
+
+        self._attr_native_value, inferred_unit = infer_unit(data)
         if not self.native_unit_of_measurement:
             self._attr_native_unit_of_measurement = inferred_unit
 

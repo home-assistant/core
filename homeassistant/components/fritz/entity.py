@@ -13,7 +13,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_DEVICE_NAME, DOMAIN
+from .const import DOMAIN
 from .coordinator import AvmWrapper
 from .models import FritzDevice
 
@@ -21,20 +21,16 @@ from .models import FritzDevice
 class FritzDeviceBase(CoordinatorEntity[AvmWrapper]):
     """Entity base class for a device connected to a FRITZ!Box device."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""
         super().__init__(avm_wrapper)
         self._avm_wrapper = avm_wrapper
         self._mac: str = device.mac_address
-        self._name: str = device.hostname or DEFAULT_DEVICE_NAME
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device.mac_address)}
         )
-
-    @property
-    def name(self) -> str:
-        """Return device name."""
-        return self._name
 
     @property
     def ip_address(self) -> str | None:

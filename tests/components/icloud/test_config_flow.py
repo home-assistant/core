@@ -200,7 +200,7 @@ async def test_login_failed(hass: HomeAssistant) -> None:
     """Test when we have errors during login."""
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService",
-        side_effect=PyiCloudFailedLoginException(),
+        side_effect=PyiCloudFailedLoginException(msg="Invalid login"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -410,7 +410,7 @@ async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService",
-        side_effect=PyiCloudFailedLoginException(),
+        side_effect=PyiCloudFailedLoginException(msg="Invalid login"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_PASSWORD: PASSWORD_2}

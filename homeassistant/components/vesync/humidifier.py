@@ -1,7 +1,7 @@
 """Support for VeSync humidifiers."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
@@ -130,11 +130,15 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     @property
     def current_humidity(self) -> int:
         """Return the current humidity."""
+        if TYPE_CHECKING:
+            assert self.device.state.humidity is not None
         return self.device.state.humidity
 
     @property
     def target_humidity(self) -> int:
         """Return the humidity we try to reach."""
+        if TYPE_CHECKING:
+            assert self.device.state.auto_humidity is not None
         return self.device.state.auto_humidity
 
     @property
@@ -164,11 +168,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
             # We successfully changed the mode. Consider it a success even if display operation fails.
             await self.device.toggle_display(False)
 
-        # Changing mode while humidifier is off actually turns it on, as per the app. But
-        # the library does not seem to update the device_status. It is also possible that
-        # other attributes get updated. Scheduling a forced refresh to get device status.
-        # updated.
-        self.schedule_update_ha_state(force_refresh=True)
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

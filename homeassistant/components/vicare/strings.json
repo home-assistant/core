@@ -432,6 +432,15 @@
       "hydraulic_separator_temperature": {
         "name": "Hydraulic separator temperature"
       },
+      "inverter_current": {
+        "name": "Inverter current"
+      },
+      "inverter_power": {
+        "name": "Inverter power"
+      },
+      "inverter_temperature": {
+        "name": "Inverter temperature"
+      },
       "outside_humidity": {
         "name": "Outside humidity"
       },
