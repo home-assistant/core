@@ -391,7 +391,7 @@
           "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
           "heating_dhw": "Heating DHW",
           "keyboard_off": "Keyboard off",
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "start_fail": "Start fail",
           "unknown": "Unknown"
         }
