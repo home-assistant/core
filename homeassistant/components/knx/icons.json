@@ -54,5 +54,10 @@
     "send": {
       "service": "mdi:email-arrow-right"
     }
+  },
+  "triggers": {
+    "telegram": {
+      "trigger": "mdi:email-outline"
+    }
   }
 }

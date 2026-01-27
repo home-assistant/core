@@ -1,0 +1,39 @@
+# Describes the format for KNX triggers
+
+telegram:
+  fields:
+    destination:
+      example: "1/2/3"
+      required: false
+      selector:
+        text:
+    group_value_write:
+      required: false
+      default: true
+      selector:
+        boolean:
+    group_value_response:
+      required: false
+      default: true
+      selector:
+        boolean:
+    group_value_read:
+      required: false
+      default: true
+      selector:
+        boolean:
+    incoming:
+      required: false
+      default: true
+      selector:
+        boolean:
+    outgoing:
+      required: false
+      default: true
+      selector:
+        boolean:
+    type:
+      example: "9.001"
+      required: false
+      selector:
+        text:

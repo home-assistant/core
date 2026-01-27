@@ -1191,5 +1191,41 @@
       },
       "name": "Send to KNX bus"
     }
+  },
+  "triggers": {
+    "telegram": {
+      "description": "Triggers when a KNX telegram is received or sent.",
+      "fields": {
+        "destination": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::destination%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::destination%]"
+        },
+        "group_value_read": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::group_value_read%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::group_value_read%]"
+        },
+        "group_value_response": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::group_value_response%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::group_value_response%]"
+        },
+        "group_value_write": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::group_value_write%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::group_value_write%]"
+        },
+        "incoming": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::incoming%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::incoming%]"
+        },
+        "outgoing": {
+          "description": "[%key:component::knx::device_automation::extra_fields_descriptions::outgoing%]",
+          "name": "[%key:component::knx::device_automation::extra_fields::outgoing%]"
+        },
+        "type": {
+          "description": "DPT used for payload decoding. If not set, it will be sourced from project file.",
+          "name": "DPT"
+        }
+      },
+      "name": "KNX telegram"
+    }
   }
 }
