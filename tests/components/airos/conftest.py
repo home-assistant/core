@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from airos.airos8 import AirOS8Data
 import pytest
 
-from homeassistant.components.airos.const import DOMAIN
+from homeassistant.components.airos.const import DEFAULT_USERNAME, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -59,7 +59,17 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_HOST: "1.1.1.1",
             CONF_PASSWORD: "test-password",
-            CONF_USERNAME: "ubnt",
+            CONF_USERNAME: DEFAULT_USERNAME,
         },
         unique_id="01:23:45:67:89:AB",
     )
+
+
+@pytest.fixture
+def mock_discovery_method() -> Generator[AsyncMock]:
+    """Mock the internal discovery method of the config flow."""
+    with patch(
+        "homeassistant.components.airos.config_flow.airos_discover_devices",
+        new_callable=AsyncMock,
+    ) as mock_method:
+        yield mock_method
