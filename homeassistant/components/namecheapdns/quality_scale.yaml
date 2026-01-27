@@ -48,7 +48,7 @@ rules:
   parallel-updates:
     status: exempt
     comment: integration has no entity platforms
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
