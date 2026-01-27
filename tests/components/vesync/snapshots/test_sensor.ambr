@@ -783,88 +783,6 @@
       'unique_id': 'CS158Cooking-preheat_set_time',
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'sensor',
-      'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_cooking_remaining_time',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'object_id_base': 'Remaining time',
-      'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 2,
-        }),
-      }),
-      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-      'original_icon': None,
-      'original_name': 'Remaining time',
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'suggested_object_id': None,
-      'supported_features': 0,
-      'translation_key': 'remaining_time',
-      'unique_id': 'CS158Cooking-remaining_time',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-    }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': dict({
-        'options': list([
-          'cooking_end',
-          'cooking',
-          'cooking_stop',
-          'heating',
-          'preheat_end',
-          'preheat_stop',
-          'pull_out',
-          'standby',
-        ]),
-      }),
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'sensor',
-      'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_status',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'object_id_base': 'Cooking status',
-      'options': dict({
-      }),
-      'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-      'original_icon': None,
-      'original_name': 'Cooking status',
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'suggested_object_id': None,
-      'supported_features': 0,
-      'translation_key': 'cook_status',
-      'unique_id': 'CS158Cooking-cook_status',
-      'unit_of_measurement': None,
-    }),
   ])
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cooking_set_temperature]
@@ -898,30 +816,6 @@
     'state': '15',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cooking_status]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'CS158-AF Air Fryer Cooking Cooking status',
-      'options': list([
-        'cooking_end',
-        'cooking',
-        'cooking_stop',
-        'heating',
-        'preheat_end',
-        'preheat_stop',
-        'pull_out',
-        'standby',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'cooking',
-  })
-# ---
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_current_temperature]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -951,21 +845,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
-  })
-# ---
-# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_remaining_time]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'CS158-AF Air Fryer Cooking Remaining time',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_cooking_remaining_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10',
   })
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Standby][devices]
@@ -1149,88 +1028,6 @@
       'unique_id': 'CS158Standby-preheat_set_time',
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'sensor',
-      'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_standby_remaining_time',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'object_id_base': 'Remaining time',
-      'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 2,
-        }),
-      }),
-      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-      'original_icon': None,
-      'original_name': 'Remaining time',
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'suggested_object_id': None,
-      'supported_features': 0,
-      'translation_key': 'remaining_time',
-      'unique_id': 'CS158Standby-remaining_time',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-    }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': dict({
-        'options': list([
-          'cooking_end',
-          'cooking',
-          'cooking_stop',
-          'heating',
-          'preheat_end',
-          'preheat_stop',
-          'pull_out',
-          'standby',
-        ]),
-      }),
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'sensor',
-      'entity_category': None,
-      'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_status',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'object_id_base': 'Cooking status',
-      'options': dict({
-      }),
-      'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-      'original_icon': None,
-      'original_name': 'Cooking status',
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'suggested_object_id': None,
-      'supported_features': 0,
-      'translation_key': 'cook_status',
-      'unique_id': 'CS158Standby-cook_status',
-      'unit_of_measurement': None,
-    }),
   ])
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cooking_set_temperature]
@@ -1263,30 +1060,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cooking_status]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'CS158-AF Air Fryer Standby Cooking status',
-      'options': list([
-        'cooking_end',
-        'cooking',
-        'cooking_stop',
-        'heating',
-        'preheat_end',
-        'preheat_stop',
-        'pull_out',
-        'standby',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_status',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'standby',
-  })
-# ---
 # name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_current_temperature]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -1315,21 +1088,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
-  })
-# ---
-# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_remaining_time]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'CS158-AF Air Fryer Standby Remaining time',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cs158_af_air_fryer_standby_remaining_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
   })
 # ---
 # name: test_sensor_state[Dimmable Light][devices]

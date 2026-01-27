@@ -136,9 +136,6 @@
       },
       "preheat_set_time": {
         "name": "Preheating set time"
-      },
-      "remaining_time": {
-        "name": "Remaining time"
       }
     },
     "switch": {
@@ -150,6 +147,11 @@
       },
       "display": {
         "name": "Display"
+      }
+    },
+    "time": {
+      "remaining_time": {
+        "name": "Remaining time"
       }
     }
   },

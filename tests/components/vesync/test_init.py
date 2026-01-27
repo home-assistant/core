@@ -68,6 +68,7 @@ async def test_async_setup_entry__no_devices(
             Platform.SELECT,
             Platform.SENSOR,
             Platform.SWITCH,
+            Platform.TIME,
             Platform.UPDATE,
         ]
 
@@ -95,6 +96,7 @@ async def test_async_setup_entry__loads_fans(
             Platform.SELECT,
             Platform.SENSOR,
             Platform.SWITCH,
+            Platform.TIME,
             Platform.UPDATE,
         ]
     assert manager.login.call_count == 1
