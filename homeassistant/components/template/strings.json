@@ -4,6 +4,10 @@
     "availability": "Availability template",
     "availability_description": "Defines a template to get the `available` state of the entity. If the template either fails to render or returns `True`, `\"1\"`, `\"true\"`, `\"yes\"`, `\"on\"`, `\"enable\"`, or a non-zero number, the entity will be `available`. If the template returns any other value, the entity will be `unavailable`. If not configured, the entity will always be `available`. Note that the string comparison is not case sensitive; `\"TrUe\"` and `\"yEs\"` are allowed.",
     "code_format": "Code format",
+    "delay_off": "Delay off",
+    "delay_off_description": "The amount of time the template state must not be met before this sensor switches to `off`.",
+    "delay_on": "Delay on",
+    "delay_on_description": "The amount of time the template state must be met before this sensor switches to `on`.",
     "device_class": "Device class",
     "device_id_description": "Select a device to link to this entity.",
     "state": "State",
@@ -68,10 +72,14 @@
         "sections": {
           "advanced_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "delay_off": "[%key:component::template::common::delay_off%]",
+              "delay_on": "[%key:component::template::common::delay_on%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "delay_off": "[%key:component::template::common::delay_off_description%]",
+              "delay_on": "[%key:component::template::common::delay_on_description%]"
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }
@@ -618,10 +626,14 @@
         "sections": {
           "advanced_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "delay_off": "[%key:component::template::common::delay_off%]",
+              "delay_on": "[%key:component::template::common::delay_on%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "delay_off": "[%key:component::template::common::delay_off_description%]",
+              "delay_on": "[%key:component::template::common::delay_on_description%]"
             },
             "name": "[%key:component::template::common::advanced_options%]"
           }

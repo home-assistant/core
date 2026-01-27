@@ -410,13 +410,24 @@ class TemplateEntity(AbstractTemplateEntity):
             self._preview_callback(None, None, None, str(errors[-1]))
             return
 
+        self._async_preview_update()
+
+    @callback
+    def _async_preview_update(self) -> None:
+        """Send an updated state to the preview callback."""
+        if not self._preview_callback:
+            return
+
+        if not self._template_result_info:
+            self._preview_callback(None, None, None, "Preview not ready")
+            return
+
         try:
             calculated_state = self._async_calculate_state()
             validate_state(calculated_state.state)
         except Exception as err:  # noqa: BLE001
             self._preview_callback(None, None, None, str(err))
         else:
-            assert self._template_result_info
             self._preview_callback(
                 calculated_state.state,
                 calculated_state.attributes,
