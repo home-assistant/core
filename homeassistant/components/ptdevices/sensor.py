@@ -6,6 +6,8 @@ from enum import StrEnum
 import logging
 from string import ascii_letters
 
+from aioptdevices.interface import PTDevicesStatusStates
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -79,6 +81,8 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=PTDevicesSensors.DEVICE_STATUS,
         translation_key=PTDevicesSensors.DEVICE_STATUS,
+        device_class=SensorDeviceClass.ENUM,
+        options=[member.value for member in PTDevicesStatusStates],
     ),
     SensorEntityDescription(
         key=PTDevicesSensors.DEVICE_WIFI_STRENGTH,

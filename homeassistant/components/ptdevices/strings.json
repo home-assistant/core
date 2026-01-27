@@ -49,6 +49,7 @@
         "state": {
           "not_connected": "Not Connected",
           "not_connected_yet": "Not Connected Yet",
+          "power_internet_out_or_receiver_not_working": "Power/Internet Out or Receiver Not Working",
           "press_transmitter_connect_button": "Press Transmitter Connect Button",
           "transmitter_not_reporting": "Transmitter Not Reporting",
           "unknown": "Unknown",
