@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -488,6 +488,9 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseCoordinatorSwitch):
     async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle deflection switch."""
         await self.coordinator.async_set_deflection_enable(self.deflection_id, turn_on)
+        deflection = self.coordinator.data["call_deflections"][self.deflection_id]
+        deflection["Enable"] = "1" if turn_on else "0"
+        self.async_write_ha_state()
 
 
 class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
@@ -524,8 +527,6 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
 
     async def _async_handle_turn_on_off(self, turn_on: bool) -> bool:
         """Handle switch state change request."""
-        if TYPE_CHECKING:
-            assert self.ip_address
         await self._avm_wrapper.async_set_allow_wan_access(self.ip_address, turn_on)
         self._avm_wrapper.devices[self._mac].wan_access = turn_on
         self.async_write_ha_state()

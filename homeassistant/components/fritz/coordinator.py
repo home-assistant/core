@@ -511,8 +511,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             self._devices[dev_mac].update(dev_info, consider_home)
             return False
 
-        device = FritzDevice(dev_mac, dev_info.name)
-        device.update(dev_info, consider_home)
+        device = FritzDevice(dev_mac, dev_info, consider_home)
         self._devices[dev_mac] = device
 
         # manually register device entry for new connected device

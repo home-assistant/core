@@ -221,7 +221,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             | MediaPlayerEntityFeature.SELECT_SOURCE
         )
 
-    def _create_api_object(self):
+    def _create_api_object(self) -> C4Room:
         """Create a pyControl4 device object.
 
         This exists so the director token used is always the latest one, without needing to re-init the entire entity.
@@ -254,7 +254,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             return media_info["mediainfo"]
         return None
 
-    def _get_current_source_state(self) -> str | None:
+    def _get_current_source_state(self) -> MediaPlayerState | None:
         current_source = self._get_current_playing_device_id()
         while current_source:
             current_data = self.coordinator.data.get(current_source, None)
@@ -277,7 +277,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         return MediaPlayerDeviceClass.SPEAKER
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return whether this room is on or idle."""
 
         if source_state := self._get_current_source_state():
@@ -289,7 +289,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         return MediaPlayerState.IDLE
 
     @property
-    def source(self):
+    def source(self) -> str | None:
         """Get the current source."""
         current_source = self._get_current_playing_device_id()
         if not current_source or current_source not in self._sources:
@@ -310,7 +310,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         return self._sources[current_source].name
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | None:
         """Get current content type if available."""
         current_source = self._get_current_playing_device_id()
         if not current_source:
@@ -319,7 +319,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             return MediaType.VIDEO
         return MediaType.MUSIC
 
-    async def async_media_play_pause(self):
+    async def async_media_play_pause(self) -> None:
         """If possible, toggle the current play/pause state.
 
         Not every source supports play/pause.
@@ -335,16 +335,16 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         return [x.name for x in self._sources.values()]
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float:
         """Get the volume level."""
         return self.coordinator.data[self._idx][CONTROL4_VOLUME_STATE] / 100
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool:
         """Check if the volume is muted."""
         return bool(self.coordinator.data[self._idx][CONTROL4_MUTED_STATE])
 
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select a new source."""
         for avail_source in self._sources.values():
             if avail_source.name == source:
@@ -359,12 +359,12 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
 
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn off the room."""
         await self._create_api_object().setRoomOff()
         await self.coordinator.async_request_refresh()
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the room."""
         if mute:
             await self._create_api_object().setMuteOn()
@@ -372,32 +372,32 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             await self._create_api_object().setMuteOff()
         await self.coordinator.async_request_refresh()
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set room volume, 0-1 scale."""
         await self._create_api_object().setVolume(int(volume * 100))
         await self.coordinator.async_request_refresh()
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Increase the volume by 1."""
         await self._create_api_object().setIncrementVolume()
         await self.coordinator.async_request_refresh()
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Decrease the volume by 1."""
         await self._create_api_object().setDecrementVolume()
         await self.coordinator.async_request_refresh()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Issue a pause command."""
         await self._create_api_object().setPause()
         await self.coordinator.async_request_refresh()
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Issue a play command."""
         await self._create_api_object().setPlay()
         await self.coordinator.async_request_refresh()
 
-    async def async_media_stop(self):
+    async def async_media_stop(self) -> None:
         """Issue a stop command."""
         await self._create_api_object().setStop()
         await self.coordinator.async_request_refresh()
