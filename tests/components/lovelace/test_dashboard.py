@@ -748,12 +748,10 @@ async def test_lovelace_migration_sets_default_panel(
 
     # Verify default_panel was set in frontend system storage via websocket
     client = await hass_ws_client(hass)
-    await client.send_json(
-        {"id": 5, "type": "frontend/get_system_data", "key": "default_panel"}
-    )
+    await client.send_json({"id": 5, "type": "frontend/get_system_data", "key": "core"})
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"]["value"] == "lovelace"
+    assert response["result"]["value"]["default_panel"] == "lovelace"
 
 
 async def test_lovelace_migration_preserves_existing_default_panel(
@@ -773,7 +771,7 @@ async def test_lovelace_migration_preserves_existing_default_panel(
     hass_storage[storage_key] = {
         "version": 1,
         "key": storage_key,
-        "data": {"default_panel": "other-dashboard"},
+        "data": {"core": {"default_panel": "other-dashboard"}},
     }
 
     # Need to setup frontend to register the websocket commands
@@ -782,12 +780,10 @@ async def test_lovelace_migration_preserves_existing_default_panel(
 
     # Verify default_panel was NOT overwritten via websocket
     client = await hass_ws_client(hass)
-    await client.send_json(
-        {"id": 5, "type": "frontend/get_system_data", "key": "default_panel"}
-    )
+    await client.send_json({"id": 5, "type": "frontend/get_system_data", "key": "core"})
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"]["value"] == "other-dashboard"
+    assert response["result"]["value"]["default_panel"] == "other-dashboard"
 
 
 async def test_lovelace_no_migration_no_default_panel_set(
@@ -803,9 +799,7 @@ async def test_lovelace_no_migration_no_default_panel_set(
 
     # Verify default_panel was NOT set via websocket
     client = await hass_ws_client(hass)
-    await client.send_json(
-        {"id": 5, "type": "frontend/get_system_data", "key": "default_panel"}
-    )
+    await client.send_json({"id": 5, "type": "frontend/get_system_data", "key": "core"})
     response = await client.receive_json()
     assert response["success"]
     assert response["result"]["value"] is None

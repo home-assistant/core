@@ -468,8 +468,11 @@ async def _async_migrate_default_config(
 
     # 5. Set default panel to lovelace if not already configured
     system_store = await frontend.async_system_store(hass)
-    if system_store.data.get("default_panel") is None:
-        await system_store.async_set_item("default_panel", DOMAIN)
+    core_data = system_store.data.get("core")
+    if core_data is None or core_data.get("default_panel") is None:
+        await system_store.async_set_item(
+            "core", {**(core_data or {}), "default_panel": DOMAIN}
+        )
         _LOGGER.info("Set default panel to 'lovelace' during migration")
 
 
