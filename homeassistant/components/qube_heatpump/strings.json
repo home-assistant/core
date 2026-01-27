@@ -456,8 +456,8 @@
       "vierweg_status": {
         "name": "Four-way valve status",
         "state": {
-          "cooling": "Cooling",
-          "heating": "Heating"
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]"
         }
       },
       "workinghours_cool_hrsret": {
