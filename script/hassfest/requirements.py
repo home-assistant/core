@@ -150,7 +150,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
-    "frontend": {"aiogithubapi": {"async-timeout"}},
     "github": {"aiogithubapi": {"async-timeout"}},
     "guardian": {
         # https://github.com/jsbronder/asyncio-dgram/issues/20
