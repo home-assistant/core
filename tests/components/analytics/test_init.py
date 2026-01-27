@@ -1,17 +1,18 @@
 """The tests for the analytics ."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.analytics import DATA_COMPONENT, LABS_SNAPSHOT_FEATURE
+from homeassistant.components.analytics import LABS_SNAPSHOT_FEATURE
 from homeassistant.components.analytics.const import (
-    ATTR_SNAPSHOTS,
     BASIC_ENDPOINT_URL,
     DOMAIN,
     SNAPSHOT_DEFAULT_URL,
     SNAPSHOT_URL_PATH,
+    STORAGE_KEY,
 )
 from homeassistant.components.labs import async_update_preview_feature
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
@@ -38,6 +39,7 @@ async def test_setup(hass: HomeAssistant) -> None:
 
 async def test_labs_feature_toggle(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test that snapshots can be toggled via labs feature."""
@@ -45,8 +47,6 @@ async def test_labs_feature_toggle(
 
     assert await async_setup_component(hass, "labs", {})
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-
-    analytics = hass.data[DATA_COMPONENT]
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
@@ -58,7 +58,7 @@ async def test_labs_feature_toggle(
 
     await async_update_preview_feature(hass, DOMAIN, LABS_SNAPSHOT_FEATURE, True)
 
-    assert analytics.preferences[ATTR_SNAPSHOTS] is True
+    assert hass_storage[STORAGE_KEY]["data"]["preferences"]["snapshots"] is True
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=25))
     await hass.async_block_till_done()
@@ -71,7 +71,7 @@ async def test_labs_feature_toggle(
 
     await async_update_preview_feature(hass, DOMAIN, LABS_SNAPSHOT_FEATURE, False)
 
-    assert analytics.preferences[ATTR_SNAPSHOTS] is False
+    assert hass_storage[STORAGE_KEY]["data"]["preferences"]["snapshots"] is False
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=25))
     await hass.async_block_till_done()

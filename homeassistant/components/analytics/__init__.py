@@ -59,7 +59,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if CONF_SNAPSHOTS_URL in analytics_config:
         await labs.async_update_preview_feature(
-            hass, DOMAIN, LABS_SNAPSHOT_FEATURE, True
+            hass, DOMAIN, LABS_SNAPSHOT_FEATURE, enabled=True
         )
         snapshots_url = analytics_config[CONF_SNAPSHOTS_URL]
     else:
