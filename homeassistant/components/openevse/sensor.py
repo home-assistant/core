@@ -474,13 +474,10 @@ class OpenEVSESensor(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SensorEnt
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        if not super().available:
-            return False
-        try:
-            self.entity_description.value_fn(self.coordinator.charger)
-        except (AttributeError, KeyError):
-            return False
-        return True
+        return (
+            super().available
+            and self.entity_description.value_fn(self.coordinator.charger) is not None
+        )
 
     @property
     def native_value(self) -> StateType | datetime:

@@ -1661,7 +1661,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_entities[sensor.openevse_mock_config_vehicle_range-entry]
