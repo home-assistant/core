@@ -121,6 +121,18 @@
       "autosw": {
         "name": "Auto switch inputs"
       },
+      "cec0en": {
+        "name": "CEC RX0"
+      },
+      "cec1en": {
+        "name": "CEC RX1"
+      },
+      "cec2en": {
+        "name": "CEC RX2"
+      },
+      "cec3en": {
+        "name": "CEC RX3"
+      },
       "htpcmode0": {
         "name": "HTPC mode RX0"
       },

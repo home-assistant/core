@@ -64,6 +64,18 @@
       "autosw": {
         "default": "mdi:import"
       },
+      "cec0en": {
+        "default": "mdi:remote-tv"
+      },
+      "cec1en": {
+        "default": "mdi:remote-tv"
+      },
+      "cec2en": {
+        "default": "mdi:remote-tv"
+      },
+      "cec3en": {
+        "default": "mdi:remote-tv"
+      },
       "htpcmode0": {
         "default": "mdi:desktop-classic"
       },
