@@ -268,16 +268,12 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._start_command_timeout("POWER_QUERY")
         await self.send_raw_command(TonewinnerCommands.POWER_QUERY)
         await asyncio.sleep(0.3)  # Wait for power state response
-        self._start_command_timeout("VOLUME_QUERY")
         await self.send_raw_command(TonewinnerCommands.VOLUME_QUERY)
-        await asyncio.sleep(0.1)  # Wait for response
-        self._start_command_timeout("MUTE_QUERY")
+        await asyncio.sleep(0.3)  # Wait for response
         await self.send_raw_command(TonewinnerCommands.MUTE_QUERY)
-        await asyncio.sleep(0.1)  # Wait for response
-        self._start_command_timeout("INPUT_QUERY")
+        await asyncio.sleep(0.3)  # Wait for response
         await self.send_raw_command(TonewinnerCommands.INPUT_QUERY)
-        await asyncio.sleep(0.1)  # Wait for response
-        self._start_command_timeout("MODE_QUERY")
+        await asyncio.sleep(0.3)  # Wait for response
         await self.send_raw_command(TonewinnerCommands.MODE_QUERY)
 
     async def async_will_remove_from_hass(self) -> None:
