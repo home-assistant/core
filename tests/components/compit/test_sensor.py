@@ -32,7 +32,7 @@ async def test_sensor_entities_snapshot(
     ("mock_return_value", "test_description"),
     [
         (None, "parameter is None"),
-        ("exceeded", "parameter value is enum"),
+        ("damaged_supply_sensor", "parameter value is enum"),
     ],
 )
 async def test_sensor_return_value_enum_sensor(
@@ -48,7 +48,7 @@ async def test_sensor_return_value_enum_sensor(
     )
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.nano_color_2_co2_level")
+    state = hass.states.get("sensor.nano_color_2_ventilation_alarm")
     assert state is not None
     assert state.state == mock_return_value if mock_return_value else "unknown"
 
@@ -64,7 +64,7 @@ async def test_sensor_enum_value_cannot_return_number(
     )
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.nano_color_2_co2_level")
+    state = hass.states.get("sensor.nano_color_2_ventilation_alarm")
     assert state is None
 
 
@@ -105,4 +105,4 @@ async def test_sensor_number_value_cannot_return_enum(
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.r_900_calculated_buffer_temperature")
-    assert state is None
+    assert state is not None and state.state == "unknown"

@@ -62,7 +62,7 @@ def mock_connector():
     mock_device_2.state.params = [
         MagicMock(code="_jezyk", value="english"),
         MagicMock(code="__aerokonfbypass", value="off"),
-        MagicMock(code="__rd_co2", value="normal"),
+        MagicMock(code="__rd_alarmwent", value="no_alarm"),
         MagicMock(code="__rd_pm10", value="warning"),
     ]
     mock_device_2.definition.code = 223  # Nano Color 2

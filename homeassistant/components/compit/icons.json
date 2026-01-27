@@ -1,24 +1,10 @@
 {
   "entity": {
     "sensor": {
-      "airing": {
-        "default": "mdi:window-open-variant",
-        "state": {
-          "off": "mdi:window-closed-variant",
-          "on": "mdi:window-open-variant"
-        }
-      },
       "alarm_code": {
         "default": "mdi:alert-circle",
         "state": {
           "no_alarm": "mdi:check-circle"
-        }
-      },
-      "battery_charge_status": {
-        "default": "mdi:battery-charging",
-        "state": {
-          "charging": "mdi:battery-charging",
-          "not_charging": "mdi:battery"
         }
       },
       "battery_level": {
@@ -39,24 +25,8 @@
       "circuit_target_temperature": {
         "default": "mdi:thermometer"
       },
-      "co2_alert": {
-        "default": "mdi:alert"
-      },
-      "co2_level": {
-        "default": "mdi:molecule-co2",
-        "state": {
-          "exceeded": "mdi:alert",
-          "no_sensor": "mdi:cancel"
-        }
-      },
       "co2_percent": {
         "default": "mdi:molecule-co2"
-      },
-      "co_pump_off_delay": {
-        "default": "mdi:timer"
-      },
-      "co_pump_on_delay": {
-        "default": "mdi:timer"
       },
       "collector_power": {
         "default": "mdi:solar-power"
@@ -66,13 +36,6 @@
       },
       "dhw_measured_temperature": {
         "default": "mdi:thermometer"
-      },
-      "dust_alert": {
-        "default": "mdi:alert",
-        "state": {
-          "alert": "mdi:alert",
-          "no_alert": "mdi:check-circle"
-        }
       },
       "energy_consumption": {
         "default": "mdi:lightning-bolt"
@@ -91,20 +54,6 @@
       },
       "fuel_level": {
         "default": "mdi:gauge"
-      },
-      "has_battery": {
-        "default": "mdi:battery",
-        "state": {
-          "no": "mdi:battery-off",
-          "yes": "mdi:battery"
-        }
-      },
-      "has_external_power": {
-        "default": "mdi:power-plug",
-        "state": {
-          "no": "mdi:power-plug-off",
-          "yes": "mdi:power-plug"
-        }
       },
       "humidity": {
         "default": "mdi:water-percent"
@@ -133,9 +82,6 @@
           "warning": "mdi:alert-circle-outline"
         }
       },
-      "pm1_level": {
-        "default": "mdi:air-filter"
-      },
       "pm25_level": {
         "default": "mdi:air-filter",
         "state": {
@@ -143,16 +89,6 @@
           "no_sensor": "mdi:cancel",
           "normal": "mdi:air-filter",
           "warning": "mdi:alert-circle-outline"
-        }
-      },
-      "pm4_level": {
-        "default": "mdi:air-filter"
-      },
-      "pump_status": {
-        "default": "mdi:pump",
-        "state": {
-          "off": "mdi:pump-off",
-          "on": "mdi:pump"
         }
       },
       "return_circuit_temperature": {
@@ -163,13 +99,6 @@
       },
       "target_heating_temperature": {
         "default": "mdi:thermometer"
-      },
-      "temperature_alert": {
-        "default": "mdi:alert",
-        "state": {
-          "alert": "mdi:alert",
-          "no_alert": "mdi:check-circle"
-        }
       },
       "ventilation_alarm": {
         "default": "mdi:alert",

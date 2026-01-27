@@ -46,13 +46,6 @@
       "actual_upper_source_temp": {
         "name": "Actual upper source temperature"
       },
-      "airing": {
-        "name": "Airing",
-        "state": {
-          "off": "Off",
-          "on": "On"
-        }
-      },
       "alarm_code": {
         "name": "Alarm code",
         "state": {
@@ -67,13 +60,6 @@
           "no_power": "No power",
           "no_pump": "No pump",
           "pump_fault": "Pump fault"
-        }
-      },
-      "battery_charge_status": {
-        "name": "Battery charge status",
-        "state": {
-          "charging": "Charging",
-          "not_charging": "Not charging"
         }
       },
       "battery_level": {
@@ -109,25 +95,8 @@
       "circuit_target_temperature": {
         "name": "Circuit target temperature"
       },
-      "co2_alert": {
-        "name": "CO2 alert"
-      },
-      "co2_level": {
-        "name": "CO2 level",
-        "state": {
-          "exceeded": "Exceeded",
-          "no_sensor": "No sensor",
-          "normal": "Normal"
-        }
-      },
       "co2_percent": {
         "name": "CO2 percent"
-      },
-      "co_pump_off_delay": {
-        "name": "Heating circuit pump off delay"
-      },
-      "co_pump_on_delay": {
-        "name": "Heating circuit pump on delay"
       },
       "collector_power": {
         "name": "Collector power"
@@ -135,27 +104,17 @@
       "collector_temperature": {
         "name": "Collector temperature"
       },
-      "current_temperature": {
-        "name": "Current temperature"
-      },
       "dhw_measured_temperature": {
         "name": "DHW measured temperature"
       },
       "dhw_temperature": {
         "name": "DHW temperature"
       },
-      "dust_alert": {
-        "name": "Dust alert",
-        "state": {
-          "alert": "Alert",
-          "no_alert": "No alert"
-        }
-      },
       "energy_consumption": {
         "name": "Energy consumption"
       },
-      "energy_sgready_yesterday": {
-        "name": "Energy SG ready yesterday"
+      "energy_smart_grid_yesterday": {
+        "name": "Energy smart grid yesterday"
       },
       "energy_today": {
         "name": "Energy today"
@@ -166,34 +125,11 @@
       "energy_yesterday": {
         "name": "Energy yesterday"
       },
-      "fan_mode": {
-        "name": "Fan mode"
-      },
       "fuel_level": {
         "name": "Fuel level"
       },
-      "has_battery": {
-        "name": "Has battery",
-        "state": {
-          "no": "No",
-          "yes": "Yes"
-        }
-      },
-      "has_external_power": {
-        "name": "Has external power",
-        "state": {
-          "no": "No",
-          "yes": "Yes"
-        }
-      },
       "heating_target_temperature_zone": {
         "name": "Heating circuit {zone} target temperature"
-      },
-      "humidity": {
-        "name": "Humidity"
-      },
-      "hvac_mode": {
-        "name": "HVAC mode"
       },
       "lower_source_temperature": {
         "name": "Lower source temperature"
@@ -217,8 +153,8 @@
           "nano_nr_3": "Nano 3",
           "nano_nr_4": "Nano 4",
           "nano_nr_5": "Nano 5",
-          "off": "Off",
-          "on": "On",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
           "summer": "Summer",
           "winter": "Winter"
         }
@@ -227,60 +163,35 @@
         "name": "PM10 level",
         "state": {
           "exceeded": "Exceeded",
-          "no_sensor": "No sensor",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "warning": "Warning"
         }
-      },
-      "pm1_level": {
-        "name": "PM1 level"
       },
       "pm25_level": {
         "name": "PM2.5 level",
         "state": {
           "exceeded": "Exceeded",
-          "no_sensor": "No sensor",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "warning": "Warning"
         }
-      },
-      "pm4_level": {
-        "name": "PM4 level"
-      },
-      "preset_mode": {
-        "name": "Preset mode"
       },
       "protection_temperature": {
         "name": "Protection temperature"
       },
-      "pump_status": {
-        "name": "Pump status",
-        "state": {
-          "off": "Off",
-          "on": "On"
-        }
-      },
       "return_circuit_temperature": {
         "name": "Return circuit temperature"
       },
-      "set_target_temperature": {
-        "name": "Set target temperature"
+      "tank_temperature_t2": {
+        "name": "Tank bottom T2 temperature"
       },
-      "tank_temperature": {
-        "name": "Tank {sensor} temperature"
+      "tank_temperature_t3": {
+        "name": "Tank top T3 temperature"
+      },
+      "tank_temperature_t4": {
+        "name": "Tank T4 temperature"
       },
       "target_heating_temperature": {
         "name": "Target heating temperature"
-      },
-      "target_temperature": {
-        "name": "Target temperature"
-      },
-      "temperature_alert": {
-        "name": "Temperature alert",
-        "state": {
-          "alert": "Alert",
-          "no_alert": "No alert"
-        }
       },
       "upper_source_temperature": {
         "name": "Upper source temperature"
@@ -299,9 +210,6 @@
       },
       "ventilation_gear": {
         "name": "Ventilation gear"
-      },
-      "weather_curve": {
-        "name": "Weather curve"
       }
     }
   }

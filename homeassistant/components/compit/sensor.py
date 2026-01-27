@@ -19,7 +19,6 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -30,6 +29,7 @@ from .const import DOMAIN, MANUFACTURER_NAME
 from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
+NO_SENSOR = "no_sensor"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -121,13 +121,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
     12: CompitDeviceDescription(
         name="Nano Color",
         parameters={
-            CompitParameter.CO2_LEVEL: SensorEntityDescription(
-                key=CompitParameter.CO2_LEVEL.value,
-                translation_key="co2_level",
-                device_class=SensorDeviceClass.ENUM,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                options=["no_sensor", "normal", "exceeded"],
-            ),
             CompitParameter.OUTDOOR_TEMPERATURE: SensorEntityDescription(
                 key=CompitParameter.OUTDOOR_TEMPERATURE.value,
                 translation_key="outdoor_temperature",
@@ -141,14 +134,16 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
                 translation_key="pm10_level",
                 device_class=SensorDeviceClass.ENUM,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                options=["no_sensor", "normal", "warning", "exceeded"],
+                entity_registry_enabled_default=False,
+                options=[NO_SENSOR, "normal", "warning", "exceeded"],
             ),
             CompitParameter.PM25_LEVEL: SensorEntityDescription(
                 key=CompitParameter.PM25_LEVEL.value,
                 translation_key="pm25_level",
                 device_class=SensorDeviceClass.ENUM,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                options=["no_sensor", "normal", "warning", "exceeded"],
+                entity_registry_enabled_default=False,
+                options=[NO_SENSOR, "normal", "warning", "exceeded"],
             ),
             CompitParameter.VENTILATION_ALARM: SensorEntityDescription(
                 key=CompitParameter.VENTILATION_ALARM.value,
@@ -188,40 +183,11 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             ),
         },
     ),
-    17: CompitDeviceDescription(
-        name="L2",
-        parameters={
-            CompitParameter.CO_PUMP_OFF_DELAY: SensorEntityDescription(
-                key=CompitParameter.CO_PUMP_OFF_DELAY.value,
-                translation_key="co_pump_off_delay",
-                device_class=SensorDeviceClass.DURATION,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                native_unit_of_measurement=UnitOfTime.MINUTES,
-                state_class=SensorStateClass.MEASUREMENT,
-            ),
-            CompitParameter.CO_PUMP_ON_DELAY: SensorEntityDescription(
-                key=CompitParameter.CO_PUMP_ON_DELAY.value,
-                translation_key="co_pump_on_delay",
-                device_class=SensorDeviceClass.DURATION,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                native_unit_of_measurement=UnitOfTime.MINUTES,
-                state_class=SensorStateClass.MEASUREMENT,
-            ),
-        },
-    ),
     27: CompitDeviceDescription(
         name="CO2 SHC",
         parameters={
-            CompitParameter.CO2_LEVEL: SensorEntityDescription(
-                key=CompitParameter.CO2_LEVEL.value,
-                translation_key="co2_level",
-                device_class=SensorDeviceClass.ENUM,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                options=["no_sensor", "normal", "exceeded"],
-            ),
             CompitParameter.HUMIDITY: SensorEntityDescription(
                 key=CompitParameter.HUMIDITY.value,
-                translation_key="humidity",
                 device_class=SensorDeviceClass.HUMIDITY,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -299,16 +265,15 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             ),
             CompitParameter.TANK_BOTTOM_T2_TEMPERATURE: SensorEntityDescription(
                 key=CompitParameter.TANK_BOTTOM_T2_TEMPERATURE.value,
-                translation_key="tank_temperature",
+                translation_key="tank_temperature_t2",
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-                translation_placeholders={"sensor": "bottom T2"},
             ),
             CompitParameter.TANK_T4_TEMPERATURE: SensorEntityDescription(
                 key=CompitParameter.TANK_T4_TEMPERATURE.value,
-                translation_key="tank_temperature",
+                translation_key="tank_temperature_t4",
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -317,12 +282,11 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             ),
             CompitParameter.TANK_TOP_T3_TEMPERATURE: SensorEntityDescription(
                 key=CompitParameter.TANK_TOP_T3_TEMPERATURE.value,
-                translation_key="tank_temperature",
+                translation_key="tank_temperature_t3",
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-                translation_placeholders={"sensor": "top T3"},
             ),
         },
     ),
@@ -355,21 +319,19 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             ),
             CompitParameter.TANK_BOTTOM_T2_TEMPERATURE: SensorEntityDescription(
                 key=CompitParameter.TANK_BOTTOM_T2_TEMPERATURE.value,
-                translation_key="tank_temperature",
+                translation_key="tank_temperature_t2",
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-                translation_placeholders={"sensor": "bottom T2"},
             ),
             CompitParameter.TANK_TOP_T3_TEMPERATURE: SensorEntityDescription(
                 key=CompitParameter.TANK_TOP_T3_TEMPERATURE.value,
-                translation_key="tank_temperature",
+                translation_key="tank_temperature_t3",
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-                translation_placeholders={"sensor": "top T3"},
             ),
         },
     ),
@@ -394,7 +356,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             ),
             CompitParameter.ENERGY_SGREADY_YESTERDAY: SensorEntityDescription(
                 key=CompitParameter.ENERGY_SGREADY_YESTERDAY.value,
-                translation_key="energy_sgready_yesterday",
+                translation_key="energy_smart_grid_yesterday",
                 device_class=SensorDeviceClass.ENERGY,
                 state_class=SensorStateClass.TOTAL,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -470,14 +432,9 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
     78: CompitDeviceDescription(
         name="SPM - Nano Color 2",
         parameters={
-            CompitParameter.CO2_ALERT: SensorEntityDescription(
-                key=CompitParameter.CO2_ALERT.value,
-                translation_key="co2_alert",
-                entity_category=EntityCategory.DIAGNOSTIC,
-            ),
             CompitParameter.CO2_LEVEL: SensorEntityDescription(
                 key=CompitParameter.CO2_LEVEL.value,
-                translation_key="co2_level",
+                device_class=SensorDeviceClass.CO2,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
@@ -489,16 +446,8 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
                 entity_category=EntityCategory.DIAGNOSTIC,
                 native_unit_of_measurement=PERCENTAGE,
             ),
-            CompitParameter.DUST_ALERT: SensorEntityDescription(
-                key=CompitParameter.DUST_ALERT.value,
-                translation_key="dust_alert",
-                device_class=SensorDeviceClass.ENUM,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                options=["no_alert", "alert"],
-            ),
             CompitParameter.HUMIDITY: SensorEntityDescription(
                 key=CompitParameter.HUMIDITY.value,
-                translation_key="humidity",
                 device_class=SensorDeviceClass.HUMIDITY,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -514,7 +463,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             ),
             CompitParameter.PM1_LEVEL_MEASURED: SensorEntityDescription(
                 key=CompitParameter.PM1_LEVEL_MEASURED.value,
-                translation_key="pm1_level",
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 device_class=SensorDeviceClass.PM1,
@@ -522,7 +470,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             ),
             CompitParameter.PM4_LEVEL_MEASURED: SensorEntityDescription(
                 key=CompitParameter.PM4_LEVEL_MEASURED.value,
-                translation_key="pm4_level",
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 device_class=SensorDeviceClass.PM4,
@@ -530,24 +477,15 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             ),
             CompitParameter.PM10_MEASURED: SensorEntityDescription(
                 key=CompitParameter.PM10_MEASURED.value,
-                translation_key="pm10_level",
                 device_class=SensorDeviceClass.PM10,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             ),
             CompitParameter.PM25_MEASURED: SensorEntityDescription(
                 key=CompitParameter.PM25_MEASURED.value,
-                translation_key="pm25_level",
                 device_class=SensorDeviceClass.PM25,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            ),
-            CompitParameter.TEMPERATURE_ALERT: SensorEntityDescription(
-                key=CompitParameter.TEMPERATURE_ALERT.value,
-                translation_key="temperature_alert",
-                device_class=SensorDeviceClass.ENUM,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                options=["no_alert", "alert"],
             ),
         },
     ),
@@ -647,21 +585,19 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             ),
             CompitParameter.TANK_BOTTOM_T2_TEMPERATURE: SensorEntityDescription(
                 key=CompitParameter.TANK_BOTTOM_T2_TEMPERATURE.value,
-                translation_key="tank_temperature",
+                translation_key="tank_temperature_t2",
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-                translation_placeholders={"sensor": "bottom T2"},
             ),
             CompitParameter.TANK_TOP_T3_TEMPERATURE: SensorEntityDescription(
                 key=CompitParameter.TANK_TOP_T3_TEMPERATURE.value,
-                translation_key="tank_temperature",
+                translation_key="tank_temperature_t3",
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-                translation_placeholders={"sensor": "top T3"},
             ),
         },
     ),
@@ -824,20 +760,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
     223: CompitDeviceDescription(
         name="Nano Color 2",
         parameters={
-            CompitParameter.AIRING: SensorEntityDescription(
-                key=CompitParameter.AIRING.value,
-                translation_key="airing",
-                device_class=SensorDeviceClass.ENUM,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                options=["off", "on"],
-            ),
-            CompitParameter.CO2_LEVEL: SensorEntityDescription(
-                key=CompitParameter.CO2_LEVEL.value,
-                translation_key="co2_level",
-                device_class=SensorDeviceClass.ENUM,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                options=["no_sensor", "normal", "exceeded"],
-            ),
             CompitParameter.OUTDOOR_TEMPERATURE: SensorEntityDescription(
                 key=CompitParameter.OUTDOOR_TEMPERATURE.value,
                 translation_key="outdoor_temperature",
@@ -851,14 +773,16 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
                 translation_key="pm10_level",
                 device_class=SensorDeviceClass.ENUM,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                options=["no_sensor", "normal", "warning", "exceeded"],
+                entity_registry_enabled_default=False,
+                options=[NO_SENSOR, "normal", "warning", "exceeded"],
             ),
             CompitParameter.PM25_LEVEL: SensorEntityDescription(
                 key=CompitParameter.PM25_LEVEL.value,
                 translation_key="pm25_level",
                 device_class=SensorDeviceClass.ENUM,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                options=["no_sensor", "normal", "warning", "exceeded"],
+                entity_registry_enabled_default=False,
+                options=[NO_SENSOR, "normal", "warning", "exceeded"],
             ),
             CompitParameter.VENTILATION_ALARM: SensorEntityDescription(
                 key=CompitParameter.VENTILATION_ALARM.value,
@@ -1018,16 +942,8 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
     225: CompitDeviceDescription(
         name="SPM - Nano Color",
         parameters={
-            CompitParameter.CO2_LEVEL: SensorEntityDescription(
-                key=CompitParameter.CO2_LEVEL.value,
-                translation_key="co2_level",
-                device_class=SensorDeviceClass.ENUM,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                options=["no_sensor", "normal", "exceeded"],
-            ),
             CompitParameter.HUMIDITY: SensorEntityDescription(
                 key=CompitParameter.HUMIDITY.value,
-                translation_key="humidity",
                 device_class=SensorDeviceClass.HUMIDITY,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -1043,14 +959,12 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             ),
             CompitParameter.PM10_MEASURED: SensorEntityDescription(
                 key=CompitParameter.PM10_MEASURED.value,
-                translation_key="pm10_level",
                 device_class=SensorDeviceClass.PM10,
                 native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             CompitParameter.PM25_MEASURED: SensorEntityDescription(
                 key=CompitParameter.PM25_MEASURED.value,
-                translation_key="pm25_level",
                 device_class=SensorDeviceClass.PM25,
                 native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -1079,16 +993,8 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
                     "no_power",
                 ],
             ),
-            CompitParameter.BATTERY_CHARGE_STATUS: SensorEntityDescription(
-                key=CompitParameter.BATTERY_CHARGE_STATUS.value,
-                translation_key="battery_charge_status",
-                device_class=SensorDeviceClass.ENUM,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                options=["not_charging", "charging"],
-            ),
             CompitParameter.BATTERY_LEVEL: SensorEntityDescription(
                 key=CompitParameter.BATTERY_LEVEL.value,
-                translation_key="battery_level",
                 device_class=SensorDeviceClass.BATTERY,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -1102,20 +1008,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
                 entity_category=EntityCategory.DIAGNOSTIC,
                 native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
             ),
-            CompitParameter.HAS_BATTERY: SensorEntityDescription(
-                key=CompitParameter.HAS_BATTERY.value,
-                translation_key="has_battery",
-                device_class=SensorDeviceClass.ENUM,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                options=["no", "yes"],
-            ),
-            CompitParameter.HAS_EXTERNAL_POWER: SensorEntityDescription(
-                key=CompitParameter.HAS_EXTERNAL_POWER.value,
-                translation_key="has_external_power",
-                device_class=SensorDeviceClass.ENUM,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                options=["no", "yes"],
-            ),
             CompitParameter.OUTDOOR_TEMPERATURE: SensorEntityDescription(
                 key=CompitParameter.OUTDOOR_TEMPERATURE.value,
                 translation_key="outdoor_temperature",
@@ -1123,13 +1015,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            ),
-            CompitParameter.PUMP_STATUS: SensorEntityDescription(
-                key=CompitParameter.PUMP_STATUS.value,
-                translation_key="pump_status",
-                device_class=SensorDeviceClass.ENUM,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                options=["off", "on"],
             ),
             CompitParameter.RETURN_CIRCUIT_TEMPERATURE: SensorEntityDescription(
                 key=CompitParameter.RETURN_CIRCUIT_TEMPERATURE.value,
@@ -1184,6 +1069,16 @@ async def async_setup_entry(
             continue
 
         for code, entity_description in device_definition.parameters.items():
+            if (
+                entity_description.options
+                and NO_SENSOR in entity_description.options
+                and (
+                    coordinator.connector.get_current_value(device_id, code)
+                    == NO_SENSOR
+                )
+            ):
+                continue
+
             sensor_entities.append(
                 CompitSensor(
                     coordinator,
@@ -1233,6 +1128,18 @@ class CompitSensor(CoordinatorEntity[CompitDataUpdateCoordinator], SensorEntity)
     @property
     def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
-        return self.coordinator.connector.get_current_value(
+        value = self.coordinator.connector.get_current_value(
             self.device_id, self.parameter_code
         )
+
+        if (
+            isinstance(value, str)
+            and self.entity_description.options
+            and value in self.entity_description.options
+        ):
+            return value
+
+        if isinstance(value, (int, float)):
+            return value
+
+        return None
