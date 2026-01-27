@@ -4,22 +4,21 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from jvcprojector import (
     JvcProjector,
     JvcProjectorAuthError,
-    JvcProjectorConnectError,
-    const,
+    JvcProjectorTimeoutError,
+    command as cmd,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import NAME
+from .const import INPUT, NAME, POWER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,26 +45,33 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             update_interval=INTERVAL_SLOW,
         )
 
-        self.device = device
-        self.unique_id = format_mac(device.mac)
+        self.device: JvcProjector = device
+
+        if TYPE_CHECKING:
+            assert config_entry.unique_id is not None
+        self.unique_id = config_entry.unique_id
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Get the latest state data."""
+        state: dict[str, str | None] = {
+            POWER: None,
+            INPUT: None,
+        }
+
         try:
-            state = await self.device.get_state()
-        except JvcProjectorConnectError as err:
+            state[POWER] = await self.device.get(cmd.Power)
+
+            if state[POWER] == cmd.Power.ON:
+                state[INPUT] = await self.device.get(cmd.Input)
+
+        except JvcProjectorTimeoutError as err:
             raise UpdateFailed(f"Unable to connect to {self.device.host}") from err
         except JvcProjectorAuthError as err:
             raise ConfigEntryAuthFailed("Password authentication failed") from err
 
-        old_interval = self.update_interval
-
-        if state[const.POWER] != const.STANDBY:
+        if state[POWER] != cmd.Power.STANDBY:
             self.update_interval = INTERVAL_FAST
         else:
             self.update_interval = INTERVAL_SLOW
-
-        if self.update_interval != old_interval:
-            _LOGGER.debug("Changed update interval to %s", self.update_interval)
 
         return state

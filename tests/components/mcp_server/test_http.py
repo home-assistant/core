@@ -33,6 +33,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     llm,
 )
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, setup_test_component_platform
@@ -300,6 +301,7 @@ async def mcp_url(mcp_protocol: str, hass_client: ClientSessionGenerator) -> str
 
 @asynccontextmanager
 async def mcp_sse_session(
+    hass: HomeAssistant,
     mcp_url: str,
     hass_supervisor_access_token: str,
 ) -> AsyncGenerator[mcp.client.session.ClientSession]:
@@ -317,6 +319,7 @@ async def mcp_sse_session(
 
 @asynccontextmanager
 async def mcp_streamable_session(
+    hass: HomeAssistant,
     mcp_url: str,
     hass_supervisor_access_token: str,
 ) -> AsyncGenerator[mcp.client.session.ClientSession]:
@@ -325,11 +328,9 @@ async def mcp_streamable_session(
     headers = {"Authorization": f"Bearer {hass_supervisor_access_token}"}
 
     async with (
-        mcp.client.streamable_http.streamablehttp_client(mcp_url, headers=headers) as (
-            read_stream,
-            write_stream,
-            _,
-        ),
+        mcp.client.streamable_http.streamable_http_client(
+            mcp_url, http_client=create_async_httpx_client(hass, headers=headers)
+        ) as (read_stream, write_stream, _),
         mcp.client.session.ClientSession(read_stream, write_stream) as session,
     ):
         await session.initialize()
@@ -356,7 +357,7 @@ async def test_mcp_tools_list(
 ) -> None:
     """Test the tools list endpoint."""
 
-    async with mcp_client(mcp_url, hass_supervisor_access_token) as session:
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.list_tools()
 
     # Pick a single arbitrary tool and test that description and parameters
@@ -384,7 +385,7 @@ async def test_mcp_tool_call(
     assert state
     assert state.state == STATE_OFF
 
-    async with mcp_client(mcp_url, hass_supervisor_access_token) as session:
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.call_tool(
             name="HassTurnOn",
             arguments={"name": "kitchen light"},
@@ -413,7 +414,7 @@ async def test_mcp_tool_call_failed(
 ) -> None:
     """Test the tool call endpoint with a failure."""
 
-    async with mcp_client(mcp_url, hass_supervisor_access_token) as session:
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.call_tool(
             name="HassTurnOn",
             arguments={"name": "backyard"},
@@ -435,7 +436,7 @@ async def test_prompt_list(
 ) -> None:
     """Test the list prompt endpoint."""
 
-    async with mcp_client(mcp_url, hass_supervisor_access_token) as session:
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.list_prompts()
 
     assert len(result.prompts) == 1
@@ -454,7 +455,7 @@ async def test_prompt_get(
 ) -> None:
     """Test the get prompt endpoint."""
 
-    async with mcp_client(mcp_url, hass_supervisor_access_token) as session:
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         result = await session.get_prompt(name="Assist")
 
     assert result.description == "Default prompt for Home Assistant Assist API"
@@ -474,6 +475,6 @@ async def test_get_unknown_prompt(
 ) -> None:
     """Test the get prompt endpoint."""
 
-    async with mcp_client(mcp_url, hass_supervisor_access_token) as session:
+    async with mcp_client(hass, mcp_url, hass_supervisor_access_token) as session:
         with pytest.raises(McpError):
             await session.get_prompt(name="Unknown")

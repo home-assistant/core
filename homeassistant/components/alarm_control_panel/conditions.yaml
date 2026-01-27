@@ -1,0 +1,52 @@
+.condition_common: &condition_common
+  target:
+    entity:
+      domain: alarm_control_panel
+  fields: &condition_common_fields
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: condition_behavior
+          options:
+            - all
+            - any
+
+is_armed: *condition_common
+
+is_armed_away:
+  fields: *condition_common_fields
+  target:
+    entity:
+      domain: alarm_control_panel
+      supported_features:
+        - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_AWAY
+
+is_armed_home:
+  fields: *condition_common_fields
+  target:
+    entity:
+      domain: alarm_control_panel
+      supported_features:
+        - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
+
+is_armed_night:
+  fields: *condition_common_fields
+  target:
+    entity:
+      domain: alarm_control_panel
+      supported_features:
+        - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_NIGHT
+
+is_armed_vacation:
+  fields: *condition_common_fields
+  target:
+    entity:
+      domain: alarm_control_panel
+      supported_features:
+        - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_VACATION
+
+is_disarmed: *condition_common
+
+is_triggered: *condition_common

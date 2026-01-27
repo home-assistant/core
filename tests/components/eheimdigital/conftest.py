@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
 from eheimdigital.classic_vario import EheimDigitalClassicVario
+from eheimdigital.filter import EheimDigitalFilter
 from eheimdigital.heater import EheimDigitalHeater
 from eheimdigital.hub import EheimDigitalHub
 from eheimdigital.types import (
@@ -13,6 +14,7 @@ from eheimdigital.types import (
     ClassicVarioDataPacket,
     ClockPacket,
     CloudPacket,
+    FilterDataPacket,
     MoonPacket,
     UsrDtaPacket,
 )
@@ -83,10 +85,24 @@ def classic_vario_mock():
 
 
 @pytest.fixture
+def filter_mock():
+    """Mock a filter device."""
+    eheim_filter = EheimDigitalFilter(
+        MagicMock(spec=EheimDigitalHub),
+        UsrDtaPacket(load_json_object_fixture("filter/usrdta.json", DOMAIN)),
+    )
+    eheim_filter.filter_data = FilterDataPacket(
+        load_json_object_fixture("filter/filter_data.json", DOMAIN)
+    )
+    return eheim_filter
+
+
+@pytest.fixture
 def eheimdigital_hub_mock(
     classic_led_ctrl_mock: MagicMock,
     heater_mock: MagicMock,
     classic_vario_mock: MagicMock,
+    filter_mock: MagicMock,
 ) -> Generator[AsyncMock]:
     """Mock eheimdigital hub."""
     with (
@@ -103,6 +119,7 @@ def eheimdigital_hub_mock(
             "00:00:00:00:00:01": classic_led_ctrl_mock,
             "00:00:00:00:00:02": heater_mock,
             "00:00:00:00:00:03": classic_vario_mock,
+            "00:00:00:00:00:04": filter_mock,
         }
         eheimdigital_hub_mock.return_value.main = classic_led_ctrl_mock
         yield eheimdigital_hub_mock

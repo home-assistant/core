@@ -260,6 +260,27 @@ async def test_setup_api_panel(
     }
 
 
+async def test_setup_app_panel(hass: HomeAssistant) -> None:
+    """Test app panel is registered."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+        assert result
+
+    panels = hass.data[frontend.DATA_PANELS]
+
+    assert panels.get("app").to_response() == {
+        "component_name": "app",
+        "icon": None,
+        "title": None,
+        "default_visible": True,
+        "config": None,
+        "url_path": "app",
+        "require_admin": False,
+        "config_panel_domain": None,
+    }
+
+
 async def test_setup_api_push_api_data(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,

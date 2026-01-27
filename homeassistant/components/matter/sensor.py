@@ -442,6 +442,9 @@ DISCOVERY_SCHEMAS = [
             key="PowerSourceBatVoltage",
             translation_key="battery_voltage",
             native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
+            # Battery voltages are low-voltage diagnostics; use 2 decimals in volts
+            # to provide finer granularity than mains-level voltage sensors.
+            suggested_display_precision=2,
             suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,

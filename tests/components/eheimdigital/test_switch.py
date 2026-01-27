@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from eheimdigital.types import EheimDeviceType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,8 +20,7 @@ from .conftest import init_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.usefixtures("classic_vario_mock")
-async def test_setup_classic_vario(
+async def test_setup(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -41,10 +39,11 @@ async def test_setup_classic_vario(
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
-        "00:00:00:00:00:03", EheimDeviceType.VERSION_EHEIM_CLASSIC_VARIO
-    )
-    await hass.async_block_till_done()
+    for device in eheimdigital_hub_mock.return_value.devices:
+        await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
+            device, eheimdigital_hub_mock.return_value.devices[device].device_type
+        )
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -52,37 +51,45 @@ async def test_setup_classic_vario(
 @pytest.mark.parametrize(
     ("service", "active"), [(SERVICE_TURN_OFF, False), (SERVICE_TURN_ON, True)]
 )
+@pytest.mark.parametrize(
+    ("device_name", "entity_id", "property_name"),
+    [
+        ("classic_vario_mock", "switch.mock_classicvario", "filterActive"),
+        ("filter_mock", "switch.mock_filter", "active"),
+    ],
+)
 async def test_turn_on_off(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
-    classic_vario_mock: MagicMock,
+    device_name: str,
+    entity_id: str,
+    property_name: str,
     service: str,
     active: bool,
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test turning on/off the switch."""
+    device: MagicMock = request.getfixturevalue(device_name)
     await init_integration(hass, mock_config_entry)
 
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
-        "00:00:00:00:00:03", EheimDeviceType.VERSION_EHEIM_CLASSIC_VARIO
+        device.mac_address, device.device_type
     )
     await hass.async_block_till_done()
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "switch.mock_classicvario"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
-    calls = [
-        call for call in classic_vario_mock.hub.mock_calls if call[0] == "send_packet"
-    ]
-    assert len(calls) == 1
-    assert calls[0][1][0].get("filterActive") == int(active)
+    calls = [call for call in device.hub.mock_calls if call[0] == "send_packet"]
+    assert calls[-1][1][0][property_name] == int(active)
 
 
-@pytest.mark.usefixtures("classic_vario_mock")
+@pytest.mark.usefixtures("classic_vario_mock", "filter_mock")
 @pytest.mark.parametrize(
     ("device_name", "entity_list"),
     [
@@ -99,6 +106,25 @@ async def test_turn_on_off(
                 (
                     "switch.mock_classicvario",
                     "classic_vario_data",
+                    "filterActive",
+                    0,
+                    "off",
+                ),
+            ],
+        ),
+        (
+            "filter_mock",
+            [
+                (
+                    "switch.mock_filter",
+                    "filter_data",
+                    "filterActive",
+                    1,
+                    "on",
+                ),
+                (
+                    "switch.mock_filter",
+                    "filter_data",
                     "filterActive",
                     0,
                     "off",
