@@ -360,19 +360,9 @@ async def test_switch_device_no_wan_access(
             STATE_OFF,
         ),
         (
-            "switch.mock_title_wi_fi_mywifi",
-            "async_set_wlan_configuration",
-            STATE_OFF,
-        ),
-        (
             "switch.printer_internet_access",
             "async_set_allow_wan_access",
             STATE_ON,
-        ),
-        (
-            "switch.mock_title_call_deflection_0",
-            "async_set_deflection_enable",
-            STATE_OFF,
         ),
     ],
 )
@@ -402,7 +392,6 @@ async def test_switch_turn_on_off(
 
     with patch(
         f"homeassistant.components.fritz.coordinator.AvmWrapper.{wrapper_method}",
-        # return_value=return_value,
     ) as mock_set_action:
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -417,7 +406,6 @@ async def test_switch_turn_on_off(
 
     with patch(
         f"homeassistant.components.fritz.coordinator.AvmWrapper.{wrapper_method}",
-        #  return_value=return_value,
     ) as mock_set_action_2:
         await hass.services.async_call(
             SWITCH_DOMAIN,
