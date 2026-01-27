@@ -74,7 +74,7 @@
         "name": "Maximum amperage"
       },
       "max_current": {
-        "name": "Maximum current"
+        "name": "Current limit"
       },
       "min_amps": {
         "name": "Minimum amperage"
