@@ -200,10 +200,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
             hasattr(self.device.state, "child_lock")
             and self.device.state.child_lock is not None
         ):
-            if isinstance(self.device.state.child_lock, bool):
-                attr["child_lock"] = self.device.state.child_lock
-            else:
-                attr["child_lock"] = self.device.state.child_lock != "off"
+            attr["child_lock"] = self.device.state.child_lock
 
         if (
             hasattr(self.device.state, "nightlight_status")
