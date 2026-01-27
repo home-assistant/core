@@ -11,15 +11,18 @@ from jaraco.abode.exceptions import (
 from homeassistant.components.abode.const import DOMAIN
 from homeassistant.components.abode.services import SERVICE_SETTINGS
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+from homeassistant.components.services import DOMAIN as SERVICES_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
 
 
 async def test_change_settings(hass: HomeAssistant) -> None:
     """Test change_setting service."""
+    await async_setup_component(hass, SERVICES_DOMAIN, {})
     await setup_platform(hass, ALARM_DOMAIN)
 
     with patch("jaraco.abode.client.Client.set_setting") as mock_set_setting:
