@@ -1062,7 +1062,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "wsdot",
     "wyoming",
     "x10",
-    "xbox",
     "xeoma",
     "xiaomi",
     "xiaomi_aqara",
