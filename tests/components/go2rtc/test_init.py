@@ -1186,25 +1186,6 @@ async def test_basic_auth_with_debug_ui(hass: HomeAssistant, server_dir: Path) -
 
 
 @pytest.mark.usefixtures("init_integration", "ws_client")
-async def test_preload_enable_during_webrtc_offer(
-    hass: HomeAssistant,
-    rest_client: AsyncMock,
-    init_test_integration: MockCamera,
-) -> None:
-    """Test preload is enabled when camera has preload preference."""
-    camera = init_test_integration
-    test_settings = DynamicStreamSettings(
-        orientation=Orientation.NO_TRANSFORM, preload_stream=True
-    )
-    await _setup_camera_prefs(hass, camera.entity_id, test_settings)
-
-    await camera.async_handle_async_webrtc_offer(OFFER_SDP, "session_id", Mock())
-
-    # Verify preload was enabled
-    rest_client.preload.enable.assert_called_once_with(camera.entity_id)
-
-
-@pytest.mark.usefixtures("init_integration", "ws_client")
 async def test_preload_not_enabled_when_preference_disabled(
     hass: HomeAssistant,
     rest_client: AsyncMock,
@@ -1235,6 +1216,7 @@ async def test_preload_disabled_on_unregister(
     rest_client.streams.list.return_value = {
         camera.entity_id: Stream([Producer("rtsp://stream")])
     }
+    rest_client.preload.list.return_value = {camera.entity_id}
 
     await provider.async_unregister_camera(camera)
 

@@ -413,9 +413,15 @@ class WebRTCProvider(CameraWebRTCProvider):
                 ],
             )
 
+    async def _update_preload_stream(self, camera: Camera) -> None:
+        camera_prefs = await get_dynamic_camera_stream_settings(
+            self._hass, camera.entity_id
+        )
         preload_streams = await self._rest_client.preload.list()
 
         if camera_prefs.preload_stream and camera.entity_id not in preload_streams:
+            # We need to first add the stream source otherwise preload enabling will fail
+            await self._update_stream_source(camera)
             await self._rest_client.preload.enable(camera.entity_id)
         elif not camera_prefs.preload_stream and camera.entity_id in preload_streams:
             await self._rest_client.preload.disable(camera.entity_id)
@@ -431,13 +437,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         camera: Camera,
     ) -> None:
         """Will be called when the provider is registered for a camera."""
-        camera_prefs = await get_dynamic_camera_stream_settings(
-            self._hass, camera.entity_id
-        )
-        if camera_prefs.preload_stream:
-            # Stream source is required to enable preload
-            # _update_stream_source will enable preload if enabled
-            await self._update_stream_source(camera)
+        await self._update_preload_stream(camera)
 
     async def async_unregister_camera(
         self,
@@ -448,15 +448,14 @@ class WebRTCProvider(CameraWebRTCProvider):
         if streams.get(camera.entity_id):
             # If no stream exists, no need to disable preload
             # as a stream is required to enable preload
-            await self._rest_client.preload.disable(camera.entity_id)
+            await self._update_preload_stream(camera)
 
     async def async_on_camera_prefs_update(
         self,
         camera: Camera,
     ) -> None:
         """Will be called when the camera preferences are updated."""
-        # Update the stream source to apply new preferences
-        await self._update_stream_source(camera)
+        await self._update_preload_stream(camera)
 
 
 @dataclass
