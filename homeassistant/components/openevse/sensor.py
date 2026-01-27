@@ -30,6 +30,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfInformation,
+    UnitOfLength,
     UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
@@ -277,7 +278,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="vehicle_range",
         translation_key="vehicle_range",
-        native_unit_of_measurement="km",
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda ev: ev.vehicle_range,

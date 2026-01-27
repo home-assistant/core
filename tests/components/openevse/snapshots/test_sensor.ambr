@@ -1702,7 +1702,7 @@
     'supported_features': 0,
     'translation_key': 'vehicle_range',
     'unique_id': 'deadbeeffeed-vehicle_range',
-    'unit_of_measurement': 'km',
+    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
 # name: test_entities[sensor.openevse_mock_config_vehicle_range-state]
@@ -1711,7 +1711,7 @@
       'device_class': 'distance',
       'friendly_name': 'openevse_mock_config Vehicle range',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'km',
+      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openevse_mock_config_vehicle_range',
