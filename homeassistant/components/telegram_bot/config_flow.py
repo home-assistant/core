@@ -263,6 +263,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=bot_name,
                 data={
                     CONF_PLATFORM: user_input[CONF_PLATFORM],
+                    CONF_API_ENDPOINT: user_input[CONF_API_ENDPOINT],
                     CONF_API_KEY: user_input[CONF_API_KEY],
                     CONF_PROXY_URL: user_input[SECTION_ADVANCED_SETTINGS].get(
                         CONF_PROXY_URL

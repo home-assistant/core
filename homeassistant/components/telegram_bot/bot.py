@@ -1113,7 +1113,12 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
 
     base_url: str = p_config.get(CONF_API_ENDPOINT, DEFAULT_API_ENDPOINT)
 
-    return Bot(token=api_key, base_url=base_url, request=request)
+    return Bot(
+        token=api_key,
+        base_url=f"{base_url}/bot",
+        base_file_url=f"{base_url}/file/bot",
+        request=request,
+    )
 
 
 async def load_data(
