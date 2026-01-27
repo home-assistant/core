@@ -15,6 +15,8 @@ DOMAIN: str = "nina"
 NO_MATCH_REGEX: str = "/(?!)/"
 ALL_MATCH_REGEX: str = ".*"
 
+SEVERITY_VALUES: list[str] = ["Extreme", "Severe", "Moderate", "Minor", "Unknown"]
+
 CONF_REGIONS: str = "regions"
 CONF_MESSAGE_SLOTS: str = "slots"
 CONF_FILTERS: str = "filters"
