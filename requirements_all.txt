@@ -264,7 +264,6 @@ aioflo==2021.11.0
 # homeassistant.components.yi
 aioftp==0.21.3
 
-# homeassistant.components.frontend
 # homeassistant.components.github
 aiogithubapi==24.6.0
 

@@ -1096,8 +1096,9 @@ async def test_www_local_dir(
     assert resp.status == HTTPStatus.OK
 
 
-async def test_development_pr_requires_github_token() -> None:
-    """Test that github_token is required when development_pr is set."""
+async def test_development_pr_and_github_token_inclusive() -> None:
+    """Test that development_pr and github_token must both be set or neither."""
+    # Both present - valid
     valid_config = {
         DOMAIN: {
             CONF_DEVELOPMENT_PR: 12345,
@@ -1106,21 +1107,22 @@ async def test_development_pr_requires_github_token() -> None:
     }
     assert CONFIG_SCHEMA(valid_config)
 
-    valid_config_no_pr: dict[str, dict[str, Any]] = {DOMAIN: {}}
-    assert CONFIG_SCHEMA(valid_config_no_pr)
+    valid_config_empty: dict[str, dict[str, Any]] = {DOMAIN: {}}
+    assert CONFIG_SCHEMA(valid_config_empty)
 
-    valid_config_token_only: dict[str, dict[str, Any]] = {
-        DOMAIN: {CONF_GITHUB_TOKEN: "test_token"}
-    }
-    assert CONFIG_SCHEMA(valid_config_token_only)
-
-    invalid_config = {
+    invalid_config_pr_only = {
         DOMAIN: {
             CONF_DEVELOPMENT_PR: 12345,
         }
     }
-    with pytest.raises(vol.Invalid, match="'github_token' is required"):
-        CONFIG_SCHEMA(invalid_config)
+    with pytest.raises(vol.Invalid, match="some but not all"):
+        CONFIG_SCHEMA(invalid_config_pr_only)
+
+    invalid_config_token_only: dict[str, dict[str, Any]] = {
+        DOMAIN: {CONF_GITHUB_TOKEN: "test_token"}
+    }
+    with pytest.raises(vol.Invalid, match="some but not all"):
+        CONFIG_SCHEMA(invalid_config_token_only)
 
 
 async def test_setup_with_development_pr_and_token(

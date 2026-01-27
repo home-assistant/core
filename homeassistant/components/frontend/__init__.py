@@ -131,37 +131,25 @@ def _validate_themes(themes: dict) -> dict[str, Any]:
     return validated_themes
 
 
-def _validate_frontend_config(config: dict) -> dict:
-    """Validate frontend configuration dependencies."""
-    if CONF_DEVELOPMENT_PR in config and CONF_GITHUB_TOKEN not in config:
-        raise vol.Invalid(
-            f"'{CONF_GITHUB_TOKEN}' is required when '{CONF_DEVELOPMENT_PR}' is set"
-        )
-    return config
-
-
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.All(
-            vol.Schema(
-                {
-                    vol.Optional(CONF_FRONTEND_REPO): cv.path,
-                    vol.Optional(CONF_DEVELOPMENT_PR): cv.positive_int,
-                    vol.Optional(CONF_GITHUB_TOKEN): cv.string,
-                    vol.Optional(CONF_THEMES): vol.All(dict, _validate_themes),
-                    vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_EXTRA_JS_URL_ES5): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    # We no longer use these options.
-                    vol.Optional(CONF_EXTRA_HTML_URL): cv.match_all,
-                    vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
-                    vol.Optional(CONF_JS_VERSION): cv.match_all,
-                },
-            ),
-            _validate_frontend_config,
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
+                vol.Inclusive(CONF_DEVELOPMENT_PR, "development_pr"): cv.positive_int,
+                vol.Inclusive(CONF_GITHUB_TOKEN, "development_pr"): cv.string,
+                vol.Optional(CONF_THEMES): vol.All(dict, _validate_themes),
+                vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_EXTRA_JS_URL_ES5): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                # We no longer use these options.
+                vol.Optional(CONF_EXTRA_HTML_URL): cv.match_all,
+                vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
+                vol.Optional(CONF_JS_VERSION): cv.match_all,
+            },
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -415,7 +403,6 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     """Return root path to the frontend files."""
     if dev_repo_path is not None:
         return pathlib.Path(dev_repo_path) / "hass_frontend"
-
     # Keep import here so that we can import frontend without installing reqs
     import hass_frontend  # noqa: PLC0415
 
@@ -458,27 +445,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Priority: development_repo > development_pr > integrated
     if repo_path and dev_pr_number:
         _LOGGER.warning(
-            "Both development_repo and development_pr are configured. "
-            "Using development_repo (takes precedence). "
-            "Remove development_repo to use automatic PR download"
+            "Both development_repo and development_pr are specified for frontend. "
+            "Using development_repo, remove development_repo to use "
+            "automatic PR download"
         )
         dev_pr_number = None
 
     if dev_pr_number:
         github_token: str = conf[CONF_GITHUB_TOKEN]
 
-        dev_pr_dir = await download_pr_artifact(
-            hass, dev_pr_number, github_token, pr_cache_dir
-        )
-
-        if dev_pr_dir is None:
-            _LOGGER.info(
-                "Falling back to the integrated frontend",
+        try:
+            dev_pr_dir = await download_pr_artifact(
+                hass, dev_pr_number, github_token, pr_cache_dir
             )
-            repo_path = None
-        else:
             repo_path = str(dev_pr_dir)
             _LOGGER.info("Using frontend from PR #%s", dev_pr_number)
+        except HomeAssistantError as err:
+            _LOGGER.error(
+                "Failed to download PR #%s: %s, falling back to the integrated frontend",
+                dev_pr_number,
+                err,
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            _LOGGER.exception(
+                "Unexpected error downloading PR #%s, "
+                "falling back to the integrated frontend",
+                dev_pr_number,
+            )
 
     is_dev = repo_path is not None
     root_path = _frontend_root(repo_path)

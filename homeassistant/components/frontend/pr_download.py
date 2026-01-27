@@ -168,13 +168,13 @@ def _extract_artifact(
     sha_file.write_text(head_sha)
 
 
-async def _download_pr_artifact(
+async def download_pr_artifact(
     hass: HomeAssistant,
     pr_number: int,
     github_token: str,
     tmp_dir: pathlib.Path,
 ) -> pathlib.Path:
-    """Download and extract frontend PR artifact from GitHub (core logic).
+    """Download and extract frontend PR artifact from GitHub.
 
     Returns the path to the tmp directory containing hass_frontend/.
     Raises HomeAssistantError on failure.
@@ -240,23 +240,3 @@ async def _download_pr_artifact(
         tmp_dir,
     )
     return tmp_dir
-
-
-async def download_pr_artifact(
-    hass: HomeAssistant,
-    pr_number: int,
-    github_token: str,
-    tmp_dir: pathlib.Path,
-) -> pathlib.Path | None:
-    """Download and extract frontend PR artifact from GitHub.
-
-    Returns the path to the tmp directory containing hass_frontend/, or None on failure.
-    """
-    try:
-        return await _download_pr_artifact(hass, pr_number, github_token, tmp_dir)
-    except HomeAssistantError as err:
-        _LOGGER.error("Failed to download PR #%s: %s", pr_number, err)
-        return None
-    except Exception:  # pylint: disable=broad-exception-caught
-        _LOGGER.exception("Unexpected error downloading PR #%s", pr_number)
-        return None
