@@ -268,7 +268,7 @@ aioftp==0.21.3
 aiogithubapi==24.6.0
 
 # homeassistant.components.guardian
-aioguardian==2022.07.0
+aioguardian==2026.01.1
 
 # homeassistant.components.harmony
 aioharmony==0.5.3
@@ -420,7 +420,7 @@ aiotankerkoenig==0.4.2
 aiotedee==0.2.25
 
 # homeassistant.components.tractive
-aiotractive==0.7.0
+aiotractive==1.0.0
 
 # homeassistant.components.unifi
 aiounifi==88
@@ -636,7 +636,7 @@ bimmer-connected[china]==0.17.3
 bizkaibus==0.1.1
 
 # homeassistant.components.esphome
-bleak-esphome==3.4.1
+bleak-esphome==3.5.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.4.3
@@ -739,7 +739,7 @@ colorlog==6.10.1
 colorthief==0.2.1
 
 # homeassistant.components.compit
-compit-inext-api==0.4.2
+compit-inext-api==0.6.0
 
 # homeassistant.components.concord232
 concord232==0.15.1
@@ -1131,6 +1131,9 @@ greeclimate==2.1.1
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
 
+# homeassistant.components.green_planet_energy
+greenplanet-energy-api==0.1.4
+
 # homeassistant.components.greenwave
 greenwavereality==0.5.1
 
@@ -1287,7 +1290,7 @@ imgw_pib==2.0.1
 incomfort-client==0.6.11
 
 # homeassistant.components.influxdb
-influxdb-client==1.48.0
+influxdb-client==1.50.0
 
 # homeassistant.components.influxdb
 influxdb==5.3.1
@@ -2659,7 +2662,7 @@ pyvesync==3.3.3
 pyvizio==0.1.61
 
 # homeassistant.components.velux
-pyvlx==0.2.27
+pyvlx==0.2.28
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
