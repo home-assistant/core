@@ -7,7 +7,7 @@
       "no_serial_number": "Device does not provide a serial number"
     },
     "error": {
-      "cannot_connect": "Cannot connect to the NRGkick device. Test the connection using a browser: http://{device_ip}/info",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_response": "The device returned an invalid response. Verify the host or IP address and make sure JSON API is enabled in the NRGkick mobile app.",
       "json_api_disabled": "JSON API is disabled on the device.\n\nEnable JSON API in the NRGkick mobile app:\n1. Open the NRGkick mobile app \u2192 Extended \u2192 Local API\n2. Enable JSON API under API Variants\n3. (Optional \u0026 recommended) Enable Authentication (JSON) and set credentials\n\nAfter enabling JSON API, submit this form again.",
@@ -30,8 +30,8 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "password": "Password for Basic Auth.",
-          "username": "Username for Basic Auth."
+          "password": "Password for your NRGkick device.",
+          "username": "Username for your NRGkick device."
         },
         "description": "Authentication is required for {device_ip}.\n\nGet your username and password in the NRGkick mobile app:\n1. Open the NRGkick mobile app \u2192 Extended \u2192 Local API\n2. Under Authentication (JSON), check or set your username and password\n\nIf you changed the credentials in the app, use the updated values here."
       },

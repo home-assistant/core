@@ -43,15 +43,15 @@ def mock_nrgkick_api(
     ):
         api = mock_api_cls.return_value
 
-        api.test_connection = AsyncMock(return_value=True)
-        api.get_info = AsyncMock(return_value=mock_info_data)
-        api.get_control = AsyncMock(return_value=mock_control_data)
-        api.get_values = AsyncMock(return_value=mock_values_data)
+        api.test_connection.return_value = True
+        api.get_info.return_value = mock_info_data
+        api.get_control.return_value = mock_control_data
+        api.get_values.return_value = mock_values_data
 
-        api.set_current = AsyncMock(return_value={"current_set": 16.0})
-        api.set_charge_pause = AsyncMock(return_value={"charge_pause": 0})
-        api.set_energy_limit = AsyncMock(return_value={"energy_limit": 0})
-        api.set_phase_count = AsyncMock(return_value={"phase_count": 3})
+        api.set_current.return_value = {"current_set": 16.0}
+        api.set_charge_pause.return_value = {"charge_pause": 0}
+        api.set_energy_limit.return_value = {"energy_limit": 0}
+        api.set_phase_count.return_value = {"phase_count": 3}
 
         yield api
 

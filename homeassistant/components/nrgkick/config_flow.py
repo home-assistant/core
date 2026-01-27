@@ -99,16 +99,11 @@ async def validate_input(
     try:
         await api.test_connection()
         info = await api.get_info(["general"], raw=True)
-    except NRGkickApiClientError:
-        # Raised by tests or other helpers; let it bubble.
-        raise
     except NRGkickAuthenticationError as err:
         raise NRGkickApiClientAuthenticationError from err
     except NRGkickAPIDisabledError as err:
         raise NRGkickApiClientApiDisabledError from err
-    except NRGkickConnectionError as err:
-        raise NRGkickApiClientCommunicationError from err
-    except (TimeoutError, aiohttp.ClientError, OSError) as err:
+    except (NRGkickConnectionError, TimeoutError, aiohttp.ClientError, OSError) as err:
         raise NRGkickApiClientCommunicationError from err
 
     device_name = info.get("general", {}).get("device_name")
@@ -141,11 +136,9 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-        device_ip = user_input[CONF_HOST] if user_input else ""
         if user_input is not None:
             try:
                 host = _normalize_host(user_input[CONF_HOST])
-                device_ip = host
             except vol.Invalid:
                 errors["base"] = "cannot_connect"
             else:
@@ -176,9 +169,6 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
-            description_placeholders={
-                "device_ip": device_ip,
-            },
         )
 
     async def async_step_user_auth(
@@ -255,12 +245,10 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
         # Store discovery info for the confirmation step.
-        self._discovered_host = discovery_info.host
+        self._discovered_host = _normalize_host(discovery_info.host)
         # Fallback: device_name -> model_type -> "NRGkick".
         self._discovered_name = device_name or model_type or "NRGkick"
-        self.context["title_placeholders"] = {
-            "name": self._discovered_name or "NRGkick"
-        }
+        self.context["title_placeholders"] = {"name": self._discovered_name}
 
         # If JSON API is disabled, guide the user through enabling it.
         if json_api_enabled != "1":
@@ -282,11 +270,10 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             NRGkickApiClientCommunicationError,
             NRGkickApiClientInvalidResponseError,
         ):
-            # Device may be temporarily unavailable; allow the user to confirm
-            # and retry.
-            pass
+            return self.async_abort(reason="cannot_connect")
         except NRGkickApiClientError:
             _LOGGER.exception("Unexpected error")
+            return self.async_abort(reason="unknown")
 
         # Proceed to confirmation step (no auth required upfront).
         return await self.async_step_zeroconf_confirm()
@@ -297,8 +284,12 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         """Guide the user to enable JSON API after discovery."""
         errors: dict[str, str] = {}
 
+        if TYPE_CHECKING:
+            assert self._discovered_host is not None
+            assert self._discovered_name is not None
+
         if user_input is not None:
-            host = _normalize_host(self._discovered_host or "")
+            host = _normalize_host(self._discovered_host)
 
             try:
                 info = await validate_input(self.hass, host)
@@ -323,8 +314,8 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="zeroconf_enable_json_api",
             data_schema=vol.Schema({}),
             description_placeholders={
-                "name": self._discovered_name or "NRGkick",
-                "device_ip": _normalize_host(self._discovered_host or ""),
+                "name": self._discovered_name,
+                "device_ip": _normalize_host(self._discovered_host),
             },
             errors=errors,
         )
@@ -335,34 +326,21 @@ class NRGkickConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         errors: dict[str, str] = {}
 
+        if TYPE_CHECKING:
+            assert self._discovered_host is not None
+            assert self._discovered_name is not None
         if user_input is not None:
-            host = _normalize_host(self._discovered_host or "")
-
-            try:
-                info = await validate_input(self.hass, host)
-            except NRGkickApiClientApiDisabledError:
-                errors["base"] = "json_api_disabled"
-            except NRGkickApiClientAuthenticationError:
-                self._pending_host = host
-                return await self.async_step_user_auth()
-            except NRGkickApiClientInvalidResponseError:
-                errors["base"] = "invalid_response"
-            except NRGkickApiClientCommunicationError:
-                errors["base"] = "cannot_connect"
-            except NRGkickApiClientError:
-                _LOGGER.exception("Unexpected error")
-                errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(
-                    title=info["title"], data={CONF_HOST: host}
-                )
+            host = _normalize_host(self._discovered_host)
+            return self.async_create_entry(
+                title=self._discovered_name, data={CONF_HOST: host}
+            )
 
         return self.async_show_form(
             step_id="zeroconf_confirm",
             data_schema=vol.Schema({}),
             description_placeholders={
-                "name": self._discovered_name or "NRGkick",
-                "device_ip": _normalize_host(self._discovered_host or ""),
+                "name": self._discovered_name,
+                "device_ip": _normalize_host(self._discovered_host),
             },
             errors=errors,
         )
