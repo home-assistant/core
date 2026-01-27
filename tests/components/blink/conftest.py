@@ -71,8 +71,6 @@ def blink_api_fixture(camera) -> MagicMock:
 def blink_auth_api_fixture() -> MagicMock:
     """Set up Blink API fixture."""
     mock_blink_auth_api = create_autospec(blinkpy.auth.Auth, instance=True)
-    mock_blink_auth_api.check_key_required.return_value = False
-    mock_blink_auth_api.send_auth_key = AsyncMock(return_value=True)
 
     with patch("homeassistant.components.blink.Auth", autospec=True) as class_mock:
         class_mock.return_value = mock_blink_auth_api
@@ -87,7 +85,7 @@ def mock_config_fixture():
         data={
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "Password",
-            "device_id": "Home Assistant",
+            "hardware_id": "Home Assistant",
             "uid": "BlinkCamera_e1233333e2-0909-09cd-777a-123456789012",
             "token": "A_token",
             "unique_id": "an_email@email.com",
@@ -97,5 +95,5 @@ def mock_config_fixture():
             "account_id": 654321,
         },
         entry_id=str(uuid4()),
-        version=3,
+        version=4,
     )

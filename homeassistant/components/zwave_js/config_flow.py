@@ -28,6 +28,7 @@ from homeassistant.components.hassio import (
 from homeassistant.config_entries import (
     SOURCE_ESPHOME,
     SOURCE_USB,
+    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -72,6 +73,7 @@ from .helpers import (
     CannotConnect,
     async_get_version_info,
     async_wait_for_driver_ready_event,
+    format_home_id_for_display,
 )
 from .models import ZwaveJSConfigEntry
 
@@ -124,6 +126,14 @@ RF_REGIONS = [
     "USA",
 ]
 
+# USB devices to ignore in serial port selection (non-Z-Wave devices)
+# Format: (manufacturer, description)
+IGNORED_USB_DEVICES = {
+    ("Nabu Casa", "SkyConnect v1.0"),
+    ("Nabu Casa", "Home Assistant Connect ZBT-1"),
+    ("Nabu Casa", "ZBT-2"),
+}
+
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
     """Return a schema for the manual step."""
@@ -155,6 +165,9 @@ def get_usb_ports() -> dict[str, str]:
     ports = list_ports.comports()
     port_descriptions = {}
     for port in ports:
+        if (port.manufacturer, port.description) in IGNORED_USB_DEVICES:
+            continue
+
         vid: str | None = None
         pid: str | None = None
         if port.vid is not None and port.pid is not None:
@@ -455,7 +468,17 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(home_id)
         self._abort_if_unique_id_configured()
         self.ws_address = f"ws://{discovery_info.host}:{discovery_info.port}"
-        self.context.update({"title_placeholders": {CONF_NAME: home_id}})
+        home_id_display = format_home_id_for_display(int(home_id))
+        # Show home ID and network location in discovery notification
+        self.context.update(
+            {
+                "title_placeholders": {
+                    "host": discovery_info.host,
+                    "port": str(discovery_info.port),
+                    "home_id": home_id_display,
+                }
+            }
+        )
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
@@ -467,10 +490,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         assert self.ws_address
         assert self.unique_id
+        home_id_display = format_home_id_for_display(int(self.unique_id))
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
-                "home_id": self.unique_id,
+                "home_id": home_id_display,
                 CONF_URL: self.ws_address[5:],
             },
         )
@@ -956,6 +980,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
                 }
             )
+            if self.restart_addon:
+                manager = get_addon_manager(self.hass)
+                await manager.async_stop_addon()
 
         self._abort_if_unique_id_configured(
             updates={
@@ -1501,41 +1528,56 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not is_hassio(self.hass):
             return self.async_abort(reason="not_hassio")
 
-        if (
-            discovery_info.zwave_home_id
-            and (
-                current_config_entries := self._async_current_entries(
-                    include_ignore=False
+        if discovery_info.zwave_home_id:
+            existing_entry: ConfigEntry | None = None
+            if (
+                (
+                    current_config_entries := self._async_current_entries(
+                        include_ignore=False
+                    )
                 )
-            )
-            and (home_id := str(discovery_info.zwave_home_id))
-            and (
-                existing_entry := next(
-                    (
-                        entry
-                        for entry in current_config_entries
-                        if entry.unique_id == home_id
-                    ),
-                    None,
+                and (home_id := str(discovery_info.zwave_home_id))
+                and (
+                    existing_entry := next(
+                        (
+                            entry
+                            for entry in current_config_entries
+                            if entry.unique_id == home_id
+                        ),
+                        None,
+                    )
                 )
-            )
-            # Only update existing entries that are configured via sockets
-            and existing_entry.data.get(CONF_SOCKET_PATH)
-            # And use the add-on
-            and existing_entry.data.get(CONF_USE_ADDON)
-        ):
-            await self._async_set_addon_config(
-                {CONF_ADDON_SOCKET: discovery_info.socket_path}
-            )
-            # Reloading will sync add-on options to config entry data
-            self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
-            return self.async_abort(reason="already_configured")
+            ):
+                # We can't migrate entries that are not using the add-on
+                if not existing_entry.data.get(CONF_USE_ADDON):
+                    return self.async_abort(reason="already_configured")
 
-        # We are not aborting if home ID configured here, we just want to make sure that it's set
-        # We will update a USB based config entry automatically in `async_step_finish_addon_setup_user`
-        await self.async_set_unique_id(
-            str(discovery_info.zwave_home_id), raise_on_progress=False
-        )
+                # Only update config automatically if using socket
+                if existing_entry.data.get(CONF_SOCKET_PATH):
+                    manager = get_addon_manager(self.hass)
+                    await self._async_set_addon_config(
+                        {CONF_ADDON_SOCKET: discovery_info.socket_path}
+                    )
+                    if self.restart_addon:
+                        await manager.async_stop_addon()
+                    self.hass.config_entries.async_update_entry(
+                        existing_entry,
+                        data={
+                            **existing_entry.data,
+                            CONF_SOCKET_PATH: discovery_info.socket_path,
+                        },
+                    )
+                    self.hass.config_entries.async_schedule_reload(
+                        existing_entry.entry_id
+                    )
+                    return self.async_abort(reason="already_configured")
+
+            # We are not aborting if home ID configured here, we just want to make sure that it's set
+            # We will update a USB based config entry automatically in `async_step_finish_addon_setup_user`
+            await self.async_set_unique_id(
+                str(discovery_info.zwave_home_id), raise_on_progress=False
+            )
+
         self.socket_path = discovery_info.socket_path
         self.context["title_placeholders"] = {
             CONF_NAME: f"{discovery_info.name} via ESPHome"

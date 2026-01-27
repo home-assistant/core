@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 from logging import Logger, getLogger
 import re
-from typing import Final
+from typing import Final, TypedDict
 
 from aioshelly.const import (
     MODEL_BULB,
@@ -26,6 +26,7 @@ from aioshelly.const import (
     MODEL_VINTAGE_V2,
     MODEL_WALL_DISPLAY,
     MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_XL,
 )
 
 from homeassistant.components.number import NumberMode
@@ -34,6 +35,10 @@ from homeassistant.const import UnitOfVolumeFlowRate
 DOMAIN: Final = "shelly"
 
 LOGGER: Logger = getLogger(__package__)
+
+# BLE provisioning
+PROVISIONING_TIMEOUT: Final = 35  # 35 seconds to wait for device to connect to WiFi
+CONF_SSID: Final = "ssid"
 
 CONF_COAP_PORT: Final = "coap_port"
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
@@ -163,6 +168,7 @@ INPUTS_EVENTS_SUBTYPES: Final = {
     "button2": 2,
     "button3": 3,
     "button4": 4,
+    "button5": 5,
 }
 
 SHBTN_MODELS: Final = [MODEL_BUTTON1, MODEL_BUTTON1_V2]
@@ -218,6 +224,11 @@ UPTIME_DEVIATION: Final = 60
 ENTRY_RELOAD_COOLDOWN = 60
 
 SHELLY_GAS_MODELS = [MODEL_GAS]
+SHELLY_WALL_DISPLAY_MODELS = (
+    MODEL_WALL_DISPLAY,
+    MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_XL,
+)
 
 CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
 
@@ -231,7 +242,6 @@ class BLEScannerMode(StrEnum):
 
 
 BLE_SCANNER_MIN_FIRMWARE = "1.5.1"
-WALL_DISPLAY_MIN_FIRMWARE = "2.3.0"
 
 MAX_PUSH_UPDATE_FAILURES = 5
 PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
@@ -244,9 +254,30 @@ BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID = "ble_scanner_firmware_unsupported_{u
 OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
     "outbound_websocket_incorrectly_enabled_{unique}"
 )
-WALL_DISPLAY_FIRMWARE_UNSUPPORTED_ISSUE_ID = (
-    "wall_display_firmware_unsupported_{unique}"
-)
+DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
+OPEN_WIFI_AP_ISSUE_ID = "open_wifi_ap_{unique}"
+COIOT_UNCONFIGURED_ISSUE_ID = "coiot_unconfigured_{unique}"
+
+
+class DeprecatedFirmwareInfo(TypedDict):
+    """TypedDict for Deprecated Firmware Info."""
+
+    min_firmware: str
+    ha_version: str
+
+
+# Provide firmware deprecation data:
+# key: device model
+# value: dict with:
+#   min_firmware: minimum supported firmware version
+#   ha_version: Home Assistant version when older firmware will be deprecated
+# Example:
+# DEPRECATED_FIRMWARES: dict[str, DeprecatedFirmwareInfo] = {
+#   MODEL_WALL_DISPLAY: DeprecatedFirmwareInfo(
+#     {"min_firmware": "2.3.0", "ha_version": "2025.10.0"}
+#   ),
+# }
+DEPRECATED_FIRMWARES: dict[str, DeprecatedFirmwareInfo] = {}
 
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
 
@@ -261,6 +292,7 @@ GEN2_BETA_RELEASE_URL = f"{GEN2_RELEASE_URL}#unreleased"
 DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_WALL_DISPLAY,
     MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_XL,
     MODEL_MOTION,
     MODEL_MOTION_2,
     MODEL_VALVE,
@@ -268,15 +300,7 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 
 CONF_GEN = "gen"
 
-VIRTUAL_COMPONENTS = (
-    "boolean",
-    "button",
-    "enum",
-    "input",
-    "number",
-    "presencezone",
-    "text",
-)
+VIRTUAL_COMPONENTS = ("boolean", "button", "enum", "number", "text")
 VIRTUAL_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
     "button": {"types": ["button"], "modes": ["button"]},
@@ -312,3 +336,14 @@ All_LIGHT_TYPES = ("cct", "light", "rgb", "rgbw")
 # Shelly-X specific models
 MODEL_NEO_WATER_VALVE = "NeoWaterValve"
 MODEL_FRANKEVER_WATER_VALVE = "WaterValve"
+MODEL_LINKEDGO_ST802_THERMOSTAT = "ST-802"
+MODEL_LINKEDGO_ST1820_THERMOSTAT = "ST1820"
+MODEL_TOP_EV_CHARGER_EVE01 = "EVE01"
+MODEL_FRANKEVER_IRRIGATION_CONTROLLER = "Irrigation"
+
+ROLE_GENERIC = "generic"
+
+TRV_CHANNEL = 0
+
+ATTR_KEY = "key"
+ATTR_VALUE = "value"

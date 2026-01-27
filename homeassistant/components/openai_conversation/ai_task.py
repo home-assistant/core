@@ -10,13 +10,18 @@ from typing import TYPE_CHECKING
 from openai.types.responses.response_output_item import ImageGenerationCall
 
 from homeassistant.components import ai_task, conversation
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
-from .const import CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL, UNSUPPORTED_IMAGE_MODELS
+from .const import (
+    CONF_CHAT_MODEL,
+    CONF_IMAGE_MODEL,
+    RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_IMAGE_MODEL,
+    UNSUPPORTED_IMAGE_MODELS,
+)
 from .entity import OpenAIBaseLLMEntity
 
 if TYPE_CHECKING:
@@ -29,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OpenAIConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AI Task entities."""
@@ -142,7 +147,7 @@ class OpenAITaskEntity(
             mime_type=mime_type,
             width=int(width) if width else None,
             height=int(height) if height else None,
-            model="gpt-image-1",
+            model=self.subentry.data.get(CONF_IMAGE_MODEL, RECOMMENDED_IMAGE_MODEL),
             revised_prompt=image_call.revised_prompt
             if hasattr(image_call, "revised_prompt")
             else None,

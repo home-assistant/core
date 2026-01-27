@@ -1,27 +1,4 @@
 {
-  "title": "Demo",
-  "options": {
-    "step": {
-      "init": {
-        "data": {}
-      },
-      "options_1": {
-        "data": {
-          "constant": "Constant",
-          "bool": "Optional boolean",
-          "int": "Numeric input"
-        },
-        "submit": "Save!"
-      },
-      "options_2": {
-        "data": {
-          "string": "String value",
-          "select": "Select an option",
-          "multi": "Multiselect"
-        }
-      }
-    }
-  },
   "entity": {
     "climate": {
       "ubercool": {
@@ -34,6 +11,13 @@
               "on_low": "On low"
             }
           },
+          "swing_horizontal_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "off": "[%key:common::state::off%]",
+              "rangefull": "Full range"
+            }
+          },
           "swing_mode": {
             "state": {
               "1": "1",
@@ -41,27 +25,6 @@
               "3": "3",
               "auto": "[%key:common::state::auto%]",
               "off": "[%key:common::state::off%]"
-            }
-          },
-          "swing_horizontal_mode": {
-            "state": {
-              "rangefull": "Full range",
-              "auto": "[%key:common::state::auto%]",
-              "off": "[%key:common::state::off%]"
-            }
-          }
-        }
-      }
-    },
-    "fan": {
-      "demo": {
-        "state_attributes": {
-          "preset_mode": {
-            "state": {
-              "auto": "[%key:common::state::auto%]",
-              "sleep": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::sleep%]",
-              "smart": "Smart",
-              "on": "[%key:common::state::on%]"
             }
           }
         }
@@ -73,6 +36,20 @@
           "event_type": {
             "state": {
               "pressed": "Pressed"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "demo": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "on": "[%key:common::state::on%]",
+              "sleep": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::sleep%]",
+              "smart": "Smart"
             }
           }
         }
@@ -119,10 +96,33 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {}
+      },
+      "options_1": {
+        "data": {
+          "bool": "Optional boolean",
+          "constant": "Constant",
+          "int": "Numeric input"
+        },
+        "submit": "Save!"
+      },
+      "options_2": {
+        "data": {
+          "multi": "Multiselect",
+          "select": "Select an option",
+          "string": "String value"
+        }
+      }
+    }
+  },
   "services": {
     "randomize_device_tracker_data": {
-      "name": "Randomize device tracker data",
-      "description": "Demonstrates using a device tracker to see where devices are located."
+      "description": "Demonstrates using a device tracker to see where devices are located.",
+      "name": "Randomize device tracker data"
     }
-  }
+  },
+  "title": "Demo"
 }

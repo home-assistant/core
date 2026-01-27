@@ -11,6 +11,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -18,7 +19,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
-from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
+from .coordinator import (
+    MieleAuxDataUpdateCoordinator,
+    MieleConfigEntry,
+    MieleDataUpdateCoordinator,
+    MieleRuntimeData,
+)
 from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
@@ -27,6 +33,7 @@ PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
     Platform.FAN,
     Platform.LIGHT,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VACUUM,
@@ -44,7 +51,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> bool:
     """Set up Miele from a config entry."""
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
 
     session = OAuth2Session(hass, entry, implementation)
     auth = AsyncConfigEntryAuth(async_get_clientsession(hass), session)
@@ -67,19 +80,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> boo
         ) from err
 
     # Setup MieleAPI and coordinator for data fetch
-    api = MieleAPI(auth)
-    coordinator = MieleDataUpdateCoordinator(hass, entry, api)
-    await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
+    _api = MieleAPI(auth)
+    _coordinator = MieleDataUpdateCoordinator(hass, entry, _api)
+    await _coordinator.async_config_entry_first_refresh()
+    _aux_coordinator = MieleAuxDataUpdateCoordinator(hass, entry, _api)
+    await _aux_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = MieleRuntimeData(_api, _coordinator, _aux_coordinator)
 
     entry.async_create_background_task(
         hass,
-        coordinator.api.listen_events(
-            data_callback=coordinator.callback_update_data,
-            actions_callback=coordinator.callback_update_actions,
+        entry.runtime_data.api.listen_events(
+            data_callback=_coordinator.callback_update_data,
+            actions_callback=_coordinator.callback_update_actions,
         ),
         "pymiele event listener",
     )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -99,5 +116,5 @@ async def async_remove_config_entry_device(
         identifier
         for identifier in device_entry.identifiers
         if identifier[0] == DOMAIN
-        and identifier[1] in config_entry.runtime_data.data.devices
+        and identifier[1] in config_entry.runtime_data.coordinator.data.devices
     )

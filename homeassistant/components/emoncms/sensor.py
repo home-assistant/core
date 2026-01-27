@@ -29,9 +29,9 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import template
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .config_flow import sensor_name
 from .const import CONF_ONLY_INCLUDE_FEEDID, FEED_ID, FEED_NAME, FEED_TAG
@@ -267,7 +267,9 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
             self._attr_extra_state_attributes[ATTR_USERID] = elem["userid"]
             self._attr_extra_state_attributes[ATTR_LASTUPDATETIME] = elem["time"]
             self._attr_extra_state_attributes[ATTR_LASTUPDATETIMESTR] = (
-                template.timestamp_local(float(elem["time"]))
+                dt_util.as_local(
+                    dt_util.utc_from_timestamp(float(elem["time"]))
+                ).isoformat()
             )
 
         self._attr_native_value = None

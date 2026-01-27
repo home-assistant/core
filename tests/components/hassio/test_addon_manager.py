@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, call
 from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import AddonsOptions, Discovery
+from aiohasupervisor.models import AddonsOptions, Discovery, PartialBackupOptions
 import pytest
 
 from homeassistant.components.hassio.addon_manager import (
@@ -17,7 +17,6 @@ from homeassistant.components.hassio.addon_manager import (
     AddonManager,
     AddonState,
 )
-from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.core import HomeAssistant
 
 
@@ -513,7 +512,7 @@ async def test_update_addon(
     assert addon_info.call_count == 2
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
-        hass, {"name": "addon_test_addon_1.0.0", "addons": ["test_addon"]}, partial=True
+        PartialBackupOptions(name="addon_test_addon_1.0.0", addons={"test_addon"})
     )
     assert update_addon.call_count == 1
 
@@ -555,7 +554,7 @@ async def test_update_addon_error(
     assert addon_info.call_count == 2
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
-        hass, {"name": "addon_test_addon_1.0.0", "addons": ["test_addon"]}, partial=True
+        PartialBackupOptions(name="addon_test_addon_1.0.0", addons={"test_addon"})
     )
     assert update_addon.call_count == 1
 
@@ -593,7 +592,7 @@ async def test_schedule_update_addon(
     assert addon_info.call_count == 3
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
-        hass, {"name": "addon_test_addon_1.0.0", "addons": ["test_addon"]}, partial=True
+        PartialBackupOptions(name="addon_test_addon_1.0.0", addons={"test_addon"})
     )
     assert update_addon.call_count == 1
 
@@ -615,7 +614,7 @@ async def test_schedule_update_addon(
     ),
     [
         (
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -665,7 +664,7 @@ async def test_schedule_update_addon_error(
     ),
     [
         (
-            HassioAPIError("Boom"),
+            SupervisorError("Boom"),
             1,
             None,
             0,
@@ -717,7 +716,7 @@ async def test_create_backup(
     assert addon_info.call_count == 1
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
-        hass, {"name": "addon_test_addon_1.0.0", "addons": ["test_addon"]}, partial=True
+        PartialBackupOptions(name="addon_test_addon_1.0.0", addons={"test_addon"})
     )
 
 
@@ -729,7 +728,7 @@ async def test_create_backup_error(
     create_backup: AsyncMock,
 ) -> None:
     """Test creating a backup of the addon raises error."""
-    create_backup.side_effect = HassioAPIError("Boom")
+    create_backup.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_create_backup()
@@ -739,7 +738,7 @@ async def test_create_backup_error(
     assert addon_info.call_count == 1
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
-        hass, {"name": "addon_test_addon_1.0.0", "addons": ["test_addon"]}, partial=True
+        PartialBackupOptions(name="addon_test_addon_1.0.0", addons={"test_addon"})
     )
 
 

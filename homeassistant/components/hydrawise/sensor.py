@@ -67,21 +67,21 @@ FLOW_CONTROLLER_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
     HydrawiseSensorEntityDescription(
         key="daily_total_water_use",
         translation_key="daily_total_water_use",
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
         suggested_display_precision=1,
         value_fn=lambda sensor: _get_water_use(sensor).total_use,
     ),
     HydrawiseSensorEntityDescription(
         key="daily_active_water_use",
         translation_key="daily_active_water_use",
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
         suggested_display_precision=1,
         value_fn=lambda sensor: _get_water_use(sensor).total_active_use,
     ),
     HydrawiseSensorEntityDescription(
         key="daily_inactive_water_use",
         translation_key="daily_inactive_water_use",
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
         suggested_display_precision=1,
         value_fn=lambda sensor: _get_water_use(sensor).total_inactive_use,
     ),
@@ -91,7 +91,7 @@ FLOW_ZONE_SENSORS: tuple[SensorEntityDescription, ...] = (
     HydrawiseSensorEntityDescription(
         key="daily_active_water_use",
         translation_key="daily_active_water_use",
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
         suggested_display_precision=1,
         value_fn=lambda sensor: float(
             _get_water_use(sensor).active_use_by_zone_id.get(sensor.zone.id, 0.0)
@@ -204,7 +204,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit_of_measurement of the sensor."""
-        if self.entity_description.device_class != SensorDeviceClass.VOLUME:
+        if self.entity_description.device_class != SensorDeviceClass.WATER:
             return self.entity_description.native_unit_of_measurement
         return (
             UnitOfVolume.GALLONS
@@ -217,7 +217,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
         """Icon of the entity based on the value."""
         if (
             self.entity_description.key in FLOW_MEASUREMENT_KEYS
-            and self.entity_description.device_class == SensorDeviceClass.VOLUME
+            and self.entity_description.device_class == SensorDeviceClass.WATER
             and round(self.state, 2) == 0.0
         ):
             return "mdi:water-outline"

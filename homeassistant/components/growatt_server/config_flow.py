@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
     ABORT_NO_PLANTS,
@@ -23,12 +24,13 @@ from .const import (
     AUTH_PASSWORD,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
+    CONF_REGION,
     DEFAULT_URL,
     DOMAIN,
     ERROR_CANNOT_CONNECT,
     ERROR_INVALID_AUTH,
     LOGIN_INVALID_AUTH_CODE,
-    SERVER_URLS,
+    SERVER_URLS_NAMES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,10 +69,13 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         self.auth_type = AUTH_PASSWORD
 
         # Traditional username/password authentication
+        # Convert region name to URL - guaranteed to exist since vol.In validates it
+        server_url = SERVER_URLS_NAMES[user_input[CONF_REGION]]
+
         self.api = growattServer.GrowattApi(
             add_random_user_id=True, agent_identifier=user_input[CONF_USERNAME]
         )
-        self.api.server_url = user_input[CONF_URL]
+        self.api.server_url = server_url
 
         try:
             login_response = await self.hass.async_add_executor_job(
@@ -91,6 +96,8 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.user_id = login_response["user"]["id"]
         self.data = user_input
+        # Store the actual URL, not the region name
+        self.data[CONF_URL] = server_url
         self.data[CONF_AUTH_TYPE] = self.auth_type
         return await self.async_step_plant()
 
@@ -104,8 +111,11 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         self.auth_type = AUTH_API_TOKEN
 
         # Using token authentication
-        token = user_input[CONF_TOKEN]
-        self.api = growattServer.OpenApiV1(token=token)
+        # Convert region name to URL - guaranteed to exist since vol.In validates it
+        server_url = SERVER_URLS_NAMES[user_input[CONF_REGION]]
+
+        self.api = growattServer.OpenApiV1(token=user_input[CONF_TOKEN])
+        self.api.server_url = server_url
 
         # Verify token by fetching plant list
         try:
@@ -127,6 +137,8 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return self._async_show_token_form({"base": ERROR_CANNOT_CONNECT})
         self.data = user_input
+        # Store the actual URL, not the region name
+        self.data[CONF_URL] = server_url
         self.data[CONF_AUTH_TYPE] = self.auth_type
         return await self.async_step_plant()
 
@@ -139,7 +151,12 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_URL, default=DEFAULT_URL): vol.In(SERVER_URLS),
+                vol.Required(CONF_REGION, default=DEFAULT_URL): SelectSelector(
+                    SelectSelectorConfig(
+                        options=list(SERVER_URLS_NAMES.keys()),
+                        translation_key="region",
+                    )
+                ),
             }
         )
 
@@ -155,6 +172,12 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_TOKEN): str,
+                vol.Required(CONF_REGION, default=DEFAULT_URL): SelectSelector(
+                    SelectSelectorConfig(
+                        options=list(SERVER_URLS_NAMES.keys()),
+                        translation_key="region",
+                    )
+                ),
             }
         )
 

@@ -1,9 +1,6 @@
 {
   "entity": {
     "button": {
-      "ptz_up": {
-        "default": "mdi:pan"
-      },
       "ptz_down": {
         "default": "mdi:pan"
       },
@@ -11,6 +8,9 @@
         "default": "mdi:pan"
       },
       "ptz_right": {
+        "default": "mdi:pan"
+      },
+      "ptz_up": {
         "default": "mdi:pan"
       }
     },

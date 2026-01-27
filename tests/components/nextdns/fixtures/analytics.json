@@ -1,0 +1,19 @@
+{
+  "protocols": {
+    "doh_queries": 20,
+    "doh3_queries": 15,
+    "doq_queries": 10,
+    "dot_queries": 30,
+    "tcp_queries": 0,
+    "udp_queries": 40
+  },
+  "status": {
+    "default_queries": 40,
+    "allowed_queries": 30,
+    "blocked_queries": 20,
+    "relayed_queries": 10
+  },
+  "ip_versions": { "ipv4_queries": 90, "ipv6_queries": 10 },
+  "encryption": { "encrypted_queries": 60, "unencrypted_queries": 40 },
+  "dnssec": { "not_validated_queries": 25, "validated_queries": 75 }
+}

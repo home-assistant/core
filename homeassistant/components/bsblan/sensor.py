@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import BSBLanConfigEntry, BSBLanData
-from .coordinator import BSBLanCoordinatorData
+from .coordinator import BSBLanFastData
 from .entity import BSBLanEntity
 
 PARALLEL_UPDATES = 1
@@ -27,8 +27,8 @@ PARALLEL_UPDATES = 1
 class BSBLanSensorEntityDescription(SensorEntityDescription):
     """Describes BSB-Lan sensor entity."""
 
-    value_fn: Callable[[BSBLanCoordinatorData], StateType]
-    exists_fn: Callable[[BSBLanCoordinatorData], bool] = lambda data: True
+    value_fn: Callable[[BSBLanFastData], StateType]
+    exists_fn: Callable[[BSBLanFastData], bool] = lambda data: True
 
 
 SENSOR_TYPES: tuple[BSBLanSensorEntityDescription, ...] = (
@@ -73,7 +73,7 @@ async def async_setup_entry(
     entities = [
         BSBLanSensor(data, description)
         for description in SENSOR_TYPES
-        if description.exists_fn(data.coordinator.data)
+        if description.exists_fn(data.fast_coordinator.data)
     ]
 
     if entities:
@@ -91,10 +91,10 @@ class BSBLanSensor(BSBLanEntity, SensorEntity):
         description: BSBLanSensorEntityDescription,
     ) -> None:
         """Initialize BSB-Lan sensor."""
-        super().__init__(data.coordinator, data)
+        super().__init__(data.fast_coordinator, data)
         self.entity_description = description
         self._attr_unique_id = f"{data.device.MAC}-{description.key}"
-        self._attr_temperature_unit = data.coordinator.client.get_temperature_unit
+        self._attr_temperature_unit = data.fast_coordinator.client.get_temperature_unit
 
     @property
     def native_value(self) -> StateType:

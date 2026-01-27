@@ -16,7 +16,9 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.components.sensor.helpers import async_parse_date_datetime
+from homeassistant.components.sensor.helpers import (  # pylint: disable=hass-component-root-import
+    async_parse_date_datetime,
+)
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
@@ -283,7 +285,10 @@ class TriggerBaseEntity(Entity):
                     variables, parse_result=True, strict=True
                 )
             ) is False:
+                name = self._rendered.get(CONF_NAME)
                 self._rendered = dict(self._static_rendered)
+                if name is not None and CONF_NAME not in self._static_rendered:
+                    self._rendered[CONF_NAME] = name
 
             self._available = result_as_boolean(available)
 

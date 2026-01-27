@@ -10,6 +10,11 @@ import dataclasses
 import sys
 from typing import TYPE_CHECKING, Any, cast, dataclass_transform
 
+if sys.version_info >= (3, 14):
+    from annotationlib import Format, get_annotations
+else:
+    from typing_extensions import Format, get_annotations
+
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
 
@@ -19,7 +24,7 @@ def _class_fields(cls: type, kw_only: bool) -> list[tuple[str, Any, Any]]:
 
     Extracted from dataclasses._process_class.
     """
-    cls_annotations = cls.__dict__.get("__annotations__", {})
+    cls_annotations = get_annotations(cls, format=Format.FORWARDREF)
 
     cls_fields: list[dataclasses.Field[Any]] = []
 
@@ -96,8 +101,16 @@ class FrozenOrThawed(type):
             for parent in cls.__mro__[::-1]:
                 if parent is object:
                     continue
-                annotations |= parent.__annotations__
-            cls.__annotations__ = annotations
+                annotations |= get_annotations(parent, format=Format.FORWARDREF)
+
+            if "__annotations__" in cls.__dict__ or sys.version_info < (3, 14):
+                cls.__annotations__ = annotations
+            else:
+
+                def wrapped_annotate(format: Format) -> dict:
+                    return annotations
+
+                cls.__annotate__ = wrapped_annotate
             return
 
         # First try without setting the kw_only flag, and if that fails, try setting it

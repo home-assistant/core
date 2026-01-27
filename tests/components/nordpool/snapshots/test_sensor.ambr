@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Currency',
     'options': dict({
     }),
     'original_device_class': None,
@@ -70,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -125,6 +127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily average',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -180,6 +183,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exchange rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -229,6 +233,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -283,6 +288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last updated',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -332,6 +338,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lowest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -386,6 +393,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -414,7 +422,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.21814',
+    'state': '1.42403',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_1_average-entry]
@@ -440,6 +448,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 1 average',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -495,6 +504,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 1 highest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -550,6 +560,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 1 lowest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -603,6 +614,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 1 time from',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -652,6 +664,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 1 time until',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -703,6 +716,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 2 average',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -758,6 +772,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 2 highest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -813,6 +828,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 2 lowest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -866,6 +882,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 2 time from',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -915,6 +932,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 2 time until',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -966,6 +984,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Peak average',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1021,6 +1040,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Peak highest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1076,6 +1096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Peak lowest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1129,6 +1150,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Peak time from',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1178,6 +1200,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Peak time until',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1227,6 +1250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Previous price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1255,7 +1279,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3.82803',
+    'state': '2.30807',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_currency-entry]
@@ -1279,6 +1303,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Currency',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1329,6 +1354,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1384,6 +1410,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily average',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1439,6 +1466,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exchange rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1488,6 +1516,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1542,6 +1571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last updated',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1591,6 +1621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lowest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1645,6 +1676,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1673,7 +1705,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.40502',
+    'state': '1.64617',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_1_average-entry]
@@ -1699,6 +1731,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 1 average',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1754,6 +1787,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 1 highest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1809,6 +1843,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 1 lowest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1862,6 +1897,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 1 time from',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1911,6 +1947,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 1 time until',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1962,6 +1999,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 2 average',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2017,6 +2055,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 2 highest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2072,6 +2111,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 2 lowest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2125,6 +2165,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 2 time from',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2174,6 +2215,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-peak 2 time until',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2225,6 +2267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Peak average',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2280,6 +2323,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Peak highest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2335,6 +2379,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Peak lowest price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2388,6 +2433,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Peak time from',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2437,6 +2483,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Peak time until',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2486,6 +2533,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Previous price',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2514,6 +2562,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4.44274',
+    'state': '2.67764',
   })
 # ---

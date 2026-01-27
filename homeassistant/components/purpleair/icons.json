@@ -7,16 +7,16 @@
       "pm0_5_count_concentration": {
         "default": "mdi:blur"
       },
-      "pm1_0_count_concentration": {
-        "default": "mdi:blur"
-      },
       "pm10_0_count_concentration": {
         "default": "mdi:blur"
       },
-      "pm5_0_count_concentration": {
+      "pm1_0_count_concentration": {
         "default": "mdi:blur"
       },
       "pm2_5_count_concentration": {
+        "default": "mdi:blur"
+      },
+      "pm5_0_count_concentration": {
         "default": "mdi:blur"
       }
     }

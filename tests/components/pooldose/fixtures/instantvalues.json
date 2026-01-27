@@ -12,6 +12,14 @@
       "value": 718,
       "unit": "mV"
     },
+    "cl": {
+      "value": 1.2,
+      "unit": "ppm"
+    },
+    "flow_rate": {
+      "value": 150,
+      "unit": "L/s"
+    },
     "ph_type_dosing": {
       "value": "alcalyne",
       "unit": null
@@ -20,7 +28,7 @@
       "value": "proportional",
       "unit": null
     },
-    "ofa_ph_value": {
+    "ofa_ph_time": {
       "value": 0,
       "unit": "min"
     },
@@ -32,7 +40,15 @@
       "value": "proportional",
       "unit": null
     },
-    "ofa_orp_value": {
+    "cl_type_dosing": {
+      "value": "low",
+      "unit": null
+    },
+    "peristaltic_cl_dosing": {
+      "value": "off",
+      "unit": null
+    },
+    "ofa_orp_time": {
       "value": 0,
       "unit": "min"
     },
@@ -59,28 +75,48 @@
     "orp_calibration_slope": {
       "value": 0.96,
       "unit": "mV"
+    },
+    "water_meter_total_permanent": {
+      "value": 12345.67,
+      "unit": "m3"
+    },
+    "water_meter_total_resettable": {
+      "value": 123.45,
+      "unit": "m3"
     }
   },
   "binary_sensor": {
-    "pump_running": {
+    "pump_alarm": {
       "value": true
     },
-    "ph_level_ok": {
+    "ph_level_alarm": {
       "value": false
     },
-    "orp_level_ok": {
+    "orp_level_alarm": {
       "value": false
     },
-    "flow_rate_ok": {
+    "flow_rate_alarm": {
       "value": false
     },
-    "alarm_relay": {
+    "relay_alarm": {
       "value": true
     },
-    "relay_aux1_ph": {
+    "relay_aux1": {
       "value": false
     },
-    "relay_aux2_orpcl": {
+    "relay_aux2": {
+      "value": false
+    },
+    "relay_aux3": {
+      "value": false
+    },
+    "alarm_ofa_ph": {
+      "value": false
+    },
+    "alarm_ofa_orp": {
+      "value": false
+    },
+    "alarm_ofa_cl": {
       "value": false
     }
   },
@@ -105,13 +141,55 @@
       "min": 0,
       "max": 65535,
       "step": 0.01
+    },
+    "ofa_ph_lower": {
+      "value": 6,
+      "unit": null,
+      "min": 0,
+      "max": 14,
+      "step": 0.1
+    },
+    "ofa_ph_upper": {
+      "value": 8,
+      "unit": null,
+      "min": 0,
+      "max": 14,
+      "step": 0.1
+    },
+    "ofa_orp_lower": {
+      "value": 600,
+      "unit": "mV",
+      "min": 0,
+      "max": 1000,
+      "step": 1
+    },
+    "ofa_orp_upper": {
+      "value": 800,
+      "unit": "mV",
+      "min": 0,
+      "max": 1000,
+      "step": 1
+    },
+    "ofa_cl_lower": {
+      "value": 0.2,
+      "unit": "ppm",
+      "min": 0,
+      "max": 10,
+      "step": 0.1
+    },
+    "ofa_cl_upper": {
+      "value": 0.9,
+      "unit": "ppm",
+      "min": 0,
+      "max": 10,
+      "step": 0.1
     }
   },
   "switch": {
-    "stop_pool_dosing": {
+    "pause_dosing": {
       "value": false
     },
-    "pump_detection": {
+    "pump_monitoring": {
       "value": true
     },
     "frequency_input": {
@@ -120,7 +198,28 @@
   },
   "select": {
     "water_meter_unit": {
-      "value": "m³"
+      "value": "m3"
+    },
+    "flow_rate_unit": {
+      "value": "L/s"
+    },
+    "ph_type_dosing_set": {
+      "value": "acid"
+    },
+    "ph_type_dosing_method": {
+      "value": "proportional"
+    },
+    "orp_type_dosing_set": {
+      "value": "low"
+    },
+    "orp_type_dosing_method": {
+      "value": "on_off"
+    },
+    "cl_type_dosing_set": {
+      "value": "high"
+    },
+    "cl_type_dosing_method": {
+      "value": "timed"
     }
   }
 }

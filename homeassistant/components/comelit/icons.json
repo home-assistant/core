@@ -1,10 +1,5 @@
 {
   "entity": {
-    "sensor": {
-      "zone_status": {
-        "default": "mdi:shield-check"
-      }
-    },
     "climate": {
       "thermostat": {
         "state_attributes": {
@@ -15,6 +10,11 @@
             }
           }
         }
+      }
+    },
+    "sensor": {
+      "zone_status": {
+        "default": "mdi:shield-check"
       }
     }
   }

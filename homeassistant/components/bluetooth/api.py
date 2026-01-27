@@ -194,6 +194,20 @@ def async_rediscover_address(hass: HomeAssistant, address: str) -> None:
 
 
 @hass_callback
+def async_clear_address_from_match_history(hass: HomeAssistant, address: str) -> None:
+    """Clear an address from the integration matcher history.
+
+    This allows future advertisements from this address to trigger discovery
+    even if the advertisement content has changed but the service data UUIDs
+    remain the same.
+
+    Unlike async_rediscover_address, this does not immediately re-trigger
+    discovery with the current advertisement in history.
+    """
+    _get_manager(hass).async_clear_address_from_match_history(address)
+
+
+@hass_callback
 def async_register_scanner(
     hass: HomeAssistant,
     scanner: BaseHaScanner,

@@ -162,6 +162,9 @@ async def test_config_flow_multiple_accounts(
         "account_id_2",
         websession=aiohttp_client.async_get_clientsession(hass),
     )
+    renault_vehicles = schemas.KamereonVehiclesResponseSchema.loads(
+        await async_load_fixture(hass, "renault/vehicle_zoe_40.json")
+    )
 
     # Multiple accounts
     with (
@@ -170,7 +173,10 @@ async def test_config_flow_multiple_accounts(
             "renault_api.renault_client.RenaultClient.get_api_accounts",
             return_value=[renault_account_1, renault_account_2],
         ),
-        patch("renault_api.renault_account.RenaultAccount.get_vehicles"),
+        patch(
+            "renault_api.renault_account.RenaultAccount.get_vehicles",
+            return_value=renault_vehicles,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -217,13 +223,19 @@ async def test_config_flow_duplicate(
         "account_id_1",
         websession=aiohttp_client.async_get_clientsession(hass),
     )
+    renault_vehicles = schemas.KamereonVehiclesResponseSchema.loads(
+        await async_load_fixture(hass, "renault/vehicle_zoe_50.json")
+    )
     with (
         patch("renault_api.renault_session.RenaultSession.login"),
         patch(
             "renault_api.renault_client.RenaultClient.get_api_accounts",
             return_value=[renault_account],
         ),
-        patch("renault_api.renault_account.RenaultAccount.get_vehicles"),
+        patch(
+            "renault_api.renault_account.RenaultAccount.get_vehicles",
+            return_value=renault_vehicles,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

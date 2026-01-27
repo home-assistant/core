@@ -5,8 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from roborock.containers import RoborockStateCode
-from roborock.roborock_typing import DeviceProp
+from roborock.data import CleanFluidStatus, RoborockStateCode
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -19,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
+from .models import DeviceState
 
 PARALLEL_UPDATES = 0
 
@@ -27,9 +27,11 @@ PARALLEL_UPDATES = 0
 class RoborockBinarySensorDescription(BinarySensorEntityDescription):
     """A class that describes Roborock binary sensors."""
 
-    value_fn: Callable[[DeviceProp], bool | int | None]
-    # If it is a dock entity
+    value_fn: Callable[[DeviceState], bool | int | None]
+    """A function that extracts the sensor value from DeviceState."""
+
     is_dock_entity: bool = False
+    """Whether this sensor is for the dock."""
 
 
 BINARY_SENSOR_DESCRIPTIONS = [
@@ -63,6 +65,18 @@ BINARY_SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: data.status.water_shortage_status,
     ),
     RoborockBinarySensorDescription(
+        key="clean_fluid_empty",
+        translation_key="clean_fluid_empty",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: (
+            data.status.clean_fluid_status == CleanFluidStatus.empty_not_installed
+            if data.status.clean_fluid_status is not None
+            else None
+        ),
+        is_dock_entity=True,
+    ),
+    RoborockBinarySensorDescription(
         key="in_cleaning",
         translation_key="in_cleaning",
         device_class=BinarySensorDeviceClass.RUNNING,
@@ -92,7 +106,7 @@ async def async_setup_entry(
         )
         for coordinator in config_entry.runtime_data.v1
         for description in BINARY_SENSOR_DESCRIPTIONS
-        if description.value_fn(coordinator.roborock_device_info.props) is not None
+        if description.value_fn(coordinator.data) is not None
     )
 
 
@@ -117,8 +131,4 @@ class RoborockBinarySensorEntity(RoborockCoordinatedEntityV1, BinarySensorEntity
     @property
     def is_on(self) -> bool:
         """Return the value reported by the sensor."""
-        return bool(
-            self.entity_description.value_fn(
-                self.coordinator.roborock_device_info.props
-            )
-        )
+        return bool(self.entity_description.value_fn(self.coordinator.data))

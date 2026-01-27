@@ -781,6 +781,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             STORAGE_KEY,
             atomic_writes=True,
             minor_version=STORAGE_VERSION_MINOR,
+            serialize_in_event_loop=False,
         )
 
     @callback
@@ -1045,7 +1046,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Private update device attributes.
 
         :param add_config_subentry_id: Add the device to a specific subentry of add_config_entry_id
-        :param remove_config_subentry_id: Remove the device from a specific subentry of remove_config_subentry_id
+        :param remove_config_subentry_id: Remove the device from a specific subentry of remove_config_entry_id
         """
         old = self.devices[device_id]
 
@@ -1346,7 +1347,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Update device attributes.
 
         :param add_config_subentry_id: Add the device to a specific subentry of add_config_entry_id
-        :param remove_config_subentry_id: Remove the device from a specific subentry of remove_config_subentry_id
+        :param remove_config_subentry_id: Remove the device from a specific subentry of remove_config_entry_id
         """
         if suggested_area is not UNDEFINED:
             report_usage(
@@ -1562,10 +1563,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     @callback
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of device registry to store in a file."""
+        # Create intermediate lists to allow this method to be called from a thread
+        # other than the event loop.
         return {
-            "devices": [entry.as_storage_fragment for entry in self.devices.values()],
+            "devices": [
+                entry.as_storage_fragment for entry in list(self.devices.values())
+            ],
             "deleted_devices": [
-                entry.as_storage_fragment for entry in self.deleted_devices.values()
+                entry.as_storage_fragment
+                for entry in list(self.deleted_devices.values())
             ],
         }
 

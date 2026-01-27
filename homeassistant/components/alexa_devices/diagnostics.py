@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
-from aioamazondevices.api import AmazonDevice
+from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -60,5 +61,5 @@ def build_device_data(device: AmazonDevice) -> dict[str, Any]:
         "online": device.online,
         "serial number": device.serial_number,
         "software version": device.software_version,
-        "sensors": device.sensors,
+        "sensors": {key: asdict(sensor) for key, sensor in device.sensors.items()},
     }

@@ -1,29 +1,144 @@
 {
-  "title": "Lawn mower",
+  "common": {
+    "condition_behavior_description": "How the state should match on the targeted lawn mowers.",
+    "condition_behavior_name": "Behavior",
+    "trigger_behavior_description": "The behavior of the targeted lawn mowers to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_docked": {
+      "description": "Tests if one or more lawn mowers are docked.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lawn_mower::common::condition_behavior_description%]",
+          "name": "[%key:component::lawn_mower::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Lawn mower is docked"
+    },
+    "is_encountering_an_error": {
+      "description": "Tests if one or more lawn mowers are encountering an error.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lawn_mower::common::condition_behavior_description%]",
+          "name": "[%key:component::lawn_mower::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Lawn mower is encountering an error"
+    },
+    "is_mowing": {
+      "description": "Tests if one or more lawn mowers are mowing.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lawn_mower::common::condition_behavior_description%]",
+          "name": "[%key:component::lawn_mower::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Lawn mower is mowing"
+    },
+    "is_paused": {
+      "description": "Tests if one or more lawn mowers are paused.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lawn_mower::common::condition_behavior_description%]",
+          "name": "[%key:component::lawn_mower::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Lawn mower is paused"
+    },
+    "is_returning": {
+      "description": "Tests if one or more lawn mowers are returning to the dock.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lawn_mower::common::condition_behavior_description%]",
+          "name": "[%key:component::lawn_mower::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Lawn mower is returning"
+    }
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::lawn_mower::title%]",
       "state": {
-        "error": "[%key:common::state::error%]",
-        "paused": "[%key:common::state::paused%]",
-        "mowing": "Mowing",
         "docked": "Docked",
+        "error": "[%key:common::state::error%]",
+        "mowing": "Mowing",
+        "paused": "[%key:common::state::paused%]",
         "returning": "Returning"
       }
     }
   },
-  "services": {
-    "start_mowing": {
-      "name": "Start mowing",
-      "description": "Starts the mowing task."
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
     },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "services": {
     "dock": {
-      "name": "Return to dock",
-      "description": "Stops the mowing task and returns to the dock."
+      "description": "Stops the mowing task and returns to the dock.",
+      "name": "Return to dock"
     },
     "pause": {
-      "name": "Pause",
-      "description": "Pauses the mowing task."
+      "description": "Pauses the mowing task.",
+      "name": "Pause"
+    },
+    "start_mowing": {
+      "description": "Starts the mowing task.",
+      "name": "Start mowing"
+    }
+  },
+  "title": "Lawn mower",
+  "triggers": {
+    "docked": {
+      "description": "Triggers after one or more lawn mowers have returned to dock.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lawn_mower::common::trigger_behavior_description%]",
+          "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Lawn mower returned to dock"
+    },
+    "errored": {
+      "description": "Triggers after one or more lawn mowers encounter an error.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lawn_mower::common::trigger_behavior_description%]",
+          "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Lawn mower encountered an error"
+    },
+    "paused_mowing": {
+      "description": "Triggers after one or more lawn mowers pause mowing.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lawn_mower::common::trigger_behavior_description%]",
+          "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Lawn mower paused mowing"
+    },
+    "started_mowing": {
+      "description": "Triggers after one or more lawn mowers start mowing.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::lawn_mower::common::trigger_behavior_description%]",
+          "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Lawn mower started mowing"
     }
   }
 }

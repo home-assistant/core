@@ -15,10 +15,10 @@
       "organic_waste_pickup": {
         "default": "mdi:delete-empty"
       },
-      "paper_waste_pickup": {
+      "packages_waste_pickup": {
         "default": "mdi:delete-empty"
       },
-      "packages_waste_pickup": {
+      "paper_waste_pickup": {
         "default": "mdi:delete-empty"
       }
     }

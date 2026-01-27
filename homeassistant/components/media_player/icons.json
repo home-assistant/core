@@ -1,4 +1,21 @@
 {
+  "conditions": {
+    "is_not_playing": {
+      "condition": "mdi:stop"
+    },
+    "is_off": {
+      "condition": "mdi:cast-off"
+    },
+    "is_on": {
+      "condition": "mdi:cast"
+    },
+    "is_paused": {
+      "condition": "mdi:pause"
+    },
+    "is_playing": {
+      "condition": "mdi:play"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:cast",
@@ -103,6 +120,11 @@
     },
     "volume_up": {
       "service": "mdi:volume-plus"
+    }
+  },
+  "triggers": {
+    "stopped_playing": {
+      "trigger": "mdi:stop"
     }
   }
 }

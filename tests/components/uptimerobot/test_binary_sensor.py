@@ -15,6 +15,7 @@ from homeassistant.util import dt as dt_util
 
 from .common import (
     MOCK_UPTIMEROBOT_MONITOR,
+    MOCK_UPTIMEROBOT_MONITOR_2,
     UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY,
     mock_uptimerobot_api_response,
     setup_uptimerobot_integration,
@@ -65,20 +66,8 @@ async def test_binary_sensor_dynamic(hass: HomeAssistant) -> None:
         "pyuptimerobot.UptimeRobot.async_get_monitors",
         return_value=mock_uptimerobot_api_response(
             data=[
-                {
-                    "id": 1234,
-                    "friendly_name": "Test monitor",
-                    "status": 2,
-                    "type": 1,
-                    "url": "http://example.com",
-                },
-                {
-                    "id": 5678,
-                    "friendly_name": "Test monitor 2",
-                    "status": 2,
-                    "type": 1,
-                    "url": "http://example2.com",
-                },
+                MOCK_UPTIMEROBOT_MONITOR,
+                MOCK_UPTIMEROBOT_MONITOR_2,
             ]
         ),
     ):

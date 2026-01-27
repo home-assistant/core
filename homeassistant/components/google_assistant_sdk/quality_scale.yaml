@@ -1,0 +1,98 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: exempt
+    comment: No polling.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: No entities.
+  entity-unique-id:
+    status: exempt
+    comment: No entities.
+  has-entity-name:
+    status: exempt
+    comment: No entities.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: No entities.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: No entities.
+  parallel-updates:
+    status: exempt
+    comment: No entities to update.
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: This integration acts as a service and does not represent physical devices.
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: No discovery.
+  discovery:
+    status: exempt
+    comment: This is a cloud service integration that cannot be discovered locally.
+  docs-data-update:
+    status: exempt
+    comment: No entities to update.
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: No devices.
+  entity-category:
+    status: exempt
+    comment: No entities.
+  entity-device-class:
+    status: exempt
+    comment: No entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: No entities.
+  entity-translations:
+    status: exempt
+    comment: No entities.
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: No repairs.
+  stale-devices:
+    status: exempt
+    comment: No devices.
+
+  # Platinum
+  async-dependency: todo
+  inject-websession:
+    status: exempt
+    comment: The underlying library uses gRPC, not aiohttp/httpx, for communication.
+  strict-typing: done

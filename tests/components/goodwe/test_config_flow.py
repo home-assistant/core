@@ -1,8 +1,9 @@
 """Test the Goodwe config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 from goodwe import InverterError
+from goodwe.const import GOODWE_UDP_PORT
 
 from homeassistant.components.goodwe.const import (
     CONF_MODEL_FAMILY,
@@ -10,24 +11,19 @@ from homeassistant.components.goodwe.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .conftest import TEST_SERIAL
 
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
-TEST_SERIAL = "123456789"
+TEST_PORT = GOODWE_UDP_PORT
 
 
-def mock_inverter():
-    """Get a mock object of the inverter."""
-    goodwe_inverter = AsyncMock()
-    goodwe_inverter.serial_number = TEST_SERIAL
-    return goodwe_inverter
-
-
-async def test_manual_setup(hass: HomeAssistant) -> None:
+async def test_manual_setup(hass: HomeAssistant, mock_inverter: MagicMock) -> None:
     """Test manually setting up."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -37,10 +33,6 @@ async def test_manual_setup(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
     with (
-        patch(
-            "homeassistant.components.goodwe.config_flow.connect",
-            return_value=mock_inverter(),
-        ),
         patch(
             "homeassistant.components.goodwe.async_setup_entry", return_value=True
         ) as mock_setup_entry,
@@ -54,15 +46,20 @@ async def test_manual_setup(hass: HomeAssistant) -> None:
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
-        CONF_MODEL_FAMILY: "AsyncMock",
+        CONF_PORT: TEST_PORT,
+        CONF_MODEL_FAMILY: "MagicMock",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_manual_setup_already_exists(hass: HomeAssistant) -> None:
+async def test_manual_setup_already_exists(
+    hass: HomeAssistant, mock_inverter: MagicMock
+) -> None:
     """Test manually setting up and the device already exists."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: TEST_HOST}, unique_id=TEST_SERIAL
+        domain=DOMAIN,
+        data={CONF_HOST: TEST_HOST},
+        unique_id=TEST_SERIAL,
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -72,13 +69,7 @@ async def test_manual_setup_already_exists(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with (
-        patch(
-            "homeassistant.components.goodwe.config_flow.connect",
-            return_value=mock_inverter(),
-        ),
-        patch("homeassistant.components.goodwe.async_setup_entry", return_value=True),
-    ):
+    with patch("homeassistant.components.goodwe.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: TEST_HOST}
         )

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -16,6 +17,7 @@ from fritzconnection.core.exceptions import (
     FritzConnectionException,
     FritzSecurityError,
 )
+from fritzconnection.lib.fritzcall import FritzCall
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritzwlan import FritzGuestWLAN
@@ -120,6 +122,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.fritz_guest_wifi: FritzGuestWLAN = None
         self.fritz_hosts: FritzHosts = None
         self.fritz_status: FritzStatus = None
+        self.fritz_call: FritzCall = None
         self.host = host
         self.mesh_role = MeshRoles.NONE
         self.mesh_wifi_uplink = False
@@ -183,6 +186,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.fritz_hosts = FritzHosts(fc=self.connection)
         self.fritz_guest_wifi = FritzGuestWLAN(fc=self.connection)
         self.fritz_status = FritzStatus(fc=self.connection)
+        self.fritz_call = FritzCall(fc=self.connection)
         info = self.fritz_status.get_device_info()
 
         _LOGGER.debug(
@@ -463,8 +467,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             self._devices[dev_mac].update(dev_info, consider_home)
             return False
 
-        device = FritzDevice(dev_mac, dev_info.name)
-        device.update(dev_info, consider_home)
+        device = FritzDevice(dev_mac, dev_info, consider_home)
         self._devices[dev_mac] = device
 
         # manually register device entry for new connected device
@@ -616,6 +619,14 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         await self.hass.async_add_executor_job(
             self.fritz_guest_wifi.set_password, password, length
         )
+
+    async def async_trigger_dial(self, number: str, max_ring_seconds: int) -> None:
+        """Trigger service to dial a number."""
+        try:
+            await self.hass.async_add_executor_job(self.fritz_call.dial, number)
+            await asyncio.sleep(max_ring_seconds)
+        finally:
+            await self.hass.async_add_executor_job(self.fritz_call.hangup)
 
     async def async_trigger_cleanup(self) -> None:
         """Trigger device trackers cleanup."""
@@ -813,6 +824,21 @@ class AvmWrapper(FritzBoxTools):
             NewIPv4Address=ip_address,
             NewDisallow="0" if turn_on else "1",
         )
+
+    async def async_get_current_user_rights(self) -> dict[str, Any]:
+        """Call X_AVM-DE_GetCurrentUser service."""
+
+        result = await self._async_service_call(
+            "LANConfigSecurity",
+            "1",
+            "X_AVM-DE_GetCurrentUser",
+        )
+
+        user_rights = xmltodict.parse(result["NewX_AVM-DE_CurrentUserRights"])["rights"]
+
+        return {
+            k: user_rights["access"][idx] for idx, k in enumerate(user_rights["path"])
+        }
 
     async def async_wake_on_lan(self, mac_address: str) -> dict[str, Any]:
         """Call X_AVM-DE_WakeOnLANByMACAddress service."""

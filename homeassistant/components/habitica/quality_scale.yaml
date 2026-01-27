@@ -68,8 +68,8 @@ rules:
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
-    status: done
-    comment: Used to inform of deprecated entities and actions.
+    status: exempt
+    comment: Integration has no repairs
   stale-devices:
     status: done
     comment: Party device is remove if stale.

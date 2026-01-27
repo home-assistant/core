@@ -18,15 +18,9 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import MOCK_VEHICLES
-
 from tests.common import async_load_fixture, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
-
-
-# Captur (fuel version) does not have a charge mode select
-_TEST_VEHICLES = [v for v in MOCK_VEHICLES if v != "captur_fuel"]
 
 
 @pytest.fixture(autouse=True)
@@ -37,7 +31,7 @@ def override_platforms() -> Generator[None]:
 
 
 @pytest.mark.usefixtures("fixtures_with_data")
-@pytest.mark.parametrize("vehicle_type", _TEST_VEHICLES, indirect=True)
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_selects(
     hass: HomeAssistant,
     config_entry: ConfigEntry,

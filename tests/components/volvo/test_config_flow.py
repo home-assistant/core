@@ -7,7 +7,7 @@ import pytest
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.auth import AUTHORIZE_URL, TOKEN_URL
 from volvocarsapi.models import VolvoApiException, VolvoCarsVehicle
-from volvocarsapi.scopes import DEFAULT_SCOPES
+from volvocarsapi.scopes import ALL_SCOPES
 from yarl import URL
 
 from homeassistant import config_entries
@@ -251,7 +251,7 @@ async def config_flow(
     assert result_url.query["state"] == state
     assert result_url.query["code_challenge"]
     assert result_url.query["code_challenge_method"] == "S256"
-    assert result_url.query["scope"] == " ".join(DEFAULT_SCOPES)
+    assert result_url.query["scope"] == " ".join(ALL_SCOPES)
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")

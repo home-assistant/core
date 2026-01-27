@@ -20,8 +20,10 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_SOURCE,
+    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
     UnitOfTime,
 )
 from homeassistant.core import (
@@ -44,6 +46,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_state_report_event,
 )
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -53,6 +56,7 @@ from .const import (
     CONF_UNIT,
     CONF_UNIT_PREFIX,
     CONF_UNIT_TIME,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,6 +89,7 @@ DEFAULT_TIME_WINDOW = 0
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Required(CONF_SOURCE): cv.entity_id,
         vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
@@ -145,6 +150,8 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the derivative sensor."""
+    await async_setup_reload_service(hass, DOMAIN, [Platform.SENSOR])
+
     derivative = DerivativeSensor(
         hass,
         name=config.get(CONF_NAME),
@@ -154,7 +161,7 @@ async def async_setup_platform(
         unit_of_measurement=config.get(CONF_UNIT),
         unit_prefix=config[CONF_UNIT_PREFIX],
         unit_time=config[CONF_UNIT_TIME],
-        unique_id=None,
+        unique_id=config.get(CONF_UNIQUE_ID),
         max_sub_interval=config.get(CONF_MAX_SUB_INTERVAL),
     )
 
@@ -196,7 +203,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
         self._attr_name = name if name is not None else f"{source_entity} derivative"
         self._attr_extra_state_attributes = {ATTR_SOURCE_ID: source_entity}
-
+        self._unit_template: str | None = None
         if unit_of_measurement is None:
             final_unit_prefix = "" if unit_prefix is None else unit_prefix
             self._unit_template = f"{final_unit_prefix}{{}}/{unit_time}"
@@ -216,6 +223,23 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         self._cancel_max_sub_interval_exceeded_callback: CALLBACK_TYPE = (
             lambda *args: None
         )
+
+    def _derive_and_set_attributes_from_state(self, source_state: State | None) -> None:
+        if self._unit_template and source_state:
+            original_unit = self._attr_native_unit_of_measurement
+            source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            self._attr_native_unit_of_measurement = self._unit_template.format(
+                "" if source_unit is None else source_unit
+            )
+            if original_unit != self._attr_native_unit_of_measurement:
+                _LOGGER.debug(
+                    "%s: Derivative sensor switched UoM from %s to %s, resetting state to 0",
+                    self.entity_id,
+                    original_unit,
+                    self._attr_native_unit_of_measurement,
+                )
+                self._state_list = []
+                self._attr_native_value = round(Decimal(0), self._round_digits)
 
     def _calc_derivative_from_state_list(self, current_time: datetime) -> Decimal:
         def calculate_weight(start: datetime, end: datetime, now: datetime) -> float:
@@ -269,14 +293,14 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         )
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
+    async def _handle_restore(self) -> None:
         restored_data = await self.async_get_last_sensor_data()
         if restored_data:
-            self._attr_native_unit_of_measurement = (
-                restored_data.native_unit_of_measurement
-            )
+            if self._attr_native_unit_of_measurement is None:
+                # Only restore the unit if it's not assigned from YAML
+                self._attr_native_unit_of_measurement = (
+                    restored_data.native_unit_of_measurement
+                )
             try:
                 self._attr_native_value = round(
                     Decimal(restored_data.native_value),  # type: ignore[arg-type]
@@ -284,6 +308,14 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 )
             except (InvalidOperation, TypeError):
                 self._attr_native_value = None
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        await self._handle_restore()
+
+        source_state = self.hass.states.get(self._sensor_source_id)
+        self._derive_and_set_attributes_from_state(source_state)
 
         def schedule_max_sub_interval_exceeded(source_state: State | None) -> None:
             """Schedule calculation using the source state and max_sub_interval.
@@ -358,10 +390,18 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             _LOGGER.debug("%s: New state changed event: %s", self.entity_id, event.data)
             self._cancel_max_sub_interval_exceeded_callback()
             new_state = event.data["new_state"]
+
             if not self._handle_invalid_source_state(new_state):
                 return
 
             assert new_state
+
+            original_unit = self._attr_native_unit_of_measurement
+            self._derive_and_set_attributes_from_state(new_state)
+            if original_unit != self._attr_native_unit_of_measurement:
+                self.async_write_ha_state()
+                return
+
             schedule_max_sub_interval_exceeded(new_state)
             old_state = event.data["old_state"]
             if old_state is not None:
@@ -390,12 +430,6 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     # Sensor becomes valid for the first time, just keep the restored value
                     self.async_write_ha_state()
                     return
-
-            if self.native_unit_of_measurement is None:
-                unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                self._attr_native_unit_of_measurement = self._unit_template.format(
-                    "" if unit is None else unit
-                )
 
             self._prune_state_list(new_timestamp)
 

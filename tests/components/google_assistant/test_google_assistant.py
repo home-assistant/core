@@ -354,7 +354,7 @@ async def test_query_humidifier_request(
     assert devices["humidifier.humidifier"] == {
         "on": True,
         "online": True,
-        "humiditySetpointPercent": 68,
+        "humiditySetpointPercent": 65,
         "humidityAmbientPercent": 45,
     }
     assert devices["humidifier.dehumidifier"] == {

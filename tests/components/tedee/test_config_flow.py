@@ -34,7 +34,7 @@ async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
             DOMAIN, context={"source": SOURCE_USER}
         )
         await hass.async_block_till_done()
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -44,7 +44,7 @@ async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
             },
         )
 
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["data"] == {
             CONF_HOST: "192.168.1.62",
             CONF_LOCAL_ACCESS_TOKEN: "token",

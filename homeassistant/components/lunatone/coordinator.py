@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 
 import aiohttp
-from lunatone_rest_api_client import Device, Devices, Info
+from lunatone_rest_api_client import DALIBroadcast, Device, Devices, Info
 from lunatone_rest_api_client.models import InfoData
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,6 +18,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_INFO_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_DEVICES_SCAN_INTERVAL = timedelta(seconds=10)
 
 
@@ -27,6 +28,7 @@ class LunatoneData:
 
     coordinator_info: LunatoneInfoDataUpdateCoordinator
     coordinator_devices: LunatoneDevicesDataUpdateCoordinator
+    dali_line_broadcasts: list[DALIBroadcast]
 
 
 type LunatoneConfigEntry = ConfigEntry[LunatoneData]
@@ -47,6 +49,7 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
             config_entry=config_entry,
             name=f"{DOMAIN}-info",
             always_update=False,
+            update_interval=DEFAULT_INFO_SCAN_INTERVAL,
         )
         self.info_api = info_api
 

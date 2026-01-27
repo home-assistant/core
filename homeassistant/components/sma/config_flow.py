@@ -6,7 +6,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import pysma
+import attrs
+from pysma import (
+    SmaAuthenticationException,
+    SmaConnectionException,
+    SmaReadException,
+    SMAWebConnect,
+)
 import voluptuous as vol
 from yarl import URL
 
@@ -42,7 +48,7 @@ async def validate_input(
     host = data[CONF_HOST] if data is not None else user_input[CONF_HOST]
     url = URL.build(scheme=protocol, host=host)
 
-    sma = pysma.SMA(
+    sma = SMAWebConnect(
         session, str(url), user_input[CONF_PASSWORD], group=user_input[CONF_GROUP]
     )
 
@@ -51,7 +57,7 @@ async def validate_input(
     device_info = await sma.device_info()
     await sma.close_session()
 
-    return device_info
+    return attrs.asdict(device_info)
 
 
 class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -90,11 +96,11 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             device_info = await validate_input(
                 self.hass, user_input=user_input, data=self._data
             )
-        except pysma.exceptions.SmaConnectionException:
+        except SmaConnectionException:
             errors["base"] = "cannot_connect"
-        except pysma.exceptions.SmaAuthenticationException:
+        except SmaAuthenticationException:
             errors["base"] = "invalid_auth"
-        except pysma.exceptions.SmaReadException:
+        except SmaReadException:
             errors["base"] = "cannot_retrieve_device_info"
         except Exception:
             _LOGGER.exception("Unexpected exception")
@@ -134,6 +140,51 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                     vol.Required(CONF_PASSWORD): cv.string,
                 }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconf_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            errors, device_info = await self._handle_user_input(
+                user_input={
+                    **reconf_entry.data,
+                    **user_input,
+                }
+            )
+
+            if not errors:
+                await self.async_set_unique_id(
+                    str(device_info["serial"]), raise_on_progress=False
+                )
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconf_entry,
+                    data_updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_SSL: user_input[CONF_SSL],
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                        CONF_GROUP: user_input[CONF_GROUP],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): cv.string,
+                        vol.Optional(CONF_SSL): cv.boolean,
+                        vol.Optional(CONF_VERIFY_SSL): cv.boolean,
+                        vol.Optional(CONF_GROUP): vol.In(GROUPS),
+                    }
+                ),
+                suggested_values=user_input or dict(reconf_entry.data),
             ),
             errors=errors,
         )

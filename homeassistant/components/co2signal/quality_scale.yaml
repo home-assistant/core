@@ -18,7 +18,6 @@ rules:
     status: todo
     comment: |
       The config flow misses data descriptions.
-      Remove URLs from data descriptions, they should be replaced with placeholders.
       Make use of Electricity Maps zone keys in country code as dropdown.
       Make use of location selector for coordinates.
   dependency-transparency: done

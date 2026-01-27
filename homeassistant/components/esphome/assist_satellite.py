@@ -5,9 +5,12 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterable
 from functools import partial
+import hashlib
 import io
 from itertools import chain
+import json
 import logging
+from pathlib import Path
 import socket
 from typing import Any, cast
 import wave
@@ -19,9 +22,12 @@ from aioesphomeapi import (
     VoiceAssistantAudioSettings,
     VoiceAssistantCommandFlag,
     VoiceAssistantEventType,
+    VoiceAssistantExternalWakeWord,
     VoiceAssistantFeature,
     VoiceAssistantTimerEventType,
 )
+import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import (
@@ -29,6 +35,7 @@ from homeassistant.components.assist_pipeline import (
     PipelineEventType,
     PipelineStage,
 )
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.intent import (
     TimerEventType,
     TimerInfo,
@@ -39,8 +46,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.network import get_url
+from homeassistant.helpers.singleton import singleton
+from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from .const import DOMAIN, WAKE_WORDS_API_PATH, WAKE_WORDS_DIR_NAME
 from .entity import EsphomeAssistEntity, convert_api_error_ha_error
 from .entry_data import ESPHomeConfigEntry
 from .enum_mapper import EsphomeEnumMapper
@@ -84,6 +94,16 @@ _TIMER_EVENT_TYPES: EsphomeEnumMapper[VoiceAssistantTimerEventType, TimerEventTy
 
 _ANNOUNCEMENT_TIMEOUT_SEC = 5 * 60  # 5 minutes
 _CONFIG_TIMEOUT_SEC = 5
+_WAKE_WORD_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required("type"): str,
+        vol.Required("wake_word"): str,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+_DATA_WAKE_WORDS: HassKey[dict[str, VoiceAssistantExternalWakeWord]] = HassKey(
+    "wake_word_cache"
+)
 
 
 async def async_setup_entry(
@@ -182,9 +202,14 @@ class EsphomeAssistSatellite(
 
     async def _update_satellite_config(self) -> None:
         """Get the latest satellite configuration from the device."""
+        wake_words = await async_get_custom_wake_words(self.hass)
+        if wake_words:
+            _LOGGER.debug("Found custom wake words: %s", sorted(wake_words.keys()))
+
         try:
             config = await self.cli.get_voice_assistant_configuration(
-                _CONFIG_TIMEOUT_SEC
+                _CONFIG_TIMEOUT_SEC,
+                external_wake_words=list(wake_words.values()),
             )
         except TimeoutError:
             # Placeholder config will be used
@@ -784,3 +809,78 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             return
 
         self.transport.sendto(data, self.remote_addr)
+
+
+async def async_get_custom_wake_words(
+    hass: HomeAssistant,
+) -> dict[str, VoiceAssistantExternalWakeWord]:
+    """Get available custom wake words."""
+    return await hass.async_add_executor_job(_get_custom_wake_words, hass)
+
+
+@singleton(_DATA_WAKE_WORDS)
+def _get_custom_wake_words(
+    hass: HomeAssistant,
+) -> dict[str, VoiceAssistantExternalWakeWord]:
+    """Get available custom wake words (singleton)."""
+    wake_words_dir = Path(hass.config.path(WAKE_WORDS_DIR_NAME))
+    wake_words: dict[str, VoiceAssistantExternalWakeWord] = {}
+
+    # Look for config/model files
+    for config_path in wake_words_dir.glob("*.json"):
+        wake_word_id = config_path.stem
+        model_path = config_path.with_suffix(".tflite")
+        if not model_path.exists():
+            # Missing model file
+            continue
+
+        with open(config_path, encoding="utf-8") as config_file:
+            config_dict = json.load(config_file)
+            try:
+                config = _WAKE_WORD_CONFIG_SCHEMA(config_dict)
+            except vol.Invalid as err:
+                # Invalid config
+                _LOGGER.debug(
+                    "Invalid wake word config: path=%s, error=%s",
+                    config_path,
+                    humanize_error(config_dict, err),
+                )
+                continue
+
+            with open(model_path, "rb") as model_file:
+                model_hash = hashlib.sha256(model_file.read()).hexdigest()
+
+            model_size = model_path.stat().st_size
+            config_rel_path = config_path.relative_to(wake_words_dir)
+
+            # Only intended for the internal network
+            base_url = get_url(hass, prefer_external=False, allow_cloud=False)
+
+            wake_words[wake_word_id] = VoiceAssistantExternalWakeWord.from_dict(
+                {
+                    "id": wake_word_id,
+                    "wake_word": config["wake_word"],
+                    "trained_languages": config_dict.get("trained_languages", []),
+                    "model_type": config["type"],
+                    "model_size": model_size,
+                    "model_hash": model_hash,
+                    "url": f"{base_url}{WAKE_WORDS_API_PATH}/{config_rel_path}",
+                }
+            )
+
+    return wake_words
+
+
+async def async_setup(hass: HomeAssistant) -> None:
+    """Set up the satellite."""
+    wake_words_dir = Path(hass.config.path(WAKE_WORDS_DIR_NAME))
+
+    # Satellites will pull model files over HTTP
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                url_path=WAKE_WORDS_API_PATH,
+                path=str(wake_words_dir),
+            )
+        ]
+    )

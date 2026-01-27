@@ -19,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import utcnow
 
 from . import init_integration, mock_device, mock_location, mock_reading
@@ -126,8 +125,7 @@ async def test_sensors_attributes_pro(hass: HomeAssistant, canary) -> None:
 
     future = utcnow() + timedelta(seconds=30)
     async_fire_time_changed(hass, future)
-    await async_update_entity(hass, entity_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state2 = hass.states.get(entity_id)
     assert state2
@@ -142,8 +140,7 @@ async def test_sensors_attributes_pro(hass: HomeAssistant, canary) -> None:
 
     future += timedelta(seconds=30)
     async_fire_time_changed(hass, future)
-    await async_update_entity(hass, entity_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state3 = hass.states.get(entity_id)
     assert state3

@@ -1,4 +1,53 @@
 # serializer version: 1
+# name: test_entities[switch.mock_title_car_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_title_car_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Car detection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Car detection',
+    'platform': 'foscam',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'car_detection',
+    'unique_id': '123ABC_car_detection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.mock_title_car_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Car detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_car_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_entities[switch.mock_title_flip-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -20,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flip',
     'options': dict({
     }),
     'original_device_class': None,
@@ -47,6 +97,55 @@
     'state': 'off',
   })
 # ---
+# name: test_entities[switch.mock_title_human_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_title_human_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Human detection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Human detection',
+    'platform': 'foscam',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'human_detection',
+    'unique_id': '123ABC_human_detection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.mock_title_human_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Human detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_human_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_entities[switch.mock_title_infrared_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -68,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Infrared mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -164,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mirror',
     'options': dict({
     }),
     'original_device_class': None,
@@ -191,6 +293,55 @@
     'state': 'off',
   })
 # ---
+# name: test_entities[switch.mock_title_pet_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_title_pet_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pet detection',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pet detection',
+    'platform': 'foscam',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pet_detection',
+    'unique_id': '123ABC_pet_detection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch.mock_title_pet_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Pet detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_pet_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_entities[switch.mock_title_siren_alarm-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -212,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Siren alarm',
     'options': dict({
     }),
     'original_device_class': None,
@@ -260,6 +412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -308,6 +461,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volume muted',
     'options': dict({
     }),
     'original_device_class': None,
@@ -356,6 +510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'White light',
     'options': dict({
     }),
     'original_device_class': None,

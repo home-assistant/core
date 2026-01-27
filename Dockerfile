@@ -4,34 +4,33 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
+LABEL \
+    io.hass.type="core" \
+    org.opencontainers.image.authors="The Home Assistant Authors" \
+    org.opencontainers.image.description="Open-source home automation platform running on Python 3" \
+    org.opencontainers.image.documentation="https://www.home-assistant.io/docs/" \
+    org.opencontainers.image.licenses="Apache-2.0" \
+    org.opencontainers.image.source="https://github.com/home-assistant/core" \
+    org.opencontainers.image.title="Home Assistant" \
+    org.opencontainers.image.url="https://www.home-assistant.io/"
+
 # Synchronize with homeassistant/core.py:async_stop
 ENV \
     S6_SERVICES_GRACETIME=240000 \
     UV_SYSTEM_PYTHON=true \
     UV_NO_CACHE=true
 
-ARG QEMU_CPU
-
 # Home Assistant S6-Overlay
 COPY rootfs /
 
-# Needs to be redefined inside the FROM statement to be set for RUN commands
-ARG BUILD_ARCH
-# Get go2rtc binary
-RUN \
-    case "${BUILD_ARCH}" in \
-        "aarch64") go2rtc_suffix='arm64' ;; \
-        "armhf") go2rtc_suffix='armv6' ;; \
-        "armv7") go2rtc_suffix='arm' ;; \
-        *) go2rtc_suffix=${BUILD_ARCH} ;; \
-    esac \
-    && curl -L https://github.com/AlexxIT/go2rtc/releases/download/v1.9.9/go2rtc_linux_${go2rtc_suffix} --output /bin/go2rtc \
-    && chmod +x /bin/go2rtc \
-    # Verify go2rtc can be executed
-    && go2rtc --version
+# Add go2rtc binary
+COPY --from=ghcr.io/alexxit/go2rtc@sha256:675c318b23c06fd862a61d262240c9a63436b4050d177ffc68a32710d9e05bae /usr/local/bin/go2rtc /bin/go2rtc
 
-# Install uv
-RUN pip3 install uv==0.8.9
+RUN \
+    # Verify go2rtc can be executed
+    go2rtc --version \
+    # Install uv
+    && pip3 install uv==0.9.26
 
 WORKDIR /usr/src
 

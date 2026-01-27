@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -24,7 +25,8 @@ from homeassistant.components.telegram_bot import (
 )
 from homeassistant.const import ATTR_LOCATION
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
@@ -45,14 +47,25 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> TelegramNotificationService:
     """Get the Telegram notification service."""
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "migrate_notify",
+        breaks_in_ha_version="2026.5.0",
+        is_fixable=False,
+        translation_key="migrate_notify",
+        severity=ir.IssueSeverity.WARNING,
+        learn_more_url="https://www.home-assistant.io/integrations/telegram_bot#notifiers",
+    )
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     chat_id = config.get(CONF_CHAT_ID)
     return TelegramNotificationService(hass, chat_id)
 
@@ -65,13 +78,9 @@ class TelegramNotificationService(BaseNotificationService):
         self._chat_id = chat_id
         self.hass = hass
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         service_data = {ATTR_TARGET: kwargs.get(ATTR_TARGET, self._chat_id)}
-        if ATTR_TITLE in kwargs:
-            service_data.update({ATTR_TITLE: kwargs.get(ATTR_TITLE)})
-        if message:
-            service_data.update({ATTR_MESSAGE: message})
         data = kwargs.get(ATTR_DATA)
 
         # Set message tag
@@ -118,7 +127,7 @@ class TelegramNotificationService(BaseNotificationService):
                 self.hass.services.call(
                     TELEGRAM_BOT_DOMAIN, "send_photo", service_data=service_data
                 )
-            return None
+            return
         if data is not None and ATTR_VIDEO in data:
             videos = data.get(ATTR_VIDEO)
             videos = videos if isinstance(videos, list) else [videos]
@@ -127,7 +136,7 @@ class TelegramNotificationService(BaseNotificationService):
                 self.hass.services.call(
                     TELEGRAM_BOT_DOMAIN, "send_video", service_data=service_data
                 )
-            return None
+            return
         if data is not None and ATTR_VOICE in data:
             voices = data.get(ATTR_VOICE)
             voices = voices if isinstance(voices, list) else [voices]
@@ -136,24 +145,32 @@ class TelegramNotificationService(BaseNotificationService):
                 self.hass.services.call(
                     TELEGRAM_BOT_DOMAIN, "send_voice", service_data=service_data
                 )
-            return None
+            return
         if data is not None and ATTR_LOCATION in data:
             service_data.update(data.get(ATTR_LOCATION))
-            return self.hass.services.call(
+            self.hass.services.call(
                 TELEGRAM_BOT_DOMAIN, "send_location", service_data=service_data
             )
+            return
         if data is not None and ATTR_DOCUMENT in data:
             service_data.update(data.get(ATTR_DOCUMENT))
-            return self.hass.services.call(
+            self.hass.services.call(
                 TELEGRAM_BOT_DOMAIN, "send_document", service_data=service_data
             )
+            return
 
         # Send message
+
+        if ATTR_TITLE in kwargs:
+            service_data.update({ATTR_TITLE: kwargs.get(ATTR_TITLE)})
+        if message:
+            service_data.update({ATTR_MESSAGE: message})
+
         _LOGGER.debug(
             "TELEGRAM NOTIFIER calling %s.send_message with %s",
             TELEGRAM_BOT_DOMAIN,
             service_data,
         )
-        return self.hass.services.call(
+        self.hass.services.call(
             TELEGRAM_BOT_DOMAIN, "send_message", service_data=service_data
         )

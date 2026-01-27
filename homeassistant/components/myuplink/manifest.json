@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/myuplink",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "silver",
   "requirements": ["myuplink==0.7.0"]

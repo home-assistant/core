@@ -1,15 +1,15 @@
 {
   "items": [
     {
-      "deviceId": "c76d6f38-1b7f-13dd-37b5-db18d5272783",
+      "deviceId": "1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977",
       "name": "Samsung Room A/C",
-      "label": "Office AirFree",
+      "label": "Clim Salon",
       "manufacturerName": "Samsung Electronics",
       "presentationId": "DA-AC-RAC-000003",
       "deviceManufacturerCode": "Samsung Electronics",
-      "locationId": "403cd42e-f692-416c-91fd-1883c00e3262",
-      "ownerId": "dd474e5c-59c0-4bea-a319-ff5287fd3373",
-      "roomId": "dffe353e-b3c5-4a97-8a8a-797ccc649fab",
+      "locationId": "460f8f20-0428-491d-8ead-8d901cc9f7eb",
+      "ownerId": "88597a89-5117-0b3c-264f-396fbc9072a4",
+      "roomId": "e7a14810-8688-4d37-bf02-72a2c673c0d7",
       "deviceTypeName": "Samsung OCF Air Conditioner",
       "components": [
         {
@@ -153,6 +153,10 @@
               "version": 1
             },
             {
+              "id": "samsungce.alwaysOnSensing",
+              "version": 1
+            },
+            {
               "id": "samsungce.deviceIdentification",
               "version": 1
             },
@@ -169,6 +173,10 @@
               "version": 1
             },
             {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
               "id": "samsungce.selfCheck",
               "version": 1
             },
@@ -182,27 +190,28 @@
               "name": "AirConditioner",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         }
       ],
-      "createTime": "2024-06-21T13:45:16.238Z",
+      "createTime": "2021-05-28T08:51:37.616Z",
       "profile": {
-        "id": "cedae6e3-1ec9-37e3-9aba-f717518156b8"
+        "id": "bb4a6df4-6e0f-303a-ac35-445ea78a41fe"
       },
       "ocf": {
         "ocfDeviceType": "oic.d.airconditioner",
         "name": "Samsung Room A/C",
         "specVersion": "core.1.1.0",
-        "verticalDomainSpecVersion": "1.2.1",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
         "manufacturerName": "Samsung Electronics",
-        "modelNumber": "ARTIK051_PRAC_20K|10256941|60010534001411014600003200800000",
+        "modelNumber": "ARTIK051_PRAC_20K|10217841|60010523001411010200001000000000",
         "platformVersion": "DAWIT 2.0",
         "platformOS": "TizenRT 1.0 + IPv6",
         "hwVersion": "ARTIK051",
         "firmwareVersion": "ARTIK051_PRAC_20K_11230313",
         "vendorId": "DA-AC-RAC-000003",
         "vendorResourceClientServerVersion": "ARTIK051 Release 2.211222.1",
-        "lastSignupTime": "2024-06-21T13:45:08.592221Z",
+        "lastSignupTime": "2021-05-28T08:51:30.356392Z",
         "transferCandidate": false,
         "additionalAuthCodeRequired": false
       },

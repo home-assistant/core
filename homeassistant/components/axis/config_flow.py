@@ -109,12 +109,12 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 if self.source == SOURCE_REAUTH:
                     self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         self._get_reauth_entry(), data_updates=config
                     )
                 if self.source == SOURCE_RECONFIGURE:
                     self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         self._get_reconfigure_entry(), data_updates=config
                     )
                 self._abort_if_unique_id_configured()
@@ -248,7 +248,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info[CONF_MAC])
 
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info[CONF_HOST]}
+            updates={CONF_HOST: discovery_info[CONF_HOST]}, reload_on_update=False
         )
 
         self.context.update(

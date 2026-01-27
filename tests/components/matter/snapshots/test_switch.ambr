@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power (1)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power (2)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Privacy mode button',
     'options': dict({
     }),
     'original_device_class': None,
@@ -194,7 +198,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock-entry]
+# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_with_unbolt-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -207,7 +211,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.mock_door_lock',
+    'entity_id': 'switch.mock_door_lock_with_unbolt',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -215,6 +219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -229,21 +234,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock-state]
+# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_with_unbolt-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
-      'friendly_name': 'Mock Door Lock',
+      'friendly_name': 'Mock Door Lock with unbolt',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_door_lock',
+    'entity_id': 'switch.mock_door_lock_with_unbolt',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_privacy_mode_button-entry]
+# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_with_unbolt_privacy_mode_button-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -256,7 +261,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.mock_door_lock_privacy_mode_button',
+    'entity_id': 'switch.mock_door_lock_with_unbolt_privacy_mode_button',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -264,6 +269,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Privacy mode button',
     'options': dict({
     }),
     'original_device_class': None,
@@ -278,13 +284,113 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_privacy_mode_button-state]
+# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_with_unbolt_privacy_mode_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Privacy mode button',
+      'friendly_name': 'Mock Door Lock with unbolt Privacy mode button',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_door_lock_privacy_mode_button',
+    'entity_id': 'switch.mock_door_lock_with_unbolt_privacy_mode_button',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_switch_bottom-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.eve_energy_20ecn4101_switch_bottom',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Switch (bottom)',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Switch (bottom)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-2-MatterPlug-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_switch_bottom-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Eve Energy 20ECN4101 Switch (bottom)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.eve_energy_20ecn4101_switch_bottom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_switch_top-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.eve_energy_20ecn4101_switch_top',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Switch (top)',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Switch (top)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-00000000000000C7-MatterNodeDevice-1-MatterPlug-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_switch_top-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Eve Energy 20ECN4101 Switch (top)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.eve_energy_20ecn4101_switch_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -312,6 +418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -361,6 +468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -389,7 +497,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[eve_thermo][switch.eve_thermo_child_lock-entry]
+# name: test_switches[eve_thermo_v4][switch.eve_thermo_20ebp1701_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -402,7 +510,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.eve_thermo_child_lock',
+    'entity_id': 'switch.eve_thermo_20ebp1701_child_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -410,6 +518,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -424,13 +533,162 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[eve_thermo][switch.eve_thermo_child_lock-state]
+# name: test_switches[eve_thermo_v4][switch.eve_thermo_20ebp1701_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo Child lock',
+      'friendly_name': 'Eve Thermo 20EBP1701 Child lock',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.eve_thermo_child_lock',
+    'entity_id': 'switch.eve_thermo_20ebp1701_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[eve_thermo_v5][switch.eve_thermo_20ecd1701_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.eve_thermo_20ecd1701_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Child lock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-EveTrvChildLock-516-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[eve_thermo_v5][switch.eve_thermo_20ecd1701_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Thermo 20ECD1701 Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.eve_thermo_20ecd1701_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[ikea_air_quality_monitor][switch.alpstuga_air_quality_monitor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.alpstuga_air_quality_monitor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000025-MatterNodeDevice-1-MatterSwitch-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[ikea_air_quality_monitor][switch.alpstuga_air_quality_monitor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'ALPSTUGA air quality monitor',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.alpstuga_air_quality_monitor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[inovelli_vtm30][switch.white_series_onoff_switch_switch_load_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.white_series_onoff_switch_switch_load_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Switch (Load Control)',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': 'Switch (Load Control)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-MatterPlug-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[inovelli_vtm30][switch.white_series_onoff_switch_switch_load_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'White Series OnOff Switch Switch (Load Control)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.white_series_onoff_switch_switch_load_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -458,6 +716,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -486,6 +745,105 @@
     'state': 'off',
   })
 # ---
+# name: test_switches[longan_link_thermostat][switch.longan_link_hvac-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.longan_link_hvac',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterSwitch-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[longan_link_thermostat][switch.longan_link_hvac-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Longan link HVAC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.longan_link_hvac',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[mock_lock][switch.mock_lock_privacy_mode_button-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_lock_privacy_mode_button',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Privacy mode button',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Privacy mode button',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'privacy_mode_button',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockEnablePrivacyModeButton-257-43',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_lock][switch.mock_lock_privacy_mode_button-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock Privacy mode button',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_lock_privacy_mode_button',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switches[on_off_plugin_unit][switch.mock_onoffpluginunit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -507,6 +865,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -556,6 +915,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power (3)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -605,6 +965,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power (4)',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -654,6 +1015,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -703,6 +1065,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -752,6 +1115,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Enable charging',
     'options': dict({
     }),
     'original_device_class': None,
@@ -800,6 +1164,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -828,6 +1193,55 @@
     'state': 'off',
   })
 # ---
+# name: test_switches[speaker][switch.mock_speaker_mute-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_speaker_mute',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mute',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mute',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'speaker_mute',
+    'unique_id': '00000000000004D2-000000000000006B-MatterNodeDevice-1-MatterMuteToggle-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[speaker][switch.mock_speaker_mute-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock speaker Mute',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_speaker_mute',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_switches[switch_unit][switch.mock_switchunit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -849,6 +1263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -877,55 +1292,6 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[thermostat][switch.longan_link_hvac-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.longan_link_hvac',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterSwitch-6-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[thermostat][switch.longan_link_hvac-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Longan link HVAC',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.longan_link_hvac',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_switches[yandex_smart_socket][switch.yndx_00540-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -947,6 +1313,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,

@@ -3,7 +3,7 @@
 import logging
 from unittest.mock import AsyncMock
 
-from aiovodafone import VodafoneStationDevice
+from aiovodafone.api import VodafoneStationDevice
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 

@@ -1,23 +1,23 @@
 {
   "config": {
-    "flow_title": "{name}",
-    "step": {
-      "user": {
-        "description": "Enter the hostname or IP address of your TOLO Sauna device.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        }
-      },
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    "flow_title": "{name}",
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "description": "Enter the hostname or IP address of your TOLO Sauna device."
+      }
     }
   },
   "entity": {
@@ -45,38 +45,35 @@
       }
     },
     "number": {
+      "fan_timer": {
+        "name": "Fan timer"
+      },
       "power_timer": {
         "name": "Power timer"
       },
       "salt_bath_timer": {
         "name": "Salt bath timer"
-      },
-      "fan_timer": {
-        "name": "Fan timer"
       }
     },
     "select": {
-      "lamp_mode": {
-        "name": "Lamp mode",
-        "state": {
-          "automatic": "Automatic",
-          "manual": "[%key:common::state::manual%]"
-        }
-      },
       "aroma_therapy_slot": {
         "name": "Aroma therapy slot",
         "state": {
           "a": "Slot A",
           "b": "Slot B"
         }
+      },
+      "lamp_mode": {
+        "name": "Lamp mode",
+        "state": {
+          "automatic": "Automatic",
+          "manual": "[%key:common::state::manual%]"
+        }
       }
     },
     "sensor": {
-      "water_level": {
-        "name": "Water level"
-      },
-      "tank_temperature": {
-        "name": "Tank temperature"
+      "fan_timer_remaining": {
+        "name": "Fan timer"
       },
       "power_timer_remaining": {
         "name": "Power timer"
@@ -84,8 +81,11 @@
       "salt_bath_timer_remaining": {
         "name": "Salt bath timer"
       },
-      "fan_timer_remaining": {
-        "name": "Fan timer"
+      "tank_temperature": {
+        "name": "Tank temperature"
+      },
+      "water_level": {
+        "name": "Water level"
       }
     },
     "switch": {

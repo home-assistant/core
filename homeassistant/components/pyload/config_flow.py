@@ -72,6 +72,7 @@ REAUTH_SCHEMA = vol.Schema(
         ),
     }
 )
+PLACEHOLDER = {"example_url": "https://example.com:8000/path"}
 
 
 async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> None:
@@ -134,6 +135,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
+            description_placeholders=PLACEHOLDER,
         )
 
     async def async_step_reauth(
@@ -211,7 +213,10 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA,
                 suggested_values,
             ),
-            description_placeholders={CONF_NAME: reconfig_entry.data[CONF_USERNAME]},
+            description_placeholders={
+                CONF_NAME: reconfig_entry.data[CONF_USERNAME],
+                **PLACEHOLDER,
+            },
             errors=errors,
         )
 

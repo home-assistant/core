@@ -25,11 +25,11 @@
       }
     },
     "sensor": {
-      "cp_state": {
-        "default": "mdi:ev-plug-type2"
-      },
       "charge_current_limit_source": {
         "default": "mdi:arrow-collapse-up"
+      },
+      "cp_state": {
+        "default": "mdi:ev-plug-type2"
       },
       "uptime": {
         "default": "mdi:timer"

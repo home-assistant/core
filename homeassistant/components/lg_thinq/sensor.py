@@ -622,6 +622,7 @@ ENERGY_USAGE_SENSORS: tuple[ThinQEnergySensorEntityDescription, ...] = (
         usage_period=USAGE_MONTHLY,
         start_date_fn=lambda today: today,
         end_date_fn=lambda today: today,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ThinQEnergySensorEntityDescription(
         key="last_month",

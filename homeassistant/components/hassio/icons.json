@@ -10,11 +10,11 @@
     }
   },
   "services": {
-    "addon_start": {
-      "service": "mdi:play"
-    },
     "addon_restart": {
       "service": "mdi:restart"
+    },
+    "addon_start": {
+      "service": "mdi:play"
     },
     "addon_stdin": {
       "service": "mdi:console"
@@ -22,17 +22,17 @@
     "addon_stop": {
       "service": "mdi:stop"
     },
-    "host_reboot": {
-      "service": "mdi:restart"
-    },
-    "host_shutdown": {
-      "service": "mdi:power"
-    },
     "backup_full": {
       "service": "mdi:content-save"
     },
     "backup_partial": {
       "service": "mdi:content-save"
+    },
+    "host_reboot": {
+      "service": "mdi:restart"
+    },
+    "host_shutdown": {
+      "service": "mdi:power"
     },
     "restore_full": {
       "service": "mdi:backup-restore"

@@ -159,6 +159,7 @@ asyncio.set_event_loop_policy = lambda policy: None
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""
     parser.addoption("--dburl", action="store", default="sqlite://")
+    parser.addoption("--drop-existing-db", action="store_const", const=True)
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -1269,9 +1270,11 @@ def evict_faked_translations(translations_once) -> Generator[_patch]:
     component_paths = components.__path__
 
     for call in mock_component_strings.mock_calls:
+        _components: set[str] = call.args[2]
         integrations: dict[str, loader.Integration] = call.args[3]
-        for domain, integration in integrations.items():
-            if any(
+        for domain in _components:
+            # If the integration exists, don't evict from cache
+            if (integration := integrations.get(domain)) and any(
                 pathlib.Path(f"{component_path}/{domain}") == integration.file_path
                 for component_path in component_paths
             ):
@@ -1492,44 +1495,58 @@ def recorder_db_url(
     assert not hass_fixture_setup
 
     db_url = cast(str, pytestconfig.getoption("dburl"))
+    drop_existing_db = pytestconfig.getoption("drop_existing_db")
+
+    def drop_db() -> None:
+        import sqlalchemy as sa  # noqa: PLC0415
+        import sqlalchemy_utils  # noqa: PLC0415
+
+        if db_url.startswith("mysql://"):
+            made_url = sa.make_url(db_url)
+            db = made_url.database
+            engine = sa.create_engine(db_url)
+            # Check for any open connections to the database before dropping it
+            # to ensure that InnoDB does not deadlock.
+            with engine.begin() as connection:
+                query = sa.text(
+                    "select id FROM information_schema.processlist WHERE db=:db and id != CONNECTION_ID()"
+                )
+                rows = connection.execute(query, parameters={"db": db}).fetchall()
+                if rows:
+                    raise RuntimeError(
+                        f"Unable to drop database {db} because it is in use by {rows}"
+                    )
+            engine.dispose()
+            sqlalchemy_utils.drop_database(db_url)
+        elif db_url.startswith("postgresql://"):
+            sqlalchemy_utils.drop_database(db_url)
+
     if db_url == "sqlite://" and persistent_database:
         tmp_path = tmp_path_factory.mktemp("recorder")
         db_url = "sqlite:///" + str(tmp_path / "pytest.db")
-    elif db_url.startswith("mysql://"):
+    elif db_url.startswith(("mysql://", "postgresql://")):
         import sqlalchemy_utils  # noqa: PLC0415
 
-        charset = "utf8mb4' COLLATE = 'utf8mb4_unicode_ci"
-        assert not sqlalchemy_utils.database_exists(db_url)
-        sqlalchemy_utils.create_database(db_url, encoding=charset)
-    elif db_url.startswith("postgresql://"):
-        import sqlalchemy_utils  # noqa: PLC0415
+        if drop_existing_db and sqlalchemy_utils.database_exists(db_url):
+            drop_db()
 
-        assert not sqlalchemy_utils.database_exists(db_url)
-        sqlalchemy_utils.create_database(db_url, encoding="utf8")
+        if sqlalchemy_utils.database_exists(db_url):
+            raise RuntimeError(
+                f"Database {db_url} already exists. Use --drop-existing-db "
+                "to automatically drop existing database before start of test."
+            )
+
+        sqlalchemy_utils.create_database(
+            db_url,
+            encoding="utf8mb4' COLLATE = 'utf8mb4_unicode_ci"
+            if db_url.startswith("mysql://")
+            else "utf8",
+        )
     yield db_url
     if db_url == "sqlite://" and persistent_database:
         rmtree(tmp_path, ignore_errors=True)
-    elif db_url.startswith("mysql://"):
-        import sqlalchemy as sa  # noqa: PLC0415
-
-        made_url = sa.make_url(db_url)
-        db = made_url.database
-        engine = sa.create_engine(db_url)
-        # Check for any open connections to the database before dropping it
-        # to ensure that InnoDB does not deadlock.
-        with engine.begin() as connection:
-            query = sa.text(
-                "select id FROM information_schema.processlist WHERE db=:db and id != CONNECTION_ID()"
-            )
-            rows = connection.execute(query, parameters={"db": db}).fetchall()
-            if rows:
-                raise RuntimeError(
-                    f"Unable to drop database {db} because it is in use by {rows}"
-                )
-        engine.dispose()
-        sqlalchemy_utils.drop_database(db_url)
-    elif db_url.startswith("postgresql://"):
-        sqlalchemy_utils.drop_database(db_url)
+    elif db_url.startswith(("mysql://", "postgresql://")):
+        drop_db()
 
 
 async def _async_init_recorder_component(
@@ -2114,3 +2131,14 @@ def _dhcp_service_info_init(self: DhcpServiceInfo, *args: Any, **kwargs: Any) ->
 
 
 DhcpServiceInfo.__init__ = _dhcp_service_info_init
+
+
+@pytest.fixture(autouse=True)
+def disable_http_server() -> Generator[None]:
+    """Disable automatic start of HTTP server during tests.
+
+    This prevents the HTTP server from starting in tests that setup
+    integrations which depend on the HTTP component.
+    """
+    with patch("homeassistant.components.http.start_http_server_and_save_config"):
+        yield

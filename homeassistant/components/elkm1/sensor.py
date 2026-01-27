@@ -189,9 +189,7 @@ class ElkPanel(ElkSensor):
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         if self._elk.is_connected():
-            self._attr_native_value = (
-                "Paused" if self._element.remote_programming_status else "Connected"
-            )
+            self._attr_native_value = "Paused" if self._elk.is_paused() else "Connected"
         else:
             self._attr_native_value = "Disconnected"
 

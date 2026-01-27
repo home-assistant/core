@@ -13,7 +13,9 @@ from hass_nabucasa.voice_data import TTS_VOICES
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+    STORAGE_KEY,
+)
 from homeassistant.components.cloud.const import DEFAULT_TTS_DEFAULT_VOICE, DOMAIN
 from homeassistant.components.cloud.tts import (
     DEFAULT_VOICES,
@@ -343,10 +345,10 @@ async def test_get_tts_audio_logged_out(
 
 
 @pytest.mark.parametrize(
-    ("mock_process_tts_side_effect"),
+    "mock_process_tts_side_effect",
     [
-        (None,),
-        (VoiceError("Boom!"),),
+        None,
+        VoiceError("Boom!"),
     ],
 )
 async def test_tts_entity(

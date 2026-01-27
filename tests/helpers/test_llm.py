@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components import calendar, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
-from homeassistant.components.script.config import ScriptConfig
+from homeassistant.components.script import ScriptConfig
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -183,19 +183,23 @@ async def test_assist_api(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["GetLiveContext"]
+    assert [tool.name for tool in api.tools] == ["GetDateTime", "GetLiveContext"]
 
     # Match all
     intent_handler.platforms = None
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["test_intent", "GetLiveContext"]
+    assert [tool.name for tool in api.tools] == [
+        "test_intent",
+        "GetDateTime",
+        "GetLiveContext",
+    ]
 
     # Match specific domain
     intent_handler.platforms = {"light"}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 2
+    assert len(api.tools) == 3
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
@@ -365,6 +369,7 @@ async def test_assist_api_tools(
         "HassTurnOn",
         "HassTurnOff",
         "HassSetPosition",
+        "HassStopMoving",
         "HassStartTimer",
         "HassCancelTimer",
         "HassCancelAllTimers",
@@ -374,6 +379,7 @@ async def test_assist_api_tools(
         "HassUnpauseTimer",
         "HassTimerStatus",
         "Super_crazy_intent_with_unique_name",
+        "GetDateTime",
     ]
 
 
@@ -390,7 +396,7 @@ async def test_assist_api_description(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 1
+    assert len(api.tools) == 2
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "my intent handler"
@@ -570,9 +576,9 @@ async def test_assist_api_prompt(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             connections={("test", "9876-integer-values")},
-            name=1,
-            manufacturer=2,
-            model=3,
+            name="1",
+            manufacturer="2",
+            model="3",
             suggested_area="Test Area 2",
         )
     )
@@ -1127,6 +1133,19 @@ async def test_selector_serializer(
         },
         "required": ["media_content_id", "media_content_type"],
     }
+    assert selector_serializer(selector.MediaSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "entity_id": {"type": "string"},
+                "media_content_id": {"type": "string"},
+                "media_content_type": {"type": "string"},
+                "metadata": {"type": "object", "additionalProperties": True},
+            },
+            "required": ["media_content_id", "media_content_type"],
+        },
+    }
     assert selector_serializer(selector.NumberSelector({"mode": "box"})) == {
         "type": "number"
     }
@@ -1463,6 +1482,41 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     }
 
 
+async def test_get_date_time_tool(hass: HomeAssistant) -> None:
+    """Test the GetDateTime tool."""
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    tool = next((tool for tool in api.tools if tool.name == "GetDateTime"), None)
+    assert tool is not None
+
+    now = dt_util.parse_datetime("2025-09-22 12:30:45Z")
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        result = await tool.async_call(
+            hass,
+            llm.ToolInput("GetDateTime", {}),
+            llm_context,
+        )
+        assert result == {
+            "success": True,
+            "result": {
+                "date": "2025-09-22",
+                "time": "12:30:45",
+                "timezone": "UTC",
+                "weekday": "Monday",
+            },
+        }
+
+
 async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     """Test that tools are not exposed when no entities are exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -1475,7 +1529,7 @@ async def test_no_tools_exposed(hass: HomeAssistant) -> None:
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert api.tools == []
+    assert [tool.name for tool in api.tools] == ["GetDateTime"]
 
 
 async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:

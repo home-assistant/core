@@ -2,7 +2,12 @@
 
 from typing import Any, Final
 
-from iometer import IOmeterClient, IOmeterConnectionError
+from iometer import (
+    IOmeterClient,
+    IOmeterConnectionError,
+    IOmeterNoReadingsError,
+    IOmeterNoStatusError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -34,6 +39,11 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
         client = IOmeterClient(host=host, session=session)
         try:
             status = await client.get_current_status()
+            _ = await client.get_current_reading()
+        except IOmeterNoStatusError:
+            return self.async_abort(reason="no_status")
+        except IOmeterNoReadingsError:
+            return self.async_abort(reason="no_readings")
         except IOmeterConnectionError:
             return self.async_abort(reason="cannot_connect")
 
@@ -70,6 +80,11 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
             client = IOmeterClient(host=self._host, session=session)
             try:
                 status = await client.get_current_status()
+                _ = await client.get_current_reading()
+            except IOmeterNoStatusError:
+                errors["base"] = "no_status"
+            except IOmeterNoReadingsError:
+                errors["base"] = "no_readings"
             except IOmeterConnectionError:
                 errors["base"] = "cannot_connect"
             else:

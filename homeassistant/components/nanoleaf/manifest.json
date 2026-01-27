@@ -7,6 +7,7 @@
   "homekit": {
     "models": ["NL29", "NL42", "NL47", "NL48", "NL52", "NL59", "NL69", "NL81"]
   },
+  "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["aionanoleaf"],
   "requirements": ["aionanoleaf==0.2.1"],

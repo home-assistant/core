@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -47,6 +48,55 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[da_ac_cac_01001][switch.ar_varanda_sound_effect-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.ar_varanda_sound_effect',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sound effect',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound effect',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sound_effect',
+    'unique_id': '23c6d296-4656-20d8-f6eb-2ff13e041753_main_samsungce.airConditionerBeep_beep_beep',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][switch.ar_varanda_sound_effect-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ar Varanda Sound effect',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.ar_varanda_sound_effect',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_display_lighting-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -68,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display lighting',
     'options': dict({
     }),
     'original_device_class': None,
@@ -95,6 +146,153 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_sound_effect-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.aire_dormitorio_principal_sound_effect',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sound effect',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound effect',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sound_effect',
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_samsungce.airConditionerBeep_beep_beep',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_sound_effect-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aire Dormitorio Principal Sound effect',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.aire_dormitorio_principal_sound_effect',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ks_hood_01001][switch.range_hood-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.range_hood',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'fa5fca25-fa7a-1807-030a-2f72ee0f7bff_main_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_hood_01001][switch.range_hood-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Range hood',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.range_hood',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_ks_walloven_0107x][switch.four_sabbath_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.four_sabbath_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sabbath mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sabbath mode',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sabbath_mode',
+    'unique_id': '1c77a562-df00-7d6a-ca73-b67f6d4c4607_main_samsungce.sabbathMode_status_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_walloven_0107x][switch.four_sabbath_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Four Sabbath mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.four_sabbath_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ref_normal_000001][switch.refrigerator_cubed_ice-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -116,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cubed ice',
     'options': dict({
     }),
     'original_device_class': None,
@@ -164,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power cool',
     'options': dict({
     }),
     'original_device_class': None,
@@ -212,6 +412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power freeze',
     'options': dict({
     }),
     'original_device_class': None,
@@ -260,6 +461,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sabbath mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -308,6 +510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cubed ice',
     'options': dict({
     }),
     'original_device_class': None,
@@ -356,6 +559,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power cool',
     'options': dict({
     }),
     'original_device_class': None,
@@ -404,6 +608,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power freeze',
     'options': dict({
     }),
     'original_device_class': None,
@@ -452,6 +657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cubed ice',
     'options': dict({
     }),
     'original_device_class': None,
@@ -500,6 +706,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ice Bites',
     'options': dict({
     }),
     'original_device_class': None,
@@ -548,6 +755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power cool',
     'options': dict({
     }),
     'original_device_class': None,
@@ -596,6 +804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power freeze',
     'options': dict({
     }),
     'original_device_class': None,
@@ -644,6 +853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sabbath mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -692,6 +902,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power cool',
     'options': dict({
     }),
     'original_device_class': None,
@@ -740,6 +951,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -788,6 +1000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -836,6 +1049,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto Cycle Link',
     'options': dict({
     }),
     'original_device_class': None,
@@ -884,6 +1098,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Keep fresh mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -932,6 +1147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sanitize',
     'options': dict({
     }),
     'original_device_class': None,
@@ -980,6 +1196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrinkle prevent',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1028,6 +1245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrinkle prevent',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1055,6 +1273,55 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_wm_wd_01011][switch.trockner_wrinkle_prevent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.trockner_wrinkle_prevent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wrinkle prevent',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wrinkle prevent',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wrinkle_prevent',
+    'unique_id': '3d39866c-7716-5259-44f0-fd7025efd85f_main_custom.dryerWrinklePrevent_dryerWrinklePrevent_dryerWrinklePrevent',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wd_01011][switch.trockner_wrinkle_prevent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Trockner Wrinkle prevent',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.trockner_wrinkle_prevent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_wm_wm_000001_1][switch.washing_machine_bubble_soak-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1076,6 +1343,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bubble Soak',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1124,6 +1392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bubble Soak',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1172,6 +1441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1220,6 +1490,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1268,6 +1539,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1316,6 +1588,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1364,6 +1637,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
