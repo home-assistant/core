@@ -25,6 +25,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -417,6 +418,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "extra_state_attributes",
     "force_update",
     "icon",
+    "included_unique_ids",
     "name",
     "should_poll",
     "state",
@@ -533,6 +535,9 @@ class Entity(
     __capabilities_updated_at_reported: bool = False
     __remove_future: asyncio.Future[None] | None = None
 
+    # A list of included entity IDs in case the entity represents a group
+    _included_entities: list[str] | None = None
+
     # Entity Properties
     _attr_assumed_state: bool = False
     _attr_attribution: str | None = None
@@ -548,6 +553,7 @@ class Entity(
     _attr_extra_state_attributes: dict[str, Any]
     _attr_force_update: bool
     _attr_icon: str | None
+    _attr_included_unique_ids: list[str]
     _attr_name: str | None
     _attr_should_poll: bool = True
     _attr_state: StateType = STATE_UNKNOWN
@@ -1069,6 +1075,21 @@ class Entity(
         available = self.available  # only call self.available once per update cycle
         state = self._stringify_state(available)
         if available:
+            if self.included_unique_ids is not None:
+                entity_registry = er.async_get(self.hass)
+                self._included_entities = [
+                    entity_id
+                    for included_id in self.included_unique_ids
+                    if (
+                        entity_id := entity_registry.async_get_entity_id(
+                            self.platform.domain,
+                            self.platform.platform_name,
+                            included_id,
+                        )
+                    )
+                    is not None
+                ]
+                attr[ATTR_ENTITY_ID] = self._included_entities.copy()
             if state_attributes := self.state_attributes:
                 attr |= state_attributes
             if extra_state_attributes := self.extra_state_attributes:
@@ -1389,6 +1410,30 @@ class Entity(
 
     async def add_to_platform_finish(self) -> None:
         """Finish adding an entity to a platform."""
+        entity_registry = er.async_get(self.hass)
+
+        async def _handle_entity_registry_updated(event: Event[Any]) -> None:
+            """Handle registry create or update event."""
+            if (
+                event.data["action"] in {"create", "update"}
+                and (entry := entity_registry.async_get(event.data["entity_id"]))
+                and self.included_unique_ids is not None
+                and entry.unique_id in self.included_unique_ids
+            ) or (
+                event.data["action"] == "remove"
+                and self._included_entities is not None
+                and event.data["entity_id"] in self._included_entities
+            ):
+                self.async_write_ha_state()
+
+        if self.included_unique_ids is not None:
+            self.async_on_remove(
+                self.hass.bus.async_listen(
+                    er.EVENT_ENTITY_REGISTRY_UPDATED,
+                    _handle_entity_registry_updated,
+                )
+            )
+
         await self.async_internal_added_to_hass()
         await self.async_added_to_hass()
         self._platform_state = EntityPlatformState.ADDED
@@ -1655,6 +1700,16 @@ class Entity(
         return async_suggest_report_issue(
             self.hass, integration_domain=platform_name, module=type(self).__module__
         )
+
+    @cached_property
+    def included_unique_ids(self) -> list[str] | None:
+        """Return the list of unique IDs if the entity represents a group.
+
+        The corresponding entities will be shown as members in the UI.
+        """
+        if hasattr(self, "_attr_included_unique_ids"):
+            return self._attr_included_unique_ids
+        return None
 
 
 class ToggleEntityDescription(EntityDescription, frozen_or_thawed=True):
