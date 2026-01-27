@@ -14,11 +14,10 @@ from tuya_sharing import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.service import async_register_admin_service
 
 from .const import (
     CONF_ENDPOINT,
@@ -177,31 +176,27 @@ def _register_services(hass: HomeAssistant) -> None:
 
         # Find the device in Tuya config entry
         for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.runtime_data is None:
-                continue
             manager = entry.runtime_data.manager
             if tuya_device_id in manager.device_map:
                 return manager.device_map[tuya_device_id], manager
 
         raise HomeAssistantError(f"Tuya device {tuya_device_id} not found")
 
-    async def get_data(call) -> dict[str, Any]:
+    async def get_data(call: ServiceCall) -> dict[str, Any]:
         """Get device data for a specific DP code."""
-        device, _ = _get_tuya_device(call.data.get("device_id"))
-        dp_code = call.data.get("dp_code")
+        device, _ = _get_tuya_device(call.data["device_id"])
+        dp_code = call.data["dp_code"]
 
         data = device.status.get(dp_code)
         if data is None:
-            available_codes = list(device.status.keys())
             raise HomeAssistantError(
                 f"Device {device.name} does not have data for DP code '{dp_code}'. "
-                f"Available codes: {', '.join(available_codes)}"
+                f"Available codes: {', '.join(device.status.keys())}"
             )
 
         return {"data": data}
 
-    async_register_admin_service(
-        hass,
+    hass.services.async_register(
         DOMAIN,
         "get_data",
         get_data,
@@ -214,18 +209,17 @@ def _register_services(hass: HomeAssistant) -> None:
         supports_response="only",
     )
 
-    async def set_data(call) -> dict[str, Any]:
+    async def set_data(call: ServiceCall) -> dict[str, Any]:
         """Set device data for a specific DP code."""
-        device, manager = _get_tuya_device(call.data.get("device_id"))
-        dp_code = call.data.get("dp_code")
-        data_value = call.data.get("data")
+        device, manager = _get_tuya_device(call.data["device_id"])
+        dp_code = call.data["dp_code"]
+        data_value = call.data["data"]
 
         # Check if the device has this DP code in its function
         if dp_code not in device.function:
-            available_codes = list(device.function.keys())
             raise HomeAssistantError(
                 f"Device {device.name} does not support DP code '{dp_code}'. "
-                f"Available codes: {', '.join(available_codes)}"
+                f"Available codes: {', '.join(device.function.keys())}"
             )
         commands = [{"code": dp_code, "value": data_value}]
 
@@ -239,8 +233,7 @@ def _register_services(hass: HomeAssistant) -> None:
             "value": data_value,
         }
 
-    async_register_admin_service(
-        hass,
+    hass.services.async_register(
         DOMAIN,
         "set_data",
         set_data,
@@ -254,9 +247,9 @@ def _register_services(hass: HomeAssistant) -> None:
         supports_response="optional",
     )
 
-    async def get_available_dp_codes(call) -> dict[str, Any]:
+    async def get_available_dp_codes(call: ServiceCall) -> dict[str, Any]:
         """Get all available DP codes for a device."""
-        device, _ = _get_tuya_device(call.data.get("device_id"))
+        device, _ = _get_tuya_device(call.data["device_id"])
 
         # Return both settable (function) and readable (status) codes with current values
         settable_codes = list(device.function.keys())
@@ -271,8 +264,7 @@ def _register_services(hass: HomeAssistant) -> None:
             "current_values": current_values,
         }
 
-    async_register_admin_service(
-        hass,
+    hass.services.async_register(
         DOMAIN,
         "get_available_dp_codes",
         get_available_dp_codes,
