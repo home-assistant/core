@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["electrolux-group-developer-sdk==0.1.3"]
+  "requirements": ["electrolux-group-developer-sdk==0.2.0"]
 }
