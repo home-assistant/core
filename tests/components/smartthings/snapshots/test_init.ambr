@@ -612,12 +612,12 @@
     'labels': set({
     }),
     'manufacturer': None,
-    'model': None,
+    'model': 'NZ64B5046GK',
     'model_id': None,
     'name': 'Induction Hob',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': 'B8C878DX900290H',
     'sw_version': None,
     'via_device_id': None,
   })
