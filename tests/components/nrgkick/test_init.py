@@ -90,24 +90,22 @@ async def test_coordinator_update_success(
     assert float(state.state) == 32.0
 
 
-async def test_coordinator_update_failed(
-    hass: HomeAssistant, mock_nrgkick_api, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        LibConnectionError("Connection failed"),
+        LibAuthError("Auth failed"),
+    ],
+    ids=["connection", "auth"],
+)
+async def test_coordinator_update_fails_and_retries(
+    hass: HomeAssistant,
+    mock_nrgkick_api,
+    side_effect: Exception,
 ) -> None:
-    """Test coordinator update failed."""
+    """Test coordinator update failures trigger a setup retry."""
     entry = create_mock_config_entry(data={CONF_HOST: "192.168.1.100"})
-    mock_nrgkick_api.get_values.side_effect = LibConnectionError("Connection failed")
-
-    await async_setup_integration(hass, entry)
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_coordinator_auth_failed(
-    hass: HomeAssistant, mock_nrgkick_api, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test coordinator auth failed."""
-    entry = create_mock_config_entry(data={CONF_HOST: "192.168.1.100"})
-    mock_nrgkick_api.get_values.side_effect = LibAuthError("Auth failed")
+    mock_nrgkick_api.get_values.side_effect = side_effect
 
     await async_setup_integration(hass, entry)
 
