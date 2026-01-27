@@ -193,7 +193,6 @@ async def test_reconfigure_flow(
             CONF_HOST: "192.168.1.124",
         },
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
@@ -223,7 +222,6 @@ async def test_reconfigure_flow_no_change(
             CONF_HOST: "192.168.1.123",
         },
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
@@ -300,7 +298,6 @@ async def test_reconfigure_flow_cannot_connect(
             CONF_HOST: "192.168.1.124",
         },
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
