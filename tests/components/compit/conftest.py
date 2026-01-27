@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from compit_inext_api.consts import CompitParameter
+from compit_inext_api.params_dictionary import PARAMS
 import pytest
 
 from homeassistant.components.compit.const import DOMAIN
@@ -77,23 +78,19 @@ def mock_connector():
         return all_devices.get(device_id)
 
     def get_current_option(device_id: int, parameter_code: CompitParameter):
+        code = PARAMS[parameter_code][all_devices[device_id].definition.code]
+
         param = next(
-            (
-                p
-                for p in all_devices[device_id].state.params
-                if p.code == parameter_code.value
-            ),
+            (p for p in all_devices[device_id].state.params if p.code == code),
             None,
         )
         return param.value if param else None
 
     def get_current_value(device_id: int, parameter_code: CompitParameter):
+        code = PARAMS[parameter_code][all_devices[device_id].definition.code]
+
         param = next(
-            (
-                p
-                for p in all_devices[device_id].state.params
-                if p.code == parameter_code.value
-            ),
+            (p for p in all_devices[device_id].state.params if p.code == code),
             None,
         )
         return param.value if param else None
