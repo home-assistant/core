@@ -439,7 +439,7 @@
         }),
         dict({
           'text': '''
-
+            
             Those are the main headlines making news today.
           ''',
           'type': 'text',
