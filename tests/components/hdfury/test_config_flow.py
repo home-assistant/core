@@ -243,15 +243,13 @@ async def test_reconfigure_flow_abort_incorrect_device(
     assert result["errors"] == {}
 
     # Simulate different serial number, as if user entered wrong IP
-    mock_hdfury_client._cf_client.get_board = AsyncMock(
-        return_value={
-            "hostname": "VRROOM-21",
-            "ipaddress": "192.168.1.124",
-            "serial": "000987654321",
-            "pcbv": "3",
-            "version": "FW: 0.61",
-        }
-    )
+    mock_hdfury_client.get_board.return_value = {
+        "hostname": "VRROOM-21",
+        "ipaddress": "192.168.1.124",
+        "serial": "000987654321",
+        "pcbv": "3",
+        "version": "FW: 0.61",
+    }
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {

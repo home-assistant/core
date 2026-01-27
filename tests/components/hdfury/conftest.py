@@ -62,7 +62,6 @@ def mock_hdfury_client() -> Generator[AsyncMock]:
 
         # Coordinator client
         coord_client = mock_coord_client.return_value
-        coord_client._cf_client = cf_client
         coord_client.get_board = cf_client.get_board
         coord_client.get_info = AsyncMock(
             return_value={
