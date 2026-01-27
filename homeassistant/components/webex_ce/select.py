@@ -15,6 +15,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# Limit parallel updates to avoid overwhelming device
+PARALLEL_UPDATES = 1
+
 # Map display values to xAPI status values
 STATE_MAP = {
     "awake": "Off",
@@ -116,6 +119,11 @@ class WebexCEStandbySelect(SelectEntity):
         else:
             _LOGGER.warning("Unknown standby state: %s", state)
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
+
     async def async_select_option(self, option: str) -> None:
         """Change the standby state."""
         _LOGGER.debug("Setting standby state to: %s", option)
@@ -198,6 +206,11 @@ class WebexCEPresentationSourceSelect(SelectEntity):
                 "Unexpected presentation source feedback: %s - %s", params, err
             )
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
+
     async def async_select_option(self, option: str) -> None:
         """Change the presentation source."""
         try:
@@ -268,6 +281,11 @@ class WebexCECameraPresetSelect(SelectEntity):
                     break
         except (AttributeError, KeyError, TypeError) as err:
             _LOGGER.warning("Unexpected camera preset feedback: %s - %s", params, err)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
 
     async def async_select_option(self, option: str) -> None:
         """Activate the camera preset."""

@@ -21,21 +21,35 @@ class WebexCEClient:
         self.password = password
         self._client: xows.XoWSClient | None = None
         self._callbacks: dict[str, tuple[list[str], Callable]] = {}
+        self.connected = False
+        self._unavailable_logged = False
 
     async def connect(self) -> None:
         """Connect to the device."""
-        client = xows.XoWSClient(
-            self.host,
-            username=self.username,
-            password=self.password,
-        )
-        self._client = await client.__aenter__()  # pylint: disable=unnecessary-dunder-call
+        try:
+            client = xows.XoWSClient(
+                self.host,
+                username=self.username,
+                password=self.password,
+            )
+            self._client = await client.__aenter__()  # pylint: disable=unnecessary-dunder-call
+            self.connected = True
+            if self._unavailable_logged:
+                _LOGGER.info("Device %s is back online", self.host)
+                self._unavailable_logged = False
+        except Exception as err:
+            self.connected = False
+            if not self._unavailable_logged:
+                _LOGGER.info("Device %s is unavailable: %s", self.host, err)
+                self._unavailable_logged = True
+            raise
 
     async def disconnect(self) -> None:
         """Disconnect from the device."""
         if self._client:
             await self._client.__aexit__(None, None, None)
             self._client = None
+        self.connected = False
 
     async def xget(self, path: list[str]) -> Any:
         """Get a status value from the device."""

@@ -23,6 +23,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# Limit parallel updates to avoid overwhelming device
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -87,6 +90,11 @@ class WebexCECallStatusSensor(SensorEntity):
         self._call_data: dict[str, Any] | None = None
         self._conference_data: dict[str, Any] | None = None
         self._call_start_time: datetime | None = None
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
 
     @property
     def icon(self) -> str:
@@ -301,6 +309,11 @@ class WebexCEAmbientNoiseSensor(SensorEntity):
         self._attr_unique_id = f"{serial}_ambient_noise"
         self._attr_native_value = None
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to device feedback when added to hass."""
         await super().async_added_to_hass()
@@ -346,6 +359,11 @@ class WebexCETemperatureSensor(SensorEntity):
         self._attr_unique_id = f"{serial}_ambient_temperature"
         self._attr_native_value = None
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to device feedback when added to hass."""
         await super().async_added_to_hass()
@@ -388,6 +406,11 @@ class WebexCEPeoplePresenceSensor(SensorEntity):
         self._attr_unique_id = f"{serial}_room_occupancy"
         self._attr_native_value = None
         self._attr_extra_state_attributes = {}
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to device feedback when added to hass."""
@@ -510,6 +533,11 @@ class WebexCEHumiditySensor(SensorEntity):
         self._attr_unique_id = f"{serial}_relative_humidity"
         self._attr_native_value = None
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to device feedback when added to hass."""
         await super().async_added_to_hass()
@@ -552,6 +580,11 @@ class WebexCESoundLevelSensor(SensorEntity):
         self._attr_unique_id = f"{serial}_sound_level"
         self._attr_native_value = None
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to device feedback when added to hass."""
         await super().async_added_to_hass()
@@ -593,6 +626,11 @@ class WebexCECurrentMeetingSensor(SensorEntity):
         self._attr_unique_id = f"{serial}_current_meeting"
         self._attr_native_value = None
         self._attr_extra_state_attributes = {}
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to device feedback when added to hass."""
@@ -667,6 +705,11 @@ class WebexCENextMeetingSensor(SensorEntity):
         self._attr_unique_id = f"{serial}_next_meeting"
         self._attr_native_value = None
         self._attr_extra_state_attributes = {}
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to device feedback when added to hass."""
@@ -750,6 +793,11 @@ class WebexCESystemUptimeSensor(SensorEntity):
         self._attr_unique_id = f"{serial}_system_uptime"
         self._attr_native_value = None
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to device feedback when added to hass."""
         await super().async_added_to_hass()
@@ -786,6 +834,11 @@ class WebexCENetworkStatusSensor(SensorEntity):
         self._attr_unique_id = f"{serial}_network_status"
         self._attr_native_value = None
         self._attr_extra_state_attributes = {}
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to device feedback when added to hass."""
@@ -877,6 +930,11 @@ class WebexCERecordingSensor(SensorEntity):
         self._attr_native_value = "No"
         self._attr_extra_state_attributes = {}
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to device feedback when added to hass."""
         await super().async_added_to_hass()
@@ -940,6 +998,11 @@ class WebexCEStreamingSensor(SensorEntity):
         self._attr_unique_id = f"{serial}_streaming"
         self._attr_native_value = "No"
         self._attr_extra_state_attributes = {}
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to device feedback when added to hass."""

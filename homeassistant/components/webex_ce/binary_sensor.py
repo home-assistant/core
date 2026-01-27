@@ -18,6 +18,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# Coordinator-based entities don't need parallel update limits
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -62,6 +65,11 @@ class WebexCERecordingStatusSensor(BinarySensorEntity):
         self._attr_unique_id = f"{serial}_recording_status"
         self._attr_is_on = False
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to device feedback when added to hass."""
         await super().async_added_to_hass()
@@ -98,6 +106,11 @@ class WebexCEStreamingStatusSensor(BinarySensorEntity):
         serial = next(iter(device_info["identifiers"]))[1]
         self._attr_unique_id = f"{serial}_streaming_status"
         self._attr_is_on = False
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to device feedback when added to hass."""

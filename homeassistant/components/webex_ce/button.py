@@ -14,6 +14,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# Buttons are user-triggered, no parallel update concerns
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -59,6 +62,11 @@ class WebexCEAcceptCallButton(ButtonEntity):
         serial = next(iter(device_info["identifiers"]))[1]
         self._attr_unique_id = f"{serial}_accept_call"
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
+
     async def async_press(self) -> None:
         """Accept the incoming call."""
         await self._client.xcommand(["Call", "Accept"])
@@ -77,6 +85,11 @@ class WebexCERejectCallButton(ButtonEntity):
         self._attr_device_info = device_info
         serial = next(iter(device_info["identifiers"]))[1]
         self._attr_unique_id = f"{serial}_reject_call"
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
 
     async def async_press(self) -> None:
         """Reject the incoming call."""
@@ -155,6 +168,11 @@ class WebexCEWakeupDisplayButton(ButtonEntity):
         self._attr_device_info = device_info
         serial = next(iter(device_info["identifiers"]))[1]
         self._attr_unique_id = f"{serial}_wakeup_display"
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
 
     async def async_press(self) -> None:
         """Wake up the display."""

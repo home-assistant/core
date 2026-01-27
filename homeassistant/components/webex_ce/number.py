@@ -15,6 +15,9 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# Limit parallel updates to avoid overwhelming device
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -109,6 +112,11 @@ class WebexCEVolumeNumber(NumberEntity):
         except (AttributeError, KeyError, TypeError, ValueError) as err:
             _LOGGER.warning("Unexpected volume feedback format: %s - %s", params, err)
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
+
     async def async_set_native_value(self, value: float) -> None:
         """Set the volume level."""
         volume = int(value)
@@ -182,6 +190,11 @@ class WebexCEBrightnessNumber(NumberEntity):
                 self.async_write_ha_state()
         except (AttributeError, KeyError, TypeError, ValueError) as err:
             _LOGGER.warning("Unexpected brightness feedback: %s - %s", params, err)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._client.connected
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the brightness level."""
