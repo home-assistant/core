@@ -27,363 +27,321 @@ class CompitDeviceDescription:
     """Parameters of the device."""
 
 
+DESCRIPTIONS: dict[CompitParameter, SelectEntityDescription] = {
+    CompitParameter.LANGUAGE: SelectEntityDescription(
+        key=CompitParameter.LANGUAGE.value,
+        translation_key="language",
+        options=[
+            "polish",
+            "english",
+        ],
+    ),
+    CompitParameter.AEROKONFBYPASS: SelectEntityDescription(
+        key=CompitParameter.AEROKONFBYPASS.value,
+        translation_key="aero_by_pass",
+        options=[
+            "off",
+            "auto",
+            "on",
+        ],
+    ),
+    CompitParameter.NANO_MODE: SelectEntityDescription(
+        key=CompitParameter.NANO_MODE.value,
+        translation_key="nano_work_mode",
+        options=[
+            "manual_3",
+            "manual_2",
+            "manual_1",
+            "manual_0",
+            "schedule",
+            "christmas",
+            "out_of_home",
+        ],
+    ),
+    CompitParameter.R900_OPERATING_MODE: SelectEntityDescription(
+        key=CompitParameter.R900_OPERATING_MODE.value,
+        translation_key="operating_mode",
+        options=[
+            "disabled",
+            "eco",
+            "hybrid",
+        ],
+    ),
+    CompitParameter.SOLAR_COMP_OPERATING_MODE: SelectEntityDescription(
+        key=CompitParameter.SOLAR_COMP_OPERATING_MODE.value,
+        translation_key="solarcomp_operating_mode",
+        options=[
+            "auto",
+            "de_icing",
+            "holiday",
+            "disabled",
+        ],
+    ),
+    CompitParameter.R490_OPERATING_MODE: SelectEntityDescription(
+        key=CompitParameter.R490_OPERATING_MODE.value,
+        translation_key="operating_mode",
+        options=[
+            "disabled",
+            "eco",
+            "hybrid",
+        ],
+    ),
+    CompitParameter.WORK_MODE: SelectEntityDescription(
+        key=CompitParameter.WORK_MODE.value,
+        translation_key="work_mode",
+        options=[
+            "winter",
+            "summer",
+            "cooling",
+        ],
+    ),
+    CompitParameter.R470_OPERATING_MODE: SelectEntityDescription(
+        key=CompitParameter.R470_OPERATING_MODE.value,
+        translation_key="operating_mode",
+        options=[
+            "disabled",
+            "auto",
+            "eco",
+        ],
+    ),
+    CompitParameter.HEATING_SOURCE_OF_CORRECTION: SelectEntityDescription(
+        key=CompitParameter.HEATING_SOURCE_OF_CORRECTION.value,
+        translation_key="heating_source_of_correction",
+        options=[
+            "no_corrections",
+            "schedule",
+            "thermostat",
+            "nano_nr_1",
+            "nano_nr_2",
+            "nano_nr_3",
+            "nano_nr_4",
+            "nano_nr_5",
+        ],
+    ),
+    CompitParameter.BIOMAX_MIXER_MODE_ZONE_1: SelectEntityDescription(
+        key=CompitParameter.BIOMAX_MIXER_MODE_ZONE_1.value,
+        translation_key="mixer_mode_zone",
+        options=[
+            "disabled",
+            "without_thermostat",
+            "schedule",
+            "thermostat",
+            "nano_nr_1",
+            "nano_nr_2",
+            "nano_nr_3",
+            "nano_nr_4",
+            "nano_nr_5",
+        ],
+        translation_placeholders={"zone": "1"},
+    ),
+    CompitParameter.BIOMAX_MIXER_MODE_ZONE_2: SelectEntityDescription(
+        key=CompitParameter.BIOMAX_MIXER_MODE_ZONE_2.value,
+        translation_key="mixer_mode_zone",
+        options=[
+            "disabled",
+            "without_thermostat",
+            "schedule",
+            "thermostat",
+            "nano_nr_1",
+            "nano_nr_2",
+            "nano_nr_3",
+            "nano_nr_4",
+            "nano_nr_5",
+        ],
+        translation_placeholders={"zone": "2"},
+    ),
+    CompitParameter.DHW_CIRCULATION_MODE: SelectEntityDescription(
+        key=CompitParameter.DHW_CIRCULATION_MODE.value,
+        translation_key="dhw_circulation",
+        options=[
+            "disabled",
+            "constant",
+            "schedule",
+        ],
+    ),
+    CompitParameter.BIOMAX_HEATING_SOURCE_OF_CORRECTION: SelectEntityDescription(
+        key=CompitParameter.BIOMAX_HEATING_SOURCE_OF_CORRECTION.value,
+        translation_key="heating_source_of_correction",
+        options=[
+            "disabled",
+            "no_corrections",
+            "schedule",
+            "thermostat",
+            "nano_nr_1",
+            "nano_nr_2",
+            "nano_nr_3",
+            "nano_nr_4",
+            "nano_nr_5",
+        ],
+    ),
+    CompitParameter.MIXER_MODE: SelectEntityDescription(
+        key=CompitParameter.MIXER_MODE.value,
+        translation_key="mixer_mode",
+        options=[
+            "no_corrections",
+            "schedule",
+            "thermostat",
+            "nano_nr_1",
+            "nano_nr_2",
+            "nano_nr_3",
+            "nano_nr_4",
+            "nano_nr_5",
+        ],
+    ),
+    CompitParameter.R480_OPERATING_MODE: SelectEntityDescription(
+        key=CompitParameter.R480_OPERATING_MODE.value,
+        translation_key="operating_mode",
+        options=[
+            "disabled",
+            "eco",
+            "hybrid",
+        ],
+    ),
+    CompitParameter.BUFFER_MODE: SelectEntityDescription(
+        key=CompitParameter.BUFFER_MODE.value,
+        translation_key="buffer_mode",
+        options=[
+            "schedule",
+            "manual",
+            "disabled",
+        ],
+    ),
+}
+
+
 DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
     223: CompitDeviceDescription(
         name="Nano Color 2",
         parameters={
-            CompitParameter.LANGUAGE: SelectEntityDescription(
-                key=CompitParameter.LANGUAGE.value,
-                translation_key="language",
-                options=[
-                    "polish",
-                    "english",
-                ],
-            ),
-            CompitParameter.AEROKONFBYPASS: SelectEntityDescription(
-                key=CompitParameter.AEROKONFBYPASS.value,
-                translation_key="aero_by_pass",
-                options=[
-                    "off",
-                    "auto",
-                    "on",
-                ],
-            ),
+            CompitParameter.LANGUAGE: DESCRIPTIONS[CompitParameter.LANGUAGE],
+            CompitParameter.AEROKONFBYPASS: DESCRIPTIONS[
+                CompitParameter.AEROKONFBYPASS
+            ],
         },
     ),
     12: CompitDeviceDescription(
         name="Nano Color",
         parameters={
-            CompitParameter.LANGUAGE: SelectEntityDescription(
-                key=CompitParameter.LANGUAGE.value,
-                translation_key="language",
-                options=[
-                    "polish",
-                    "english",
-                ],
-            ),
-            CompitParameter.AEROKONFBYPASS: SelectEntityDescription(
-                key=CompitParameter.AEROKONFBYPASS.value,
-                translation_key="aero_by_pass",
-                options=[
-                    "off",
-                    "auto",
-                    "on",
-                ],
-            ),
+            CompitParameter.LANGUAGE: DESCRIPTIONS[CompitParameter.LANGUAGE],
+            CompitParameter.AEROKONFBYPASS: DESCRIPTIONS[
+                CompitParameter.AEROKONFBYPASS
+            ],
         },
     ),
     7: CompitDeviceDescription(
         name="Nano One",
         parameters={
-            CompitParameter.LANGUAGE: SelectEntityDescription(
-                key=CompitParameter.LANGUAGE.value,
-                translation_key="language",
-                options=[
-                    "polish",
-                    "english",
-                ],
-            ),
-            CompitParameter.NANO_MODE: SelectEntityDescription(
-                key=CompitParameter.NANO_MODE.value,
-                translation_key="nano_work_mode",
-                options=[
-                    "manual_3",
-                    "manual_2",
-                    "manual_1",
-                    "manual_0",
-                    "schedule",
-                    "christmas",
-                    "out_of_home",
-                ],
-            ),
+            CompitParameter.LANGUAGE: DESCRIPTIONS[CompitParameter.LANGUAGE],
+            CompitParameter.NANO_MODE: DESCRIPTIONS[CompitParameter.NANO_MODE],
         },
     ),
     224: CompitDeviceDescription(
         name="R 900",
         parameters={
-            CompitParameter.R900_OPERATING_MODE: SelectEntityDescription(
-                key=CompitParameter.R900_OPERATING_MODE.value,
-                translation_key="operating_mode",
-                options=[
-                    "disabled",
-                    "eco",
-                    "hybrid",
-                ],
-            ),
+            CompitParameter.R900_OPERATING_MODE: DESCRIPTIONS[
+                CompitParameter.R900_OPERATING_MODE
+            ],
         },
     ),
     45: CompitDeviceDescription(
         name="SolarComp971",
         parameters={
-            CompitParameter.SOLAR_COMP_OPERATING_MODE: SelectEntityDescription(
-                key=CompitParameter.SOLAR_COMP_OPERATING_MODE.value,
-                translation_key="solarcomp_operating_mode",
-                options=[
-                    "auto",
-                    "de_icing",
-                    "holiday",
-                    "disabled",
-                ],
-            ),
+            CompitParameter.SOLAR_COMP_OPERATING_MODE: DESCRIPTIONS[
+                CompitParameter.SOLAR_COMP_OPERATING_MODE
+            ],
         },
     ),
     99: CompitDeviceDescription(
         name="SolarComp971C",
         parameters={
-            CompitParameter.SOLAR_COMP_OPERATING_MODE: SelectEntityDescription(
-                key=CompitParameter.SOLAR_COMP_OPERATING_MODE.value,
-                translation_key="solarcomp_operating_mode",
-                options=[
-                    "auto",
-                    "de_icing",
-                    "holiday",
-                    "disabled",
-                ],
-            ),
+            CompitParameter.SOLAR_COMP_OPERATING_MODE: DESCRIPTIONS[
+                CompitParameter.SOLAR_COMP_OPERATING_MODE
+            ],
         },
     ),
     44: CompitDeviceDescription(
         name="SolarComp 951",
         parameters={
-            CompitParameter.SOLAR_COMP_OPERATING_MODE: SelectEntityDescription(
-                key=CompitParameter.SOLAR_COMP_OPERATING_MODE.value,
-                translation_key="solarcomp_operating_mode",
-                options=[
-                    "auto",
-                    "de_icing",
-                    "holiday",
-                    "disabled",
-                ],
-            ),
+            CompitParameter.SOLAR_COMP_OPERATING_MODE: DESCRIPTIONS[
+                CompitParameter.SOLAR_COMP_OPERATING_MODE
+            ],
         },
     ),
     92: CompitDeviceDescription(
         name="r490",
         parameters={
-            CompitParameter.R490_OPERATING_MODE: SelectEntityDescription(
-                key=CompitParameter.R490_OPERATING_MODE.value,
-                translation_key="operating_mode",
-                options=[
-                    "disabled",
-                    "eco",
-                    "hybrid",
-                ],
-            ),
-            CompitParameter.WORK_MODE: SelectEntityDescription(
-                key=CompitParameter.WORK_MODE.value,
-                translation_key="work_mode",
-                options=[
-                    "winter",
-                    "summer",
-                    "cooling",
-                ],
-            ),
+            CompitParameter.R490_OPERATING_MODE: DESCRIPTIONS[
+                CompitParameter.R490_OPERATING_MODE
+            ],
+            CompitParameter.WORK_MODE: DESCRIPTIONS[CompitParameter.WORK_MODE],
         },
     ),
     34: CompitDeviceDescription(
         name="r470",
         parameters={
-            CompitParameter.R470_OPERATING_MODE: SelectEntityDescription(
-                key=CompitParameter.R470_OPERATING_MODE.value,
-                translation_key="operating_mode",
-                options=[
-                    "disabled",
-                    "auto",
-                    "eco",
-                ],
-            ),
-            CompitParameter.HEATING_SOURCE_OF_CORRECTION: SelectEntityDescription(
-                key=CompitParameter.HEATING_SOURCE_OF_CORRECTION.value,
-                translation_key="heating_source_of_correction",
-                options=[
-                    "no_corrections",
-                    "schedule",
-                    "thermostat",
-                    "nano_nr_1",
-                    "nano_nr_2",
-                    "nano_nr_3",
-                    "nano_nr_4",
-                    "nano_nr_5",
-                ],
-            ),
+            CompitParameter.R470_OPERATING_MODE: DESCRIPTIONS[
+                CompitParameter.R470_OPERATING_MODE
+            ],
+            CompitParameter.HEATING_SOURCE_OF_CORRECTION: DESCRIPTIONS[
+                CompitParameter.HEATING_SOURCE_OF_CORRECTION
+            ],
         },
     ),
     201: CompitDeviceDescription(
         name="BioMax775",
         parameters={
-            CompitParameter.BIOMAX_MIXER_MODE_ZONE_1: SelectEntityDescription(
-                key=CompitParameter.BIOMAX_MIXER_MODE_ZONE_1.value,
-                translation_key="mixer_mode_zone",
-                options=[
-                    "disabled",
-                    "without_thermostat",
-                    "schedule",
-                    "thermostat",
-                    "nano_nr_1",
-                    "nano_nr_2",
-                    "nano_nr_3",
-                    "nano_nr_4",
-                    "nano_nr_5",
-                ],
-                translation_placeholders={"zone": "1"},
-            ),
-            CompitParameter.BIOMAX_MIXER_MODE_ZONE_2: SelectEntityDescription(
-                key=CompitParameter.BIOMAX_MIXER_MODE_ZONE_2.value,
-                translation_key="mixer_mode_zone",
-                options=[
-                    "disabled",
-                    "without_thermostat",
-                    "schedule",
-                    "thermostat",
-                    "nano_nr_1",
-                    "nano_nr_2",
-                    "nano_nr_3",
-                    "nano_nr_4",
-                    "nano_nr_5",
-                ],
-                translation_placeholders={"zone": "2"},
-            ),
-            CompitParameter.DHW_CIRCULATION_MODE: SelectEntityDescription(
-                key=CompitParameter.DHW_CIRCULATION_MODE.value,
-                translation_key="dhw_circulation",
-                options=[
-                    "disabled",
-                    "constant",
-                    "schedule",
-                ],
-            ),
+            CompitParameter.BIOMAX_MIXER_MODE_ZONE_1: DESCRIPTIONS[
+                CompitParameter.BIOMAX_MIXER_MODE_ZONE_1
+            ],
+            CompitParameter.BIOMAX_MIXER_MODE_ZONE_2: DESCRIPTIONS[
+                CompitParameter.BIOMAX_MIXER_MODE_ZONE_2
+            ],
+            CompitParameter.DHW_CIRCULATION_MODE: DESCRIPTIONS[
+                CompitParameter.DHW_CIRCULATION_MODE
+            ],
         },
     ),
     36: CompitDeviceDescription(
         name="BioMax742",
         parameters={
-            CompitParameter.BIOMAX_HEATING_SOURCE_OF_CORRECTION: SelectEntityDescription(
-                key=CompitParameter.BIOMAX_HEATING_SOURCE_OF_CORRECTION.value,
-                translation_key="heating_source_of_correction",
-                options=[
-                    "disabled",
-                    "no_corrections",
-                    "schedule",
-                    "thermostat",
-                    "nano_nr_1",
-                    "nano_nr_2",
-                    "nano_nr_3",
-                    "nano_nr_4",
-                    "nano_nr_5",
-                ],
-            ),
-            CompitParameter.BIOMAX_MIXER_MODE_ZONE_1: SelectEntityDescription(
-                key=CompitParameter.BIOMAX_MIXER_MODE_ZONE_1.value,
-                translation_key="mixer_mode",
-                options=[
-                    "disabled",
-                    "no_corrections",
-                    "schedule",
-                    "thermostat",
-                    "nano_nr_1",
-                    "nano_nr_2",
-                    "nano_nr_3",
-                    "nano_nr_4",
-                    "nano_nr_5",
-                ],
-            ),
-            CompitParameter.DHW_CIRCULATION_MODE: SelectEntityDescription(
-                key=CompitParameter.DHW_CIRCULATION_MODE.value,
-                translation_key="dhw_circulation",
-                options=[
-                    "disabled",
-                    "constant",
-                    "schedule",
-                ],
-            ),
+            CompitParameter.BIOMAX_HEATING_SOURCE_OF_CORRECTION: DESCRIPTIONS[
+                CompitParameter.BIOMAX_HEATING_SOURCE_OF_CORRECTION
+            ],
+            CompitParameter.BIOMAX_MIXER_MODE_ZONE_1: DESCRIPTIONS[
+                CompitParameter.BIOMAX_MIXER_MODE_ZONE_1
+            ],
+            CompitParameter.DHW_CIRCULATION_MODE: DESCRIPTIONS[
+                CompitParameter.DHW_CIRCULATION_MODE
+            ],
         },
     ),
     75: CompitDeviceDescription(
         name="BioMax772",
         parameters={
-            CompitParameter.BIOMAX_MIXER_MODE_ZONE_1: SelectEntityDescription(
-                key=CompitParameter.BIOMAX_MIXER_MODE_ZONE_1.value,
-                translation_key="mixer_mode_zone",
-                options=[
-                    "disabled",
-                    "without_thermostat",
-                    "schedule",
-                    "thermostat",
-                    "nano_nr_1",
-                    "nano_nr_2",
-                    "nano_nr_3",
-                    "nano_nr_4",
-                    "nano_nr_5",
-                ],
-                translation_placeholders={"zone": "1"},
-            ),
-            CompitParameter.BIOMAX_MIXER_MODE_ZONE_2: SelectEntityDescription(
-                key=CompitParameter.BIOMAX_MIXER_MODE_ZONE_2.value,
-                translation_key="mixer_mode_zone",
-                options=[
-                    "disabled",
-                    "without_thermostat",
-                    "schedule",
-                    "thermostat",
-                    "nano_nr_1",
-                    "nano_nr_2",
-                    "nano_nr_3",
-                    "nano_nr_4",
-                    "nano_nr_5",
-                ],
-                translation_placeholders={"zone": "2"},
-            ),
-            CompitParameter.DHW_CIRCULATION_MODE: SelectEntityDescription(
-                key=CompitParameter.DHW_CIRCULATION_MODE.value,
-                translation_key="dhw_circulation",
-                options=[
-                    "disabled",
-                    "constant",
-                    "schedule",
-                ],
-            ),
+            CompitParameter.BIOMAX_MIXER_MODE_ZONE_1: DESCRIPTIONS[
+                CompitParameter.BIOMAX_MIXER_MODE_ZONE_1
+            ],
+            CompitParameter.BIOMAX_MIXER_MODE_ZONE_2: DESCRIPTIONS[
+                CompitParameter.BIOMAX_MIXER_MODE_ZONE_2
+            ],
+            CompitParameter.DHW_CIRCULATION_MODE: DESCRIPTIONS[
+                CompitParameter.DHW_CIRCULATION_MODE
+            ],
         },
     ),
     5: CompitDeviceDescription(
         name="R350 T3",
         parameters={
-            CompitParameter.MIXER_MODE: SelectEntityDescription(
-                key=CompitParameter.MIXER_MODE.value,
-                translation_key="mixer_mode",
-                options=[
-                    "no_corrections",
-                    "schedule",
-                    "thermostat",
-                    "nano_nr_1",
-                    "nano_nr_2",
-                    "nano_nr_3",
-                    "nano_nr_4",
-                    "nano_nr_5",
-                ],
-            )
+            CompitParameter.MIXER_MODE: DESCRIPTIONS[CompitParameter.MIXER_MODE],
         },
     ),
     215: CompitDeviceDescription(
         name="R480",
         parameters={
-            CompitParameter.R480_OPERATING_MODE: SelectEntityDescription(
-                key=CompitParameter.R480_OPERATING_MODE.value,
-                translation_key="operating_mode",
-                options=[
-                    "disabled",
-                    "eco",
-                    "hybrid",
-                ],
-            ),
-            CompitParameter.BUFFER_MODE: SelectEntityDescription(
-                key=CompitParameter.BUFFER_MODE.value,
-                translation_key="buffer_mode",
-                options=[
-                    "schedule",
-                    "manual",
-                    "disabled",
-                ],
-            ),
+            CompitParameter.R480_OPERATING_MODE: DESCRIPTIONS[
+                CompitParameter.R480_OPERATING_MODE
+            ],
+            CompitParameter.BUFFER_MODE: DESCRIPTIONS[CompitParameter.BUFFER_MODE],
         },
     ),
 }

@@ -49,17 +49,17 @@ def mock_connector():
     mock_device_1 = MagicMock()
     mock_device_1.definition.name = "Test Device 1"
     mock_device_1.state.params = [
-        MagicMock(code=CompitParameter.R900_OPERATING_MODE.value, value="eco"),
+        MagicMock(code="__tr_pracy_pc", value="eco"),
         MagicMock(
-            code=CompitParameter.SOLAR_COMP_OPERATING_MODE.value, value="de_icing"
+            code="__trybpracy", value="de_icing"
         ),  # parameter not relevant for this device, should be ignored
     ]
     mock_device_1.definition.code = 224  # R 900
 
     mock_device_2 = MagicMock()
     mock_device_2.state.params = [
-        MagicMock(code=CompitParameter.LANGUAGE.value, value="english"),
-        MagicMock(code=CompitParameter.AEROKONFBYPASS.value, value="off"),
+        MagicMock(code="_jezyk", value="english"),
+        MagicMock(code="__aerokonfbypass", value="off"),
     ]
     mock_device_2.definition.code = 223  # Nano Color 2
 

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_select_entities_snapshot[select.nano_color_2_by_pass-entry]
+# name: test_select_entities_snapshot[select.nano_color_2_bypass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -18,7 +18,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.nano_color_2_by_pass',
+    'entity_id': 'select.nano_color_2_bypass',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -26,12 +26,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'By pass',
+    'object_id_base': 'Bypass',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'By pass',
+    'original_name': 'Bypass',
     'platform': 'compit',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -41,10 +41,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_entities_snapshot[select.nano_color_2_by_pass-state]
+# name: test_select_entities_snapshot[select.nano_color_2_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nano Color 2 By pass',
+      'friendly_name': 'Nano Color 2 Bypass',
       'options': list([
         'off',
         'auto',
@@ -52,7 +52,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.nano_color_2_by_pass',
+    'entity_id': 'select.nano_color_2_bypass',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

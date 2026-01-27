@@ -35,7 +35,7 @@
   "entity": {
     "select": {
       "aero_by_pass": {
-        "name": "By pass",
+        "name": "Bypass",
         "state": {
           "auto": "Auto",
           "off": "Off",
@@ -73,7 +73,7 @@
         }
       },
       "heating_source_of_correction_zone": {
-        "name": "Heating source of correction zone {zone}",
+        "name": "Zone {zone} heating source of correction",
         "state": {
           "disabled": "Disabled",
           "nano_nr_1": "Nano 1",
@@ -116,7 +116,7 @@
         }
       },
       "mixer_mode_zone": {
-        "name": "Mixer mode zone {zone}",
+        "name": "Zone {zone} mixer mode",
         "state": {
           "disabled": "Disabled",
           "nano_nr_1": "Nano 1",
