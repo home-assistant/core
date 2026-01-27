@@ -80,7 +80,9 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="service_level",
         translation_key="service_level",
-        value_fn=lambda ev: ev.service_level,
+        device_class=SensorDeviceClass.ENUM,
+        options=["1", "2", "a"],
+        value_fn=lambda ev: ev.service_level.lower(),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
