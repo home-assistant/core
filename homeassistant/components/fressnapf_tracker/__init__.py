@@ -55,6 +55,7 @@ async def _tracker_is_valid(hass: HomeAssistant, device: Device) -> bool:
             hass,
             DOMAIN,
             f"invalid_fressnapf_tracker_{device.serialnumber}",
+            issue_domain=DOMAIN,
             learn_more_url="https://www.home-assistant.io/integrations/fressnapf_tracker/",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
