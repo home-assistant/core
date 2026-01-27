@@ -128,6 +128,7 @@ _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "climate",
     "device_tracker",
     "fan",
+    "humidifier",
     "lawn_mower",
     "light",
     "lock",
