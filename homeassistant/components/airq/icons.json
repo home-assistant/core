@@ -4,6 +4,9 @@
       "health_index": {
         "default": "mdi:heart-pulse"
       },
+      "mold": {
+        "default": "mdi:water-check"
+      },
       "oxygen": {
         "default": "mdi:leaf"
       },

@@ -88,3 +88,8 @@ publish:
           type: url
           autocomplete: url
       example: https://example.org/logo.png
+    sequence_id:
+      required: false
+      selector:
+        text:
+      example: "Mc3otamDNcpJ"

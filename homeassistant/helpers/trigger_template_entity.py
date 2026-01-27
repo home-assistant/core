@@ -285,7 +285,10 @@ class TriggerBaseEntity(Entity):
                     variables, parse_result=True, strict=True
                 )
             ) is False:
+                name = self._rendered.get(CONF_NAME)
                 self._rendered = dict(self._static_rendered)
+                if name is not None and CONF_NAME not in self._static_rendered:
+                    self._rendered[CONF_NAME] = name
 
             self._available = result_as_boolean(available)
 
