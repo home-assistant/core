@@ -36,7 +36,7 @@ from .const import CONF_PASSKEY, DOMAIN
 from .coordinator import BSBLanFastCoordinator, BSBLanSlowCoordinator
 from .services import async_setup_services
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
+PLATFORMS = [Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
