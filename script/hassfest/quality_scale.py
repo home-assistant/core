@@ -1658,7 +1658,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "mythicbeastsdns",
     "nad",
     "nam",
-    "namecheapdns",
     "nanoleaf",
     "nasweb",
     "neato",
