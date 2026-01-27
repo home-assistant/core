@@ -8,14 +8,13 @@ import logging
 import re
 from typing import Any, Literal, cast
 
-from hass_nabucasa import Cloud, NabuCasaBaseError
-from hass_nabucasa.llm import (
+from hass_nabucasa import (
+    Cloud,
     LLMAuthenticationError,
     LLMRateLimitError,
     LLMResponseError,
     LLMServiceError,
-)
-from hass_nabucasa.llm.stream_events import (
+    NabuCasaBaseError,
     ResponseCompletedEvent,
     ResponseErrorEvent,
     ResponseFailedEvent,
