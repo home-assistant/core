@@ -1784,6 +1784,8 @@ build.json @home-assistant/supervisor
 /tests/components/vicare/ @CFenner
 /homeassistant/components/victron_ble/ @rajlaud
 /tests/components/victron_ble/ @rajlaud
+/homeassistant/components/victron_gx_mqtt/ @tomer-w
+/tests/components/victron_gx_mqtt/ @tomer-w
 /homeassistant/components/victron_remote_monitoring/ @AndyTempel
 /tests/components/victron_remote_monitoring/ @AndyTempel
 /homeassistant/components/vilfo/ @ManneW
