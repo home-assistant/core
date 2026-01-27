@@ -192,7 +192,8 @@ class PTDevicesSensorEntity(CoordinatorEntity[PTDevicesCoordinator], SensorEntit
         """Return True if entity is available."""
         return (
             super().available
-            and self.entity_description.key in self.coordinator.data[self._device_id]
+            and self.entity_description.key
+            in self.coordinator.data.get(self._device_id, {})
         )
 
     @callback
