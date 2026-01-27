@@ -84,7 +84,8 @@ async def async_setup_entry(
         SERVICE_PUBLISH_SCHEMA,
         "publish",
         description_placeholders={
-            "markdown_guide_url": "https://www.markdownguide.org/basic-syntax/"
+            "markdown_guide_url": "https://www.markdownguide.org/basic-syntax/",
+            "emoji_reference_url": "https://docs.ntfy.sh/emojis/",
         },
     )
 
