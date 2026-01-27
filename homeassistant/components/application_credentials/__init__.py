@@ -9,6 +9,7 @@ provide credentials from yaml for backwards compatibility.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 import logging
 from typing import Any, Protocol
 
@@ -41,7 +42,12 @@ from homeassistant.loader import (
 from homeassistant.util import slugify
 from homeassistant.util.hass_dict import HassKey
 
-__all__ = ["AuthorizationServer", "ClientCredential", "async_import_client_credential"]
+__all__ = [
+    "AuthorizationServer",
+    "AuthorizationTypes",
+    "ClientCredential",
+    "async_import_client_credential",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +71,13 @@ UPDATE_FIELDS: VolDictType = {}  # Not supported
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
+class AuthorizationTypes(StrEnum):
+    """Supported authorization types."""
+
+    CLIENT_CREDENTIALS = "client_credentials"
+    DEVICE_FLOW = "device_flow"
+
+
 @dataclass
 class ClientCredential:
     """Represent an OAuth client credential."""
@@ -80,6 +93,7 @@ class AuthorizationServer:
 
     authorize_url: str
     token_url: str
+    auth_type: AuthorizationTypes | None = AuthorizationTypes.CLIENT_CREDENTIALS
 
 
 class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
@@ -229,7 +243,14 @@ async def _async_provide_implementation(
             await platform.async_get_auth_implementation(hass, auth_domain, credential)
             for auth_domain, credential in credentials.items()
         ]
+
     authorization_server = await platform.async_get_authorization_server(hass)
+    if authorization_server.auth_type != AuthorizationTypes.CLIENT_CREDENTIALS:
+        raise NotImplementedError(
+            f"Integration '{domain}' authorization server has unsupported"
+            f" auth_type '{authorization_server.auth_type}' for application_credentials"
+        )
+
     return [
         AuthImplementation(hass, auth_domain, credential, authorization_server)
         for auth_domain, credential in credentials.items()
@@ -310,11 +331,33 @@ async def _get_platform(
 
 
 async def _async_integration_config(hass: HomeAssistant, domain: str) -> dict[str, Any]:
+    """Return application_credentials integration config."""
     platform = await _get_platform(hass, domain)
-    if platform and hasattr(platform, "async_get_description_placeholders"):
-        placeholders = await platform.async_get_description_placeholders(hass)
-        return {"description_placeholders": placeholders}
-    return {}
+
+    if not platform:
+        return {}
+
+    result: dict[str, Any] = {}
+    # Integrations such as fitbit, gentex_homelink, geocaching and a few others don't implement
+    # async_get_authorization_server, so either we default to client_credentials
+
+    if hasattr(platform, "async_get_authorization_server"):
+        try:
+            auth_server = await platform.async_get_authorization_server(hass)
+            result["auth_type"] = auth_server.auth_type
+        except LookupError:
+            # Some integrations have dynamic authorization servers that
+            # require context to be set before calling
+            # I found that MCP integration does this
+            # Default to client_credentials for now
+            result["auth_type"] = AuthorizationTypes.CLIENT_CREDENTIALS
+
+    if hasattr(platform, "async_get_description_placeholders"):
+        result[
+            "description_placeholders"
+        ] = await platform.async_get_description_placeholders(hass)
+
+    return result
 
 
 @websocket_api.websocket_command(

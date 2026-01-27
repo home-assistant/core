@@ -16,6 +16,7 @@ from homeassistant.components.application_credentials import (
     DOMAIN,
     AuthImplementation,
     AuthorizationServer,
+    AuthorizationTypes,
     ClientCredential,
     async_import_client_credential,
 )
@@ -79,6 +80,7 @@ async def setup_application_credentials_integration(
         async_get_authorization_server=AsyncMock(return_value=authorization_server),
     )
     del mock_platform_impl.async_get_auth_implementation  # return False on hasattr
+    del mock_platform_impl.async_get_description_placeholders  # return False on hasattr
     mock_platform(
         hass,
         f"{domain}.application_credentials",
@@ -746,6 +748,51 @@ async def test_websocket_integration_list(ws_client: ClientFixture) -> None:
         }
 
 
+async def test_websocket_integration_list_with_auth_type(
+    hass: HomeAssistant,
+    ws_client: ClientFixture,
+    authorization_server: AuthorizationServer,
+) -> None:
+    """Test websocket integration list command returns auth_type."""
+    client = await ws_client()
+    # I've made a separate test, if the auth_type is desired, this can be merged with the above test
+    result = await client.cmd_result("config")
+    assert TEST_DOMAIN in result["domains"]
+    assert result["integrations"][TEST_DOMAIN] == {
+        "auth_type": AuthorizationTypes.CLIENT_CREDENTIALS,
+    }
+
+
+@pytest.mark.parametrize("mock_application_credentials_integration", [None])
+async def test_websocket_integration_list_with_auth_type_exception(
+    hass: HomeAssistant,
+    ws_client: ClientFixture,
+) -> None:
+    """Test websocket integration list returns default auth_type."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    hass.config.components.add(TEST_DOMAIN)
+
+    # Mock platform where async_get_authorization_server raises LookupError
+    mock_platform_impl = Mock(
+        async_get_authorization_server=AsyncMock(
+            side_effect=LookupError("darn MCP server with your context")
+        ),
+    )
+    del mock_platform_impl.async_get_auth_implementation
+    del mock_platform_impl.async_get_description_placeholders
+    mock_platform(hass, f"{TEST_DOMAIN}.application_credentials", mock_platform_impl)
+
+    client = await ws_client()
+    with patch("homeassistant.loader.APPLICATION_CREDENTIALS", [TEST_DOMAIN]):
+        result = await client.cmd_result("config")
+
+    # Now if we get the auth_type, it should be the default client credentials
+    assert TEST_DOMAIN in result["domains"]
+    assert result["integrations"][TEST_DOMAIN] == {
+        "auth_type": AuthorizationTypes.CLIENT_CREDENTIALS,
+    }
+
+
 async def test_name(
     hass: HomeAssistant, ws_client: ClientFixture, oauth_fixture: OAuthFixture
 ) -> None:
@@ -838,3 +885,28 @@ async def test_websocket_create_strips_whitespace(ws_client: ClientFixture) -> N
             "id": ID,
         }
     ]
+
+
+@pytest.mark.parametrize("config_credential", [DEVELOPER_CREDENTIAL])
+async def test_unsupported_auth_type(
+    hass: HomeAssistant,
+    config_credential: ClientCredential,
+) -> None:
+    """Test platform with unsupported auth type using imported credential."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    hass.config.components.add(TEST_DOMAIN)
+
+    mock_platform_impl = Mock(
+        async_get_authorization_server=AsyncMock(
+            return_value=AuthorizationServer(
+                AUTHORIZE_URL, TOKEN_URL, AuthorizationTypes.DEVICE_FLOW
+            )
+        ),
+    )
+    del mock_platform_impl.async_get_auth_implementation
+    mock_platform(hass, f"{TEST_DOMAIN}.application_credentials", mock_platform_impl)
+
+    with pytest.raises(NotImplementedError, match="unsupported auth_type"):
+        await hass.config_entries.flow.async_init(
+            TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
