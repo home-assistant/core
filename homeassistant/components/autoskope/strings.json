@@ -1,0 +1,42 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host (optional)",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Autoskope API endpoint. Defaults to the standard Autoskope cloud service if left blank.",
+          "password": "The password for your Autoskope account.",
+          "username": "The username for your Autoskope account"
+        },
+        "description": "Enter your Autoskope credentials.",
+        "title": "Connect to Autoskope"
+      }
+    }
+  },
+  "issues": {
+    "cannot_connect": {
+      "description": "Home Assistant could not connect to the Autoskope API at {host}. Please check the connection details and ensure the API endpoint is reachable.\n\nError: {error}",
+      "title": "Failed to connect to Autoskope"
+    },
+    "invalid_auth": {
+      "description": "Authentication with Autoskope failed for user {username}. Please re-authenticate the integration with the correct password.",
+      "title": "Invalid Autoskope authentication"
+    },
+    "low_battery": {
+      "description": "The battery voltage for vehicle {vehicle_name} ({vehicle_id}) is low ({value}V). Consider checking or replacing the battery.",
+      "title": "Low vehicle battery ({vehicle_name})"
+    }
+  }
+}
