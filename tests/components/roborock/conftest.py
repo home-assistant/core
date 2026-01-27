@@ -22,6 +22,7 @@ from roborock.data import (
     RoborockBase,
     RoborockDyadStateCode,
     ValleyElectricityTimer,
+    WorkStatusMapping,
     ZeoError,
     ZeoState,
 )
@@ -110,7 +111,33 @@ def create_zeo_trait() -> Mock:
 def create_b01_q7_trait() -> Mock:
     """Create B01 Q7 trait for B01 devices."""
     b01_trait = AsyncMock()
-    b01_trait.query_values.return_value = Q7_B01_PROPS
+    b01_trait._props_data = deepcopy(Q7_B01_PROPS)
+
+    async def query_values_side_effect(protocols):
+        return b01_trait._props_data
+
+    b01_trait.query_values = AsyncMock(side_effect=query_values_side_effect)
+
+    # Add API methods that update the state when called
+    async def start_clean_side_effect():
+        b01_trait._props_data.status = WorkStatusMapping.SWEEP_MOPING
+
+    async def pause_clean_side_effect():
+        b01_trait._props_data.status = WorkStatusMapping.PAUSED
+
+    async def stop_clean_side_effect():
+        b01_trait._props_data.status = WorkStatusMapping.WAITING_FOR_ORDERS
+
+    async def return_to_dock_side_effect():
+        b01_trait._props_data.status = WorkStatusMapping.DOCKING
+
+    b01_trait.start_clean = AsyncMock(side_effect=start_clean_side_effect)
+    b01_trait.pause_clean = AsyncMock(side_effect=pause_clean_side_effect)
+    b01_trait.stop_clean = AsyncMock(side_effect=stop_clean_side_effect)
+    b01_trait.return_to_dock = AsyncMock(side_effect=return_to_dock_side_effect)
+    b01_trait.find_me = AsyncMock()
+    b01_trait.set_fan_speed = AsyncMock()
+    b01_trait.send = AsyncMock()
     return b01_trait
 
 
@@ -148,6 +175,20 @@ class FakeDevice(RoborockDevice):
         """Close the device."""
 
 
+def set_trait_attributes(
+    trait: AsyncMock,
+    dataclass_template: RoborockBase,
+    init_none: bool = False,
+) -> None:
+    """Set attributes on a mock roborock trait."""
+    template_copy = deepcopy(dataclass_template)
+    for attr_name in dir(template_copy):
+        if attr_name.startswith("_"):
+            continue
+        attr_value = getattr(template_copy, attr_name) if not init_none else None
+        setattr(trait, attr_name, attr_value)
+
+
 def make_mock_trait(
     trait_spec: type[V1TraitMixin] | None = None,
     dataclass_template: RoborockBase | None = None,
@@ -156,12 +197,14 @@ def make_mock_trait(
     trait = AsyncMock(spec=trait_spec or V1TraitMixin)
     if dataclass_template is not None:
         # Copy all attributes and property methods (e.g. computed properties)
-        template_copy = deepcopy(dataclass_template)
-        for attr_name in dir(template_copy):
-            if attr_name.startswith("_"):
-                continue
-            setattr(trait, attr_name, getattr(template_copy, attr_name))
-    trait.refresh = AsyncMock()
+        # on the first call to refresh(). The object starts uninitialized.
+        set_trait_attributes(trait, dataclass_template, init_none=True)
+
+    async def refresh() -> None:
+        if dataclass_template is not None:
+            set_trait_attributes(trait, dataclass_template)
+
+    trait.refresh = AsyncMock(side_effect=refresh)
     return trait
 
 

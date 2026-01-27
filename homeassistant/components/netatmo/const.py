@@ -53,6 +53,7 @@ NETATMO_CREATE_ROOM_SENSOR = "netatmo_create_room_sensor"
 NETATMO_CREATE_SELECT = "netatmo_create_select"
 NETATMO_CREATE_SENSOR = "netatmo_create_sensor"
 NETATMO_CREATE_SWITCH = "netatmo_create_switch"
+NETATMO_CREATE_WEATHER_BINARY_SENSOR = "netatmo_create_weather_binary_sensor"
 NETATMO_CREATE_WEATHER_SENSOR = "netatmo_create_weather_sensor"
 
 CONF_AREA_NAME = "area_name"

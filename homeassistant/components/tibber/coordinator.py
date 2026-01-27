@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
+from aiohttp.client_exceptions import ClientError
 import tibber
+from tibber.data_api import TibberDevice
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
@@ -19,14 +21,17 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     statistics_during_period,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from .const import TibberConfigEntry
 
 FIVE_YEARS = 5 * 365 * 24
 
@@ -36,12 +41,12 @@ _LOGGER = logging.getLogger(__name__)
 class TibberDataCoordinator(DataUpdateCoordinator[None]):
     """Handle Tibber data and insert statistics."""
 
-    config_entry: ConfigEntry
+    config_entry: TibberConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: TibberConfigEntry,
         tibber_connection: tibber.Tibber,
     ) -> None:
         """Initialize the data handler."""
@@ -187,3 +192,68 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                     unit_of_measurement=unit,
                 )
                 async_add_external_statistics(self.hass, metadata, statistics)
+
+
+class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
+    """Fetch and cache Tibber Data API device capabilities."""
+
+    config_entry: TibberConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: TibberConfigEntry,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN} Data API",
+            update_interval=timedelta(minutes=1),
+            config_entry=entry,
+        )
+        self._runtime_data = entry.runtime_data
+        self.sensors_by_device: dict[str, dict[str, tibber.data_api.Sensor]] = {}
+
+    def _build_sensor_lookup(self, devices: dict[str, TibberDevice]) -> None:
+        """Build sensor lookup dict for efficient access."""
+        self.sensors_by_device = {
+            device_id: {sensor.id: sensor for sensor in device.sensors}
+            for device_id, device in devices.items()
+        }
+
+    def get_sensor(
+        self, device_id: str, sensor_id: str
+    ) -> tibber.data_api.Sensor | None:
+        """Get a sensor by device and sensor ID."""
+        if device_sensors := self.sensors_by_device.get(device_id):
+            return device_sensors.get(sensor_id)
+        return None
+
+    async def _async_get_client(self) -> tibber.Tibber:
+        """Get the Tibber client with error handling."""
+        try:
+            return await self._runtime_data.async_get_client(self.hass)
+        except ConfigEntryAuthFailed:
+            raise
+        except (ClientError, TimeoutError, tibber.UserAgentMissingError) as err:
+            raise UpdateFailed(f"Unable to create Tibber client: {err}") from err
+
+    async def _async_setup(self) -> None:
+        """Initial load of Tibber Data API devices."""
+        client = await self._async_get_client()
+        devices = await client.data_api.get_all_devices()
+        self._build_sensor_lookup(devices)
+
+    async def _async_update_data(self) -> dict[str, TibberDevice]:
+        """Fetch the latest device capabilities from the Tibber Data API."""
+        client = await self._async_get_client()
+        try:
+            devices: dict[str, TibberDevice] = await client.data_api.update_devices()
+        except tibber.exceptions.RateLimitExceededError as err:
+            raise UpdateFailed(
+                f"Rate limit exceeded, retry after {err.retry_after} seconds",
+                retry_after=err.retry_after,
+            ) from err
+        self._build_sensor_lookup(devices)
+        return devices

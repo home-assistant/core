@@ -1,8 +1,10 @@
 """Test the PoolDose config flow."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.pooldose.const import DOMAIN
@@ -14,7 +16,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import RequestStatus
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -426,3 +428,80 @@ async def test_dhcp_preserves_existing_mac(
     assert entry.data[CONF_HOST] == "192.168.0.123"  # IP was updated
     assert entry.data[CONF_MAC] == "existing11aabb"  # MAC remains unchanged
     assert entry.data[CONF_MAC] != "different22ccdd"  # Not updated to new MAC
+
+
+async def _start_reconfigure_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, host_ip: str
+) -> Any:
+    """Initialize a reconfigure flow for PoolDose and submit new host."""
+    mock_config_entry.add_to_hass(hass)
+
+    reconfigure_result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert reconfigure_result["type"] is FlowResultType.FORM
+    assert reconfigure_result["step_id"] == "reconfigure"
+
+    return await hass.config_entries.flow.async_configure(
+        reconfigure_result["flow_id"], {CONF_HOST: host_ip}
+    )
+
+
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test successful reconfigure updates host and reloads entry."""
+    # Ensure the mocked device returns the same serial number as the
+    # config entry so the reconfigure flow matches the device
+    mock_pooldose_client.device_info = {"SERIAL_NUMBER": mock_config_entry.unique_id}
+
+    result = await _start_reconfigure_flow(hass, mock_config_entry, "192.168.0.200")
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # Config entry should have updated host
+    assert mock_config_entry.data.get(CONF_HOST) == "192.168.0.200"
+
+    freezer.tick(timedelta(seconds=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Config entry should have updated host
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry is not None
+    assert entry.data.get(CONF_HOST) == "192.168.0.200"
+
+
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure shows cannot_connect when device unreachable."""
+    mock_pooldose_client.connect.return_value = RequestStatus.HOST_UNREACHABLE
+
+    result = await _start_reconfigure_flow(hass, mock_config_entry, "192.168.0.200")
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reconfigure_flow_wrong_device(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts when serial number doesn't match existing entry."""
+    # Return device info with different serial number
+    mock_pooldose_client.device_info = {"SERIAL_NUMBER": "OTHER123"}
+
+    result = await _start_reconfigure_flow(hass, mock_config_entry, "192.168.0.200")
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"

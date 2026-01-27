@@ -573,6 +573,18 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "84E657*",
     },
     {
+        "domain": "playstation_network",
+        "hostname": "ps5-*",
+    },
+    {
+        "domain": "playstation_network",
+        "hostname": "ps4-*",
+    },
+    {
+        "domain": "playstation_network",
+        "hostname": "ps3",
+    },
+    {
         "domain": "pooldose",
         "hostname": "kommspot",
     },

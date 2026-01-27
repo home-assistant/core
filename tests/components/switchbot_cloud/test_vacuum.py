@@ -476,7 +476,7 @@ async def test_s20_start(
         )
 
 
-async def test_s20set_fan_speed(
+async def test_s20_set_fan_speed(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
     """Test s20 set fan speed."""

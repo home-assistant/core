@@ -4,8 +4,10 @@ from datetime import time
 from typing import Any
 from unittest.mock import MagicMock
 
-from bsblan import BSBLANError, DaySchedule, TimeSlot
+from bsblan import BSBLANError, DaySchedule, DeviceTime, TimeSlot
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.components.bsblan.services import (
@@ -15,6 +17,7 @@ from homeassistant.components.bsblan.services import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -173,9 +176,22 @@ async def test_invalid_device_id(
     assert exc_info.value.translation_key == "invalid_device_id"
 
 
+@pytest.mark.parametrize(
+    ("service_name", "service_data"),
+    [
+        (
+            SERVICE_SET_HOT_WATER_SCHEDULE,
+            {"monday_slots": [{"start_time": time(6, 0), "end_time": time(8, 0)}]},
+        ),
+        ("sync_time", {}),
+    ],
+    ids=["set_hot_water_schedule", "sync_time"],
+)
 async def test_no_config_entry_for_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    service_name: str,
+    service_data: dict[str, Any],
 ) -> None:
     """Test error when device has no matching BSB-LAN config entry."""
     # Create a different config entry (not for bsblan)
@@ -195,13 +211,8 @@ async def test_no_config_entry_for_device(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_HOT_WATER_SCHEDULE,
-            {
-                "device_id": device_entry.id,
-                "monday_slots": [
-                    {"start_time": time(6, 0), "end_time": time(8, 0)},
-                ],
-            },
+            service_name,
+            {"device_id": device_entry.id, **service_data},
             blocking=True,
         )
 
@@ -274,14 +285,10 @@ async def test_api_error(
     [
         (time(13, 0), time(11, 0), "end_time_before_start_time"),
         ("13:00", "11:00", "end_time_before_start_time"),
-        ("invalid", "08:00", "invalid_time_format"),
-        ("06:00", "not-a-time", "invalid_time_format"),
     ],
     ids=[
         "time_objects_end_before_start",
         "strings_end_before_start",
-        "invalid_start_time_format",
-        "invalid_end_time_format",
     ],
 )
 async def test_time_validation_errors(
@@ -395,21 +402,19 @@ async def test_non_standard_time_types(
     device_entry: dr.DeviceEntry,
 ) -> None:
     """Test service with non-standard time types raises error."""
-    # Test with integer time values (shouldn't happen but need coverage)
-    with pytest.raises(ServiceValidationError) as exc_info:
+    # Test with integer time values - schema validation will reject these
+    with pytest.raises(vol.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_HOT_WATER_SCHEDULE,
             {
                 "device_id": device_entry.id,
                 "monday_slots": [
-                    {"start_time": 600, "end_time": 800},  # Non-standard types
+                    {"start_time": 600, "end_time": 800},
                 ],
             },
             blocking=True,
         )
-
-    assert exc_info.value.translation_key == "invalid_time_format"
 
 
 async def test_async_setup_services(
@@ -428,3 +433,198 @@ async def test_async_setup_services(
 
     # Verify service is now registered
     assert hass.services.has_service(DOMAIN, SERVICE_SET_HOT_WATER_SCHEDULE)
+
+
+async def test_sync_time_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the sync_time service."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Get the device
+    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_MAC)})
+    assert device is not None
+
+    # Mock device time that differs from HA time
+    mock_bsblan.time.return_value = DeviceTime.from_json(
+        '{"time": {"name": "Time", "value": "01.01.2020 00:00:00", "unit": "", "desc": "", "dataType": 0, "readonly": 0, "error": 0}}'
+    )
+
+    # Call the service
+    await hass.services.async_call(
+        DOMAIN,
+        "sync_time",
+        {"device_id": device.id},
+        blocking=True,
+    )
+
+    # Verify time() was called to check current device time
+    assert mock_bsblan.time.called
+
+    # Verify set_time() was called with current HA time
+    current_time_str = dt_util.now().strftime("%d.%m.%Y %H:%M:%S")
+    mock_bsblan.set_time.assert_called_once_with(current_time_str)
+
+
+async def test_sync_time_service_no_update_when_same(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the sync_time service doesn't update when time matches."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Get the device
+    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_MAC)})
+    assert device is not None
+
+    # Mock device time that matches HA time
+    current_time_str = dt_util.now().strftime("%d.%m.%Y %H:%M:%S")
+    mock_bsblan.time.return_value = DeviceTime.from_json(
+        f'{{"time": {{"name": "Time", "value": "{current_time_str}", "unit": "", "desc": "", "dataType": 0, "readonly": 0, "error": 0}}}}'
+    )
+
+    # Call the service
+    await hass.services.async_call(
+        DOMAIN,
+        "sync_time",
+        {"device_id": device.id},
+        blocking=True,
+    )
+
+    # Verify time() was called
+    assert mock_bsblan.time.called
+
+    # Verify set_time() was NOT called since times match
+    assert not mock_bsblan.set_time.called
+
+
+async def test_sync_time_service_error_handling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the sync_time service handles errors gracefully."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Get the device
+    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_MAC)})
+    assert device is not None
+
+    # Mock time() to raise an error
+    mock_bsblan.time.side_effect = BSBLANError("Connection failed")
+
+    # Call the service - should raise HomeAssistantError
+    with pytest.raises(HomeAssistantError, match="Failed to sync time"):
+        await hass.services.async_call(
+            DOMAIN,
+            "sync_time",
+            {"device_id": device.id},
+            blocking=True,
+        )
+
+
+async def test_sync_time_service_set_time_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the sync_time service handles set_time errors."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Get the device
+    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_MAC)})
+    assert device is not None
+
+    # Mock device time that differs
+    mock_bsblan.time.return_value = DeviceTime.from_json(
+        '{"time": {"name": "Time", "value": "01.01.2020 00:00:00", "unit": "", "desc": "", "dataType": 0, "readonly": 0, "error": 0}}'
+    )
+
+    # Mock set_time() to raise an error
+    mock_bsblan.set_time.side_effect = BSBLANError("Write failed")
+
+    # Call the service - should raise HomeAssistantError
+    with pytest.raises(HomeAssistantError, match="Failed to sync time"):
+        await hass.services.async_call(
+            DOMAIN,
+            "sync_time",
+            {"device_id": device.id},
+            blocking=True,
+        )
+
+
+async def test_sync_time_service_entry_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test the sync_time service raises error for non-existent device."""
+    # Set up the entry (this registers the service)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Call the service with a non-existent device ID
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "sync_time",
+            {"device_id": "non_existent_device_id"},
+            blocking=True,
+        )
+
+
+async def test_sync_time_service_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the sync_time service raises error for unloaded entry."""
+    # Set up the first entry (this registers the service)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Create a second unloaded entry
+    unloaded_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Unloaded BSBLAN",
+        data=mock_config_entry.data.copy(),
+        unique_id="unloaded_unique_id",
+    )
+    unloaded_entry.add_to_hass(hass)
+    # Don't call async_setup on this entry, so it stays NOT_LOADED
+
+    # Manually register a device for this unloaded entry
+    unloaded_device = device_registry.async_get_or_create(
+        config_entry_id=unloaded_entry.entry_id,
+        identifiers={(DOMAIN, "unloaded_device_mac")},
+        name="Unloaded Device",
+    )
+
+    # Call the service with the device from the unloaded entry - should raise error
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "sync_time",
+            {"device_id": unloaded_device.id},
+            blocking=True,
+        )

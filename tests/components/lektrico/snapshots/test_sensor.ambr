@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -129,6 +131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -182,6 +185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Installation current',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -237,6 +241,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lifetime energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -305,6 +310,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Limit reason',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -369,6 +375,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -438,6 +445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'State',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -500,6 +508,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -554,6 +563,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

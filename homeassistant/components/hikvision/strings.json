@@ -29,6 +29,11 @@
       }
     }
   },
+  "device": {
+    "nvr_channel": {
+      "name": "{device_name} channel {channel_number}"
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue": {
       "description": "Configuring {integration_title} using YAML is deprecated and the import failed. Please remove the `{domain}` entry from your `configuration.yaml` file and set up the integration manually.",
