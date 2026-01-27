@@ -8,7 +8,6 @@ from collections.abc import (
     Callable,
     Coroutine,
     Generator,
-    Hashable,
     Iterable,
     Mapping,
     ValuesView,
@@ -1833,7 +1832,14 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
     def __setitem__(self, entry_id: str, entry: ConfigEntry) -> None:
         """Add an item."""
         data = self.data
-        self.check_unique_id(entry)
+        if not self.check_unique_id(entry):
+            # If unique id not valid, don't save entry.
+            _LOGGER.error(
+                "The entry %s unique id %s is not a string and will not be added",
+                entry.title,
+                entry.unique_id,
+            )
+            return
         if entry_id in data:
             # This is likely a bug in a test that is adding the same entry twice.
             # In the future, once we have fixed the tests, this will raise HomeAssistantError.
@@ -1842,45 +1848,27 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         data[entry_id] = entry
         self._index_entry(entry)
 
-    def check_unique_id(self, entry: ConfigEntry) -> None:
-        """Check config entry unique id.
+    def check_unique_id(self, entry: ConfigEntry) -> bool:
+        """Check if config entry unique id is valid and log if not.
 
-        For a string unique id (this is the correct case): return
-        For a hashable non string unique id: log warning
-        For a non-hashable unique id: raise error
+        Args:
+            entry: Config entry.
+
+        Returns:
+            True if the unique id is a string.
         """
         if (unique_id := entry.unique_id) is None:
-            return
-        if isinstance(unique_id, str):
-            # Unique id should be a string
-            return
-        if isinstance(unique_id, Hashable):  # type: ignore[unreachable]
-            # Checks for other non-string was added in HA Core 2024.10
-            # In HA Core 2025.10, we should remove the error and instead fail
-            report_issue = async_suggest_report_issue(
-                self._hass, integration_domain=entry.domain
-            )
-            _LOGGER.error(
-                (
-                    "Config entry '%s' from integration %s has an invalid unique_id"
-                    " '%s' of type %s when a string is expected, please %s"
-                ),
-                entry.title,
-                entry.domain,
-                entry.unique_id,
-                type(entry.unique_id).__name__,
-                report_issue,
-            )
-        else:
-            # Guard against integrations using unhashable unique_id
-            # In HA Core 2024.11, the guard was changed from warning to failing
-            raise HomeAssistantError(
-                f"The entry unique id {unique_id} is not a string."
-            )
+            return True
+        if not isinstance(unique_id, str):
+            return False  # type: ignore[unreachable]
+        return True
 
     def _index_entry(self, entry: ConfigEntry) -> None:
         """Index an entry."""
-        self.check_unique_id(entry)
+        if not self.check_unique_id(entry):
+            raise HomeAssistantError(
+                f"Cannot update unique id to {entry.unique_id} as it's not a string value."
+            )
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
             self._domain_unique_id_index.setdefault(entry.domain, {}).setdefault(
@@ -1913,7 +1901,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         """
         entry_id = entry.entry_id
         self._unindex_entry(entry_id)
-        self.check_unique_id(entry)
+        if not self.check_unique_id(entry):
+            raise HomeAssistantError(
+                f"Cannot update unique id to {new_unique_id} as it's not a string value."
+            )
         object.__setattr__(entry, "unique_id", new_unique_id)
         self._index_entry(entry)
         entry.clear_state_cache()
@@ -1929,7 +1920,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         """Get entry by domain and unique id."""
         if unique_id is None:
             return None  # type: ignore[unreachable]
-        if not isinstance(unique_id, Hashable):
+        if not isinstance(unique_id, str):
             raise HomeAssistantError(
                 f"The entry unique id {unique_id} is not a string."
             )
