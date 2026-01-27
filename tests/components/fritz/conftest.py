@@ -142,7 +142,7 @@ def fs_class_mock():
             return_value=ArgumentNamespace(MOCK_STATUS_DEVICE_INFO_DATA)
         )
         result.get_monitor_data = MagicMock(return_value={})
-        result.get_cpu_temperatures = MagicMock(return_value=[42, 38])
+        result.get_cpu_temperatures = MagicMock(return_value=[69, 68, 67])
         result.get_avm_device_log = MagicMock(
             return_value=MOCK_STATUS_AVM_DEVICE_LOG_DATA
         )
