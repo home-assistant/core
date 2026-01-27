@@ -14,6 +14,7 @@
           "entity_id": "[%key:component::history_stats::config::step::user::data::entity_id%]",
           "start": "Start",
           "state": "[%key:component::history_stats::config::step::user::data::state%]",
+          "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",
           "type": "[%key:component::history_stats::config::step::user::data::type%]"
         },
         "data_description": {
@@ -22,6 +23,7 @@
           "entity_id": "[%key:component::history_stats::config::step::user::data_description::entity_id%]",
           "start": "When to start the measure (timestamp or datetime). Can be a template.",
           "state": "[%key:component::history_stats::config::step::user::data_description::state%]",
+          "state_class": "The state class for statistics calculation.",
           "type": "[%key:component::history_stats::config::step::user::data_description::type%]"
         },
         "description": "Read the documentation for further details on how to configure the history stats sensor using these options."
@@ -68,6 +70,7 @@
           "entity_id": "[%key:component::history_stats::config::step::user::data::entity_id%]",
           "start": "[%key:component::history_stats::config::step::options::data::start%]",
           "state": "[%key:component::history_stats::config::step::user::data::state%]",
+          "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",
           "type": "[%key:component::history_stats::config::step::user::data::type%]"
         },
         "data_description": {
@@ -76,6 +79,7 @@
           "entity_id": "[%key:component::history_stats::config::step::user::data_description::entity_id%]",
           "start": "[%key:component::history_stats::config::step::options::data_description::start%]",
           "state": "[%key:component::history_stats::config::step::user::data_description::state%]",
+          "state_class": "The state class for statistics calculation. Changing the state class will require statistics to be reset.",
           "type": "[%key:component::history_stats::config::step::user::data_description::type%]"
         },
         "description": "[%key:component::history_stats::config::step::options::description%]"
@@ -83,6 +87,12 @@
     }
   },
   "selector": {
+    "state_class": {
+      "options": {
+        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
+        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
+      }
+    },
     "type": {
       "options": {
         "count": "Count",
