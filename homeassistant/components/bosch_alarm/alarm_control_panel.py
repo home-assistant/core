@@ -45,6 +45,7 @@ class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+
     _attr_code_arm_required = False
     _attr_name = None
 
@@ -52,6 +53,9 @@ class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
         """Initialise a Bosch Alarm control panel entity."""
         super().__init__(panel, area_id, unique_id, True, False, True)
         self._attr_unique_id = self._area_unique_id
+
+        if self.panel.is_part_arm_instant_supported():
+            self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_NIGHT
 
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
@@ -64,10 +68,13 @@ class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
             return AlarmControlPanelState.ARMING
         if self._area.is_pending():
             return AlarmControlPanelState.PENDING
-        if self._area.is_part_armed():
+        if self._area.is_part_armed_delay():
             return AlarmControlPanelState.ARMED_HOME
+        if self._area.is_part_armed_instant():
+            return AlarmControlPanelState.ARMED_NIGHT
         if self._area.is_all_armed():
             return AlarmControlPanelState.ARMED_AWAY
+
         return None
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
@@ -76,7 +83,11 @@ class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self.panel.area_arm_part(self._area_id)
+        await self.panel.area_arm_part(self._area_id, delay=True)
+
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
+        """Send arm night command."""
+        await self.panel.area_arm_part(self._area_id, delay=False)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
