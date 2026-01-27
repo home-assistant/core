@@ -134,6 +134,7 @@
         "name": "Now playing",
         "state_attributes": {
           "achievements": { "name": "Achievements" },
+          "active_device": { "name": "Active device" },
           "developer": { "name": "Developer" },
           "gamerscore": {
             "name": "[%key:component::xbox::entity::sensor::gamer_score::name%]"
@@ -143,7 +144,8 @@
           "progress": { "name": "Progress" },
           "publisher": { "name": "Publisher" },
           "release_date": { "name": "Release date" },
-          "short_description": { "name": "Short description" }
+          "short_description": { "name": "Short description" },
+          "title_id": { "name": "Title ID" }
         }
       },
       "status": {

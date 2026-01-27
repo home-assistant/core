@@ -79,7 +79,7 @@ class XboxStorageDeviceSensorEntityDescription(
     value_fn: Callable[[StorageDevice], StateType]
 
 
-def now_playing_attributes(_: Person, title: Title | None) -> dict[str, Any]:
+def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any]:
     """Attributes of the currently played title."""
     attributes: dict[str, Any] = {
         "short_description": None,
@@ -91,9 +91,16 @@ def now_playing_attributes(_: Person, title: Title | None) -> dict[str, Any]:
         "achievements": None,
         "gamerscore": None,
         "progress": None,
+        "title_id": title.title_id if title else None,
+        "active_device": None,
     }
+
     if not title:
         return attributes
+    if person.presence_details:
+        attributes["active_device"] = next(
+            (d.device for d in person.presence_details if d.state == "Active"), None
+        )
     if title.detail is not None:
         attributes.update(
             {
