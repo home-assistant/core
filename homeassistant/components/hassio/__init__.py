@@ -70,6 +70,8 @@ from .const import (
     ADDONS_COORDINATOR,
     ATTR_ADDON,
     ATTR_ADDONS,
+    ATTR_APP,
+    ATTR_APPS,
     ATTR_COMPRESSED,
     ATTR_FOLDERS,
     ATTR_HOMEASSISTANT,
@@ -135,6 +137,10 @@ SERVICE_ADDON_START = "addon_start"
 SERVICE_ADDON_STOP = "addon_stop"
 SERVICE_ADDON_RESTART = "addon_restart"
 SERVICE_ADDON_STDIN = "addon_stdin"
+SERVICE_APP_START = "app_start"
+SERVICE_APP_STOP = "app_stop"
+SERVICE_APP_RESTART = "app_restart"
+SERVICE_APP_STDIN = "app_stdin"
 SERVICE_HOST_SHUTDOWN = "host_shutdown"
 SERVICE_HOST_REBOOT = "host_reboot"
 SERVICE_BACKUP_FULL = "backup_full"
@@ -156,7 +162,7 @@ def valid_addon(value: Any) -> str:
     hass = async_get_hass_or_none()
 
     if hass and (addons := get_addons_info(hass)) is not None and value not in addons:
-        raise vol.Invalid("Not a valid add-on slug")
+        raise vol.Invalid("Not a valid app slug")
     return value
 
 
@@ -165,6 +171,12 @@ SCHEMA_NO_DATA = vol.Schema({})
 SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): valid_addon})
 
 SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
+    {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
+)
+
+SCHEMA_APP = vol.Schema({vol.Required(ATTR_APP): valid_addon})
+
+SCHEMA_APP_STDIN = SCHEMA_APP.extend(
     {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
 )
 
@@ -186,6 +198,8 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_APPS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
+        # Deprecated (with no deadline yet), use apps instead
         vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
     }
 )
@@ -201,6 +215,8 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_APPS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
+        # Deprecated (with no deadline yet), use apps instead
         vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
     }
 )
@@ -221,12 +237,18 @@ class APIEndpointSettings(NamedTuple):
 
 
 MAP_SERVICE_API = {
+    # Legacy addon services
     SERVICE_ADDON_START: APIEndpointSettings("/addons/{addon}/start", SCHEMA_ADDON),
     SERVICE_ADDON_STOP: APIEndpointSettings("/addons/{addon}/stop", SCHEMA_ADDON),
     SERVICE_ADDON_RESTART: APIEndpointSettings("/addons/{addon}/restart", SCHEMA_ADDON),
     SERVICE_ADDON_STDIN: APIEndpointSettings(
         "/addons/{addon}/stdin", SCHEMA_ADDON_STDIN
     ),
+    # New app services
+    SERVICE_APP_START: APIEndpointSettings("/addons/{addon}/start", SCHEMA_APP),
+    SERVICE_APP_STOP: APIEndpointSettings("/addons/{addon}/stop", SCHEMA_APP),
+    SERVICE_APP_RESTART: APIEndpointSettings("/addons/{addon}/restart", SCHEMA_APP),
+    SERVICE_APP_STDIN: APIEndpointSettings("/addons/{addon}/stdin", SCHEMA_APP_STDIN),
     SERVICE_HOST_SHUTDOWN: APIEndpointSettings("/host/shutdown", SCHEMA_NO_DATA),
     SERVICE_HOST_REBOOT: APIEndpointSettings("/host/reboot", SCHEMA_NO_DATA),
     SERVICE_BACKUP_FULL: APIEndpointSettings(
@@ -386,12 +408,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         api_endpoint = MAP_SERVICE_API[service.service]
 
         data = service.data.copy()
-        addon = data.pop(ATTR_ADDON, None)
+        # Handle both app and addon parameters (app takes precedence)
+        addon = data.pop(ATTR_APP, None) or data.pop(ATTR_ADDON, None)
         slug = data.pop(ATTR_SLUG, None)
+
+        # Handle both apps and addons parameters for backup/restore services
+        apps = data.pop(ATTR_APPS, None)
+        addons = data.pop(ATTR_ADDONS, None)
+        if apps or addons:
+            # apps takes precedence if both provided, but we still want to use "addons" in API
+            data[ATTR_ADDONS] = apps or addons
+
         payload = None
 
         # Pass data to Hass.io API
-        if service.service == SERVICE_ADDON_STDIN:
+        if service.service in (SERVICE_ADDON_STDIN, SERVICE_APP_STDIN):
             payload = data[ATTR_INPUT]
         elif api_endpoint.pass_data:
             payload = data
