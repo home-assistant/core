@@ -259,9 +259,15 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
 
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
+
+        # Keep typed as list[HVACMode] for mypy/ClimateEntity
+        raw_hvac_modes = config.get(CONF_HVAC_MODES, [HVACMode.AUTO])
         self._attr_hvac_modes = [
-            str(m) for m in config.get(CONF_HVAC_MODES, [HVACMode.AUTO])
+            m if isinstance(m, HVACMode) else HVACMode(str(m).lower().strip())
+            for m in raw_hvac_modes
         ]
+
+        # Other mode lists are strings
         self._attr_fan_modes = [str(m) for m in config.get(CONF_FAN_MODES, [])]
         self._attr_swing_modes = [str(m) for m in config.get(CONF_SWING_MODES, [])]
         self._attr_preset_modes = [str(m) for m in config.get(CONF_PRESET_MODES, [])]
@@ -276,17 +282,33 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self._attr_precision = config.get(CONF_PRECISION, DEFAULT_PRECISION)
 
+        # hvac_mode: convert -> HVACMode then enforce within hvac_modes
+        _hvac_mode_to_enum = template_validators.strenum(
+            self,
+            CONF_HVAC_MODE,
+            HVACMode,
+            none_on_unknown_unavailable=True,
+        )
+        _hvac_mode_in_list = template_validators.item_in_list(
+            self,
+            CONF_HVAC_MODE,
+            self._attr_hvac_modes,
+            items_attribute=CONF_HVAC_MODES,
+            none_on_unknown_unavailable=True,
+        )
+
+        def _validate_hvac_mode(result: Any) -> HVACMode | None:
+            mode = _hvac_mode_to_enum(result)
+            if mode is None:
+                return None
+            return _hvac_mode_in_list(mode)
+
         self.setup_template(
             CONF_HVAC_MODE,
             "_attr_hvac_mode",
-            template_validators.item_in_list(
-                self,
-                CONF_HVAC_MODE,
-                self._attr_hvac_modes,
-                items_attribute=CONF_HVAC_MODES,
-                none_on_unknown_unavailable=True,
-            ),
+            _validate_hvac_mode,
         )
+
         self.setup_template(
             CONF_HVAC_ACTION,
             "_attr_hvac_action",
