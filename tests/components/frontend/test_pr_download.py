@@ -242,6 +242,7 @@ async def test_pr_download_http_error(
 async def test_pr_download_zip_bomb_too_many_files(
     hass: HomeAssistant,
     tmp_path: Path,
+    mock_github_api: AsyncMock,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
