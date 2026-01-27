@@ -17,4 +17,5 @@ async def async_get_config_entry_diagnostics(
     return {
         "data": config_entry.runtime_data.coordinator.data,
         "mobile_devices": config_entry.runtime_data.mobile_coordinator.data,
+        "zone_control": config_entry.runtime_data.zone_control_coordinator.data,
     }
