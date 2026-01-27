@@ -77,6 +77,14 @@
       }
     },
     "select": {
+      "cleaning_mode": {
+        "name": "Cleaning mode",
+        "state": {
+          "mop": "Mop only",
+          "vac_and_mop": "Vacuum and mop",
+          "vacuum": "Vacuum only"
+        }
+      },
       "dust_collection_mode": {
         "name": "Empty mode",
         "state": {

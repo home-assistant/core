@@ -4,7 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, call
 
 import pytest
-from roborock import RoborockCommand
+from roborock import CleanTypeMapping, RoborockCommand
 from roborock.data import RoborockDockDustCollectionModeCode, WaterLevelMapping
 from roborock.exceptions import RoborockException
 
@@ -225,7 +225,7 @@ async def test_update_failure_q7_water_level(
     assert q7_device.b01_q7_properties
     q7_device.b01_q7_properties.set_water_level.side_effect = RoborockException
 
-    with pytest.raises(HomeAssistantError, match="Error while calling set_water_level"):
+    with pytest.raises(HomeAssistantError, match="Error while calling water_level"):
         await hass.services.async_call(
             "select",
             SERVICE_SELECT_OPTION,
@@ -233,3 +233,46 @@ async def test_update_failure_q7_water_level(
             blocking=True,
             target={"entity_id": "select.roborock_q7_mop_intensity"},
         )
+
+
+async def test_update_failure_q7_cleaning_mode(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_device: FakeDevice,
+) -> None:
+    """Test failure when setting Q7 cleaning mode."""
+    assert q7_device.b01_q7_properties
+    q7_device.b01_q7_properties.set_mode.side_effect = RoborockException
+
+    with pytest.raises(HomeAssistantError, match="Error while calling cleaning_mode"):
+        await hass.services.async_call(
+            "select",
+            SERVICE_SELECT_OPTION,
+            service_data={"option": "vacuum"},
+            blocking=True,
+            target={"entity_id": "select.roborock_q7_cleaning_mode"},
+        )
+
+
+async def test_update_success_q7_cleaning_mode(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_device: FakeDevice,
+) -> None:
+    """Test allowed changing values for Q7 cleaning mode select entity."""
+    entity_id = "select.roborock_q7_cleaning_mode"
+    assert hass.states.get(entity_id) is not None
+
+    # Test setting value
+    await hass.services.async_call(
+        "select",
+        SERVICE_SELECT_OPTION,
+        service_data={"option": "vacuum"},
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+
+    assert q7_device.b01_q7_properties
+    assert q7_device.b01_q7_properties.set_mode.call_count == 1
+
+    q7_device.b01_q7_properties.set_mode.assert_called_with(CleanTypeMapping.VACUUM)

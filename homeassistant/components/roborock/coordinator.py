@@ -554,6 +554,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             RoborockB01Props.HYPA,
             RoborockB01Props.WIND,
             RoborockB01Props.WATER,
+            RoborockB01Props.MODE,
         ]
 
     async def _async_update_data(
