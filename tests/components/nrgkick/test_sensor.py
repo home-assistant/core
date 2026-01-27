@@ -19,6 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
+from . import async_setup_integration
+
 from tests.common import load_fixture
 
 
@@ -37,7 +39,6 @@ async def test_sensor_entities(
     mock_values_data_sensor,
 ) -> None:
     """Test sensor entities."""
-    mock_config_entry.add_to_hass(hass)
 
     # Make enum-like info fields numeric as well (these are mapped via tables).
     mock_info_data["connector"]["type"] = ConnectorType.TYPE2
@@ -51,8 +52,7 @@ async def test_sensor_entities(
     # Setup entry
     now = datetime(2025, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.components.nrgkick.sensor.utcnow", return_value=now):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        await async_setup_integration(hass, mock_config_entry)
 
     # Helper to get state by unique ID
     entity_registry = er.async_get(hass)
@@ -132,7 +132,6 @@ async def test_mapped_unknown_values_become_state_unknown(
     mock_values_data_sensor,
 ) -> None:
     """Test that enum-like UNKNOWN values map to HA's unknown state."""
-    mock_config_entry.add_to_hass(hass)
 
     mock_info_data["connector"]["type"] = ConnectorType.UNKNOWN
     mock_info_data["grid"]["phases"] = GridPhases.UNKNOWN
@@ -142,8 +141,7 @@ async def test_mapped_unknown_values_become_state_unknown(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data_sensor
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_setup_integration(hass, mock_config_entry)
 
     entity_registry = er.async_get(hass)
 
@@ -176,7 +174,6 @@ async def test_cellular_and_gps_entities_are_gated_by_model_type(
     expect_optional_entities: bool,
 ) -> None:
     """Test that cellular/GPS entities are only created for SIM-capable models (GPS to be added later)."""
-    mock_config_entry.add_to_hass(hass)
 
     mock_info_data["general"]["model_type"] = model_type
 
@@ -188,8 +185,7 @@ async def test_cellular_and_gps_entities_are_gated_by_model_type(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data_sensor
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_setup_integration(hass, mock_config_entry)
 
     entity_registry = er.async_get(hass)
     optional_keys = (

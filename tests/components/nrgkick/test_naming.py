@@ -4,6 +4,8 @@ from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import async_setup_integration
+
 
 async def test_device_name_fallback(
     hass: HomeAssistant,
@@ -23,8 +25,7 @@ async def test_device_name_fallback(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_setup_integration(hass, mock_config_entry, add_to_hass=False)
 
     # Verify device registry
     device_registry = dr.async_get(hass)
@@ -64,8 +65,7 @@ async def test_device_name_custom(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_setup_integration(hass, mock_config_entry, add_to_hass=False)
 
     # Verify device registry
     device_registry = dr.async_get(hass)

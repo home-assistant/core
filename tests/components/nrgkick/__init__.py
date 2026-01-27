@@ -8,11 +8,15 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def async_setup_entry_with_return(
-    hass: HomeAssistant, entry: MockConfigEntry
-) -> bool:
-    """Set up the component and return boolean success."""
-    return await hass.config_entries.async_setup(entry.entry_id)
+async def async_setup_integration(
+    hass: HomeAssistant, config_entry: MockConfigEntry, *, add_to_hass: bool = True
+) -> None:
+    """Set up the component for tests."""
+    if add_to_hass:
+        config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 def create_mock_config_entry(
@@ -35,6 +39,6 @@ def create_mock_config_entry(
 
 
 __all__ = [
-    "async_setup_entry_with_return",
+    "async_setup_integration",
     "create_mock_config_entry",
 ]
