@@ -15,7 +15,7 @@ from hass_nabucasa.llm import (
     LLMResponseError,
     LLMServiceError,
 )
-from hass_nabucasa.llm_stream_events import (
+from hass_nabucasa.llm.stream_events import (
     ResponseCompletedEvent,
     ResponseErrorEvent,
     ResponseFailedEvent,
