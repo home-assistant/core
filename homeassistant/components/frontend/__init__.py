@@ -28,12 +28,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.aiohttp_client import (
+    async_aiohttp_proxy_web,
+    async_get_clientsession,
+)
 from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration, bind_hass
+from homeassistant.loader import IntegrationNotFound, async_get_integration, bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from .storage import async_setup_frontend_storage
@@ -411,6 +415,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_get_version)
     websocket_api.async_register_command(hass, websocket_subscribe_extra_js)
     hass.http.register_view(ManifestJSONView())
+    hass.http.register_view(BrandsIconView())
 
     conf = config.get(DOMAIN, {})
 
@@ -790,6 +795,54 @@ class ManifestJSONView(HomeAssistantView):
         )
         response.enable_compression()
         return response
+
+
+class BrandsIconView(HomeAssistantView):
+    """View to return a brand icon."""
+
+    requires_auth = False
+    cors_allowed = True
+    url = "/brands/{domain}/{filename}"
+    name = "brandsicon"
+
+    async def get(  # noqa: D102
+        self, request: web.Request, domain: str, filename: str
+    ) -> web.Response | web.FileResponse | web.StreamResponse | None:
+        # Limit to valid filenames
+        if filename not in (
+            "icon.png",
+            "logo.png",
+            "icon@2x.png",
+            "logo@2x.png",
+            "dark_icon.png",
+            "dark_logo.png",
+            "dark_icon@2x.png",
+            "dark_logo@2x.png",
+        ):
+            return web.Response(status=403)
+
+        hass = request.app[KEY_HASS]
+
+        try:
+            integration = await async_get_integration(hass, domain)
+            filenames = [filename]
+            if filename.startswith("dark_"):
+                filenames.append(filename.removeprefix("dark_"))
+
+            for name in filenames:
+                icon_path = integration.file_path / name
+                if await hass.async_add_executor_job(icon_path.exists):
+                    return web.FileResponse(icon_path)
+        except (IntegrationNotFound, HomeAssistantError):
+            pass
+
+        return await async_aiohttp_proxy_web(
+            hass,
+            request,
+            async_get_clientsession(hass).get(
+                f"https://brands.home-assistant.io/_/{domain}/{filename}"
+            ),
+        )
 
 
 @websocket_api.websocket_command(
