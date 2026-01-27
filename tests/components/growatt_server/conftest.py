@@ -155,8 +155,8 @@ def mock_growatt_classic_api():
     Individual tests can override specific return values to test error conditions.
 
     Methods mocked for integration setup:
-    - login: Called during get_device_list_classic to authenticate
-    - plant_list: Called during setup if plant_id is default (to auto-select plant)
+    - login: Called during migration (to resolve DEFAULT_PLANT_ID) or async_setup_entry
+    - plant_list: Called during migration to resolve DEFAULT_PLANT_ID to actual plant_id
     - device_list: Called during async_setup_entry to discover devices
 
     Methods mocked for total coordinator refresh:
@@ -265,9 +265,10 @@ def mock_config_entry_classic() -> MockConfigEntry:
 def mock_config_entry_classic_default_plant() -> MockConfigEntry:
     """Return a mocked config entry for Classic API with DEFAULT_PLANT_ID.
 
-    This config entry uses plant_id="0" which triggers auto-plant-selection logic
-    in the Classic API path. This is legacy support for old config entries that
-    didn't have a specific plant_id set during initial configuration.
+    This config entry uses plant_id="0" which triggers migration logic in
+    async_setup_entry to resolve to the actual plant_id. This is legacy support
+    for old config entries that didn't have a specific plant_id set during initial
+    configuration.
     """
     return MockConfigEntry(
         domain=DOMAIN,
@@ -276,7 +277,7 @@ def mock_config_entry_classic_default_plant() -> MockConfigEntry:
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_password",
             CONF_URL: "https://server.growatt.com/",
-            CONF_PLANT_ID: DEFAULT_PLANT_ID,  # "0" triggers auto-selection
+            CONF_PLANT_ID: DEFAULT_PLANT_ID,  # "0" - should trigger migration
         },
         unique_id="plant_default",
     )
