@@ -26,6 +26,10 @@
       },
       "step": {
         "init": {
+          "data": {
+            "notify_service": "Action",
+            "target": "Target"
+          },
           "description": "Please select one of the notification services:",
           "title": "Set up one-time password delivered by notify component"
         },
