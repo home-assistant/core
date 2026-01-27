@@ -19,7 +19,7 @@
           "host": "Enter the IP address or hostname of your Qube heat pump (e.g. 192.168.1.50)."
         },
         "description": "Enter the heat pump IP or host.\nNeed help? See https://github.com/MattieGit/qube_heatpump/tree/main/wiki.",
-        "title": "Qube Heatpump"
+        "title": "Qube heat pump"
       },
       "reconfigure_confirm": {
         "data": {
