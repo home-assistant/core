@@ -50,7 +50,6 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "advanced_sleep": "Advanced sleep",
               "auto": "[%key:common::state::auto%]",
               "normal": "[%key:common::state::normal%]",
               "pet": "Pet",
@@ -92,8 +91,30 @@
       "air_quality": {
         "name": "Air quality"
       },
+      "cook_set_temp": {
+        "name": "Cooking set temperature"
+      },
+      "cook_set_time": {
+        "name": "Cooking set time"
+      },
+      "cook_status": {
+        "name": "Cooking status",
+        "state": {
+          "cooking": "Cooking",
+          "cooking_end": "Cooking finished",
+          "cooking_stop": "Cooking stopped",
+          "heating": "Preheating",
+          "preheat_end": "Preheating finished",
+          "preheat_stop": "Preheating stopped",
+          "pull_out": "Drawer pulled out",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
       "current_power": {
         "name": "Current power"
+      },
+      "current_temp": {
+        "name": "Current temperature"
       },
       "current_voltage": {
         "name": "Current voltage"
@@ -112,6 +133,9 @@
       },
       "filter_life": {
         "name": "Filter lifetime"
+      },
+      "preheat_set_time": {
+        "name": "Preheating set time"
       }
     },
     "switch": {

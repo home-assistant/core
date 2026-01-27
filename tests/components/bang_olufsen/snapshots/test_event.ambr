@@ -1,6 +1,7 @@
 # serializer version: 1
 # name: test_button_event_creation_a5
   list([
+    'binary_sensor.beosound_a5_44444444_charging',
     'event.beosound_a5_44444444_bluetooth',
     'event.beosound_a5_44444444_next',
     'event.beosound_a5_44444444_play_pause',
@@ -100,6 +101,8 @@
     'event.beoremote_one_55555555_44444444_control_function_25',
     'event.beoremote_one_55555555_44444444_control_function_26',
     'event.beoremote_one_55555555_44444444_control_function_27',
+    'sensor.beosound_a5_44444444_battery',
+    'sensor.beoremote_one_55555555_44444444_battery',
     'media_player.beosound_a5_44444444',
   ])
 # ---
@@ -205,6 +208,7 @@
     'event.beoremote_one_55555555_11111111_control_function_25',
     'event.beoremote_one_55555555_11111111_control_function_26',
     'event.beoremote_one_55555555_11111111_control_function_27',
+    'sensor.beoremote_one_55555555_11111111_battery',
     'media_player.beosound_balance_11111111',
   ])
 # ---
@@ -308,6 +312,7 @@
     'event.beoremote_one_55555555_33333333_control_function_25',
     'event.beoremote_one_55555555_33333333_control_function_26',
     'event.beoremote_one_55555555_33333333_control_function_27',
+    'sensor.beoremote_one_55555555_33333333_battery',
     'media_player.beosound_premiere_33333333',
   ])
 # ---

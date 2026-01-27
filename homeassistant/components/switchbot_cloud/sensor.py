@@ -225,6 +225,9 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock Lite": (BATTERY_DESCRIPTION,),
     "Smart Lock Pro": (BATTERY_DESCRIPTION,),
     "Smart Lock Ultra": (BATTERY_DESCRIPTION,),
+    "Smart Lock Vision": (BATTERY_DESCRIPTION,),
+    "Smart Lock Vision Pro": (BATTERY_DESCRIPTION,),
+    "Smart Lock Pro Wifi": (BATTERY_DESCRIPTION,),
     "Relay Switch 2PM": (
         RELAY_SWITCH_2PM_POWER_DESCRIPTION,
         RELAY_SWITCH_2PM_VOLTAGE_DESCRIPTION,

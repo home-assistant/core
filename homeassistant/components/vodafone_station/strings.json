@@ -65,6 +65,14 @@
         "name": "Internet key reconnect"
       }
     },
+    "image": {
+      "guest": {
+        "name": "Guest network"
+      },
+      "guest_5g": {
+        "name": "Guest 5GHz network"
+      }
+    },
     "sensor": {
       "active_connection": {
         "name": "Active connection",
@@ -110,6 +118,20 @@
       },
       "up_stream": {
         "name": "WAN upload rate"
+      }
+    },
+    "switch": {
+      "guest": {
+        "name": "Guest network"
+      },
+      "guest_5g": {
+        "name": "Guest 5GHz network"
+      },
+      "main": {
+        "name": "Main network"
+      },
+      "main_5g": {
+        "name": "Main 5GHz network"
       }
     }
   },

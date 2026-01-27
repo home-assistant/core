@@ -242,6 +242,13 @@ LIGHTS: dict[DeviceCategory, tuple[TuyaLightEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.CWWSQ: (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            translation_key="light",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     DeviceCategory.DC: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,
@@ -676,7 +683,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         *,
         brightness_wrapper: DeviceWrapper[int] | None,
         color_data_wrapper: DeviceWrapper[tuple[float, float, float]] | None,
-        color_mode_wrapper: DPCodeEnumWrapper | None,
+        color_mode_wrapper: DeviceWrapper[str] | None,
         color_temp_wrapper: DeviceWrapper[int] | None,
         switch_wrapper: DeviceWrapper[bool],
     ) -> None:
