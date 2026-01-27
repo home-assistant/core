@@ -415,25 +415,43 @@ class RegistryEntry:
 
 @callback
 def _async_get_full_entity_name(
-    name: str | None,
+    hass: HomeAssistant,
     *,
-    device: dr.DeviceEntry | None = None,
-    platform: str,
-    unique_id: str,
+    device_id: str | None,
+    fallback: str,
+    has_entity_name: bool,
+    name: str | None,
+    original_name: str | None,
+    overridden_name: str | None = None,
 ) -> str:
     """Get full name for an entity.
 
     This includes the device name if appropriate.
     """
+    use_device = False
+    if name is None:
+        if overridden_name is not None:
+            name = overridden_name
+        else:
+            name = original_name
+            if has_entity_name:
+                use_device = True
+
+    device = (
+        dr.async_get(hass).async_get(device_id)
+        if use_device and device_id is not None
+        else None
+    )
+
     if device is not None:
         device_name = device.name_by_user or device.name
         if not name:
             name = device_name
-        else:
+        elif device_name:
             name = f"{device_name} {name}"
 
     if not name:
-        name = f"{platform}_{unique_id}"
+        return fallback
 
     return name
 
@@ -996,28 +1014,14 @@ class EntityRegistry(BaseRegistry):
         Entity ID conflicts are checked against registered and currently
         existing entities, as well as provided `reserved_entity_ids`.
         """
-        object_id: str | None
-        use_device = False
-        if name is not None:
-            object_id = name
-        elif suggested_object_id is not None:
-            object_id = suggested_object_id
-        else:
-            object_id = object_id_base
-            if has_entity_name:
-                use_device = True
-
-        device = (
-            dr.async_get(self.hass).async_get(device_id)
-            if use_device and device_id is not None
-            else None
-        )
-
         object_id = _async_get_full_entity_name(
-            object_id,
-            device=device,
-            platform=platform,
-            unique_id=unique_id,
+            self.hass,
+            device_id=device_id,
+            fallback=f"{platform}_{unique_id}",
+            has_entity_name=has_entity_name,
+            name=name,
+            original_name=object_id_base,
+            overridden_name=suggested_object_id,
         )
         return self.async_get_available_entity_id(
             domain,
@@ -1049,6 +1053,25 @@ class EntityRegistry(BaseRegistry):
             reserved_entity_ids=reserved_entity_ids,
             suggested_object_id=entry.suggested_object_id,
             unique_id=entry.unique_id,
+        )
+
+    @callback
+    def async_generate_full_name(
+        self,
+        entry: RegistryEntry,
+        original_name: str | None | UndefinedType = UNDEFINED,
+    ) -> str:
+        """Generate a friendly name for an entry."""
+        original_name = (
+            original_name if original_name is not UNDEFINED else entry.original_name
+        )
+        return _async_get_full_entity_name(
+            self.hass,
+            device_id=entry.device_id,
+            fallback="",
+            has_entity_name=entry.has_entity_name,
+            name=entry.name,
+            original_name=original_name,
         )
 
     @callback
