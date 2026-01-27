@@ -9091,6 +9091,66 @@
       "serializedGlobalTradeItemNumber": "3014F71100000000000SHWSM",
       "type": "WATERING_ACTUATOR",
       "updateState": "UP_TO_DATE"
+    },
+    "3014F7110000000000000SB8": {
+      "availableFirmwareVersion": "0.0.0",
+      "connectionType": "HMIP_RF",
+      "firmwareVersion": "1.8.12",
+      "firmwareVersionInteger": 67596,
+      "functionalChannels": {
+        "0": {
+          "configPending": false,
+          "deviceId": "3014F7110000000000000SB8",
+          "dutyCycle": false,
+          "functionalChannelType": "DEVICE_BASE",
+          "groupIndex": 0,
+          "groups": ["00000000-0000-0000-0000-000000000041"],
+          "index": 0,
+          "label": "",
+          "lowBat": null,
+          "routerModuleEnabled": false,
+          "routerModuleSupported": false,
+          "rssiDeviceValue": -62,
+          "rssiPeerValue": -60,
+          "unreach": false,
+          "supportedOptionalFeatures": {}
+        },
+        "1": {
+          "deviceId": "3014F7110000000000000SB8",
+          "functionalChannelType": "SWITCH_CHANNEL",
+          "groupIndex": 1,
+          "groups": ["00000000-0000-0000-0000-000000000042"],
+          "index": 1,
+          "label": "LED 1",
+          "on": false,
+          "profileMode": "AUTOMATIC",
+          "userDesiredProfileMode": "AUTOMATIC"
+        },
+        "2": {
+          "deviceId": "3014F7110000000000000SB8",
+          "functionalChannelType": "SWITCH_CHANNEL",
+          "groupIndex": 2,
+          "groups": ["00000000-0000-0000-0000-000000000042"],
+          "index": 2,
+          "label": "LED 2",
+          "on": true,
+          "profileMode": "AUTOMATIC",
+          "userDesiredProfileMode": "AUTOMATIC"
+        }
+      },
+      "homeId": "00000000-0000-0000-0000-000000000001",
+      "id": "3014F7110000000000000SB8",
+      "label": "Status Board",
+      "lastStatusUpdate": 1543746604446,
+      "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+      "manufacturerCode": 9,
+      "modelId": 574,
+      "modelType": "ELV-SH-SB8",
+      "oem": "eQ-3",
+      "permanentlyReachable": true,
+      "serializedGlobalTradeItemNumber": "3014F7110000000000000SB8",
+      "type": "STATUS_BOARD_8",
+      "updateState": "UP_TO_DATE"
     }
   },
   "groups": {

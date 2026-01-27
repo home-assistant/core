@@ -263,3 +263,36 @@ async def test_hmip_wired_multi_switch(
     await async_manipulate_test_data(hass, hmip_device, "on", True)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
+
+
+async def test_hmip_status_board_switch(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test HomematicipMultiSwitch with StatusBoard8."""
+    entity_id = "switch.led_1"
+    entity_name = "LED 1"
+    device_model = "ELV-SH-SB8"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Status Board"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == STATE_OFF
+    service_call_counter = len(hmip_device.functionalChannels[1].mock_calls)
+
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": entity_id}, blocking=True
+    )
+    assert len(hmip_device.functionalChannels[1].mock_calls) == service_call_counter + 1
+    assert hmip_device.functionalChannels[1].mock_calls[-1][0] == "async_turn_on"
+    await async_manipulate_test_data(hass, hmip_device, "on", True)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_ON
+
+    # Verify second channel exists and has correct initial state (on=true in fixture)
+    ha_state2 = hass.states.get("switch.led_2")
+    assert ha_state2 is not None
+    assert ha_state2.state == STATE_ON
