@@ -78,12 +78,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _get_access_token(oauth_session: OAuth2Session) -> str:
     """Get a valid access token, refreshing if necessary."""
-    LOGGER.debug(
-        "Token valid: %s, expires_at: %s",
-        oauth_session.valid_token,
-        oauth_session.token.get("expires_at"),
-    )
     try:
+        LOGGER.debug(
+            "Token valid: %s, expires_at: %s",
+            oauth_session.valid_token,
+            oauth_session.token.get("expires_at"),
+        )
         await oauth_session.async_ensure_token_valid()
     except ClientResponseError as err:
         if err.status == 401:
