@@ -10,6 +10,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
 
+PLATFORMS = [Platform.SENSOR]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> bool:
     """Set up OpenEVSE from a config entry."""
@@ -29,10 +31,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
 
     entry.runtime_data = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, [Platform.SENSOR])
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
