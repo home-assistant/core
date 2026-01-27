@@ -291,7 +291,7 @@
         "name": "Current power"
       },
       "glbal": {
-        "name": "Global Alarm"
+        "name": "Global alarm"
       },
       "heatingalrms": {
         "name": "Alarm: Collective alarm heating"
