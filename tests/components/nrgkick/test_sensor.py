@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import json
+from typing import Any
 from unittest.mock import patch
 
 from nrgkick_api import ChargingStatus, ConnectorType, GridPhases
@@ -10,7 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
@@ -23,7 +24,7 @@ pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
 
 @pytest.fixture
-def mock_values_data_sensor():
+def mock_values_data_sensor() -> dict[str, Any]:
     """Mock values data for sensor tests."""
     return json.loads(load_fixture("values_sensor.json", DOMAIN))
 
@@ -64,7 +65,7 @@ async def test_sensor_entities(
 
     # Defensive: if the API returns an unexpected type for a nested section,
     # the entity should fall back to unknown (native_value=None).
-    bad_values = dict(mock_values_data_sensor)
+    bad_values: dict[str, Any] = dict(mock_values_data_sensor)
     bad_values["powerflow"] = "not-a-dict"
     mock_nrgkick_api.get_values.return_value = bad_values
 
@@ -96,9 +97,9 @@ async def test_mapped_unknown_values_become_state_unknown(
 
     await async_setup_integration(hass, mock_config_entry)
 
-    entity_registry = er.async_get(hass)
+    entity_registry: er.EntityRegistry = er.async_get(hass)
 
-    def get_state_by_key(key):
+    def get_state_by_key(key: str) -> State | None:
         unique_id = f"TEST123456_{key}"
         entity_id = entity_registry.async_get_entity_id("sensor", "nrgkick", unique_id)
         return hass.states.get(entity_id) if entity_id else None

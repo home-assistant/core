@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -20,13 +22,13 @@ async def async_setup_integration(
 
 
 def create_mock_config_entry(
-    domain=DOMAIN,
-    data=None,
-    options=None,
-    entry_id="test_entry",
-    title="NRGkick",
-    unique_id="TEST123456",
-):
+    domain: str = DOMAIN,
+    data: dict[str, Any] | None = None,
+    options: dict[str, Any] | None = None,
+    entry_id: str = "test_entry",
+    title: str = "NRGkick",
+    unique_id: str = "TEST123456",
+) -> MockConfigEntry:
     """Create a mock config entry for testing."""
     return MockConfigEntry(
         domain=domain,

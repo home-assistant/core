@@ -27,7 +27,7 @@ async def test_setup_entry(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    entity_registry = er.async_get(hass)
+    entity_registry: er.EntityRegistry = er.async_get(hass)
     unique_id = f"{mock_config_entry.unique_id}_rated_current"
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
     assert entity_id is not None
@@ -80,7 +80,7 @@ async def test_coordinator_update_success(
     await async_setup_integration(hass, mock_config_entry)
 
     # Validate coordinator refresh via the state machine (entities have values).
-    entity_registry = er.async_get(hass)
+    entity_registry: er.EntityRegistry = er.async_get(hass)
     unique_id = f"{mock_config_entry.unique_id}_rated_current"
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
     assert entity_id is not None
