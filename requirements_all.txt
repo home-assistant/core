@@ -2727,6 +2727,9 @@ radiotherm==2.1.0
 # homeassistant.components.raincloud
 raincloudy==0.0.7
 
+# homeassistant.components.kodi
+rapidfuzz==3.14.3
+
 # homeassistant.components.rapt_ble
 rapt-ble==0.1.2
 

@@ -21,6 +21,8 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.const import (
@@ -49,6 +51,7 @@ from .browse_media import (
     get_media_info,
     library_payload,
     media_source_content_filter,
+    search_items,
 )
 from .const import DOMAIN, EVENT_TURN_OFF, EVENT_TURN_ON
 
@@ -164,6 +167,7 @@ class KodiEntity(MediaPlayerEntity):
     _attr_translation_key = "media_player"
     _attr_supported_features = (
         MediaPlayerEntityFeature.BROWSE_MEDIA
+        | MediaPlayerEntityFeature.SEARCH_MEDIA
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.PLAY
@@ -860,6 +864,17 @@ class KodiEntity(MediaPlayerEntity):
                 f"Media not found: {media_content_type} / {media_content_id}"
             )
         return response
+
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the media player."""
+
+        media = await search_items(
+            self.hass, self._kodi, query, self.get_browse_image_url
+        )
+        return SearchMedia(result=media)
 
     async def async_get_browse_image(
         self,
