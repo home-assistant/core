@@ -108,19 +108,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the myStrom entities."""
     device = entry.runtime_data.device
-    info = entry.runtime_data.info
 
     entities: list[MyStromSensorBase] = []
     match device:
         case MyStromPir():
             entities = [
-                MyStromSensor(device, entry.title, description, info["mac"])
+                MyStromSensor(device, entry.title, description)
                 for description in SENSOR_TYPES_PIR
                 if description.value_fn(device) is not None
             ]
         case MyStromSwitch():
             entities = [
-                MyStromSensor(device, entry.title, description, info["mac"])
+                MyStromSensor(device, entry.title, description)
                 for description in SENSOR_TYPES_SWITCH
                 if description.value_fn(device) is not None
             ]
@@ -149,9 +148,10 @@ class MyStromSensorBase(SensorEntity):
         self._attr_unique_id = f"{device.mac}-{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.mac)},
+            connections={(CONNECTION_NETWORK_MAC, device.mac)},
             name=name,
             manufacturer=MANUFACTURER,
-            sw_version=device.firmware,
+            sw_version=getattr(device, "firmware", None),
         )
 
 
@@ -160,24 +160,15 @@ class MyStromSensor[_DeviceT](MyStromSensorBase):
 
     entity_description: MyStromSensorEntityDescription[_DeviceT]
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         device: _DeviceT,
         name: str,
         description: MyStromSensorEntityDescription[_DeviceT],
-        mac: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device, name, description.key)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, mac)},
-            connections={(CONNECTION_NETWORK_MAC, mac)},
-            name=name,
-            manufacturer=MANUFACTURER,
-            sw_version=getattr(device, "firmware", None),
-        )
+        self.entity_description = description
 
     @property
     def native_value(self) -> float | None:
