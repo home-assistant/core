@@ -1,6 +1,6 @@
 """Config flow for Rejseplanen integration."""
 
-from py_rejseplan.api.base import BaseAPIClient as Rejseplanen
+from py_rejseplan.api.departures import DeparturesAPIClient as Rejseplanen
 from py_rejseplan.dataclasses.transport_mappings import DEPARTURE_TYPE_TO_CLASS
 import voluptuous as vol
 
@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -37,7 +37,7 @@ from .const import (
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_API_KEY, default=""): str,
     }
 )
 
@@ -68,6 +68,15 @@ CONFIG_STOP_SCHEMA = vol.Schema(
         ),
     }
 )
+
+
+def _is_stop_name_already_configured(hass: HomeAssistant, new_data: str) -> bool:
+    """Check if the stop name is already configured."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        for subentry in entry.subentries.values():
+            if subentry.title.lower() == new_data.lower():
+                return True
+    return False
 
 
 class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -101,7 +110,8 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         auth_key = user_input[CONF_API_KEY]
-        api = Rejseplanen(base_url="https://www.rejseplanen.dk/api/", auth_key=auth_key)
+        # api = Rejseplanen(base_url="https://www.rejseplanen.dk/api/", auth_key=auth_key)
+        api = Rejseplanen(auth_key=auth_key)
 
         try:
             result = await self.hass.async_add_executor_job(api.validate_auth_key)
@@ -114,7 +124,9 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors:
             return self.async_show_form(
                 step_id="user",
-                data_schema=CONFIG_SCHEMA,
+                data_schema=self.add_suggested_values_to_schema(
+                    CONFIG_SCHEMA, user_input
+                ),
                 errors=errors,
             )
         # Store the authentication key and name
@@ -127,33 +139,50 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
 class RejseplanenSubentryStopFlow(ConfigSubentryFlow):
     """Handle subentry flow for Rejseplanen stops."""
 
-    VERSION = 1
-
-    async def async_step_user(
+    async def async_step_stop(
         self,
         user_input: dict[str, str] | None = None,
     ) -> SubentryFlowResult:
         """Handle the stop subentry step."""
-        if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=CONFIG_STOP_SCHEMA)
 
-        stop_id = int(user_input[CONF_STOP_ID])
-        name = user_input[CONF_NAME]
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            stop_id = int(user_input[CONF_STOP_ID])
+            name = user_input[CONF_NAME]
 
-        selected_keys: str | list = user_input.get(CONF_DEPARTURE_TYPE, [])
-        departure_types = [
-            DEPARTURE_TYPE_TO_CLASS[key]
-            for key in selected_keys
-            if key in DEPARTURE_TYPE_TO_CLASS
-        ]
+            if _is_stop_name_already_configured(self.hass, name):
+                errors["base"] = "stop_name_already_configured"
 
-        return self.async_create_entry(
-            title=name,
-            data={
-                CONF_STOP_ID: stop_id,
-                CONF_NAME: name,
-                CONF_DEPARTURE_TYPE: departure_types,
-                CONF_DIRECTION: user_input.get(CONF_DIRECTION, []),
-                CONF_ROUTE: user_input.get(CONF_ROUTE, []),
-            },
+            if errors:
+                return self.async_show_form(
+                    step_id="stop",
+                    data_schema=self.add_suggested_values_to_schema(
+                        CONFIG_STOP_SCHEMA, user_input
+                    ),
+                    errors=errors,
+                )
+
+            selected_keys: str | list = user_input.get(CONF_DEPARTURE_TYPE, [])
+            departure_types = [
+                DEPARTURE_TYPE_TO_CLASS[key]
+                for key in selected_keys
+                if key in DEPARTURE_TYPE_TO_CLASS
+            ]
+
+            return self.async_create_entry(
+                title=name,
+                data={
+                    CONF_STOP_ID: stop_id,
+                    CONF_NAME: name,
+                    CONF_DEPARTURE_TYPE: departure_types,
+                    CONF_DIRECTION: user_input.get(CONF_DIRECTION, []),
+                    CONF_ROUTE: user_input.get(CONF_ROUTE, []),
+                },
+            )
+        user_input = {}
+        return self.async_show_form(
+            step_id="stop",
+            data_schema=CONFIG_STOP_SCHEMA,
         )
+
+    async_step_user = async_step_stop
