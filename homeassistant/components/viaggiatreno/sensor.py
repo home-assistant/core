@@ -144,6 +144,7 @@ class ViaggiaTrenoSensor(SensorEntity):
         if self._tstatus is not None:
             if self._tstatus.state == TrainState.CANCELLED:
                 self._state = CANCELLED_STRING
+                self._icon = "mdi:cancel"
             elif self._tstatus.state == TrainState.NOT_YET_DEPARTED:
                 self._state = NOT_DEPARTED_STRING
             elif self._tstatus.state == TrainState.ARRIVED:
