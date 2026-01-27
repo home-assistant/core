@@ -2,28 +2,29 @@
 
 from __future__ import annotations
 
+import email.utils
+import logging
+import os
+import smtplib
+import socket
+import ssl
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import email.utils
-import logging
-import os
 from pathlib import Path
-import smtplib
-import socket
-import ssl
 from typing import Any
 
 import voluptuous as vol
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
+)
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
 )
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -41,9 +42,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
-from homeassistant.util.ssl import create_client_context
+from homeassistant.util.ssl import client_context
 
 from .const import (
+    ATTR_FROM_NAME,
     ATTR_HTML,
     ATTR_IMAGES,
     CONF_DEBUG,
@@ -82,14 +84,46 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MailNotificationService | None:
     """Get the mail notification service."""
+    if discovery_info is None:
+        # YAML configuration - use legacy setup
+        return await hass.async_add_executor_job(
+            get_service, hass, config, discovery_info
+        )
+
+    # Config entry setup via discovery
+    verify_ssl = discovery_info[CONF_VERIFY_SSL]
+    ssl_context = client_context() if verify_ssl else None
+
+    return MailNotificationService(
+        discovery_info[CONF_SERVER],
+        discovery_info[CONF_PORT],
+        discovery_info[CONF_TIMEOUT],
+        discovery_info[CONF_SENDER],
+        discovery_info[CONF_ENCRYPTION],
+        discovery_info.get(CONF_USERNAME),
+        discovery_info.get(CONF_PASSWORD),
+        discovery_info[CONF_RECIPIENT],
+        discovery_info.get(CONF_SENDER_NAME),
+        discovery_info[CONF_DEBUG],
+        verify_ssl,
+        ssl_context,
+    )
+
+
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> MailNotificationService | None:
+    """Get the mail notification service (legacy YAML)."""
     setup_reload_service(hass, DOMAIN, PLATFORMS)
-    ssl_context = create_client_context() if config[CONF_VERIFY_SSL] else None
+    ssl_context = client_context() if config[CONF_VERIFY_SSL] else None
     mail_service = MailNotificationService(
         config[CONF_SERVER],
         config[CONF_PORT],
@@ -198,10 +232,12 @@ class MailNotificationService(BaseNotificationService):
         Will send plain text normally, with pictures as attachments if images config is
         defined, or will build a multipart HTML if html config is defined.
         """
-        subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+        subject = kwargs.get(ATTR_TITLE) or kwargs.get("title", ATTR_TITLE_DEFAULT)
 
         msg: MIMEMultipart | MIMEText
-        if data := kwargs.get(ATTR_DATA):
+        data = kwargs.get(ATTR_DATA) or kwargs.get("data", {})
+
+        if data:
             if ATTR_HTML in data:
                 msg = _build_html_msg(
                     self.hass,
@@ -218,14 +254,19 @@ class MailNotificationService(BaseNotificationService):
 
         msg["Subject"] = subject
 
-        if targets := kwargs.get(ATTR_TARGET):
-            recipients: list[str] = targets  # ensured by NOTIFY_SERVICE_SCHEMA
+        if targets := kwargs.get(ATTR_TARGET) or kwargs.get("target"):
+            recipients: list[str] = targets
         else:
             recipients = self.recipients
         msg["To"] = ",".join(recipients)
 
-        if self._sender_name:
-            msg["From"] = f"{self._sender_name} <{self._sender}>"
+        # Allow overriding sender name per message
+        sender_name = data.get(ATTR_FROM_NAME) if data else None
+        if sender_name is None:
+            sender_name = self._sender_name
+
+        if sender_name:
+            msg["From"] = f"{sender_name} <{self._sender}>"
         else:
             msg["From"] = self._sender
 
@@ -321,7 +362,7 @@ def _build_multipart_msg(
     hass: HomeAssistant, message: str, images: list[str]
 ) -> MIMEMultipart:
     """Build Multipart message with images as attachments."""
-    _LOGGER.debug("Building multipart email with image attachme_build_html_msgnt(s)")
+    _LOGGER.debug("Building multipart email with image attachment(s)")
     msg = MIMEMultipart()
     body_txt = MIMEText(message)
     msg.attach(body_txt)

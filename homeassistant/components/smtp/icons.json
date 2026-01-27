@@ -1,7 +1,7 @@
 {
   "services": {
-    "reload": {
-      "service": "mdi:reload"
+    "send_message": {
+      "service": "mdi:at"
     }
   }
 }
