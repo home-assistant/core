@@ -1,7 +1,61 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted climate-control devices.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted climates to trigger on.",
     "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_cooling": {
+      "description": "Tests if one or more climate-control devices are cooling.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::condition_behavior_description%]",
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device is cooling"
+    },
+    "is_drying": {
+      "description": "Tests if one or more climate-control devices are drying.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::condition_behavior_description%]",
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device is drying"
+    },
+    "is_heating": {
+      "description": "Tests if one or more climate-control devices are heating.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::condition_behavior_description%]",
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device is heating"
+    },
+    "is_off": {
+      "description": "Tests if one or more climate-control devices are off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::condition_behavior_description%]",
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more climate-control devices are on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::condition_behavior_description%]",
+          "name": "[%key:component::climate::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device is on"
+    }
   },
   "device_automation": {
     "action_type": {
@@ -181,6 +235,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "hvac_mode": {
       "options": {
         "auto": "[%key:common::state::auto%]",
