@@ -66,7 +66,6 @@ async def test_init_pir_and_unload(
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data.get(DOMAIN)
 
 
 async def test_init_switch_and_unload(

@@ -108,26 +108,28 @@ async def async_setup_entry(
 ) -> None:
     """Set up the myStrom entities."""
     device = entry.runtime_data.device
+    info = entry.runtime_data.info
 
     entities: list[MyStromSensorBase] = []
     match device:
         case MyStromPir():
             entities = [
-                MyStromSensor(device, entry.title, description)
+                MyStromSensor(device, entry.title, description, info["mac"])
                 for description in SENSOR_TYPES_PIR
                 if description.value_fn(device) is not None
             ]
         case MyStromSwitch():
             entities = [
-                MyStromSensor(device, entry.title, description)
+                MyStromSensor(device, entry.title, description, info["mac"])
                 for description in SENSOR_TYPES_SWITCH
                 if description.value_fn(device) is not None
             ]
+            if device.time_since_boot is not None:
+                entities.append(
+                    MyStromSwitchUptimeSensor(device, entry.title, info["mac"])
+                )
         case _:
             entities = []
-
-    if device.time_since_boot is not None:
-        entities.append(MyStromSwitchUptimeSensor(device, entry.title))
 
     async_add_entities(entities)
 
@@ -142,13 +144,14 @@ class MyStromSensorBase(SensorEntity):
         device: MyStromSwitch,
         name: str,
         key: str,
+        mac: str,
     ) -> None:
         """Initialize the sensor."""
         self.device = device
-        self._attr_unique_id = f"{device.mac}-{key}"
+        self._attr_unique_id = f"{mac}-{key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.mac)},
-            connections={(CONNECTION_NETWORK_MAC, device.mac)},
+            identifiers={(DOMAIN, mac)},
+            connections={(CONNECTION_NETWORK_MAC, mac)},
             name=name,
             manufacturer=MANUFACTURER,
             sw_version=getattr(device, "firmware", None),
@@ -160,14 +163,17 @@ class MyStromSensor[_DeviceT](MyStromSensorBase):
 
     entity_description: MyStromSensorEntityDescription[_DeviceT]
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         device: _DeviceT,
         name: str,
         description: MyStromSensorEntityDescription[_DeviceT],
+        mac: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device, name, description.key)
+        super().__init__(device, name, description.key, mac)
         self.entity_description = description
 
     @property
@@ -190,9 +196,10 @@ class MyStromSwitchUptimeSensor(MyStromSensorBase):
         self,
         device: MyStromSwitch,
         name: str,
+        mac: str,
     ) -> None:
         """Initialize the uptime sensor."""
-        super().__init__(device, name, self.entity_description.key)
+        super().__init__(device, name, self.entity_description.key, mac)
         self._last_value: datetime | None = None
         self._last_attributes: dict[str, Any] = {}
 
