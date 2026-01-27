@@ -13,7 +13,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -114,6 +118,7 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
         native_unit_of_measurement_fn=lambda x: x.pollutants.co.concentration.units,
         exists_fn=lambda x: "co" in {p.code for p in x.pollutants},
         value_fn=lambda x: x.pollutants.co.concentration.value,
+        suggested_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
     ),
     AirQualitySensorEntityDescription(
         key="nh3",
@@ -133,24 +138,24 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
     ),
     AirQualitySensorEntityDescription(
         key="no",
-        translation_key="nitrogen_monoxide",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
         native_unit_of_measurement_fn=lambda x: x.pollutants.no.concentration.units,
         value_fn=lambda x: x.pollutants.no.concentration.value,
         exists_fn=lambda x: "no" in {p.code for p in x.pollutants},
     ),
     AirQualitySensorEntityDescription(
         key="no2",
-        translation_key="nitrogen_dioxide",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         native_unit_of_measurement_fn=lambda x: x.pollutants.no2.concentration.units,
         exists_fn=lambda x: "no2" in {p.code for p in x.pollutants},
         value_fn=lambda x: x.pollutants.no2.concentration.value,
     ),
     AirQualitySensorEntityDescription(
         key="o3",
-        translation_key="ozone",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.OZONE,
         native_unit_of_measurement_fn=lambda x: x.pollutants.o3.concentration.units,
         exists_fn=lambda x: "o3" in {p.code for p in x.pollutants},
         value_fn=lambda x: x.pollutants.o3.concentration.value,
@@ -173,8 +178,8 @@ AIR_QUALITY_SENSOR_TYPES: tuple[AirQualitySensorEntityDescription, ...] = (
     ),
     AirQualitySensorEntityDescription(
         key="so2",
-        translation_key="sulphur_dioxide",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
         native_unit_of_measurement_fn=lambda x: x.pollutants.so2.concentration.units,
         exists_fn=lambda x: "so2" in {p.code for p in x.pollutants},
         value_fn=lambda x: x.pollutants.so2.concentration.value,

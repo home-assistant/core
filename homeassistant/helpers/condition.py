@@ -17,6 +17,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Final,
+    Literal,
     Protocol,
     TypedDict,
     Unpack,
@@ -330,12 +331,11 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 )
 
 
-class EntityStateConditionBase(Condition):
-    """State condition."""
+class EntityConditionBase(Condition):
+    """Base class for entity conditions."""
 
     _domain: str
     _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
-    _states: set[str]
 
     @override
     @classmethod
@@ -362,19 +362,23 @@ class EntityStateConditionBase(Condition):
             if split_entity_id(entity_id)[0] == self._domain
         }
 
+    @abc.abstractmethod
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches the expected state(s)."""
+
     @override
     async def async_get_checker(self) -> ConditionChecker:
         """Get the condition checker."""
 
-        def check_any_match_state(states: list[str]) -> bool:
-            """Test if any entity match the state."""
-            return any(state in self._states for state in states)
+        def check_any_match_state(states: list[State]) -> bool:
+            """Test if any entity matches the state."""
+            return any(self.is_valid_state(state) for state in states)
 
-        def check_all_match_state(states: list[str]) -> bool:
+        def check_all_match_state(states: list[State]) -> bool:
             """Test if all entities match the state."""
-            return all(state in self._states for state in states)
+            return all(self.is_valid_state(state) for state in states)
 
-        matcher: Callable[[list[str]], bool]
+        matcher: Callable[[list[State]], bool]
         if self._behavior == BEHAVIOR_ANY:
             matcher = check_any_match_state
         elif self._behavior == BEHAVIOR_ALL:
@@ -390,7 +394,7 @@ class EntityStateConditionBase(Condition):
             )
             filtered_entity_ids = self.entity_filter(referenced_entity_ids)
             entity_states = [
-                _state.state
+                _state
                 for entity_id in filtered_entity_ids
                 if (_state := self._hass.states.get(entity_id))
                 and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
@@ -398,6 +402,16 @@ class EntityStateConditionBase(Condition):
             return matcher(entity_states)
 
         return test_state
+
+
+class EntityStateConditionBase(EntityConditionBase):
+    """State condition."""
+
+    _states: set[str]
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches the expected state(s)."""
+        return entity_state.state in self._states
 
 
 def make_entity_state_condition(
@@ -415,6 +429,37 @@ def make_entity_state_condition(
 
         _domain = domain
         _states = states_set
+
+    return CustomCondition
+
+
+class EntityStateAttributeConditionBase(EntityConditionBase):
+    """State attribute condition."""
+
+    _attribute: str
+    _attribute_states: set[str]
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches the expected state(s)."""
+        return entity_state.attributes.get(self._attribute) in self._attribute_states
+
+
+def make_entity_state_attribute_condition(
+    domain: str, attribute: str, attribute_states: str | set[str]
+) -> type[EntityStateAttributeConditionBase]:
+    """Create a condition for entity attribute matching specific state(s)."""
+
+    if isinstance(attribute_states, str):
+        attribute_states_set = {attribute_states}
+    else:
+        attribute_states_set = attribute_states
+
+    class CustomCondition(EntityStateAttributeConditionBase):
+        """Condition for entity attribute."""
+
+        _domain = domain
+        _attribute = attribute
+        _attribute_states = attribute_states_set
 
     return CustomCondition
 
@@ -1346,13 +1391,18 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
         if entity_ids is not None:
             referenced.update(entity_ids)
 
+        if target_entities := _get_targets_from_condition_config(
+            config, CONF_ENTITY_ID
+        ):
+            referenced.update(target_entities)
+
     return referenced
 
 
 @callback
 def async_extract_devices(config: ConfigType | Template) -> set[str]:
     """Extract devices from a condition."""
-    referenced = set()
+    referenced: set[str] = set()
     to_process = deque([config])
 
     while to_process:
@@ -1366,13 +1416,55 @@ def async_extract_devices(config: ConfigType | Template) -> set[str]:
             to_process.extend(config["conditions"])
             continue
 
-        if condition != "device":
+        if condition == "device":
+            if (device_id := config.get(CONF_DEVICE_ID)) is not None:
+                referenced.add(device_id)
             continue
 
-        if (device_id := config.get(CONF_DEVICE_ID)) is not None:
-            referenced.add(device_id)
+        if target_devices := _get_targets_from_condition_config(config, CONF_DEVICE_ID):
+            referenced.update(target_devices)
 
     return referenced
+
+
+@callback
+def async_extract_targets(
+    config: ConfigType | Template,
+    target_type: Literal["area_id", "floor_id", "label_id"],
+) -> set[str]:
+    """Extract targets from a condition."""
+    referenced: set[str] = set()
+    to_process = deque([config])
+
+    while to_process:
+        config = to_process.popleft()
+        if isinstance(config, Template):
+            continue
+
+        condition = config[CONF_CONDITION]
+
+        if condition in ("and", "not", "or"):
+            to_process.extend(config["conditions"])
+            continue
+
+        if targets := _get_targets_from_condition_config(config, target_type):
+            referenced.update(targets)
+
+    return referenced
+
+
+@callback
+def _get_targets_from_condition_config(
+    config: ConfigType,
+    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+) -> list[str]:
+    """Extract targets from a condition target config."""
+    if not (target_conf := config.get(CONF_TARGET)):
+        return []
+    if not (targets := target_conf.get(target)):
+        return []
+
+    return [targets] if isinstance(targets, str) else targets
 
 
 def _load_conditions_file(integration: Integration) -> dict[str, Any]:
