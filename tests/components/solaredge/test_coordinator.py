@@ -32,6 +32,7 @@ from .conftest import API_KEY, PASSWORD, SITE_ID, USERNAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
@@ -425,7 +426,7 @@ async def test_storage_data_service(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    aioclient_mock,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test storage data service fetches battery charge/discharge energy."""
     mock_config_entry = MockConfigEntry(
@@ -510,7 +511,7 @@ async def test_storage_data_service_no_batteries(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    aioclient_mock,
+    aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test storage data service handles empty battery data."""

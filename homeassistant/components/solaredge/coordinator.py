@@ -7,6 +7,7 @@ from collections.abc import Iterable
 from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
+from aiohttp import ClientError
 from aiosolaredge import SolarEdge
 from solaredge_web import EnergyData, SolarEdgeWeb, TimeUnit
 
@@ -377,7 +378,7 @@ class SolarEdgeStorageDataService(SolarEdgeDataService):
             async with self._session.get(url, params=params) as response:
                 response.raise_for_status()
                 data = await response.json()
-        except Exception as ex:
+        except ClientError as ex:
             raise UpdateFailed(f"Error fetching storage data: {ex}") from ex
 
         storage_data = data.get("storageData", {})
