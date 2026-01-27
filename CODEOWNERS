@@ -641,6 +641,8 @@ build.json @home-assistant/supervisor
 /tests/components/gpsd/ @fabaff @jrieger
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche
+/homeassistant/components/green_planet_energy/ @petschni
+/tests/components/green_planet_energy/ @petschni
 /homeassistant/components/greeneye_monitor/ @jkeljo
 /tests/components/greeneye_monitor/ @jkeljo
 /homeassistant/components/group/ @home-assistant/core
@@ -661,6 +663,8 @@ build.json @home-assistant/supervisor
 /tests/components/harmony/ @ehendrix23 @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
+/homeassistant/components/hdfury/ @glenndehaan
+/tests/components/hdfury/ @glenndehaan
 /homeassistant/components/hdmi_cec/ @inytar
 /tests/components/hdmi_cec/ @inytar
 /homeassistant/components/heatmiser/ @andylockran
@@ -1015,8 +1019,8 @@ build.json @home-assistant/supervisor
 /tests/components/mill/ @danielhiversen
 /homeassistant/components/min_max/ @gjohansson-ST
 /tests/components/min_max/ @gjohansson-ST
-/homeassistant/components/minecraft_server/ @elmurato
-/tests/components/minecraft_server/ @elmurato
+/homeassistant/components/minecraft_server/ @elmurato @zachdeibert
+/tests/components/minecraft_server/ @elmurato @zachdeibert
 /homeassistant/components/minio/ @tkislan
 /tests/components/minio/ @tkislan
 /homeassistant/components/moat/ @bdraco
@@ -1066,6 +1070,8 @@ build.json @home-assistant/supervisor
 /tests/components/myuplink/ @pajzo @astrandb
 /homeassistant/components/nam/ @bieniu
 /tests/components/nam/ @bieniu
+/homeassistant/components/namecheapdns/ @tr4nt0r
+/tests/components/namecheapdns/ @tr4nt0r
 /homeassistant/components/nanoleaf/ @milanmeu @joostlek
 /tests/components/nanoleaf/ @milanmeu @joostlek
 /homeassistant/components/nasweb/ @nasWebio
@@ -1120,6 +1126,8 @@ build.json @home-assistant/supervisor
 /tests/components/notify_events/ @matrozov @papajojo
 /homeassistant/components/notion/ @bachya
 /tests/components/notion/ @bachya
+/homeassistant/components/nrgkick/ @andijakl
+/tests/components/nrgkick/ @andijakl
 /homeassistant/components/nsw_fuel_station/ @nickw444
 /tests/components/nsw_fuel_station/ @nickw444
 /homeassistant/components/nsw_rural_fire_service_feed/ @exxamalte
@@ -1170,8 +1178,8 @@ build.json @home-assistant/supervisor
 /tests/components/open_router/ @joostlek
 /homeassistant/components/openerz/ @misialq
 /tests/components/openerz/ @misialq
-/homeassistant/components/openevse/ @c00w
-/tests/components/openevse/ @c00w
+/homeassistant/components/openevse/ @c00w @firstof9
+/tests/components/openevse/ @c00w @firstof9
 /homeassistant/components/openexchangerates/ @MartinHjelmare
 /tests/components/openexchangerates/ @MartinHjelmare
 /homeassistant/components/opengarage/ @danielhiversen
@@ -1269,7 +1277,8 @@ build.json @home-assistant/supervisor
 /tests/components/prosegur/ @dgomes
 /homeassistant/components/proximity/ @mib1185
 /tests/components/proximity/ @mib1185
-/homeassistant/components/proxmoxve/ @jhollowe @Corbeno
+/homeassistant/components/proxmoxve/ @jhollowe @Corbeno @erwindouna
+/tests/components/proxmoxve/ @jhollowe @Corbeno @erwindouna
 /homeassistant/components/ps4/ @ktnrg45
 /tests/components/ps4/ @ktnrg45
 /homeassistant/components/pterodactyl/ @elmurato
@@ -1717,6 +1726,8 @@ build.json @home-assistant/supervisor
 /tests/components/twinkly/ @dr1rrb @Robbie1221 @Olen
 /homeassistant/components/twitch/ @joostlek
 /tests/components/twitch/ @joostlek
+/homeassistant/components/uhoo/ @getuhoo @joshsmonta
+/tests/components/uhoo/ @getuhoo @joshsmonta
 /homeassistant/components/ukraine_alarm/ @PaulAnnekov
 /tests/components/ukraine_alarm/ @PaulAnnekov
 /homeassistant/components/unifi/ @Kane610
@@ -1803,6 +1814,8 @@ build.json @home-assistant/supervisor
 /tests/components/waqi/ @joostlek
 /homeassistant/components/water_heater/ @home-assistant/core
 /tests/components/water_heater/ @home-assistant/core
+/homeassistant/components/waterfurnace/ @sdague @masterkoppa
+/tests/components/waterfurnace/ @sdague @masterkoppa
 /homeassistant/components/watergate/ @adam-the-hero
 /tests/components/watergate/ @adam-the-hero
 /homeassistant/components/watson_tts/ @rutkai

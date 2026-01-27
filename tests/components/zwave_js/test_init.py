@@ -2077,18 +2077,18 @@ async def test_identify_event(
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
     assert (
-        "network `Mock Title`, with the home ID `3245146787`"
+        "network `Mock Title`, with the home ID `0xc16d02a3`"
         in notifications[msg_id]["message"]
     )
     async_dismiss(hass, msg_id)
 
     # Test case where config entry title and home ID do match
-    hass.config_entries.async_update_entry(integration, title="3245146787")
+    hass.config_entries.async_update_entry(integration, title="0xc16d02a3")
     client.driver.controller.receive_event(event)
     notifications = async_get_persistent_notifications(hass)
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
-    assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
+    assert "network with the home ID `0xc16d02a3`" in notifications[msg_id]["message"]
 
 
 async def test_server_logging(
@@ -2241,13 +2241,13 @@ async def test_factory_reset_node(
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
     assert (
-        "network `Mock Title`, with the home ID `3245146787`"
+        "network `Mock Title`, with the home ID `0xc16d02a3`"
         in notifications[msg_id]["message"]
     )
     async_dismiss(hass, msg_id)
 
     # Test case where config entry title and home ID do match
-    hass.config_entries.async_update_entry(integration, title="3245146787")
+    hass.config_entries.async_update_entry(integration, title="0xc16d02a3")
     add_event = Event(
         type="node added",
         data={
@@ -2264,7 +2264,7 @@ async def test_factory_reset_node(
     notifications = async_get_persistent_notifications(hass)
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
-    assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
+    assert "network with the home ID `0xc16d02a3`" in notifications[msg_id]["message"]
 
 
 async def test_entity_available_when_node_dead(

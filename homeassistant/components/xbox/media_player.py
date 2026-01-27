@@ -76,6 +76,7 @@ async def async_setup_entry(
                 ]
             )
             devices_added |= new_devices
+        devices_added &= set(consoles.data)
 
     entry.async_on_unload(consoles.async_add_listener(add_entities))
     add_entities()
@@ -156,6 +157,8 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
             await self.client.smartglass.mute(self._console.id)
         else:
             await self.client.smartglass.unmute(self._console.id)
+        self._attr_is_volume_muted = mute
+        self.async_write_ha_state()
 
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
