@@ -191,7 +191,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_hassio_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm the app discovery."""
+        """Confirm the Home Assistant app discovery."""
         if TYPE_CHECKING:
             assert self.url is not None
 
