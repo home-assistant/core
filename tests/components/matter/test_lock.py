@@ -354,6 +354,13 @@ async def test_set_lock_usercode(
     matter_node: MatterNode,
 ) -> None:
     """Test setting a usercode on a Matter lock."""
+    # Mock a successful SetCredentialResponse
+    matter_client.send_device_command.return_value = {
+        "status": 0,
+        "userIndex": 1,
+        "nextCredentialIndex": 2,
+    }
+
     await hass.services.async_call(
         "matter",
         "set_lock_usercode",
@@ -369,11 +376,16 @@ async def test_set_lock_usercode(
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
-        command=clusters.DoorLock.Commands.SetPinCode(
-            userIndex=0,  # code_slot 1 -> index 0 (0-based)
-            userStatus=clusters.DoorLock.Enums.UserStatusEnum.kEnabled,
-            userType=clusters.DoorLock.Enums.UserTypeEnum.kUnrestricted,
-            pin=b"1234",
+        command=clusters.DoorLock.Commands.SetCredential(
+            operationType=clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd,
+            credential=clusters.DoorLock.Structs.CredentialStruct(
+                credentialType=clusters.DoorLock.Enums.CredentialTypeEnum.kPin,
+                credentialIndex=1,
+            ),
+            credentialData=b"1234",
+            userIndex=0,
+            userStatus=clusters.DoorLock.Enums.UserStatusEnum.kOccupiedEnabled,
+            userType=clusters.DoorLock.Enums.UserTypeEnum.kUnrestrictedUser,
         ),
         timed_request_timeout_ms=1000,
     )
@@ -400,8 +412,11 @@ async def test_clear_lock_usercode(
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
-        command=clusters.DoorLock.Commands.ClearPinCode(
-            userIndex=2,  # code_slot 3 -> index 2 (0-based)
+        command=clusters.DoorLock.Commands.ClearCredential(
+            credential=clusters.DoorLock.Structs.CredentialStruct(
+                credentialType=clusters.DoorLock.Enums.CredentialTypeEnum.kPin,
+                credentialIndex=3,
+            ),
         ),
         timed_request_timeout_ms=1000,
     )

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from chip.clusters import Objects as clusters
+from matter_server.common.errors import MatterError
 from matter_server.common.models import EventType, MatterNodeEvent
 
 from homeassistant.components.lock import (
@@ -17,6 +18,7 @@ from homeassistant.components.lock import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
@@ -200,35 +202,73 @@ class MatterLock(MatterEntity, LockEntity):
         )
 
     async def async_set_usercode(self, code_slot: int, usercode: str) -> None:
-        """Set a usercode on the lock."""
-        await self.send_device_command(
-            command=clusters.DoorLock.Commands.SetPinCode(
-                userIndex=code_slot - 1,  # Matter user indexes are 0-based
-                userStatus=clusters.DoorLock.Enums.UserStatusEnum.kEnabled,
-                userType=clusters.DoorLock.Enums.UserTypeEnum.kUnrestricted,
-                pin=usercode.encode(),
-            ),
-            timed_request_timeout_ms=1000,
-        )
+        """Set a usercode on the lock.
 
-    async def async_clear_usercode(self, code_slot: int) -> None:
-        """Clear a usercode on the lock."""
-        await self.send_device_command(
-            command=clusters.DoorLock.Commands.ClearPinCode(
-                userIndex=code_slot - 1  # Matter user indexes are 0-based
-            ),
-            timed_request_timeout_ms=1000,
-        )
-
-    async def async_get_user(self, user_index: int) -> dict[str, Any]:
-        """Get user information from the lock."""
+        Uses SetCredential which creates the user automatically if needed.
+        code_slot maps to credential_index (1-based).
+        Passing userIndex=0 tells the lock to auto-assign or create a user.
+        """
         result = await self.matter_client.send_device_command(
             node_id=self._endpoint.node.node_id,
             endpoint_id=self._endpoint.endpoint_id,
-            command=clusters.DoorLock.Commands.GetUser(
-                userIndex=user_index,
+            command=clusters.DoorLock.Commands.SetCredential(
+                operationType=clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd,
+                credential=clusters.DoorLock.Structs.CredentialStruct(
+                    credentialType=clusters.DoorLock.Enums.CredentialTypeEnum.kPin,
+                    credentialIndex=code_slot,
+                ),
+                credentialData=usercode.encode(),
+                userIndex=0,  # 0 = let the lock auto-assign a user
+                userStatus=clusters.DoorLock.Enums.UserStatusEnum.kOccupiedEnabled,
+                userType=clusters.DoorLock.Enums.UserTypeEnum.kUnrestrictedUser,
             ),
+            timed_request_timeout_ms=1000,
         )
+        if isinstance(result, dict):
+            status = result.get("status", -1)
+            if status != 0:
+                raise HomeAssistantError(
+                    f"SetCredential failed with status {status} for slot {code_slot}. "
+                    "The lock may not support remote PIN management."
+                )
+            LOGGER.debug(
+                "SetCredential succeeded for slot %s, userIndex=%s",
+                code_slot,
+                result.get("userIndex"),
+            )
+
+    async def async_clear_usercode(self, code_slot: int) -> None:
+        """Clear a usercode on the lock."""
+        try:
+            await self.send_device_command(
+                command=clusters.DoorLock.Commands.ClearCredential(
+                    credential=clusters.DoorLock.Structs.CredentialStruct(
+                        credentialType=clusters.DoorLock.Enums.CredentialTypeEnum.kPin,
+                        credentialIndex=code_slot,
+                    ),
+                ),
+                timed_request_timeout_ms=1000,
+            )
+        except (MatterError, HomeAssistantError) as err:
+            LOGGER.warning("ClearCredential failed for slot %s: %s", code_slot, err)
+
+    async def async_get_user(self, user_index: int) -> dict[str, Any]:
+        """Get user information from the lock."""
+        try:
+            result = await self.matter_client.send_device_command(
+                node_id=self._endpoint.node.node_id,
+                endpoint_id=self._endpoint.endpoint_id,
+                command=clusters.DoorLock.Commands.GetUser(
+                    userIndex=user_index,
+                ),
+            )
+        except (MatterError, HomeAssistantError) as err:
+            LOGGER.warning("GetUser command failed for user %s: %s", user_index, err)
+            return {
+                "user_index": user_index,
+                "exists": False,
+                "error": str(err),
+            }
         if result is None:
             return {"user_index": user_index, "exists": False}
         return {
@@ -353,5 +393,6 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterLock,
         required_attributes=(clusters.DoorLock.Attributes.LockState,),
+        allow_multi=True,  # also used for door lock event entity
     ),
 ]
