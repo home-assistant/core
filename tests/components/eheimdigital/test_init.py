@@ -1,18 +1,63 @@
 """Tests for the init module."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from eheimdigital.types import EheimDeviceType, EheimDigitalClientError
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import init_integration
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
+
+
+async def test_dynamic_entities(
+    hass: HomeAssistant,
+    eheimdigital_hub_mock: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test dynamic adding of entities."""
+    mock_config_entry.add_to_hass(hass)
+    heater_data = eheimdigital_hub_mock.return_value.devices[
+        "00:00:00:00:00:02"
+    ].heater_data
+    eheimdigital_hub_mock.return_value.devices["00:00:00:00:00:02"].heater_data = None
+    with (
+        patch(
+            "homeassistant.components.eheimdigital.coordinator.asyncio.Event",
+            new=AsyncMock,
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    for device in eheimdigital_hub_mock.return_value.devices:
+        await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
+            device, eheimdigital_hub_mock.return_value.devices[device].device_type
+        )
+        await hass.async_block_till_done()
+
+    assert (
+        "00:00:00:00:00:02"
+        in mock_config_entry.runtime_data.unsuccessful_configured_devices
+    )
+
+    eheimdigital_hub_mock.return_value.devices[
+        "00:00:00:00:00:02"
+    ].heater_data = heater_data
+
+    await mock_config_entry.runtime_data._async_receive_callback()
+
+    assert len(mock_config_entry.runtime_data.unsuccessful_configured_devices) == 0
+    assert hass.states.get("number.mock_heater_night_temperature_offset").state == str(
+        eheimdigital_hub_mock.return_value.devices[
+            "00:00:00:00:00:02"
+        ].night_temperature_offset
+    )
 
 
 async def test_remove_device(
