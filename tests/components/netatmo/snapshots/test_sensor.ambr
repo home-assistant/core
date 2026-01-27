@@ -1224,7 +1224,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Cold water None',
+      'friendly_name': 'Cold water',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cold_water',
@@ -1274,7 +1274,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Consumption meter None',
+      'friendly_name': 'Consumption meter',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.consumption_meter',
@@ -1437,7 +1437,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Écocompteur None',
+      'friendly_name': 'Écocompteur',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ecocompteur',
@@ -1487,7 +1487,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Gas None',
+      'friendly_name': 'Gas',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gas',
@@ -3319,7 +3319,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Hot water None',
+      'friendly_name': 'Hot water',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hot_water',
@@ -3942,7 +3942,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 1 None',
+      'friendly_name': 'Line 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.line_1',
@@ -3992,7 +3992,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 2 None',
+      'friendly_name': 'Line 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.line_2',
@@ -4042,7 +4042,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 3 None',
+      'friendly_name': 'Line 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.line_3',
@@ -4092,7 +4092,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 4 None',
+      'friendly_name': 'Line 4',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.line_4',
@@ -4142,7 +4142,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 5 None',
+      'friendly_name': 'Line 5',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.line_5',
@@ -5393,7 +5393,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Prise None',
+      'friendly_name': 'Prise',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.prise',
@@ -5501,7 +5501,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Total None',
+      'friendly_name': 'Total',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.total',

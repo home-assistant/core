@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["compit"],
   "quality_scale": "bronze",
-  "requirements": ["compit-inext-api==0.5.0"]
+  "requirements": ["compit-inext-api==0.6.0"]
 }
