@@ -34,6 +34,13 @@ class UnraidFlowError(Exception):
         super().__init__()
 
 
+class UnraidAbortFlow(Exception):
+    """Exception to abort the config flow."""
+
+    def __init__(self, reason: str) -> None:
+        """Initialize the abort exception."""
+        self.reason = reason
+        super().__init__()
 
 
 USER_SCHEMA = vol.Schema(
@@ -144,6 +151,8 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception as err:
             _LOGGER.exception("Unexpected error during connection test")
             raise UnraidFlowError("unknown") from err
+        finally:
+            await api_client.close()
 
         # Success - set SSL preference
         self._use_ssl = use_ssl
@@ -183,5 +192,6 @@ class UnraidConfigFlow(ConfigFlow, domain=DOMAIN):
             current = AwesomeVersion(api_version)
             minimum = AwesomeVersion(MIN_API_VERSION)
         except AwesomeVersionException:
-            return True
+            _LOGGER.error("Failed to parse API version: %s", api_version)
+            return False
         return current >= minimum

@@ -65,12 +65,7 @@ SYSTEM_SENSORS: tuple[UnraidSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
-        value_fn=lambda data: (
-            data.metrics.memory_total - data.metrics.memory_used
-            if data.metrics.memory_total is not None
-            and data.metrics.memory_used is not None
-            else None
-        ),
+        value_fn=lambda data: data.metrics.memory_used,
     ),
     UnraidSensorEntityDescription(
         key="uptime",

@@ -122,23 +122,16 @@ def mock_unraid_client(
     mock_system_data: UnraidSystemData,
 ) -> Generator[MagicMock]:
     """Return a mocked Unraid API client."""
-    with patch("homeassistant.components.unraid.UnraidClient") as mock_client_class:
-        mock_client_class.return_value = create_mock_unraid_client(
-            mock_server_info, mock_system_data
-        )
-        yield mock_client_class.return_value
-
-
-@pytest.fixture
-def mock_unraid_client_config_flow() -> Generator[MagicMock]:
-    """Return a mocked Unraid API client for config flow tests."""
-    with patch(
-        "homeassistant.components.unraid.config_flow.UnraidClient"
-    ) as mock_client_class:
-        mock_client_class.return_value = create_mock_unraid_client(
-            create_mock_server_info()
-        )
-        yield mock_client_class.return_value
+    with (
+        patch("homeassistant.components.unraid.UnraidClient") as mock_client_class,
+        patch(
+            "homeassistant.components.unraid.config_flow.UnraidClient",
+            new=mock_client_class,
+        ),
+    ):
+        client = create_mock_unraid_client(mock_server_info, mock_system_data)
+        mock_client_class.return_value = client
+        yield client
 
 
 @pytest.fixture

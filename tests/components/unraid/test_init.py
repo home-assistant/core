@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from unraid_api.exceptions import (
@@ -43,19 +43,17 @@ async def test_setup_entry(
 async def test_setup_entry_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_unraid_client: MagicMock,
     side_effect: Exception,
     expected_state: ConfigEntryState,
 ) -> None:
     """Test setup fails with various errors."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.unraid.UnraidClient") as mock_client_class:
-        client = MagicMock()
-        client.get_server_info = AsyncMock(side_effect=side_effect)
-        mock_client_class.return_value = client
+    mock_unraid_client.get_server_info.side_effect = side_effect
 
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state
 
