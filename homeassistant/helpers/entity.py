@@ -462,7 +462,7 @@ class Entity(
 
     # A group information in case the entity represents a group
     group: Group | None
-    _group: Group | None = None
+    __group: Group | None = None
 
     # If we reported if this entity was slow
     _slow_reported = False
@@ -1071,10 +1071,10 @@ class Entity(
         entry = self.registry_entry
 
         capability_attr = self.capability_attributes
-        if self._group is not None:
+        if self.__group is not None:
             capability_attr = capability_attr.copy() if capability_attr else {}
             capability_attr[ATTR_GROUP_ENTITIES] = (
-                self._group.included_entity_ids.copy()
+                self.__group.included_entity_ids.copy()
             )
 
         attr = capability_attr.copy() if capability_attr else {}
@@ -1524,8 +1524,8 @@ class Entity(
                     breaks_in_ha_version="2027.2",
                 )
             else:
-                self._group = self.group
-                self._group.async_added_to_hass()
+                self.__group = self.group
+                self.__group.async_added_to_hass()
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
@@ -1537,8 +1537,8 @@ class Entity(
         if self.platform:
             del entity_sources(self.hass)[self.entity_id]
 
-        if self._group is not None:
-            self._group.async_will_remove_from_hass()
+        if self.__group is not None:
+            self.__group.async_will_remove_from_hass()
 
     @callback
     def _async_registry_updated(
