@@ -8,6 +8,7 @@ from typing import Any
 from google_air_quality_api.api import GoogleAirQualityApi
 from google_air_quality_api.auth import Auth
 from google_air_quality_api.exceptions import GoogleAirQualityApiError
+from google_air_quality_api.mapping import AQICategoryMapping
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -28,11 +29,26 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
+from homeassistant.helpers.selector import (
+    CountrySelector,
+    LocationSelector,
+    LocationSelectorConfig,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
-from .const import CONF_REFERRER, DOMAIN, SECTION_API_KEY_OPTIONS
+from .const import (
+    CONF_REFERRER,
+    CUSTOM_LOCAL_AQI_OPTIONS,
+    DOMAIN,
+    SECTION_API_KEY_OPTIONS,
+)
 
 _LOGGER = logging.getLogger(__name__)
+AIR_QUALITY_COVERAGE_URL = (
+    "https://developers.google.com/maps/documentation/air-quality/coverage"
+)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -52,10 +68,18 @@ async def _validate_input(
     description_placeholders: dict[str, str],
 ) -> bool:
     try:
-        await api.async_get_current_conditions(
-            lat=user_input[CONF_LOCATION][CONF_LATITUDE],
-            lon=user_input[CONF_LOCATION][CONF_LONGITUDE],
-        )
+        if user_input[CUSTOM_LOCAL_AQI_OPTIONS]["enable_custom_laqi"]:
+            await api.async_get_current_conditions(
+                lat=user_input[CONF_LOCATION][CONF_LATITUDE],
+                lon=user_input[CONF_LOCATION][CONF_LONGITUDE],
+                region_code=user_input[CUSTOM_LOCAL_AQI_OPTIONS]["country"],
+                custom_local_aqi=user_input[CUSTOM_LOCAL_AQI_OPTIONS]["custom_laqi"],
+            )
+        if not user_input[CUSTOM_LOCAL_AQI_OPTIONS]["enable_custom_laqi"]:
+            await api.async_get_current_conditions(
+                lat=user_input[CONF_LOCATION][CONF_LATITUDE],
+                lon=user_input[CONF_LOCATION][CONF_LONGITUDE],
+            )
     except GoogleAirQualityApiError as err:
         errors["base"] = "cannot_connect"
         description_placeholders["error_message"] = str(err)
@@ -79,6 +103,23 @@ def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
                     CONF_LONGITUDE: hass.config.longitude,
                 },
             ): LocationSelector(LocationSelectorConfig(radius=False)),
+            vol.Optional(CUSTOM_LOCAL_AQI_OPTIONS): section(
+                vol.Schema(
+                    {
+                        vol.Required("enable_custom_laqi", default=False): bool,
+                        vol.Optional(
+                            "country", default=hass.config.country
+                        ): CountrySelector(),
+                        vol.Optional("custom_laqi"): SelectSelector(
+                            SelectSelectorConfig(
+                                options=list(AQICategoryMapping.get_all_laq_indices()),
+                                mode=SelectSelectorMode.DROPDOWN,
+                            )
+                        ),
+                    }
+                ),
+                SectionConfig(collapsed=True),
+            ),
         }
     )
 
@@ -122,6 +163,7 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {
             "api_key_url": "https://developers.google.com/maps/documentation/air-quality/get-api-key",
+            "air_quality_coverage_url": AIR_QUALITY_COVERAGE_URL,
             "restricting_api_keys_url": "https://developers.google.com/maps/api-security-best-practices#restricting-api-keys",
         }
         if user_input is not None:
@@ -184,8 +226,11 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="entry_not_loaded")
 
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {
+            "air_quality_coverage_url": AIR_QUALITY_COVERAGE_URL
+        }
         if user_input is not None:
+            _LOGGER.debug("User input: %s", user_input)
             if _is_location_already_configured(self.hass, user_input[CONF_LOCATION]):
                 errors["base"] = "location_already_configured"
             if _is_location_name_already_configured(self.hass, user_input[CONF_NAME]):
@@ -201,9 +246,11 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                     description_placeholders=description_placeholders,
                 )
             if await _validate_input(user_input, api, errors, description_placeholders):
+                data = user_input[CONF_LOCATION]
+                data[CUSTOM_LOCAL_AQI_OPTIONS] = user_input[CUSTOM_LOCAL_AQI_OPTIONS]
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
-                    data=user_input[CONF_LOCATION],
+                    data=data,
                 )
         else:
             user_input = {}
