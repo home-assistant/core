@@ -303,7 +303,6 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.Thermostat.Attributes.LocalTemperatureCalibration,
         ),
-        vendor_id=(4874,),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
