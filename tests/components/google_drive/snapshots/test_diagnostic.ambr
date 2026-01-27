@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'backup': list([
+      dict({
+        'addons': list([
+          dict({
+            'name': 'Test',
+            'slug': 'test',
+            'version': '1.0.0',
+          }),
+        ]),
+        'backup_id': 'test-backup',
+        'database_included': True,
+        'date': '2025-01-01T01:23:45.678Z',
+        'extra_metadata': dict({
+          'with_automatic_settings': False,
+        }),
+        'folders': list([
+        ]),
+        'homeassistant_included': True,
+        'homeassistant_version': '2024.12.0',
+        'name': 'Test',
+        'protected': False,
+        'size': 104857600.0,
+      }),
+    ]),
+    'backup_agents': list([
+      dict({
+        'name': 'Google Drive entry title',
+      }),
+    ]),
+    'backup_folder_id': 'HA folder ID',
+    'config': dict({
+      'auth_implementation': 'google_drive',
+      'token': dict({
+        'access_token': '**REDACTED**',
+        'expires_at': 1636047419.0,
+        'refresh_token': '**REDACTED**',
+        'scope': 'https://www.googleapis.com/auth/drive.file',
+      }),
+    }),
+    'coordinator_data': dict({
+      'all_backups_size': 104857600.0,
+      'storage_quota': dict({
+        'limit': 10737418240,
+        'usage': 5368709120,
+        'usage_in_drive': 2147483648,
+        'usage_in_trash': 1073741824,
+      }),
+    }),
+  })
+# ---

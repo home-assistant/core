@@ -50,10 +50,18 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.entity_platform import PlatformData
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.network import get_url
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.util import slugify
 
 from .camera import GenericCamera, generate_auth
@@ -67,17 +75,20 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     GET_IMAGE_TIMEOUT,
+    SECTION_ADVANCED,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DATA = {
     CONF_NAME: DEFAULT_NAME,
-    CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
-    CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
-    CONF_FRAMERATE: 2,
-    CONF_VERIFY_SSL: True,
-    CONF_RTSP_TRANSPORT: "tcp",
+    SECTION_ADVANCED: {
+        CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+        CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
+        CONF_FRAMERATE: 2,
+        CONF_VERIFY_SSL: True,
+        CONF_RTSP_TRANSPORT: "tcp",
+    },
 }
 
 SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
@@ -94,58 +105,47 @@ class InvalidStreamException(HomeAssistantError):
 
 
 def build_schema(
-    user_input: Mapping[str, Any],
     is_options_flow: bool = False,
     show_advanced_options: bool = False,
 ) -> vol.Schema:
     """Create schema for camera config setup."""
+    rtsp_options = [
+        SelectOptionDict(
+            value=value,
+            label=name,
+        )
+        for value, name in RTSP_TRANSPORTS.items()
+    ]
+
+    advanced_section = {
+        vol.Required(CONF_FRAMERATE): vol.All(
+            vol.Range(min=0, min_included=False), cv.positive_float
+        ),
+        vol.Required(CONF_VERIFY_SSL): bool,
+        vol.Optional(CONF_RTSP_TRANSPORT): SelectSelector(
+            SelectSelectorConfig(
+                options=rtsp_options,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        ),
+        vol.Optional(CONF_AUTHENTICATION): vol.In(
+            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
+        ),
+    }
     spec = {
-        vol.Optional(
-            CONF_STILL_IMAGE_URL,
-            description={"suggested_value": user_input.get(CONF_STILL_IMAGE_URL, "")},
-        ): str,
-        vol.Optional(
-            CONF_STREAM_SOURCE,
-            description={"suggested_value": user_input.get(CONF_STREAM_SOURCE, "")},
-        ): str,
-        vol.Optional(
-            CONF_RTSP_TRANSPORT,
-            description={"suggested_value": user_input.get(CONF_RTSP_TRANSPORT)},
-        ): vol.In(RTSP_TRANSPORTS),
-        vol.Optional(
-            CONF_AUTHENTICATION,
-            description={"suggested_value": user_input.get(CONF_AUTHENTICATION)},
-        ): vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
-        vol.Optional(
-            CONF_USERNAME,
-            description={"suggested_value": user_input.get(CONF_USERNAME, "")},
-        ): str,
-        vol.Optional(
-            CONF_PASSWORD,
-            description={"suggested_value": user_input.get(CONF_PASSWORD, "")},
-        ): str,
-        vol.Required(
-            CONF_FRAMERATE,
-            description={"suggested_value": user_input.get(CONF_FRAMERATE, 2)},
-        ): vol.All(vol.Range(min=0, min_included=False), cv.positive_float),
-        vol.Required(
-            CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
-        ): bool,
+        vol.Optional(CONF_STREAM_SOURCE): str,
+        vol.Optional(CONF_STILL_IMAGE_URL): str,
+        vol.Optional(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD): str,
+        vol.Required(SECTION_ADVANCED): section(
+            vol.Schema(advanced_section), {"collapsed": True}
+        ),
     }
     if is_options_flow:
-        spec[
-            vol.Required(
-                CONF_LIMIT_REFETCH_TO_URL_CHANGE,
-                default=user_input.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE, False),
-            )
-        ] = bool
+        advanced_section[vol.Optional(CONF_LIMIT_REFETCH_TO_URL_CHANGE)] = bool
         if show_advanced_options:
-            spec[
-                vol.Required(
-                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-                    default=user_input.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
-                )
-            ] = bool
+            advanced_section[vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS)] = bool
+
     return vol.Schema(spec)
 
 
@@ -187,7 +187,7 @@ async def async_test_still(
         return {CONF_STILL_IMAGE_URL: "malformed_url"}, None
     if not yarl_url.is_absolute():
         return {CONF_STILL_IMAGE_URL: "relative_url"}, None
-    verify_ssl = info[CONF_VERIFY_SSL]
+    verify_ssl = info[SECTION_ADVANCED][CONF_VERIFY_SSL]
     auth = generate_auth(info)
     try:
         async_client = get_async_client(hass, verify_ssl=verify_ssl)
@@ -268,9 +268,9 @@ async def async_test_and_preview_stream(
         _LOGGER.warning("Problem rendering template %s: %s", stream_source, err)
         raise InvalidStreamException("template_error") from err
     stream_options: dict[str, str | bool | float] = {}
-    if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
+    if rtsp_transport := info[SECTION_ADVANCED].get(CONF_RTSP_TRANSPORT):
         stream_options[CONF_RTSP_TRANSPORT] = rtsp_transport
-    if info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
+    if info[SECTION_ADVANCED].get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
         stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
 
     try:
@@ -326,7 +326,7 @@ def register_still_preview(hass: HomeAssistant) -> None:
 class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for generic IP camera."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize Generic ConfigFlow."""
@@ -381,7 +381,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input = DEFAULT_DATA.copy()
         return self.async_show_form(
             step_id="user",
-            data_schema=build_schema(user_input),
+            data_schema=self.add_suggested_values_to_schema(build_schema(), user_input),
             errors=errors,
         )
 
@@ -449,13 +449,19 @@ class GenericOptionsFlowHandler(OptionsFlow):
                     self.preview_stream = None
                 if not errors:
                     data = {
-                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS: self.config_entry.options.get(
-                            CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
-                        ),
                         **user_input,
                         CONF_CONTENT_TYPE: still_format
                         or self.config_entry.options.get(CONF_CONTENT_TYPE),
                     }
+                    if (
+                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS
+                        not in user_input[SECTION_ADVANCED]
+                    ):
+                        data[SECTION_ADVANCED][CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = (
+                            self.config_entry.options[SECTION_ADVANCED].get(
+                                CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                            )
+                        )
                     self.user_input = data
                     # temporary preview for user to check the image
                     self.preview_image_settings = data
@@ -464,10 +470,12 @@ class GenericOptionsFlowHandler(OptionsFlow):
             user_input = self.user_input
         return self.async_show_form(
             step_id="init",
-            data_schema=build_schema(
+            data_schema=self.add_suggested_values_to_schema(
+                build_schema(
+                    True,
+                    self.show_advanced_options,
+                ),
                 user_input or self.config_entry.options,
-                True,
-                self.show_advanced_options,
             ),
             errors=errors,
         )
@@ -583,7 +591,8 @@ async def ws_start_preview(
         _LOGGER.debug("Got preview still URL: %s", ha_still_url)
 
     if ha_stream := flow.preview_stream:
-        ha_stream_url = ha_stream.endpoint_url(HLS_PROVIDER)
+        # HLS player needs an absolute URL as base for constructing child playlist URLs
+        ha_stream_url = f"{get_url(hass)}{ha_stream.endpoint_url(HLS_PROVIDER)}"
         _LOGGER.debug("Got preview stream URL: %s", ha_stream_url)
 
     connection.send_message(

@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_user_flow_oauth2_success(
-    hass: HomeAssistant, mock_actron_api: AsyncMock
+    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test successful OAuth2 device code flow."""
     # Start the config flow
@@ -90,7 +90,7 @@ async def test_user_flow_oauth2_error(hass: HomeAssistant, mock_actron_api) -> N
 
 
 async def test_user_flow_token_polling_error(
-    hass: HomeAssistant, mock_actron_api
+    hass: HomeAssistant, mock_actron_api, mock_setup_entry: AsyncMock
 ) -> None:
     """Test OAuth2 flow with error during token polling."""
     # Override the default mock to raise an error during token polling
@@ -179,7 +179,10 @@ async def test_user_flow_duplicate_account(
 
 
 async def test_reauth_flow_success(
-    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_actron_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test successful reauthentication flow."""
     # Create an existing config entry

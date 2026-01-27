@@ -123,6 +123,7 @@ def _async_device_as_dict(
         data["status_range"][status_range.code] = {
             "type": status_range.type,
             "value": status_range.values,
+            "report_type": status_range.report_type,
         }
 
     # Gather information how this Tuya device is represented in Home Assistant

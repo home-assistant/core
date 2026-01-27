@@ -324,6 +324,29 @@
       },
       "name": "Delete message"
     },
+    "download_file": {
+      "description": "Download the file to a local path.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The config entry representing the Telegram bot to get the file.",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]"
+        },
+        "directory_path": {
+          "description": "Local directory path to save the file to. Defaults to the 'telegram_bot' directory within your Home Assistant configuration directory.",
+          "example": "/config/telegram_bot",
+          "name": "Directory path"
+        },
+        "file_id": {
+          "description": "ID of the file to get.",
+          "name": "File ID"
+        },
+        "file_name": {
+          "description": "Name to save the file as. If not provided, the original file name will be used.",
+          "name": "File name"
+        }
+      },
+      "name": "Download file"
+    },
     "edit_caption": {
       "description": "Edits the caption of a previously sent message.",
       "fields": {

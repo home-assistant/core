@@ -13,11 +13,13 @@ from homeassistant.components.media_player import (
     SERVICE_JOIN,
     SERVICE_UNJOIN,
 )
+from homeassistant.components.sonos.const import LONG_SERVICE_TIMEOUT
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockSoCo, group_speakers, ungroup_speakers
+from .conftest import MockSoCo, create_zgs_sonos_event, group_speakers, ungroup_speakers
 
 
 async def test_media_player_join(
@@ -131,8 +133,9 @@ async def test_media_player_join_timeout(
 
     expected = (
         "Timeout while waiting for Sonos player to join the "
-        "group ['Living Room: Living Room, Bedroom']"
+        "group Living Room: Living Room, Bedroom"
     )
+
     with (
         patch(
             "homeassistant.components.sonos.speaker.asyncio.timeout", instant_timeout
@@ -151,6 +154,37 @@ async def test_media_player_join_timeout(
     assert soco_bedroom.join.call_count == 1
     assert soco_bedroom.join.call_args[0][0] == soco_living_room
     assert soco_living_room.join.call_count == 0
+
+
+async def test_media_player_unjoin_timeout(
+    hass: HomeAssistant,
+    sonos_setup_two_speakers: list[MockSoCo],
+) -> None:
+    """Test unjoining of speaker with timeout error."""
+
+    soco_living_room = sonos_setup_two_speakers[0]
+    soco_bedroom = sonos_setup_two_speakers[1]
+
+    # First group the speakers together
+    group_speakers(soco_living_room, soco_bedroom)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    expected = (
+        "Timeout while waiting for Sonos player to unjoin the group Bedroom: Bedroom"
+    )
+    with (
+        patch(
+            "homeassistant.components.sonos.speaker.asyncio.timeout", instant_timeout
+        ),
+        pytest.raises(HomeAssistantError, match=re.escape(expected)),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_UNJOIN,
+            {ATTR_ENTITY_ID: "media_player.bedroom"},
+            blocking=True,
+        )
+    assert soco_bedroom.unjoin.call_count == 1
 
 
 async def test_media_player_unjoin(
@@ -189,7 +223,7 @@ async def test_media_player_unjoin(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(caplog.records) == 0
-    assert soco_bedroom.unjoin.call_count == 1
+    soco_bedroom.unjoin.assert_called_with(timeout=LONG_SERVICE_TIMEOUT)
     assert soco_living_room.unjoin.call_count == 0
 
 
@@ -215,3 +249,65 @@ async def test_media_player_unjoin_already_unjoined(
     # Should not have called unjoin, since the speakers are already unjoined.
     assert soco_bedroom.unjoin.call_count == 0
     assert soco_living_room.unjoin.call_count == 0
+
+
+async def test_unjoin_completes_when_coordinator_receives_event_first(
+    hass: HomeAssistant,
+    sonos_setup_two_speakers: list[MockSoCo],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that unjoin completes even when only coordinator receives ZGS event."""
+    soco_living_room = sonos_setup_two_speakers[0]
+    soco_bedroom = sonos_setup_two_speakers[1]
+
+    # First, group the speakers together
+    group_speakers(soco_living_room, soco_bedroom)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Verify initial grouped state
+    expected_group = ["media_player.living_room", "media_player.bedroom"]
+    assert (
+        hass.states.get("media_player.living_room").attributes["group_members"]
+        == expected_group
+    )
+    assert (
+        hass.states.get("media_player.bedroom").attributes["group_members"]
+        == expected_group
+    )
+
+    unjoin_complete_event = asyncio.Event()
+
+    def mock_unjoin(*args, **kwargs) -> None:
+        hass.loop.call_soon_threadsafe(unjoin_complete_event.set)
+
+    soco_bedroom.unjoin = Mock(side_effect=mock_unjoin)
+
+    with caplog.at_level(logging.WARNING):
+        caplog.clear()
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_UNJOIN,
+            {ATTR_ENTITY_ID: "media_player.bedroom"},
+            blocking=False,
+        )
+        await unjoin_complete_event.wait()
+
+        # Fire ZGS event only to coordinator to test clearing of bedroom speaker
+        ungroup_event = create_zgs_sonos_event(
+            "zgs_two_single.xml",
+            soco_living_room,
+            soco_bedroom,
+            create_uui_ds_in_group=False,
+        )
+        soco_living_room.zoneGroupTopology.subscribe.return_value._callback(
+            ungroup_event
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Should complete without warnings or timeout errors
+    assert len(caplog.records) == 0
+    assert soco_bedroom.unjoin.call_count == 1
+    state = hass.states.get("media_player.living_room")
+    assert state.attributes["group_members"] == ["media_player.living_room"]
+    state = hass.states.get("media_player.bedroom")
+    assert state.attributes["group_members"] == ["media_player.bedroom"]

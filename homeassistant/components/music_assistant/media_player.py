@@ -356,6 +356,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             await self._async_handle_play_announcement(
                 media_id,
                 use_pre_announce=kwargs[ATTR_MEDIA_EXTRA].get("use_pre_announce"),
+                pre_announce_url=kwargs[ATTR_MEDIA_EXTRA].get("pre_announce_url"),
                 announce_volume=kwargs[ATTR_MEDIA_EXTRA].get("announce_volume"),
             )
             return
@@ -464,11 +465,16 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self,
         url: str,
         use_pre_announce: bool | None = None,
+        pre_announce_url: str | None = None,
         announce_volume: int | None = None,
     ) -> None:
         """Send the play_announcement command to the media player."""
         await self.mass.players.play_announcement(
-            self.player_id, url, use_pre_announce, announce_volume
+            self.player_id,
+            url,
+            pre_announce=use_pre_announce,
+            pre_announce_url=pre_announce_url,
+            volume_level=announce_volume,
         )
 
     @catch_musicassistant_error

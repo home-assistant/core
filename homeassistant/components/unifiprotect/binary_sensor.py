@@ -8,6 +8,7 @@ import dataclasses
 from uiprotect.data import (
     NVR,
     Camera,
+    Event,
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
@@ -453,6 +454,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ProtectBinaryEventEntityDescription(
         key="smart_audio_cmonx",
         translation_key="co_alarm_detected",
+        device_class=BinarySensorDeviceClass.CO,
         ufp_required_field="can_detect_co",
         ufp_enabled="is_co_detection_on",
         ufp_event_obj="last_cmonx_detect_event",
@@ -644,15 +646,46 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         self._attr_extra_state_attributes = {}
 
     @callback
+    def _find_active_event_with_object_type(
+        self, device: ProtectDeviceType
+    ) -> Event | None:
+        """Find an active event containing this sensor's object type.
+
+        Fallback for issue #152133: last_smart_detect_event_ids may not update
+        immediately when a new detection type is added to an ongoing event.
+        """
+        obj_type = self.entity_description.ufp_obj_type
+        if obj_type is None or not isinstance(device, Camera):
+            return None
+
+        # Check known active event IDs from camera first (fast path)
+        for event_id in device.last_smart_detect_event_ids.values():
+            if (
+                event_id
+                and (event := self.data.api.bootstrap.events.get(event_id))
+                and event.end is None
+                and obj_type in event.smart_detect_types
+            ):
+                return event
+
+        return None
+
+    @callback
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
 
         prev_event = self._event
         prev_event_end = self._event_end
         super()._async_update_device_from_protect(device)
-        if event := description.get_event_obj(device):
+
+        event = description.get_event_obj(device)
+        if event is None:
+            # Fallback for #152133: check active events directly
+            event = self._find_active_event_with_object_type(device)
+
+        if event:
             self._event = event
-            self._event_end = event.end if event else None
+            self._event_end = event.end
 
         if not (
             event

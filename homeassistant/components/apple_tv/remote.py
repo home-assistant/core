@@ -51,6 +51,8 @@ async def async_setup_entry(
 class AppleTVRemote(AppleTVEntity, RemoteEntity):
     """Device that sends commands to an Apple TV."""
 
+    _attr_name = None
+
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""

@@ -8,4 +8,4 @@ HA_MANAGED_API_PORT = 11984
 HA_MANAGED_URL = f"http://localhost:{HA_MANAGED_API_PORT}/"
 # When changing this version, also update the corresponding SHA hash (_GO2RTC_SHA)
 # in script/hassfest/docker.py.
-RECOMMENDED_VERSION = "1.9.12"
+RECOMMENDED_VERSION = "1.9.14"

@@ -33,7 +33,7 @@ PARALLEL_UPDATES = 0
 class TeslaFleetNumberVehicleEntityDescription(NumberEntityDescription):
     """Describes TeslaFleet Number entity."""
 
-    func: Callable[[VehicleFleet, float], Awaitable[Any]]
+    func: Callable[[VehicleFleet, int], Awaitable[Any]]
     native_min_value: float
     native_max_value: float
     min_key: str | None = None
@@ -74,19 +74,19 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetNumberVehicleEntityDescription, ...] = (
 class TeslaFleetNumberBatteryEntityDescription(NumberEntityDescription):
     """Describes TeslaFleet Number entity."""
 
-    func: Callable[[EnergySite, float], Awaitable[Any]]
+    func: Callable[[EnergySite, int], Awaitable[Any]]
     requires: str | None = None
 
 
 ENERGY_INFO_DESCRIPTIONS: tuple[TeslaFleetNumberBatteryEntityDescription, ...] = (
     TeslaFleetNumberBatteryEntityDescription(
         key="backup_reserve_percent",
-        func=lambda api, value: api.backup(int(value)),
+        func=lambda api, value: api.backup(value),
         requires="components_battery",
     ),
     TeslaFleetNumberBatteryEntityDescription(
         key="off_grid_vehicle_charging_reserve_percent",
-        func=lambda api, value: api.off_grid_vehicle_charging_reserve(int(value)),
+        func=lambda api, value: api.off_grid_vehicle_charging_reserve(value),
         requires="components_off_grid_vehicle_charging_reserve_supported",
     ),
 )

@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery charge power limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -83,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery charge SOC limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -141,6 +143,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery discharge power limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -199,6 +202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery discharge SOC limit',
     'options': dict({
     }),
     'original_device_class': None,

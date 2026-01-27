@@ -323,6 +323,9 @@
       "chime_duration": {
         "name": "Chime duration"
       },
+      "chime_ring_volume": {
+        "name": "Ring volume ({camera_name})"
+      },
       "doorbell_ring_volume": {
         "name": "Doorbell ring volume"
       },
@@ -350,31 +353,68 @@
     },
     "select": {
       "chime_type": {
-        "name": "Chime type"
+        "name": "Chime type",
+        "state": {
+          "digital": "Digital",
+          "mechanical": "Mechanical",
+          "none": "[%key:common::state::off%]"
+        }
       },
       "doorbell_text": {
         "name": "Doorbell text"
       },
       "hdr_mode": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::hdr_mode::name%]"
+        "name": "[%key:component::unifiprotect::entity::binary_sensor::hdr_mode::name%]",
+        "state": {
+          "always": "Always on",
+          "auto": "Auto",
+          "off": "Always off"
+        }
       },
       "infrared_mode": {
-        "name": "Infrared mode"
+        "name": "Infrared mode",
+        "state": {
+          "auto": "Auto",
+          "auto_filter_only": "Auto (filter only, no LEDs)",
+          "custom": "Auto (custom lux)",
+          "off": "Always disable",
+          "on": "Always enable"
+        }
       },
       "light_mode": {
-        "name": "Light mode"
+        "name": "Light mode",
+        "state": {
+          "manual": "Manual",
+          "motion": "On motion - always",
+          "motion_dark": "On motion - when dark",
+          "when_dark": "When dark"
+        }
       },
       "liveview": {
         "name": "Liveview"
       },
       "mount_type": {
-        "name": "Mount type"
+        "name": "Mount type",
+        "state": {
+          "door": "Door",
+          "garage": "Garage",
+          "leak": "Leak",
+          "none": "[%key:common::state::off%]",
+          "window": "Window"
+        }
       },
       "paired_camera": {
         "name": "Paired camera"
       },
       "recording_mode": {
-        "name": "Recording mode"
+        "name": "Recording mode",
+        "state": {
+          "adaptive": "Adaptive",
+          "always": "Always",
+          "detections": "Detections",
+          "never": "Never",
+          "schedule": "Schedule"
+        }
       }
     },
     "sensor": {
@@ -616,11 +656,17 @@
     "api_key_required": {
       "message": "API key is required. Please reauthenticate this integration to provide an API key."
     },
+    "command_error": {
+      "message": "Error communicating with UniFi Protect while sending command: {error}"
+    },
     "device_not_found": {
       "message": "No device found for device id: {device_id}"
     },
     "no_users_found": {
       "message": "No users found, please check Protect permissions"
+    },
+    "not_authorized": {
+      "message": "Not authorized to perform this action on the UniFi Protect controller"
     },
     "only_music_supported": {
       "message": "Only music media type is supported"

@@ -33,8 +33,8 @@ from .helpers import InputType, LcnConfigEntry
 
 BRIGHTNESS_SCALE = (1, 100)
 
-PARALLEL_UPDATES = 0
-SCAN_INTERVAL = timedelta(minutes=1)
+PARALLEL_UPDATES = 2
+SCAN_INTERVAL = timedelta(minutes=10)
 
 
 def add_lcn_entities(

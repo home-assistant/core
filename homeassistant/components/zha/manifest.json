@@ -20,9 +20,10 @@
     "zigpy_zigate",
     "zigpy_znp",
     "zha",
-    "universal_silabs_flasher"
+    "universal_silabs_flasher",
+    "serialx"
   ],
-  "requirements": ["zha==0.0.80"],
+  "requirements": ["zha==0.0.84", "serialx==0.6.2"],
   "usb": [
     {
       "description": "*2652*",

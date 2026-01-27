@@ -164,7 +164,6 @@ async def test_authentication_required_triggers_reauth(
     music_assistant_client: MagicMock,
 ) -> None:
     """Test that AuthenticationRequired exception triggers reauth flow."""
-    # Create a config entry
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Music Assistant",
@@ -173,19 +172,44 @@ async def test_authentication_required_triggers_reauth(
     )
     config_entry.add_to_hass(hass)
 
-    # Mock the client to raise AuthenticationRequired during connect
     music_assistant_client.connect.side_effect = AuthenticationRequired(
         "Authentication required"
     )
 
-    # Try to set up the integration
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify the entry is in SETUP_ERROR state (auth failed)
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
-    # Verify a reauth repair issue was created
     issue_reg = ir.async_get(hass)
     issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
     assert issue_reg.async_get_issue("homeassistant", issue_id)
+
+
+async def test_authentication_required_addon_no_reauth(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that AuthenticationRequired exception does not trigger reauth for addon."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Music Assistant",
+        data={"url": "http://localhost:8095", "token": "old_token"},
+        unique_id="test_server_id",
+    )
+    config_entry.add_to_hass(hass)
+
+    music_assistant_client.server_info.homeassistant_addon = True
+
+    music_assistant_client.connect.side_effect = AuthenticationRequired(
+        "Authentication required"
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    issue_reg = ir.async_get(hass)
+    issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
+    assert issue_reg.async_get_issue("homeassistant", issue_id) is None

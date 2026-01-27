@@ -6,10 +6,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      test_connection_error and test_unsupported_version_error should end in CREATE_ENTRY
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -38,13 +35,7 @@ rules:
     status: exempt
     comment: |
       This integration does not require authentication.
-  test-coverage:
-    status: todo
-    comment: |
-      The test_setting_unique_id test is redundant.
-      The test_websocket_already_connected test can use the freezer.
-      The snapshot tests should be used more widely.
-      We should use pytest.mark.freeze_time instead of mock.
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: done

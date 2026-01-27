@@ -9,6 +9,8 @@ import pytest
 
 from homeassistant.components.gentex_homelink import DOMAIN
 
+from . import TEST_ACCESS_JWT
+
 from tests.common import MockConfigEntry
 
 
@@ -21,7 +23,7 @@ def mock_srp_auth() -> Generator[AsyncMock]:
         instance = mock_srp_auth.return_value
         instance.async_get_access_token.return_value = {
             "AuthenticationResult": {
-                "AccessToken": "access",
+                "AccessToken": TEST_ACCESS_JWT,
                 "RefreshToken": "refresh",
                 "TokenType": "bearer",
                 "ExpiresIn": 3600,
@@ -60,6 +62,8 @@ def mock_device() -> AsyncMock:
 def mock_config_entry() -> MockConfigEntry:
     """Mock setup entry."""
     return MockConfigEntry(
+        unique_id="some-uuid",
+        version=1,
         domain=DOMAIN,
         data={
             "auth_implementation": "gentex_homelink",

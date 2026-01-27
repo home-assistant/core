@@ -3,9 +3,16 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
+import jwt
+
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+TEST_CREDENTIALS = {CONF_EMAIL: "test@test.com", CONF_PASSWORD: "SomePassword"}
+
+TEST_ACCESS_JWT = jwt.encode({"sub": "some-uuid"}, key="secret")
 
 
 async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None:

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Self
 
 from tuya_sharing import CustomerDevice
+
+from homeassistant.components.sensor import SensorStateClass
 
 from .type_information import (
     BitmapTypeInformation,
@@ -17,18 +20,47 @@ from .type_information import (
     TypeInformation,
 )
 
+_LOGGER = logging.getLogger(__name__)
 
-class DeviceWrapper:
+
+class DeviceWrapper[T]:
     """Base device wrapper."""
 
-    options: list[str] | None = None
+    native_unit: str | None = None
+    suggested_unit: str | None = None
+    state_class: SensorStateClass | None = None
 
-    def read_device_status(self, device: CustomerDevice) -> Any | None:
+    max_value: float
+    min_value: float
+    value_step: float
+
+    options: list[str]
+
+    def initialize(self, device: CustomerDevice) -> None:
+        """Initialize the wrapper with device data.
+
+        Called when the entity is added to Home Assistant.
+        Override in subclasses to perform initialization logic.
+        """
+
+    def skip_update(
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Determine if the wrapper should skip an update.
+
+        The default is to always skip, unless overridden in subclasses.
+        """
+        return True
+
+    def read_device_status(self, device: CustomerDevice) -> T | None:
         """Read device status and convert to a Home Assistant value."""
         raise NotImplementedError
 
     def get_update_commands(
-        self, device: CustomerDevice, value: Any
+        self, device: CustomerDevice, value: T
     ) -> list[dict[str, Any]]:
         """Generate update commands for a Home Assistant action."""
         raise NotImplementedError
@@ -41,12 +73,25 @@ class DPCodeWrapper(DeviceWrapper):
     access read conversion routines.
     """
 
-    native_unit: str | None = None
-    suggested_unit: str | None = None
-
     def __init__(self, dpcode: str) -> None:
         """Init DPCodeWrapper."""
         self.dpcode = dpcode
+
+    def skip_update(
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Determine if the wrapper should skip an update.
+
+        By default, skip if updated_status_properties is given and
+        does not include this dpcode.
+        """
+        return (
+            updated_status_properties is None
+            or self.dpcode not in updated_status_properties
+        )
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value.
@@ -135,7 +180,6 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
     """Simple wrapper for EnumTypeInformation values."""
 
     _DPTYPE = EnumTypeInformation
-    options: list[str]
 
     def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
         """Init DPCodeEnumWrapper."""
@@ -177,6 +221,59 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeInformation])
             f"Value `{new_value}` (converted from `{value}`) out of range:"
             f" ({self.type_information.min}-{self.type_information.max})"
         )
+
+
+class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
+    """Wrapper for integer values with delta report accumulation.
+
+    This wrapper handles sensors that report incremental (delta) values
+    instead of cumulative totals. It accumulates the delta values locally
+    to provide a running total.
+    """
+
+    _accumulated_value: float = 0
+    _last_dp_timestamp: int | None = None
+
+    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
+        """Init DPCodeDeltaIntegerWrapper."""
+        super().__init__(dpcode, type_information)
+        # Delta reports use TOTAL_INCREASING state class
+        self.state_class = SensorStateClass.TOTAL_INCREASING
+
+    def skip_update(
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Override skip_update to process delta updates.
+
+        Processes delta accumulation before determining if update should be skipped.
+        """
+        if (
+            super().skip_update(device, updated_status_properties, dp_timestamps)
+            or dp_timestamps is None
+            or (current_timestamp := dp_timestamps.get(self.dpcode)) is None
+            or current_timestamp == self._last_dp_timestamp
+            or (raw_value := super().read_device_status(device)) is None
+        ):
+            return True
+
+        delta = float(raw_value)
+        self._accumulated_value += delta
+        _LOGGER.debug(
+            "Delta update for %s: +%s, total: %s",
+            self.dpcode,
+            delta,
+            self._accumulated_value,
+        )
+
+        self._last_dp_timestamp = current_timestamp
+        return False
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read device status, returning accumulated value for delta reports."""
+        return self._accumulated_value
 
 
 class DPCodeRawWrapper(DPCodeTypeInformationWrapper[RawTypeInformation]):

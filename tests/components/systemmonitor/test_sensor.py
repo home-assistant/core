@@ -564,6 +564,7 @@ async def test_remove_obsolete_entities(
         has_entity_name=True,
         device_id=cpu_sensor_entity.device_id,
         translation_key="network_out",
+        suggested_object_id="systemmonitor_network_out_veth12345",
     )
     # Fake an entity which should not be removed as not supported but not disabled
     entity_registry.async_get_or_create(
@@ -575,6 +576,7 @@ async def test_remove_obsolete_entities(
         has_entity_name=True,
         device_id=cpu_sensor_entity.device_id,
         translation_key="network_out",
+        suggested_object_id="systemmonitor_network_out_veth54321",
     )
     await hass.config_entries.async_reload(mock_added_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -635,3 +637,70 @@ async def test_no_duplicate_disk_entities(
     assert disk_sensor.state == "60.0"
 
     assert "Platform systemmonitor does not generate unique IDs." not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("psutil_attr", "exception", "entity_id"),
+    [
+        (
+            "sensors_fans",
+            AttributeError,
+            "sensor.system_monitor_cpu_fan_fan_speed",
+        ),
+        (
+            "sensors_temperatures",
+            AttributeError,
+            "sensor.system_monitor_processor_temperature",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_with_param_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_psutil: Mock,
+    psutil_attr: str,
+    exception: Exception,
+    entity_id: str,
+) -> None:
+    """Test the sensor."""
+    setattr(mock_psutil, psutil_attr, Mock(side_effect=exception))
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
+
+
+@pytest.mark.parametrize(
+    ("psutil_attr", "exception", "entity_id"),
+    [
+        (
+            "sensors_battery",
+            FileNotFoundError,
+            "sensor.system_monitor_battery",
+        ),
+        (
+            "sensors_battery",
+            AttributeError,
+            "sensor.system_monitor_battery",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_without_param_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_psutil: Mock,
+    psutil_attr: str,
+    exception: Exception,
+    entity_id: str,
+) -> None:
+    """Test the sensor."""
+    setattr(mock_psutil, psutil_attr, Mock(side_effect=exception))
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE

@@ -442,7 +442,7 @@ class BlockSleepingClimate(
         self._attr_device_info = get_entity_block_device_info(coordinator, sensor_block)
         self._attr_name = None  # Main device entity
 
-        self._channel = cast(int, self._unique_id.split("_")[1])
+        self._channel = int(self._unique_id.split("_")[1])
 
     @property
     def extra_restore_state_data(self) -> ShellyClimateExtraStoredData:
@@ -543,8 +543,9 @@ class BlockSleepingClimate(
         """Set block state (HTTP request)."""
         LOGGER.debug("Setting state for entity %s, state: %s", self.name, kwargs)
         try:
-            return await self.coordinator.device.http_request(
-                "get", f"thermostat/{self._channel}", kwargs
+            return await self.coordinator.device.set_thermostat_state(
+                self._channel,
+                **kwargs,
             )
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
@@ -577,7 +578,7 @@ class BlockSleepingClimate(
                     UnitOfTemperature.FAHRENHEIT,
                 )
 
-        await self.set_state_full_path(target_t_enabled=1, target_t=f"{target_temp}")
+        await self.set_state_full_path(target_t_enabled=1, target_t=target_temp)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
@@ -585,7 +586,7 @@ class BlockSleepingClimate(
             if isinstance(self.target_temperature, float):
                 self._last_target_temp = self.target_temperature
             await self.set_state_full_path(
-                target_t_enabled=1, target_t=f"{self._attr_min_temp}"
+                target_t_enabled=1, target_t=self._attr_min_temp
             )
         if hvac_mode == HVACMode.HEAT:
             await self.set_state_full_path(
@@ -599,9 +600,7 @@ class BlockSleepingClimate(
         if preset_index == 0:
             await self.set_state_full_path(schedule=0)
         else:
-            await self.set_state_full_path(
-                schedule=1, schedule_profile=f"{preset_index}"
-            )
+            await self.set_state_full_path(schedule=1, schedule_profile=preset_index)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

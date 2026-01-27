@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import section
@@ -148,6 +149,15 @@ from .vacuum import (
     SERVICE_START,
     SERVICE_STOP,
     async_create_preview_vacuum,
+)
+from .weather import (
+    CONF_CONDITION,
+    CONF_FORECAST_DAILY,
+    CONF_FORECAST_HOURLY,
+    CONF_HUMIDITY,
+    CONF_TEMPERATURE as CONF_WEATHER_TEMPERATURE,
+    CONF_TEMPERATURE_UNIT,
+    async_create_preview_weather,
 )
 
 _SCHEMA_STATE: dict[vol.Marker, Any] = {
@@ -457,6 +467,22 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(SERVICE_LOCATE): selector.ActionSelector(),
         }
 
+    if domain == Platform.WEATHER:
+        schema |= {
+            vol.Required(CONF_CONDITION): selector.TemplateSelector(),
+            vol.Required(CONF_HUMIDITY): selector.TemplateSelector(),
+            vol.Required(CONF_WEATHER_TEMPERATURE): selector.TemplateSelector(),
+            vol.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in UnitOfTemperature],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    sort=True,
+                ),
+            ),
+            vol.Optional(CONF_FORECAST_DAILY): selector.TemplateSelector(),
+            vol.Optional(CONF_FORECAST_HOURLY): selector.TemplateSelector(),
+        }
+
     schema |= {
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         vol.Optional(CONF_ADVANCED_OPTIONS): section(
@@ -475,6 +501,15 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 options_schema = partial(generate_schema, flow_type="options")
 
 config_schema = partial(generate_schema, flow_type="config")
+
+
+async def _get_forecast_description_place_holders(
+    handler: SchemaCommonFlowHandler,
+) -> dict[str, str]:
+    return {
+        "daily_link": "https://www.home-assistant.io/integrations/template/#daily-weather-forecast",
+        "hourly_link": "https://www.home-assistant.io/integrations/template/#hourly-weather-forecast",
+    }
 
 
 async def choose_options_step(options: dict[str, Any]) -> str:
@@ -575,6 +610,7 @@ TEMPLATE_TYPES = [
     Platform.SWITCH,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.WEATHER,
 ]
 
 CONFIG_FLOW = {
@@ -657,6 +693,12 @@ CONFIG_FLOW = {
         config_schema(Platform.VACUUM),
         preview="template",
         validate_user_input=validate_user_input(Platform.VACUUM),
+    ),
+    Platform.WEATHER: SchemaFlowFormStep(
+        config_schema(Platform.WEATHER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.WEATHER),
+        description_placeholders=_get_forecast_description_place_holders,
     ),
 }
 
@@ -742,6 +784,12 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.VACUUM),
     ),
+    Platform.WEATHER: SchemaFlowFormStep(
+        options_schema(Platform.WEATHER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.WEATHER),
+        description_placeholders=_get_forecast_description_place_holders,
+    ),
 }
 
 CREATE_PREVIEW_ENTITY: dict[
@@ -762,6 +810,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.SWITCH: async_create_preview_switch,
     Platform.UPDATE: async_create_preview_update,
     Platform.VACUUM: async_create_preview_vacuum,
+    Platform.WEATHER: async_create_preview_weather,
 }
 
 

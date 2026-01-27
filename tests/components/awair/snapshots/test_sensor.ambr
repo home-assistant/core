@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -77,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -132,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
@@ -187,6 +190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -242,6 +246,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -295,6 +300,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -353,6 +359,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
@@ -408,6 +415,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -463,6 +471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -518,6 +527,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -573,6 +583,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -626,6 +637,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -684,6 +696,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
@@ -739,6 +752,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -794,6 +808,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -849,6 +864,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -902,6 +918,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -960,6 +977,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
@@ -1015,6 +1033,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1070,6 +1089,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -1124,6 +1144,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -1179,6 +1200,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1232,6 +1254,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1290,6 +1313,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
@@ -1345,6 +1369,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -1400,6 +1425,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1455,6 +1481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -1509,6 +1536,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -1564,6 +1592,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1617,6 +1646,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
@@ -1671,6 +1701,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1729,6 +1760,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
@@ -1784,6 +1816,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Absolute humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1841,6 +1874,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -1895,6 +1929,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1952,6 +1987,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2006,6 +2042,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -2060,6 +2097,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2113,6 +2151,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2170,6 +2209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
