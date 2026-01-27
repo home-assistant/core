@@ -1593,7 +1593,6 @@ async def test_calendar_background_color(
                     "accessRole": "owner",
                     "backgroundColor": background_color,
                     "summary": "Test Calendar",
-                    "primary": True,
                 }
             ]
         }
@@ -1602,7 +1601,7 @@ async def test_calendar_background_color(
 
     assert await component_setup()
 
-    # Primary calendars create a birthdays entity in the entity registry
-    entity = entity_registry.async_get("calendar.birthdays")
+    # Verify the main calendar entity has the color set
+    entity = entity_registry.async_get("calendar.test_calendar")
     assert entity is not None
     assert entity.options.get("calendar", {}).get("color") == expected_color
