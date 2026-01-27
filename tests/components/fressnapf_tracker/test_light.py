@@ -58,15 +58,15 @@ async def test_state_entity_device_snapshots(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_auth_client")
+@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_init")
 async def test_not_added_when_no_led(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_api_client: MagicMock,
+    mock_api_client_coordinator: MagicMock,
 ) -> None:
     """Test light entity is created correctly."""
-    mock_api_client.get_tracker.return_value = TRACKER_NO_LED
+    mock_api_client_coordinator.get_tracker.return_value = TRACKER_NO_LED
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -81,7 +81,7 @@ async def test_not_added_when_no_led(
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_on(
     hass: HomeAssistant,
-    mock_api_client: MagicMock,
+    mock_api_client_coordinator: MagicMock,
 ) -> None:
     """Test turning the light on."""
     entity_id = "light.fluffy_flashlight"
@@ -97,13 +97,13 @@ async def test_turn_on(
         blocking=True,
     )
 
-    mock_api_client.set_led_brightness.assert_called_once_with(100)
+    mock_api_client_coordinator.set_led_brightness.assert_called_once_with(100)
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_on_with_brightness(
     hass: HomeAssistant,
-    mock_api_client: MagicMock,
+    mock_api_client_coordinator: MagicMock,
 ) -> None:
     """Test turning the light on with brightness."""
     entity_id = "light.fluffy_flashlight"
@@ -116,13 +116,13 @@ async def test_turn_on_with_brightness(
     )
 
     # 128/255 * 100 = 50
-    mock_api_client.set_led_brightness.assert_called_once_with(50)
+    mock_api_client_coordinator.set_led_brightness.assert_called_once_with(50)
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_off(
     hass: HomeAssistant,
-    mock_api_client: MagicMock,
+    mock_api_client_coordinator: MagicMock,
 ) -> None:
     """Test turning the light off."""
     entity_id = "light.fluffy_flashlight"
@@ -138,7 +138,7 @@ async def test_turn_off(
         blocking=True,
     )
 
-    mock_api_client.set_led_brightness.assert_called_once_with(0)
+    mock_api_client_coordinator.set_led_brightness.assert_called_once_with(0)
 
 
 @pytest.mark.parametrize(
@@ -149,16 +149,16 @@ async def test_turn_off(
         "not_charging",
     ],
 )
-@pytest.mark.usefixtures("mock_auth_client")
+@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_init")
 async def test_turn_on_led_not_activatable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_api_client: MagicMock,
+    mock_api_client_coordinator: MagicMock,
     activatable_parameter: str,
 ) -> None:
     """Test turning on the light when LED is not activatable raises."""
     setattr(
-        mock_api_client.get_tracker.return_value.led_activatable,
+        mock_api_client_coordinator.get_tracker.return_value.led_activatable,
         activatable_parameter,
         False,
     )
@@ -177,7 +177,7 @@ async def test_turn_on_led_not_activatable(
             blocking=True,
         )
 
-    mock_api_client.set_led_brightness.assert_not_called()
+    mock_api_client_coordinator.set_led_brightness.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -191,11 +191,11 @@ async def test_turn_on_led_not_activatable(
     ],
 )
 @pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
-@pytest.mark.usefixtures("mock_auth_client")
+@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_init")
 async def test_turn_on_off_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_api_client: MagicMock,
+    mock_api_client_coordinator: MagicMock,
     api_exception: FressnapfTrackerError,
     expected_exception: type[HomeAssistantError],
     service: str,
@@ -208,7 +208,7 @@ async def test_turn_on_off_error(
 
     entity_id = "light.fluffy_flashlight"
 
-    mock_api_client.set_led_brightness.side_effect = api_exception
+    mock_api_client_coordinator.set_led_brightness.side_effect = api_exception
     with pytest.raises(expected_exception):
         await hass.services.async_call(
             LIGHT_DOMAIN,

@@ -57,15 +57,15 @@ async def test_state_entity_device_snapshots(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_auth_client")
+@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_init")
 async def test_not_added_when_no_energy_saving_mode(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_api_client: MagicMock,
+    mock_api_client_coordinator: MagicMock,
 ) -> None:
     """Test switch entity is created correctly."""
-    mock_api_client.get_tracker.return_value = TRACKER_NO_ENERGY_SAVING_MODE
+    mock_api_client_coordinator.get_tracker.return_value = TRACKER_NO_ENERGY_SAVING_MODE
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -80,7 +80,7 @@ async def test_not_added_when_no_energy_saving_mode(
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_on(
     hass: HomeAssistant,
-    mock_api_client: MagicMock,
+    mock_api_client_coordinator: MagicMock,
 ) -> None:
     """Test turning the switch on."""
     entity_id = "switch.fluffy_sleep_mode"
@@ -96,13 +96,13 @@ async def test_turn_on(
         blocking=True,
     )
 
-    mock_api_client.set_energy_saving.assert_called_once_with(True)
+    mock_api_client_coordinator.set_energy_saving.assert_called_once_with(True)
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_off(
     hass: HomeAssistant,
-    mock_api_client: MagicMock,
+    mock_api_client_coordinator: MagicMock,
 ) -> None:
     """Test turning the switch off."""
     entity_id = "switch.fluffy_sleep_mode"
@@ -118,7 +118,7 @@ async def test_turn_off(
         blocking=True,
     )
 
-    mock_api_client.set_energy_saving.assert_called_once_with(False)
+    mock_api_client_coordinator.set_energy_saving.assert_called_once_with(False)
 
 
 @pytest.mark.parametrize(
@@ -132,11 +132,11 @@ async def test_turn_off(
     ],
 )
 @pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
-@pytest.mark.usefixtures("mock_auth_client")
+@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_init")
 async def test_turn_on_off_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_api_client: MagicMock,
+    mock_api_client_coordinator: MagicMock,
     api_exception: FressnapfTrackerError,
     expected_exception: type[HomeAssistantError],
     service: str,
@@ -149,7 +149,7 @@ async def test_turn_on_off_error(
 
     entity_id = "switch.fluffy_sleep_mode"
 
-    mock_api_client.set_energy_saving.side_effect = api_exception
+    mock_api_client_coordinator.set_energy_saving.side_effect = api_exception
     with pytest.raises(expected_exception):
         await hass.services.async_call(
             SWITCH_DOMAIN,
