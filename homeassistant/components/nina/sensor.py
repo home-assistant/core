@@ -1,8 +1,7 @@
 """NINA sensor platform."""
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from enum import StrEnum
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,64 +12,53 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_MESSAGE_SLOTS, CONF_REGIONS, SEVERITY_VALUES
-from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator
+from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator, NinaWarningData
 from .entity import NinaEntity
 
 PARALLEL_UPDATES = 0
 
 
-# pylint: disable=fixme
-class SensorDataPoints(StrEnum):
-    """Enum of data point."""
+@dataclass(frozen=True, kw_only=True)
+class NinaSensorEntityDescription(SensorEntityDescription):
+    """Describes NINA sensor entity."""
 
-    HEADLINE = "headline"
-    SENDER = "sender"
-    SEVERITY = "severity"  # TODO set possible options in entity
-    AFFECTED_AREAS = "affected_areas"
-    MORE_INFORMATION_URL = "more_info_url"
+    value_fn: Callable[[NinaWarningData], str]
 
 
-@dataclass
-class SensorData:
-    """Representation of a sensor configuration."""
-
-    type: SensorDataPoints
-    friendly_name: str
-    entity_description: SensorEntityDescription | None
-
-
-FRIENDLY_NAME_MAPPING = {
-    SensorDataPoints.HEADLINE: "Headline",
-    SensorDataPoints.SENDER: "Sender",
-    SensorDataPoints.SEVERITY: "Severity",
-    SensorDataPoints.AFFECTED_AREAS: "Affected Areas",
-    SensorDataPoints.MORE_INFORMATION_URL: "More Information",
-}
-
-ENTITY_DESCRIPTION_MAPPING = {
-    SensorDataPoints.HEADLINE: SensorEntityDescription(
+SENSOR_TYPES: tuple[NinaSensorEntityDescription, ...] = (
+    NinaSensorEntityDescription(
         key="headline",
         icon="mdi:text-short",
+        translation_key="headline",
+        value_fn=lambda data: data.headline,
     ),
-    SensorDataPoints.SENDER: SensorEntityDescription(
+    NinaSensorEntityDescription(
         key="sender",
         icon="mdi:account-tie-voice",
+        translation_key="sender",
+        value_fn=lambda data: data.sender,
     ),
-    SensorDataPoints.SEVERITY: SensorEntityDescription(
+    NinaSensorEntityDescription(
         key="severity",
         options=SEVERITY_VALUES,
         device_class=SensorDeviceClass.ENUM,
         icon="mdi:alert",
+        translation_key="severity",
+        value_fn=lambda data: data.severity,
     ),
-    SensorDataPoints.AFFECTED_AREAS: SensorEntityDescription(
+    NinaSensorEntityDescription(
         key="affected_areas",
         icon="mdi:map-marker-radius",
+        translation_key="affected_areas",
+        value_fn=lambda data: data.affected_areas,
     ),
-    SensorDataPoints.MORE_INFORMATION_URL: SensorEntityDescription(
+    NinaSensorEntityDescription(
         key="more_info_url",
         icon="mdi:web",
+        translation_key="more_info_url",
+        value_fn=lambda data: data.more_info_url,
     ),
-}
+)
 
 
 def create_sensors_for_warning(
@@ -83,13 +71,9 @@ def create_sensors_for_warning(
             region,
             region_name,
             slot_id,
-            SensorData(
-                sensor_type,
-                FRIENDLY_NAME_MAPPING.get(sensor_type, sensor_type.value),
-                ENTITY_DESCRIPTION_MAPPING.get(sensor_type),
-            ),
+            description,
         )
-        for sensor_type in SensorDataPoints
+        for description in SENSOR_TYPES
     ]
 
 
@@ -121,25 +105,22 @@ class NinaSensor(NinaEntity, SensorEntity):
 
     _attr_has_entity_name = True
 
+    entity_description: NinaSensorEntityDescription
+
     def __init__(
         self,
         coordinator: NINADataUpdateCoordinator,
         region: str,
         region_name: str,
         slot_id: int,
-        sensor_data: SensorData,
+        description: NinaSensorEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, region, slot_id)
+        super().__init__(coordinator, region, region_name, slot_id)
 
-        self._sensor_data: SensorData = sensor_data
+        self.entity_description = description
 
-        self._attr_name = f"{sensor_data.friendly_name}: {region_name} {slot_id}"
-        self._attr_unique_id = f"{region_name}_{slot_id}-{sensor_data.type.value}"
-        self._attr_device_info = coordinator.device_info
-
-        if sensor_data.entity_description:
-            self.entity_description = sensor_data.entity_description
+        self._attr_unique_id = f"{region_name}-{slot_id}-{self.entity_description.key}"
 
     @property
     def available(self) -> bool:
@@ -149,4 +130,4 @@ class NinaSensor(NinaEntity, SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        return getattr(self._get_warning_data(), self._sensor_data.type.value, None)
+        return self.entity_description.value_fn(self._get_warning_data())

@@ -45,6 +45,30 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "warning": {
+        "name": "Warning: {region_name} {slot_id}"
+      }
+    },
+    "sensor": {
+      "affected_areas": {
+        "name": "Affected Areas: {region_name} {slot_id}"
+      },
+      "headline": {
+        "name": "Headline: {region_name} {slot_id}"
+      },
+      "more_info_url": {
+        "name": "More Information URL: {region_name} {slot_id}"
+      },
+      "sender": {
+        "name": "Sender: {region_name} {slot_id}"
+      },
+      "severity": {
+        "name": "Severity: {region_name} {slot_id}"
+      }
+    }
+  },
   "options": {
     "abort": {
       "no_fetch": "[%key:component::nina::config::abort::no_fetch%]",
