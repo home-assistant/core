@@ -157,11 +157,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "homewizard": {"python-homewizard-energy": {"async-timeout"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
-    "influxdb": {
-        # https://github.com/influxdata/influxdb-client-python/issues/695
-        # influxdb-client > setuptools
-        "influxdb-client": {"setuptools"}
-    },
     "izone": {"python-izone": {"async-timeout"}},
     "kef": {"aiokef": {"async-timeout"}},
     "kodi": {"jsonrpc-websocket": {"async-timeout"}},
