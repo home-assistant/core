@@ -8,11 +8,12 @@ from aiohttp import ClientError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
-from .helpers import update_namecheapdns
+from .helpers import AuthFailed, update_namecheapdns
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +54,12 @@ class NamecheapDnsUpdateCoordinator(DataUpdateCoordinator[None]):
                     translation_key="update_failed",
                     translation_placeholders={CONF_DOMAIN: f"{host}.{domain}"},
                 )
+        except AuthFailed as e:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+                translation_placeholders={CONF_DOMAIN: f"{host}.{domain}"},
+            ) from e
         except ClientError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
