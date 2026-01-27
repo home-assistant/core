@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+from pyvlx.exception import PyVLXException
 from pyvlx.opening_device import Awning, GarageDoor, Gate, RollerShutter, Window
 
 from homeassistant.components.cover import (
@@ -20,6 +21,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.components.velux import DOMAIN
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
@@ -27,6 +29,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import update_callback_entity
@@ -296,3 +299,34 @@ async def test_non_blind_has_no_tilt_position(
     state = hass.states.get(entity_id)
     assert state is not None
     assert "current_tilt_position" not in state.attributes
+
+
+# Exception handling tests
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [PyVLXException("PyVLX error"), OSError("OS error")],
+)
+async def test_cover_command_exception_handling(
+    hass: HomeAssistant,
+    mock_window: AsyncMock,
+    exception: Exception,
+) -> None:
+    """Test that exceptions from node commands are wrapped in HomeAssistantError."""
+
+    entity_id = "cover.test_window"
+
+    # Make the close method raise an exception
+    mock_window.close.side_effect = exception
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Failed to communicate with Velux device",
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )

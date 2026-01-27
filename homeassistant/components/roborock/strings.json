@@ -41,6 +41,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "clean_fluid_empty": {
+        "name": "Cleaning fluid"
+      },
       "in_cleaning": {
         "name": "Cleaning"
       },
@@ -372,6 +375,7 @@
       "zeo_state": {
         "name": "State",
         "state": {
+          "aftercare": "Aftercare",
           "cooling": "Cooling",
           "done": "Done",
           "drying": "Drying",
@@ -380,6 +384,7 @@
           "spinning": "Spinning",
           "standby": "[%key:common::state::standby%]",
           "under_delay_start": "Delayed start",
+          "waiting_for_aftercare": "Waiting for aftercare",
           "washing": "Washing",
           "weighing": "Weighing"
         }

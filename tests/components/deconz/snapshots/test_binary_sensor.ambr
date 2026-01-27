@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm 10',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
@@ -71,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cave CO',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CO: 'carbon_monoxide'>,
@@ -121,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cave CO Low Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -170,6 +173,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cave CO Tampered',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -219,6 +223,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence sensor',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -271,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence sensor Low Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -320,6 +326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence sensor Tampered',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -369,6 +376,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'sensor_kitchen_smoke',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -419,6 +427,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'sensor_kitchen_smoke Test Mode',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -468,6 +477,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'sensor_kitchen_smoke',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -518,6 +528,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'sensor_kitchen_smoke Test Mode',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
@@ -567,6 +578,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen Switch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -616,6 +628,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Back Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -667,6 +680,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Motion sensor 4',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -718,6 +732,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'water2',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -769,6 +784,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'water2 Low Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -818,6 +834,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'water2 Tampered',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
@@ -867,6 +884,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vibration 1',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.VIBRATION: 'vibration'>,
@@ -925,6 +943,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence sensor',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
@@ -977,6 +996,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence sensor Low Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
@@ -1026,6 +1046,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Presence sensor Tampered',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,

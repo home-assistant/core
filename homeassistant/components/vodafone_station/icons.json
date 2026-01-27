@@ -39,6 +39,32 @@
       "sys_reboot_cause": {
         "default": "mdi:restart-alert"
       }
+    },
+    "switch": {
+      "guest": {
+        "default": "mdi:wifi",
+        "state": {
+          "off": "mdi:wifi-off"
+        }
+      },
+      "guest_5g": {
+        "default": "mdi:wifi",
+        "state": {
+          "off": "mdi:wifi-off"
+        }
+      },
+      "main": {
+        "default": "mdi:wifi",
+        "state": {
+          "off": "mdi:wifi-off"
+        }
+      },
+      "main_5g": {
+        "default": "mdi:wifi",
+        "state": {
+          "off": "mdi:wifi-off"
+        }
+      }
     }
   }
 }

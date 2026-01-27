@@ -582,6 +582,18 @@ ZEROCONF = {
             "name": "eheimdigital._http._tcp.local.",
         },
         {
+            "domain": "hdfury",
+            "name": "diva-*",
+        },
+        {
+            "domain": "hdfury",
+            "name": "vertex2-*",
+        },
+        {
+            "domain": "hdfury",
+            "name": "vrroom-*",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
         },
@@ -770,6 +782,11 @@ ZEROCONF = {
             "domain": "nanoleaf",
         },
     ],
+    "_nrgkick._tcp.local.": [
+        {
+            "domain": "nrgkick",
+        },
+    ],
     "_nut._tcp.local.": [
         {
             "domain": "nut",
@@ -778,6 +795,11 @@ ZEROCONF = {
     "_octoprint._tcp.local.": [
         {
             "domain": "octoprint",
+        },
+    ],
+    "_openevse._tcp.local.": [
+        {
+            "domain": "openevse",
         },
     ],
     "_owserver._tcp.local.": [

@@ -461,6 +461,11 @@ async def test_play_media_in_queue(
             "spotify:episode:3oRoMXsP2NRzm51lldj1RO",
             {"uris": ["spotify:episode:3oRoMXsP2NRzm51lldj1RO"]},
         ),
+        (
+            "spotify://current_user_saved_tracks",
+            "spotify:user:1112264111:collection",
+            {"context_uri": "spotify:user:1112264111:collection"},
+        ),
     ],
 )
 async def test_play_media(

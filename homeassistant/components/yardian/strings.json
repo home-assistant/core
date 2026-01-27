@@ -34,6 +34,21 @@
       "zone_enabled": {
         "name": "Zone {zone} enabled"
       }
+    },
+    "sensor": {
+      "active_zone_count": {
+        "name": "Active zones",
+        "unit_of_measurement": "Zones"
+      },
+      "rain_delay": {
+        "name": "Rain delay"
+      },
+      "water_hammer_duration": {
+        "name": "Water hammer reduction"
+      },
+      "zone_delay": {
+        "name": "Zone delay"
+      }
     }
   },
   "services": {

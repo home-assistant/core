@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -131,6 +133,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -187,6 +190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -252,6 +256,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -313,6 +318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -369,6 +375,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -423,6 +430,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -472,6 +480,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -521,6 +530,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -572,6 +582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -628,6 +639,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -690,6 +702,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -748,6 +761,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -801,6 +815,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -857,6 +872,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -913,6 +929,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -978,6 +995,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1039,6 +1057,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1095,6 +1114,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1149,6 +1169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1198,6 +1219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1247,6 +1269,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1298,6 +1321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1354,6 +1378,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1416,6 +1441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1474,6 +1500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1530,6 +1557,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel quantity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1584,6 +1612,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1633,6 +1662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1682,6 +1712,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last location activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1733,6 +1764,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1789,6 +1821,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1845,6 +1878,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Admissible charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1901,6 +1935,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1954,6 +1989,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2010,6 +2046,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2066,6 +2103,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2131,6 +2169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2192,6 +2231,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2248,6 +2288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2304,6 +2345,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel quantity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2358,6 +2400,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2407,6 +2450,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2456,6 +2500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2505,6 +2550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last location activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2556,6 +2602,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2612,6 +2659,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2674,6 +2722,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2732,6 +2781,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Admissible charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2788,6 +2838,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -2841,6 +2892,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2897,6 +2949,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2953,6 +3006,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3018,6 +3072,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3079,6 +3134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3133,6 +3189,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3182,6 +3239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3231,6 +3289,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3280,6 +3339,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last location activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -3331,6 +3391,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3387,6 +3448,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3449,6 +3511,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3507,6 +3570,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -3560,6 +3624,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3616,6 +3681,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3672,6 +3738,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3737,6 +3804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3798,6 +3866,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3854,6 +3923,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3908,6 +3978,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3957,6 +4028,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -4006,6 +4078,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -4057,6 +4130,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4113,6 +4187,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4175,6 +4250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4233,6 +4309,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Admissible charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4289,6 +4366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -4342,6 +4420,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery autonomy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4398,6 +4477,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery available energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4454,6 +4534,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4519,6 +4600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4580,6 +4662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4636,6 +4719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front left tyre pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4692,6 +4776,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front right tyre pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4746,6 +4831,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HVAC SoC threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4795,6 +4881,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last battery activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -4844,6 +4931,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last HVAC activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -4893,6 +4981,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last location activity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -4944,6 +5033,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5000,6 +5090,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5062,6 +5153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plug state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5120,6 +5212,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear left tyre pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5176,6 +5269,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rear right tyre pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

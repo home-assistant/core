@@ -40,13 +40,13 @@ rules:
   diagnostics: done
   discovery-update-info: done
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: todo
     comment: |
@@ -56,7 +56,7 @@ rules:
   entity-disabled-by-default: done
   entity-translations: todo
   exception-translations: done
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt

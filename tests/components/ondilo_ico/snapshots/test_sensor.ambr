@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oxydo reduction potential',
     'options': dict({
     }),
     'original_device_class': None,
@@ -127,6 +129,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
@@ -179,6 +182,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RSSI',
     'options': dict({
     }),
     'original_device_class': None,
@@ -231,6 +235,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt',
     'options': dict({
     }),
     'original_device_class': None,
@@ -283,6 +288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TDS',
     'options': dict({
     }),
     'original_device_class': None,
@@ -335,6 +341,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -391,6 +398,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -444,6 +452,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Oxydo reduction potential',
     'options': dict({
     }),
     'original_device_class': None,
@@ -496,6 +505,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'pH',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PH: 'ph'>,
@@ -548,6 +558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RSSI',
     'options': dict({
     }),
     'original_device_class': None,
@@ -600,6 +611,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt',
     'options': dict({
     }),
     'original_device_class': None,
@@ -652,6 +664,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TDS',
     'options': dict({
     }),
     'original_device_class': None,
@@ -704,6 +717,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

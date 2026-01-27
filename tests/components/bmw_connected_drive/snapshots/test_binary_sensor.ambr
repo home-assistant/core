@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Check control messages',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition-based services',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -173,6 +176,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connection status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
@@ -222,6 +226,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door lock state',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
@@ -272,6 +277,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lids',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -328,6 +334,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pre-entry climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -376,6 +383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -427,6 +435,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
@@ -476,6 +485,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Check control messages',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -526,6 +536,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition-based services',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -586,6 +597,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connection status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
@@ -635,6 +647,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door lock state',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
@@ -685,6 +698,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lids',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -740,6 +754,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pre-entry climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -788,6 +803,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -842,6 +858,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
@@ -891,6 +908,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Check control messages',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -941,6 +959,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition-based services',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1001,6 +1020,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Connection status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
@@ -1050,6 +1070,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door lock state',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
@@ -1100,6 +1121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lids',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -1156,6 +1178,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pre-entry climatization',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1204,6 +1227,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -1258,6 +1282,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Check control messages',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1309,6 +1334,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Condition-based services',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1372,6 +1398,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door lock state',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.LOCK: 'lock'>,
@@ -1422,6 +1449,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lids',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
@@ -1477,6 +1505,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Windows',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,

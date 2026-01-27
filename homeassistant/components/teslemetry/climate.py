@@ -291,9 +291,7 @@ class TeslemetryStreamingClimateEntity(
             )
         )
         self.async_on_remove(
-            self.vehicle.stream_vehicle.listen_HvacACEnabled(
-                self._async_handle_hvac_ac_enabled
-            )
+            self.vehicle.stream_vehicle.listen_HvacPower(self._async_handle_hvac_power)
         )
         self.async_on_remove(
             self.vehicle.stream_vehicle.listen_ClimateKeeperMode(
@@ -335,9 +333,13 @@ class TeslemetryStreamingClimateEntity(
         self._attr_current_temperature = data
         self.async_write_ha_state()
 
-    def _async_handle_hvac_ac_enabled(self, data: bool | None):
+    def _async_handle_hvac_power(self, data: str | None):
         self._attr_hvac_mode = (
-            None if data is None else HVACMode.HEAT_COOL if data else HVACMode.OFF
+            None
+            if data is None
+            else HVACMode.HEAT_COOL
+            if data == "On"
+            else HVACMode.OFF
         )
         self.async_write_ha_state()
 
