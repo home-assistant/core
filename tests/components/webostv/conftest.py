@@ -58,6 +58,7 @@ def client_fixture():
             muted=False,
             is_on=True,
             media_state=[{"playState": ""}],
+            power_state={"state": "Active"},
         )
 
         client.is_registered = Mock(return_value=True)
