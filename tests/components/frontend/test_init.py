@@ -1170,3 +1170,28 @@ async def test_setup_cleans_up_pr_cache_when_not_configured(
     await hass.async_block_till_done()
 
     assert not pr_cache_dir.exists()
+
+
+async def test_setup_with_development_pr_unexpected_error(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that setup handles unexpected errors during PR download gracefully."""
+    hass.config.config_dir = str(tmp_path)
+
+    with patch(
+        "homeassistant.components.frontend.download_pr_artifact",
+        side_effect=RuntimeError("Unexpected error"),
+    ):
+        config = {
+            DOMAIN: {
+                CONF_DEVELOPMENT_PR: 12345,
+                CONF_GITHUB_TOKEN: "test_token",
+            }
+        }
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert "Unexpected error downloading PR #12345" in caplog.text

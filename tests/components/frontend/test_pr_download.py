@@ -128,6 +128,72 @@ async def test_pr_download_cache_invalidated(
     assert len(aioclient_mock.mock_calls) == 1
 
 
+async def test_pr_download_cache_sha_read_error(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_github_api: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+    mock_zipfile: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that cache SHA read errors are handled gracefully."""
+    hass.config.config_dir = str(tmp_path)
+
+    pr_cache_dir = tmp_path / ".cache" / "frontend" / "development_artifacts"
+    frontend_dir = pr_cache_dir / "hass_frontend"
+    frontend_dir.mkdir(parents=True)
+    (frontend_dir / "index.html").write_text("test")
+    sha_file = pr_cache_dir / ".sha"
+    sha_file.write_text("abc123def456")
+    sha_file.chmod(0o000)
+
+    aioclient_mock.get(
+        "https://api.github.com/artifact/download",
+        content=b"fake zip data",
+    )
+
+    try:
+        config = {
+            DOMAIN: {
+                "development_pr": 12345,
+                "github_token": "test_token",
+            }
+        }
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert len(aioclient_mock.mock_calls) == 1
+        assert "Failed to read cache SHA file" in caplog.text
+    finally:
+        sha_file.chmod(0o644)
+
+
+async def test_pr_download_session_error(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling of session creation errors."""
+    hass.config.config_dir = str(tmp_path)
+
+    with patch(
+        "homeassistant.components.frontend.pr_download.async_get_clientsession",
+        side_effect=RuntimeError("Session error"),
+    ):
+        config = {
+            DOMAIN: {
+                "development_pr": 12345,
+                "github_token": "test_token",
+            }
+        }
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert "Failed to download PR #12345" in caplog.text
+
+
 @pytest.mark.parametrize(
     ("exc", "error_message"),
     [
@@ -154,6 +220,55 @@ async def test_pr_download_github_errors(
         mock_client = AsyncMock()
         mock_gh_class.return_value = mock_client
         mock_client.generic.side_effect = exc
+
+        config = {
+            DOMAIN: {
+                "development_pr": 12345,
+                "github_token": "test_token",
+            }
+        }
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert error_message in caplog.text.lower()
+        assert "Failed to download PR #12345" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("exc", "error_message"),
+    [
+        (GitHubAuthenticationException("Unauthorized"), "invalid or expired"),
+        (GitHubRatelimitException("Rate limit exceeded"), "rate limit"),
+        (GitHubPermissionException("Forbidden"), "rate limit"),
+        (GitHubException("API error"), "api error"),
+    ],
+)
+async def test_pr_download_artifact_search_github_errors(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    exc: Exception,
+    error_message: str,
+) -> None:
+    """Test handling of GitHub API errors during artifact search."""
+    hass.config.config_dir = str(tmp_path)
+
+    with patch(
+        "homeassistant.components.frontend.pr_download.GitHubAPI"
+    ) as mock_gh_class:
+        mock_client = AsyncMock()
+        mock_gh_class.return_value = mock_client
+
+        pr_response = AsyncMock()
+        pr_response.data = {"head": {"sha": "abc123def456"}}
+
+        async def generic_side_effect(endpoint, **_kwargs):
+            if "pulls" in endpoint:
+                return pr_response
+            raise exc
+
+        mock_client.generic.side_effect = generic_side_effect
 
         config = {
             DOMAIN: {
@@ -239,6 +354,103 @@ async def test_pr_download_http_error(
     assert "Failed to download PR #12345" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("status", "error_message"),
+    [
+        (401, "invalid or expired"),
+        (403, "rate limit"),
+        (500, "http 500"),
+    ],
+)
+async def test_pr_download_http_status_errors(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_github_api: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    status: int,
+    error_message: str,
+) -> None:
+    """Test handling of HTTP status errors during artifact download."""
+    hass.config.config_dir = str(tmp_path)
+
+    aioclient_mock.get(
+        "https://api.github.com/artifact/download",
+        status=status,
+    )
+
+    config = {
+        DOMAIN: {
+            "development_pr": 12345,
+            "github_token": "test_token",
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert error_message in caplog.text.lower()
+    assert "Failed to download PR #12345" in caplog.text
+
+
+async def test_pr_download_timeout_error(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_github_api: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling of timeout during artifact download."""
+    hass.config.config_dir = str(tmp_path)
+
+    aioclient_mock.get(
+        "https://api.github.com/artifact/download",
+        exc=TimeoutError("Connection timed out"),
+    )
+
+    config = {
+        DOMAIN: {
+            "development_pr": 12345,
+            "github_token": "test_token",
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert "timeout" in caplog.text.lower()
+    assert "Failed to download PR #12345" in caplog.text
+
+
+async def test_pr_download_bad_zip_file(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_github_api: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling of corrupted zip file."""
+    hass.config.config_dir = str(tmp_path)
+
+    aioclient_mock.get(
+        "https://api.github.com/artifact/download",
+        content=b"not a valid zip file",
+    )
+
+    config = {
+        DOMAIN: {
+            "development_pr": 12345,
+            "github_token": "test_token",
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert "Failed to download PR #12345" in caplog.text
+    assert "corrupted or invalid" in caplog.text.lower()
+
+
 async def test_pr_download_zip_bomb_too_many_files(
     hass: HomeAssistant,
     tmp_path: Path,
@@ -256,7 +468,6 @@ async def test_pr_download_zip_bomb_too_many_files(
 
     with patch("zipfile.ZipFile") as mock_zip:
         mock_zip_instance = MagicMock()
-        # Create a mock with too many files (> MAX_ZIP_FILES which is 50000)
         mock_info = MagicMock()
         mock_info.file_size = 100
         mock_zip_instance.infolist.return_value = [mock_info] * 55000
@@ -293,7 +504,6 @@ async def test_pr_download_zip_bomb_too_large(
 
     with patch("zipfile.ZipFile") as mock_zip:
         mock_zip_instance = MagicMock()
-        # Create a mock with excessive total size (> MAX_ZIP_SIZE which is 1.5GB)
         mock_info = MagicMock()
         mock_info.file_size = 2 * 1024 * 1024 * 1024  # 2GB per file
         mock_zip_instance.infolist.return_value = [mock_info]
@@ -311,3 +521,40 @@ async def test_pr_download_zip_bomb_too_large(
 
         assert "Failed to download PR #12345" in caplog.text
         assert "too large" in caplog.text.lower()
+
+
+async def test_pr_download_extraction_os_error(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_github_api: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling of OS errors during extraction."""
+    hass.config.config_dir = str(tmp_path)
+
+    aioclient_mock.get(
+        "https://api.github.com/artifact/download",
+        content=b"fake zip data",
+    )
+
+    with patch("zipfile.ZipFile") as mock_zip:
+        mock_zip_instance = MagicMock()
+        mock_info = MagicMock()
+        mock_info.file_size = 100
+        mock_zip_instance.infolist.return_value = [mock_info]
+        mock_zip_instance.extractall.side_effect = OSError("Disk full")
+        mock_zip.return_value.__enter__.return_value = mock_zip_instance
+
+        config = {
+            DOMAIN: {
+                "development_pr": 12345,
+                "github_token": "test_token",
+            }
+        }
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert "Failed to download PR #12345" in caplog.text
+        assert "failed to extract" in caplog.text.lower()
