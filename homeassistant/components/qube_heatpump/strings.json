@@ -31,7 +31,7 @@
           "port": "Modbus TCP port (default: 502)."
         },
         "description": "Update connection settings for your Qube heat pump.",
-        "title": "Reconfigure Qube Heatpump"
+        "title": "Reconfigure Qube heat pump"
       }
     }
   },
