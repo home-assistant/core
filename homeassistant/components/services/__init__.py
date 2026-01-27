@@ -28,12 +28,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class ServiceActionsProtocol(Protocol):
     """Define the format that service actions platforms can have."""
 
-    async def async_setup_service_actions(self, hass: HomeAssistant) -> None:
-        """Set up service actions for an integration."""
+    async def async_register_service_actions(self, hass: HomeAssistant) -> None:
+        """Register service actions for an integration."""
 
 
 async def _register_service_actions_platform(
     hass: HomeAssistant, integration_domain: str, platform: ServiceActionsProtocol
 ) -> None:
     """Register a service actions platform."""
-    await platform.async_setup_service_actions(hass)
+    await platform.async_register_service_actions(hass)

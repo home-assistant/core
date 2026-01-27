@@ -70,8 +70,8 @@ def _trigger_automation(call: ServiceCall) -> None:
         dispatcher_send(call.hass, signal)
 
 
-async def async_setup_service_actions(hass: HomeAssistant) -> None:
-    """Home Assistant services."""
+async def async_register_service_actions(hass: HomeAssistant) -> None:
+    """Register service actions."""
 
     hass.services.async_register(
         DOMAIN, SERVICE_SETTINGS, _change_setting, schema=CHANGE_SETTING_SCHEMA
