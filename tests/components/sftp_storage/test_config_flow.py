@@ -14,6 +14,7 @@ from homeassistant.components.sftp_storage.config_flow import (
     SFTPStorageMissingPasswordOrPkey,
 )
 from homeassistant.components.sftp_storage.const import (
+    CONF_BACKUP_LOCATION,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PRIVATE_KEY_FILE,
@@ -49,15 +50,17 @@ def mock_process_uploaded_file():
         yield
 
 
+@pytest.mark.xdist_group("sftp_storage")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_process_uploaded_file")
-@pytest.mark.usefixtures("mock_ssh_connection")
 async def test_backup_sftp_full_flow(
     hass: HomeAssistant,
+    mock_ssh_connection: SSHClientConnectionMock,
 ) -> None:
     """Test the full backup_sftp config flow with valid user input."""
 
     user_input = USER_INPUT.copy()
+    mock_ssh_connection._sftp._mock_getcwd = user_input[CONF_BACKUP_LOCATION]
     # Start the configuration flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -82,6 +85,7 @@ async def test_backup_sftp_full_flow(
     assert result["data"] == user_input
 
 
+@pytest.mark.xdist_group("sftp_storage")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_process_uploaded_file")
 @pytest.mark.usefixtures("mock_ssh_connection")
@@ -105,22 +109,26 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.xdist_group("sftp_storage")
 @pytest.mark.parametrize(
-    ("exception_type", "error_base"),
+    ("exception_type", "backup_location", "error_base"),
     [
-        (OSError, "os_error"),
-        (SFTPStorageInvalidPrivateKey, "invalid_key"),
-        (PermissionDenied, "permission_denied"),
-        (SFTPStorageMissingPasswordOrPkey, "key_or_password_needed"),
-        (SFTPNoSuchFile, "sftp_no_such_file"),
-        (SFTPPermissionDenied, "sftp_permission_denied"),
-        (Exception, "unknown"),
+        (OSError, None, "os_error"),
+        (SFTPStorageInvalidPrivateKey, None, "invalid_key"),
+        (PermissionDenied, None, "permission_denied"),
+        (SFTPStorageMissingPasswordOrPkey, None, "key_or_password_needed"),
+        (SFTPNoSuchFile, None, "sftp_no_such_file"),
+        (SFTPPermissionDenied, None, "sftp_permission_denied"),
+        (SFTPPermissionDenied, "/backup/location", "sftp_write_permission_denied"),
+        (SFTPPermissionDenied, "/", "sftp_write_root_permission_denied"),
+        (Exception, None, "unknown"),
     ],
 )
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_process_uploaded_file")
 async def test_config_flow_exceptions(
-    exception_type: Exception,
+    exception_type: type[Exception],
+    backup_location: str | None,
     error_base: str,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -128,7 +136,13 @@ async def test_config_flow_exceptions(
 ) -> None:
     """Test successful failure of already added config entry."""
 
-    mock_ssh_connection._sftp._mock_chdir.side_effect = exception_type("Error message.")
+    user_input = USER_INPUT.copy()
+    if exception_type == SFTPPermissionDenied and backup_location is not None:
+        mock_target = mock_ssh_connection._sftp._mock_unlink
+        user_input[CONF_BACKUP_LOCATION] = backup_location
+    else:
+        mock_target = mock_ssh_connection._sftp._mock_chdir
+    mock_target.side_effect = exception_type("Error message.")
 
     # config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -137,7 +151,7 @@ async def test_config_flow_exceptions(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
+        result["flow_id"], user_input
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -161,6 +175,7 @@ async def test_config_flow_exceptions(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.xdist_group("sftp_storage")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_process_uploaded_file")
 async def test_config_entry_error(hass: HomeAssistant) -> None:

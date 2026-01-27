@@ -59,6 +59,7 @@ def generate_result(metadata: dict) -> dict:
     return expected_result
 
 
+@pytest.mark.xdist_group("sftp_storage")
 async def test_agents_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -91,6 +92,7 @@ async def test_agents_info(
     )
 
 
+@pytest.mark.xdist_group("sftp_storage")
 async def test_agents_list_backups(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -109,6 +111,7 @@ async def test_agents_list_backups(
     assert response["result"]["backups"] == [expected_result]
 
 
+@pytest.mark.xdist_group("sftp_storage")
 async def test_agents_list_backups_fail(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -131,6 +134,7 @@ async def test_agents_list_backups_fail(
     }
 
 
+@pytest.mark.xdist_group("sftp_storage")
 async def test_agents_list_backups_include_bad_metadata(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -156,6 +160,7 @@ async def test_agents_list_backups_include_bad_metadata(
     )
 
 
+@pytest.mark.xdist_group("sftp_storage")
 @pytest.mark.parametrize(
     ("backup_id", "expected_result"),
     [
@@ -182,6 +187,7 @@ async def test_agents_get_backup(
     assert response["result"]["backup"] == expected_result
 
 
+@pytest.mark.xdist_group("sftp_storage")
 async def test_agents_download(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -199,6 +205,7 @@ async def test_agents_download(
     mock_ssh_connection._sftp._mock_open.close.assert_awaited()
 
 
+@pytest.mark.xdist_group("sftp_storage")
 async def test_agents_download_fail(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -225,6 +232,7 @@ async def test_agents_download_fail(
     assert b"Internal Server Error" in content
 
 
+@pytest.mark.xdist_group("sftp_storage")
 async def test_agents_download_metadata_not_found(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -243,6 +251,7 @@ async def test_agents_download_metadata_not_found(
     assert content.decode() == ""
 
 
+@pytest.mark.xdist_group("sftp_storage")
 async def test_agents_upload(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -286,6 +295,7 @@ async def test_agents_upload(
     assert uploaded_metadata == BACKUP_METADATA["metadata"]
 
 
+@pytest.mark.xdist_group("sftp_storage")
 async def test_agents_upload_fail(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -316,6 +326,7 @@ async def test_agents_upload_fail(
     )
 
 
+@pytest.mark.xdist_group("sftp_storage")
 async def test_agents_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -340,6 +351,7 @@ async def test_agents_delete(
     assert mock_ssh_connection._sftp._mock_unlink.call_count == 2
 
 
+@pytest.mark.xdist_group("sftp_storage")
 @pytest.mark.parametrize(
     ("exists_side_effect", "expected_result"),
     [
@@ -382,6 +394,7 @@ async def test_agents_delete_fail(
     assert response["result"] == expected_result
 
 
+@pytest.mark.xdist_group("sftp_storage")
 async def test_agents_delete_not_found(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -405,6 +418,7 @@ async def test_agents_delete_not_found(
     assert response["result"] == {"agent_errors": {}}
 
 
+@pytest.mark.xdist_group("sftp_storage")
 async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
     """Test listener gets cleaned up."""
     listener = MagicMock()
