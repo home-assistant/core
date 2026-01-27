@@ -23,34 +23,6 @@ class RejseplanenEntity(CoordinatorEntity[RejseplanenDataUpdateCoordinator]):
         stop_id: int,
     ) -> None:
         """Initialize base entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, context=stop_id)
 
-        self._unavailable_logged = False
         self._stop_id = stop_id
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity being added to hass."""
-        await super().async_added_to_hass()
-        # Register stop ID with coordinator
-        self.coordinator.add_stop_id(self._stop_id)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Handle removal of the entity from Home Assistant."""
-        await super().async_will_remove_from_hass()
-        # Clean up stop ID from coordinator
-        self.coordinator.remove_stop_id(self._stop_id)
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        available = super().available
-
-        # Log unavailability changes (Silver requirement)
-        if not available and not self._unavailable_logged:
-            _LOGGER.info("Entity %s became unavailable", self.entity_id)
-            self._unavailable_logged = True
-        elif available and self._unavailable_logged:
-            _LOGGER.info("Entity %s is back online", self.entity_id)
-            self._unavailable_logged = False
-
-        return available

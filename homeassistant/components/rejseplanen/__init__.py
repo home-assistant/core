@@ -6,10 +6,7 @@ import logging
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN
 from .coordinator import RejseplanenConfigEntry, RejseplanenDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,9 +17,6 @@ logging.getLogger("py_rejseplan").setLevel(logging.WARNING)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-# Integration is config entry only (deprecated YAML setup triggers repair issue)
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -31,10 +25,7 @@ async def async_setup_entry(
     """Set up Rejseplanen from a config entry."""
     coordinator = RejseplanenDataUpdateCoordinator(hass, config_entry)
 
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except Exception as ex:
-        raise ConfigEntryNotReady(f"Unable to connect to Rejseplanen API: {ex}") from ex
+    await coordinator.async_config_entry_first_refresh()
 
     config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

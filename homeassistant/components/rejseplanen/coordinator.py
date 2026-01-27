@@ -9,6 +9,7 @@ from py_rejseplan.api.departures import DeparturesAPIClient
 from py_rejseplan.dataclasses.departure import Departure
 from py_rejseplan.dataclasses.departure_board import DepartureBoard
 from py_rejseplan.exceptions import APIError, ConnectionError, HTTPError
+from reactivex import throw
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -67,20 +68,6 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
         self.last_update_success_time = dt_util.now()
         return board
 
-    @property
-    def available(self) -> bool:
-        """Return if the coordinator is available.
-
-        The coordinator is considered available if it has been updated successfully
-        at least once and the last update was successful.
-        """
-        return (
-            self.last_update_success_time is not None
-            and self.update_interval is not None
-            and self.last_update_success_time
-            > (dt_util.now() - 3 * self.update_interval)
-        )
-
     def add_stop_id(self, stop_id: int):
         """Add a stop ID to the coordinator."""
         self._stop_ids.add(stop_id)
@@ -95,33 +82,30 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
             _LOGGER.warning(
                 "No stops registered, Please add a stop through the UI configuration. Data not fetched"
             )
-            return DepartureBoard(
-                serverVersion="N/A",
-                dialectVersion="N/A",
-                planRtTs=datetime.now(),
-                requestId="N/A",
-                departures=[],
-            )
+            throw(UpdateFailed("No stops registered for data fetching."))
         _LOGGER.debug("Fetching data for stop IDs: %s", self._stop_ids)
         # Get all departures for this stop
-        departure_board, _ = self.api.get_departures(list(self._stop_ids))
+        departure_board, _ = self.api.get_departures(list(self.async_contexts()))
         return departure_board
 
     def get_filtered_departures(
-        self,
-        stop_id,
-        route_filter=None,
-        direction_filter=None,
-        departure_type_filter=None,
+        self: RejseplanenDataUpdateCoordinator,
+        stop_id: int,
+        route_filter: list[str] | None = None,
+        direction_filter: list[str] | None = None,
+        departure_type_filter: int | None = None,
     ) -> list[Departure]:
         """Get departures filtered by the specified criteria."""
         if not self.data:
             return []
 
-        departures = self.data.departures
+        departure_board: DepartureBoard
+        departure_board, _ = self.api.get_departures(list(self.async_contexts()))
 
         filtered_data = [
-            departure for departure in departures if departure.stopExtId == stop_id
+            departure
+            for departure in departure_board.departures
+            if departure.stopExtId == stop_id
         ]
 
         if direction_filter:
@@ -131,7 +115,10 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
 
         if departure_type_filter:
             filtered_data = [
-                d for d in filtered_data if (d.product.cls_id & departure_type_filter)
+                d
+                for d in filtered_data
+                if d.product.cls_id is not None
+                and (d.product.cls_id & departure_type_filter)
             ]
 
         # Sort by due_in time

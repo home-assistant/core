@@ -89,6 +89,9 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         """Handle the initial step of the config flow."""
+
+        self._async_abort_entries_match()
+
         if user_input is None:
             return self.async_show_form(
                 step_id="user",
@@ -102,10 +105,11 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             result = await self.hass.async_add_executor_job(api.validate_auth_key)
-            if not result:
-                errors["base"] = "invalid_auth"
         except (ConnectionError, TimeoutError, OSError):
             errors["base"] = "cannot_connect"
+        else:
+            if not result:
+                errors["base"] = "invalid_auth"
 
         if errors:
             return self.async_show_form(
@@ -113,7 +117,6 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=CONFIG_SCHEMA,
                 errors=errors,
             )
-
         # Store the authentication key and name
         return self.async_create_entry(
             title="Rejseplanen",

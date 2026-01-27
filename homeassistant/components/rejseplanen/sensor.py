@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import UnitOfTime
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -401,28 +402,19 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     # Process all subentries (stop configurations)
-    for subentry_id, subentry in config_entry.subentries.items():
+    for subentry in config_entry.subentries.values():
         if subentry.subentry_type != "stop":
             continue
 
-        config = dict(subentry.data)
-        config["subentry_id"] = subentry_id
-
-        subentry_entities = [
-            RejseplanenTransportSensor(
-                coordinator=coordinator, config=config, entity_description=description
-            )
-            for description in SENSORS
-        ]
-        _LOGGER.debug(
-            "Adding %d entities for subentry %s (stop_id: %d)",
-            len(subentry_entities),
-            subentry_id,
-            int(config[CONF_STOP_ID]),
-        )
         async_add_entities(
-            subentry_entities,
-            config_subentry_id=subentry_id,
+            [
+                RejseplanenTransportSensor(
+                    coordinator=coordinator,
+                    config=subentry,
+                    entity_description=description,
+                )
+                for description in SENSORS
+            ]
         )
 
 
@@ -435,21 +427,21 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
     def __init__(
         self,
         coordinator: RejseplanenDataUpdateCoordinator,
-        config: dict[str, Any],
+        config: ConfigSubentry,
         entity_description: RejseplanenSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, int(config[CONF_STOP_ID]))
+        super().__init__(coordinator, int(config.data[CONF_STOP_ID]))
         self.entity_description = entity_description
 
         self._departure_cleanup_unsubscribe: CALLBACK_TYPE | None = None
         self._last_cleanup_time: datetime | None = None
 
-        self._stop_id = int(config[CONF_STOP_ID])
-        self._route = config.get(CONF_ROUTE, [])
-        self._direction = config.get(CONF_DIRECTION, [])
-        self._departure_type = config.get(CONF_DEPARTURE_TYPE, [])
-        self._attr_unique_id = f"{config.get('subentry_id')}_{entity_description.key}"
+        self._stop_id = int(config.data[CONF_STOP_ID])
+        self._route = config.data[CONF_ROUTE]
+        self._direction = config.data[CONF_DIRECTION]
+        self._departure_type = config.data[CONF_DEPARTURE_TYPE]
+        self._attr_unique_id = f"{config.subentry_id}_{entity_description.key}"
 
         # Calculate bitflag for filtering
         self._departure_type_bitflag = coordinator.api.calculate_departure_type_bitflag(
@@ -458,10 +450,9 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
         # Create a device for this configured stop using the configuration
         # values so the device entry contains useful metadata for the stop.
         self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, str(config.get("subentry_id")))},
-            name=config.get("name") or f"Rejseplanen stop {self._stop_id}",
+            identifiers={(DOMAIN, config.subentry_id)},
+            name=config.data.get("name"),
             manufacturer="Rejseplanen",
-            sw_version=str(self._stop_id),
         )
 
     async def async_added_to_hass(self) -> None:
