@@ -76,12 +76,12 @@ class EventAreaRegistryUpdatedData(TypedDict):
 class AreaEntry(NormalizedNameBaseRegistryEntry):
     """Area Registry Entry."""
 
-    aliases: set[str]
+    aliases: frozenset[str]
     floor_id: str | None
     humidity_entity_id: str | None
     icon: str | None
     id: str
-    labels: set[str] = field(default_factory=set)
+    labels: frozenset[str] = field(default_factory=frozenset)
     picture: str | None
     temperature_entity_id: str | None
     _cache: dict[str, Any] = field(default_factory=dict, compare=False, init=False)
@@ -302,12 +302,12 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             _validate_temperature_entity(self.hass, temperature_entity_id)
 
         area = AreaEntry(
-            aliases=aliases or set(),
+            aliases=frozenset(aliases) if aliases else frozenset(),
             floor_id=floor_id,
             humidity_entity_id=humidity_entity_id,
             icon=icon,
             id=self._generate_id(name),
-            labels=labels or set(),
+            labels=frozenset(labels) if labels else frozenset(),
             name=name,
             picture=picture,
             temperature_entity_id=temperature_entity_id,
@@ -345,11 +345,11 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         self,
         area_id: str,
         *,
-        aliases: set[str] | UndefinedType = UNDEFINED,
+        aliases: frozenset[str] | set[str] | UndefinedType = UNDEFINED,
         floor_id: str | None | UndefinedType = UNDEFINED,
         humidity_entity_id: str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
-        labels: set[str] | UndefinedType = UNDEFINED,
+        labels: frozenset[str] | set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
         temperature_entity_id: str | None | UndefinedType = UNDEFINED,
@@ -381,11 +381,11 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         self,
         area_id: str,
         *,
-        aliases: set[str] | UndefinedType = UNDEFINED,
+        aliases: frozenset[str] | set[str] | UndefinedType = UNDEFINED,
         floor_id: str | None | UndefinedType = UNDEFINED,
         humidity_entity_id: str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
-        labels: set[str] | UndefinedType = UNDEFINED,
+        labels: frozenset[str] | set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
         temperature_entity_id: str | None | UndefinedType = UNDEFINED,
@@ -396,16 +396,22 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         new_values: dict[str, Any] = {
             attr_name: value
             for attr_name, value in (
-                ("aliases", aliases),
                 ("floor_id", floor_id),
                 ("humidity_entity_id", humidity_entity_id),
                 ("icon", icon),
-                ("labels", labels),
                 ("picture", picture),
                 ("temperature_entity_id", temperature_entity_id),
             )
             if value is not UNDEFINED and value != getattr(old, attr_name)
         }
+
+        for attr_name, value in (
+            ("aliases", aliases),
+            ("labels", labels),
+        ):
+            if value is UNDEFINED or value == getattr(old, attr_name):
+                continue
+            new_values[attr_name] = frozenset(value)
 
         if "humidity_entity_id" in new_values and humidity_entity_id is not None:
             _validate_humidity_entity(self.hass, new_values["humidity_entity_id"])
@@ -459,12 +465,12 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             for area in data["areas"]:
                 assert area["name"] is not None and area["id"] is not None
                 areas[area["id"]] = AreaEntry(
-                    aliases=set(area["aliases"]),
+                    aliases=frozenset(area["aliases"]),
                     floor_id=area["floor_id"],
                     humidity_entity_id=area["humidity_entity_id"],
                     icon=area["icon"],
                     id=area["id"],
-                    labels=set(area["labels"]),
+                    labels=frozenset(area["labels"]),
                     name=area["name"],
                     picture=area["picture"],
                     temperature_entity_id=area["temperature_entity_id"],
