@@ -69,16 +69,15 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         value_fn=lambda ev: ev.status,
     ),
     OpenEVSESensorDescription(
-        key="mode",
-        translation_key="mode",
-        value_fn=lambda ev: ev.mode,
-    ),
-    OpenEVSESensorDescription(
         key="service_level",
         translation_key="service_level",
         device_class=SensorDeviceClass.ENUM,
-        options=["1", "2", "a"],
-        value_fn=lambda ev: ev.service_level.lower(),
+        options=["level_1", "level_2", "automatic"],
+        value_fn=lambda ev: {
+            "1": "level_1",
+            "2": "level_2",
+            "a": "automatic",
+        }.get(ev.service_level.lower()),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -281,7 +280,6 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     # Connectivity sensors
     OpenEVSESensorDescription(
         key="wifi_signal",
-        translation_key="wifi_signal",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
@@ -465,14 +463,6 @@ class OpenEVSESensor(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SensorEnt
                 (CONNECTION_NETWORK_MAC, unique_id)
             }
             self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return (
-            super().available
-            and self.entity_description.value_fn(self.coordinator.charger) is not None
-        )
 
     @property
     def native_value(self) -> StateType | datetime:

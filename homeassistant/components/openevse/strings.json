@@ -30,14 +30,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "manual_override": {
-        "name": "Manual override"
-      },
-      "vehicle": {
-        "name": "Vehicle connected"
-      }
-    },
     "sensor": {
       "ambient_temp": {
         "name": "Ambient temperature"
@@ -102,9 +94,9 @@
       "service_level": {
         "name": "Service level",
         "state": {
-          "1": "Level 1 (120V)",
-          "2": "Level 2 (240V)",
-          "a": "Automatic"
+          "automatic": "Automatic",
+          "level_1": "Level 1 (120V)",
+          "level_2": "Level 2 (240V)"
         }
       },
       "shaper_available_current": {
@@ -154,9 +146,6 @@
       },
       "vehicle_soc": {
         "name": "Vehicle state of charge"
-      },
-      "wifi_signal": {
-        "name": "WiFi signal strength"
       }
     }
   },

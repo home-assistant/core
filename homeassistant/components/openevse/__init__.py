@@ -10,7 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> bool:

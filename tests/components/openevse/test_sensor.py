@@ -7,7 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, Platform
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -69,10 +69,10 @@ async def test_missing_sensor_graceful_handling(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # The sensor with missing attribute should be unavailable
+    # The sensor with missing attribute should be unknown
     state = hass.states.get("sensor.openevse_mock_config_vehicle_state_of_charge")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNKNOWN
 
     # Other sensors should still work
     state = hass.states.get("sensor.openevse_mock_config_charging_status")
