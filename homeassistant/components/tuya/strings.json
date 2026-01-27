@@ -1096,12 +1096,44 @@
   "exceptions": {
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
+    },
+    "device_not_found": {
+      "message": "Device with ID {device_id} not found in any loaded Tuya config entry."
+    },
+    "device_offline": {
+      "message": "Device {device_name} is offline and cannot receive commands."
+    },
+    "invalid_dp_code": {
+      "message": "DP code \"{dp_code}\" is not a valid function for {device_name}. Available codes: {available_codes}"
+    },
+    "send_command_failed": {
+      "message": "Failed to send command to {device_name}: {error}"
     }
   },
   "issues": {
     "deprecated_entity_new_valve": {
       "description": "The Tuya entity `{entity}` is deprecated, replaced by a new valve entity.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue.",
       "title": "{name} is deprecated"
+    }
+  },
+  "services": {
+    "set_dp_value": {
+      "description": "Set a data point value on a Tuya device. Use this to control device features not exposed as entities.",
+      "fields": {
+        "device_id": {
+          "description": "The Tuya device to control",
+          "name": "Device"
+        },
+        "dp_code": {
+          "description": "The data point code to control (e.g., switch_1, vibe_light_scene)",
+          "name": "DP code"
+        },
+        "dp_value": {
+          "description": "The value to set (boolean, integer, string, or base64 for Raw type)",
+          "name": "Value"
+        }
+      },
+      "name": "Set DP value"
     }
   }
 }
