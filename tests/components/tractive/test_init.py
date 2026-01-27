@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from aiotractive.exceptions import TractiveError, UnauthorizedError
 import pytest
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
 from homeassistant.components.tractive.const import (
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
@@ -17,6 +18,7 @@ from homeassistant.components.tractive.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
@@ -216,3 +218,28 @@ async def test_missing_activity_data(
     payload = async_dispatcher_send_mock.mock_calls[0][1][2]
     assert payload[ATTR_DAILY_GOAL] is None
     assert payload[ATTR_MINUTES_ACTIVE] is None
+
+
+@pytest.mark.parametrize("sensor", ["activity_label", "calories", "sleep_label"])
+async def test_remove_unsupported_sensor_entity(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    sensor: str,
+) -> None:
+    """Test removing unsupported sensor entity."""
+    entity_id = f"sensor.test_pet_{sensor}"
+    mock_config_entry.add_to_hass(hass)
+
+    entity_registry.async_get_or_create(
+        SENSOR_PLATFORM,
+        DOMAIN,
+        f"pet_id_123_{sensor}",
+        suggested_object_id=entity_id.rsplit(".", maxsplit=1)[-1],
+        config_entry=mock_config_entry,
+    )
+
+    await init_integration(hass, mock_config_entry)
+
+    assert entity_registry.async_get(entity_id) is None

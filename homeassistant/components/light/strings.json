@@ -42,24 +42,24 @@
   },
   "conditions": {
     "is_off": {
-      "description": "Test if a light is off.",
+      "description": "Tests if one or more lights are off.",
       "fields": {
         "behavior": {
           "description": "[%key:component::light::common::condition_behavior_description%]",
           "name": "[%key:component::light::common::condition_behavior_name%]"
         }
       },
-      "name": "If a light is off"
+      "name": "Light is off"
     },
     "is_on": {
-      "description": "Test if a light is on.",
+      "description": "Tests if one or more lights are on.",
       "fields": {
         "behavior": {
           "description": "[%key:component::light::common::condition_behavior_description%]",
           "name": "[%key:component::light::common::condition_behavior_name%]"
         }
       },
-      "name": "If a light is on"
+      "name": "Light is on"
     }
   },
   "device_automation": {

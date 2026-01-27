@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -128,6 +130,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -181,6 +184,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indoor air quality score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -232,6 +236,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NOx index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -283,6 +288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
@@ -336,6 +342,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
@@ -389,6 +396,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -442,6 +450,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM4',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM4: 'pm4'>,
@@ -495,6 +504,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -551,6 +561,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -604,6 +615,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -660,6 +672,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VOC index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -711,6 +724,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Acceleration total',
     'options': dict({
     }),
     'original_device_class': None,
@@ -763,6 +777,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Acceleration X',
     'options': dict({
     }),
     'original_device_class': None,
@@ -815,6 +830,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Acceleration Y',
     'options': dict({
     }),
     'original_device_class': None,
@@ -867,6 +883,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Acceleration Z',
     'options': dict({
     }),
     'original_device_class': None,
@@ -919,6 +936,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -972,6 +990,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Movement counter',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1023,6 +1042,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1079,6 +1099,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -1132,6 +1153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1188,6 +1210,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1244,6 +1267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -1297,6 +1321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1350,6 +1375,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Illuminance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
@@ -1403,6 +1429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Indoor air quality score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1454,6 +1481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NOx index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1505,6 +1533,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -1558,6 +1587,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1614,6 +1644,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
@@ -1667,6 +1698,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1723,6 +1755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VOC index',
     'options': dict({
     }),
     'original_device_class': None,

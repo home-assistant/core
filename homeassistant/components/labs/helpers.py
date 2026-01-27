@@ -61,3 +61,32 @@ def async_listen(
             listener()
 
     return hass.bus.async_listen(EVENT_LABS_UPDATED, _async_feature_updated)
+
+
+async def async_update_preview_feature(
+    hass: HomeAssistant,
+    domain: str,
+    preview_feature: str,
+    enabled: bool,
+) -> None:
+    """Update a lab preview feature state."""
+    labs_data = hass.data[LABS_DATA]
+
+    preview_feature_id = f"{domain}.{preview_feature}"
+
+    if preview_feature_id not in labs_data.preview_features:
+        raise ValueError(f"Preview feature {preview_feature_id} not found")
+
+    if enabled:
+        labs_data.data.preview_feature_status.add((domain, preview_feature))
+    else:
+        labs_data.data.preview_feature_status.discard((domain, preview_feature))
+
+    await labs_data.store.async_save(labs_data.data.to_store_format())
+
+    event_data: EventLabsUpdatedData = {
+        "domain": domain,
+        "preview_feature": preview_feature,
+        "enabled": enabled,
+    }
+    hass.bus.async_fire(EVENT_LABS_UPDATED, event_data)
