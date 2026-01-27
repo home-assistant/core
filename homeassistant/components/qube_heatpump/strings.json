@@ -107,7 +107,7 @@
         "name": "DHW controller enabled"
       },
       "glbal": {
-        "name": "Global Alarm"
+        "name": "Global alarm"
       },
       "heatingalrms": {
         "name": "Alarm: Collective alarm heating"
