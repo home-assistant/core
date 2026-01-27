@@ -1,7 +1,5 @@
 """Tests for NRGkick device naming and fallback logic."""
 
-from unittest.mock import patch
-
 from homeassistant.components.nrgkick.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -25,9 +23,8 @@ async def test_device_name_fallback(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data
 
-    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify device registry
     device_registry = dr.async_get(hass)
@@ -67,9 +64,8 @@ async def test_device_name_custom(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data
 
-    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify device registry
     device_registry = dr.async_get(hass)

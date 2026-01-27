@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
-
 from nrgkick_api import (
     NRGkickAuthenticationError as LibAuthError,
     NRGkickConnectionError as LibConnectionError,
@@ -25,10 +23,9 @@ async def test_setup_entry(
     """Test successful setup of entry."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
-        # Use the config_entries.async_setup to properly set entry state
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Use the config_entries.async_setup to properly set entry state
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data is not None
@@ -42,9 +39,8 @@ async def test_setup_entry_failed_connection(
 
     mock_nrgkick_api.get_info.side_effect = LibConnectionError("Connection failed")
 
-    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -55,10 +51,9 @@ async def test_unload_entry(
     """Test successful unload of entry."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
-        # Use proper setup to set entry state
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Use proper setup to set entry state
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Use the config_entries.async_unload for proper state management
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -73,15 +68,13 @@ async def test_reload_entry(
     """Test reload of entry."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
-        # Use proper setup to set entry state
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Use proper setup to set entry state
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Test that reload calls the config_entries.async_reload
-    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
-        assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_coordinator_update_success(
@@ -99,16 +92,15 @@ async def test_coordinator_update_success(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data
 
-    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
-        # Use proper setup to set entry state
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Use proper setup to set entry state
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        coordinator = mock_config_entry.runtime_data
-        assert coordinator.data is not None
-        assert coordinator.data.info == mock_info_data
-        assert coordinator.data.control == mock_control_data
-        assert coordinator.data.values == mock_values_data
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data is not None
+    assert coordinator.data.info == mock_info_data
+    assert coordinator.data.control == mock_control_data
+    assert coordinator.data.values == mock_values_data
 
 
 async def test_coordinator_update_failed(

@@ -50,10 +50,7 @@ async def test_sensor_entities(
 
     # Setup entry
     now = datetime(2025, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC)
-    with (
-        patch("homeassistant.components.nrgkick.async_get_clientsession"),
-        patch("homeassistant.components.nrgkick.sensor.utcnow", return_value=now),
-    ):
+    with patch("homeassistant.components.nrgkick.sensor.utcnow", return_value=now):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -145,11 +142,8 @@ async def test_mapped_unknown_values_become_state_unknown(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data_sensor
 
-    with (
-        patch("homeassistant.components.nrgkick.async_get_clientsession"),
-    ):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -194,9 +188,8 @@ async def test_cellular_and_gps_entities_are_gated_by_model_type(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data_sensor
 
-    with patch("homeassistant.components.nrgkick.async_get_clientsession"):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
     optional_keys = (
