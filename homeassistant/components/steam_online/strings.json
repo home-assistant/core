@@ -20,7 +20,7 @@
           "account": "Steam account ID",
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
-        "description": "Use {account_id_url} to find your Steam account ID"
+        "description": "Use {account_id_url} to find your Steam account ID (labeled \"steamID64\")"
       }
     }
   },
