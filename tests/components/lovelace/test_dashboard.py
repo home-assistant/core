@@ -200,7 +200,12 @@ async def test_lovelace_migration_completes_when_both_files_exist(
         "data": {"config": {"views": [{"title": "New"}]}},
     }
 
-    assert await async_setup_component(hass, "lovelace", {})
+    with patch("homeassistant.components.lovelace.os.rename") as mock_rename:
+        assert await async_setup_component(hass, "lovelace", {})
+
+    # Old file should be renamed as backup
+    old_path = hass.config.path(".storage", dashboard.CONFIG_STORAGE_KEY_DEFAULT)
+    mock_rename.assert_called_once_with(old_path, old_path + "_old")
 
     # Dashboard should be created, completing the incomplete migration
     client = await hass_ws_client(hass)
@@ -215,9 +220,6 @@ async def test_lovelace_migration_completes_when_both_files_exist(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {"views": [{"title": "New"}]}
-
-    # Old storage key should be removed
-    assert dashboard.CONFIG_STORAGE_KEY_DEFAULT not in hass_storage
 
 
 async def test_lovelace_migration_skipped_when_already_migrated(

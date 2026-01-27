@@ -1,7 +1,9 @@
 """Support for the Lovelace UI."""
 
+from contextlib import suppress
 from dataclasses import dataclass
 import logging
+import os
 from typing import Any
 
 import voluptuous as vol
@@ -401,9 +403,10 @@ async def _async_migrate_default_config(
     1. Skips if a dashboard with url_path "lovelace" already exists
     2. Skips if .storage/lovelace has no data
     3. Creates a new dashboard entry with url_path "lovelace"
-    4. Copies data to .storage/lovelace.lovelace (if not already present)
-    5. Removes old .storage/lovelace file
-    6. Sets the default panel to "lovelace" if not already configured
+    4. Handles storage files:
+       a. If .storage/lovelace.lovelace does not exist, copies data and removes old file
+       b. If .storage/lovelace.lovelace already exists, renames old file to lovelace_old as backup
+    5. Sets the default panel to "lovelace" if not already configured
     """
     # 1. Skip if already migrated (dashboard with url_path "lovelace" exists)
     for item in dashboards_collection.async_items():
@@ -441,7 +444,7 @@ async def _async_migrate_default_config(
         _LOGGER.exception("Failed to create dashboard entry during migration")
         return
 
-    # 4. Copy data to new storage (if not already present)
+    # 4. Handle storage files
     new_store = Store[dict[str, Any]](
         hass,
         dashboard.CONFIG_STORAGE_VERSION,
@@ -449,13 +452,21 @@ async def _async_migrate_default_config(
     )
     if await new_store.async_load() is None:
         await new_store.async_save(old_data)
-
-    # 5. Remove old storage file
-    await old_store.async_remove()
+        await old_store.async_remove()
+    else:
+        # This should not happen because "lovelace" was a forbidden dashboard
+        # url_path before this migration existed. Rename old file as backup
+        # to avoid data loss just in case.
+        with suppress(FileNotFoundError):
+            await hass.async_add_executor_job(
+                os.rename,
+                old_store.path,
+                old_store.path + "_old",
+            )
 
     _LOGGER.info("Successfully migrated default lovelace config to dashboard entry")
 
-    # 6. Set default panel to lovelace if not already configured
+    # 5. Set default panel to lovelace if not already configured
     system_store = await frontend.async_system_store(hass)
     if system_store.data.get("default_panel") is None:
         await system_store.async_set_item("default_panel", DOMAIN)
