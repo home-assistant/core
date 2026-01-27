@@ -132,17 +132,18 @@ def translation_key_validator(value: str) -> str:
     return value
 
 
-def translation_value_validator(value: Any) -> str:
+def validate_translation_value(value: Any, allow_placeholders=True) -> str:
     """Validate that the value is a valid translation.
 
     - prevents string with HTML
     - prevents strings with single quoted placeholders
     - prevents strings with placeholders using invalid identifiers
+    - prevents placeholders where they are not allowed
     - prevents combined translations
     """
     string_value = cv.string_with_no_html(value)
     string_value = string_no_single_quoted_placeholders(string_value)
-    string_value = validate_placeholders(string_value)
+    string_value = validate_placeholders(string_value, allow_placeholders)
     if RE_COMBINED_REFERENCE.search(string_value):
         raise vol.Invalid("the string should not contain combined translations")
     if string_value != string_value.strip():
@@ -155,6 +156,20 @@ def translation_value_validator(value: Any) -> str:
     return string_value
 
 
+def translation_value_validator(value: Any) -> str:
+    """Validate translation value with default options."""
+    return validate_translation_value(value)
+
+
+def custom_translation_value_validator(allow_placeholders=True):
+    """Validate translation value with custom options."""
+
+    def _validator(value: Any) -> str:
+        return validate_translation_value(value, allow_placeholders)
+
+    return _validator
+
+
 def string_no_single_quoted_placeholders(value: str) -> str:
     """Validate that the value does not contain placeholders inside single quotes."""
     if RE_PLACEHOLDER_IN_SINGLE_QUOTES.search(value):
@@ -164,12 +179,14 @@ def string_no_single_quoted_placeholders(value: str) -> str:
     return value
 
 
-def validate_placeholders(value: str) -> str:
+def validate_placeholders(value: str, allow_placeholders: bool) -> str:
     """Validate that placeholders in translations use valid identifiers."""
     formatter = string.Formatter()
 
     for _, field_name, _, _ in formatter.parse(value):
         if field_name:  # skip literal text segments
+            if not allow_placeholders:
+                raise vol.Invalid("placeholders are not supported in this value")
             if not field_name.isidentifier():
                 raise vol.Invalid(
                     "placeholders must be valid identifiers ([a-zA-Z_][a-zA-Z0-9_]*)"
@@ -418,14 +435,16 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 {
                     vol.Optional("name"): str,
                     vol.Optional("state"): cv.schema_with_slug_keys(
-                        translation_value_validator,
+                        custom_translation_value_validator(allow_placeholders=False),
                         slug_validator=translation_key_validator,
                     ),
                     vol.Optional("state_attributes"): cv.schema_with_slug_keys(
                         {
                             vol.Optional("name"): str,
                             vol.Optional("state"): cv.schema_with_slug_keys(
-                                translation_value_validator,
+                                custom_translation_value_validator(
+                                    allow_placeholders=False
+                                ),
                                 slug_validator=translation_key_validator,
                             ),
                         },
@@ -445,14 +464,22 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     {
                         vol.Optional("name"): translation_value_validator,
                         vol.Optional("state"): cv.schema_with_slug_keys(
-                            translation_value_validator,
+                            custom_translation_value_validator(
+                                allow_placeholders=False
+                            ),
                             slug_validator=translation_key_validator,
                         ),
                         vol.Optional("state_attributes"): cv.schema_with_slug_keys(
                             {
-                                vol.Optional("name"): translation_value_validator,
+                                vol.Optional(
+                                    "name"
+                                ): custom_translation_value_validator(
+                                    allow_placeholders=False
+                                ),
                                 vol.Optional("state"): cv.schema_with_slug_keys(
-                                    translation_value_validator,
+                                    custom_translation_value_validator(
+                                        allow_placeholders=False
+                                    ),
                                     slug_validator=translation_key_validator,
                                 ),
                             },
@@ -460,7 +487,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                         ),
                         vol.Optional(
                             "unit_of_measurement"
-                        ): translation_value_validator,
+                        ): custom_translation_value_validator(allow_placeholders=False),
                     },
                     slug_validator=translation_key_validator,
                 ),
