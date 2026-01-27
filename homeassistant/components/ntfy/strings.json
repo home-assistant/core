@@ -349,7 +349,7 @@
           "name": "Icon URL"
         },
         "markdown": {
-          "description": "Enable Markdown formatting for the message body. See the Markdown guide for syntax details: {markdown_guide_url}.",
+          "description": "Enable Markdown formatting for the message body. See the [Markdown guide]({markdown_guide_url}) for syntax details.",
           "name": "Format as Markdown"
         },
         "message": {
@@ -365,7 +365,7 @@
           "name": "[%key:component::ntfy::common::sequence_id%]"
         },
         "tags": {
-          "description": "Add tags or emojis to the notification. Emojis (using shortcodes like smile) will appear in the notification title or message. Other tags will be displayed below the notification content.",
+          "description": "Add tags or emojis to the notification. Emojis (using shortcodes like `smile`) will appear in the notification title or message. Other tags will be displayed below the notification content. See the [emoji short code reference]({emoji_reference_url}) for a list of supported emojis.",
           "name": "Tags/Emojis"
         },
         "title": {
