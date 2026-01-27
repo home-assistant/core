@@ -214,8 +214,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="usage_total",
         translation_key="usage_total",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda ev: ev.usage_total,
@@ -223,8 +222,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="total_day",
         translation_key="total_day",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -233,8 +231,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="total_week",
         translation_key="total_week",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -243,8 +240,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="total_month",
         translation_key="total_month",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -253,8 +249,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="total_year",
         translation_key="total_year",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
