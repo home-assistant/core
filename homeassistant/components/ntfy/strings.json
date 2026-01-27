@@ -267,6 +267,9 @@
     "authentication_error": {
       "message": "Failed to authenticate with ntfy service. Please verify your credentials"
     },
+    "clear_failed": {
+      "message": "Failed to dismiss notification"
+    },
     "connection_error": {
       "message": "Failed to connect to ntfy service due to a connection error"
     },
@@ -275,6 +278,9 @@
     },
     "delay_no_email": {
       "message": "Delayed email notifications are not supported"
+    },
+    "delete_failed": {
+      "message": "Failed to delete notification"
     },
     "entity_not_found": {
       "message": "The selected ntfy entity could not be found."
@@ -288,7 +294,6 @@
     "publish_failed_request_error": {
       "message": "Failed to publish notification: {error_msg}"
     },
-
     "server_error": {
       "message": "Failed to connect to ntfy service due to a server error: {error_msg}"
     },
@@ -321,6 +326,26 @@
     }
   },
   "services": {
+    "clear": {
+      "description": "Dismisses a previously sent message from a ntfy topic by marking it as read.",
+      "fields": {
+        "sequence_id": {
+          "description": "The message ID or sequence ID of the notification to dismiss.",
+          "name": "[%key:component::ntfy::common::sequence_id%]"
+        }
+      },
+      "name": "Dismiss notification"
+    },
+    "delete": {
+      "description": "Deletes a message from a ntfy topic.",
+      "fields": {
+        "sequence_id": {
+          "description": "The message ID or sequence ID of the notification to delete.",
+          "name": "[%key:component::ntfy::common::sequence_id%]"
+        }
+      },
+      "name": "Delete notification"
+    },
     "publish": {
       "description": "Publishes a notification message to a ntfy topic",
       "fields": {

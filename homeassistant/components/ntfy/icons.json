@@ -74,6 +74,12 @@
     }
   },
   "services": {
+    "clear": {
+      "service": "mdi:comment-check"
+    },
+    "delete": {
+      "service": "mdi:comment-remove"
+    },
     "publish": {
       "service": "mdi:send"
     }
