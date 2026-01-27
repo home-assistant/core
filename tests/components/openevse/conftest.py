@@ -40,6 +40,7 @@ def mock_charger() -> Generator[MagicMock]:
         charger.manual_override = False
         charger.ota_update = "none"
         charger.service_level = "2"
+        charger.charge_rate = "20"
         # Timing sensors
         charger.charge_time_elapsed = 3600  # 60 minutes in seconds
         charger.vehicle_eta = None
