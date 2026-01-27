@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_home": {
+      "condition": "mdi:account"
+    },
+    "is_not_home": {
+      "condition": "mdi:account-arrow-right"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:account",
