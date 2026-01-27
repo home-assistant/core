@@ -36,23 +36,24 @@ class ElectroluxConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            token_manager: TokenManager
             try:
                 token_manager = await self._authenticate_user(user_input)
-
-                # Don't allow the same device or service to be able to be set up twice
-                await self.async_set_unique_id(token_manager.get_user_id())
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(title="Electrolux", data=user_input)
             except AbortFlow:
                 raise
             except InvalidCredentialsException as _:
-                errors["base"] = "auth_failed"
+                errors["base"] = "invalid_auth"
             except FailedConnectionException as _:
                 errors["base"] = "cannot_connect"
             except Exception as e:
                 _LOGGER.exception("Storing credentials failed", exc_info=e)
                 errors["base"] = "unknown"
+
+            # Don't allow the same device or service to be able to be set up twice
+            await self.async_set_unique_id(token_manager.get_user_id())
+            self._abort_if_unique_id_configured()
+
+            return self.async_create_entry(title="Electrolux", data=user_input)
 
         return self._get_form(step_id="user", errors=errors)
 
