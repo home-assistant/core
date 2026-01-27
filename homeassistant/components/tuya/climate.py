@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import collections
 from dataclasses import dataclass
 from typing import Any, Self
 
@@ -140,6 +141,22 @@ class _SwingModeWrapper(DeviceWrapper):
         return commands
 
 
+def _filter_hvac_mode_mappings(tuya_range: list[str]) -> dict[str, HVACMode | None]:
+    """Filter TUYA_HVAC_TO_HA modes that are not in the range.
+
+    If multiple Tuya modes map to the same HA mode, set the mapping to None to avoid
+    ambiguity when converting back from HA to Tuya modes.
+    """
+    modes_in_range = {
+        tuya_mode: TUYA_HVAC_TO_HA.get(tuya_mode) for tuya_mode in tuya_range
+    }
+    modes_occurrences = collections.Counter(modes_in_range.values())
+    for key, value in modes_in_range.items():
+        if value is not None and modes_occurrences[value] > 1:
+            modes_in_range[key] = None
+    return modes_in_range
+
+
 class _HvacModeWrapper(DPCodeEnumWrapper):
     """Wrapper for managing climate HVACMode."""
 
@@ -148,10 +165,9 @@ class _HvacModeWrapper(DPCodeEnumWrapper):
     def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
         """Init _HvacModeWrapper."""
         super().__init__(dpcode, type_information)
+        self._mappings = _filter_hvac_mode_mappings(type_information.range)
         self.options = [
-            TUYA_HVAC_TO_HA[tuya_mode]
-            for tuya_mode in type_information.range
-            if tuya_mode in TUYA_HVAC_TO_HA
+            ha_mode for ha_mode in self._mappings.values() if ha_mode is not None
         ]
 
     def read_device_status(self, device: CustomerDevice) -> HVACMode | None:
@@ -166,7 +182,7 @@ class _HvacModeWrapper(DPCodeEnumWrapper):
         """Convert value to raw value."""
         return next(
             tuya_mode
-            for tuya_mode, ha_mode in TUYA_HVAC_TO_HA.items()
+            for tuya_mode, ha_mode in self._mappings.items()
             if ha_mode == value
         )
 
@@ -179,10 +195,9 @@ class _PresetWrapper(DPCodeEnumWrapper):
     def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
         """Init _PresetWrapper."""
         super().__init__(dpcode, type_information)
+        mappings = _filter_hvac_mode_mappings(type_information.range)
         self.options = [
-            tuya_mode
-            for tuya_mode in type_information.range
-            if tuya_mode not in TUYA_HVAC_TO_HA
+            tuya_mode for tuya_mode, ha_mode in mappings.items() if ha_mode is None
         ]
 
     def read_device_status(self, device: CustomerDevice) -> str | None:

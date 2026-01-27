@@ -42,6 +42,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -147,6 +148,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -245,6 +247,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program phase',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -316,6 +319,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -351,7 +355,7 @@
     'state': 'own_program',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_rinse_aid_level-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -364,7 +368,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -372,6 +376,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse aid level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -386,21 +391,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_rinse_aid_level-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rinse aid level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_salt_level-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -413,7 +418,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -421,6 +426,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -435,21 +441,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_salt_level-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Salt level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_1_level-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -462,7 +468,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -470,6 +476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -484,21 +491,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_1_level-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_1_level_2-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -511,7 +518,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -519,6 +526,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -533,21 +541,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_1_level_2-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_2_level-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -560,7 +568,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -568,6 +576,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -582,21 +591,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_2_level-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_2_level_2-entry]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -609,7 +618,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -617,6 +626,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -631,14 +641,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.none_twindos_2_level_2-state]
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -688,6 +698,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -781,6 +792,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -877,6 +889,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -975,6 +988,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1073,6 +1087,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1171,6 +1186,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1269,6 +1285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1367,6 +1384,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1465,6 +1483,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 4',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1563,6 +1582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 4',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1661,6 +1681,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1756,6 +1777,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1806,7 +1828,7 @@
     'state': 'off',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_rinse_aid_level-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1819,7 +1841,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1827,6 +1849,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse aid level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1841,21 +1864,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_rinse_aid_level-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rinse aid level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_salt_level-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1868,7 +1891,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1876,6 +1899,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1890,21 +1914,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_salt_level-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Salt level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_1_level-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1917,7 +1941,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1925,6 +1949,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1939,21 +1964,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_1_level-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_1_level_2-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1966,7 +1991,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1974,6 +1999,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1988,21 +2014,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_1_level_2-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_2_level-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2015,7 +2041,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2023,6 +2049,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2037,21 +2064,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_2_level-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_2_level_2-entry]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2064,7 +2091,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2072,6 +2099,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2086,14 +2114,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.none_twindos_2_level_2-state]
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2143,6 +2171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2236,6 +2265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2309,6 +2339,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2365,6 +2396,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2421,6 +2453,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature zone 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2454,7 +2487,7 @@
     'state': '-18.0',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_rinse_aid_level-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2467,7 +2500,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2475,6 +2508,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse aid level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2489,21 +2523,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_rinse_aid_level-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rinse aid level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_salt_level-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2516,7 +2550,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2524,6 +2558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2538,21 +2573,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_salt_level-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Salt level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_1_level-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2565,7 +2600,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2573,6 +2608,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2587,21 +2623,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_1_level-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_1_level_2-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2614,7 +2650,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2622,6 +2658,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2636,21 +2673,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_1_level_2-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_2_level-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2663,7 +2700,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2671,6 +2708,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2685,21 +2723,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_2_level-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_2_level_2-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2712,7 +2750,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2720,6 +2758,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2734,14 +2773,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.none_twindos_2_level_2-state]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2791,6 +2830,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2887,6 +2927,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2985,6 +3026,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3083,6 +3125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3181,6 +3224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 4',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3279,6 +3323,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3331,7 +3376,7 @@
     'state': 'plate_step_boost',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_rinse_aid_level-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3344,7 +3389,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3352,6 +3397,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse aid level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3366,21 +3412,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_rinse_aid_level-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rinse aid level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_salt_level-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3393,7 +3439,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3401,6 +3447,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3415,21 +3462,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_salt_level-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Salt level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_1_level-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3442,7 +3489,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3450,6 +3497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3464,21 +3512,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_1_level-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_1_level_2-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3491,7 +3539,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3499,6 +3547,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3513,21 +3562,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_1_level_2-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_2_level-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3540,7 +3589,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3548,6 +3597,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3562,21 +3612,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_2_level-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_2_level_2-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3589,7 +3639,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3597,6 +3647,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3611,14 +3662,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.none_twindos_2_level_2-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3668,6 +3719,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3741,6 +3793,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3817,6 +3870,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3867,7 +3921,7 @@
     'state': 'off',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_rinse_aid_level-entry]
+# name: test_sensor_states[platforms0][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3880,7 +3934,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3888,6 +3942,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse aid level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3902,21 +3957,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_rinse_aid_level-state]
+# name: test_sensor_states[platforms0][sensor.rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rinse aid level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_salt_level-entry]
+# name: test_sensor_states[platforms0][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3929,7 +3984,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3937,6 +3992,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3951,21 +4007,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_salt_level-state]
+# name: test_sensor_states[platforms0][sensor.salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Salt level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_twindos_1_level-entry]
+# name: test_sensor_states[platforms0][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3978,7 +4034,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3986,6 +4042,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4000,21 +4057,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_twindos_1_level-state]
+# name: test_sensor_states[platforms0][sensor.twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_twindos_2_level-entry]
+# name: test_sensor_states[platforms0][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4027,7 +4084,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4035,6 +4092,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4049,14 +4107,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[platforms0][sensor.none_twindos_2_level-state]
+# name: test_sensor_states[platforms0][sensor.twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4106,6 +4164,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4179,6 +4238,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Core temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4233,6 +4293,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4286,6 +4347,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Finish',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -4494,6 +4556,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4710,6 +4773,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program phase',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4775,6 +4839,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4831,6 +4896,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4884,6 +4950,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -4933,6 +5000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start in',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4991,6 +5059,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5047,6 +5116,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5123,6 +5193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5196,6 +5267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5272,6 +5344,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5343,6 +5416,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5398,6 +5472,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5452,6 +5527,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy forecast',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5501,6 +5577,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Finish',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -5598,6 +5675,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5718,6 +5796,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program phase',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5798,6 +5877,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5854,6 +5934,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5907,6 +5988,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Spin speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5956,6 +6038,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -6005,6 +6088,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start in',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6063,6 +6147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -6117,6 +6202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6166,6 +6252,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6217,6 +6304,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6271,6 +6359,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water forecast',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6342,6 +6431,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6415,6 +6505,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -6491,6 +6582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6541,7 +6633,7 @@
     'state': 'off',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_rinse_aid_level-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6554,7 +6646,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6562,6 +6654,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse aid level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6576,21 +6669,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_rinse_aid_level-state]
+# name: test_sensor_states_api_push[platforms0][sensor.rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rinse aid level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_salt_level-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6603,7 +6696,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6611,6 +6704,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6625,21 +6719,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_salt_level-state]
+# name: test_sensor_states_api_push[platforms0][sensor.salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Salt level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_twindos_1_level-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6652,7 +6746,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6660,6 +6754,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6674,21 +6769,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_twindos_1_level-state]
+# name: test_sensor_states_api_push[platforms0][sensor.twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_twindos_2_level-entry]
+# name: test_sensor_states_api_push[platforms0][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6701,7 +6796,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6709,6 +6804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6723,14 +6819,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states_api_push[platforms0][sensor.none_twindos_2_level-state]
+# name: test_sensor_states_api_push[platforms0][sensor.twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6780,6 +6876,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6853,6 +6950,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Core temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -6907,6 +7005,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6960,6 +7059,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Finish',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -7168,6 +7268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -7384,6 +7485,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program phase',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -7449,6 +7551,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -7505,6 +7608,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7558,6 +7662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -7607,6 +7712,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start in',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -7665,6 +7771,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7721,6 +7828,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7797,6 +7905,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -7870,6 +7979,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7946,6 +8056,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -8017,6 +8128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8072,6 +8184,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8126,6 +8239,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy forecast',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8175,6 +8289,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Finish',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -8272,6 +8387,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -8392,6 +8508,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program phase',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -8472,6 +8589,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -8528,6 +8646,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8581,6 +8700,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Spin speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8630,6 +8750,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -8679,6 +8800,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start in',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -8737,6 +8859,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -8791,6 +8914,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8840,6 +8964,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8891,6 +9016,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -8945,6 +9071,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water forecast',
     'options': dict({
     }),
     'original_device_class': None,
@@ -8973,7 +9100,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_rinse_aid_level-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8986,7 +9113,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8994,6 +9121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rinse aid level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9008,21 +9136,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_rinse_aid_level-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.rinse_aid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rinse aid level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_rinse_aid_level',
+    'entity_id': 'sensor.rinse_aid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_salt_level-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.salt_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9035,7 +9163,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9043,6 +9171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Salt level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9057,21 +9186,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_salt_level-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.salt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Salt level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_salt_level',
+    'entity_id': 'sensor.salt_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '75',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_1_level-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9084,7 +9213,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9092,6 +9221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9106,21 +9236,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_1_level-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level',
+    'entity_id': 'sensor.twindos_1_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_1_level_2-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9133,7 +9263,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9141,6 +9271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 1 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9155,21 +9286,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_1_level_2-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 1 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_1_level_2',
+    'entity_id': 'sensor.twindos_1_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '63',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_2_level-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9182,7 +9313,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9190,6 +9321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9204,21 +9336,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_2_level-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level',
+    'entity_id': 'sensor.twindos_2_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_2_level_2-entry]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -9231,7 +9363,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -9239,6 +9371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'TwinDos 2 level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -9253,14 +9386,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.none_twindos_2_level_2-state]
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TwinDos 2 level',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.none_twindos_2_level_2',
+    'entity_id': 'sensor.twindos_2_level_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -9310,6 +9443,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -9381,6 +9515,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -9431,6 +9566,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9484,6 +9620,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Finish',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -9541,6 +9678,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -9605,6 +9743,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -9661,6 +9800,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -9714,6 +9854,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,

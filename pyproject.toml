@@ -48,7 +48,7 @@ dependencies = [
   "fnv-hash-fast==1.6.0",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==1.9.0",
+  "hass-nabucasa==1.11.0",
   # When bumping httpx, please check the version pins of
   # httpcore, anyio, and h11 in gen_requirements_all
   "httpx==0.28.1",
@@ -62,7 +62,7 @@ dependencies = [
   "Pillow==12.0.0",
   "propcache==0.4.1",
   "pyOpenSSL==25.3.0",
-  "orjson==3.11.3",
+  "orjson==3.11.5",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==8.0.4",
@@ -75,7 +75,7 @@ dependencies = [
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==1.5.2",
   "urllib3>=2.0",
-  "uv==0.9.17",
+  "uv==0.9.26",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.2.0",
@@ -676,7 +676,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.13.0"
+required-version = ">=0.14.13"
 
 [tool.ruff.lint]
 select = [

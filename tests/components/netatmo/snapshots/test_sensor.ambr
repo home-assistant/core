@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Atmospheric pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -84,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -146,6 +148,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Health index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -207,6 +210,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -263,6 +267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Noise',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -320,6 +325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -371,6 +377,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reachability',
     'options': dict({
     }),
     'original_device_class': None,
@@ -424,6 +431,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -481,6 +489,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -532,6 +541,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi strength',
     'options': dict({
     }),
     'original_device_class': None,
@@ -585,6 +595,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Atmospheric pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -645,6 +656,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -705,6 +717,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Health index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -764,6 +777,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -818,6 +832,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Noise',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -873,6 +888,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -922,6 +938,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reachability',
     'options': dict({
     }),
     'original_device_class': None,
@@ -975,6 +992,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1030,6 +1048,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1079,6 +1098,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi strength',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1132,6 +1152,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1163,7 +1184,7 @@
     'state': '90',
   })
 # ---
-# name: test_entity[sensor.cold_water_none-entry]
+# name: test_entity[sensor.cold_water-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1176,7 +1197,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cold_water_none',
+    'entity_id': 'sensor.cold_water',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1184,6 +1205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1198,21 +1220,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.cold_water_none-state]
+# name: test_entity[sensor.cold_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Cold water None',
+      'friendly_name': 'Cold water',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cold_water_none',
+    'entity_id': 'sensor.cold_water',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'True',
   })
 # ---
-# name: test_entity[sensor.consumption_meter_none-entry]
+# name: test_entity[sensor.consumption_meter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1225,7 +1247,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.consumption_meter_none',
+    'entity_id': 'sensor.consumption_meter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1233,6 +1255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1247,14 +1270,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.consumption_meter_none-state]
+# name: test_entity[sensor.consumption_meter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Consumption meter None',
+      'friendly_name': 'Consumption meter',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.consumption_meter_none',
+    'entity_id': 'sensor.consumption_meter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1284,6 +1307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1341,6 +1365,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1372,7 +1397,7 @@
     'state': '67',
   })
 # ---
-# name: test_entity[sensor.ecocompteur_none-entry]
+# name: test_entity[sensor.ecocompteur-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1385,7 +1410,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ecocompteur_none',
+    'entity_id': 'sensor.ecocompteur',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1393,6 +1418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1407,21 +1433,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.ecocompteur_none-state]
+# name: test_entity[sensor.ecocompteur-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Écocompteur None',
+      'friendly_name': 'Écocompteur',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ecocompteur_none',
+    'entity_id': 'sensor.ecocompteur',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_entity[sensor.gas_none-entry]
+# name: test_entity[sensor.gas-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1434,7 +1460,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.gas_none',
+    'entity_id': 'sensor.gas',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1442,6 +1468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1456,14 +1483,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.gas_none-state]
+# name: test_entity[sensor.gas-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Gas None',
+      'friendly_name': 'Gas',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gas_none',
+    'entity_id': 'sensor.gas',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1493,6 +1520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Atmospheric pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1555,6 +1583,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gust angle',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
@@ -1611,6 +1640,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gust strength',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1670,6 +1700,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -1726,6 +1757,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1785,6 +1817,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation last hour',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1844,6 +1877,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1903,6 +1937,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1962,6 +1997,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
@@ -2018,6 +2054,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2077,6 +2114,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Atmospheric pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2139,6 +2177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gust angle',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
@@ -2195,6 +2234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gust strength',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2254,6 +2294,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2310,6 +2351,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2369,6 +2411,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation last hour',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2428,6 +2471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2487,6 +2531,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2546,6 +2591,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
@@ -2602,6 +2648,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2661,6 +2708,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Atmospheric pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2723,6 +2771,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gust angle',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
@@ -2779,6 +2828,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gust strength',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2838,6 +2888,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -2894,6 +2945,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2953,6 +3005,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation last hour',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3012,6 +3065,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3071,6 +3125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3130,6 +3185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
@@ -3186,6 +3242,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3222,7 +3279,7 @@
     'state': '15',
   })
 # ---
-# name: test_entity[sensor.hot_water_none-entry]
+# name: test_entity[sensor.hot_water-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3235,7 +3292,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.hot_water_none',
+    'entity_id': 'sensor.hot_water',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3243,6 +3300,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -3257,14 +3315,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.hot_water_none-state]
+# name: test_entity[sensor.hot_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Hot water None',
+      'friendly_name': 'Hot water',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hot_water_none',
+    'entity_id': 'sensor.hot_water',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3294,6 +3352,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Atmospheric pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3356,6 +3415,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -3418,6 +3478,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Health index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3479,6 +3540,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -3535,6 +3597,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Noise',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3592,6 +3655,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3643,6 +3707,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reachability',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3696,6 +3761,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3753,6 +3819,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3804,6 +3871,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi strength',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3834,7 +3902,7 @@
     'state': 'Full',
   })
 # ---
-# name: test_entity[sensor.line_1_none-entry]
+# name: test_entity[sensor.line_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3847,7 +3915,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_1_none',
+    'entity_id': 'sensor.line_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3855,6 +3923,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -3869,21 +3938,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.line_1_none-state]
+# name: test_entity[sensor.line_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 1 None',
+      'friendly_name': 'Line 1',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.line_1_none',
+    'entity_id': 'sensor.line_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'True',
   })
 # ---
-# name: test_entity[sensor.line_2_none-entry]
+# name: test_entity[sensor.line_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3896,7 +3965,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_2_none',
+    'entity_id': 'sensor.line_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3904,6 +3973,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -3918,21 +3988,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.line_2_none-state]
+# name: test_entity[sensor.line_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 2 None',
+      'friendly_name': 'Line 2',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.line_2_none',
+    'entity_id': 'sensor.line_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'True',
   })
 # ---
-# name: test_entity[sensor.line_3_none-entry]
+# name: test_entity[sensor.line_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3945,7 +4015,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_3_none',
+    'entity_id': 'sensor.line_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3953,6 +4023,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -3967,21 +4038,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.line_3_none-state]
+# name: test_entity[sensor.line_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 3 None',
+      'friendly_name': 'Line 3',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.line_3_none',
+    'entity_id': 'sensor.line_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'True',
   })
 # ---
-# name: test_entity[sensor.line_4_none-entry]
+# name: test_entity[sensor.line_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3994,7 +4065,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_4_none',
+    'entity_id': 'sensor.line_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4002,6 +4073,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -4016,21 +4088,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.line_4_none-state]
+# name: test_entity[sensor.line_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 4 None',
+      'friendly_name': 'Line 4',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.line_4_none',
+    'entity_id': 'sensor.line_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'True',
   })
 # ---
-# name: test_entity[sensor.line_5_none-entry]
+# name: test_entity[sensor.line_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4043,7 +4115,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_5_none',
+    'entity_id': 'sensor.line_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4051,6 +4123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -4065,14 +4138,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.line_5_none-state]
+# name: test_entity[sensor.line_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 5 None',
+      'friendly_name': 'Line 5',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.line_5_none',
+    'entity_id': 'sensor.line_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4102,6 +4175,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Atmospheric pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4164,6 +4238,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -4218,6 +4293,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -4280,6 +4356,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Health index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4341,6 +4418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -4397,6 +4475,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Noise',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4454,6 +4533,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4505,6 +4585,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reachability',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4558,6 +4639,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4615,6 +4697,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4666,6 +4749,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi strength',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4719,6 +4803,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Atmospheric pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4781,6 +4866,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -4843,6 +4929,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Health index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4904,6 +4991,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -4960,6 +5048,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Noise',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5017,6 +5106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5068,6 +5158,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reachability',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5121,6 +5212,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5178,6 +5270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5229,6 +5322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi strength',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5259,7 +5353,7 @@
     'state': 'High',
   })
 # ---
-# name: test_entity[sensor.prise_none-entry]
+# name: test_entity[sensor.prise-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5272,7 +5366,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.prise_none',
+    'entity_id': 'sensor.prise',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5280,6 +5374,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -5294,14 +5389,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.prise_none-state]
+# name: test_entity[sensor.prise-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Prise None',
+      'friendly_name': 'Prise',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.prise_none',
+    'entity_id': 'sensor.prise',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5331,6 +5426,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5365,7 +5461,7 @@
     'state': '0',
   })
 # ---
-# name: test_entity[sensor.total_none-entry]
+# name: test_entity[sensor.total-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5378,7 +5474,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.total_none',
+    'entity_id': 'sensor.total',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5386,6 +5482,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -5400,14 +5497,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity[sensor.total_none-state]
+# name: test_entity[sensor.total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Total None',
+      'friendly_name': 'Total',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.total_none',
+    'entity_id': 'sensor.total',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -5437,6 +5534,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -5491,6 +5589,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -5545,6 +5644,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Atmospheric pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5607,6 +5707,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -5661,6 +5762,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -5715,6 +5817,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -5767,6 +5870,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reachability',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5816,6 +5920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RF strength',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5867,6 +5972,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5922,6 +6028,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5973,6 +6080,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -6027,6 +6135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -6081,6 +6190,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -6133,6 +6243,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reachability',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6182,6 +6293,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RF strength',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6233,6 +6345,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -6288,6 +6401,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6339,6 +6453,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -6395,6 +6510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -6449,6 +6565,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gust angle',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
@@ -6512,6 +6629,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gust direction',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6574,6 +6692,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gust strength',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6629,6 +6748,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reachability',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6678,6 +6798,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RF strength',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6729,6 +6850,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind angle',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
@@ -6792,6 +6914,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6854,6 +6977,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6911,6 +7035,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -6967,6 +7092,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Noise',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7026,6 +7152,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -7080,6 +7207,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -7132,6 +7260,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reachability',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7181,6 +7310,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RF strength',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7232,6 +7362,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7287,6 +7418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7336,6 +7468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pressure trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7389,6 +7522,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -7443,6 +7577,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7500,6 +7635,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation last hour',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7557,6 +7693,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -7612,6 +7749,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reachability',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7661,6 +7799,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RF strength',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7710,6 +7849,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reachability',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7763,6 +7903,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -7820,6 +7961,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature trend',
     'options': dict({
     }),
     'original_device_class': None,
@@ -7871,6 +8013,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wi-Fi strength',
     'options': dict({
     }),
     'original_device_class': None,

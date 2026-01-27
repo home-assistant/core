@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mobile start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -117,6 +119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Notification active',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -166,6 +169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -215,6 +219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -263,6 +268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart grid',
     'options': dict({
     }),
     'original_device_class': None,
@@ -311,6 +317,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mobile start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -359,6 +366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Notification active',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -408,6 +416,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -457,6 +466,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -505,6 +515,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart grid',
     'options': dict({
     }),
     'original_device_class': None,
@@ -553,6 +564,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -602,6 +614,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mobile start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -650,6 +663,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Notification active',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -699,6 +713,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -748,6 +763,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -796,6 +812,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart grid',
     'options': dict({
     }),
     'original_device_class': None,
@@ -844,6 +861,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -893,6 +911,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mobile start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -941,6 +960,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Notification active',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -990,6 +1010,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1039,6 +1060,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1087,6 +1109,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart grid',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1135,6 +1158,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -1184,6 +1208,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mobile start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1232,6 +1257,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Notification active',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1281,6 +1307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1330,6 +1357,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1378,6 +1406,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart grid',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1426,6 +1455,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -1475,6 +1505,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mobile start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1523,6 +1554,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Notification active',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1572,6 +1604,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1621,6 +1654,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1669,6 +1703,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart grid',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1717,6 +1752,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mobile start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1765,6 +1801,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Notification active',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1814,6 +1851,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -1863,6 +1901,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1911,6 +1950,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart grid',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1959,6 +1999,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -2008,6 +2049,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mobile start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2056,6 +2098,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Notification active',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2105,6 +2148,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2154,6 +2198,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2202,6 +2247,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart grid',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2250,6 +2296,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -2299,6 +2346,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mobile start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2347,6 +2395,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Notification active',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2396,6 +2445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2445,6 +2495,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2493,6 +2544,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart grid',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2541,6 +2593,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Door',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
@@ -2590,6 +2643,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mobile start',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2638,6 +2692,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Notification active',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2687,6 +2742,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -2736,6 +2792,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remote control',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2784,6 +2841,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart grid',
     'options': dict({
     }),
     'original_device_class': None,

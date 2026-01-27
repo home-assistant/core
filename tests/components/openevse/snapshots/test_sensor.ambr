@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ambient temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -126,6 +127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge time elapsed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -295,6 +297,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -780,6 +783,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'IR temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1201,6 +1205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'RTC temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1569,6 +1574,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1681,6 +1687,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Usage this session',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
