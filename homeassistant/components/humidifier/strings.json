@@ -1,7 +1,51 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted humidifiers.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted humidifiers to trigger on.",
     "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_drying": {
+      "description": "Tests if one or more humidifiers are drying.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::condition_behavior_description%]",
+          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Humidifier is drying"
+    },
+    "is_humidifying": {
+      "description": "Tests if one or more humidifiers are humidifying.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::condition_behavior_description%]",
+          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Humidifier is humidifying"
+    },
+    "is_off": {
+      "description": "Tests if one or more humidifiers are off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::condition_behavior_description%]",
+          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Humidifier is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more humidifiers are on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::condition_behavior_description%]",
+          "name": "[%key:component::humidifier::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Humidifier is on"
+    }
   },
   "device_automation": {
     "action_type": {
@@ -91,6 +135,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "number_or_entity": {
       "choices": {
         "entity": "Entity",

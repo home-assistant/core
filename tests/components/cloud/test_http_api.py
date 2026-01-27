@@ -1953,6 +1953,13 @@ async def test_download_support_package(
                 "user": "hass",
             },
         ),
+        patch(
+            "homeassistant.components.cloud.http_api.async_get_installed_packages",
+            return_value=[
+                {"name": "homeassistant", "version": "3.2.1"},
+                {"name": "hass-nabucasa", "version": "1.2.3"},
+            ],
+        ),
     ):
         req = await cloud_client.get("/api/cloud/support_package")
     assert req.status == HTTPStatus.OK
@@ -2064,6 +2071,13 @@ async def test_download_support_package_custom_components_error(
         patch(
             "homeassistant.components.cloud.http_api.async_get_custom_components",
             side_effect=Exception("Custom components error"),
+        ),
+        patch(
+            "homeassistant.components.cloud.http_api.async_get_installed_packages",
+            return_value=[
+                {"name": "homeassistant", "version": "3.2.1"},
+                {"name": "hass-nabucasa", "version": "1.2.3"},
+            ],
         ),
     ):
         req = await cloud_client.get("/api/cloud/support_package")
@@ -2181,6 +2195,13 @@ async def test_download_support_package_integration_load_error(
             side_effect=lambda hass, domain: Exception("Integration load error")
             if domain == "failing_integration"
             else async_get_loaded_integration(hass, domain),
+        ),
+        patch(
+            "homeassistant.components.cloud.http_api.async_get_installed_packages",
+            return_value=[
+                {"name": "homeassistant", "version": "3.2.1"},
+                {"name": "hass-nabucasa", "version": "1.2.3"},
+            ],
         ),
     ):
         req = await cloud_client.get("/api/cloud/support_package")

@@ -19,9 +19,7 @@ rules:
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
-  unique-config-entry:
-    status: todo
-    comment: Can be migrated to accept multiple config entries now
+  unique-config-entry: done
 
   # Silver
   action-exceptions: todo
