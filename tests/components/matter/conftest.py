@@ -129,6 +129,7 @@ async def integration_fixture(
         "oven",
         "pressure_sensor",
         "pump",
+        "resideo_x2s_thermostat",
         "room_airconditioner",
         "secuyou_smart_lock",
         "silabs_dishwasher",

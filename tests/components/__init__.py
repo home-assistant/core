@@ -103,6 +103,13 @@ async def target_entities(
     entity_reg.async_get_or_create(
         domain=domain,
         platform="test",
+        unique_id=f"{domain}_device2",
+        suggested_object_id=f"device2_{domain}",
+        device_id=device.id,
+    )
+    entity_reg.async_get_or_create(
+        domain=domain,
+        platform="test",
         unique_id=f"{domain}_device_excluded",
         suggested_object_id=f"device_{domain}_excluded",
         device_id=device.id,
@@ -130,9 +137,11 @@ async def target_entities(
     return {
         "included": [
             f"{domain}.standalone_{domain}",
+            f"{domain}.standalone2_{domain}",
             f"{domain}.label_{domain}",
             f"{domain}.area_{domain}",
             f"{domain}.device_{domain}",
+            f"{domain}.device2_{domain}",
         ],
         "excluded": [
             f"{domain}.standalone_{domain}_excluded",
@@ -150,17 +159,22 @@ def parametrize_target_entities(domain: str) -> list[tuple[dict, str, int]]:
     """
     return [
         (
-            {CONF_ENTITY_ID: f"{domain}.standalone_{domain}"},
+            {
+                CONF_ENTITY_ID: [
+                    f"{domain}.standalone_{domain}",
+                    f"{domain}.standalone2_{domain}",
+                ]
+            },
             f"{domain}.standalone_{domain}",
-            1,
+            2,
         ),
-        ({ATTR_LABEL_ID: "test_label"}, f"{domain}.label_{domain}", 2),
-        ({ATTR_AREA_ID: "test_area"}, f"{domain}.area_{domain}", 2),
-        ({ATTR_FLOOR_ID: "test_floor"}, f"{domain}.area_{domain}", 2),
-        ({ATTR_LABEL_ID: "test_label"}, f"{domain}.device_{domain}", 2),
-        ({ATTR_AREA_ID: "test_area"}, f"{domain}.device_{domain}", 2),
-        ({ATTR_FLOOR_ID: "test_floor"}, f"{domain}.device_{domain}", 2),
-        ({ATTR_DEVICE_ID: "test_device"}, f"{domain}.device_{domain}", 1),
+        ({ATTR_LABEL_ID: "test_label"}, f"{domain}.label_{domain}", 3),
+        ({ATTR_AREA_ID: "test_area"}, f"{domain}.area_{domain}", 3),
+        ({ATTR_FLOOR_ID: "test_floor"}, f"{domain}.area_{domain}", 3),
+        ({ATTR_LABEL_ID: "test_label"}, f"{domain}.device_{domain}", 3),
+        ({ATTR_AREA_ID: "test_area"}, f"{domain}.device_{domain}", 3),
+        ({ATTR_FLOOR_ID: "test_floor"}, f"{domain}.device_{domain}", 3),
+        ({ATTR_DEVICE_ID: "test_device"}, f"{domain}.device_{domain}", 2),
     ]
 
 
@@ -184,18 +198,19 @@ class ConditionStateDescription(TypedDict):
 
     included: _StateDescription  # State for entities meant to be targeted
     excluded: _StateDescription  # State for entities not meant to be targeted
-    state_valid: bool  # False if the state of the included entities is missing (None), unavailable or unknown
 
     condition_true: bool  # If the condition is expected to evaluate to true
+    condition_true_first_entity: bool  # If the condition is expected to evaluate to true for the first targeted entity
 
 
-def parametrize_condition_states(
+def _parametrize_condition_states(
     *,
     condition: str,
     condition_options: dict[str, Any] | None = None,
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
-    additional_attributes: dict | None = None,
+    additional_attributes: dict | None,
+    condition_true_if_invalid: bool,
 ) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
     """Parametrize states and expected condition evaluations.
 
@@ -212,7 +227,7 @@ def parametrize_condition_states(
     def state_with_attributes(
         state: str | None | tuple[str | None, dict],
         condition_true: bool,
-        state_valid: bool,
+        condition_true_first_entity: bool,
     ) -> ConditionStateDescription:
         """Return ConditionStateDescription dict."""
         if isinstance(state, str) or state is None:
@@ -226,7 +241,7 @@ def parametrize_condition_states(
                     "attributes": {},
                 },
                 "condition_true": condition_true,
-                "state_valid": state_valid,
+                "condition_true_first_entity": condition_true_first_entity,
             }
         return {
             "included": {
@@ -238,7 +253,7 @@ def parametrize_condition_states(
                 "attributes": state[1],
             },
             "condition_true": condition_true,
-            "state_valid": state_valid,
+            "condition_true_first_entity": condition_true_first_entity,
         }
 
     return [
@@ -247,21 +262,91 @@ def parametrize_condition_states(
             condition_options,
             list(
                 itertools.chain(
-                    (state_with_attributes(None, False, False),),
-                    (state_with_attributes(STATE_UNAVAILABLE, False, False),),
-                    (state_with_attributes(STATE_UNKNOWN, False, False),),
+                    (state_with_attributes(None, condition_true_if_invalid, True),),
                     (
-                        state_with_attributes(other_state, False, True)
+                        state_with_attributes(
+                            STATE_UNAVAILABLE, condition_true_if_invalid, True
+                        ),
+                    ),
+                    (
+                        state_with_attributes(
+                            STATE_UNKNOWN, condition_true_if_invalid, True
+                        ),
+                    ),
+                    (
+                        state_with_attributes(other_state, False, False)
                         for other_state in other_states
                     ),
-                    (
-                        state_with_attributes(target_state, True, True)
-                        for target_state in target_states
-                    ),
-                )
+                ),
             ),
         ),
+        # Test each target state individually to isolate condition_true expectations
+        *(
+            (
+                condition,
+                condition_options,
+                [
+                    state_with_attributes(other_states[0], False, False),
+                    state_with_attributes(target_state, True, False),
+                ],
+            )
+            for target_state in target_states
+        ),
     ]
+
+
+def parametrize_condition_states_any(
+    *,
+    condition: str,
+    condition_options: dict[str, Any] | None = None,
+    target_states: list[str | None | tuple[str | None, dict]],
+    other_states: list[str | None | tuple[str | None, dict]],
+    additional_attributes: dict | None = None,
+) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
+    """Parametrize states and expected condition evaluations.
+
+    The target_states and other_states iterables are either iterables of
+    states or iterables of (state, attributes) tuples.
+
+    Returns a list of tuples with (condition, condition options, list of states),
+    where states is a list of ConditionStateDescription dicts.
+    """
+
+    return _parametrize_condition_states(
+        condition=condition,
+        condition_options=condition_options,
+        target_states=target_states,
+        other_states=other_states,
+        additional_attributes=additional_attributes,
+        condition_true_if_invalid=False,
+    )
+
+
+def parametrize_condition_states_all(
+    *,
+    condition: str,
+    condition_options: dict[str, Any] | None = None,
+    target_states: list[str | None | tuple[str | None, dict]],
+    other_states: list[str | None | tuple[str | None, dict]],
+    additional_attributes: dict | None = None,
+) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
+    """Parametrize states and expected condition evaluations.
+
+    The target_states and other_states iterables are either iterables of
+    states or iterables of (state, attributes) tuples.
+
+    Returns a list of tuples with (condition, condition options, list of states),
+    where states is a list of ConditionStateDescription dicts.
+    """
+
+    return _parametrize_condition_states(
+        condition=condition,
+        condition_options=condition_options,
+        target_states=target_states,
+        other_states=other_states,
+        additional_attributes=additional_attributes,
+        condition_true_if_invalid=True,
+    )
 
 
 def parametrize_trigger_states(

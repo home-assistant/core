@@ -16,6 +16,8 @@ from .const import DOMAIN
 from .coordinator import HDFuryConfigEntry
 from .entity import HDFuryEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(kw_only=True, frozen=True)
 class HDFurySwitchEntityDescription(SwitchEntityDescription):

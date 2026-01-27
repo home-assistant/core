@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 
 from openevsehttp.__main__ import OpenEVSE
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
@@ -23,11 +23,19 @@ from homeassistant.const import (
     ATTR_SERIAL_NUMBER,
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS,
+    EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfInformation,
+    UnitOfLength,
+    UnitOfPower,
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -50,15 +58,30 @@ PARALLEL_UPDATES = 0
 class OpenEVSESensorDescription(SensorEntityDescription):
     """Describes an OpenEVSE sensor entity."""
 
-    value_fn: Callable[[OpenEVSE], str | float | None]
+    value_fn: Callable[[OpenEVSE], str | float | datetime | None]
 
 
 SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
+    # Status sensors
     OpenEVSESensorDescription(
         key="status",
         translation_key="status",
         value_fn=lambda ev: ev.status,
     ),
+    OpenEVSESensorDescription(
+        key="service_level",
+        translation_key="service_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["level_1", "level_2", "automatic"],
+        value_fn=lambda ev: {
+            "1": "level_1",
+            "2": "level_2",
+            "a": "automatic",
+        }.get(ev.service_level.lower()),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    # Timing sensors
     OpenEVSESensorDescription(
         key="charge_time",
         translation_key="charge_time",
@@ -68,6 +91,80 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda ev: ev.charge_time_elapsed,
     ),
+    OpenEVSESensorDescription(
+        key="vehicle_eta",
+        translation_key="vehicle_eta",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda ev: ev.vehicle_eta,
+    ),
+    # Electrical sensors
+    OpenEVSESensorDescription(
+        key="charging_current",
+        translation_key="charging_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.charging_current,
+    ),
+    OpenEVSESensorDescription(
+        key="charging_voltage",
+        translation_key="charging_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.charging_voltage,
+    ),
+    OpenEVSESensorDescription(
+        key="charging_power",
+        translation_key="charging_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.charging_power,
+    ),
+    OpenEVSESensorDescription(
+        key="current_power",
+        translation_key="current_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.current_power,
+    ),
+    OpenEVSESensorDescription(
+        key="current_capacity",
+        translation_key="current_capacity",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.current_capacity,
+    ),
+    OpenEVSESensorDescription(
+        key="max_current",
+        translation_key="max_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda ev: ev.max_current,
+    ),
+    OpenEVSESensorDescription(
+        key="min_amps",
+        translation_key="min_amps",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.min_amps,
+    ),
+    OpenEVSESensorDescription(
+        key="max_amps",
+        translation_key="max_amps",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.max_amps,
+    ),
+    # Temperature sensors
     OpenEVSESensorDescription(
         key="ambient_temp",
         translation_key="ambient_temp",
@@ -95,6 +192,17 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     OpenEVSESensorDescription(
+        key="esp_temp",
+        translation_key="esp_temp",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.esp_temperature,
+    ),
+    # Energy sensors
+    OpenEVSESensorDescription(
         key="usage_session",
         translation_key="usage_session",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -111,6 +219,145 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda ev: ev.usage_total,
+    ),
+    OpenEVSESensorDescription(
+        key="total_day",
+        translation_key="total_day",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.total_day,
+    ),
+    OpenEVSESensorDescription(
+        key="total_week",
+        translation_key="total_week",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.total_week,
+    ),
+    OpenEVSESensorDescription(
+        key="total_month",
+        translation_key="total_month",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.total_month,
+    ),
+    OpenEVSESensorDescription(
+        key="total_year",
+        translation_key="total_year",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.total_year,
+    ),
+    # Vehicle sensors
+    OpenEVSESensorDescription(
+        key="vehicle_soc",
+        translation_key="vehicle_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.vehicle_soc,
+    ),
+    OpenEVSESensorDescription(
+        key="vehicle_range",
+        translation_key="vehicle_range",
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda ev: ev.vehicle_range,
+    ),
+    # Connectivity sensors
+    OpenEVSESensorDescription(
+        key="wifi_signal",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.wifi_signal,
+    ),
+    # Power shaper sensors
+    OpenEVSESensorDescription(
+        key="shaper_live_power",
+        translation_key="shaper_live_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.shaper_live_power,
+    ),
+    OpenEVSESensorDescription(
+        key="shaper_available_current",
+        translation_key="shaper_available_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.shaper_available_current,
+    ),
+    OpenEVSESensorDescription(
+        key="shaper_max_power",
+        translation_key="shaper_max_power",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.shaper_max_power,
+    ),
+    # Safety trip count sensors
+    OpenEVSESensorDescription(
+        key="gfi_trip_count",
+        translation_key="gfi_trip_count",
+        state_class=SensorStateClass.TOTAL,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.gfi_trip_count,
+    ),
+    OpenEVSESensorDescription(
+        key="no_gnd_trip_count",
+        translation_key="no_gnd_trip_count",
+        state_class=SensorStateClass.TOTAL,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.no_gnd_trip_count,
+    ),
+    OpenEVSESensorDescription(
+        key="stuck_relay_trip_count",
+        translation_key="stuck_relay_trip_count",
+        state_class=SensorStateClass.TOTAL,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.stuck_relay_trip_count,
+    ),
+    # System diagnostic sensors
+    OpenEVSESensorDescription(
+        key="uptime",
+        translation_key="uptime",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.uptime,
+    ),
+    OpenEVSESensorDescription(
+        key="freeram",
+        translation_key="freeram",
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ev: ev.freeram,
     ),
 )
 
@@ -218,6 +465,6 @@ class OpenEVSESensor(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SensorEnt
             self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.charger)
