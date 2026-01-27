@@ -818,8 +818,12 @@
       "animal_type": {
         "name": "Animal type",
         "state": {
+          "bear": "Bear",
           "cat": "Cat",
-          "dog": "Dog"
+          "cow": "Cow",
+          "dog": "Dog",
+          "fox": "Fox",
+          "squirrel": "Squirrel"
         }
       },
       "battery_state": {
@@ -850,6 +854,7 @@
       "person_type": {
         "name": "Person type",
         "state": {
+          "child": "Child",
           "man": "Man",
           "woman": "Woman"
         }
@@ -870,7 +875,9 @@
           "motorcycle": "Motorcycle",
           "pickup_truck": "Pickup truck",
           "sedan": "Sedan",
-          "suv": "SUV"
+          "suv": "SUV",
+          "truck": "Truck",
+          "van": "Van"
         }
       },
       "wifi_signal": {
