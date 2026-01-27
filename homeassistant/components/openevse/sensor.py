@@ -73,11 +73,6 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
         value_fn=lambda ev: ev.mode,
     ),
     OpenEVSESensorDescription(
-        key="charge_mode",
-        translation_key="charge_mode",
-        value_fn=lambda ev: ev.charge_mode,
-    ),
-    OpenEVSESensorDescription(
         key="divert_mode",
         translation_key="divert_mode",
         value_fn=lambda ev: ev.divertmode,

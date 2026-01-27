@@ -45,9 +45,6 @@
       "available_current": {
         "name": "Available current"
       },
-      "charge_mode": {
-        "name": "Charge mode"
-      },
       "charge_rate": {
         "name": "Charge rate"
       },
