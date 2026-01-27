@@ -8,6 +8,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import HDFuryConfigEntry
 from .entity import HDFuryEntity
 
+PARALLEL_UPDATES = 0
+
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="RX0",

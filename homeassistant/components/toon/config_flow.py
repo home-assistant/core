@@ -20,6 +20,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     DOMAIN = DOMAIN
     VERSION = 2
+    MINOR_VERSION = 2
 
     agreements: list[Agreement]
     data: dict[str, Any]
@@ -92,7 +93,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if self.migrate_entry:
             await self.hass.config_entries.async_remove(self.migrate_entry)
 
-        await self.async_set_unique_id(agreement.agreement_id)
+        await self.async_set_unique_id(str(agreement.agreement_id))
         self._abort_if_unique_id_configured()
 
         self.data[CONF_AGREEMENT_ID] = agreement.agreement_id

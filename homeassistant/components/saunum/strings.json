@@ -50,6 +50,19 @@
         "name": "Thermal cutoff alarm"
       }
     },
+    "climate": {
+      "saunum_climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "type_1": "Sauna Type 1",
+              "type_2": "Sauna Type 2",
+              "type_3": "Sauna Type 3"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "light": {
         "name": "[%key:component::light::title%]"
@@ -80,14 +93,23 @@
     "door_open": {
       "message": "Cannot start sauna session when sauna door is open"
     },
+    "preset_session_active": {
+      "message": "Cannot change preset mode while sauna session is active"
+    },
     "session_active_cannot_change_fan_duration": {
-      "message": "Cannot change fan duration while session is active"
+      "message": "Cannot change fan duration while sauna session is active"
     },
     "session_active_cannot_change_sauna_duration": {
-      "message": "Cannot change sauna duration while session is active"
+      "message": "Cannot change sauna duration while sauna session is active"
     },
     "session_not_active": {
       "message": "Cannot change fan mode when sauna session is not active"
+    },
+    "set_fan_duration_failed": {
+      "message": "Failed to set fan duration"
+    },
+    "set_fan_mode_failed": {
+      "message": "Failed to set fan mode"
     },
     "set_hvac_mode_failed": {
       "message": "Failed to set HVAC mode to {hvac_mode}"
@@ -98,11 +120,31 @@
     "set_light_on_failed": {
       "message": "Failed to turn on light"
     },
+    "set_preset_failed": {
+      "message": "Failed to set preset to {preset_mode}"
+    },
+    "set_sauna_duration_failed": {
+      "message": "Failed to set sauna duration"
+    },
     "set_temperature_failed": {
       "message": "Failed to set temperature to {temperature}"
-    },
-    "set_value_failed": {
-      "message": "Failed to set {entity} to {value}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "preset_name_type_1": "Preset name for sauna type 1",
+          "preset_name_type_2": "Preset name for sauna type 2",
+          "preset_name_type_3": "Preset name for sauna type 3"
+        },
+        "data_description": {
+          "preset_name_type_1": "Custom name for sauna type 1 preset mode",
+          "preset_name_type_2": "Custom name for sauna type 2 preset mode",
+          "preset_name_type_3": "Custom name for sauna type 3 preset mode"
+        },
+        "description": "Customize the names of the three sauna type preset modes"
+      }
     }
   }
 }

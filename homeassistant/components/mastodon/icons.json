@@ -4,7 +4,7 @@
       "bot": { "default": "mdi:robot" },
       "discoverable": { "default": "mdi:magnify-scan" },
       "indexable": { "default": "mdi:search-web" },
-      "limited": { "default": "mdi:volume-mute" },
+      "limited": { "default": "mdi:account-cancel" },
       "locked": {
         "default": "mdi:account-lock",
         "state": { "off": "mdi:account-lock-open" }
@@ -20,8 +20,14 @@
       "following": {
         "default": "mdi:account-multiple"
       },
+      "last_post": {
+        "default": "mdi:message-text-clock"
+      },
       "posts": {
         "default": "mdi:message-text"
+      },
+      "username": {
+        "default": "mdi:account"
       }
     }
   },

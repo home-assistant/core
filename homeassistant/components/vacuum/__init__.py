@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-from enum import IntFlag
 from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, final
@@ -36,20 +35,20 @@ from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     _DEPRECATED_STATE_CLEANING,
     _DEPRECATED_STATE_DOCKED,
     _DEPRECATED_STATE_ERROR,
     _DEPRECATED_STATE_RETURNING,
+    DATA_COMPONENT,
     DOMAIN,
     VacuumActivity,
+    VacuumEntityFeature,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[StateVacuumEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -83,25 +82,6 @@ _BATTERY_DEPRECATION_IGNORED_PLATFORMS = (
     "mqtt",
     "template",
 )
-
-
-class VacuumEntityFeature(IntFlag):
-    """Supported features of the vacuum entity."""
-
-    TURN_ON = 1  # Deprecated, not supported by StateVacuumEntity
-    TURN_OFF = 2  # Deprecated, not supported by StateVacuumEntity
-    PAUSE = 4
-    STOP = 8
-    RETURN_HOME = 16
-    FAN_SPEED = 32
-    BATTERY = 64
-    STATUS = 128  # Deprecated, not supported by StateVacuumEntity
-    SEND_COMMAND = 256
-    LOCATE = 512
-    CLEAN_SPOT = 1024
-    MAP = 2048
-    STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
-    START = 8192
 
 
 # mypy: disallow-any-generics
