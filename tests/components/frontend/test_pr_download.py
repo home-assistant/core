@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiogithubapi import (
     GitHubAuthenticationException,
@@ -237,3 +237,76 @@ async def test_pr_download_http_error(
     await hass.async_block_till_done()
 
     assert "Failed to download PR #12345" in caplog.text
+
+
+async def test_pr_download_zip_bomb_too_many_files(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that zip bombs with too many files are rejected."""
+    hass.config.config_dir = str(tmp_path)
+
+    aioclient_mock.get(
+        "https://api.github.com/artifact/download",
+        content=b"fake zip data",
+    )
+
+    with patch("zipfile.ZipFile") as mock_zip:
+        mock_zip_instance = MagicMock()
+        # Create a mock with too many files (> MAX_ZIP_FILES which is 50000)
+        mock_info = MagicMock()
+        mock_info.file_size = 100
+        mock_zip_instance.infolist.return_value = [mock_info] * 55000
+        mock_zip.return_value.__enter__.return_value = mock_zip_instance
+
+        config = {
+            DOMAIN: {
+                "development_pr": 12345,
+                "github_token": "test_token",
+            }
+        }
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert "Failed to download PR #12345" in caplog.text
+        assert "too many files" in caplog.text.lower()
+
+
+async def test_pr_download_zip_bomb_too_large(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_github_api: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that zip bombs with excessive uncompressed size are rejected."""
+    hass.config.config_dir = str(tmp_path)
+
+    aioclient_mock.get(
+        "https://api.github.com/artifact/download",
+        content=b"fake zip data",
+    )
+
+    with patch("zipfile.ZipFile") as mock_zip:
+        mock_zip_instance = MagicMock()
+        # Create a mock with excessive total size (> MAX_ZIP_SIZE which is 1.5GB)
+        mock_info = MagicMock()
+        mock_info.file_size = 2 * 1024 * 1024 * 1024  # 2GB per file
+        mock_zip_instance.infolist.return_value = [mock_info]
+        mock_zip.return_value.__enter__.return_value = mock_zip_instance
+
+        config = {
+            DOMAIN: {
+                "development_pr": 12345,
+                "github_token": "test_token",
+            }
+        }
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+        assert "Failed to download PR #12345" in caplog.text
+        assert "too large" in caplog.text.lower()

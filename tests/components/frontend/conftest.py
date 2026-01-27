@@ -64,5 +64,9 @@ def mock_zipfile() -> Generator[MagicMock]:
     """Mock zipfile extraction."""
     with patch("zipfile.ZipFile") as mock_zip:
         mock_zip_instance = MagicMock()
+        # Mock infolist for zip bomb validation
+        mock_info = MagicMock()
+        mock_info.file_size = 1000  # Small file size
+        mock_zip_instance.infolist.return_value = [mock_info]
         mock_zip.return_value.__enter__.return_value = mock_zip_instance
         yield mock_zip_instance

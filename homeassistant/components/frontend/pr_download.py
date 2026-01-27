@@ -27,6 +27,11 @@ _LOGGER = logging.getLogger(__name__)
 GITHUB_REPO = "home-assistant/frontend"
 ARTIFACT_NAME = "frontend-build"
 
+# Zip bomb protection limits (10x typical frontend build size)
+# Typical frontend build: ~4500 files, ~135MB uncompressed
+MAX_ZIP_FILES = 50000
+MAX_ZIP_SIZE = 1500 * 1024 * 1024  # 1.5GB
+
 ERROR_INVALID_TOKEN = (
     "GitHub token is invalid or expired. "
     "Please check your github_token in the frontend configuration. "
@@ -142,6 +147,20 @@ def _extract_artifact(
     frontend_dir.mkdir(parents=True, exist_ok=True)
 
     with zipfile.ZipFile(io.BytesIO(artifact_data)) as zip_file:
+        # Validate zip contents to protect against zip bombs
+        # See: https://github.com/python/cpython/issues/80643
+        total_size = 0
+        for file_count, info in enumerate(zip_file.infolist(), start=1):
+            total_size += info.file_size
+            if file_count > MAX_ZIP_FILES:
+                raise ValueError(
+                    f"Zip contains too many files (>{MAX_ZIP_FILES}), possible zip bomb"
+                )
+            if total_size > MAX_ZIP_SIZE:
+                raise ValueError(
+                    f"Zip uncompressed size too large (>{MAX_ZIP_SIZE} bytes), "
+                    "possible zip bomb"
+                )
         zip_file.extractall(str(frontend_dir))
 
     # Save the commit SHA for cache validation
@@ -204,6 +223,10 @@ async def _download_pr_artifact(
     except zipfile.BadZipFile as err:
         raise HomeAssistantError(
             f"Downloaded artifact for PR #{pr_number} is corrupted or invalid"
+        ) from err
+    except ValueError as err:
+        raise HomeAssistantError(
+            f"Downloaded artifact for PR #{pr_number} failed validation: {err}"
         ) from err
     except OSError as err:
         raise HomeAssistantError(
