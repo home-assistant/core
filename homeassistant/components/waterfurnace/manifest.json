@@ -2,6 +2,7 @@
   "domain": "waterfurnace",
   "name": "WaterFurnace",
   "codeowners": ["@sdague", "@masterkoppa"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/waterfurnace",
   "integration_type": "device",
   "iot_class": "cloud_polling",

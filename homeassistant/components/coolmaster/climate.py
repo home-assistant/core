@@ -124,7 +124,9 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     @property
     def fan_mode(self):
         """Return the fan setting."""
-        return CM_TO_HA_FAN[self._unit.fan_speed]
+
+        # Normalize to lowercase for lookup, and pass unknown values through.
+        return CM_TO_HA_FAN.get(self._unit.fan_speed.lower(), self._unit.fan_speed)
 
     @property
     def fan_modes(self):
