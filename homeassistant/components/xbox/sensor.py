@@ -44,6 +44,16 @@ MAP_JOIN_RESTRICTIONS = {
     "followed": "joinable",
 }
 
+MAP_PLATFORM_NAME = {
+    "Android": "Android",
+    "iOS": "iOS",
+    "Nintendo": "Nintendo Switch",
+    "Scarlett": "Xbox Series X|S",
+    "WindowsOneCore": "Windows",
+    "Xbox360": "Xbox 360",
+    "XboxOne": "Xbox One",
+}
+
 
 class XboxSensor(StrEnum):
     """Xbox sensor."""
@@ -92,15 +102,30 @@ def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any
         "gamerscore": None,
         "progress": None,
         "title_id": title.title_id if title else None,
-        "active_device": None,
+        "platform": None,
     }
 
     if not title:
         return attributes
+
     if person.presence_details:
-        attributes["active_device"] = next(
-            (d.device for d in person.presence_details if d.state == "Active"), None
+        active_entry = next(
+            (d for d in person.presence_details if d.state == "Active" and d.is_game),
+            next((d for d in person.presence_details if d.state == "Active"), None),
         )
+
+        if active_entry:
+            if active_entry.device == "Scarlett" and title.devices:
+                if "Xbox360" in title.devices:
+                    attributes["platform"] = MAP_PLATFORM_NAME["Xbox360"]
+                elif "XboxOne" in title.devices:
+                    attributes["platform"] = MAP_PLATFORM_NAME["XboxOne"]
+                else:
+                    attributes["platform"] = MAP_PLATFORM_NAME["Scarlett"]
+            else:
+                attributes["platform"] = MAP_PLATFORM_NAME.get(
+                    active_entry.device, active_entry.device.capitalize()
+                )
     if title.detail is not None:
         attributes.update(
             {
