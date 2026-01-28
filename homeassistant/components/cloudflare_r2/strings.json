@@ -16,7 +16,7 @@
           "bucket": "Bucket name",
           "endpoint_url": "Endpoint URL",
           "prefix": "Folder prefix (optional)",
-          "secret_access_key": "Secret access key",
+          "secret_access_key": "Secret access key"
         },
         "data_description": {
           "access_key_id": "Access key ID to connect to Cloudflare R2 (this is your Account ID)",
