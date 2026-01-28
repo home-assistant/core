@@ -1885,6 +1885,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "everhome": {
+      "name": "everHome",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "everlights": {
       "name": "EverLights",
       "integration_type": "hub",

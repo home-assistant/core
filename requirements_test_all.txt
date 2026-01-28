@@ -749,6 +749,9 @@ eagle100==0.1.1
 # homeassistant.components.easyenergy
 easyenergy==2.2.0
 
+# homeassistant.components.everhome
+ecotracker==0.1.15
+
 # homeassistant.components.egauge
 egauge-async==0.4.0
 

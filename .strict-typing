@@ -195,6 +195,7 @@ homeassistant.components.enphase_envoy.*
 homeassistant.components.eq3btsmart.*
 homeassistant.components.esphome.*
 homeassistant.components.event.*
+homeassistant.components.everhome.*
 homeassistant.components.evil_genius_labs.*
 homeassistant.components.evohome.*
 homeassistant.components.faa_delays.*

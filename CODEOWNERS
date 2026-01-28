@@ -486,6 +486,8 @@ build.json @home-assistant/supervisor
 /tests/components/eufylife_ble/ @bdr99
 /homeassistant/components/event/ @home-assistant/core
 /tests/components/event/ @home-assistant/core
+/homeassistant/components/everhome/ @everhome-gmbh
+/tests/components/everhome/ @everhome-gmbh
 /homeassistant/components/evohome/ @zxdavb
 /tests/components/evohome/ @zxdavb
 /homeassistant/components/ezviz/ @RenierM26
