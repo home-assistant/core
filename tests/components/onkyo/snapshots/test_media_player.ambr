@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[media_player.tx_nr7100-entry]
+# name: test_entities[component.media_player.services.onkyo_select_hdmi_output.][media_player.tx_nr7100-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -44,7 +44,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[media_player.tx_nr7100-state]
+# name: test_entities[component.media_player.services.onkyo_select_hdmi_output.][media_player.tx_nr7100-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'audio_information': dict({
@@ -77,7 +77,7 @@
     'state': 'on',
   })
 # ---
-# name: test_entities[media_player.tx_nr7100_zone_2-entry]
+# name: test_entities[component.media_player.services.onkyo_select_hdmi_output.][media_player.tx_nr7100_zone_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -121,7 +121,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[media_player.tx_nr7100_zone_2-state]
+# name: test_entities[component.media_player.services.onkyo_select_hdmi_output.][media_player.tx_nr7100_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TX-NR7100 Zone 2',
@@ -145,7 +145,7 @@
     'state': 'on',
   })
 # ---
-# name: test_entities[media_player.tx_nr7100_zone_3-entry]
+# name: test_entities[component.media_player.services.onkyo_select_hdmi_output.][media_player.tx_nr7100_zone_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -186,7 +186,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[media_player.tx_nr7100_zone_3-state]
+# name: test_entities[component.media_player.services.onkyo_select_hdmi_output.][media_player.tx_nr7100_zone_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TX-NR7100 Zone 3',

@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Mapping
 from functools import lru_cache
 from importlib.util import find_spec
+import inspect
 from pathlib import Path
 import re
 import string
@@ -665,8 +666,13 @@ async def _validate_translation(
     if not translation_required:
         return
 
+    if full_key not in translation_errors:
+        for k in translation_errors:
+            if k.endswith(".") and full_key.startswith(k):
+                full_key = k
+                break
     if translation_errors.get(full_key) in {"used", "unused"}:
-        # If the does not integration exist, translation errors should be ignored
+        # If the integration does not exist, translation errors should be ignored
         # via the ignore_translations_for_mock_domains fixture instead of the
         # ignore_missing_translations fixture.
         try:
@@ -938,6 +944,20 @@ async def _check_exception_translation(
     )
 
 
+_DYNAMIC_SERVICE_DOMAINS = {
+    "esphome",
+    "notify",
+    "rest_command",
+    "script",
+    "shell_command",
+    "tts",
+}
+"""These domains create services dynamically.
+
+name/description translations are not required.
+"""
+
+
 async def _check_service_registration_translation(
     hass: HomeAssistant,
     domain: str,
@@ -957,6 +977,20 @@ async def _check_service_registration_translation(
         f"{service_name}.",
         description_placeholders,
     )
+    # Service `name` and `description` should be compulsory
+    # unless for specific domains where the services are dynamically created
+    if domain not in _DYNAMIC_SERVICE_DOMAINS:
+        for subkey in ("name", "description"):
+            await _validate_translation(
+                hass,
+                translation_errors,
+                ignore_translations_for_mock_domains,
+                "services",
+                domain,
+                f"{service_name}.{subkey}",
+                description_placeholders,
+                translation_required=True,
+            )
 
 
 @pytest.fixture(autouse=True)
@@ -1065,16 +1099,30 @@ async def check_translations(
         *,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
-        translation_coros.add(
-            _check_service_registration_translation(
-                self._hass,
-                domain,
-                service,
-                description_placeholders,
-                translation_errors,
-                ignored_domains,
+        if (
+            (current_frame := inspect.currentframe()) is None
+            or (caller := current_frame.f_back) is None
+            or (
+                # async_mock_service is used in tests to register test services
+                caller.f_code.co_name != "async_mock_service"
+                # ServiceRegistry.async_register can also be called directly in
+                # a test module
+                and not caller.f_code.co_filename.startswith(
+                    str(Path(__file__).parents[0])
+                )
             )
-        )
+        ):
+            translation_coros.add(
+                _check_service_registration_translation(
+                    self._hass,
+                    domain,
+                    service,
+                    description_placeholders,
+                    translation_errors,
+                    ignored_domains,
+                )
+            )
+
         _original_service_registry_async_register(
             self,
             domain,

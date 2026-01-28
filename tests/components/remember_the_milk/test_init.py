@@ -27,6 +27,9 @@ def configure_id() -> Generator[str]:
     ("token", "rtm_entity_exists", "configurator_end_state"),
     [(TOKEN, True, "configured"), (None, False, "configure")],
 )
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.configurator.services.configure."]
+)
 async def test_configurator(
     hass: HomeAssistant,
     client: MagicMock,
