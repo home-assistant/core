@@ -85,6 +85,12 @@
       "batteries": {
         "name": "Batteries"
       },
+      "battery_charge_today": {
+        "name": "Battery energy charged today"
+      },
+      "battery_discharge_today": {
+        "name": "Battery energy discharged today"
+      }
       "consumption_energy": {
         "name": "Consumed energy"
       },
@@ -145,12 +151,6 @@
       "storage_power": {
         "name": "Storage power"
       },
-      "battery_charge_today": {
-        "name": "Battery energy charged today"
-      },
-      "battery_discharge_today": {
-        "name": "Battery energy discharged today"
-      }
     }
   }
 }
