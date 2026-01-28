@@ -1175,7 +1175,7 @@ habluetooth==5.8.0
 hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
-hass-nabucasa==1.11.0
+hass-nabucasa==1.12.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1664,6 +1664,7 @@ open-garage==0.2.0
 # homeassistant.components.open_meteo
 open-meteo==0.3.2
 
+# homeassistant.components.cloud
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
 openai==2.15.0
@@ -3292,7 +3293,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.84
+zha==0.0.87
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

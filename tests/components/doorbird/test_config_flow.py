@@ -145,6 +145,37 @@ async def test_form_zeroconf_ipv4_address(
     assert config_entry.data[CONF_HOST] == "4.4.4.4"
 
 
+async def test_form_zeroconf_ignored_entry(
+    hass: HomeAssistant, doorbird_api: DoorBird
+) -> None:
+    """Test we abort when the entry was ignored, without attempting to connect."""
+
+    config_entry = MockConfigEntry(
+        source=config_entries.SOURCE_IGNORE,
+        domain=DOMAIN,
+        unique_id="1CCAE3AAAAAA",
+        data={},
+        options={},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("4.4.4.4"),
+            ip_addresses=[ip_address("4.4.4.4")],
+            hostname="mock_hostname",
+            name="Doorstation - abc123._axis-video._tcp.local.",
+            port=None,
+            properties={"macaddress": "1CCAE3AAAAAA"},
+            type="mock_type",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_form_zeroconf_ipv4_address_wrong_device(
     hass: HomeAssistant, doorbird_api: DoorBird
 ) -> None:

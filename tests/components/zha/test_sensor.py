@@ -284,9 +284,6 @@ async def async_test_powerconfiguration2(
     hass: HomeAssistant, cluster: Cluster, entity_id: str
 ):
     """Test powerconfiguration/battery sensor."""
-    await send_attributes_report(hass, cluster, {33: -1})
-    assert_state(hass, entity_id, STATE_UNKNOWN, "%")
-
     await send_attributes_report(hass, cluster, {33: 255})
     assert_state(hass, entity_id, STATE_UNKNOWN, "%")
 
@@ -399,7 +396,7 @@ async def async_test_pi_heating_demand(
                 "summation_formatting": 0b1_0111_010,
                 "unit_of_measure": 0x00,
             },
-            {"instaneneous_demand", "current_summ_received"},
+            {"instantaneous_demand", "current_summ_received"},
             STATE_UNKNOWN,
         ),
         (
@@ -417,7 +414,7 @@ async def async_test_pi_heating_demand(
                 "unit_of_measure": 0x00,
                 "current_summ_received": 0,
             },
-            {"instaneneous_demand", "current_summ_delivered"},
+            {"instantaneous_demand", "current_summ_delivered"},
             "0.0",
         ),
         (

@@ -51,7 +51,7 @@
         },
         "step": {
           "fix_menu": {
-            "description": "Add-on {addon} is set to start at boot but failed to start. Usually this occurs when the configuration is incorrect or the same port is used in multiple add-ons. Check the configuration as well as logs for {addon} and Supervisor.\n\nUse Start to try again or Disable to turn off the start at boot option.",
+            "description": "App {addon} is set to start at boot but failed to start. Usually this occurs when the configuration is incorrect or the same port is used in multiple apps. Check the configuration as well as logs for {addon} and Supervisor.\n\nUse Start to try again or Disable to turn off the start at boot option.",
             "menu_options": {
               "addon_disable_boot": "[%key:common::action::disable%]",
               "addon_execute_start": "[%key:common::action::start%]"
@@ -59,41 +59,41 @@
           }
         }
       },
-      "title": "Add-on failed to start at boot"
+      "title": "App failed to start at boot"
     },
     "issue_addon_deprecated_addon": {
       "fix_flow": {
         "abort": {
-          "apply_suggestion_fail": "Could not uninstall the add-on. Check the Supervisor logs for more details."
+          "apply_suggestion_fail": "Could not uninstall the app. Check the Supervisor logs for more details."
         },
         "step": {
           "addon_execute_remove": {
-            "description": "Add-on {addon} is marked deprecated by the developer. This means it is no longer being maintained and so may break or become a security issue over time.\n\nReview the [readme]({addon_info}) and [documentation]({addon_documentation}) of the add-on to see if the developer provided instructions.\n\nSelecting **Submit** will uninstall this deprecated add-on. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
+            "description": "App {addon} is marked deprecated by the developer. This means it is no longer being maintained and so may break or become a security issue over time.\n\nReview the [readme]({addon_info}) and [documentation]({addon_documentation}) of the app to see if the developer provided instructions.\n\nSelecting **Submit** will uninstall this deprecated app. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
           }
         }
       },
-      "title": "Installed add-on is deprecated"
+      "title": "Installed app is deprecated"
     },
     "issue_addon_detached_addon_missing": {
-      "description": "Repository for add-on {addon} is missing. This means it will not get updates, and backups may not be restored correctly as the Home Assistant Supervisor may not be able to build/download the resources required.\n\nPlease check the [add-on's documentation]({addon_url}) for installation instructions and add the repository to the store.",
-      "title": "Missing repository for an installed add-on"
+      "description": "Repository for app {addon} is missing. This means it will not get updates, and backups may not be restored correctly as the Home Assistant Supervisor may not be able to build/download the resources required.\n\nPlease check the [app's documentation]({addon_url}) for installation instructions and add the repository to the store.",
+      "title": "Missing repository for an installed app"
     },
     "issue_addon_detached_addon_removed": {
       "fix_flow": {
         "abort": {
-          "apply_suggestion_fail": "Could not uninstall the add-on. Check the Supervisor logs for more details."
+          "apply_suggestion_fail": "Could not uninstall the app. Check the Supervisor logs for more details."
         },
         "step": {
           "addon_execute_remove": {
-            "description": "Add-on {addon} has been removed from the repository it was installed from. This means it will not get updates, and backups may not be restored correctly as the Home Assistant Supervisor may not be able to build/download the resources required.\n\nSelecting **Submit** will uninstall this deprecated add-on. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
+            "description": "App {addon} has been removed from the repository it was installed from. This means it will not get updates, and backups may not be restored correctly as the Home Assistant Supervisor may not be able to build/download the resources required.\n\nSelecting **Submit** will uninstall this deprecated app. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
           }
         }
       },
-      "title": "Installed add-on has been removed from repository"
+      "title": "Installed app has been removed from repository"
     },
     "issue_addon_pwned": {
-      "description": "Add-on {addon} uses secrets/passwords in its configuration which are detected as not secure. See [pwned passwords and secrets]({more_info_pwned}) for more information on this issue.",
-      "title": "Insecure secrets detected in add-on configuration"
+      "description": "App {addon} uses secrets/passwords in its configuration which are detected as not secure. See [pwned passwords and secrets]({more_info_pwned}) for more information on this issue.",
+      "title": "Insecure secrets detected in app configuration"
     },
     "issue_mount_mount_failed": {
       "fix_flow": {
@@ -123,7 +123,7 @@
         },
         "step": {
           "system_execute_rebuild": {
-            "description": "The default configuration for add-ons and Home Assistant has changed. To update the configuration with the new defaults, a restart is required for the following:\n\n- {components}"
+            "description": "The default configuration for apps and Home Assistant has changed. To update the configuration with the new defaults, a restart is required for the following:\n\n- {components}"
           }
         }
       },
@@ -160,7 +160,7 @@
         },
         "step": {
           "system_execute_reboot": {
-            "description": "Settings were changed which require a system reboot to take effect.\n\nThis fix will initiate a system reboot which will make Home Assistant and all the Add-ons inaccessible for a brief period."
+            "description": "Settings were changed which require a system reboot to take effect.\n\nThis fix will initiate a system reboot which will make Home Assistant and all the apps inaccessible for a brief period."
           }
         }
       },
@@ -203,7 +203,7 @@
       "title": "Unsupported system - {reason}"
     },
     "unsupported_apparmor": {
-      "description": "System is unsupported because AppArmor is working incorrectly and add-ons are running in an unprotected and insecure way. For troubleshooting information, select Learn more.",
+      "description": "System is unsupported because AppArmor is working incorrectly and apps are running in an unprotected and insecure way. For troubleshooting information, select Learn more.",
       "title": "Unsupported system - AppArmor issues"
     },
     "unsupported_cgroup_version": {
@@ -510,7 +510,7 @@
       "docker_version": "Docker version",
       "healthy": "Healthy",
       "host_os": "Host operating system",
-      "installed_addons": "Installed add-ons",
+      "installed_addons": "Installed apps",
       "nameservers": "Nameservers",
       "supervisor_api": "Supervisor API",
       "supervisor_version": "Supervisor version",
