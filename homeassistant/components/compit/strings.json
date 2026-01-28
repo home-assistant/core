@@ -72,28 +72,6 @@
           "thermostat": "Thermostat"
         }
       },
-      "heating_source_of_correction_zone": {
-        "name": "Zone {zone} heating source of correction",
-        "state": {
-          "disabled": "Disabled",
-          "nano_nr_1": "Nano 1",
-          "nano_nr_2": "Nano 2",
-          "nano_nr_3": "Nano 3",
-          "nano_nr_4": "Nano 4",
-          "nano_nr_5": "Nano 5",
-          "no_corrections": "No corrections",
-          "schedule": "Schedule",
-          "thermostat": "Thermostat"
-        }
-      },
-      "hot_water_circulation": {
-        "name": "Hot water circulation",
-        "state": {
-          "constant": "Constant",
-          "disabled": "Disabled",
-          "schedule": "Schedule"
-        }
-      },
       "language": {
         "name": "Language",
         "state": {

@@ -83,7 +83,7 @@ def mock_connector():
         ).value
 
     def select_device_option(
-        device_id: int, parameter_code: CompitParameter, value: int
+        device_id: int, parameter_code: CompitParameter, value: str
     ):
         next(
             p
