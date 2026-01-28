@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from pystiebeleltron import ControllerModel, StiebelEltronModbusError
 import pytest
 
 from homeassistant.components.stiebel_eltron.const import DOMAIN
@@ -13,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_stiebel_eltron_client")
+@pytest.mark.usefixtures("mock_get_controller_model")
 async def test_full_flow(hass: HomeAssistant) -> None:
     """Test the full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -40,14 +41,14 @@ async def test_full_flow(hass: HomeAssistant) -> None:
 
 async def test_form_cannot_connect(
     hass: HomeAssistant,
-    mock_stiebel_eltron_client: MagicMock,
+    mock_get_controller_model: MagicMock,
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_stiebel_eltron_client.update.return_value = False
+    mock_get_controller_model.side_effect = StiebelEltronModbusError
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -60,7 +61,7 @@ async def test_form_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_stiebel_eltron_client.update.return_value = True
+    mock_get_controller_model.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -75,14 +76,14 @@ async def test_form_cannot_connect(
 
 async def test_form_unknown_exception(
     hass: HomeAssistant,
-    mock_stiebel_eltron_client: MagicMock,
+    mock_get_controller_model: MagicMock,
 ) -> None:
-    """Test we handle cannot connect error."""
+    """Test we handle unknown exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_stiebel_eltron_client.update.side_effect = Exception
+    mock_get_controller_model.side_effect = Exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -95,7 +96,8 @@ async def test_form_unknown_exception(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
 
-    mock_stiebel_eltron_client.update.side_effect = None
+    mock_get_controller_model.side_effect = None
+    mock_get_controller_model.return_value = ControllerModel.LWZ  # Valid model (LWZ)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -129,7 +131,7 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_stiebel_eltron_client")
+@pytest.mark.usefixtures("mock_get_controller_model")
 async def test_import(hass: HomeAssistant) -> None:
     """Test import step."""
     result = await hass.config_entries.flow.async_init(
@@ -151,10 +153,10 @@ async def test_import(hass: HomeAssistant) -> None:
 
 async def test_import_cannot_connect(
     hass: HomeAssistant,
-    mock_stiebel_eltron_client: MagicMock,
+    mock_get_controller_model: MagicMock,
 ) -> None:
     """Test we handle cannot connect error."""
-    mock_stiebel_eltron_client.update.return_value = False
+    mock_get_controller_model.side_effect = StiebelEltronModbusError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -171,10 +173,10 @@ async def test_import_cannot_connect(
 
 async def test_import_unknown_exception(
     hass: HomeAssistant,
-    mock_stiebel_eltron_client: MagicMock,
+    mock_get_controller_model: MagicMock,
 ) -> None:
-    """Test we handle cannot connect error."""
-    mock_stiebel_eltron_client.update.side_effect = Exception
+    """Test we handle unknown exception."""
+    mock_get_controller_model.side_effect = Exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

@@ -22,6 +22,24 @@
       }
     }
   },
+  "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "Auto",
+              "emergency": "Emergency",
+              "manual": "Manual",
+              "program": "Program",
+              "ready": "Ready",
+              "water_heating": "Water heating"
+            }
+          }
+        }
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml": {
       "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove both the `{domain}` and the relevant Modbus configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",

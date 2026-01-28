@@ -1,0 +1,89 @@
+# serializer version: 1
+# name: test_climate_entity[climate.stiebel_eltron_stiebel_eltron_001_climate_hk_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 10.0,
+      'preset_modes': list([
+        'ready',
+        'comfort',
+        'eco',
+        'water_heating',
+        'auto',
+        'manual',
+        'emergency',
+      ]),
+      'target_temp_step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.stiebel_eltron_stiebel_eltron_001_climate_hk_1',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'stiebel_eltron',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': 'stiebel_eltron_001-climate_hk_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_entity[climate.stiebel_eltron_stiebel_eltron_001_climate_hk_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 45.0,
+      'current_temperature': 21.0,
+      'filter_alarm': False,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 10.0,
+      'preset_mode': 'auto',
+      'preset_modes': list([
+        'ready',
+        'comfort',
+        'eco',
+        'water_heating',
+        'auto',
+        'manual',
+        'emergency',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 0.1,
+      'temperature': 22.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.stiebel_eltron_stiebel_eltron_001_climate_hk_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
