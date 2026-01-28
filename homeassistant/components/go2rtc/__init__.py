@@ -328,6 +328,36 @@ class WebRTCProvider(CameraWebRTCProvider):
         config = camera.async_get_webrtc_client_configuration()
         await ws_client.send(WebRTCOffer(offer_sdp, config.configuration.ice_servers))
 
+    async def async_handle_async_webrtc_re_offer(
+        self,
+        camera: Camera,
+        offer_sdp: str,
+        session_id: str,
+        send_message: WebRTCSendMessage,
+    ) -> None:
+        """Handle the WebRTC offer on renegotiation and return the answer via the provided callback."""
+        self._sessions[session_id] = ws_client = Go2RtcWsClient(
+            self._session, self._url, source=camera.entity_id
+        )
+
+        @callback
+        def on_messages(message: ReceiveMessages) -> None:
+            """Handle messages."""
+            value: WebRTCMessage
+            match message:
+                case WebRTCCandidate():
+                    value = HAWebRTCCandidate(RTCIceCandidateInit(message.candidate))
+                case WebRTCAnswer():
+                    value = HAWebRTCAnswer(message.sdp)
+                case WsError():
+                    value = WebRTCError("go2rtc_webrtc_offer_failed", message.error)
+
+            send_message(value)
+
+        ws_client.subscribe(on_messages)
+        config = camera.async_get_webrtc_client_configuration()
+        await ws_client.send(WebRTCOffer(offer_sdp, config.configuration.ice_servers))
+
     async def async_on_webrtc_candidate(
         self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
