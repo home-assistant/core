@@ -59,9 +59,6 @@ _LOGGER = logging.getLogger(__name__)
 _MAX_TOOL_ITERATIONS = 10
 
 
-type ResponseInputParam = list[ResponseInputItemParam]
-
-
 class ResponseItemType(str, Enum):
     """Response item types."""
 
@@ -74,9 +71,9 @@ class ResponseItemType(str, Enum):
 
 def _convert_content_to_param(
     chat_content: Iterable[conversation.Content],
-) -> ResponseInputParam:
+) -> list[ResponseInputItemParam]:
     """Convert any native chat message for this agent to the native format."""
-    messages: ResponseInputParam = []
+    messages: list[ResponseInputItemParam] = []
     reasoning_summary: list[str] = []
     web_search_calls: dict[str, dict[str, Any]] = {}
 
@@ -460,7 +457,7 @@ class BaseCloudLLMEntity(Entity):
     async def _prepare_chat_for_generation(
         self,
         chat_log: conversation.ChatLog,
-        messages: ResponseInputParam,
+        messages: list[ResponseInputItemParam],
         response_format: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Prepare kwargs for Cloud LLM from the chat log."""
