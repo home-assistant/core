@@ -1,0 +1,83 @@
+get_series:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: sonarr
+
+get_queue:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: sonarr
+    max_items:
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 500
+          mode: box
+
+get_diskspace:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: sonarr
+
+get_upcoming:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: sonarr
+    days:
+      required: false
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 30
+          mode: box
+
+get_wanted:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: sonarr
+    max_items:
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 500
+          mode: box
+
+get_episodes:
+  fields:
+    entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: sonarr
+    series_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+    season_number:
+      required: false
+      selector:
+        number:
+          min: 0
+          mode: box
