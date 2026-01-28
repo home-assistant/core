@@ -19,6 +19,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.typing import RecorderInstanceContextManager
+
+
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_test_recorder: RecorderInstanceContextManager,
+) -> None:
+    """Set up recorder before hass fixture runs."""
 
 
 def create_tibber_device(
@@ -158,21 +166,15 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def _tibber_patches() -> AsyncGenerator[tuple[MagicMock, MagicMock]]:
+def tibber_mock() -> AsyncGenerator[MagicMock]:
     """Patch the Tibber libraries used by the integration."""
     unique_user_id = "unique_user_id"
     title = "title"
 
-    with (
-        patch(
-            "tibber.Tibber",
-            autospec=True,
-        ) as mock_tibber,
-        patch(
-            "tibber.data_api.TibberDataAPI",
-            autospec=True,
-        ) as mock_data_api_client,
-    ):
+    with patch(
+        "tibber.Tibber",
+        autospec=True,
+    ) as mock_tibber:
         tibber_mock = mock_tibber.return_value
         tibber_mock.update_info = AsyncMock(return_value=True)
         tibber_mock.user_id = unique_user_id
@@ -180,24 +182,21 @@ def _tibber_patches() -> AsyncGenerator[tuple[MagicMock, MagicMock]]:
         tibber_mock.send_notification = AsyncMock()
         tibber_mock.rt_disconnect = AsyncMock()
         tibber_mock.get_homes = MagicMock(return_value=[])
+        tibber_mock.set_access_token = MagicMock()
 
-        data_api_client_mock = mock_data_api_client.return_value
-        data_api_client_mock.get_all_devices = AsyncMock(return_value={})
-        data_api_client_mock.update_devices = AsyncMock(return_value={})
+        data_api_mock = MagicMock()
+        data_api_mock.get_all_devices = AsyncMock(return_value={})
+        data_api_mock.update_devices = AsyncMock(return_value={})
+        data_api_mock.get_userinfo = AsyncMock()
+        tibber_mock.data_api = data_api_mock
 
-        yield tibber_mock, data_api_client_mock
-
-
-@pytest.fixture
-def tibber_mock(_tibber_patches: tuple[MagicMock, MagicMock]) -> MagicMock:
-    """Return the patched Tibber connection mock."""
-    return _tibber_patches[0]
+        yield tibber_mock
 
 
 @pytest.fixture
-def data_api_client_mock(_tibber_patches: tuple[MagicMock, MagicMock]) -> MagicMock:
+def data_api_client_mock(tibber_mock: MagicMock) -> MagicMock:
     """Return the patched Tibber Data API client mock."""
-    return _tibber_patches[1]
+    return tibber_mock.data_api
 
 
 @pytest.fixture

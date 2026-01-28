@@ -40,6 +40,7 @@ from .const import (
 from .entity import TuyaEntity
 from .models import (
     DeviceWrapper,
+    DPCodeDeltaIntegerWrapper,
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,
     DPCodeJsonWrapper,
@@ -48,7 +49,7 @@ from .models import (
     DPCodeWrapper,
 )
 from .raw_data_models import ElectricityData
-from .type_information import EnumTypeInformation
+from .type_information import EnumTypeInformation, IntegerTypeInformation
 
 
 class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
@@ -350,6 +351,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         *BATTERY_SENSORS,
     ),
     DeviceCategory.CWWSQ: (
+        *BATTERY_SENSORS,
         TuyaSensorEntityDescription(
             key=DPCode.FEED_REPORT,
             translation_key="last_amount",
@@ -1739,11 +1741,13 @@ def _get_dpcode_wrapper(
                 return wrapper
         return None
 
-    for cls in (DPCodeIntegerWrapper, DPCodeEnumWrapper):
-        if wrapper := cls.find_dpcode(device, dpcode):
-            return wrapper
+    # Check for integer type first, using delta wrapper only for sum report_type
+    if type_information := IntegerTypeInformation.find_dpcode(device, dpcode):
+        if type_information.report_type == "sum":
+            return DPCodeDeltaIntegerWrapper(type_information.dpcode, type_information)
+        return DPCodeIntegerWrapper(type_information.dpcode, type_information)
 
-    return None
+    return DPCodeEnumWrapper.find_dpcode(device, dpcode)
 
 
 async def async_setup_entry(
@@ -1798,6 +1802,8 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             self._attr_native_unit_of_measurement = dpcode_wrapper.native_unit
         if description.suggested_unit_of_measurement is None:
             self._attr_suggested_unit_of_measurement = dpcode_wrapper.suggested_unit
+        if description.state_class is None:
+            self._attr_state_class = dpcode_wrapper.state_class
 
         self._validate_device_class_unit()
 
