@@ -90,7 +90,7 @@
       },
       "battery_discharge_today": {
         "name": "Battery energy discharged today"
-      }
+      },
       "consumption_energy": {
         "name": "Consumed energy"
       },
