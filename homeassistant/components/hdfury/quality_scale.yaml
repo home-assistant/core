@@ -50,7 +50,7 @@ rules:
   docs-examples: done
   docs-known-limitations:
     status: exempt
-    comment: The integration does not have any known limitations.
+    comment: There are currently no known limitations for this integration.
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
