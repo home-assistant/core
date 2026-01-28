@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
@@ -21,7 +23,7 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
@@ -46,6 +48,7 @@ from .const import (  # noqa: F401
     VacuumActivity,
     VacuumEntityFeature,
 )
+from .websocket import async_register_websocket_handlers
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +65,7 @@ ATTR_PARAMS = "params"
 ATTR_STATUS = "status"
 
 SERVICE_CLEAN_SPOT = "clean_spot"
+SERVICE_CLEAN_AREA = "clean_area"
 SERVICE_LOCATE = "locate"
 SERVICE_RETURN_TO_BASE = "return_to_base"
 SERVICE_SEND_COMMAND = "send_command"
@@ -72,6 +76,8 @@ SERVICE_PAUSE = "pause"
 SERVICE_STOP = "stop"
 
 DEFAULT_NAME = "Vacuum cleaner robot"
+
+ISSUE_SEGMENTS_CHANGED = "segments_changed"
 
 # These STATE_* constants are deprecated as of Home Assistant 2025.1.
 # Please use the VacuumActivity enum instead.
@@ -101,6 +107,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await component.async_setup(config)
 
+    async_register_websocket_handlers(hass)
+
     component.async_register_entity_service(
         SERVICE_START,
         None,
@@ -124,6 +132,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         None,
         "async_clean_spot",
         [VacuumEntityFeature.CLEAN_SPOT],
+    )
+    component.async_register_entity_service(
+        SERVICE_CLEAN_AREA,
+        {
+            vol.Required("cleaning_area_id"): vol.All(cv.ensure_list, [str]),
+        },
+        "async_internal_clean_area",
+        [VacuumEntityFeature.CLEAN_AREA],
     )
     component.async_register_entity_service(
         SERVICE_LOCATE,
@@ -423,6 +439,114 @@ class StateVacuumEntity(
         """
         await self.hass.async_add_executor_job(partial(self.clean_spot, **kwargs))
 
+    async def async_get_segments(self) -> list[Segment]:
+        """Get the segments that can be cleaned.
+
+        Returns a list of segments containing their ids and names.
+        """
+        raise NotImplementedError
+
+    @final
+    @property
+    def last_seen_segments(self) -> list[Segment] | None:
+        """Return segments as seen by the user, when last mapping the areas.
+
+        Returns None if no mapping has been saved yet.
+        This can be used by integrations to detect changes in segments reported
+        by the vacuum and create a repair issue.
+        """
+        if self.registry_entry is None:
+            _LOGGER.error(
+                "Cannot access last_seen_segments, registry entry is not set for %s",
+                self.entity_id,
+            )
+            return None
+
+        options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
+        last_seen_segments = options.get("last_seen_segments")
+
+        if last_seen_segments is None:
+            return None
+
+        return [Segment(**segment) for segment in last_seen_segments]
+
+    @final
+    async def async_internal_clean_area(
+        self, cleaning_area_id: list[str], **kwargs: Any
+    ) -> None:
+        """Perform an area clean.
+
+        Calls async_clean_segments.
+        """
+        if self.registry_entry is None:
+            _LOGGER.error(
+                "Cannot perform area clean, registry entry is not set for %s",
+                self.entity_id,
+            )
+            return
+
+        options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
+        area_mapping: dict[str, list[str]] = options.get("area_mapping", {})
+
+        # We use a dict to preserve the order of segments.
+        segment_ids: dict[str, None] = {}
+        for area_id in cleaning_area_id:
+            for segment_id in area_mapping.get(area_id, []):
+                segment_ids[segment_id] = None
+
+        if not segment_ids:
+            _LOGGER.debug(
+                "No segments found for cleaning_area_id %s on vacuum %s",
+                cleaning_area_id,
+                self.entity_id,
+            )
+            return
+
+        await self.async_clean_segments(list(segment_ids), **kwargs)
+
+    def clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Perform an area clean."""
+        raise NotImplementedError
+
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
+        """Perform an area clean."""
+        await self.hass.async_add_executor_job(
+            partial(self.clean_segments, segment_ids, **kwargs)
+        )
+
+    @callback
+    def async_create_segments_issue(self) -> None:
+        """Create a repair issue when vacuum segments have changed.
+
+        Integrations should call this method when the vacuum reports
+        different segments than what was previously mapped to areas.
+
+        The issue is not fixable via the standard repair flow. The frontend
+        will handle the fix by showing the segment mapping dialog.
+        """
+        if self.registry_entry is None:
+            _LOGGER.error(
+                "Cannot create segments issue, registry entry is not set for %s",
+                self.entity_id,
+            )
+            return
+
+        issue_id = f"{ISSUE_SEGMENTS_CHANGED}_{self.registry_entry.id}"
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            data={
+                "entry_id": self.registry_entry.id,
+            },
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_SEGMENTS_CHANGED,
+            translation_placeholders={
+                "entity_id": self.entity_id,
+            },
+        )
+
     def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
         raise NotImplementedError
@@ -491,6 +615,15 @@ class StateVacuumEntity(
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(self.pause)
+
+
+@dataclass(slots=True)
+class Segment:
+    """Represents a cleanable segment reported by a vacuum."""
+
+    id: str
+    name: str
+    group: str | None = None
 
 
 # As we import deprecated constants from the const module, we need to add these two functions
