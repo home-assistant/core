@@ -2220,30 +2220,32 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
 
     declared_quality_scale = QUALITY_SCALE_TIERS.get(integration.quality_scale)
 
-    iqs_file = integration.path / "quality_scale.yaml"
-    has_file = iqs_file.is_file()
-    if not has_file:
+    if not integration.quality_scale:
         if (
-            integration.domain not in INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE
+            integration.domain not in INTEGRATIONS_WITHOUT_SCALE
             and integration.domain not in NO_QUALITY_SCALE
             and integration.integration_type != "virtual"
         ):
             integration.add_error(
                 "quality_scale",
-                (
-                    "New integrations marked as internal should be added to NO_QUALITY_SCALE in script/hassfest/quality_scale.py."
-                    if integration.quality_scale == "internal"
-                    else "Quality scale definition not found. New integrations are required to at least reach the Bronze tier."
-                ),
+                "Quality scale definition not found. New integrations are required to at least reach the Bronze tier.",
             )
             return
-        if declared_quality_scale is not None:
+
+    iqs_file = integration.path / "quality_scale.yaml"
+    has_file = iqs_file.is_file()
+    if not has_file:
+        if (
+            declared_quality_scale
+            and integration.domain not in INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE
+        ):
             integration.add_error(
                 "quality_scale",
-                "Quality scale definition not found. Integrations that set a manifest quality scale must have a quality scale definition.",
+                "Quality scale definition YAML not found. Integrations that set a manifest quality scale must have a quality scale definition.",
             )
             return
         return
+
     if integration.integration_type == "virtual":
         integration.add_error(
             "quality_scale",
