@@ -298,10 +298,10 @@
     'area_id': None,
     'capabilities': dict({
       'source_list': list([
-        'digitalTv',
+        'dtv',
         'HDMI1',
-        'HDMI4',
-        'HDMI4',
+        'HDMI2',
+        'HDMI3',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -342,10 +342,10 @@
       'is_volume_muted': True,
       'source': 'HDMI1',
       'source_list': list([
-        'digitalTv',
+        'dtv',
         'HDMI1',
-        'HDMI4',
-        'HDMI4',
+        'HDMI2',
+        'HDMI3',
       ]),
       'supported_features': <MediaPlayerEntityFeature: 23997>,
       'volume_level': 0.13,

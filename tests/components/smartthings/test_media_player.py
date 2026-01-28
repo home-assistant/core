@@ -15,11 +15,13 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerEntityFeature,
     RepeatMode,
 )
 from homeassistant.components.smartthings.const import MAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -325,7 +327,7 @@ async def test_select_source(
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test media player stop command."""
+    """Test media player select source command."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -341,6 +343,70 @@ async def test_select_source(
         MAIN,
         "digital",
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
+async def test_tv_select_source(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test TV media player select source command using Samsung VD capability."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.tv_samsung_8_series_49")
+    assert state is not None
+    assert MediaPlayerEntityFeature.SELECT_SOURCE in MediaPlayerEntityFeature(
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOURCE,
+        {
+            ATTR_ENTITY_ID: "media_player.tv_samsung_8_series_49",
+            ATTR_INPUT_SOURCE: "HDMI1",
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+        Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+        Command.SET_INPUT_SOURCE,
+        MAIN,
+        argument="HDMI1",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["vd_stv_2017_k"])
+async def test_tv_source_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test TV source state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("media_player.tv_samsung_8_series_49")
+    assert state is not None
+    assert MediaPlayerEntityFeature.SELECT_SOURCE in MediaPlayerEntityFeature(
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+    )
+    assert state.attributes[ATTR_INPUT_SOURCE] == "HDMI1"
+
+    # Update source to dtv
+    await trigger_update(
+        hass,
+        devices,
+        "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+        Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
+        Attribute.INPUT_SOURCE,
+        "dtv",
+    )
+
+    state = hass.states.get("media_player.tv_samsung_8_series_49")
+    assert state is not None
+    assert state.attributes[ATTR_INPUT_SOURCE] == "dtv"
 
 
 @pytest.mark.parametrize("device_fixture", ["hw_q80r_soundbar"])
