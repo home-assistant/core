@@ -3,8 +3,7 @@
 from datetime import timedelta
 import logging
 
-from env_canada import ECAirQuality, ECRadar, ECWeather
-
+from env_canada import ECAirQuality, ECMap, ECWeather
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -43,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) ->
         errors = errors + 1
         _LOGGER.warning("Unable to retrieve Environment Canada weather")
 
-    radar_data = ECRadar(coordinates=(lat, lon))
+    radar_data = ECMap(coordinates=(lat, lon), layer="precip_type", legend=False)
     radar_coordinator = ECDataUpdateCoordinator(
         hass, config_entry, radar_data, "radar", DEFAULT_RADAR_UPDATE_INTERVAL
     )
