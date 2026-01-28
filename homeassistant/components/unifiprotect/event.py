@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Any
 
+from uiprotect.data import ModelType
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
 
 from homeassistant.components.event import (
@@ -31,7 +32,6 @@ from .const import (
     VEHICLE_EVENT_DELAY_SECONDS,
 )
 from .data import (
-    Camera,
     EventType,
     ProtectAdoptableDeviceModel,
     ProtectData,
@@ -423,7 +423,8 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if device.is_adopted and isinstance(device, Camera):
+        # AiPort inherits from Camera but should not create camera-specific entities
+        if device.is_adopted and device.model is ModelType.CAMERA:
             async_add_entities(_async_event_entities(data, ufp_device=device))
 
     data.async_subscribe_adopt(_add_new_device)
