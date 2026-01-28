@@ -16,10 +16,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import TodoistCoordinator
+from .util import parse_due_date
 
 
 async def async_setup_entry(
@@ -99,24 +99,16 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
                 if task.parent_id is not None:
                     # Filter out sub-tasks until they are supported by the UI.
                     continue
-                if task.is_completed:
+                if task.completed_at is not None:
                     status = TodoItemStatus.COMPLETED
                 else:
                     status = TodoItemStatus.NEEDS_ACTION
-                due: datetime.date | datetime.datetime | None = None
-                if task_due := task.due:
-                    if task_due.datetime:
-                        due = dt_util.as_local(
-                            datetime.datetime.fromisoformat(task_due.datetime)
-                        )
-                    elif task_due.date:
-                        due = datetime.date.fromisoformat(task_due.date)
                 items.append(
                     TodoItem(
                         summary=task.content,
                         uid=task.id,
                         status=status,
-                        due=due,
+                        due=parse_due_date(task.due),
                         description=task.description or None,  # Don't use empty string
                     )
                 )
@@ -147,9 +139,9 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
 
                 if item.status != existing_item.status:
                     if item.status == TodoItemStatus.COMPLETED:
-                        await self.coordinator.api.close_task(task_id=uid)
+                        await self.coordinator.api.complete_task(task_id=uid)
                     else:
-                        await self.coordinator.api.reopen_task(task_id=uid)
+                        await self.coordinator.api.uncomplete_task(task_id=uid)
         await self.coordinator.async_refresh()
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
