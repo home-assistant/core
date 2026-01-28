@@ -116,6 +116,7 @@ class KnxExposeOptions:
     dpt: type[DPTBase]
     respond_to_read: bool
     cooldown: float
+    periodic_send: float
     default: Any | None
     value_template: Template | None
 
@@ -130,12 +131,17 @@ def _yaml_config_to_expose_options(config: ConfigType) -> KnxExposeOptions:
     else:
         dpt = DPTBase.parse_transcoder(config[ExposeSchema.CONF_KNX_EXPOSE_TYPE])  # type: ignore[assignment]  # checked by schema validation
     ga = parse_device_group_address(config[KNX_ADDRESS])
+    cooldown_seconds = config[ExposeSchema.CONF_KNX_EXPOSE_COOLDOWN].total_seconds()
+    periodic_send_seconds = config[
+        ExposeSchema.CONF_KNX_EXPOSE_PERIODIC_SEND
+    ].total_seconds()
     return KnxExposeOptions(
         attribute=config.get(ExposeSchema.CONF_KNX_EXPOSE_ATTRIBUTE),
         group_address=ga,
         dpt=dpt,
         respond_to_read=config[CONF_RESPOND_TO_READ],
-        cooldown=config[ExposeSchema.CONF_KNX_EXPOSE_COOLDOWN],
+        cooldown=cooldown_seconds,
+        periodic_send=periodic_send_seconds,
         default=config.get(ExposeSchema.CONF_KNX_EXPOSE_DEFAULT),
         value_template=config.get(CONF_VALUE_TEMPLATE),
     )
@@ -167,6 +173,7 @@ class KnxExposeEntity:
                     respond_to_read=option.respond_to_read,
                     value_type=option.dpt,
                     cooldown=option.cooldown,
+                    periodic_send=option.periodic_send,
                 ),
             )
             for option in options
