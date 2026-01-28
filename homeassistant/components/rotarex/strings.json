@@ -1,0 +1,52 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Rotarex account is already configured."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Rotarex API. Please check your network connection.",
+      "invalid_auth": "Invalid email or password. Please check your credentials and try again.",
+      "unknown": "An unknown error occurred."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        },
+        "data_description": {
+          "email": "Email",
+          "password": "Password"
+        },
+        "description": "Enter your Rotarex DIMES SRG account credentials.",
+        "title": "Rotarex DIMES SRG Login"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": {
+        "name": "Battery",
+        "state_attributes": {
+          "last_sync": {
+            "name": "Last synchronization"
+          }
+        }
+      },
+      "last_sync": {
+        "name": "Last synchronization"
+      },
+      "level": {
+        "name": "Level",
+        "state_attributes": {
+          "last_sync": {
+            "name": "Last synchronization"
+          },
+          "temperature": {
+            "name": "Temperature"
+          }
+        }
+      }
+    }
+  }
+}

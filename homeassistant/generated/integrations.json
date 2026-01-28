@@ -5726,6 +5726,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "rotarex": {
+      "name": "Rotarex DIMES SRG",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "roth": {
       "name": "Roth",
       "integrations": {

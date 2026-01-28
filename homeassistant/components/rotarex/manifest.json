@@ -1,0 +1,10 @@
+{
+  "domain": "rotarex",
+  "name": "Rotarex DIMES SRG",
+  "codeowners": ["@Rotarex"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/rotarex",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["rotarex-dimes-srg-api==0.1.6"]
+}
