@@ -723,13 +723,6 @@ async def test_service_calls_apps_addons_exclusive(
         assert await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
 
-    service_data: dict[str, Any] = {
-        "apps": ["test"],
-        "addons": ["test"],
-    }
-    if service == "restore_partial":
-        service_data["slug"] = "test"
-
     with pytest.raises(
         Invalid, match="two or more values in the same group of exclusion"
     ):
