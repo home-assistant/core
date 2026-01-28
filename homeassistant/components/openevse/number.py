@@ -45,6 +45,7 @@ NUMBER_TYPES: tuple[OpenEVSENumberDescription, ...] = (
         min_value_fn=lambda ev: ev.min_amps,
         max_value_fn=lambda ev: ev.max_amps,
         set_value_fn=lambda ev, value: ev.set_current(value),
+        native_step=1.0,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=NumberDeviceClass.CURRENT,
@@ -84,7 +85,6 @@ class OpenEVSENumber(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], NumberEnt
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{identifier}-{description.key}"
-        self._attr_native_step = 1.0
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},
