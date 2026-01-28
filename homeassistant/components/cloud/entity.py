@@ -407,15 +407,9 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     }
                 )
 
-            incomplete_details = (
-                response.get("incomplete_details")
-                if isinstance(response, dict)
-                else None
-            )
+            incomplete_details = response.get("incomplete_details")
             reason = "unknown reason"
-            if isinstance(incomplete_details, dict) and incomplete_details.get(
-                "reason"
-            ):
+            if incomplete_details is not None and incomplete_details.get("reason"):
                 reason = incomplete_details["reason"]
 
             if reason == "max_output_tokens":
@@ -438,8 +432,8 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     }
                 )
             reason = "unknown reason"
-            if response and "error" in response:
-                reason = response["error"].get("message") or reason
+            if isinstance(error := response.get("error"), dict):
+                reason = error.get("message") or reason
             raise HomeAssistantError(f"OpenAI response failed: {reason}")
 
         elif isinstance(event, LLMResponseErrorEvent):
