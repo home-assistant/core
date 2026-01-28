@@ -21,6 +21,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
+    CONF_WIRED_DETECTION_TIME,
     DOMAIN,
 )
 from homeassistant.const import (
@@ -402,6 +403,7 @@ async def test_advanced_option_flow(
             CONF_TRACK_DEVICES: False,
             CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
             CONF_DETECTION_TIME: 100,
+            CONF_WIRED_DETECTION_TIME: 10,
         },
     )
 
@@ -437,6 +439,7 @@ async def test_advanced_option_flow(
         CONF_TRACK_DEVICES: False,
         CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
         CONF_DETECTION_TIME: 100,
+        CONF_WIRED_DETECTION_TIME: 10,
         CONF_IGNORE_WIRED_BUG: False,
         CONF_DPI_RESTRICTIONS: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],

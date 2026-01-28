@@ -28,6 +28,7 @@ CONF_ALLOW_UPTIME_SENSORS = "allow_uptime_sensors"
 CONF_BLOCK_CLIENT = "block_client"
 CONF_CLIENT_SOURCE = "client_source"
 CONF_DETECTION_TIME = "detection_time"
+CONF_WIRED_DETECTION_TIME = "wired_detection_time"
 CONF_DPI_RESTRICTIONS = "dpi_restrictions"
 CONF_IGNORE_WIRED_BUG = "ignore_wired_bug"
 CONF_TRACK_CLIENTS = "track_clients"
@@ -43,6 +44,7 @@ DEFAULT_TRACK_CLIENTS = True
 DEFAULT_TRACK_DEVICES = True
 DEFAULT_TRACK_WIRED_CLIENTS = True
 DEFAULT_DETECTION_TIME = 300
+DEFAULT_WIRED_DETECTION_TIME = 5
 
 ATTR_MANUFACTURER = "Ubiquiti Networks"
 
