@@ -1,10 +1,10 @@
 {
   "config": {
     "abort": {
-      "addon_connection_failed": "Failed to connect to the {addon} add-on. Check the add-on status and try again later.",
-      "addon_info_failed": "Failed get info for the {addon} add-on.",
-      "addon_install_failed": "Failed to install the {addon} add-on.",
-      "addon_start_failed": "Failed to start the {addon} add-on.",
+      "addon_connection_failed": "Failed to connect to the {addon} app. Check the app status and try again later.",
+      "addon_info_failed": "Failed get info for the {addon} app.",
+      "addon_install_failed": "Failed to install the {addon} app.",
+      "addon_start_failed": "Failed to start the {addon} app.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
@@ -68,11 +68,11 @@
         "description": "Please enter the connection information of your MQTT broker."
       },
       "hassio_confirm": {
-        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?",
-        "title": "MQTT broker via Home Assistant add-on"
+        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the {addon} app?",
+        "title": "MQTT broker via Home Assistant app"
       },
       "install_addon": {
-        "title": "Installing add-on"
+        "title": "Installing app"
       },
       "reauth_confirm": {
         "data": {
@@ -87,12 +87,12 @@
         "title": "Re-authentication required with the MQTT broker"
       },
       "start_addon": {
-        "title": "Starting add-on"
+        "title": "Starting app"
       },
       "user": {
         "description": "Please choose how you want to connect to the MQTT broker:",
         "menu_options": {
-          "addon": "Use the official {addon} add-on.",
+          "addon": "Use the official {addon} app.",
           "broker": "Manually enter the MQTT broker connection details"
         }
       }
@@ -1085,7 +1085,7 @@
   },
   "exceptions": {
     "addon_start_failed": {
-      "message": "Failed to correctly start {addon} add-on."
+      "message": "Failed to correctly start {addon} app."
     },
     "command_template_error": {
       "message": "Parsing template `{command_template}` for entity `{entity_id}` failed with error: {error}."
