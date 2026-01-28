@@ -100,3 +100,17 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
             ATTR_START: data.start,
             ATTR_EXPIRES: data.expires,
         }
+
+    def get_description(self) -> str | None:
+        """Return the description."""
+        if not self.is_on:
+            return None
+
+        return self._get_warning_data().description
+
+    def get_full_affected_areas(self) -> str | None:
+        """Return full affected areas."""
+        if not self.is_on:
+            return None
+
+        return self._get_warning_data().affected_areas

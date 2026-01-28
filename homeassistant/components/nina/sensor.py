@@ -50,7 +50,7 @@ SENSOR_TYPES: tuple[NinaSensorEntityDescription, ...] = (
         key="affected_areas",
         icon="mdi:map-marker-radius",
         translation_key="affected_areas",
-        value_fn=lambda data: data.affected_areas,
+        value_fn=lambda data: data.affected_areas_shorted,
     ),
     NinaSensorEntityDescription(
         key="more_info_url",

@@ -1,0 +1,11 @@
+get_description:
+  target:
+    entity:
+      domain: binary_sensor
+      integration: nina
+
+get_affected_areas:
+  target:
+    entity:
+      domain: binary_sensor
+      integration: nina

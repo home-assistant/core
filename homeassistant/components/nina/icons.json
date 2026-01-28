@@ -1,0 +1,6 @@
+{
+  "services": {
+    "get_affected_areas": { "service": "mdi:download" },
+    "get_description": { "service": "mdi:download" }
+  }
+}

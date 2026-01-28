@@ -17,6 +17,9 @@ ALL_MATCH_REGEX: str = ".*"
 
 SEVERITY_VALUES: list[str] = ["extreme", "severe", "moderate", "minor", "unknown"]
 
+SERVICE_GET_DESCRIPTION: str = "get_description"
+SERVICE_GET_AFFECTED_AREAS: str = "get_affected_areas"
+
 CONF_REGIONS: str = "regions"
 CONF_MESSAGE_SLOTS: str = "slots"
 CONF_FILTERS: str = "filters"
