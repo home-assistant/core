@@ -97,19 +97,19 @@ class OpenEVSENumber(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], NumberEnt
             self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float:
         """Return the state of the number."""
-        return float(self.entity_description.value_fn(self.coordinator.charger))
+        return self.entity_description.value_fn(self.coordinator.charger)
 
     @property
     def native_min_value(self) -> float:
         """Return the minimum value."""
-        return float(self.entity_description.min_value_fn(self.coordinator.charger))
+        return self.entity_description.min_value_fn(self.coordinator.charger)
 
     @property
     def native_max_value(self) -> float:
         """Return the maximum value."""
-        return float(self.entity_description.max_value_fn(self.coordinator.charger))
+        return self.entity_description.max_value_fn(self.coordinator.charger)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
