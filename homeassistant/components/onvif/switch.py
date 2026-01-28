@@ -71,11 +71,20 @@ async def async_setup_entry(
     """Set up a ONVIF switch platform."""
     device = hass.data[DOMAIN][config_entry.unique_id]
 
-    async_add_entities(
+    # Add predefined switches
+    entities = [
         ONVIFSwitch(device, description)
         for description in SWITCHES
         if description.supported_fn(device)
-    )
+    ]
+
+    # Add relay output switches
+    if device.capabilities.deviceio and device.capabilities.relay_outputs > 0:
+        relays = await device.async_get_relay_outputs()
+        for relay in relays:
+            entities.append(ONVIFRelaySwitch(device, relay))
+
+    async_add_entities(entities)
 
 
 class ONVIFSwitch(ONVIFBaseEntity, SwitchEntity):
@@ -107,3 +116,53 @@ class ONVIFSwitch(ONVIFBaseEntity, SwitchEntity):
         await self.entity_description.turn_off_fn(self.device)(
             profile, self.entity_description.turn_off_data
         )
+
+
+class ONVIFRelaySwitch(ONVIFBaseEntity, SwitchEntity):
+    """An ONVIF relay output switch."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, device: ONVIFDevice, relay: Any) -> None:
+        """Initialize the relay switch."""
+        super().__init__(device)
+        self._relay_token = relay.token
+        # Extract relay properties if available
+        if hasattr(relay, "Properties") and hasattr(relay.Properties, "Name"):
+            self._attr_name = relay.Properties.Name
+        else:
+            self._attr_name = f"Relay {relay.token}"
+
+        # The initial relay state is unknown until explicitly set
+        self._attr_is_on = None
+
+        self._attr_unique_id = f"{self.mac_or_serial}_relay_{self._relay_token}"
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on relay."""
+        try:
+            await self.device.async_set_relay_output_state(
+                self._relay_token, "active"
+            )
+            self._attr_is_on = True
+            self.async_write_ha_state()
+        except ONVIFError:
+            # Revert optimistic state update on error
+            self._attr_is_on = False
+            self.async_write_ha_state()
+            raise
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off relay."""
+        try:
+            await self.device.async_set_relay_output_state(
+                self._relay_token, "inactive"
+            )
+            self._attr_is_on = False
+            self.async_write_ha_state()
+        except ONVIFError:
+            # Revert optimistic state update on error
+            self._attr_is_on = True
+            self.async_write_ha_state()
+            raise
+
