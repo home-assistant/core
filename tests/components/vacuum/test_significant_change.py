@@ -2,11 +2,7 @@
 
 import pytest
 
-from homeassistant.components.vacuum import (
-    ATTR_BATTERY_ICON,
-    ATTR_BATTERY_LEVEL,
-    ATTR_FAN_SPEED,
-)
+from homeassistant.components.vacuum import ATTR_CLEANED_AREA, ATTR_FAN_SPEED
 from homeassistant.components.vacuum.significant_change import (
     async_check_significant_change,
 )
@@ -26,18 +22,13 @@ async def test_significant_state_change() -> None:
         ({ATTR_FAN_SPEED: "old_value"}, {ATTR_FAN_SPEED: "new_value"}, True),
         # multiple attributes
         (
-            {ATTR_FAN_SPEED: "old_value", ATTR_BATTERY_LEVEL: 10.0},
-            {ATTR_FAN_SPEED: "new_value", ATTR_BATTERY_LEVEL: 10.0},
+            {ATTR_FAN_SPEED: "old_value", ATTR_CLEANED_AREA: "old_value"},
+            {ATTR_FAN_SPEED: "new_value", ATTR_CLEANED_AREA: "old_value"},
             True,
         ),
-        # float attributes
-        ({ATTR_BATTERY_LEVEL: 10.0}, {ATTR_BATTERY_LEVEL: 11.0}, True),
-        ({ATTR_BATTERY_LEVEL: 10.0}, {ATTR_BATTERY_LEVEL: 10.9}, False),
-        ({ATTR_BATTERY_LEVEL: "invalid"}, {ATTR_BATTERY_LEVEL: 10.0}, True),
-        ({ATTR_BATTERY_LEVEL: 10.0}, {ATTR_BATTERY_LEVEL: "invalid"}, False),
         # insignificant attributes
-        ({ATTR_BATTERY_ICON: "old_value"}, {ATTR_BATTERY_ICON: "new_value"}, False),
-        ({ATTR_BATTERY_ICON: "old_value"}, {ATTR_BATTERY_ICON: "old_value"}, False),
+        ({ATTR_CLEANED_AREA: "old_value"}, {ATTR_CLEANED_AREA: "new_value"}, False),
+        ({ATTR_CLEANED_AREA: "old_value"}, {ATTR_CLEANED_AREA: "old_value"}, False),
         ({"unknown_attr": "old_value"}, {"unknown_attr": "old_value"}, False),
         ({"unknown_attr": "old_value"}, {"unknown_attr": "new_value"}, False),
     ],
