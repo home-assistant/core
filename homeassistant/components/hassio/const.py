@@ -174,7 +174,7 @@ EXTRA_PLACEHOLDERS = {
 class SupervisorEntityModel(StrEnum):
     """Supervisor entity model."""
 
-    ADDON = "Home Assistant Add-on"
+    ADDON = "Home Assistant App"
     OS = "Home Assistant Operating System"
     CORE = "Home Assistant Core"
     SUPERVISOR = "Home Assistant Supervisor"
