@@ -763,6 +763,7 @@ class Profiles:
 
         color_attributes = (
             ATTR_COLOR_NAME,
+            ATTR_COLOR_TEMP_KELVIN,
             ATTR_HS_COLOR,
             ATTR_RGB_COLOR,
             ATTR_RGBW_COLOR,
