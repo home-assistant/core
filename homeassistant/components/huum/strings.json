@@ -29,6 +29,11 @@
       "humidity": {
         "name": "[%key:component::sensor::entity_component::humidity::name%]"
       }
+    },
+    "sensor": {
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      }
     }
   }
 }
