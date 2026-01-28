@@ -33,6 +33,9 @@
       }
     },
     "switch": {
+      "airplay_enable": {
+        "default": "mdi:cast-variant"
+      },
       "lock_physical_controls": {
         "default": "mdi:lock-open"
       },
