@@ -368,7 +368,8 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 {
                     vol.Required("name"): translation_value_validator,
                     vol.Required("description"): custom_translation_value_validator(
-                        allow_urls=True
+                        allow_placeholders=False,
+                        allow_urls=True,
                     ),
                     vol.Optional("enable_confirmation"): translation_value_validator,
                     vol.Optional("disable_confirmation"): translation_value_validator,
