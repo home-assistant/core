@@ -469,7 +469,16 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         self.ws_address = f"ws://{discovery_info.host}:{discovery_info.port}"
         home_id_display = format_home_id_for_display(int(home_id))
-        self.context.update({"title_placeholders": {CONF_NAME: home_id_display}})
+        # Show home ID and network location in discovery notification
+        self.context.update(
+            {
+                "title_placeholders": {
+                    "host": discovery_info.host,
+                    "port": str(discovery_info.port),
+                    "home_id": home_id_display,
+                }
+            }
+        )
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(

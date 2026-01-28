@@ -8,7 +8,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.vegehub.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import (
@@ -20,12 +19,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from .conftest import TEST_HOSTNAME, TEST_IP, TEST_SIMPLE_MAC
 
 from tests.common import MockConfigEntry
 
-DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address(TEST_IP),
     ip_addresses=[ip_address(TEST_IP)],
     port=80,
@@ -33,7 +36,7 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     type="mock_type",
     name="myVege",
     properties={
-        zeroconf.ATTR_PROPERTIES_ID: TEST_HOSTNAME,
+        ATTR_PROPERTIES_ID: TEST_HOSTNAME,
         "version": "5.1.1",
     },
 )
@@ -360,7 +363,7 @@ async def test_zeroconf_flow_update_ip_hostname(
     # Use the same discovery info, but change the IP and hostname
     new_ip = "192.168.0.99"
     new_hostname = "new_hostname"
-    new_discovery_info = zeroconf.ZeroconfServiceInfo(
+    new_discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address(new_ip),
         ip_addresses=[ip_address(new_ip)],
         port=DISCOVERY_INFO.port,

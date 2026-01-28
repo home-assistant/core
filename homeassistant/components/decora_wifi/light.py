@@ -103,14 +103,14 @@ class DecoraWifiLight(LightEntity):
         self._attr_unique_id = switch.serial
 
     @property
-    def color_mode(self) -> str:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._switch.canSetLevel:
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         return {self.color_mode}
 
