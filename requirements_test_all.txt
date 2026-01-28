@@ -2303,6 +2303,9 @@ radiotherm==2.1.0
 # homeassistant.components.rapt_ble
 rapt-ble==0.1.2
 
+# homeassistant.components.redgtech
+redgtech-api==0.1.38
+
 # homeassistant.components.refoss
 refoss-ha==1.2.5
 
