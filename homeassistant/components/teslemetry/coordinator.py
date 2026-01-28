@@ -97,7 +97,11 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(e.message, retry_after=_get_retry_after(e)) from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
-        return flatten(data)
+
+        return flatten(
+            data,
+            skip_keys=["daily_charges", "demand_charges", "energy_charges", "seasons"],
+        )
 
 
 class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -179,7 +183,11 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             raise UpdateFailed(e.message, retry_after=_get_retry_after(e)) from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
-        return flatten(data)
+
+        return flatten(
+            data,
+            skip_keys=["daily_charges", "demand_charges", "energy_charges", "seasons"],
+        )
 
 
 class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
