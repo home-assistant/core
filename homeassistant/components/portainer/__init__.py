@@ -15,7 +15,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.device_registry import DeviceEntry
 
+from .const import DOMAIN
 from .coordinator import PortainerCoordinator
 
 _PLATFORMS: list[Platform] = [
@@ -69,3 +71,26 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
         hass.config_entries.async_update_entry(entry=entry, data=data, version=3)
 
     return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    entry: PortainerConfigEntry,
+    device: DeviceEntry,
+) -> bool:
+    """Remove a config entry from a device."""
+    coordinator = entry.runtime_data
+    valid_identifiers: set[tuple[str, str]] = set()
+
+    # The Portainer integration creates devices for both endpoints and containers. That's why we're doing it double
+    valid_identifiers.update(
+        (DOMAIN, f"{entry.entry_id}_{endpoint_id}") for endpoint_id in coordinator.data
+    )
+
+    valid_identifiers.update(
+        (DOMAIN, f"{entry.entry_id}_{container_name}")
+        for endpoint in coordinator.data.values()
+        for container_name in endpoint.containers
+    )
+
+    return not device.identifiers.intersection(valid_identifiers)
