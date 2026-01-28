@@ -33,15 +33,34 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock control4 setup entry."""
+    with patch(
+        "homeassistant.components.control4.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture
 def mock_c4_account() -> Generator[MagicMock]:
     """Mock a Control4 Account client."""
-    with patch(
-        "homeassistant.components.control4.C4Account", autospec=True
-    ) as mock_account_class:
+    with (
+        patch(
+            "homeassistant.components.control4.C4Account", autospec=True
+        ) as mock_account_class,
+        patch(
+            "homeassistant.components.control4.config_flow.C4Account",
+            new=mock_account_class,
+        ),
+    ):
         mock_account = mock_account_class.return_value
         mock_account.getAccountBearerToken = AsyncMock()
         mock_account.getAccountControllers = AsyncMock(
-            return_value={"href": "https://example.com"}
+            return_value={
+                "controllerCommonName": "control4_model_00AA00AA00AA",
+                "href": "https://apis.control4.com/account/v3/rest/accounts/000000",
+                "name": "Name",
+            }
         )
         mock_account.getDirectorBearerToken = AsyncMock(return_value={"token": "test"})
         mock_account.getControllerOSVersion = AsyncMock(return_value="3.2.0")
@@ -51,9 +70,15 @@ def mock_c4_account() -> Generator[MagicMock]:
 @pytest.fixture
 def mock_c4_director() -> Generator[MagicMock]:
     """Mock a Control4 Director client."""
-    with patch(
-        "homeassistant.components.control4.C4Director", autospec=True
-    ) as mock_director_class:
+    with (
+        patch(
+            "homeassistant.components.control4.C4Director", autospec=True
+        ) as mock_director_class,
+        patch(
+            "homeassistant.components.control4.config_flow.C4Director",
+            new=mock_director_class,
+        ),
+    ):
         mock_director = mock_director_class.return_value
         # Multi-platform setup: media room, climate room, shared devices
         # Note: The API returns JSON strings, so we load fixtures as strings
