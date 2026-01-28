@@ -1,0 +1,4 @@
+shuffle:
+  target:
+    entity:
+      integration: photo_frame

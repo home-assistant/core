@@ -1,0 +1,11 @@
+{
+  "domain": "photo_frame",
+  "name": "Photo Frame",
+  "codeowners": ["@karwosts"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/photo_frame",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "quality_scale": "bronze",
+  "requirements": []
+}

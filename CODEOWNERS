@@ -1239,6 +1239,8 @@ build.json @home-assistant/supervisor
 /tests/components/pglab/ @pglab-electronics
 /homeassistant/components/philips_js/ @elupus
 /tests/components/philips_js/ @elupus
+/homeassistant/components/photo_frame/ @karwosts
+/tests/components/photo_frame/ @karwosts
 /homeassistant/components/pi_hole/ @shenxn
 /tests/components/pi_hole/ @shenxn
 /homeassistant/components/picnic/ @corneyl @codesalatdev
