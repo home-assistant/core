@@ -27,7 +27,10 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
     """Class to manage fetching data from the Rejseplanen API."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: RejseplanenConfigEntry
+        self,
+        hass: HomeAssistant,
+        config_entry: RejseplanenConfigEntry,
+        context: object = None,
     ) -> None:
         """Initialize."""
 
@@ -85,7 +88,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
             throw(UpdateFailed("No stops registered for data fetching."))
         _LOGGER.debug("Fetching data for stop IDs: %s", self._stop_ids)
         # Get all departures for this stop
-        departure_board, _ = self.api.get_departures(list(self.async_contexts()))
+        departure_board, _ = self.api.get_departures(list(self._stop_ids))
         return departure_board
 
     def get_filtered_departures(
@@ -96,15 +99,13 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
         departure_type_filter: int | None = None,
     ) -> list[Departure]:
         """Get departures filtered by the specified criteria."""
+
         if not self.data:
             return []
 
-        departure_board: DepartureBoard
-        departure_board, _ = self.api.get_departures(list(self.async_contexts()))
-
         filtered_data = [
             departure
-            for departure in departure_board.departures
+            for departure in self.data.departures
             if departure.stopExtId == stop_id
         ]
 

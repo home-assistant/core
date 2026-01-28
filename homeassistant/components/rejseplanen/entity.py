@@ -26,3 +26,4 @@ class RejseplanenEntity(CoordinatorEntity[RejseplanenDataUpdateCoordinator]):
         super().__init__(coordinator, context=stop_id)
 
         self._stop_id = stop_id
+        self.coordinator.add_stop_id(stop_id)
