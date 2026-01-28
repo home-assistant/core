@@ -10,12 +10,12 @@
     "step": {
       "user": {
         "data": {
-          "tracked_addons": "Add-ons",
+          "tracked_addons": "Apps",
           "tracked_custom_integrations": "Custom integrations",
           "tracked_integrations": "Integrations"
         },
         "data_description": {
-          "tracked_addons": "Select the add-ons you want to track",
+          "tracked_addons": "Select the apps you want to track",
           "tracked_custom_integrations": "Select the custom integrations you want to track",
           "tracked_integrations": "Select the integrations you want to track"
         }
