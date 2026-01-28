@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from roborock.data import RoborockStateCode
+from roborock.data import CleanFluidStatus, RoborockStateCode
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -63,6 +63,34 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_shortage_status,
+    ),
+    RoborockBinarySensorDescription(
+        key="dirty_box_full",
+        translation_key="dirty_box_full",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status.dirty_water_box_status,
+        is_dock_entity=True,
+    ),
+    RoborockBinarySensorDescription(
+        key="clean_box_empty",
+        translation_key="clean_box_empty",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status.clear_water_box_status,
+        is_dock_entity=True,
+    ),
+    RoborockBinarySensorDescription(
+        key="clean_fluid_empty",
+        translation_key="clean_fluid_empty",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: (
+            data.status.clean_fluid_status == CleanFluidStatus.empty_not_installed
+            if data.status.clean_fluid_status is not None
+            else None
+        ),
+        is_dock_entity=True,
     ),
     RoborockBinarySensorDescription(
         key="in_cleaning",
