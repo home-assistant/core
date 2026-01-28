@@ -1,0 +1,12 @@
+{
+    "SN": "3310500113",
+    "voltage": 229.87,
+    "current": 0.66,
+    "active power": 133.50,
+    "apparent power": 209.60,
+    "reactive power": -29.80,
+    "power factor": 0.63,
+    "frequency": 50.03,
+    "total_act_energy": 3.53,
+    "total_act_ret_energy": 0.18
+}

@@ -906,6 +906,11 @@ ZEROCONF = {
             "domain": "cambridge_audio",
         },
     ],
+    "_solarman._tcp.local.": [
+        {
+            "domain": "solarman",
+        },
+    ],
     "_sonos._tcp.local.": [
         {
             "domain": "sonos",

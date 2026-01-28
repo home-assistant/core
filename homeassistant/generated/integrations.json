@@ -6320,6 +6320,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "solarman": {
+      "name": "SOLARMAN",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "solax": {
       "name": "SolaX Power",
       "integration_type": "hub",

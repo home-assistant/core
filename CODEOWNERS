@@ -1538,6 +1538,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/solaredge_local/ @drobtravels @scheric
 /homeassistant/components/solarlog/ @Ernst79 @dontinelli
 /tests/components/solarlog/ @Ernst79 @dontinelli
+/homeassistant/components/solarman/ @solarmanpv
+/tests/components/solarman/ @solarmanpv
 /homeassistant/components/solax/ @squishykid @Darsstar
 /tests/components/solax/ @squishykid @Darsstar
 /homeassistant/components/soma/ @ratsept
