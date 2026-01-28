@@ -1,15 +1,13 @@
 add_password:
-  target:
-    entity:
-      integration: switchbot
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: switchbot
     password:
       required: true
       example: "123456"
       selector:
         text:
           type: password
-get_password_count:
-  target:
-    entity:
-      integration: switchbot

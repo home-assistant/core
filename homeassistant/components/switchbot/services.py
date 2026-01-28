@@ -9,23 +9,15 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SENSOR_TYPE
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceCall,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.target import TargetSelection
-from homeassistant.util.json import JsonValueType
 
 from .const import DOMAIN, SupportedModels
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 
 SERVICE_ADD_PASSWORD = "add_password"
-SERVICE_GET_PASSWORD_COUNT = "get_password_count"
 
 ATTR_PASSWORD = "password"
 
@@ -48,40 +40,56 @@ SCHEMA_GET_PASSWORD_COUNT_SERVICE = vol.Schema(
 
 
 @callback
-def _async_get_switchbot_entry_for_entity_id(
-    hass: HomeAssistant, entity_id: str
+def _async_get_switchbot_entry_for_device_id(
+    hass: HomeAssistant, device_id: str
 ) -> SwitchbotConfigEntry:
-    """Return the loaded SwitchBot config entry for an entity id."""
-    entity_registry = er.async_get(hass)
-    if not (entity_entry := entity_registry.async_get(entity_id)):
+    """Return the loaded SwitchBot config entry for a device id."""
+    device_registry = dr.async_get(hass)
+    if not (device_entry := device_registry.async_get(device_id)):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="invalid_entity_id",
-            translation_placeholders={"entity_id": entity_id},
+            translation_key="invalid_device_id",
+            translation_placeholders={"device_id": device_id},
         )
 
-    if entity_entry.config_entry_id is None:
+    if not device_entry.config_entries:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="entity_without_config_entry",
-            translation_placeholders={"entity_id": entity_id},
+            translation_key="device_without_config_entry",
+            translation_placeholders={"device_id": device_id},
         )
 
-    entry = hass.config_entries.async_get_entry(entity_entry.config_entry_id)
-    if entry is None or entry.domain != DOMAIN:
+    entries = [
+        hass.config_entries.async_get_entry(entry_id)
+        for entry_id in device_entry.config_entries
+    ]
+    switchbot_entries = [
+        entry for entry in entries if entry is not None and entry.domain == DOMAIN
+    ]
+    if not switchbot_entries:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="entity_not_belonging",
-            translation_placeholders={"entity_id": entity_id},
-        )
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_loaded",
-            translation_placeholders={"entity_id": entity_id},
+            translation_key="device_not_belonging",
+            translation_placeholders={"device_id": device_id},
         )
 
-    return cast(SwitchbotConfigEntry, entry)
+    if not (
+        loaded_entry := next(
+            (
+                entry
+                for entry in switchbot_entries
+                if entry.state is ConfigEntryState.LOADED
+            ),
+            None,
+        )
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_entry_not_loaded",
+            translation_placeholders={"device_id": device_id},
+        )
+
+    return cast(SwitchbotConfigEntry, loaded_entry)
 
 
 def _is_supported_keypad(entry: SwitchbotConfigEntry) -> bool:
@@ -94,42 +102,46 @@ def _is_supported_keypad(entry: SwitchbotConfigEntry) -> bool:
 
 
 @callback
-def _async_extract_target_entity_ids(call: ServiceCall) -> set[str]:
-    """Extract entity ids from a service call target."""
+def _async_extract_target_device_ids(call: ServiceCall) -> set[str]:
+    """Extract device ids from a service call target."""
     selection = TargetSelection(call.data)
-
-    return set(selection.entity_ids)
+    device_ids = set(selection.device_ids)
+    if not device_ids:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="missing_device_id",
+        )
+    return device_ids
 
 
 @callback
 def _async_targets(
-    hass: HomeAssistant, entity_ids: set[str]
+    hass: HomeAssistant, device_ids: set[str]
 ) -> tuple[dict[str, SwitchbotDataUpdateCoordinator], dict[str, set[str]]]:
     """Group targets by config entry id."""
     coordinators_by_entry_id: dict[str, SwitchbotDataUpdateCoordinator] = {}
-    entity_ids_by_entry_id: dict[str, set[str]] = {}
+    device_ids_by_entry_id: dict[str, set[str]] = {}
 
-    for entity_id in entity_ids:
-        entry = _async_get_switchbot_entry_for_entity_id(hass, entity_id)
+    for device_id in device_ids:
+        entry = _async_get_switchbot_entry_for_device_id(hass, device_id)
         if not _is_supported_keypad(entry):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="not_keypad_vision_device",
-                translation_placeholders={"entity_id": entity_id},
             )
 
         coordinators_by_entry_id.setdefault(entry.entry_id, entry.runtime_data)
-        entity_ids_by_entry_id.setdefault(entry.entry_id, set()).add(entity_id)
+        device_ids_by_entry_id.setdefault(entry.entry_id, set()).add(device_id)
 
-    return coordinators_by_entry_id, entity_ids_by_entry_id
+    return coordinators_by_entry_id, device_ids_by_entry_id
 
 
 async def async_add_password(call: ServiceCall) -> None:
     """Add a password to a SwitchBot keypad device."""
     password: str = call.data[ATTR_PASSWORD]
-    entity_ids = _async_extract_target_entity_ids(call)
+    device_ids = _async_extract_target_device_ids(call)
 
-    coordinators_by_entry_id, _ = _async_targets(call.hass, entity_ids)
+    coordinators_by_entry_id, _ = _async_targets(call.hass, device_ids)
 
     await asyncio.gather(
         *(
@@ -139,50 +151,12 @@ async def async_add_password(call: ServiceCall) -> None:
     )
 
 
-async def async_get_password_count(call: ServiceCall) -> ServiceResponse:
-    """Return the password counts by credential type for the keypad device."""
-    entity_ids = _async_extract_target_entity_ids(call)
-
-    coordinators_by_entry_id, entity_ids_by_entry_id = _async_targets(
-        call.hass, entity_ids
-    )
-
-    entry_ids = list(coordinators_by_entry_id)
-    results = await asyncio.gather(
-        *(
-            coordinators_by_entry_id[entry_id].device.get_password_count()
-            for entry_id in entry_ids
-        )
-    )
-
-    result_by_entity_id: dict[str, dict[str, JsonValueType]] = {}
-    for entry_id, result in zip(entry_ids, results, strict=True):
-        for entity_id in entity_ids_by_entry_id[entry_id]:
-            result_by_entity_id[entity_id] = result
-
-    if len(entity_ids) == 1:
-        return next(iter(result_by_entity_id.values()))
-
-    entities: dict[str, JsonValueType] = dict(result_by_entity_id.items())
-    return {"entities": entities}
-
-
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the SwitchBot integration."""
-    if not hass.services.has_service(DOMAIN, SERVICE_ADD_PASSWORD):
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_ADD_PASSWORD,
-            async_add_password,
-            schema=SCHEMA_ADD_PASSWORD_SERVICE,
-        )
-
-    if not hass.services.has_service(DOMAIN, SERVICE_GET_PASSWORD_COUNT):
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_GET_PASSWORD_COUNT,
-            async_get_password_count,
-            schema=SCHEMA_GET_PASSWORD_COUNT_SERVICE,
-            supports_response=SupportsResponse.ONLY,
-        )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ADD_PASSWORD,
+        async_add_password,
+        schema=SCHEMA_ADD_PASSWORD_SERVICE,
+    )

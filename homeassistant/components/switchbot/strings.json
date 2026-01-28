@@ -329,20 +329,23 @@
     "advertising_state_error": {
       "message": "{address} is not advertising state"
     },
+    "device_entry_not_loaded": {
+      "message": "The device ID {device_id} is not loaded."
+    },
+    "device_not_belonging": {
+      "message": "The device ID {device_id} does not belong to SwitchBot integration."
+    },
     "device_not_found_error": {
       "message": "Could not find Switchbot {sensor_type} with address {address}"
     },
-    "entity_not_belonging": {
-      "message": "The entity ID {entity_id} does not belong to SwitchBot integration."
+    "device_without_config_entry": {
+      "message": "The device ID {device_id} is not associated with a config entry."
     },
-    "entity_without_config_entry": {
-      "message": "The entity ID {entity_id} is not associated with a config entry."
+    "invalid_device_id": {
+      "message": "The device ID {device_id} is not a valid device ID."
     },
-    "entry_not_loaded": {
-      "message": "The entity ID {entity_id} is not loaded."
-    },
-    "invalid_entity_id": {
-      "message": "The entity ID {entity_id} is not a valid entity ID."
+    "missing_device_id": {
+      "message": "You must target at least one SwitchBot device."
     },
     "not_keypad_vision_device": {
       "message": "This service is only supported for SwitchBot Keypad Vision devices."
@@ -372,16 +375,16 @@
     "add_password": {
       "description": "Add a password to your keypad vision device.",
       "fields": {
+        "device_id": {
+          "description": "The device ID of the keypad vision device",
+          "name": "Device ID"
+        },
         "password": {
           "description": "A 6 to 12 digit password",
           "name": "Password"
         }
       },
       "name": "Add password"
-    },
-    "get_password_count": {
-      "description": "Get the number of passwords stored on your keypad vision device.",
-      "name": "Get password count"
     }
   }
 }
