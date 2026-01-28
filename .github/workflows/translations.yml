@@ -10,7 +10,7 @@ on:
       - "**strings.json"
 
 env:
-  DEFAULT_PYTHON: "3.13"
+  DEFAULT_PYTHON: "3.14.2"
 
 jobs:
   upload:

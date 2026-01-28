@@ -10,12 +10,12 @@ on:
 
 env:
   BUILD_TYPE: core
-  DEFAULT_PYTHON: "3.13"
+  DEFAULT_PYTHON: "3.14.2"
   PIP_TIMEOUT: 60
   UV_HTTP_TIMEOUT: 60
   UV_SYSTEM_PYTHON: "true"
   # Base image version from https://github.com/home-assistant/docker
-  BASE_IMAGE_VERSION: "2025.12.0"
+  BASE_IMAGE_VERSION: "2026.01.0"
   ARCHITECTURES: '["amd64", "aarch64"]'
 
 jobs:
