@@ -782,6 +782,11 @@ ZEROCONF = {
             "domain": "nanoleaf",
         },
     ],
+    "_nrgkick._tcp.local.": [
+        {
+            "domain": "nrgkick",
+        },
+    ],
     "_nut._tcp.local.": [
         {
             "domain": "nut",
@@ -825,6 +830,11 @@ ZEROCONF = {
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
+        },
+    ],
+    "_prana._tcp.local.": [
+        {
+            "domain": "prana",
         },
     ],
     "_printer._tcp.local.": [
