@@ -30,7 +30,7 @@ TEST_OBJECT_ID = "test_template_climate"
 TEST_ENTITY_ID = f"climate.{TEST_OBJECT_ID}"
 
 TEST_STATE_TRIGGER = {
-    "trigger": {
+    "triggers": {
         "trigger": "state",
         "entity_id": [
             "sensor.temp",
@@ -40,7 +40,7 @@ TEST_STATE_TRIGGER = {
             "sensor.fan",
         ],
     },
-    "action": [{"event": "action_event"}],
+    "actions": [{"event": "action_event"}],
 }
 
 
@@ -48,7 +48,7 @@ async def async_setup_modern_format(
     hass: HomeAssistant, expected: int, climate_config: dict[str, Any]
 ) -> None:
     """Set up climate via modern YAML format."""
-    config = {"template": {"climate": climate_config}}
+    config = {"template": [{"climate": climate_config}]}
 
     with assert_setup_component(expected, template.DOMAIN):
         assert await async_setup_component(hass, template.DOMAIN, config)
@@ -62,7 +62,7 @@ async def async_setup_trigger_format(
     hass: HomeAssistant, expected: int, climate_config: dict[str, Any]
 ) -> None:
     """Set up climate via trigger-based YAML format."""
-    config = {"template": {**TEST_STATE_TRIGGER, "climate": climate_config}}
+    config = {"template": [{**TEST_STATE_TRIGGER, "climate": climate_config}]}
 
     with assert_setup_component(expected, template.DOMAIN):
         assert await async_setup_component(hass, template.DOMAIN, config)
@@ -118,6 +118,7 @@ async def test_template_state_attributes(
     hass.states.async_set("sensor.mode", "cool")
     hass.states.async_set("sensor.action", "cooling")
     hass.states.async_set("sensor.fan", "high")
+    await hass.async_block_till_done()
 
     climate_config: dict[str, Any] = {
         "name": TEST_OBJECT_ID,
@@ -166,6 +167,7 @@ async def test_actions(hass: HomeAssistant, style: ConfigurationStyle) -> None:
         "input_number",
         {"input_number": {"test_temp": {"min": 0, "max": 100, "step": 1}}},
     )
+    await hass.async_block_till_done()
 
     climate_config: dict[str, Any] = {
         "name": TEST_OBJECT_ID,
@@ -212,6 +214,7 @@ async def test_optimistic_mode(hass: HomeAssistant, style: ConfigurationStyle) -
     assert await async_setup_component(
         hass, "input_boolean", {"input_boolean": {"test": {}}}
     )
+    await hass.async_block_till_done()
 
     climate_config: dict[str, Any] = {
         "name": TEST_OBJECT_ID,
@@ -323,8 +326,7 @@ async def test_invalid_hvac_action_logs_and_clears_attribute(
 
 
 async def test_setup_config_entry(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
+    hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
     """Test creating a climate from a config entry."""
     hass.states.async_set("sensor.test_temp", "21.5", {})

@@ -34,7 +34,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 
 from . import TriggerUpdateCoordinator, validators as template_validators
 from .const import DOMAIN
@@ -194,26 +193,20 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
 
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-        for opt in self._extra_optimistic_options:
-            setattr(self, f"_AbstractTemplateEntity__attr_{opt}", None)
-
-        self._attr_hvac_mode = None
-        self._attr_hvac_action = None
-        self._attr_current_temperature = None
-        self._attr_target_temperature = None
-        self._attr_target_temperature_high = None
-        self._attr_target_temperature_low = None
-        self._attr_fan_mode = None
-        self._attr_swing_mode = None
-        self._attr_preset_mode = None
-        self._attr_current_humidity = None
-        self._attr_target_humidity = None
-
         raw_hvac_modes = config.get(CONF_HVAC_MODES, [HVACMode.AUTO])
-        self._attr_hvac_modes = [
-            m if isinstance(m, HVACMode) else HVACMode(str(m).lower().strip())
-            for m in raw_hvac_modes
-        ]
+        hvac_modes: list[HVACMode] = []
+        for m in raw_hvac_modes:
+            if isinstance(m, HVACMode):
+                hvac_modes.append(m)
+                continue
+            try:
+                hvac_modes.append(HVACMode(str(m).lower().strip()))
+            except ValueError:
+                continue
+        if not hvac_modes:
+            hvac_modes = [HVACMode.AUTO]
+        self._attr_hvac_modes = hvac_modes
+
         self._attr_fan_modes = [str(m) for m in config.get(CONF_FAN_MODES, [])]
         self._attr_swing_modes = [str(m) for m in config.get(CONF_SWING_MODES, [])]
         self._attr_preset_modes = [str(m) for m in config.get(CONF_PRESET_MODES, [])]
@@ -248,10 +241,11 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
                 return None
             return hvac_mode_in_list(mode)
 
-        self.setup_template(CONF_HVAC_MODE, "_attr_hvac_mode", validate_hvac_mode)
+        self.setup_template(CONF_HVAC_MODE, "attr_hvac_mode", validate_hvac_mode)
+
         self.setup_template(
             CONF_HVAC_ACTION,
-            "_attr_hvac_action",
+            "attr_hvac_action",
             template_validators.strenum(
                 self,
                 CONF_HVAC_ACTION,
@@ -261,7 +255,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_CURRENT_TEMPERATURE,
-            "_attr_current_temperature",
+            "attr_current_temperature",
             template_validators.number(
                 self,
                 CONF_CURRENT_TEMPERATURE,
@@ -271,7 +265,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_TARGET_TEMPERATURE,
-            "_attr_target_temperature",
+            "attr_target_temperature",
             template_validators.number(
                 self,
                 CONF_TARGET_TEMPERATURE,
@@ -281,7 +275,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_TARGET_TEMPERATURE_HIGH,
-            "_attr_target_temperature_high",
+            "attr_target_temperature_high",
             template_validators.number(
                 self,
                 CONF_TARGET_TEMPERATURE_HIGH,
@@ -291,7 +285,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_TARGET_TEMPERATURE_LOW,
-            "_attr_target_temperature_low",
+            "attr_target_temperature_low",
             template_validators.number(
                 self,
                 CONF_TARGET_TEMPERATURE_LOW,
@@ -301,7 +295,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_FAN_MODE,
-            "_attr_fan_mode",
+            "attr_fan_mode",
             template_validators.item_in_list(
                 self,
                 CONF_FAN_MODE,
@@ -312,7 +306,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_SWING_MODE,
-            "_attr_swing_mode",
+            "attr_swing_mode",
             template_validators.item_in_list(
                 self,
                 CONF_SWING_MODE,
@@ -323,7 +317,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_PRESET_MODE,
-            "_attr_preset_mode",
+            "attr_preset_mode",
             template_validators.item_in_list(
                 self,
                 CONF_PRESET_MODE,
@@ -334,7 +328,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_HUMIDITY,
-            "_attr_current_humidity",
+            "attr_current_humidity",
             template_validators.number(
                 self,
                 CONF_HUMIDITY,
@@ -344,7 +338,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_TARGET_HUMIDITY,
-            "_attr_target_humidity",
+            "attr_target_humidity",
             template_validators.number(
                 self,
                 CONF_TARGET_HUMIDITY,
@@ -355,13 +349,13 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
 
         self._attr_supported_features = ClimateEntityFeature(0)
 
-        if action_cfg := config.get(SET_HVAC_MODE_ACTION):
+        if (action_cfg := config.get(SET_HVAC_MODE_ACTION)) is not None:
             self.add_script(SET_HVAC_MODE_ACTION, action_cfg, name, DOMAIN)
             self._attr_supported_features |= (
                 ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
-        if action_cfg := config.get(SET_TEMPERATURE_ACTION):
+        if (action_cfg := config.get(SET_TEMPERATURE_ACTION)) is not None:
             self.add_script(SET_TEMPERATURE_ACTION, action_cfg, name, DOMAIN)
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
             if (
@@ -372,44 +366,28 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
                     ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
                 )
 
-        if action_cfg := config.get(SET_FAN_MODE_ACTION):
+        if (action_cfg := config.get(SET_FAN_MODE_ACTION)) is not None:
             self.add_script(SET_FAN_MODE_ACTION, action_cfg, name, DOMAIN)
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
-        if action_cfg := config.get(SET_SWING_MODE_ACTION):
+        if (action_cfg := config.get(SET_SWING_MODE_ACTION)) is not None:
             self.add_script(SET_SWING_MODE_ACTION, action_cfg, name, DOMAIN)
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
-        if action_cfg := config.get(SET_PRESET_MODE_ACTION):
+        if (action_cfg := config.get(SET_PRESET_MODE_ACTION)) is not None:
             self.add_script(SET_PRESET_MODE_ACTION, action_cfg, name, DOMAIN)
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
-        if action_cfg := config.get(SET_HUMIDITY_ACTION):
+        if (action_cfg := config.get(SET_HUMIDITY_ACTION)) is not None:
             self.add_script(SET_HUMIDITY_ACTION, action_cfg, name, DOMAIN)
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
-
-    @property
-    def capability_attributes(self) -> dict[str, Any] | None:
-        """Return capability attributes with stable serialization."""
-        data = super().capability_attributes
-        if not data:
-            return data
-
-        if (modes := data.get("hvac_modes")) is not None:
-            data["hvac_modes"] = [
-                m.value if isinstance(m, HVACMode) else m for m in modes
-            ]
-
-        return data
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         self._attr_hvac_mode = hvac_mode
         if script := self._action_scripts.get(SET_HVAC_MODE_ACTION):
             await self.async_run_script(
-                script,
-                run_variables={ATTR_HVAC_MODE: hvac_mode},
-                context=self._context,
+                script, run_variables={ATTR_HVAC_MODE: hvac_mode}, context=self._context
             )
         if self._attr_assumed_state:
             self.async_write_ha_state()
@@ -431,9 +409,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         self._attr_fan_mode = fan_mode
         if script := self._action_scripts.get(SET_FAN_MODE_ACTION):
             await self.async_run_script(
-                script,
-                run_variables={ATTR_FAN_MODE: fan_mode},
-                context=self._context,
+                script, run_variables={ATTR_FAN_MODE: fan_mode}, context=self._context
             )
         if self._attr_assumed_state:
             self.async_write_ha_state()
@@ -469,9 +445,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
 
         if script := self._action_scripts.get(SET_TEMPERATURE_ACTION):
             await self.async_run_script(
-                script,
-                run_variables=run_variables,
-                context=self._context,
+                script, run_variables=run_variables, context=self._context
             )
         if self._attr_assumed_state:
             self.async_write_ha_state()
@@ -481,9 +455,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         self._attr_target_humidity = humidity
         if script := self._action_scripts.get(SET_HUMIDITY_ACTION):
             await self.async_run_script(
-                script,
-                run_variables={ATTR_HUMIDITY: humidity},
-                context=self._context,
+                script, run_variables={ATTR_HUMIDITY: humidity}, context=self._context
             )
         if self._attr_assumed_state:
             self.async_write_ha_state()
@@ -512,25 +484,12 @@ class TriggerClimateEntity(TriggerEntity, AbstractTemplateClimate):
     """Climate entity based on trigger data."""
 
     domain = CLIMATE_DOMAIN
-    extra_template_keys = (
-        CONF_HVAC_MODE,
-        CONF_HVAC_ACTION,
-        CONF_CURRENT_TEMPERATURE,
-        CONF_TARGET_TEMPERATURE,
-        CONF_TARGET_TEMPERATURE_HIGH,
-        CONF_TARGET_TEMPERATURE_LOW,
-        CONF_FAN_MODE,
-        CONF_SWING_MODE,
-        CONF_PRESET_MODE,
-        CONF_HUMIDITY,
-        CONF_TARGET_HUMIDITY,
-    )
 
     def __init__(
         self,
         hass: HomeAssistant,
         coordinator: TriggerUpdateCoordinator,
-        config: ConfigType,
+        config: dict[str, Any],
     ) -> None:
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
