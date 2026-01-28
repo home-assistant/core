@@ -87,8 +87,7 @@ class PranaSwitch(PranaBaseEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return switch on/off state."""
-        value = self.entity_description.value_fn(self.coordinator)
-        return bool(value)
+        return self.entity_description.value_fn(self.coordinator)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
