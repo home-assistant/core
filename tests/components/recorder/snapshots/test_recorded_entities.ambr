@@ -1,0 +1,36 @@
+# serializer version: 1
+# name: test_get_entity_options
+  dict({
+    'recording_disabled_by': None,
+  })
+# ---
+# name: test_get_entity_options.1
+  dict({
+    'recording_disabled_by': <EntityRecordingDisabler.USER: 'user'>,
+  })
+# ---
+# name: test_get_entity_options.2
+  dict({
+    'recording_disabled_by': <EntityRecordingDisabler.USER: 'user'>,
+  })
+# ---
+# name: test_get_entity_options_data_from_the_future[hass_storage_data0]
+  dict({
+    'recording_disabled_by': <EntityRecordingDisabler.USER: 'user'>,
+  })
+# ---
+# name: test_get_entity_options_data_from_the_future[hass_storage_data0].1
+  dict({
+    'recording_disabled_by': None,
+  })
+# ---
+# name: test_get_entity_options_data_from_the_future[hass_storage_data0].2
+  dict({
+    'recording_disabled_by': <EntityRecordingDisabler.USER: 'user'>,
+  })
+# ---
+# name: test_get_entity_options_data_from_the_future[hass_storage_data0].3
+  dict({
+    'recording_disabled_by': None,
+  })
+# ---
