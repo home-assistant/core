@@ -33,20 +33,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from . import TriggerUpdateCoordinator, validators as template_validators
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
-from .helpers import (
-    async_setup_template_entry,
-    async_setup_template_platform,
-    async_setup_template_preview,
-)
+from .helpers import async_setup_template_entry, async_setup_template_preview
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
@@ -154,26 +147,6 @@ CLIMATE_YAML_SCHEMA = vol.All(
 CLIMATE_CONFIG_ENTRY_SCHEMA = vol.All(
     CLIMATE_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema),
 )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Template climate."""
-    await async_setup_template_platform(
-        hass,
-        CLIMATE_DOMAIN,
-        config,
-        StateClimateEntity,
-        TriggerClimateEntity,
-        async_add_entities,
-        discovery_info,
-        {},
-        legacy_key=CLIMATE_DOMAIN,
-    )
 
 
 async def async_setup_entry(
@@ -382,13 +355,13 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
 
         self._attr_supported_features = ClimateEntityFeature(0)
 
-        if (action_cfg := config.get(SET_HVAC_MODE_ACTION)) is not None:
+        if action_cfg := config.get(SET_HVAC_MODE_ACTION):
             self.add_script(SET_HVAC_MODE_ACTION, action_cfg, name, DOMAIN)
             self._attr_supported_features |= (
                 ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
-        if (action_cfg := config.get(SET_TEMPERATURE_ACTION)) is not None:
+        if action_cfg := config.get(SET_TEMPERATURE_ACTION):
             self.add_script(SET_TEMPERATURE_ACTION, action_cfg, name, DOMAIN)
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
             if (
@@ -399,21 +372,35 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
                     ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
                 )
 
-        if (action_cfg := config.get(SET_FAN_MODE_ACTION)) is not None:
+        if action_cfg := config.get(SET_FAN_MODE_ACTION):
             self.add_script(SET_FAN_MODE_ACTION, action_cfg, name, DOMAIN)
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
-        if (action_cfg := config.get(SET_SWING_MODE_ACTION)) is not None:
+        if action_cfg := config.get(SET_SWING_MODE_ACTION):
             self.add_script(SET_SWING_MODE_ACTION, action_cfg, name, DOMAIN)
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
-        if (action_cfg := config.get(SET_PRESET_MODE_ACTION)) is not None:
+        if action_cfg := config.get(SET_PRESET_MODE_ACTION):
             self.add_script(SET_PRESET_MODE_ACTION, action_cfg, name, DOMAIN)
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
-        if (action_cfg := config.get(SET_HUMIDITY_ACTION)) is not None:
+        if action_cfg := config.get(SET_HUMIDITY_ACTION):
             self.add_script(SET_HUMIDITY_ACTION, action_cfg, name, DOMAIN)
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
+
+    @property
+    def capability_attributes(self) -> dict[str, Any] | None:
+        """Return capability attributes with stable serialization."""
+        data = super().capability_attributes
+        if not data:
+            return data
+
+        if (modes := data.get("hvac_modes")) is not None:
+            data["hvac_modes"] = [
+                m.value if isinstance(m, HVACMode) else m for m in modes
+            ]
+
+        return data
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -525,6 +512,19 @@ class TriggerClimateEntity(TriggerEntity, AbstractTemplateClimate):
     """Climate entity based on trigger data."""
 
     domain = CLIMATE_DOMAIN
+    extra_template_keys = (
+        CONF_HVAC_MODE,
+        CONF_HVAC_ACTION,
+        CONF_CURRENT_TEMPERATURE,
+        CONF_TARGET_TEMPERATURE,
+        CONF_TARGET_TEMPERATURE_HIGH,
+        CONF_TARGET_TEMPERATURE_LOW,
+        CONF_FAN_MODE,
+        CONF_SWING_MODE,
+        CONF_PRESET_MODE,
+        CONF_HUMIDITY,
+        CONF_TARGET_HUMIDITY,
+    )
 
     def __init__(
         self,

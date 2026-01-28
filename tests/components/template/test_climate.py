@@ -88,30 +88,20 @@ async def async_setup_climate_config(
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
-@pytest.mark.parametrize(
-    ("climate_config", "entity_id"),
-    [
-        (
-            {
-                "name": TEST_OBJECT_ID,
-                "hvac_mode": "{{ 'heat' }}",
-                "hvac_modes": ["heat", "off"],
-                "set_hvac_mode": [{"action": "script.turn_on"}],
-            },
-            TEST_ENTITY_ID,
-        ),
-    ],
-)
 async def test_template_state_text(
-    hass: HomeAssistant,
-    style: ConfigurationStyle,
-    climate_config: dict[str, Any],
-    entity_id: str,
+    hass: HomeAssistant, style: ConfigurationStyle
 ) -> None:
     """Test the state of a template climate."""
+    climate_config: dict[str, Any] = {
+        "name": TEST_OBJECT_ID,
+        "hvac_mode": "{{ 'heat' }}",
+        "hvac_modes": ["heat", "off"],
+        "set_hvac_mode": [{"action": "script.turn_on"}],
+    }
+
     await async_setup_climate_config(hass, 1, style, climate_config)
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
     assert state.state == HVACMode.HEAT
 
