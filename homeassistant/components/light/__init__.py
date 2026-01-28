@@ -123,8 +123,8 @@ def filter_supported_color_modes(color_modes: Iterable[ColorMode]) -> set[ColorM
 
 
 def valid_supported_color_modes(
-    color_modes: Iterable[ColorMode | str],
-) -> set[ColorMode | str]:
+    color_modes: Iterable[ColorMode],
+) -> set[ColorMode]:
     """Validate the given color modes."""
     color_modes = set(color_modes)
     if (
@@ -1233,7 +1233,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def __validate_supported_color_modes(
         self,
-        supported_color_modes: set[ColorMode] | set[str],
+        supported_color_modes: set[ColorMode],
     ) -> None:
         """Validate the supported color modes."""
         if self.__color_mode_reported:
