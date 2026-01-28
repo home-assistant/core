@@ -9,8 +9,8 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aiohasupervisor import SupervisorError, SupervisorNotFoundError
-from aiohasupervisor.models import StoreInfo
-from aiohasupervisor.models.mounts import CIFSMountResponse, NFSMountResponse
+from aiohasupervisor.models import ContextType, IssueType, StoreInfo
+from aiohasupervisor.models.mounts import CIFSMountResponse, MountState, NFSMountResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
@@ -386,6 +386,9 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         new_data[DATA_KEY_HOST] = get_host_info(self.hass) or {}
         new_data[DATA_KEY_MOUNTS] = {mount.name: mount for mount in mounts_info.mounts}
 
+        # Check for automatically resolvable mount issues
+        await self._async_check_resolved_mount_issues(new_data[DATA_KEY_MOUNTS])
+
         # If this is the initial refresh, register all addons and return the dict
         if is_first_update:
             async_register_addons_in_dev_reg(
@@ -603,6 +606,40 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                     self.async_set_updated_data(data)
         except SupervisorError as err:
             _LOGGER.warning("Could not refresh info for %s: %s", addon_slug, err)
+
+    async def _async_check_resolved_mount_issues(
+        self, mounts: dict[str, CIFSMountResponse | NFSMountResponse]
+    ) -> None:
+        """Check for mount issues that can be automatically resolved."""
+        issues_info = get_issues_info(self.hass)
+        if not issues_info:
+            return
+
+        # Find mount failure issues that correspond to mounts that are now active
+        for issue in issues_info.issues:
+            if (
+                issue.context == ContextType.MOUNT
+                and issue.type == IssueType.MOUNT_FAILED
+                and issue.reference
+                and issue.reference in mounts
+            ):
+                mount = mounts[issue.reference]
+                if mount.state == MountState.ACTIVE:
+                    # Mount is now active, try to resolve the issue
+                    try:
+                        await self.supervisor_client.resolution.apply_suggestion(
+                            issue.suggestions[0].uuid
+                        )
+                        _LOGGER.info(
+                            "Automatically resolved mount failure issue for %s",
+                            issue.reference,
+                        )
+                    except SupervisorError as err:
+                        _LOGGER.warning(
+                            "Failed to automatically resolve mount issue for %s: %s",
+                            issue.reference,
+                            err,
+                        )
 
     @callback
     def unload(self) -> None:
