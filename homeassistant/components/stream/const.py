@@ -62,6 +62,11 @@ RTSP_TRANSPORTS = {
 CONF_USE_WALLCLOCK_AS_TIMESTAMPS = "use_wallclock_as_timestamps"
 CONF_EXTRA_PART_WAIT_TIME = "extra_part_wait_time"
 
+# Decoder-only codecs that need remapping for muxing (decoder -> generic codec).
+DECODER_TO_CODEC: Final[dict[str, str]] = {
+    "libdav1d": "av1",  # AV1 decoder library
+}
+
 
 class StreamClientError(IntEnum):
     """Enum for stream client errors.
