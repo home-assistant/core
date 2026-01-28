@@ -132,7 +132,9 @@ def translation_key_validator(value: str) -> str:
     return value
 
 
-def validate_translation_value(value: Any, allow_placeholders=True) -> str:
+def validate_translation_value(
+    value: Any, allow_placeholders: bool = True, allow_urls: bool = False
+) -> str:
     """Validate that the value is a valid translation.
 
     - prevents string with HTML
@@ -148,7 +150,7 @@ def validate_translation_value(value: Any, allow_placeholders=True) -> str:
         raise vol.Invalid("the string should not contain combined translations")
     if string_value != string_value.strip():
         raise vol.Invalid("the string should not contain leading or trailing spaces")
-    if RE_URL.search(string_value):
+    if not allow_urls and RE_URL.search(string_value):
         raise vol.Invalid(
             "the string should not contain URLs, "
             "please use description placeholders instead"
@@ -161,11 +163,13 @@ def translation_value_validator(value: Any) -> str:
     return validate_translation_value(value)
 
 
-def custom_translation_value_validator(allow_placeholders=True):
+def custom_translation_value_validator(
+    allow_placeholders: bool = True, allow_urls: bool = False
+):
     """Validate translation value with custom options."""
 
     def _validator(value: Any) -> str:
-        return validate_translation_value(value, allow_placeholders)
+        return validate_translation_value(value, allow_placeholders, allow_urls)
 
     return _validator
 
@@ -363,7 +367,9 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
             vol.Optional("preview_features"): cv.schema_with_slug_keys(
                 {
                     vol.Required("name"): translation_value_validator,
-                    vol.Required("description"): translation_value_validator,
+                    vol.Required("description"): custom_translation_value_validator(
+                        allow_urls=True
+                    ),
                     vol.Optional("enable_confirmation"): translation_value_validator,
                     vol.Optional("disable_confirmation"): translation_value_validator,
                 },
