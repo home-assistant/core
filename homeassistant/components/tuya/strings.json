@@ -1106,40 +1106,56 @@
   },
   "services": {
     "get_available_dp_codes": {
-      "description": "Retrieves all available DP codes for a Tuya device.",
+      "description": "Discover all available DP codes for a Tuya device.",
       "fields": {
         "device_id": {
-          "description": "The Tuya device."
+          "description": "The Tuya device.",
+          "name": "Device"
         }
       },
       "name": "Get available DP codes"
     },
     "get_data": {
-      "description": "Retrieves data for a specific DP code from a Tuya device.",
+      "description": "Retrieve data for a specific DP code from a Tuya device. First call 'Get available DP codes' to discover which codes your device supports.",
       "fields": {
         "device_id": {
-          "description": "The Tuya device."
+          "description": "The Tuya device.",
+          "name": "Device"
         },
         "dp_code": {
-          "description": "The DP code to retrieve."
+          "description": "The DP code to retrieve.",
+          "name": "DP code"
         }
       },
       "name": "Get device data"
     },
     "set_data": {
-      "description": "Sets data for a specific DP code on a Tuya device.",
+      "description": "Set data for a specific DP code on a Tuya device. First call 'Get available DP codes' to discover which settable codes your device supports. If you don't know what value to send, check the current values returned by 'Get available DP codes'.",
       "fields": {
+        "data": {
+          "description": "The data to set.",
+          "name": "Data"
+        },
         "device_id": {
-          "description": "The Tuya device."
+          "description": "The Tuya device.",
+          "name": "Device"
         },
         "dp_code": {
-          "description": "The DP code to set."
-        },
-        "data": {
-          "description": "The data to set."
+          "description": "The DP code to set.",
+          "name": "DP code"
         }
       },
       "name": "Set device data"
+    },
+    "set_direction": {
+      "description": "Set the direction of the cover motor (e.g., forward or back).",
+      "fields": {
+        "direction": {
+          "description": "The direction to set (typically 'forward' or 'back').",
+          "name": "Direction"
+        }
+      },
+      "name": "Set direction"
     }
   }
 }

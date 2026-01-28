@@ -8,7 +8,7 @@ from typing import Any
 from tuya_sharing import CustomerDevice, Manager
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
@@ -116,7 +116,7 @@ async def async_register_services(hass: HomeAssistant) -> None:
                 vol.Required("dp_code"): str,
             }
         ),
-        supports_response="only",
+        supports_response=SupportsResponse.ONLY,
     )
 
     # Register set_data service
@@ -131,7 +131,7 @@ async def async_register_services(hass: HomeAssistant) -> None:
                 vol.Required("data"): vol.Any(str, int, float, bool, dict, list),
             }
         ),
-        supports_response="optional",
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     # Register get_available_dp_codes service
@@ -144,5 +144,5 @@ async def async_register_services(hass: HomeAssistant) -> None:
                 vol.Required("device_id"): str,
             }
         ),
-        supports_response="only",
+        supports_response=SupportsResponse.ONLY,
     )

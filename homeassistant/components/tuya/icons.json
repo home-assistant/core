@@ -381,5 +381,19 @@
         "default": "mdi:watermark"
       }
     }
+  },
+  "services": {
+    "get_available_dp_codes": {
+      "default": "mdi:code-braces"
+    },
+    "get_data": {
+      "default": "mdi:database-eye"
+    },
+    "set_data": {
+      "default": "mdi:database-edit"
+    },
+    "set_direction": {
+      "default": "mdi:arrow-left-right"
+    }
   }
 }
