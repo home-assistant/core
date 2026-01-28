@@ -698,14 +698,24 @@ async def test_invalid_service_calls(
 
 
 @pytest.mark.parametrize(
-    "service",
-    ["backup_partial", "restore_partial"],
+    ("service", "service_data"),
+    [
+        (
+            "backup_partial",
+            {"apps": ["test"], "addons": ["test"]},
+        ),
+        (
+            "restore_partial",
+            {"apps": ["test"], "addons": ["test"], "slug": "test"},
+        ),
+    ],
 )
 @pytest.mark.usefixtures("addon_installed")
 async def test_service_calls_apps_addons_exclusive(
     hass: HomeAssistant,
     supervisor_is_connected: AsyncMock,
     service: str,
+    service_data: dict[str, Any],
 ) -> None:
     """Test that apps and addons parameters are mutually exclusive."""
     supervisor_is_connected.side_effect = SupervisorError
