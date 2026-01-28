@@ -11,10 +11,10 @@ astroid==4.0.1
 coverage==7.10.6
 freezegun==1.5.2
 # librt is an internal mypy dependency
-librt==0.2.1
+librt==0.7.3
 license-expression==30.4.3
 mock-open==1.4.0
-mypy-dev==1.19.0a4
+mypy==1.19.1
 prek==0.2.28
 pydantic==2.12.2
 pylint==4.0.1
