@@ -125,14 +125,18 @@ async def test_doortag_opening_status_change(
     """Test doortag opening status changes."""
     fake_post_hits = 0
     # Repeatedly used variables for the test and initial value from fixture
-    doortag_entity_id = "12:34:56:00:86:99"
+    # Use nonexistent ID to prevent matching during initial setup
+    doortag_entity_id = "aa:bb:cc:dd:ee:ff"
     doortag_connectivity = False
     doortag_opening = "no_news"
+    doortag_timestamp = None
 
     def tag_modifier(payload):
         """This function will be called by common.py during ANY homestatus call."""
-        nonlocal doortag_connectivity, doortag_opening
-        payload["time_server"] = int(dt_util.utcnow().timestamp())
+        nonlocal doortag_connectivity, doortag_opening, doortag_timestamp
+
+        if doortag_timestamp is not None:
+            payload["time_server"] = doortag_timestamp
         body = payload.get("body", {})
 
         # Handle both structures: {"home": {...}} AND {"homes": [{...}]}
@@ -152,7 +156,8 @@ async def test_doortag_opening_status_change(
                 if isinstance(module, dict) and module.get("id") == doortag_entity_id:
                     module["reachable"] = doortag_connectivity
                     module["status"] = doortag_opening
-                    module["last_seen"] = int(dt_util.utcnow().timestamp())
+                    if doortag_timestamp is not None:
+                        module["last_seen"] = doortag_timestamp
                     break
 
     async def fake_tag_post(*args, **kwargs):
@@ -206,17 +211,30 @@ async def test_doortag_opening_status_change(
     # Check opening initial state
     assert hass.states.get(_doortag_entity_opening).state == "unavailable"
 
+    # Trigger some polling cycle to let API throttling work
+    for _ in range(11):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
     # Change mocked status
+    doortag_entity_id = "12:34:56:00:86:99"
     doortag_connectivity = True
     doortag_opening = doortag_status
+    doortag_timestamp = int(dt_util.utcnow().timestamp())
 
-    # Trigger a polling cycle
-    freezer.tick(timedelta(minutes=20))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    # Trigger some polling cycle to let status change be picked up
+
+    for _ in range(11):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     # Check connectivity mocked state
     assert hass.states.get(_doortag_entity_connectivity).state == "on"
