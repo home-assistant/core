@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, DOMAIN_DATA, LOGGER
 
 SERVICE_SETTINGS = "change_setting"
 SERVICE_CAPTURE_IMAGE = "capture_image"
@@ -35,7 +35,7 @@ def _change_setting(call: ServiceCall) -> None:
     value = call.data[ATTR_VALUE]
 
     try:
-        call.hass.data[DOMAIN].abode.set_setting(setting, value)
+        call.hass.data[DOMAIN_DATA].abode.set_setting(setting, value)
     except AbodeException as ex:
         LOGGER.warning(ex)
 
@@ -46,7 +46,7 @@ def _capture_image(call: ServiceCall) -> None:
 
     target_entities = [
         entity_id
-        for entity_id in call.hass.data[DOMAIN].entity_ids
+        for entity_id in call.hass.data[DOMAIN_DATA].entity_ids
         if entity_id in entity_ids
     ]
 
@@ -61,7 +61,7 @@ def _trigger_automation(call: ServiceCall) -> None:
 
     target_entities = [
         entity_id
-        for entity_id in call.hass.data[DOMAIN].entity_ids
+        for entity_id in call.hass.data[DOMAIN_DATA].entity_ids
         if entity_id in entity_ids
     ]
 
