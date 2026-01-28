@@ -18,7 +18,6 @@ from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -26,12 +25,8 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_ENTITY_ID,
-    CONF_FRIENDLY_NAME,
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -54,7 +49,6 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     make_template_entity_common_modern_schema,
 )
@@ -62,8 +56,6 @@ from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_AVAILABILITY = "availability"
 
 CONF_HVAC_MODE = "hvac_mode"
 CONF_HVAC_ACTION = "hvac_action"
@@ -102,13 +94,6 @@ DEFAULT_TEMP_MAX = 35
 DEFAULT_HUMIDITY_MIN = 30
 DEFAULT_HUMIDITY_MAX = 99
 DEFAULT_PRECISION = PRECISION_TENTHS
-
-# Legacy YAML key, analogous to cover's CONF_COVERS
-CONF_THERMOSTATS = "thermostats"
-
-LEGACY_FIELDS = {
-    CONF_VALUE_TEMPLATE: CONF_HVAC_MODE,
-}
 
 CLIMATE_COMMON_SCHEMA = vol.Schema(
     {
@@ -166,29 +151,6 @@ CLIMATE_YAML_SCHEMA = vol.All(
     ),
 )
 
-CLIMATE_LEGACY_YAML_SCHEMA = vol.All(
-    cv.deprecated(CONF_ENTITY_ID),
-    vol.Schema(
-        {
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(CLIMATE_COMMON_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema)
-    .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA),
-)
-
-# Legacy platform schema: { climate: { platform: template, thermostats: {...} } }
-PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_THERMOSTATS): cv.schema_with_slug_keys(
-            CLIMATE_LEGACY_YAML_SCHEMA
-        )
-    }
-)
-
 CLIMATE_CONFIG_ENTRY_SCHEMA = vol.All(
     CLIMATE_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema),
 )
@@ -209,8 +171,8 @@ async def async_setup_platform(
         TriggerClimateEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
-        legacy_key=CONF_THERMOSTATS,
+        {},
+        legacy_key=CLIMATE_DOMAIN,
     )
 
 
@@ -259,15 +221,26 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
 
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
+        for opt in self._extra_optimistic_options:
+            setattr(self, f"_AbstractTemplateEntity__attr_{opt}", None)
 
-        # Keep typed as list[HVACMode] for mypy/ClimateEntity
+        self._attr_hvac_mode = None
+        self._attr_hvac_action = None
+        self._attr_current_temperature = None
+        self._attr_target_temperature = None
+        self._attr_target_temperature_high = None
+        self._attr_target_temperature_low = None
+        self._attr_fan_mode = None
+        self._attr_swing_mode = None
+        self._attr_preset_mode = None
+        self._attr_current_humidity = None
+        self._attr_target_humidity = None
+
         raw_hvac_modes = config.get(CONF_HVAC_MODES, [HVACMode.AUTO])
         self._attr_hvac_modes = [
             m if isinstance(m, HVACMode) else HVACMode(str(m).lower().strip())
             for m in raw_hvac_modes
         ]
-
-        # Other mode lists are strings
         self._attr_fan_modes = [str(m) for m in config.get(CONF_FAN_MODES, [])]
         self._attr_swing_modes = [str(m) for m in config.get(CONF_SWING_MODES, [])]
         self._attr_preset_modes = [str(m) for m in config.get(CONF_PRESET_MODES, [])]
@@ -282,14 +255,13 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self._attr_precision = config.get(CONF_PRECISION, DEFAULT_PRECISION)
 
-        # hvac_mode: convert -> HVACMode then enforce within hvac_modes
-        _hvac_mode_to_enum = template_validators.strenum(
+        hvac_mode_to_enum = template_validators.strenum(
             self,
             CONF_HVAC_MODE,
             HVACMode,
             none_on_unknown_unavailable=True,
         )
-        _hvac_mode_in_list = template_validators.item_in_list(
+        hvac_mode_in_list = template_validators.item_in_list(
             self,
             CONF_HVAC_MODE,
             self._attr_hvac_modes,
@@ -297,18 +269,13 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
             none_on_unknown_unavailable=True,
         )
 
-        def _validate_hvac_mode(result: Any) -> HVACMode | None:
-            mode = _hvac_mode_to_enum(result)
+        def validate_hvac_mode(result: Any) -> HVACMode | None:
+            mode = hvac_mode_to_enum(result)
             if mode is None:
                 return None
-            return _hvac_mode_in_list(mode)
+            return hvac_mode_in_list(mode)
 
-        self.setup_template(
-            CONF_HVAC_MODE,
-            "_attr_hvac_mode",
-            _validate_hvac_mode,
-        )
-
+        self.setup_template(CONF_HVAC_MODE, "_attr_hvac_mode", validate_hvac_mode)
         self.setup_template(
             CONF_HVAC_ACTION,
             "_attr_hvac_action",
@@ -453,7 +420,9 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         self._attr_hvac_mode = hvac_mode
         if script := self._action_scripts.get(SET_HVAC_MODE_ACTION):
             await self.async_run_script(
-                script, run_variables={ATTR_HVAC_MODE: hvac_mode}, context=self._context
+                script,
+                run_variables={ATTR_HVAC_MODE: hvac_mode},
+                context=self._context,
             )
         if self._attr_assumed_state:
             self.async_write_ha_state()
@@ -475,7 +444,9 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         self._attr_fan_mode = fan_mode
         if script := self._action_scripts.get(SET_FAN_MODE_ACTION):
             await self.async_run_script(
-                script, run_variables={ATTR_FAN_MODE: fan_mode}, context=self._context
+                script,
+                run_variables={ATTR_FAN_MODE: fan_mode},
+                context=self._context,
             )
         if self._attr_assumed_state:
             self.async_write_ha_state()
@@ -511,7 +482,9 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
 
         if script := self._action_scripts.get(SET_TEMPERATURE_ACTION):
             await self.async_run_script(
-                script, run_variables=run_variables, context=self._context
+                script,
+                run_variables=run_variables,
+                context=self._context,
             )
         if self._attr_assumed_state:
             self.async_write_ha_state()
@@ -521,7 +494,9 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         self._attr_target_humidity = humidity
         if script := self._action_scripts.get(SET_HUMIDITY_ACTION):
             await self.async_run_script(
-                script, run_variables={ATTR_HUMIDITY: humidity}, context=self._context
+                script,
+                run_variables={ATTR_HUMIDITY: humidity},
+                context=self._context,
             )
         if self._attr_assumed_state:
             self.async_write_ha_state()
