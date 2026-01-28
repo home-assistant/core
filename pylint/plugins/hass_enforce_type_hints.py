@@ -2702,24 +2702,29 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="default_language",
                     return_type=["str", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_languages",
                     return_type=["list[str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="supported_options",
                     return_type=["list[str]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="default_options",
                     return_type=["Mapping[str, Any]", None],
+                    mandatory=True,
                 ),
                 TypeHintMatch(
                     function_name="get_tts_audio",
                     arg_types={1: "str", 2: "str", 3: "dict[str, Any]"},
                     return_type="TtsAudioType",
                     has_async_counterpart=True,
+                    mandatory=True,
                 ),
             ],
         ),
