@@ -62,3 +62,15 @@ lost_device:
       example: "Call me"
       selector:
         text:
+
+next_media:
+  target:
+    entity:
+      integration: icloud
+      domain: camera
+  fields:
+    mode:
+      required: false
+      default: false
+      selector:
+        boolean:

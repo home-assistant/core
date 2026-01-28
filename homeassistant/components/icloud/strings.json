@@ -44,6 +44,63 @@
       }
     }
   },
+  "config_subentries": {
+    "camera": {
+      "abort": {
+        "album_not_found": "The selected album could not be found",
+        "already_configured": "This album is already configured",
+        "no_albums": "No albums could be found in your iCloud Photos library",
+        "no_shared_streams": "No shared streams could be found in your iCloud Photos library",
+        "reconfigure_successful": "The album camera options have been updated"
+      },
+      "entry_type": "Camera",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure Album Camera",
+        "user": "Add Album Camera"
+      },
+      "step": {
+        "options": {
+          "data": {
+            "album_picture_interval": "Image change interval (seconds)",
+            "album_random_order": "Randomize image selection"
+          },
+          "description": "Configure the album camera",
+          "title": "Set album camera options"
+        },
+        "progress": {
+          "description": "Please wait while we load your iCloud albums.",
+          "title": "Loading albums"
+        },
+        "reconfigure": {
+          "data": {
+            "album_picture_interval": "Image change interval (seconds)",
+            "album_random_order": "Randomize image selection"
+          },
+          "description": "Re-configure the album camera",
+          "title": "Update album camera"
+        },
+        "select_album": {
+          "data": {
+            "album_id": "Album"
+          },
+          "description": "Select the iCloud album to use",
+          "title": "Select iCloud Album"
+        },
+        "user": {
+          "description": "Select the type of album you want to add",
+          "menu_option_descriptions": {
+            "album": "Use an album from your iCloud Photos library",
+            "shared_stream": "Use a shared stream from iCloud Photos"
+          },
+          "menu_options": {
+            "album": "Album",
+            "shared_stream": "Shared Stream"
+          },
+          "title": "Add Album Camera"
+        }
+      }
+    }
+  },
   "services": {
     "display_message": {
       "description": "Displays a message on an Apple device.",
@@ -88,6 +145,16 @@
         }
       },
       "name": "Lost device"
+    },
+    "next_media": {
+      "description": "Skips to the next image on the camera entity.",
+      "fields": {
+        "mode": {
+          "description": "Use a random image instead of the next image.",
+          "name": "Randomize"
+        }
+      },
+      "name": "Next media"
     },
     "play_sound": {
       "description": "Plays the Lost device sound on an Apple device.",
