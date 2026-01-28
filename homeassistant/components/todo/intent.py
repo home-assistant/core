@@ -36,7 +36,7 @@ class ListAddItemIntent(intent.IntentHandler):
         hass = intent_obj.hass
 
         slots = self.async_validate_slots(intent_obj.slots)
-        item = slots["item"]["value"].strip()
+        item = slots["item"]["value"].strip().capitalize()
         list_name = slots["name"]["value"]
 
         target_list: TodoListEntity | None = None
@@ -120,7 +120,8 @@ class ListCompleteItemIntent(intent.IntentHandler):
         matching_item = None
         for todo_item in target_list.todo_items or ():
             if (
-                item in (todo_item.uid, todo_item.summary)
+                item.casefold()
+                in (todo_item.uid, str(todo_item.summary or "").casefold())
                 and todo_item.status == TodoItemStatus.NEEDS_ACTION
             ):
                 matching_item = todo_item
