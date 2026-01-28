@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.cloud.const import DOMAIN
+from homeassistant.components.cloud.const import CONF_PROMPT, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -43,3 +43,24 @@ async def test_multiple_entries(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_options_flow_prompt(hass: HomeAssistant) -> None:
+    """Test updating the Cloud prompt via options flow."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    prompt = "My custom prompt"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_PROMPT: prompt}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_PROMPT: prompt}
+
+    updated_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+    assert updated_entry
+    assert updated_entry.options[CONF_PROMPT] == prompt
