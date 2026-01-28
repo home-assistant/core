@@ -162,7 +162,7 @@ class CameraWebRTCProvider(ABC):
         camera: Camera,
     ) -> None:
         """Will be called when the provider is registered for a camera."""
-        return  ## This is an optional method so we need a default here.
+        pass  ## This is an optional method so we need a default here.
 
     async def async_unregister_camera(
         self,
