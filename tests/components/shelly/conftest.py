@@ -512,7 +512,7 @@ def events(hass: HomeAssistant):
 
 
 @pytest.fixture
-async def mock_block_device():
+async def mock_block_device(model: str = MODEL_1):
     """Mock block (Gen1, CoAP) device."""
     with patch("aioshelly.block_device.BlockDevice.create") as block_device_mock:
 
@@ -540,8 +540,9 @@ async def mock_block_device():
             status=MOCK_STATUS_COAP,
             firmware_version="some fw string",
             initialized=True,
-            model=MODEL_1,
+            model=model,
             gen=1,
+            ip_address="10.10.10.11",
         )
         type(device).name = PropertyMock(return_value="Test name")
         block_device_mock.return_value = device

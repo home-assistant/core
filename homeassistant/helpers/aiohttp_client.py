@@ -47,14 +47,6 @@ SERVER_SOFTWARE = (
     f"aiohttp/{aiohttp.__version__} Python/{sys.version_info[0]}.{sys.version_info[1]}"
 )
 
-ENABLE_CLEANUP_CLOSED = (3, 13, 0) <= sys.version_info < (
-    3,
-    13,
-    1,
-) or sys.version_info < (3, 12, 7)
-# Cleanup closed is no longer needed after https://github.com/python/cpython/pull/118960
-# which first appeared in Python 3.12.7 and 3.13.1
-
 WARN_CLOSE_MSG = "closes the Home Assistant aiohttp session"
 
 #
@@ -380,7 +372,6 @@ def _async_get_connector(
 
     connector = HomeAssistantTCPConnector(
         family=family,
-        enable_cleanup_closed=ENABLE_CLEANUP_CLOSED,
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
         limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
