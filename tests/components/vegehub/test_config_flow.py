@@ -20,12 +20,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import TEST_HOSTNAME, TEST_IP, TEST_SIMPLE_MAC
 
 from tests.common import MockConfigEntry
 
-DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address(TEST_IP),
     ip_addresses=[ip_address(TEST_IP)],
     port=80,
@@ -360,7 +361,7 @@ async def test_zeroconf_flow_update_ip_hostname(
     # Use the same discovery info, but change the IP and hostname
     new_ip = "192.168.0.99"
     new_hostname = "new_hostname"
-    new_discovery_info = zeroconf.ZeroconfServiceInfo(
+    new_discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address(new_ip),
         ip_addresses=[ip_address(new_ip)],
         port=DISCOVERY_INFO.port,
