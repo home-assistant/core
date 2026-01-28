@@ -11,6 +11,7 @@ ATTR_FILENAME = "filename"
 ATTR_SUBDIR = "subdir"
 ATTR_URL = "url"
 ATTR_OVERWRITE = "overwrite"
+ATTR_HEADERS = "headers"
 
 CONF_DOWNLOAD_DIR = "download_dir"
 
