@@ -932,7 +932,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_brightness
 
     @cached_property
-    def color_mode(self) -> ColorMode | str | None:
+    def color_mode(self) -> ColorMode | None:
         """Return the color mode of the light."""
         return self._attr_color_mode
 
