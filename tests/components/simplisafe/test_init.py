@@ -97,7 +97,7 @@ async def test_coordinator_exceptions_propagate(
         system.async_update = AsyncMock(side_effect=exc("fail"))
 
     # Capture the websocket task before the update
-    task_before = manager._websocket_reconnect_task
+    task_before = manager._websocket_task
     assert task_before is not None
 
     # Advance time to trigger the coordinator update
@@ -108,10 +108,10 @@ async def test_coordinator_exceptions_propagate(
 
     # Verify websocket task state
     if cancel_websocket:
-        task = manager._websocket_reconnect_task
+        task = manager._websocket_task
         assert task is None or task.cancelled() or task.done()
     else:
-        task = manager._websocket_reconnect_task
+        task = manager._websocket_task
         assert task is task_before
         assert not task.done()
 

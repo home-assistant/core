@@ -557,7 +557,7 @@ class SimpliSafe:
         assert self._api.websocket
 
         self._api.websocket.add_event_callback(self._async_websocket_on_event)
-        self._websocket_task = self.entry.async_create_task(
+        self._websocket_task = self.entry.async_create_background_task(
             self._hass, self._async_websocket_loop(), WEBSOCKET_LOOP_TASK_NAME
         )
 
@@ -603,7 +603,7 @@ class SimpliSafe:
             # Open a new websocket connection with the fresh token:
             assert self._api.websocket
             await self._async_cancel_websocket_loop()
-            self._websocket_task = self.entry.async_create_task(
+            self._websocket_task = self.entry.async_create_background_task(
                 self._hass, self._async_websocket_loop(), WEBSOCKET_LOOP_TASK_NAME
             )
 
@@ -654,7 +654,7 @@ class SimpliSafe:
             if self.coordinator and not self.coordinator.last_update_success:
                 if not self._websocket_task or self._websocket_task.done():
                     LOGGER.debug("Restarting websocket loop after successful update")
-                    self._websocket_task = self.entry.async_create_task(
+                    self._websocket_task = self.entry.async_create_background_task(
                         self._hass,
                         self._async_websocket_loop(),
                         WEBSOCKET_LOOP_TASK_NAME,
