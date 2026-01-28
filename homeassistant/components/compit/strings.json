@@ -37,16 +37,16 @@
       "aero_by_pass": {
         "name": "Bypass",
         "state": {
-          "auto": "Auto",
-          "off": "Off",
-          "on": "On"
+          "auto": "[%key:common::state::auto%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       },
       "buffer_mode": {
         "name": "Buffer mode",
         "state": {
-          "disabled": "Disabled",
-          "manual": "Manual",
+          "disabled": "[%key:common::state::disabled%]",
+          "manual": "[%key:common::state::manual%]",
           "schedule": "Schedule"
         }
       },
@@ -54,14 +54,14 @@
         "name": "Domestic hot water circulation",
         "state": {
           "constant": "Constant",
-          "disabled": "Disabled",
+          "disabled": "[%key:common::state::disabled%]",
           "schedule": "Schedule"
         }
       },
       "heating_source_of_correction": {
         "name": "Heating source of correction",
         "state": {
-          "disabled": "Disabled",
+          "disabled": "[%key:common::state::disabled%]",
           "nano_nr_1": "Nano 1",
           "nano_nr_2": "Nano 2",
           "nano_nr_3": "Nano 3",
@@ -82,7 +82,6 @@
       "mixer_mode": {
         "name": "Mixer mode",
         "state": {
-          "disabled": "Disabled",
           "nano_nr_1": "Nano 1",
           "nano_nr_2": "Nano 2",
           "nano_nr_3": "Nano 3",
@@ -96,7 +95,7 @@
       "mixer_mode_zone": {
         "name": "Zone {zone} mixer mode",
         "state": {
-          "disabled": "Disabled",
+          "disabled": "[%key:common::state::disabled%]",
           "nano_nr_1": "Nano 1",
           "nano_nr_2": "Nano 2",
           "nano_nr_3": "Nano 3",
@@ -123,8 +122,8 @@
       "operating_mode": {
         "name": "Operating mode",
         "state": {
-          "auto": "Auto",
-          "disabled": "Disabled",
+          "auto": "[%key:common::state::auto%]",
+          "disabled": "[%key:common::state::disabled%]",
           "eco": "Eco",
           "hybrid": "Hybrid"
         }
@@ -132,9 +131,9 @@
       "solarcomp_operating_mode": {
         "name": "Operating mode",
         "state": {
-          "auto": "Auto",
+          "auto": "[%key:common::state::auto%]",
           "de_icing": "De-icing",
-          "disabled": "Disabled",
+          "disabled": "[%key:common::state::disabled%]",
           "holiday": "Holiday"
         }
       },
