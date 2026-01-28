@@ -1,5 +1,7 @@
 """Tests for the todo intents."""
 
+import datetime
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -31,6 +33,18 @@ async def setup_intents(hass: HomeAssistant) -> None:
     """Set up the intents."""
     assert await async_setup_component(hass, "homeassistant", {})
     await todo_intent.async_setup_intents(hass)
+
+
+@pytest.fixture
+def patch_datetime_now(monkeypatch: pytest.MonkeyPatch):
+    """Setup mocked "now" method to datetime module."""
+
+    class fakedatetime(datetime.datetime):
+        @classmethod
+        def now(cls, tz: str | None):
+            return datetime.datetime(2025, 1, 1, 12, 0, 0)
+
+    monkeypatch.setattr(datetime, "datetime", fakedatetime)
 
 
 async def test_add_item_intent(
@@ -179,6 +193,106 @@ async def test_add_item_intent_errors(
             },
             assistant=conversation.DOMAIN,
         )
+
+
+@pytest.mark.parametrize(
+    ("slots", "expected"),
+    [
+        # now = 2025/01/01 12:00:00 (Wednesday)
+        ({}, None),
+        # absolute
+        ({"due_day": {"value": "today"}}, datetime.date(2025, 1, 1)),
+        ({"due_day": {"value": "tomorrow"}}, datetime.date(2025, 1, 2)),
+        ({"due_day": {"value": "mon"}}, datetime.date(2025, 1, 6)),
+        ({"due_day": {"value": "tue"}}, datetime.date(2025, 1, 7)),
+        ({"due_day": {"value": "wed"}}, datetime.date(2025, 1, 8)),
+        ({"due_day": {"value": "thu"}}, datetime.date(2025, 1, 2)),
+        ({"due_day": {"value": "fri"}}, datetime.date(2025, 1, 3)),
+        ({"due_day": {"value": "sat"}}, datetime.date(2025, 1, 4)),
+        ({"due_day": {"value": "sun"}}, datetime.date(2025, 1, 5)),
+        ({"due_hour": {"value": 2}}, datetime.datetime(2025, 1, 2, 2, 0, 0)),
+        ({"due_hour": {"value": 15}}, datetime.datetime(2025, 1, 1, 15, 0, 0)),
+        (
+            {"due_hour": {"value": 12}, "due_minute": {"value": 30}},
+            datetime.datetime(2025, 1, 1, 12, 30, 0),
+        ),
+        (
+            {"due_day": {"value": "today"}, "due_hour": {"value": 2}},
+            datetime.datetime(2025, 1, 2, 2, 0, 0),
+        ),
+        (
+            {"due_day": {"value": "tomorrow"}, "due_hour": {"value": 12}},
+            datetime.datetime(2025, 1, 2, 12, 0, 0),
+        ),
+        (
+            {"due_day": {"value": "wed"}, "due_hour": {"value": 11}},
+            datetime.datetime(2025, 1, 8, 11, 0, 0),
+        ),
+        (
+            {"due_day": {"value": "wed"}, "due_hour": {"value": 15}},
+            datetime.datetime(2025, 1, 1, 15, 0, 0),
+        ),
+        # relative
+        ({"due_day_offset": {"value": 1}}, datetime.date(2025, 1, 2)),
+        ({"due_day_offset": {"value": 10}}, datetime.date(2025, 1, 11)),
+        ({"due_hour_offset": {"value": 2}}, datetime.datetime(2025, 1, 1, 14, 0, 0)),
+        ({"due_hour_offset": {"value": 48}}, datetime.datetime(2025, 1, 3, 12, 0, 0)),
+        (
+            {"due_minute_offset": {"value": 10}},
+            datetime.datetime(2025, 1, 1, 12, 10, 0),
+        ),
+        (
+            {"due_minute_offset": {"value": 120}},
+            datetime.datetime(2025, 1, 1, 14, 0, 0),
+        ),
+        (
+            {"due_hour_offset": {"value": 2}, "due_minute_offset": {"value": 20}},
+            datetime.datetime(2025, 1, 1, 14, 20, 0),
+        ),
+        (
+            {"due_day_offset": {"value": 3}, "due_hour_offset": {"value": 5}},
+            datetime.datetime(2025, 1, 4, 17, 0, 0),
+        ),
+        # mixed (offset is ignored)
+        (
+            {"due_day": {"value": "today"}, "due_day_offset": {"value": 1}},
+            datetime.date(2025, 1, 1),
+        ),
+    ],
+)
+async def test_add_item_intent_with_duedate(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    patch_datetime_now,
+    slots: dict[str, Any],
+    expected: datetime.date | datetime.datetime | None,
+) -> None:
+    """Test adding items with due date to lists using an intent."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    await todo_intent.async_setup_intents(hass)
+
+    entity = MockTodoListEntity()
+    entity._attr_name = "My List"
+    entity.entity_id = "todo.my_list"
+
+    await create_mock_platform(hass, [entity])
+
+    response = await intent.async_handle(
+        hass,
+        "test",
+        todo_intent.INTENT_LIST_ADD_ITEM,
+        {
+            ATTR_ITEM: {"value": "beer"},
+            "name": {"value": "my list"},
+        }
+        | slots,
+        assistant=conversation.DOMAIN,
+    )
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+
+    assert len(entity.items) == 1
+    assert entity.items[0].due == expected
+    entity.items.clear()
 
 
 async def test_complete_item_intent(
