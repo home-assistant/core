@@ -87,3 +87,18 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
             ) from error
 
         return NRGkickData(info=info, control=control, values=values)
+
+    def async_update_control_cache(self, updates: dict[str, Any]) -> None:
+        """Update the cached control data.
+
+        This is intended for optimistic updates after successful commands.
+        """
+        data = self.data
+        assert data is not None
+
+        control = dict(data.control)
+        control.update(updates)
+
+        self.async_set_updated_data(
+            NRGkickData(info=data.info, control=control, values=data.values)
+        )
