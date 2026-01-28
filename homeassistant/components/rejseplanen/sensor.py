@@ -408,7 +408,8 @@ async def async_setup_entry(
                     entity_description=description,
                 )
                 for description in SENSORS
-            ]
+            ],
+            config_subentry_id=subentry.subentry_id,
         )
 
 

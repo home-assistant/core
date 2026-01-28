@@ -26,4 +26,15 @@ class RejseplanenEntity(CoordinatorEntity[RejseplanenDataUpdateCoordinator]):
         super().__init__(coordinator, context=stop_id)
 
         self._stop_id = stop_id
-        self.coordinator.add_stop_id(stop_id)
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity being added to hass."""
+        await super().async_added_to_hass()
+        # Register stop ID with coordinator
+        self.coordinator.add_stop_id(self._stop_id)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle removal of the entity from Home Assistant."""
+        await super().async_will_remove_from_hass()
+        # Clean up stop ID from coordinator
+        self.coordinator.remove_stop_id(self._stop_id)
