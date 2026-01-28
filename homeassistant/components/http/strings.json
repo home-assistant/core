@@ -11,7 +11,7 @@
   },
   "services": {
     "unban": {
-      "description": "Remove previously banned IP addresses from the list of banned IP addresses.",
+      "description": "Removes previously banned IP addresses from the list of banned IP addresses.",
       "name": "Unban banned IP addresses"
     }
   }
