@@ -14,6 +14,8 @@ from homeassistant.components.squeezebox.browse_media import (
     SQUEEZEBOX_ID_BY_TYPE,
 )
 from homeassistant.components.squeezebox.const import (
+    CONF_HTTPS,
+    DOMAIN,
     STATUS_QUERY_LIBRARYNAME,
     STATUS_QUERY_MAC,
     STATUS_QUERY_UUID,
@@ -32,6 +34,7 @@ from homeassistant.components.squeezebox.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -41,6 +44,9 @@ TEST_VOLUME_STEP = 10
 TEST_HOST = "1.2.3.4"
 TEST_PORT = "9000"
 TEST_USE_HTTPS = False
+UUID = "test-uuid"
+HOST = "1.1.1.1"
+PORT = 9000
 SERVER_UUIDS = [
     "12345678-1234-1234-1234-123456789012",
     "87654321-4321-4321-4321-210987654321",
@@ -112,6 +118,76 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.squeezebox.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_config_entry():
+    """Fixture that returns a mock config entry with UUID."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=UUID,
+        data={CONF_HOST: HOST, CONF_PORT: PORT, CONF_HTTPS: False},
+    )
+
+
+@pytest.fixture
+def mock_server():
+    """Fixture to mock pysqueezebox.Server per test run."""
+    # Patch without autospec, so we can add arbitrary attributes
+    with patch("homeassistant.components.squeezebox.config_flow.Server") as server_cls:
+        server_mock = server_cls.return_value
+
+        # async methods
+        server_mock.async_query = AsyncMock()
+
+        yield server_mock
+
+
+@pytest.fixture
+def mock_discover_success():
+    """Fixture to simulate successful async_discover."""
+
+    async def _mock_discover(callback):
+        class DummyServer:
+            host = "1.1.1.1"
+            port = 9000
+            uuid = UUID  # Ensure UUID is defined or imported
+
+        callback(DummyServer())
+        return [DummyServer()]
+
+    return _mock_discover
+
+
+@pytest.fixture
+def mock_discover_failure():
+    """Simulate failed discovery without raising unhandled exceptions."""
+
+    async def _failed_discover(callback):
+        # Simulate no servers found, no callback triggered
+        return []
+
+    return _failed_discover
+
+
+@pytest.fixture
+def patch_discover():
+    """Patch the async_discover function to prevent actual network calls."""
+
+    async def _mock_discover(callback):
+        return []
+
+    with patch(
+        "homeassistant.components.squeezebox.config_flow.async_discover",
+        side_effect=_mock_discover,
+    ):
+        yield
+
+
+@pytest.fixture
+def dhcp_info():
+    """Fixture for DHCP discovery data."""
+    return DhcpServiceInfo(ip=HOST, macaddress="aabbccddeeff", hostname="any")
 
 
 @pytest.fixture
