@@ -363,6 +363,24 @@
     "command_failure": {
       "message": "Command {command} failed. Status: {status}. Message: {message}"
     },
+    "entry_not_found": {
+      "message": "Entry not found: {entry_id}"
+    },
+    "entry_not_loaded": {
+      "message": "Entry not loaded: {entry_id}"
+    },
+    "image_error": {
+      "message": "Error while checking image url: {url}"
+    },
+    "invalid_entry": {
+      "message": "Invalid entry: {entry_id}"
+    },
+    "invalid_entry_id": {
+      "message": "Invalid entry id: {entry_id}"
+    },
+    "invalid_image_type": {
+      "message": "Invalid image type: {image_type}"
+    },
     "no_vehicle": {
       "message": "Unable to retrieve vehicle details."
     },
@@ -374,6 +392,37 @@
     },
     "update_failed": {
       "message": "Unable to update data."
+    }
+  },
+  "selector": {
+    "service_param_image": {
+      "options": {
+        "exterior_back": "Exterior back",
+        "exterior_back_left": "Exterior back left",
+        "exterior_back_right": "Exterior back right",
+        "exterior_front": "Exterior front",
+        "exterior_front_left": "Exterior front left",
+        "exterior_front_right": "Exterior front right",
+        "exterior_side_left": "Exterior side left",
+        "exterior_side_right": "Exterior side right",
+        "interior": "Interior"
+      }
+    }
+  },
+  "services": {
+    "get_image_url": {
+      "description": "Get the URL of one or more vehicle specific images.",
+      "fields": {
+        "entry": {
+          "description": "The entry to retrieve the vehicle images for.",
+          "name": "Entry"
+        },
+        "images": {
+          "description": "The image types to retrieve. Leave empty to get all images.",
+          "name": "Images"
+        }
+      },
+      "name": "Get image URL"
     }
   }
 }
