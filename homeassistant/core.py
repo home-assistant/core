@@ -2624,6 +2624,9 @@ class ServiceRegistry:
 
         This method must be run in the event loop.
         """
+        from .helpers import config_validation as cv  # noqa: PLC0415
+
+        cv.raise_on_templated_service(domain, service, schema)
         domain = domain.lower()
         service = service.lower()
         service_obj = Service(
