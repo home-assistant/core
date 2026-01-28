@@ -558,15 +558,29 @@ async def async_migrate_entry(
 ) -> bool:
     """Migrate Telegram Bot config entry."""
 
-    # Minor version 2: add default API endpoint to data
-    if not config_entry.data.get(CONF_API_ENDPOINT):
+    version = config_entry.version
+    minor_version = config_entry.minor_version
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        version,
+        minor_version,
+    )
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    # version 1.1: to add default API endpoint
+    if version == 1 and minor_version == 1:
         new_data = {**config_entry.data}
         new_data[CONF_API_ENDPOINT] = DEFAULT_API_ENDPOINT
         updated = hass.config_entries.async_update_entry(
             config_entry, data=new_data, minor_version=2
         )
         _LOGGER.debug(
-            "Migrated Telegram Bot config entry to minor version 2, entry updated: %s",
+            "Migrated Telegram Bot config entry to %s.%s, entry updated: %s",
+            config_entry.version,
+            config_entry.minor_version,
             updated,
         )
 

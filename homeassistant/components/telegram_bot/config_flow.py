@@ -237,8 +237,8 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # validate connection to Telegram API
         errors: dict[str, str] = {}
-        user_input[CONF_API_ENDPOINT] = user_input[SECTION_ADVANCED_SETTINGS].get(
-            CONF_API_ENDPOINT, DEFAULT_API_ENDPOINT
+        user_input[CONF_API_ENDPOINT] = (
+            user_input[SECTION_ADVANCED_SETTINGS][CONF_API_ENDPOINT],
         )
         user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
             CONF_PROXY_URL
@@ -492,11 +492,15 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             # logout existing bot from the official Telegram bot API
             # logout is only used when changing the API endpoint from official to a custom one
             # there is a 10-minute lockout period after logout so we only logout if necessary
+            service: TelegramNotificationService = (
+                self._get_reconfigure_entry().runtime_data
+            )
             try:
-                service: TelegramNotificationService = (
-                    self._get_reconfigure_entry().runtime_data
-                )
                 is_logged_out = await service.bot.log_out()
+            except TelegramError as err:
+                errors["base"] = "telegram_error"
+                description_placeholders[ERROR_MESSAGE] = str(err)
+            else:
                 _LOGGER.info(
                     "[%s %s] Logged out: %s",
                     service.bot.username,
@@ -505,9 +509,6 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 if not is_logged_out:
                     errors["base"] = "bot_logout_failed"
-            except TelegramError as err:
-                errors["base"] = "telegram_error"
-                description_placeholders[ERROR_MESSAGE] = str(err)
 
         if errors:
             return self.async_show_form(
