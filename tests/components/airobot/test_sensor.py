@@ -16,6 +16,7 @@ def platforms() -> list[Platform]:
     return [Platform.SENSOR]
 
 
+@pytest.mark.freeze_time("2024-01-01 00:00:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_sensors(
     hass: HomeAssistant,

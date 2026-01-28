@@ -142,12 +142,12 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
-        """Handle Home Assistant add-on discovery.
+        """Handle Home Assistant app discovery.
 
-        This flow is triggered by the Music Assistant add-on.
+        This flow is triggered by the Music Assistant app.
         """
-        # Build URL from add-on discovery info
-        # The add-on exposes the API on port 8095, but also hosts an internal-only
+        # Build URL from app discovery info
+        # The app exposes the API on port 8095, but also hosts an internal-only
         # webserver (default at port 8094) for the Home Assistant integration to connect to.
         # The info where the internal API is exposed is passed via discovery_info
         host = discovery_info.config["host"]
@@ -160,7 +160,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         except InvalidServerVersion:
             return self.async_abort(reason="invalid_server_version")
         except MusicAssistantClientException:
-            LOGGER.exception("Unexpected exception during add-on discovery")
+            LOGGER.exception("Unexpected exception during HA app discovery")
             return self.async_abort(reason="unknown")
 
         # We trust the token from hassio discovery and validate it during setup
@@ -179,6 +179,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                     ConfigEntryState.LOADED,
                     ConfigEntryState.SETUP_ERROR,
                     ConfigEntryState.SETUP_RETRY,
+                    ConfigEntryState.SETUP_IN_PROGRESS,
                 ):
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
@@ -190,7 +191,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_hassio_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm the add-on discovery."""
+        """Confirm the Home Assistant app discovery."""
         if TYPE_CHECKING:
             assert self.url is not None
 
@@ -217,10 +218,10 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_discovery_info")
 
         if server_info.schema_version >= HASSIO_DISCOVERY_SCHEMA_VERSION:
-            # Ignore servers running as Home Assistant add-on
+            # Ignore servers running as Home Assistant app
             # (they should be discovered through hassio discovery instead)
             if server_info.homeassistant_addon:
-                LOGGER.debug("Ignoring add-on server in zeroconf discovery")
+                LOGGER.debug("Ignoring HA app server in zeroconf discovery")
                 return self.async_abort(reason="already_discovered_addon")
 
         self.url = server_info.base_url

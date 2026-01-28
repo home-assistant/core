@@ -11,7 +11,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DEVICE_BUTTONS, DOMAIN, BeoButtons, BeoModel
+from .const import (
+    BEO_REMOTE_CONTROL_KEYS,
+    BEO_REMOTE_KEYS,
+    BEO_REMOTE_SUBMENU_CONTROL,
+    BEO_REMOTE_SUBMENU_LIGHT,
+    DEVICE_BUTTONS,
+    DOMAIN,
+    BeoButtons,
+    BeoModel,
+)
 
 
 def get_device(hass: HomeAssistant, unique_id: str) -> DeviceEntry:
@@ -64,3 +73,21 @@ def get_device_buttons(model: BeoModel) -> list[str]:
         buttons.remove(BeoButtons.BLUETOOTH)
 
     return buttons
+
+
+def get_remote_keys() -> list[str]:
+    """Get remote keys for the Beoremote One. Formatted for Home Assistant use."""
+    return [
+        *[f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}" for key_type in BEO_REMOTE_KEYS],
+        *[
+            f"{BEO_REMOTE_SUBMENU_CONTROL}/{key_type}"
+            for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)
+        ],
+    ]
+
+
+async def supports_battery(client: MozartClient) -> bool:
+    """Get if a Mozart device has a battery."""
+    battery_state = await client.get_battery_state()
+
+    return battery_state.state != "BatteryNotPresent"

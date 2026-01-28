@@ -1,7 +1,7 @@
 {
   "domain": "control4",
   "name": "Control4",
-  "codeowners": ["@lawtancool"],
+  "codeowners": ["@lawtancool", "@davidrecordon"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/control4",
   "integration_type": "hub",

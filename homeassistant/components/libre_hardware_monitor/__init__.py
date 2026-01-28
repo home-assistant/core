@@ -32,15 +32,15 @@ async def async_migrate_entry(
             entity_registry, config_entry.entry_id
         )
         for reg_entry in registry_entries:
-            new_entity_id = f"{config_entry.entry_id}_{reg_entry.unique_id[4:]}"
+            new_unique_id = f"{config_entry.entry_id}_{reg_entry.unique_id[4:]}"
             _LOGGER.debug(
                 "Migrating entity %s unique id from %s to %s",
                 reg_entry.entity_id,
                 reg_entry.unique_id,
-                new_entity_id,
+                new_unique_id,
             )
             entity_registry.async_update_entity(
-                reg_entry.entity_id, new_unique_id=new_entity_id
+                reg_entry.entity_id, new_unique_id=new_unique_id
             )
 
         # Migrate device identifiers

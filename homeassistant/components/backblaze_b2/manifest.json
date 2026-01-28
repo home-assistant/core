@@ -8,5 +8,5 @@
   "iot_class": "cloud_push",
   "loggers": ["b2sdk"],
   "quality_scale": "bronze",
-  "requirements": ["b2sdk==2.8.1"]
+  "requirements": ["b2sdk==2.10.1"]
 }

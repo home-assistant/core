@@ -27,7 +27,11 @@ from music_assistant_models.player import Player
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import (
@@ -101,6 +105,15 @@ async def async_setup_entry(  # noqa: C901
         )
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
     except (AuthenticationRequired, AuthenticationFailed, InvalidToken) as err:
+        assert mass.server_info is not None
+        # Users cannot reauthenticate when running as Home Assistant addon,
+        # so raising ConfigEntryAuthFailed in that case would be incorrect.
+        # Instead we should wait until the addon discovery is completed,
+        # as that will set up authentication and reload the entry automatically.
+        if mass.server_info.homeassistant_addon:
+            raise ConfigEntryError(
+                "Authentication failed, addon discovery not completed yet"
+            ) from err
         raise ConfigEntryAuthFailed(
             f"Authentication failed for {mass_url}: {err}"
         ) from err

@@ -98,50 +98,28 @@ DEVICE_TYPE_TAGS = {
 }
 
 
-class StateStatus(IntEnum):
+class StateStatus(MieleEnum, missing_to_none=True):
     """Define appliance states."""
 
-    RESERVED = 0
-    OFF = 1
-    ON = 2
-    PROGRAMMED = 3
-    WAITING_TO_START = 4
-    IN_USE = 5
-    PAUSE = 6
-    PROGRAM_ENDED = 7
-    FAILURE = 8
-    PROGRAM_INTERRUPTED = 9
-    IDLE = 10
-    RINSE_HOLD = 11
-    SERVICE = 12
-    SUPERFREEZING = 13
-    SUPERCOOLING = 14
-    SUPERHEATING = 15
-    SUPERCOOLING_SUPERFREEZING = 146
-    AUTOCLEANING = 147
-    NOT_CONNECTED = 255
-
-
-STATE_STATUS_TAGS = {
-    StateStatus.OFF: "off",
-    StateStatus.ON: "on",
-    StateStatus.PROGRAMMED: "programmed",
-    StateStatus.WAITING_TO_START: "waiting_to_start",
-    StateStatus.IN_USE: "in_use",
-    StateStatus.PAUSE: "pause",
-    StateStatus.PROGRAM_ENDED: "program_ended",
-    StateStatus.FAILURE: "failure",
-    StateStatus.PROGRAM_INTERRUPTED: "program_interrupted",
-    StateStatus.IDLE: "idle",
-    StateStatus.RINSE_HOLD: "rinse_hold",
-    StateStatus.SERVICE: "service",
-    StateStatus.SUPERFREEZING: "superfreezing",
-    StateStatus.SUPERCOOLING: "supercooling",
-    StateStatus.SUPERHEATING: "superheating",
-    StateStatus.SUPERCOOLING_SUPERFREEZING: "supercooling_superfreezing",
-    StateStatus.AUTOCLEANING: "autocleaning",
-    StateStatus.NOT_CONNECTED: "not_connected",
-}
+    reserved = 0
+    off = 1
+    on = 2
+    programmed = 3
+    waiting_to_start = 4
+    in_use = 5
+    pause = 6
+    program_ended = 7
+    failure = 8
+    program_interrupted = 9
+    idle = 10
+    rinse_hold = 11
+    service = 12
+    superfreezing = 13
+    supercooling = 14
+    superheating = 15
+    supercooling_superfreezing = 146
+    autocleaning = 147
+    not_connected = 255
 
 
 class MieleActions(IntEnum):
@@ -353,10 +331,12 @@ class ProgramPhaseMicrowaveOvenCombo(MieleEnum, missing_to_none=True):
 
     not_running = 0, 65535
     steam_reduction = 3863
-    process_running = 7938
+    process_running = 3330, 7938
     waiting_for_start = 7939
-    heating_up_phase = 7940
-    process_finished = 7942
+    heating_up_phase = 3329, 7940
+    process_finished = 3334, 7942
+    cooling_phase = 3339
+    energy_save = 3340
 
 
 class ProgramPhaseSteamOven(MieleEnum, missing_to_none=True):
@@ -430,8 +410,7 @@ class StateProgramType(MieleEnum, missing_to_none=True):
 
     normal_operation_mode = 0
     own_program = 1
-    automatic_program = 2
-    cleaning_care_program = 3
+    automatic_program = 2, 3
     maintenance_program = 4
 
 
@@ -542,7 +521,7 @@ class TumbleDryerProgramId(MieleEnum, missing_to_none=True):
     silks_handcare = 17, 170
     standard_pillows = 19, 190
     basket_program = 22, 220
-    cottons_hygiene = 23
+    cottons_hygiene = 11, 23
     smoothing = 24, 240
     bed_linen = 31, 99002
     eco = 66
@@ -559,11 +538,16 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     defrost = 1, 356
     eco_fan_heat = 6
     auto_roast = 7
+    grill = 9
     full_grill = 10
     economy_grill = 11
     fan_plus = 13
     intensive_bake = 14
     microwave = 19
+    microwave_auto_roast = 20
+    microwave_grill = 21
+    microwave_fan_plus = 22
+    microwave_fan_grill = 23
     conventional_heat = 24
     top_heat = 25
     fan_grill = 29
@@ -572,6 +556,8 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     moisture_plus_fan_plus = 40, 49
     moisture_plus_intensive_bake = 50, 74
     moisture_plus_conventional_heat = 51, 76
+    popcorn = 53
+    quick_microwave = 54
     custom_program_1 = 97
     custom_program_2 = 98
     custom_program_3 = 99
@@ -599,6 +585,7 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     yom_tov = 336
     drying = 357
     heat_crockery = 358
+    prove_dough = 359
     low_temperature_cooking = 360
     steam_cooking = 361
     keeping_warm = 362
@@ -702,6 +689,10 @@ class OvenProgramId(MieleEnum, missing_to_none=True):
     rack_of_lamb_with_vegetables = 634
     yorkshire_pudding = 635
     meat_loaf = 636
+    defrost_meat = 647
+    defrost_vegetables = 654
+    heating_bakes_gratins = 661
+    heating_vegetables = 671
     swiss_farmhouse_bread = 695
     plaited_swiss_loaf = 696
     tiger_bread = 697

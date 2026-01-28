@@ -10,6 +10,8 @@ from requests import RequestException
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     AUTH_API_TOKEN,
@@ -19,13 +21,24 @@ from .const import (
     DEFAULT_PLANT_ID,
     DEFAULT_URL,
     DEPRECATED_URLS,
+    DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
 )
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
 from .models import GrowattRuntimeData
+from .services import async_register_services
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Growatt Server component."""
+    # Register services
+    await async_register_services(hass)
+    return True
 
 
 def get_device_list_classic(
@@ -51,6 +64,9 @@ def get_device_list_classic(
 
     user_id = login_response["user"]["id"]
 
+    # Legacy support: DEFAULT_PLANT_ID ("0") triggers auto-selection of first plant.
+    # Modern config flow always sets a specific plant_id, but old config entries
+    # from earlier versions may still have plant_id="0".
     if plant_id == DEFAULT_PLANT_ID:
         try:
             plant_info = api.plant_list(user_id)
@@ -118,7 +134,9 @@ def get_device_list(
         return get_device_list_v1(api, config)
     if api_version == "classic":
         return get_device_list_classic(api, config)
-    raise ConfigEntryError(f"Unknown API version: {api_version}")
+    # Defensive: api_version is hardcoded in async_setup_entry as "v1" or "classic"
+    # This line is unreachable through normal execution but kept as a safeguard
+    raise ConfigEntryError(f"Unknown API version: {api_version}")  # pragma: no cover
 
 
 async def async_setup_entry(

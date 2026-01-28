@@ -2160,7 +2160,7 @@ async def test_dhcp_while_user_flow_pending(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-    assert result_user["type"] == FlowResultType.FORM
+    assert result_user["type"] is FlowResultType.FORM
     assert result_user["step_id"] == "user"
 
     # While user flow is pending (form shown), trigger DHCP flow
@@ -2178,4 +2178,4 @@ async def test_dhcp_while_user_flow_pending(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp_data,
         )
-    assert result_dhcp["type"] == FlowResultType.ABORT
+    assert result_dhcp["type"] is FlowResultType.ABORT

@@ -14,11 +14,12 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/insteon",
+  "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["pyinsteon", "pypubsub"],
   "requirements": [
-    "pyinsteon==1.6.3",
-    "insteon-frontend-home-assistant==0.5.0"
+    "pyinsteon==1.6.4",
+    "insteon-frontend-home-assistant==0.6.1"
   ],
   "single_config_entry": true,
   "usb": [

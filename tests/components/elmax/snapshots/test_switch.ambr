@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'USCITA 02',
     'options': dict({
     }),
     'original_device_class': None,
