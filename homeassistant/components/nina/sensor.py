@@ -120,7 +120,7 @@ class NinaSensor(NinaEntity, SensorEntity):
 
         self.entity_description = description
 
-        self._attr_unique_id = f"{region_name}-{slot_id}-{self.entity_description.key}"
+        self._attr_unique_id = f"{region}-{slot_id}-{self.entity_description.key}"
 
     @property
     def available(self) -> bool:
