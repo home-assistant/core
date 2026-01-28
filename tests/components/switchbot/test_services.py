@@ -176,7 +176,7 @@ async def test_missing_device_id(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_PASSWORD,
-            {"password": "123456"},
+            {"password": "123456", "device_id": []},
             blocking=True,
         )
 

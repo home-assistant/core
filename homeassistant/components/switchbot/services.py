@@ -8,11 +8,10 @@ from typing import cast
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_SENSOR_TYPE
+from homeassistant.const import ATTR_DEVICE_ID, CONF_SENSOR_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.target import TargetSelection
 
 from .const import DOMAIN, SupportedModels
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
@@ -25,15 +24,8 @@ _PASSWORD_VALIDATOR = vol.All(cv.string, cv.matches_regex(r"^\d{6,12}$"))
 
 SCHEMA_ADD_PASSWORD_SERVICE = vol.Schema(
     {
+        vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [str]),
         vol.Required(ATTR_PASSWORD): _PASSWORD_VALIDATOR,
-        **cv.TARGET_SERVICE_FIELDS,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-SCHEMA_GET_PASSWORD_COUNT_SERVICE = vol.Schema(
-    {
-        **cv.TARGET_SERVICE_FIELDS,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -104,8 +96,7 @@ def _is_supported_keypad(entry: SwitchbotConfigEntry) -> bool:
 @callback
 def _async_extract_target_device_ids(call: ServiceCall) -> set[str]:
     """Extract device ids from a service call target."""
-    selection = TargetSelection(call.data)
-    device_ids = set(selection.device_ids)
+    device_ids = set(cv.ensure_list(call.data[ATTR_DEVICE_ID]))
     if not device_ids:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
