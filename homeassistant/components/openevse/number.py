@@ -10,7 +10,6 @@ from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
-    NumberMode,
 )
 from homeassistant.const import (
     ATTR_CONNECTIONS,
@@ -49,7 +48,6 @@ NUMBER_TYPES: tuple[OpenEVSENumberDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=NumberDeviceClass.CURRENT,
-        mode=NumberMode.AUTO,
     ),
 )
 

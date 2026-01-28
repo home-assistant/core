@@ -5,8 +5,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 48.0,
-      'min': 6.0,
+      'max': 48,
+      'min': 6,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
     }),
@@ -45,8 +45,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'current',
       'friendly_name': 'openevse_mock_config Charge rate',
-      'max': 48.0,
-      'min': 6.0,
+      'max': 48,
+      'min': 6,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
@@ -56,6 +56,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.0',
+    'state': '20',
   })
 # ---

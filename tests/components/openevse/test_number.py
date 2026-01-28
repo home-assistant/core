@@ -5,8 +5,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, SERVICE_SET_VALUE
-from homeassistant.const import Platform
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -39,19 +43,10 @@ async def test_set_value(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "number.openevse_mock_config_charge_rate"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "1.0"
-    assert state.attributes["max"] == 48.0
-    assert state.attributes["min"] == 6.0
-
-    servicedata = {
-        "entity_id": entity_id,
-        "value": 32.0,
-    }
-
     await hass.services.async_call(
-        NUMBER_DOMAIN, SERVICE_SET_VALUE, servicedata, blocking=True
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: "number.openevse_mock_config_charge_rate", ATTR_VALUE: 32.0},
+        blocking=True,
     )
-    await hass.async_block_till_done()
+    mock_charger.set_current.assert_called_once_with(32.0)
