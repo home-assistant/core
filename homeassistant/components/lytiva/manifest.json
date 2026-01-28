@@ -1,0 +1,23 @@
+{
+  "domain": "lytiva",
+  "name": "Lytiva",
+  "version": "1.0.0",
+  "documentation": "https://www.home-assistant.io/integrations/lytiva",
+  "issue_tracker": "https://github.com/home-assistant/core/issues",
+  "requirements": [
+    "lytiva-connect==1.0.1"
+  ],
+  "dependencies": [
+    "mqtt"
+  ],
+  "codeowners": [
+    "@lytiva"
+  ],
+  "mqtt": [
+    "LYT/homeassistant/#"
+  ],
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "config_flow": true,
+  "quality_scale": "silver"
+}
