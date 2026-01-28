@@ -8,11 +8,9 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .api import NRGkickApiClientInvalidResponseError, async_api_call
-from .const import DOMAIN
+from .api import async_api_call
 from .coordinator import NRGkickConfigEntry, NRGkickData, NRGkickDataUpdateCoordinator
 from .entity import NRGkickEntity
 
@@ -24,9 +22,7 @@ class NRGkickSwitchEntityDescription(SwitchEntityDescription):
     """Class describing NRGkick switch entities."""
 
     is_on_fn: Callable[[NRGkickData], bool]
-    set_pause_fn: Callable[
-        [NRGkickDataUpdateCoordinator, bool], Awaitable[dict[str, Any]]
-    ]
+    set_pause_fn: Callable[[NRGkickDataUpdateCoordinator, bool], Awaitable[int]]
 
 
 def _is_charging_enabled(data: NRGkickData) -> bool:
@@ -37,36 +33,9 @@ def _is_charging_enabled(data: NRGkickData) -> bool:
 
 async def _async_set_charge_pause(
     coordinator: NRGkickDataUpdateCoordinator, pause: bool
-) -> dict[str, Any]:
+) -> int:
     """Set the charge pause state."""
-    response = await async_api_call(coordinator.api.set_charge_pause(pause))
-
-    if (reason := response.get("Response")) and isinstance(reason, str):
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="command_rejected",
-            translation_placeholders={"reason": reason},
-        )
-
-    if "charge_pause" not in response:
-        raise NRGkickApiClientInvalidResponseError
-
-    try:
-        charge_pause = int(response["charge_pause"])
-    except (TypeError, ValueError) as err:
-        raise NRGkickApiClientInvalidResponseError from err
-
-    expected = 1 if pause else 0
-    if charge_pause != expected:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="command_rejected",
-            translation_placeholders={
-                "reason": f"Unexpected charge_pause value: {charge_pause}",
-            },
-        )
-
-    return response
+    return await async_api_call(coordinator.api.set_charge_pause(pause))
 
 
 SWITCHES: tuple[NRGkickSwitchEntityDescription, ...] = (

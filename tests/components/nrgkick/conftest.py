@@ -48,10 +48,10 @@ def mock_nrgkick_api(
         api.get_control.return_value = mock_control_data
         api.get_values.return_value = mock_values_data
 
-        api.set_current.return_value = {"current_set": 16.0}
-        api.set_charge_pause.return_value = {"charge_pause": 0}
-        api.set_energy_limit.return_value = {"energy_limit": 0}
-        api.set_phase_count.return_value = {"phase_count": 3}
+        api.set_current.return_value = 16.0
+        api.set_charge_pause.return_value = 0
+        api.set_energy_limit.return_value = 0
+        api.set_phase_count.return_value = 3
 
         yield api
 

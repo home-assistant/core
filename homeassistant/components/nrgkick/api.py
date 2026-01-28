@@ -9,7 +9,9 @@ import aiohttp
 from nrgkick_api import (
     NRGkickAPIDisabledError,
     NRGkickAuthenticationError,
+    NRGkickCommandRejectedError,
     NRGkickConnectionError,
+    NRGkickInvalidResponseError,
 )
 
 from homeassistant.exceptions import HomeAssistantError
@@ -63,10 +65,18 @@ async def async_api_call(awaitable: Awaitable[_T]) -> _T:
     """
     try:
         return await awaitable
+    except NRGkickCommandRejectedError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_rejected",
+            translation_placeholders={"reason": err.reason},
+        ) from err
     except NRGkickAuthenticationError as err:
         raise NRGkickApiClientAuthenticationError from err
     except NRGkickAPIDisabledError as err:
         raise NRGkickApiClientApiDisabledError from err
+    except NRGkickInvalidResponseError as err:
+        raise NRGkickApiClientInvalidResponseError from err
     except NRGkickConnectionError as err:
         raise NRGkickApiClientCommunicationError(
             translation_placeholders={"error": str(err)}

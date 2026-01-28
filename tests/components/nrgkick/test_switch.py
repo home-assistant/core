@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, call
 
+from nrgkick_api import NRGkickCommandRejectedError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -41,8 +42,8 @@ async def test_charge_switch_service_calls_update_state(
     """Test the charge switch calls the API and updates state."""
     await setup_integration(hass, mock_config_entry, platforms=[Platform.SWITCH])
 
-    async def set_charge_pause(pause: bool) -> dict[str, int]:
-        return {"charge_pause": 1 if pause else 0}
+    async def set_charge_pause(pause: bool) -> int:
+        return 1 if pause else 0
 
     mock_nrgkick_api.set_charge_pause.side_effect = set_charge_pause
 
@@ -102,10 +103,10 @@ async def test_charge_switch_rejected_by_device(
     )
     entity_id = entity_entry.entity_id
 
-    # Device refuses the command and returns a textual response.
-    mock_nrgkick_api.set_charge_pause.return_value = {
-        "Response": "Charging pause is blocked by solar-charging"
-    }
+    # Device refuses the command and the library raises an exception.
+    mock_nrgkick_api.set_charge_pause.side_effect = NRGkickCommandRejectedError(
+        "Charging pause is blocked by solar-charging"
+    )
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
