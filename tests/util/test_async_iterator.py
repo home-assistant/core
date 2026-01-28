@@ -114,3 +114,23 @@ async def test_async_iterator_writer_abort_late(hass: HomeAssistant) -> None:
 
     with pytest.raises(Abort):
         await fut
+
+
+async def test_async_iterator_writer_exhausted(hass: HomeAssistant) -> None:
+    """Test that reading from exhausted writer doesn't block."""
+    writer = AsyncIteratorWriter(hass.loop)
+
+    # Write some data and signal end of stream
+    fut = hass.async_add_executor_job(_write_all, writer, [b"test"])
+
+    # Read all data
+    read = b""
+    async for data in writer:
+        read += data
+
+    await fut
+    assert read == b"test"
+
+    # Calling anext again after exhaustion should raise immediately, not block
+    with pytest.raises(StopAsyncIteration):
+        await anext(writer)
