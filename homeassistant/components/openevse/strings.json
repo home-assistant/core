@@ -30,6 +30,11 @@
     }
   },
   "entity": {
+    "number": {
+      "charge_rate": {
+        "name": "Charge rate"
+      }
+    },
     "sensor": {
       "ambient_temp": {
         "name": "Ambient temperature"

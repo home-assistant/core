@@ -57,6 +57,7 @@ def mock_charger() -> Generator[MagicMock]:
         charger.max_current = 48
         charger.min_amps = 6
         charger.max_amps = 48
+        charger.max_current_soft = 20
         # Divert/solar mode sensors
         charger.available_current = 32.0
         charger.smoothed_available_current = 32.0
