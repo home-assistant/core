@@ -176,6 +176,8 @@ SONOS_MEDIA_UPDATED = "sonos_media_updated"
 SONOS_SPEAKER_ACTIVITY = "sonos_speaker_activity"
 SONOS_SPEAKER_ADDED = "sonos_speaker_added"
 SONOS_STATE_UPDATED = "sonos_state_updated"
+SONOS_GROUP_VOLUME_REFRESHED = "sonos_group_volume_refreshed"
+SONOS_GROUP_VOLUME_REQUEST = "sonos_group_volume_request"
 SONOS_REBOOTED = "sonos_rebooted"
 SONOS_VANISHED = "sonos_vanished"
 
