@@ -4,12 +4,17 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 from typing import Any
 
 from greenplanet_energy_api import GreenPlanetEnergyAPI
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -28,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 class GreenPlanetEnergySensorEntityDescription(SensorEntityDescription):
     """Describes Green Planet Energy sensor entity."""
 
-    value_fn: Callable[[GreenPlanetEnergyAPI, dict[str, Any]], float | None]
+    value_fn: Callable[[GreenPlanetEnergyAPI, dict[str, Any]], float | datetime | None]
 
 
 SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
@@ -41,6 +46,16 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         value_fn=lambda api, data: api.get_highest_price_today(data),
     ),
     GreenPlanetEnergySensorEntityDescription(
+        key="gpe_highest_price_time",
+        translation_key="highest_price_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda api, data: (
+            dt_util.start_of_local_day().replace(hour=hour)
+            if (hour := api.get_highest_price_today_with_hour(data)[1]) is not None
+            else None
+        ),
+    ),
+    GreenPlanetEnergySensorEntityDescription(
         key="gpe_lowest_price_day",
         translation_key="lowest_price_day",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
@@ -49,12 +64,34 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         value_fn=lambda api, data: api.get_lowest_price_day(data),
     ),
     GreenPlanetEnergySensorEntityDescription(
+        key="gpe_lowest_price_day_time",
+        translation_key="lowest_price_day_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        translation_placeholders={"time_range": "(06:00-18:00)"},
+        value_fn=lambda api, data: (
+            dt_util.start_of_local_day().replace(hour=hour)
+            if (hour := api.get_lowest_price_day_with_hour(data)[1]) is not None
+            else None
+        ),
+    ),
+    GreenPlanetEnergySensorEntityDescription(
         key="gpe_lowest_price_night",
         translation_key="lowest_price_night",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=4,
         translation_placeholders={"time_range": "(18:00-06:00)"},
         value_fn=lambda api, data: api.get_lowest_price_night(data),
+    ),
+    GreenPlanetEnergySensorEntityDescription(
+        key="gpe_lowest_price_night_time",
+        translation_key="lowest_price_night_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        translation_placeholders={"time_range": "(18:00-06:00)"},
+        value_fn=lambda api, data: (
+            dt_util.start_of_local_day().replace(hour=hour)
+            if (hour := api.get_lowest_price_night_with_hour(data)[1]) is not None
+            else None
+        ),
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_current_price",
@@ -105,7 +142,7 @@ class GreenPlanetEnergySensor(
         )
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(
             self.coordinator.api, self.coordinator.data
