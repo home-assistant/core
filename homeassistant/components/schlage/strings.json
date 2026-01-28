@@ -56,8 +56,47 @@
     }
   },
   "exceptions": {
+    "schlage_code_exists": {
+      "message": "A PIN code with this value already exists on the lock"
+    },
+    "schlage_code_required": {
+      "message": "PIN code is required"
+    },
+    "schlage_name_exists": {
+      "message": "A PIN code with this name already exists on the lock"
+    },
     "schlage_refresh_failed": {
       "message": "Failed to refresh Schlage data"
+    }
+  },
+  "services": {
+    "add_code": {
+      "description": "Add a PIN code to a lock.",
+      "fields": {
+        "code": {
+          "description": "The PIN code to add. Must be unique to lock and be between 4 and 8 digits long.",
+          "name": "PIN code"
+        },
+        "name": {
+          "description": "Name for PIN code. Must be unique to lock.",
+          "name": "PIN Name"
+        }
+      },
+      "name": "Add PIN code"
+    },
+    "delete_code": {
+      "description": "Delete a PIN code from a lock.",
+      "fields": {
+        "name": {
+          "description": "Name of PIN code to delete.",
+          "name": "PIN Name"
+        }
+      },
+      "name": "Delete PIN code"
+    },
+    "get_codes": {
+      "description": "Retrieve all PIN codes from the lock",
+      "name": "Get PIN codes"
     }
   }
 }

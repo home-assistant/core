@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from pyschlage.code import AccessCode
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import LockData, SchlageConfigEntry, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
@@ -64,3 +68,74 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         """Unlock the device."""
         await self.hass.async_add_executor_job(self._lock.unlock)
         await self.coordinator.async_request_refresh()
+
+    def _validate_code_name(
+        self, codes: dict[str, AccessCode] | None, name: str
+    ) -> None:
+        """Validate that the code name doesn't already exist."""
+        if codes and any(code.name.lower() == name.lower() for code in codes.values()):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="schlage_name_exists",
+            )
+
+    def _validate_code_value(
+        self, codes: dict[str, AccessCode] | None, code: str
+    ) -> None:
+        """Validate that the code value doesn't already exist."""
+        if codes and any(
+            existing_code.code == code for existing_code in codes.values()
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="schlage_code_exists",
+            )
+
+    async def add_code(self, name: str, code: str) -> None:
+        """Add a lock code."""
+
+        if TYPE_CHECKING:
+            assert code is not None
+
+        codes = self._lock.access_codes
+        self._validate_code_name(codes, name)
+        self._validate_code_value(codes, code)
+
+        access_code = AccessCode(name=name, code=code)
+        await self.hass.async_add_executor_job(self._lock.add_access_code, access_code)
+        await self.coordinator.async_request_refresh()
+
+    async def delete_code(self, name: str) -> None:
+        """Delete a lock code."""
+        codes = self._lock.access_codes
+        if not codes:
+            return
+
+        code_id_to_delete = next(
+            (
+                code_id
+                for code_id, code_data in codes.items()
+                if code_data.name.lower() == name.lower()
+            ),
+            None,
+        )
+
+        if not code_id_to_delete:
+            return
+
+        if self._lock.access_codes:
+            await self.hass.async_add_executor_job(codes[code_id_to_delete].delete)
+            await self.coordinator.async_request_refresh()
+
+    async def get_codes(self) -> ServiceResponse:
+        """Get lock codes."""
+
+        if self._lock.access_codes:
+            return {
+                code: {
+                    "name": self._lock.access_codes[code].name,
+                    "code": self._lock.access_codes[code].code,
+                }
+                for code in self._lock.access_codes
+            }
+        return {}
