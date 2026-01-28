@@ -243,32 +243,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     user_input, self._all_region_codes_sorted
                 )
 
-                entity_registry = er.async_get(self.hass)
-
-                entries = er.async_entries_for_config_entry(
-                    entity_registry, self.config_entry.entry_id
-                )
-
-                removed_entities_slots = [
-                    f"{region}-{slot_id}"
-                    for region in self.data[CONF_REGIONS]
-                    for slot_id in range(self.data[CONF_MESSAGE_SLOTS] + 1)
-                    if slot_id > user_input[CONF_MESSAGE_SLOTS]
-                ]
-
-                removed_entities_area = [
-                    f"{cfg_region}-{slot_id}"
-                    for slot_id in range(1, self.data[CONF_MESSAGE_SLOTS] + 1)
-                    for cfg_region in self.data[CONF_REGIONS]
-                    if cfg_region not in user_input[CONF_REGIONS]
-                ]
-
-                for entry in entries:
-                    for entity_uid in list(
-                        set(removed_entities_slots + removed_entities_area)
-                    ):
-                        if entry.unique_id == entity_uid:
-                            entity_registry.async_remove(entry.entity_id)
+                await self.remove_unused_entities(user_input)
 
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=user_input
@@ -287,3 +262,42 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             data_schema=schema_with_suggested,
             errors=errors,
         )
+
+    async def remove_unused_entities(self, user_input: dict[str, Any]) -> None:
+        """Remove entities which are not used anymore."""
+        entity_registry = er.async_get(self.hass)
+
+        entries = er.async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        )
+
+        id_type_suffix = [
+            "-headline",
+            "-sender",
+            "-severity",
+            "-affected_areas",
+            "-more_info_url",
+            "",
+        ]
+
+        removed_entities_slots = [
+            f"{region}-{slot_id}{suffix}"
+            for region in self.data[CONF_REGIONS]
+            for slot_id in range(self.data[CONF_MESSAGE_SLOTS] + 1)
+            for suffix in id_type_suffix
+            if slot_id > user_input[CONF_MESSAGE_SLOTS]
+        ]
+
+        removed_entities_area = [
+            f"{cfg_region}-{slot_id}{suffix}"
+            for slot_id in range(1, self.data[CONF_MESSAGE_SLOTS] + 1)
+            for cfg_region in self.data[CONF_REGIONS]
+            for suffix in id_type_suffix
+            if cfg_region not in user_input[CONF_REGIONS]
+        ]
+
+        for entry in entries:
+            for entity_uid in set(removed_entities_slots + removed_entities_area):
+                if entry.unique_id == entity_uid:
+                    entity_registry.async_remove(entry.entity_id)
+                    break

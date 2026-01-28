@@ -285,6 +285,17 @@ async def test_options_flow_entity_removal(
     """Test if old entities are removed."""
     await setup_platform(hass, mock_config_entry, mock_nina_class, nina_warnings)
 
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    entities_per_slot = 6
+
+    assert (
+        len(entries)
+        == mock_config_entry.data.get(CONF_MESSAGE_SLOTS) * entities_per_slot
+    )
+
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     new_slot_count = 2
@@ -309,4 +320,4 @@ async def test_options_flow_entity_removal(
         entity_registry, mock_config_entry.entry_id
     )
 
-    assert len(entries) == new_slot_count
+    assert len(entries) == new_slot_count * entities_per_slot

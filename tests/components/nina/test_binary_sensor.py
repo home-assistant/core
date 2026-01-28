@@ -16,11 +16,11 @@ from homeassistant.components.nina.const import (
     CONF_REGIONS,
     DOMAIN,
 )
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_platform
+from . import setup_single_platform
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -43,7 +43,7 @@ ENTRY_DATA_SPECIFIC_AREA: dict[str, Any] = {
 }
 
 
-async def test_sensors(
+async def test_binary_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
@@ -52,11 +52,13 @@ async def test_sensors(
     nina_warnings: list[Warning],
 ) -> None:
     """Test the creation and values of the NINA sensors."""
-    await setup_platform(hass, mock_config_entry, mock_nina_class, nina_warnings)
+    await setup_single_platform(
+        hass, mock_config_entry, Platform.BINARY_SENSOR, mock_nina_class, nina_warnings
+    )
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_sensors_without_corona_filter(
+async def test_binary_sensors_without_corona_filter(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -74,7 +76,9 @@ async def test_sensors_without_corona_filter(
     )
     conf_entry.add_to_hass(hass)
 
-    await setup_platform(hass, conf_entry, mock_nina_class, nina_warnings)
+    await setup_single_platform(
+        hass, conf_entry, Platform.BINARY_SENSOR, mock_nina_class, nina_warnings
+    )
 
     state_w1 = hass.states.get("binary_sensor.nina_warning_aach_stadt_1")
 
@@ -102,7 +106,7 @@ async def test_sensors_without_corona_filter(
     assert state_w5.state == STATE_OFF
 
 
-async def test_sensors_with_area_filter(
+async def test_binary_sensors_with_area_filter(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
@@ -120,7 +124,9 @@ async def test_sensors_with_area_filter(
     )
     conf_entry.add_to_hass(hass)
 
-    await setup_platform(hass, conf_entry, mock_nina_class, nina_warnings)
+    await setup_single_platform(
+        hass, conf_entry, Platform.BINARY_SENSOR, mock_nina_class, nina_warnings
+    )
 
     state_w1 = hass.states.get("binary_sensor.nina_warning_aach_stadt_1")
 
