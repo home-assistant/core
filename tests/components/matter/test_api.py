@@ -211,7 +211,7 @@ async def test_node_diagnostics(
         network_type=NetworkType.WIFI,
         node_type=NodeType.END_DEVICE,
         network_name="SuperCoolWiFi",
-        ip_adresses=["192.168.1.1", "fe80::260:97ff:fe02:6ea5"],
+        ip_addresses=["192.168.1.1", "fe80::260:97ff:fe02:6ea5"],
         mac_address="00:11:22:33:44:55",
         available=True,
         active_fabrics=[MatterFabricData(2, 4939, 1, vendor_name="Nabu Casa")],
