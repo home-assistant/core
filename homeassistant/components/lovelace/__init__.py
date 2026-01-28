@@ -21,7 +21,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     issue_registry as ir,
 )
-from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
@@ -108,34 +107,6 @@ class LovelaceData:
     dashboards: dict[str | None, dashboard.LovelaceConfig]
     resources: resources.ResourceYAMLCollection | resources.ResourceStorageCollection
     yaml_dashboards: dict[str | None, ConfigType]
-
-    def __getitem__(self, name: str) -> Any:
-        """Enable method for compatibility reason.
-
-        Following migration from an untyped dict to a dataclass in
-        https://github.com/home-assistant/core/pull/136313
-        """
-        report_usage(
-            f"accessed lovelace_data['{name}'] instead of lovelace_data.{name}",
-            breaks_in_ha_version="2026.2",
-            exclude_integrations={DOMAIN},
-        )
-        return getattr(self, name)
-
-    def get(self, name: str, default: Any = None) -> Any:
-        """Enable method for compatibility reason.
-
-        Following migration from an untyped dict to a dataclass in
-        https://github.com/home-assistant/core/pull/136313
-        """
-        report_usage(
-            f"accessed lovelace_data.get('{name}') instead of lovelace_data.{name}",
-            breaks_in_ha_version="2026.2",
-            exclude_integrations={DOMAIN},
-        )
-        if hasattr(self, name):
-            return getattr(self, name)
-        return default
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
