@@ -401,7 +401,7 @@ async def test_state_brightness_color_effect_temp_change_via_topic(
     async_fire_mqtt_message(hass, "test_light_rgb", "on,,195")
 
     light_state = hass.states.get("light.test")
-    assert light_state.attributes["color_temp"] == 195
+    assert light_state.attributes[light.ATTR_COLOR_TEMP_KELVIN] == 5128
 
     # change the color
     async_fire_mqtt_message(hass, "test_light_rgb", "on,,,41-42-43")
@@ -1287,8 +1287,8 @@ async def test_max_mireds(
     await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
-    assert state.attributes.get("min_mireds") == 153
-    assert state.attributes.get("max_mireds") == 370
+    assert state.attributes.get(light.ATTR_MIN_COLOR_TEMP_KELVIN) == 2702
+    assert state.attributes.get(light.ATTR_MAX_COLOR_TEMP_KELVIN) == 6535
 
 
 @pytest.mark.parametrize(

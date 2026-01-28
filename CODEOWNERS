@@ -288,6 +288,8 @@ build.json @home-assistant/supervisor
 /tests/components/cloud/ @home-assistant/cloud
 /homeassistant/components/cloudflare/ @ludeeus @ctalkington
 /tests/components/cloudflare/ @ludeeus @ctalkington
+/homeassistant/components/cloudflare_r2/ @corrreia
+/tests/components/cloudflare_r2/ @corrreia
 /homeassistant/components/co2signal/ @jpbede @VIKTORVAV99
 /tests/components/co2signal/ @jpbede @VIKTORVAV99
 /homeassistant/components/coinbase/ @tombrien
@@ -1128,6 +1130,8 @@ build.json @home-assistant/supervisor
 /tests/components/notify_events/ @matrozov @papajojo
 /homeassistant/components/notion/ @bachya
 /tests/components/notion/ @bachya
+/homeassistant/components/nrgkick/ @andijakl
+/tests/components/nrgkick/ @andijakl
 /homeassistant/components/nsw_fuel_station/ @nickw444
 /tests/components/nsw_fuel_station/ @nickw444
 /homeassistant/components/nsw_rural_fire_service_feed/ @exxamalte
@@ -1263,6 +1267,8 @@ build.json @home-assistant/supervisor
 /tests/components/powerfox/ @klaasnicolaas
 /homeassistant/components/powerwall/ @bdraco @jrester @daniel-simpson
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
+/homeassistant/components/prana/ @prana-dev-official
+/tests/components/prana/ @prana-dev-official
 /homeassistant/components/private_ble_device/ @Jc2k
 /tests/components/private_ble_device/ @Jc2k
 /homeassistant/components/probe_plus/ @pantherale0
@@ -1726,6 +1732,8 @@ build.json @home-assistant/supervisor
 /tests/components/twinkly/ @dr1rrb @Robbie1221 @Olen
 /homeassistant/components/twitch/ @joostlek
 /tests/components/twitch/ @joostlek
+/homeassistant/components/uhoo/ @getuhoo @joshsmonta
+/tests/components/uhoo/ @getuhoo @joshsmonta
 /homeassistant/components/ukraine_alarm/ @PaulAnnekov
 /tests/components/ukraine_alarm/ @PaulAnnekov
 /homeassistant/components/unifi/ @Kane610

@@ -210,6 +210,7 @@ aiobafi6==0.9.0
 
 # homeassistant.components.aws
 # homeassistant.components.aws_s3
+# homeassistant.components.cloudflare_r2
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
@@ -573,13 +574,13 @@ beautifulsoup4==4.13.3
 bimmer-connected[china]==0.17.3
 
 # homeassistant.components.esphome
-bleak-esphome==3.4.1
+bleak-esphome==3.5.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.4.3
 
 # homeassistant.components.bluetooth
-bleak==2.0.0
+bleak==2.1.1
 
 # homeassistant.components.blebox
 blebox-uniapi==2.5.0
@@ -691,7 +692,7 @@ dbus-fast==3.1.2
 debugpy==1.8.17
 
 # homeassistant.components.ecovacs
-deebot-client==17.0.1
+deebot-client==17.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.ohmconnect
@@ -886,7 +887,7 @@ foobot_async==1.0.0
 forecast-solar==4.2.0
 
 # homeassistant.components.freebox
-freebox-api==1.2.2
+freebox-api==1.3.0
 
 # homeassistant.components.fressnapf_tracker
 fressnapftracker==0.2.1
@@ -1085,7 +1086,7 @@ home-assistant-intents==2026.1.6
 homelink-integration-api==0.0.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.4.0
+homematicip==2.5.0
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1136,7 +1137,7 @@ imgw_pib==2.0.1
 incomfort-client==0.6.11
 
 # homeassistant.components.influxdb
-influxdb-client==1.48.0
+influxdb-client==1.50.0
 
 # homeassistant.components.influxdb
 influxdb==5.3.1
@@ -1248,7 +1249,7 @@ loqedAPI==2.1.10
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.5.7
+lunatone-rest-api-client==0.6.3
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -1285,7 +1286,7 @@ melnor-bluetooth==0.0.25
 meteo-lt-pkg==0.2.4
 
 # homeassistant.components.meteo_france
-meteofrance-api==1.4.0
+meteofrance-api==1.5.0
 
 # homeassistant.components.mfi
 mficlient==0.5.0
@@ -1388,6 +1389,9 @@ notifications-android-tv==0.1.5
 
 # homeassistant.components.notify_events
 notify-events==1.0.4
+
+# homeassistant.components.nrgkick
+nrgkick-api==1.6.0
 
 # homeassistant.components.nederlandse_spoorwegen
 nsapi==3.1.3
@@ -1513,6 +1517,9 @@ poolsense==0.0.8
 # homeassistant.components.powerfox
 powerfox==2.0.0
 
+# homeassistant.components.prana
+prana-api-client==0.10.0
+
 # homeassistant.components.reddit
 praw==7.5.0
 
@@ -1594,7 +1601,7 @@ pyDuotecno==2024.10.1
 pyElectra==1.2.4
 
 # homeassistant.components.hikvision
-pyHik==0.4.0
+pyHik==0.4.1
 
 # homeassistant.components.homee
 pyHomee==1.3.8
@@ -2040,7 +2047,7 @@ pyserial==3.5
 pyseventeentrack==1.1.1
 
 # homeassistant.components.sia
-pysiaalarm==3.1.1
+pysiaalarm==3.2.2
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.24
@@ -2179,7 +2186,7 @@ python-pooldose==0.8.2
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==4.7.2
+python-roborock==4.8.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.46
@@ -2237,7 +2244,7 @@ pyuptimerobot==22.2.0
 pyvera==0.3.16
 
 # homeassistant.components.vesync
-pyvesync==3.3.3
+pyvesync==3.4.1
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -2315,7 +2322,7 @@ renault-api==0.5.2
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.18.0
+reolink-aio==0.18.1
 
 # homeassistant.components.rflink
 rflink==0.0.67
@@ -2581,6 +2588,9 @@ typedmonarchmoney==0.4.4
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
+
+# homeassistant.components.uhoo
+uhooapi==1.2.6
 
 # homeassistant.components.unifiprotect
 uiprotect==10.0.1

@@ -196,7 +196,7 @@ def state[_LimitlessLEDGroupT: LimitlessLEDGroup, **_P](
             pipeline = Pipeline()
             transition_time = DEFAULT_TRANSITION
             if self.effect == EFFECT_COLORLOOP:
-                self.group.stop()
+                self.led_group.stop()
             self._attr_effect = None
             # Set transition time.
             if ATTR_TRANSITION in kwargs:
@@ -205,7 +205,7 @@ def state[_LimitlessLEDGroupT: LimitlessLEDGroup, **_P](
             function(self, transition_time, pipeline, *args, **kwargs)
             # Update state.
             self._attr_is_on = new_state
-            self.group.enqueue(pipeline)
+            self.led_group.enqueue(pipeline)
             self.schedule_update_ha_state()
 
         return wrapper
@@ -250,7 +250,7 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
                 ColorMode.HS,
             }
 
-        self.group = group
+        self.led_group = group
         self._attr_name = group.name
         self.config = config
         self._attr_is_on = False
@@ -275,7 +275,7 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         return self._attr_brightness
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._fixed_color_mode:
             return self._fixed_color_mode

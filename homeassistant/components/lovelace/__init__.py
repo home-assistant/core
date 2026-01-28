@@ -1,7 +1,9 @@
 """Support for the Lovelace UI."""
 
+from contextlib import suppress
 from dataclasses import dataclass
 import logging
+import os
 from typing import Any
 
 import voluptuous as vol
@@ -14,9 +16,13 @@ from homeassistant.config import (
 from homeassistant.const import CONF_FILENAME, CONF_MODE, CONF_RESOURCES
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import collection, config_validation as cv
-from homeassistant.helpers.frame import report_usage
+from homeassistant.helpers import (
+    collection,
+    config_validation as cv,
+    issue_registry as ir,
+)
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
@@ -34,6 +40,7 @@ from .const import (  # noqa: F401
     DEFAULT_ICON,
     DOMAIN,
     EVENT_LOVELACE_UPDATED,
+    LOVELACE_CONFIG_FILE,
     LOVELACE_DATA,
     MODE_STORAGE,
     MODE_YAML,
@@ -101,48 +108,24 @@ class LovelaceData:
     resources: resources.ResourceYAMLCollection | resources.ResourceStorageCollection
     yaml_dashboards: dict[str | None, ConfigType]
 
-    def __getitem__(self, name: str) -> Any:
-        """Enable method for compatibility reason.
-
-        Following migration from an untyped dict to a dataclass in
-        https://github.com/home-assistant/core/pull/136313
-        """
-        report_usage(
-            f"accessed lovelace_data['{name}'] instead of lovelace_data.{name}",
-            breaks_in_ha_version="2026.2",
-            exclude_integrations={DOMAIN},
-        )
-        return getattr(self, name)
-
-    def get(self, name: str, default: Any = None) -> Any:
-        """Enable method for compatibility reason.
-
-        Following migration from an untyped dict to a dataclass in
-        https://github.com/home-assistant/core/pull/136313
-        """
-        report_usage(
-            f"accessed lovelace_data.get('{name}') instead of lovelace_data.{name}",
-            breaks_in_ha_version="2026.2",
-            exclude_integrations={DOMAIN},
-        )
-        if hasattr(self, name):
-            return getattr(self, name)
-        return default
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Lovelace commands."""
     mode = config[DOMAIN][CONF_MODE]
     yaml_resources = config[DOMAIN].get(CONF_RESOURCES)
 
-    frontend.async_register_built_in_panel(
-        hass,
-        DOMAIN,
-        config={"mode": mode},
-        sidebar_title="overview",
-        sidebar_icon="mdi:view-dashboard",
-        sidebar_default_visible=False,
-    )
+    # Deprecated - Remove in 2026.8
+    # For YAML mode, register the default panel in yaml mode (temporary until user migrates)
+    if mode == MODE_YAML:
+        frontend.async_register_built_in_panel(
+            hass,
+            DOMAIN,
+            config={"mode": mode},
+            sidebar_title="overview",
+            sidebar_icon="mdi:view-dashboard",
+            sidebar_default_visible=False,
+        )
+        _async_create_yaml_mode_repair(hass)
 
     async def reload_resources_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml resources."""
@@ -238,6 +221,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if change_type == collection.CHANGE_REMOVED:
             frontend.async_remove_panel(hass, url_path)
             await hass.data[LOVELACE_DATA].dashboards.pop(url_path).async_delete()
+            # Re-register default lovelace panel if the "lovelace" dashboard was deleted
+            if url_path == DOMAIN:
+                _async_ensure_default_panel(hass)
             return
 
         if change_type == collection.CHANGE_ADDED:
@@ -282,6 +268,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     dashboards_collection.async_add_listener(storage_dashboard_changed)
     await dashboards_collection.async_load()
 
+    # Migrate default lovelace panel to dashboard entry (storage mode only)
+    if mode == MODE_STORAGE:
+        await _async_migrate_default_config(hass, dashboards_collection)
+
+    # Ensure lovelace panel is always registered for backwards compatibility
+    _async_ensure_default_panel(hass)
+
     dashboard.DashboardsCollectionWebSocket(
         dashboards_collection,
         "lovelace/dashboards",
@@ -319,6 +312,16 @@ async def create_yaml_resource_col(
                 yaml_resources = ll_conf[CONF_RESOURCES]
 
     return resources.ResourceYAMLCollection(yaml_resources or [])
+
+
+@callback
+def _async_ensure_default_panel(hass: HomeAssistant) -> None:
+    """Ensure a default lovelace panel is registered for backward compatibility."""
+    if (
+        frontend.DATA_PANELS not in hass.data
+        or DOMAIN not in hass.data[frontend.DATA_PANELS]
+    ):
+        frontend.async_register_built_in_panel(hass, DOMAIN)
 
 
 @callback
@@ -360,3 +363,101 @@ async def _create_map_dashboard(
 
     map_store = hass.data[LOVELACE_DATA].dashboards["map"]
     await map_store.async_save({"strategy": {"type": "map"}})
+
+
+async def _async_migrate_default_config(
+    hass: HomeAssistant, dashboards_collection: dashboard.DashboardsCollection
+) -> None:
+    """Migrate default lovelace storage config to a named dashboard entry.
+
+    This migration:
+    1. Skips if a dashboard with url_path "lovelace" already exists
+    2. Skips if .storage/lovelace has no data
+    3. Creates a new dashboard entry with url_path "lovelace"
+    4. Handles storage files:
+       a. If .storage/lovelace.lovelace does not exist, copies data and removes old file
+       b. If .storage/lovelace.lovelace already exists, renames old file to lovelace_old as backup
+    5. Sets the default panel to "lovelace" if not already configured
+    """
+    # 1. Skip if already migrated (dashboard with url_path "lovelace" exists)
+    for item in dashboards_collection.async_items():
+        if item.get(CONF_URL_PATH) == DOMAIN:
+            return
+
+    # 2. Skip if old storage data does not exist
+    old_store = Store[dict[str, Any]](
+        hass, dashboard.CONFIG_STORAGE_VERSION, dashboard.CONFIG_STORAGE_KEY_DEFAULT
+    )
+    old_data = await old_store.async_load()
+    if old_data is None or old_data.get("config") is None:
+        return
+
+    _LOGGER.info("Migrating default lovelace config to dashboard entry")
+
+    # 3. Create dashboard entry
+    translations = await async_get_translations(
+        hass, hass.config.language, "dashboard", {onboarding.DOMAIN}
+    )
+    title = translations.get(
+        "component.onboarding.dashboard.overview.title", "Overview"
+    )
+
+    try:
+        await dashboards_collection.async_create_item(
+            {
+                CONF_ALLOW_SINGLE_WORD: True,
+                CONF_ICON: DEFAULT_ICON,
+                CONF_TITLE: title,
+                CONF_URL_PATH: DOMAIN,
+            }
+        )
+    except (HomeAssistantError, vol.Invalid):
+        _LOGGER.exception("Failed to create dashboard entry during migration")
+        return
+
+    # 4. Handle storage files
+    new_store = Store[dict[str, Any]](
+        hass,
+        dashboard.CONFIG_STORAGE_VERSION,
+        dashboard.CONFIG_STORAGE_KEY.format(DOMAIN),
+    )
+    if await new_store.async_load() is None:
+        await new_store.async_save(old_data)
+        await old_store.async_remove()
+    else:
+        # This should not happen because "lovelace" was a forbidden dashboard
+        # url_path before this migration existed. Rename old file as backup
+        # to avoid data loss just in case.
+        with suppress(FileNotFoundError):
+            await hass.async_add_executor_job(
+                os.rename,
+                old_store.path,
+                old_store.path + "_old",
+            )
+
+    _LOGGER.info("Successfully migrated default lovelace config to dashboard entry")
+
+    # 5. Set default panel to lovelace if not already configured
+    system_store = await frontend.async_system_store(hass)
+    core_data = system_store.data.get("core")
+    if core_data is None or core_data.get("default_panel") is None:
+        await system_store.async_set_item(
+            "core", {**(core_data or {}), "default_panel": DOMAIN}
+        )
+        _LOGGER.info("Set default panel to 'lovelace' during migration")
+
+
+# Deprecated - Remove in 2026.8
+@callback
+def _async_create_yaml_mode_repair(hass: HomeAssistant) -> None:
+    """Create repair issue for YAML mode migration."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "yaml_mode_deprecated",
+        breaks_in_ha_version="2026.8.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="yaml_mode_deprecated",
+        translation_placeholders={"config_file": LOVELACE_CONFIG_FILE},
+    )
