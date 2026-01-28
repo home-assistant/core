@@ -11,7 +11,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
+from .const import CONF_CLIENT_SOURCE, DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
 from .services import async_setup_services
@@ -75,11 +75,45 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove config entry from a device."""
     hub = config_entry.runtime_data
-    return not any(
+
+    # Get MAC address from device connections
+    device_mac = None
+    for connection_type, identifier in device_entry.connections:
+        if connection_type == "mac":
+            device_mac = identifier
+            break
+
+    # If device is still present in API, don't allow removal
+    if any(
         identifier
         for _, identifier in device_entry.connections
         if identifier in hub.api.clients or identifier in hub.api.devices
-    )
+    ):
+        return False
+
+    # If track_clients is disabled and this is a client device, allow removal
+    # and remove from supported clients list
+    if (
+        not hub.config.option_track_clients
+        and device_mac
+        and device_mac in hub.config.option_supported_clients
+    ):
+        # Update the config entry options to remove this client from supported list
+        new_options = dict(config_entry.options)
+        if CONF_CLIENT_SOURCE in new_options:
+            supported_clients = list(new_options[CONF_CLIENT_SOURCE])
+            if device_mac in supported_clients:
+                supported_clients.remove(device_mac)
+                new_options[CONF_CLIENT_SOURCE] = supported_clients
+
+                # Update the config entry
+                hass.config_entries.async_update_entry(
+                    config_entry, options=new_options
+                )
+
+        return True
+
+    return True
 
 
 class UnifiWirelessClients:
