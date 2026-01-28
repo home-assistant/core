@@ -95,10 +95,10 @@ class TasmotaLight(
 
     def __init__(self, **kwds: Any) -> None:
         """Initialize Tasmota light."""
-        self._supported_color_modes: set[str] | None = None
+        self._supported_color_modes: set[ColorMode] | None = None
 
         self._brightness: int | None = None
-        self._color_mode: str | None = None
+        self._color_mode: ColorMode | None = None
         self._color_temp: int | None = None
         self._effect: str | None = None
         self._white_value: int | None = None
@@ -241,7 +241,7 @@ class TasmotaLight(
         return (hs_color[0], hs_color[1])
 
     @property
-    def supported_color_modes(self) -> set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode] | None:
         """Flag supported color modes."""
         return self._supported_color_modes
 
