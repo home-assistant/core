@@ -647,38 +647,16 @@ async def test_default_profiles_group(
         (
             # Color temp in turn on params, color from profile ignored
             {
-                light.ATTR_COLOR_TEMP: 600,
+                light.ATTR_COLOR_TEMP_KELVIN: 6500,
                 light.ATTR_BRIGHTNESS: 11,
                 light.ATTR_TRANSITION: 1,
             },
-            {
-                light.ATTR_COLOR_TEMP: 600,
-                light.ATTR_COLOR_TEMP_KELVIN: 1666,
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
-            },
-            {
-                light.ATTR_COLOR_TEMP: 600,
-                light.ATTR_COLOR_TEMP_KELVIN: 1666,
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
-            },
-        ),
-        (
-            # Color temp in turn on params, color from profile ignored
             {
                 light.ATTR_COLOR_TEMP_KELVIN: 6500,
                 light.ATTR_BRIGHTNESS: 11,
                 light.ATTR_TRANSITION: 1,
             },
             {
-                light.ATTR_COLOR_TEMP: 153,
-                light.ATTR_COLOR_TEMP_KELVIN: 6500,
-                light.ATTR_BRIGHTNESS: 11,
-                light.ATTR_TRANSITION: 1,
-            },
-            {
-                light.ATTR_COLOR_TEMP: 153,
                 light.ATTR_COLOR_TEMP_KELVIN: 6500,
                 light.ATTR_BRIGHTNESS: 11,
                 light.ATTR_TRANSITION: 1,
