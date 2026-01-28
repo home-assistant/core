@@ -97,7 +97,6 @@ from .const import (
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
-    DEFAULT_API_ENDPOINT,
     DOMAIN,
     EVENT_TELEGRAM_ATTACHMENT,
     EVENT_TELEGRAM_CALLBACK,
@@ -1111,7 +1110,7 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
     else:
         request = HTTPXRequest(connection_pool_size=8)
 
-    base_url: str = p_config.get(CONF_API_ENDPOINT, DEFAULT_API_ENDPOINT)
+    base_url: str = p_config[CONF_API_ENDPOINT]
 
     return Bot(
         token=api_key,

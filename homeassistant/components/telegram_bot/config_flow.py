@@ -191,6 +191,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Telegram."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -378,9 +379,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_PLATFORM: self._step_user_data[CONF_PLATFORM],
                 CONF_API_KEY: self._step_user_data[CONF_API_KEY],
-                CONF_API_ENDPOINT: self._step_user_data[SECTION_ADVANCED_SETTINGS].get(
-                    CONF_API_ENDPOINT, DEFAULT_API_ENDPOINT
-                ),
+                CONF_API_ENDPOINT: self._step_user_data[SECTION_ADVANCED_SETTINGS][
+                    CONF_API_ENDPOINT
+                ],
                 CONF_PROXY_URL: self._step_user_data[SECTION_ADVANCED_SETTINGS].get(
                     CONF_PROXY_URL
                 ),
@@ -452,9 +453,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         **self._get_reconfigure_entry().data,
                         SECTION_ADVANCED_SETTINGS: {
-                            CONF_API_ENDPOINT: self._get_reconfigure_entry().data.get(
-                                CONF_API_ENDPOINT, DEFAULT_API_ENDPOINT
-                            ),
+                            CONF_API_ENDPOINT: self._get_reconfigure_entry().data[
+                                CONF_API_ENDPOINT
+                            ],
                             CONF_PROXY_URL: self._get_reconfigure_entry().data.get(
                                 CONF_PROXY_URL
                             ),
@@ -467,9 +468,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_PROXY_URL
         )
 
-        user_input[CONF_API_ENDPOINT] = user_input[SECTION_ADVANCED_SETTINGS].get(
+        user_input[CONF_API_ENDPOINT] = user_input[SECTION_ADVANCED_SETTINGS][
             CONF_API_ENDPOINT
-        )
+        ]
 
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = DESCRIPTION_PLACEHOLDERS.copy()
@@ -480,9 +481,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         self._bot_name = bot_name
 
-        existing_api_endpoint: str = self._get_reconfigure_entry().data.get(
-            CONF_API_ENDPOINT, DEFAULT_API_ENDPOINT
-        )
+        existing_api_endpoint: str = self._get_reconfigure_entry().data[
+            CONF_API_ENDPOINT
+        ]
         if (
             self._get_reconfigure_entry().state == ConfigEntryState.LOADED
             and user_input[CONF_API_ENDPOINT] != DEFAULT_API_ENDPOINT
@@ -516,7 +517,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         **user_input,
                         SECTION_ADVANCED_SETTINGS: {
-                            CONF_API_ENDPOINT: user_input.get(CONF_API_ENDPOINT),
+                            CONF_API_ENDPOINT: user_input[CONF_API_ENDPOINT],
                             CONF_PROXY_URL: user_input.get(CONF_PROXY_URL),
                         },
                     },
@@ -556,8 +557,10 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
+        updated_data = {**self._get_reauth_entry().data}
+        updated_data[CONF_API_KEY] = user_input[CONF_API_KEY]
         bot_name = await self._validate_bot(
-            user_input, errors, description_placeholders
+            updated_data, errors, description_placeholders
         )
         await self._shutdown_bot()
 
@@ -572,7 +575,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_update_reload_and_abort(
-            self._get_reauth_entry(), title=bot_name, data_updates=user_input
+            self._get_reauth_entry(), title=bot_name, data_updates=updated_data
         )
 
 

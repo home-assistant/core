@@ -23,6 +23,7 @@ from homeassistant.components.telegram_bot.const import (
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_TRUSTED_NETWORKS,
+    DEFAULT_API_ENDPOINT,
     DOMAIN,
     PARSER_MD,
     PLATFORM_BROADCAST,
@@ -45,6 +46,7 @@ def mock_polling_config_entry() -> MockConfigEntry:
         data={
             CONF_PLATFORM: PLATFORM_POLLING,
             CONF_API_KEY: "mock api key",
+            CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
         },
         options={ATTR_PARSER: PARSER_MD},
         subentries_data=[
@@ -61,6 +63,7 @@ def mock_polling_config_entry() -> MockConfigEntry:
                 title="mock chat 2",
             ),
         ],
+        minor_version=2,
     )
 
 
@@ -255,6 +258,7 @@ def mock_broadcast_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_PLATFORM: PLATFORM_BROADCAST,
+            CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
             CONF_API_KEY: "mock api key",
         },
         options={ATTR_PARSER: PARSER_MD},
@@ -272,6 +276,7 @@ def mock_broadcast_config_entry() -> MockConfigEntry:
                 title="mock chat 2",
             ),
         ],
+        minor_version=2,
     )
 
 
@@ -297,6 +302,7 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
                 title="mock chat",
             )
         ],
+        minor_version=2,
     )
 
 
