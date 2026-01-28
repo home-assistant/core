@@ -74,4 +74,5 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_TRACKED_INTEGRATIONS: ["youtube", "spotify", "myq"],
             CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
         },
+        version=2,
     )

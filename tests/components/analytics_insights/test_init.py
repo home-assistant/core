@@ -5,7 +5,6 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from homeassistant.components.analytics_insights.const import (
-    CONF_TRACKED_APPS,
     CONF_TRACKED_INTEGRATIONS,
     DOMAIN,
 )
@@ -48,7 +47,7 @@ async def test_migration_v1_to_v2(
         title="Home Assistant Analytics migration time!",
         data={},
         options={
-            CONF_TRACKED_APPS: ["core_samba"],
+            "tracked_addons": ["core_samba"],
             CONF_TRACKED_INTEGRATIONS: ["youtube"],
         },
     )

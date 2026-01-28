@@ -16,7 +16,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_TRACKED_INTEGRATIONS
+from .const import CONF_TRACKED_APPS, CONF_TRACKED_INTEGRATIONS
 from .coordinator import HomeassistantAnalyticsDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -76,7 +76,10 @@ async def async_migrate_entry(
                 new_unique_id=entity_entry.unique_id.replace("addon_", "app_"),
             )
 
-        hass.config_entries.async_update_entry(entry, version=2)
+        options = dict(entry.options)
+        options[CONF_TRACKED_APPS] = options.pop("tracked_addons", [])
+
+        hass.config_entries.async_update_entry(entry, version=2, options=options)
 
     return True
 
