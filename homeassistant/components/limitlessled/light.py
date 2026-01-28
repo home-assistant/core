@@ -275,7 +275,7 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         return self._attr_brightness
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._fixed_color_mode:
             return self._fixed_color_mode

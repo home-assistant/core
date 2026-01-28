@@ -1829,7 +1829,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="color_mode",
-                    return_type=["ColorMode", "str", None],
+                    return_type=["ColorMode", None],
                     mandatory=True,
                 ),
                 TypeHintMatch(
@@ -1884,7 +1884,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="supported_color_modes",
-                    return_type=["set[ColorMode]", "set[str]", None],
+                    return_type=["set[ColorMode]", None],
                     mandatory=True,
                 ),
                 TypeHintMatch(
