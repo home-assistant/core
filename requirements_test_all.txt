@@ -691,7 +691,7 @@ dbus-fast==3.1.2
 debugpy==1.8.17
 
 # homeassistant.components.ecovacs
-deebot-client==17.0.1
+deebot-client==17.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.ohmconnect
