@@ -1,0 +1,206 @@
+# serializer version: 1
+# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_next_arrival-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_next_arrival',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:subway-variant',
+    'original_name': 'Next arrival',
+    'platform': 'mta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_arrival',
+    'unique_id': '1_127N-next_arrival',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_next_arrival-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'destination': 'Van Cortlandt Park - 242 St',
+      'device_class': 'timestamp',
+      'friendly_name': '1 Line - Times Sq - 42 St (N direction) Next arrival',
+      'icon': 'mdi:subway-variant',
+      'route': '1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_next_arrival',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-21T00:05:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_second_arrival-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_second_arrival',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:subway-variant',
+    'original_name': 'Second arrival',
+    'platform': 'mta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'second_arrival',
+    'unique_id': '1_127N-second_arrival',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_second_arrival-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'destination': 'Van Cortlandt Park - 242 St',
+      'device_class': 'timestamp',
+      'friendly_name': '1 Line - Times Sq - 42 St (N direction) Second arrival',
+      'icon': 'mdi:subway-variant',
+      'route': '1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_second_arrival',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-21T00:10:00+00:00',
+  })
+# ---
+# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_stop_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_stop_id',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:identifier',
+    'original_name': 'Stop ID',
+    'platform': 'mta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stop_id',
+    'unique_id': '1_127N-stop_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_stop_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '1 Line - Times Sq - 42 St (N direction) Stop ID',
+      'icon': 'mdi:identifier',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_stop_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '127N',
+  })
+# ---
+# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_third_arrival-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_third_arrival',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:subway-variant',
+    'original_name': 'Third arrival',
+    'platform': 'mta',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'third_arrival',
+    'unique_id': '1_127N-third_arrival',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.1_line_times_sq_42_st_n_direction_third_arrival-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'destination': 'Van Cortlandt Park - 242 St',
+      'device_class': 'timestamp',
+      'friendly_name': '1 Line - Times Sq - 42 St (N direction) Third arrival',
+      'icon': 'mdi:subway-variant',
+      'route': '1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.1_line_times_sq_42_st_n_direction_third_arrival',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-21T00:15:00+00:00',
+  })
+# ---

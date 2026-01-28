@@ -1,0 +1,74 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_stops": "No stops found for this line. The line may not be currently running."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "stop": {
+        "data": {
+          "stop_id": "Stop and direction"
+        },
+        "data_description": {
+          "stop_id": "Select the stop and direction you want to track"
+        },
+        "description": "Choose a stop on the {line} line. The direction is included with each stop.",
+        "title": "Select stop and direction"
+      },
+      "user": {
+        "data": {
+          "line": "Line"
+        },
+        "data_description": {
+          "line": "The subway line to track"
+        },
+        "description": "Choose the subway line you want to track.",
+        "title": "Select subway line"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_arrival": {
+        "name": "Next arrival",
+        "state_attributes": {
+          "destination": {
+            "name": "Destination"
+          },
+          "route": {
+            "name": "Route"
+          }
+        }
+      },
+      "second_arrival": {
+        "name": "Second arrival",
+        "state_attributes": {
+          "destination": {
+            "name": "Destination"
+          },
+          "route": {
+            "name": "Route"
+          }
+        }
+      },
+      "stop_id": {
+        "name": "Stop ID"
+      },
+      "third_arrival": {
+        "name": "Third arrival",
+        "state_attributes": {
+          "destination": {
+            "name": "Destination"
+          },
+          "route": {
+            "name": "Route"
+          }
+        }
+      }
+    }
+  }
+}

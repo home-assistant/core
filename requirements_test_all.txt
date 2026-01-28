@@ -1583,6 +1583,9 @@ py-nextbusnext==2.3.0
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
 
+# homeassistant.components.mta
+py-nymta==0.3.2
+
 # homeassistant.components.ecovacs
 py-sucks==0.9.11
 
