@@ -219,6 +219,7 @@ aiobafi6==0.9.0
 
 # homeassistant.components.aws
 # homeassistant.components.aws_s3
+# homeassistant.components.cloudflare_r2
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
@@ -1218,7 +1219,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260107.2
+home-assistant-frontend==20260128.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.1.6
@@ -1354,7 +1355,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.1.15.112308
+knx-frontend==2026.1.28.162006
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1764,6 +1765,9 @@ poolsense==0.0.8
 
 # homeassistant.components.powerfox
 powerfox==2.0.0
+
+# homeassistant.components.prana
+prana-api-client==0.10.0
 
 # homeassistant.components.reddit
 praw==7.5.0
@@ -2412,7 +2416,7 @@ pysesame2==1.0.1
 pyseventeentrack==1.1.1
 
 # homeassistant.components.sia
-pysiaalarm==3.1.1
+pysiaalarm==3.2.2
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.24
