@@ -419,11 +419,14 @@ class WebRTCProvider(CameraWebRTCProvider):
         )
         preload_streams = await self._rest_client.preload.list()
 
-        if camera_prefs.preload_stream and camera.entity_id not in preload_streams:
+        if camera_prefs.preload_stream == (camera.entity_id in preload_streams):
+            return
+
+        if camera_prefs.preload_stream:
             # We need to first add the stream source otherwise preload enabling will fail
             await self._update_stream_source(camera)
             await self._rest_client.preload.enable(camera.entity_id)
-        elif not camera_prefs.preload_stream and camera.entity_id in preload_streams:
+        else:
             await self._rest_client.preload.disable(camera.entity_id)
 
     async def teardown(self) -> None:

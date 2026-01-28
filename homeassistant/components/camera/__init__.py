@@ -234,7 +234,7 @@ async def _async_get_stream_image(
     height: int | None = None,
     wait_for_next_keyframe: bool = False,
 ) -> bytes | None:
-    if (provider := camera._webrtc_provider) and (  # noqa: SLF001
+    if (provider := camera.webrtc_provider) and (
         image := await provider.async_get_image(camera, width=width, height=height)
     ) is not None:
         return image
@@ -515,6 +515,12 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return False
         return super().available
 
+    @final
+    @property
+    def webrtc_provider(self) -> CameraWebRTCProvider | None:
+        """Return the WebRTC provider."""
+        return self._webrtc_provider
+
     async def async_create_stream(self) -> Stream | None:
         """Create a Stream for stream_source."""
         # There is at most one stream (a decode worker) per camera
@@ -692,17 +698,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if old_provider == new_provider:
             return
-        
+
         if old_provider:
             await old_provider.async_unregister_camera(self)
-        
+
         if new_provider:
             await new_provider.async_register_camera(self)
-        
+
         self._webrtc_provider = new_provider
         self._invalidate_camera_capabilities_cache()
-            if write_state:
-                self.async_write_ha_state()
+        if write_state:
+            self.async_write_ha_state()
 
     async def _async_get_supported_webrtc_provider[_T](
         self, fn: Callable[[HomeAssistant, Camera], Coroutine[None, None, _T | None]]
@@ -956,7 +962,7 @@ async def websocket_update_prefs(
         connection.send_error(msg["id"], "update_failed", str(ex))
     else:
         if (camera := hass.data[DATA_COMPONENT].get_entity(entity_id)) and (
-            provider := camera._webrtc_provider  # noqa: SLF001
+            provider := camera.webrtc_provider
         ):
             await provider.async_on_camera_prefs_update(camera)
         connection.send_result(msg["id"], entity_prefs)
