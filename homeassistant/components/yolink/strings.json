@@ -12,12 +12,37 @@
       "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The credentials provided are for a different YoLink home than the one configured. Use the UAC credentials for the home you want to re-authenticate, or remove this integration entry and add it again if you want to change homes."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
     "step": {
+      "user": {
+        "description": "Choose how you want to authenticate with YoLink.",
+        "menu_options": {
+          "pick_implementation": "Sign in with YoLink account",
+          "uac": "Use UAC credentials (recommended for multiple homes)"
+        }
+      },
+      "uac": {
+        "title": "Enter UAC credentials",
+        "description": "Enter your User Access Credentials from the YoLink app.\n\nTo find these: YoLink App -> Settings -> Account -> Advanced Settings -> User Access Credentials",
+        "data": {
+          "uaid": "UAID (User Access ID)",
+          "secret_key": "Secret key"
+        },
+        "data_description": {
+          "uaid": "The User Access ID from your YoLink app",
+          "secret_key": "The secret key associated with your UAID"
+        }
+      },
       "pick_implementation": {
         "data": {
           "implementation": "[%key:common::config_flow::data::implementation%]"
