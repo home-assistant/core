@@ -6336,6 +6336,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "solarwatt": {
+      "name": "Solarwatt",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "solax": {
       "name": "SolaX Power",
       "integration_type": "hub",
