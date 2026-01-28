@@ -220,7 +220,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if existing_entry:
             if existing_entry.source == SOURCE_IGNORE:
-                raise AbortFlow("already_configured")
+                return self.async_abort(reason="already_configured")
 
             # Check if the host is actually changing
             if existing_entry.data.get(CONF_HOST) != host:
