@@ -121,5 +121,15 @@
         "title": "Options"
       }
     }
+  },
+  "services": {
+    "get_affected_areas": {
+      "description": "Get all the affected areas of a warning.",
+      "name": "Get affected areas"
+    },
+    "get_description": {
+      "description": "Get the description of a warning.",
+      "name": "Get description"
+    }
   }
 }
