@@ -147,6 +147,7 @@ class AgentManager:
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
         self.default_agent: DefaultAgent | None = None
+        self.config_intents: dict[str, Any] = {}
         self.triggers_details: list[TriggerDetails] = []
 
     @callback
@@ -199,8 +200,15 @@ class AgentManager:
 
     async def async_setup_default_agent(self, agent: DefaultAgent) -> None:
         """Set up the default agent."""
+        agent.update_config_intents(self.config_intents)
         agent.update_triggers(self.triggers_details)
         self.default_agent = agent
+
+    def update_config_intents(self, intents: dict[str, Any]) -> None:
+        """Update config intents."""
+        self.config_intents = intents
+        if self.default_agent is not None:
+            self.default_agent.update_config_intents(intents)
 
     def register_trigger(self, trigger_details: TriggerDetails) -> CALLBACK_TYPE:
         """Register a trigger."""

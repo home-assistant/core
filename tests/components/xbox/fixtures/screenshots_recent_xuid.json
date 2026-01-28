@@ -1,0 +1,54 @@
+{
+  "screenshots": [
+    {
+      "screenshotId": "41593644-be22-43d6-b224-c7bebe14076e",
+      "resolutionHeight": 1080,
+      "resolutionWidth": 1920,
+      "state": 6,
+      "datePublished": "2015-11-11T06:11:58.6404578Z",
+      "dateTaken": "2015-11-11T06:10:16Z",
+      "lastModified": "2015-11-11T06:10:16Z",
+      "userCaption": "",
+      "type": 8,
+      "scid": "1370999b-fca2-4c53-8ec5-73493bcb67e5",
+      "titleId": 219630713,
+      "rating": 0.0,
+      "ratingCount": 0,
+      "views": 413,
+      "titleData": "",
+      "systemProperties": "e1fad752-787f-4be7-b89d-ba84e06f59a6;",
+      "savedByUser": true,
+      "achievementId": "",
+      "greatestMomentId": null,
+      "thumbnails": [
+        {
+          "uri": "https://screenshotscontent-t5001.xboxlive.com/00097bbbbbbbbb23-41593644-be22-43d6-b224-c7bebe14076e/Thumbnail_Small.PNG?sv=2015-12-11&sr=b&si=DefaultAccess&sig=TcI8NNFJlcGykmjTFzeFKgUz7E9g%2FHKZqSNUoYAlZOM%3D",
+          "fileSize": 95044,
+          "thumbnailType": 1
+        },
+        {
+          "uri": "https://screenshotscontent-t5001.xboxlive.com/00097bbbbbbbbb23-41593644-be22-43d6-b224-c7bebe14076e/Thumbnail_Large.PNG?sv=2015-12-11&sr=b&si=DefaultAccess&sig=W4ZlmlL7Zd%2FubVoWMojXIfmTiodcpTezppxvsEeNOlI%3D",
+          "fileSize": 340052,
+          "thumbnailType": 2
+        }
+      ],
+      "screenshotUris": [
+        {
+          "uri": "https://screenshotscontent-d5001.xboxlive.com/00097bbbbbbbbb23-41593644-be22-43d6-b224-c7bebe14076e/Screenshot-Original.png?sv=2015-12-11&sr=b&si=DefaultAccess&sig=ALKo3DE2HXqBTlpdyynIrH6RPKIECOF7zwotH%2Bb30Ts%3D",
+          "fileSize": 1790858,
+          "uriType": 2,
+          "expiration": "2018-03-29T17:46:58.5342894Z"
+        }
+      ],
+      "xuid": "2669321029139235",
+      "screenshotName": "",
+      "titleName": "Halo 5: Guardians",
+      "screenshotLocale": "en-US",
+      "screenshotContentAttributes": 0,
+      "deviceType": "XboxOne"
+    }
+  ],
+  "pagingInfo": {
+    "continuationToken": null
+  }
+}

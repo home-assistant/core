@@ -1,0 +1,335 @@
+{
+  "xuid": "2719584417856940",
+  "titles": [
+    {
+      "titleId": "1297287135",
+      "pfn": null,
+      "bingId": "66acd000-77fe-1000-9115-d8024d5307df",
+      "windowsPhoneProductId": null,
+      "name": "Blue Dragon",
+      "type": "Game",
+      "devices": ["Xbox360", "XboxOne", "XboxSeries"],
+      "displayImage": "http://store-images.s-microsoft.com/image/apps.45451.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.3abf2cc3-00cc-417d-a93d-97110cdfb261",
+      "mediaItemType": "Xbox360Game",
+      "modernTitleId": "644793037",
+      "isBundle": false,
+      "achievement": {
+        "currentAchievements": 3,
+        "totalAchievements": 43,
+        "currentGamerscore": 15,
+        "totalGamerscore": 1000,
+        "progressPercentage": 2.0,
+        "sourceVersion": 1
+      },
+      "stats": { "sourceVersion": 0 },
+      "gamePass": null,
+      "images": [
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.35725.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.c4bf34f8-ad40-4af3-914e-a85e75a76bed",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.64736.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.6491fb2f-52e7-4129-bcbd-d23a67117ae0",
+          "type": "BrandedKeyArt",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.55545.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.4c2daefb-fbf6-4b90-b392-bf8ecc39a92e",
+          "type": "TitledHeroArt",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.22570.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.bf29284d-808a-4e4a-beaa-6621c9898d0e",
+          "type": "Poster",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.55545.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.4c2daefb-fbf6-4b90-b392-bf8ecc39a92e",
+          "type": "SuperHeroArt",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.45451.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.3abf2cc3-00cc-417d-a93d-97110cdfb261",
+          "type": "BoxArt",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.45451.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.3abf2cc3-00cc-417d-a93d-97110cdfb261",
+          "type": "FeaturePromotionalSquareArt",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.38628.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.c2a205af-5146-405b-b2b7-56845351f1f3",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.22150.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.b147895c-e947-424d-a731-faefc8c9906a",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.37559.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.479d2dc1-db2d-4ffa-8c54-a2bebb093ec6",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.32737.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.6a16ae3e-2918-46e9-90d9-232c79cb9d9d",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.57046.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.0c0dd072-aa27-4e83-9010-474dfbb42277",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.19315.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.6293a7b7-07ca-4df0-9eea-6018285a0a8d",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.23374.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.66498a73-52f5-4247-a1e2-d3c84b9b315d",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.64646.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.83182b76-4294-496d-90a7-f4e31e7aa80a",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.24470.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.72d2abc3-aa69-4aeb-960b-6f6d25f498e4",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.15604.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.27cee011-660b-49a4-bd33-38db6fff5226",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.39987.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.be285efe-78f8-4984-9d28-9159881bacd4",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.38206.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.2409803d-7378-4a69-a10b-1574ac42b98b",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.14938.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.ef6ee72c-4beb-45ec-bd10-6235bd6a7c7f",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.12835.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.6165ee24-df01-44f5-80fe-7411f9366d1c",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.40786.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.b7607a0d-0101-4864-9bf8-ad889f820489",
+          "type": "Screenshot",
+          "caption": ""
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.55686.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.ecbb0e91-36a9-4f76-ab1e-5a5de009840e",
+          "type": "Screenshot",
+          "caption": ""
+        }
+      ],
+      "titleHistory": {
+        "lastTimePlayed": "2025-10-30T13:56:20.61Z",
+        "visible": true,
+        "canHide": false
+      },
+      "titleRecord": null,
+      "detail": null,
+      "friendsWhoPlayed": null,
+      "alternateTitleIds": null,
+      "contentBoards": null,
+      "xboxLiveTier": "Full"
+    },
+    {
+      "titleId": "1560034050",
+      "pfn": "Ubisoft.6f7d78df-dd91-4d2a-b038-367b2b266f46_ngz4m417e0mpw",
+      "bingId": "56e06243-00dc-49c4-a214-20af83036f97",
+      "windowsPhoneProductId": "088ef83e-6beb-49de-9e13-294ea701b210",
+      "name": "Assassin's Creed® Syndicate",
+      "type": "Game",
+      "devices": ["XboxOne"],
+      "displayImage": "http://store-images.s-microsoft.com/image/apps.23100.63309362003335928.4079e21b-b00f-4446-a680-6bf9c0eb0158.7f8406d5-3130-4d85-b3e3-a5e0e2f8ac49",
+      "mediaItemType": "Application",
+      "modernTitleId": "1560034050",
+      "isBundle": false,
+      "achievement": {
+        "currentAchievements": 22,
+        "totalAchievements": 0,
+        "currentGamerscore": 465,
+        "totalGamerscore": 1300,
+        "progressPercentage": 36.0,
+        "sourceVersion": 2
+      },
+      "stats": {
+        "sourceVersion": 2
+      },
+      "gamePass": {
+        "isGamePass": false
+      },
+      "images": [
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.45099.63309362003335928.4079e21b-b00f-4446-a680-6bf9c0eb0158.3a88a700-8351-45e7-b430-dc75a7a9d9b8",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.46246.63309362003335928.4079e21b-b00f-4446-a680-6bf9c0eb0158.c976135a-831a-4cf6-a39b-f01c633567bc",
+          "type": "BrandedKeyArt"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.9155.63309362003335928.4079e21b-b00f-4446-a680-6bf9c0eb0158.66c76ab3-66b2-4eb4-884a-647d73cb1617",
+          "type": "TitledHeroArt"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.9961.63309362003335928.4079e21b-b00f-4446-a680-6bf9c0eb0158.f69e9d47-aef9-4aba-9297-915f02c744e9",
+          "type": "Poster"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.61147.63309362003335928.4079e21b-b00f-4446-a680-6bf9c0eb0158.cd2dd80e-a2bc-4a19-adf0-7018ee45b2cd",
+          "type": "SuperHeroArt"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.23100.63309362003335928.4079e21b-b00f-4446-a680-6bf9c0eb0158.7f8406d5-3130-4d85-b3e3-a5e0e2f8ac49",
+          "type": "BoxArt"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.47207.63309362003335928.4079e21b-b00f-4446-a680-6bf9c0eb0158.3329df5e-a071-41d6-b584-c03fc3706fe8",
+          "type": "FeaturePromotionalSquareArt"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.31444.63309362003335928.4079e21b-b00f-4446-a680-6bf9c0eb0158.5295c5a8-a2d7-4407-ab1c-6fea8d77b0b9",
+          "type": "Screenshot"
+        },
+        {
+          "url": "http://store-images.s-microsoft.com/image/apps.16645.63309362003335928.4079e21b-b00f-4446-a680-6bf9c0eb0158.040cba15-6110-4d0f-8da7-a2883b298f44",
+          "type": "Screenshot"
+        }
+      ],
+      "titleHistory": {
+        "lastTimePlayed": "2020-10-08T01:55:12.4411936Z",
+        "visible": true,
+        "canHide": false
+      },
+      "detail": {
+        "attributes": [
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "BroadcastSupport"
+          },
+          {
+            "applicablePlatforms": null,
+            "maximum": null,
+            "minimum": null,
+            "name": "XboxLive"
+          }
+        ],
+        "availabilities": [
+          {
+            "Actions": [
+              "Details",
+              "Fulfill",
+              "Purchase",
+              "Browse",
+              "Curate",
+              "Redeem"
+            ],
+            "AvailabilityId": "9ZDCVZ019WLR",
+            "Platforms": ["Xbox"],
+            "SkuId": "0001"
+          }
+        ],
+        "capabilities": [],
+        "description": "London, 1868. In the heart of the Industrial Revolution, lead your underworld organization and grow your influence to fight those who exploit the less privileged in the name of progress:\r\n\r\n• Champion justice\r\nAs Jacob Frye, a young and reckless Assassin, use your skills to help those trampled by the march of progress. From freeing exploited children used as slave labour in factories, to stealing precious assets from enemy boats, you will stop at nothing to bring justice back to London’s streets.\r\n\r\n• Command London’s underworld\r\nTo reclaim London for the people, you will need an army. As a gang leader, strengthen your stronghold and rally rival gang members to your cause, in order to take back the capital from the Templars’ hold.\r\n\r\n• A new dynamic fighting system\r\nIn Assassin’s Creed Syndicate, action is fast-paced and brutal. As a master of combat, combine powerful multi-kills and countermoves to strike your enemies down.\r\n\r\n• A whole new arsenal\r\nChoose your own way to fight enemies. Take advantage of the Rope Launcher technology to be as stealthy as ever and strike with your Hidden Blade. Or choose the kukri knife and the brass knuckles to get the drop on your enemies.\r\n\r\n• A new age of transportation\r\nIn London, the systemic vehicles offer an ever-changing environment. Drive carriages to chase your target, use your parkour skills to engage in epic fights atop high-speed trains, or make your own way amongst the boats of the River Thames.\r\n\r\n• A vast open world\r\nTravel the city at the height of the Industrial Revolution and meet iconic historical figures. From Westminster to Whitechapel, you will come across Darwin, Dickens, Queen Victoria… and many more.",
+        "developerName": "Ubisoft Quebec",
+        "publisherName": "Ubisoft",
+        "minAge": 16,
+        "releaseDate": "2015-10-23T00:00:00Z",
+        "shortDescription": "“9/10” Gamespot\n\nLondon, 1868. In the heart of the Industrial Revolution, play as Jacob Frye - a brash and charismatic Assassin.\n\nOn a mission to defeat those who exploit the less privileged in the name of progress, lead your underworld organization, fight like never before in a massive open-world  and discover new features inspired by the dawning modern age.",
+        "vuiDisplayName": null,
+        "xboxLiveGoldRequired": false
+      },
+      "friendsWhoPlayed": {
+        "people": [
+          {
+            "xuid": "2533274810951322",
+            "isFavorite": false,
+            "displayPicRaw": "https://images-eds-ssl.xboxlive.com/image?url=z951ykn43p4FqWbbFvR2Ec.8vbDhj8G2Xe7JngaTToBrrCmIEEXHC9UNrdJ6P7KIm2RQQtfSX9jMSatOYowOzEjYigCkXhTNbce1rv4TMJkvAA49vtg8MpFHt6Pum4yf&format=png",
+            "useAvatar": true,
+            "isCurrentlyPlaying": false,
+            "gamertag": "cavsbballin23",
+            "lastTimePlayed": "2018-07-03T23:39:26.9942864Z",
+            "presenceState": "Offline",
+            "preferredColor": {
+              "primaryColor": "1073d6",
+              "secondaryColor": "133157",
+              "tertiaryColor": "134e8a"
+            }
+          },
+          {
+            "xuid": "2533274829739812",
+            "isFavorite": false,
+            "displayPicRaw": "https://images-eds-ssl.xboxlive.com/image?url=wHwbXKif8cus8csoZ03RW_ES.ojiJijNBGRVUbTnZKsoCCCkjlsEJrrMqDkYqs3MrHRhRzH2.GdQgHRZi_rY_v9q_t0POXG6iEqqweb.6Fh7_jOUyRHgH8TW9apXc.w08pRmE5ZgIlhBWHgor1YXeQQQ5CqjqDPWUROGdwJDAvo-&format=png",
+            "useAvatar": false,
+            "isCurrentlyPlaying": false,
+            "gamertag": "FLUFFY JOK3R",
+            "lastTimePlayed": "2018-04-29T03:42:10.4244998Z",
+            "presenceState": "Offline",
+            "preferredColor": {
+              "primaryColor": "e31123",
+              "secondaryColor": "471010",
+              "tertiaryColor": "851414"
+            }
+          },
+          {
+            "xuid": "2533274826800072",
+            "isFavorite": false,
+            "displayPicRaw": "https://images-eds-ssl.xboxlive.com/image?url=Hr2eiH8yWKd4q_oa.xgbMsBMaML4RHmTUbpHkaZTnVU5KRB4bTh8MR86WWWB5GR.vzh0E9kRjckB83CjpwGCrUWEsXRb90OAITc4F4D6jNOPvNH6pV0L8c1lNSoi0gzbsaJ3._X_vFSIGtf8TCZsYn2hoN3c57jwNTxfTwUyiO0-&format=png",
+            "useAvatar": true,
+            "isCurrentlyPlaying": false,
+            "gamertag": "ThumbTacular",
+            "lastTimePlayed": "2017-10-15T11:36:05.1343310Z",
+            "presenceState": "Offline",
+            "preferredColor": {
+              "primaryColor": "193e91",
+              "secondaryColor": "101836",
+              "tertiaryColor": "102c69"
+            }
+          },
+          {
+            "xuid": "2533274842759744",
+            "isFavorite": false,
+            "displayPicRaw": "https://images-eds-ssl.xboxlive.com/image?url=wHwbXKif8cus8csoZ03RW3apWESZjav65Yncai8aRmVbSlZ3zqRpg1sdxEje_JmFoVefUwnJqOE159pIT3JzYd9blbzFeNzxgMKTwNLyj1Hq3Vb.8avA4NoeHlgaLPP2oI5233eY7w3bgRSMcnELusaPWGxm5L469OLjNCQQ20s-&format=png",
+            "useAvatar": true,
+            "isCurrentlyPlaying": false,
+            "gamertag": "Blvck Clovd",
+            "lastTimePlayed": "2016-01-14T05:54:34.0000000Z",
+            "presenceState": "Offline",
+            "preferredColor": {
+              "primaryColor": "677488",
+              "secondaryColor": "222B38",
+              "tertiaryColor": "3e4b61"
+            }
+          }
+        ],
+        "currentlyPlayingCount": 16,
+        "havePlayedCount": 4
+      },
+      "alternateTitleIds": [],
+      "contentBoards": null,
+      "xboxLiveTier": "Full"
+    }
+  ]
+}

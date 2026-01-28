@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date
-import decimal
 import logging
 from typing import Any
 
@@ -24,7 +22,7 @@ from homeassistant.const import (
     MATCH_ALL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import PlatformNotReady, TemplateError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -42,7 +40,10 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_ADVANCED_OPTIONS, CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from .util import (
+    InvalidSqlQuery,
     async_create_sessionmaker,
+    check_and_render_sql_query,
+    convert_value,
     generate_lambda_stmt,
     redact_credentials,
     resolve_db_url,
@@ -82,7 +83,7 @@ async def async_setup_platform(
         return
 
     name: Template = conf[CONF_NAME]
-    query_str: str = conf[CONF_QUERY]
+    query_template: ValueTemplate = conf[CONF_QUERY]
     value_template: ValueTemplate | None = conf.get(CONF_VALUE_TEMPLATE)
     column_name: str = conf[CONF_COLUMN_NAME]
     unique_id: str | None = conf.get(CONF_UNIQUE_ID)
@@ -97,7 +98,7 @@ async def async_setup_platform(
     await async_setup_sensor(
         hass,
         trigger_entity_config,
-        query_str,
+        query_template,
         column_name,
         value_template,
         unique_id,
@@ -120,6 +121,13 @@ async def async_setup_entry(
     template: str | None = entry.options[CONF_ADVANCED_OPTIONS].get(CONF_VALUE_TEMPLATE)
     column_name: str = entry.options[CONF_COLUMN_NAME]
 
+    query_template: ValueTemplate | None = None
+    try:
+        query_template = ValueTemplate(query_str, hass)
+        query_template.ensure_valid()
+    except TemplateError as err:
+        raise PlatformNotReady("Invalid SQL query template") from err
+
     value_template: ValueTemplate | None = None
     if template is not None:
         try:
@@ -138,7 +146,7 @@ async def async_setup_entry(
     await async_setup_sensor(
         hass,
         trigger_entity_config,
-        query_str,
+        query_template,
         column_name,
         value_template,
         entry.entry_id,
@@ -151,7 +159,7 @@ async def async_setup_entry(
 async def async_setup_sensor(
     hass: HomeAssistant,
     trigger_entity_config: ConfigType,
-    query_str: str,
+    query_template: ValueTemplate,
     column_name: str,
     value_template: ValueTemplate | None,
     unique_id: str | None,
@@ -167,22 +175,25 @@ async def async_setup_sensor(
     ) = await async_create_sessionmaker(hass, db_url)
     if sessmaker is None:
         return
-    validate_query(hass, query_str, uses_recorder_db, unique_id)
+    validate_query(hass, query_template, uses_recorder_db, unique_id)
 
+    query_str = check_and_render_sql_query(hass, query_template)
     upper_query = query_str.upper()
     # MSSQL uses TOP and not LIMIT
+    mod_query_template = query_template
     if not ("LIMIT" in upper_query or "SELECT TOP" in upper_query):
         if "mssql" in db_url:
-            query_str = upper_query.replace("SELECT", "SELECT TOP 1")
+            _query = query_template.template.replace("SELECT", "SELECT TOP 1")
         else:
-            query_str = query_str.replace(";", "") + " LIMIT 1;"
+            _query = query_template.template.replace(";", "") + " LIMIT 1;"
+        mod_query_template = ValueTemplate(_query, hass)
 
     async_add_entities(
         [
             SQLSensor(
                 trigger_entity_config,
                 sessmaker,
-                query_str,
+                mod_query_template,
                 column_name,
                 value_template,
                 yaml,
@@ -201,7 +212,7 @@ class SQLSensor(ManualTriggerSensorEntity):
         self,
         trigger_entity_config: ConfigType,
         sessmaker: scoped_session,
-        query: str,
+        query: ValueTemplate,
         column: str,
         value_template: ValueTemplate | None,
         yaml: bool,
@@ -215,7 +226,6 @@ class SQLSensor(ManualTriggerSensorEntity):
         self.sessionmaker = sessmaker
         self._attr_extra_state_attributes = {}
         self._use_database_executor = use_database_executor
-        self._lambda_stmt = generate_lambda_stmt(query)
         if not yaml and (unique_id := trigger_entity_config.get(CONF_UNIQUE_ID)):
             self._attr_name = None
             self._attr_has_entity_name = True
@@ -253,15 +263,25 @@ class SQLSensor(ManualTriggerSensorEntity):
     def _update(self) -> None:
         """Retrieve sensor data from the query."""
         data = None
-        extra_state_attributes = {}
         self._attr_extra_state_attributes = {}
         sess: scoped_session = self.sessionmaker()
         try:
-            result: Result = sess.execute(self._lambda_stmt)
+            rendered_query = check_and_render_sql_query(self.hass, self._query)
+            _lambda_stmt = generate_lambda_stmt(rendered_query)
+            result: Result = sess.execute(_lambda_stmt)
+        except (TemplateError, InvalidSqlQuery) as err:
+            _LOGGER.error(
+                "Error rendering query %s: %s",
+                redact_credentials(self._query.template),
+                redact_credentials(str(err)),
+            )
+            sess.rollback()
+            sess.close()
+            return
         except SQLAlchemyError as err:
             _LOGGER.error(
                 "Error executing query %s: %s",
-                self._query,
+                rendered_query,
                 redact_credentials(str(err)),
             )
             sess.rollback()
@@ -269,17 +289,10 @@ class SQLSensor(ManualTriggerSensorEntity):
             return
 
         for res in result.mappings():
-            _LOGGER.debug("Query %s result in %s", self._query, res.items())
+            _LOGGER.debug("Query %s result in %s", rendered_query, res.items())
             data = res[self._column_name]
             for key, value in res.items():
-                if isinstance(value, decimal.Decimal):
-                    value = float(value)
-                elif isinstance(value, date):
-                    value = value.isoformat()
-                elif isinstance(value, (bytes, bytearray)):
-                    value = f"0x{value.hex()}"
-                extra_state_attributes[key] = value
-                self._attr_extra_state_attributes[key] = value
+                self._attr_extra_state_attributes[key] = convert_value(value)
 
         if data is not None and isinstance(data, (bytes, bytearray)):
             data = f"0x{data.hex()}"
@@ -296,6 +309,6 @@ class SQLSensor(ManualTriggerSensorEntity):
             self._attr_native_value = data
 
         if data is None:
-            _LOGGER.warning("%s returned no results", self._query)
+            _LOGGER.warning("%s returned no results", rendered_query)
 
         sess.close()

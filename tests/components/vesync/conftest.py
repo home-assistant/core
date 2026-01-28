@@ -32,15 +32,6 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
-def patch_vesync_firmware():
-    """Patch VeSync to disable firmware checks."""
-    with patch(
-        "pyvesync.vesync.VeSync.check_firmware", new=AsyncMock(return_value=True)
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
 def patch_vesync_login():
     """Patch VeSync login method."""
     with patch("pyvesync.vesync.VeSync.login", new=AsyncMock()):
@@ -54,13 +45,7 @@ def patch_vesync():
         "enabled": True,
     }
 
-    with (
-        patch.multiple(
-            "pyvesync.vesync.VeSync",
-            check_firmware=AsyncMock(return_value=True),
-        ),
-        ExitStack() as stack,
-    ):
+    with ExitStack() as stack:
         for name, value in props.items():
             mock = stack.enter_context(
                 patch.object(VeSync, name, new_callable=PropertyMock)
@@ -103,6 +88,9 @@ def config_entry_fixture(hass: HomeAssistant, config) -> ConfigEntry:
         title="VeSync",
         domain=DOMAIN,
         data=config[DOMAIN],
+        unique_id="TESTACCOUNTID",
+        version=1,
+        minor_version=3,
     )
     entry.add_to_hass(hass)
     return entry
@@ -159,10 +147,12 @@ def fan_fixture():
         cid="fan",
         device_type="fan",
         device_name="Test Fan",
+        product_type="fan",
         device_status="on",
         modes=[],
         connection_status="online",
         current_firm_version="1.0.0",
+        latest_firm_version="1.0.1",
     )
 
 
@@ -171,6 +161,7 @@ def bulb_fixture():
     """Create a mock VeSync bulb fixture."""
     return Mock(
         VeSyncBulb,
+        product_type="bulb",
         cid="bulb",
         device_name="Test Bulb",
     )
@@ -181,6 +172,7 @@ def switch_fixture():
     """Create a mock VeSync switch fixture."""
     return Mock(
         VeSyncSwitch,
+        product_type="switch",
         is_dimmable=Mock(return_value=False),
     )
 
@@ -190,6 +182,7 @@ def dimmable_switch_fixture():
     """Create a mock VeSync switch fixture."""
     return Mock(
         VeSyncSwitch,
+        product_type="switch",
         is_dimmable=Mock(return_value=True),
     )
 
@@ -200,6 +193,7 @@ def outlet_fixture():
     return Mock(
         VeSyncOutlet,
         cid="outlet",
+        product_type="outlet",
         device_name="Test Outlet",
     )
 
@@ -217,6 +211,7 @@ def humidifier_fixture():
         },
         features=[HumidifierFeatures.NIGHTLIGHT],
         device_type="Classic200S",
+        product_type="humidifier",
         device_name="Humidifier 200s",
         device_status="on",
         mist_modes=["auto", "manual"],
@@ -236,6 +231,7 @@ def humidifier_fixture():
         ),
         connection_status="online",
         current_firm_version="1.0.0",
+        latest_firm_version="1.0.1",
     )
 
 
@@ -252,6 +248,7 @@ def humidifier_300s_fixture():
         },
         features=[HumidifierFeatures.NIGHTLIGHT],
         device_type="Classic300S",
+        product_type="humidifier",
         device_name="Humidifier 300s",
         device_status="on",
         mist_modes=["auto", "manual"],
@@ -271,6 +268,7 @@ def humidifier_300s_fixture():
         ),
         config_module="configModule",
         current_firm_version="1.0.0",
+        latest_firm_version="1.0.1",
     )
 
 
@@ -283,6 +281,9 @@ async def humidifier_config_entry(
         title="VeSync",
         domain=DOMAIN,
         data=config[DOMAIN],
+        unique_id="TESTACCOUNTID",
+        version=1,
+        minor_version=3,
     )
     entry.add_to_hass(hass)
 
@@ -318,6 +319,9 @@ async def fan_config_entry(
         title="VeSync",
         domain=DOMAIN,
         data=config[DOMAIN],
+        unique_id="TESTACCOUNTID",
+        version=1,
+        minor_version=3,
     )
     entry.add_to_hass(hass)
 

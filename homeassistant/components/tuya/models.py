@@ -2,139 +2,319 @@
 
 from __future__ import annotations
 
-import base64
-from dataclasses import dataclass
-import json
-import struct
-from typing import Self
+import logging
+from typing import Any, Self
 
-from .const import DPCode
-from .util import remap_value
+from tuya_sharing import CustomerDevice
+
+from homeassistant.components.sensor import SensorStateClass
+
+from .type_information import (
+    BitmapTypeInformation,
+    BooleanTypeInformation,
+    EnumTypeInformation,
+    IntegerTypeInformation,
+    JsonTypeInformation,
+    RawTypeInformation,
+    StringTypeInformation,
+    TypeInformation,
+)
+
+_LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class IntegerTypeData:
-    """Integer Type Data."""
+class DeviceWrapper[T]:
+    """Base device wrapper."""
 
-    dpcode: DPCode
-    min: int
-    max: int
-    scale: float
-    step: float
-    unit: str | None = None
-    type: str | None = None
+    native_unit: str | None = None
+    suggested_unit: str | None = None
+    state_class: SensorStateClass | None = None
 
-    @property
-    def max_scaled(self) -> float:
-        """Return the max scaled."""
-        return self.scale_value(self.max)
+    max_value: float
+    min_value: float
+    value_step: float
 
-    @property
-    def min_scaled(self) -> float:
-        """Return the min scaled."""
-        return self.scale_value(self.min)
+    options: list[str]
 
-    @property
-    def step_scaled(self) -> float:
-        """Return the step scaled."""
-        return self.step / (10**self.scale)
+    def initialize(self, device: CustomerDevice) -> None:
+        """Initialize the wrapper with device data.
 
-    def scale_value(self, value: float) -> float:
-        """Scale a value."""
-        return value / (10**self.scale)
+        Called when the entity is added to Home Assistant.
+        Override in subclasses to perform initialization logic.
+        """
 
-    def scale_value_back(self, value: float) -> int:
-        """Return raw value for scaled."""
-        return int(value * (10**self.scale))
-
-    def remap_value_to(
+    def skip_update(
         self,
-        value: float,
-        to_min: float = 0,
-        to_max: float = 255,
-        reverse: bool = False,
-    ) -> float:
-        """Remap a value from this range to a new range."""
-        return remap_value(value, self.min, self.max, to_min, to_max, reverse)
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Determine if the wrapper should skip an update.
 
-    def remap_value_from(
+        The default is to always skip, unless overridden in subclasses.
+        """
+        return True
+
+    def read_device_status(self, device: CustomerDevice) -> T | None:
+        """Read device status and convert to a Home Assistant value."""
+        raise NotImplementedError
+
+    def get_update_commands(
+        self, device: CustomerDevice, value: T
+    ) -> list[dict[str, Any]]:
+        """Generate update commands for a Home Assistant action."""
+        raise NotImplementedError
+
+
+class DPCodeWrapper(DeviceWrapper):
+    """Base device wrapper for a single DPCode.
+
+    Used as a common interface for referring to a DPCode, and
+    access read conversion routines.
+    """
+
+    def __init__(self, dpcode: str) -> None:
+        """Init DPCodeWrapper."""
+        self.dpcode = dpcode
+
+    def skip_update(
         self,
-        value: float,
-        from_min: float = 0,
-        from_max: float = 255,
-        reverse: bool = False,
-    ) -> float:
-        """Remap a value from its current range to this range."""
-        return remap_value(value, from_min, from_max, self.min, self.max, reverse)
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Determine if the wrapper should skip an update.
+
+        By default, skip if updated_status_properties is given and
+        does not include this dpcode.
+        """
+        return (
+            updated_status_properties is None
+            or self.dpcode not in updated_status_properties
+        )
+
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
+        """Convert a Home Assistant value back to a raw device value.
+
+        This is called by `get_update_commands` to prepare the value for sending
+        back to the device, and should be implemented in concrete classes if needed.
+        """
+        raise NotImplementedError
+
+    def get_update_commands(
+        self, device: CustomerDevice, value: Any
+    ) -> list[dict[str, Any]]:
+        """Get the update commands for the dpcode.
+
+        The Home Assistant value is converted back to a raw device value.
+        """
+        return [
+            {
+                "code": self.dpcode,
+                "value": self._convert_value_to_raw_value(device, value),
+            }
+        ]
+
+
+class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
+    """Base DPCode wrapper with Type Information."""
+
+    _DPTYPE: type[T]
+    type_information: T
+
+    def __init__(self, dpcode: str, type_information: T) -> None:
+        """Init DPCodeWrapper."""
+        super().__init__(dpcode)
+        self.type_information = type_information
+
+    def read_device_status(self, device: CustomerDevice) -> Any | None:
+        """Read the device value for the dpcode."""
+        return self.type_information.process_raw_value(
+            device.status.get(self.dpcode), device
+        )
 
     @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> IntegerTypeData | None:
-        """Load JSON string and return a IntegerTypeData object."""
-        if not (parsed := json.loads(data)):
-            return None
+    def find_dpcode(
+        cls,
+        device: CustomerDevice,
+        dpcodes: str | tuple[str, ...] | None,
+        *,
+        prefer_function: bool = False,
+    ) -> Self | None:
+        """Find and return a DPCodeTypeInformationWrapper for the given DP codes."""
+        if type_information := cls._DPTYPE.find_dpcode(
+            device, dpcodes, prefer_function=prefer_function
+        ):
+            return cls(
+                dpcode=type_information.dpcode, type_information=type_information
+            )
+        return None
 
-        return cls(
-            dpcode,
-            min=int(parsed["min"]),
-            max=int(parsed["max"]),
-            scale=float(parsed["scale"]),
-            step=max(float(parsed["step"]), 1),
-            unit=parsed.get("unit"),
-            type=parsed.get("type"),
+
+class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[BooleanTypeInformation]):
+    """Simple wrapper for boolean values.
+
+    Supports True/False only.
+    """
+
+    _DPTYPE = BooleanTypeInformation
+
+    def _convert_value_to_raw_value(
+        self, device: CustomerDevice, value: Any
+    ) -> Any | None:
+        """Convert a Home Assistant value back to a raw device value."""
+        if value in (True, False):
+            return value
+        # Currently only called with boolean values
+        # Safety net in case of future changes
+        raise ValueError(f"Invalid boolean value `{value}`")
+
+
+class DPCodeJsonWrapper(DPCodeTypeInformationWrapper[JsonTypeInformation]):
+    """Wrapper to extract information from a JSON value."""
+
+    _DPTYPE = JsonTypeInformation
+
+
+class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
+    """Simple wrapper for EnumTypeInformation values."""
+
+    _DPTYPE = EnumTypeInformation
+
+    def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
+        """Init DPCodeEnumWrapper."""
+        super().__init__(dpcode, type_information)
+        self.options = type_information.range
+
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
+        """Convert a Home Assistant value back to a raw device value."""
+        if value in self.type_information.range:
+            return value
+        # Guarded by select option validation
+        # Safety net in case of future changes
+        raise ValueError(
+            f"Enum value `{value}` out of range: {self.type_information.range}"
         )
 
 
-@dataclass
-class EnumTypeData:
-    """Enum Type Data."""
+class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeInformation]):
+    """Simple wrapper for IntegerTypeInformation values."""
 
-    dpcode: DPCode
-    range: list[str]
+    _DPTYPE = IntegerTypeInformation
 
-    @classmethod
-    def from_json(cls, dpcode: DPCode, data: str) -> EnumTypeData | None:
-        """Load JSON string and return a EnumTypeData object."""
-        if not (parsed := json.loads(data)):
-            return None
-        return cls(dpcode, **parsed)
+    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
+        """Init DPCodeIntegerWrapper."""
+        super().__init__(dpcode, type_information)
+        self.native_unit = type_information.unit
+        self.min_value = self.type_information.scale_value(type_information.min)
+        self.max_value = self.type_information.scale_value(type_information.max)
+        self.value_step = self.type_information.scale_value(type_information.step)
 
-
-class ComplexValue:
-    """Complex value (for JSON/RAW parsing)."""
-
-    @classmethod
-    def from_json(cls, data: str) -> Self:
-        """Load JSON string and return a ComplexValue object."""
-        raise NotImplementedError("from_json is not implemented for this type")
-
-    @classmethod
-    def from_raw(cls, data: str) -> Self | None:
-        """Decode base64 string and return a ComplexValue object."""
-        raise NotImplementedError("from_raw is not implemented for this type")
-
-
-@dataclass
-class ElectricityValue(ComplexValue):
-    """Electricity complex value."""
-
-    electriccurrent: str | None = None
-    power: str | None = None
-    voltage: str | None = None
-
-    @classmethod
-    def from_json(cls, data: str) -> Self:
-        """Load JSON string and return a ElectricityValue object."""
-        return cls(**json.loads(data.lower()))
-
-    @classmethod
-    def from_raw(cls, data: str) -> Self | None:
-        """Decode base64 string and return a ElectricityValue object."""
-        raw = base64.b64decode(data)
-        if len(raw) == 0:
-            return None
-        voltage = struct.unpack(">H", raw[0:2])[0] / 10.0
-        electriccurrent = struct.unpack(">L", b"\x00" + raw[2:5])[0] / 1000.0
-        power = struct.unpack(">L", b"\x00" + raw[5:8])[0] / 1000.0
-        return cls(
-            electriccurrent=str(electriccurrent), power=str(power), voltage=str(voltage)
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
+        """Convert a Home Assistant value back to a raw device value."""
+        new_value = round(value * (10**self.type_information.scale))
+        if self.type_information.min <= new_value <= self.type_information.max:
+            return new_value
+        # Guarded by number validation
+        # Safety net in case of future changes
+        raise ValueError(
+            f"Value `{new_value}` (converted from `{value}`) out of range:"
+            f" ({self.type_information.min}-{self.type_information.max})"
         )
+
+
+class DPCodeDeltaIntegerWrapper(DPCodeIntegerWrapper):
+    """Wrapper for integer values with delta report accumulation.
+
+    This wrapper handles sensors that report incremental (delta) values
+    instead of cumulative totals. It accumulates the delta values locally
+    to provide a running total.
+    """
+
+    _accumulated_value: float = 0
+    _last_dp_timestamp: int | None = None
+
+    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
+        """Init DPCodeDeltaIntegerWrapper."""
+        super().__init__(dpcode, type_information)
+        # Delta reports use TOTAL_INCREASING state class
+        self.state_class = SensorStateClass.TOTAL_INCREASING
+
+    def skip_update(
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Override skip_update to process delta updates.
+
+        Processes delta accumulation before determining if update should be skipped.
+        """
+        if (
+            super().skip_update(device, updated_status_properties, dp_timestamps)
+            or dp_timestamps is None
+            or (current_timestamp := dp_timestamps.get(self.dpcode)) is None
+            or current_timestamp == self._last_dp_timestamp
+            or (raw_value := super().read_device_status(device)) is None
+        ):
+            return True
+
+        delta = float(raw_value)
+        self._accumulated_value += delta
+        _LOGGER.debug(
+            "Delta update for %s: +%s, total: %s",
+            self.dpcode,
+            delta,
+            self._accumulated_value,
+        )
+
+        self._last_dp_timestamp = current_timestamp
+        return False
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read device status, returning accumulated value for delta reports."""
+        return self._accumulated_value
+
+
+class DPCodeRawWrapper(DPCodeTypeInformationWrapper[RawTypeInformation]):
+    """Wrapper to extract information from a RAW/binary value."""
+
+    _DPTYPE = RawTypeInformation
+
+
+class DPCodeStringWrapper(DPCodeTypeInformationWrapper[StringTypeInformation]):
+    """Wrapper to extract information from a STRING value."""
+
+    _DPTYPE = StringTypeInformation
+
+
+class DPCodeBitmapBitWrapper(DPCodeWrapper):
+    """Simple wrapper for a specific bit in bitmap values."""
+
+    def __init__(self, dpcode: str, mask: int) -> None:
+        """Init DPCodeBitmapWrapper."""
+        super().__init__(dpcode)
+        self._mask = mask
+
+    def read_device_status(self, device: CustomerDevice) -> bool | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := device.status.get(self.dpcode)) is None:
+            return None
+        return (raw_value & (1 << self._mask)) != 0
+
+    @classmethod
+    def find_dpcode(
+        cls,
+        device: CustomerDevice,
+        dpcodes: str | tuple[str, ...],
+        *,
+        bitmap_key: str,
+    ) -> Self | None:
+        """Find and return a DPCodeBitmapBitWrapper for the given DP codes."""
+        if (
+            type_information := BitmapTypeInformation.find_dpcode(device, dpcodes)
+        ) and bitmap_key in type_information.label:
+            return cls(
+                type_information.dpcode, type_information.label.index(bitmap_key)
+            )
+        return None

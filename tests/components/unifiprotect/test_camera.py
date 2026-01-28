@@ -44,6 +44,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
+from . import patch_ufp_method
 from .utils import (
     Camera,
     MockUFPFixture,
@@ -596,45 +597,33 @@ async def test_camera_ws_update_offline(
     assert state and state.state == "idle"
 
 
-async def test_camera_enable_motion(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+@pytest.mark.parametrize(
+    ("service", "expected_value"),
+    [
+        ("enable_motion_detection", True),
+        ("disable_motion_detection", False),
+    ],
+)
+async def test_camera_motion_detection(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    service: str,
+    expected_value: bool,
 ) -> None:
-    """Tests generic entity update service."""
-
+    """Test enabling/disabling motion detection on camera."""
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
-    camera.__pydantic_fields__["set_motion_detection"] = Mock(final=False, frozen=False)
-    camera.set_motion_detection = AsyncMock()
+    with patch_ufp_method(
+        camera, "set_motion_detection", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "camera",
+            service,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        "camera",
-        "enable_motion_detection",
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    camera.set_motion_detection.assert_called_once_with(True)
-
-
-async def test_camera_disable_motion(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
-) -> None:
-    """Tests generic entity update service."""
-
-    await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high_resolution_channel"
-
-    camera.__pydantic_fields__["set_motion_detection"] = Mock(final=False, frozen=False)
-    camera.set_motion_detection = AsyncMock()
-
-    await hass.services.async_call(
-        "camera",
-        "disable_motion_detection",
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    camera.set_motion_detection.assert_called_once_with(False)
+        mock_method.assert_called_once_with(expected_value)

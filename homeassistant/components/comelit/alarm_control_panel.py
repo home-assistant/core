@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from aiocomelit.api import ComelitVedoAreaObject
-from aiocomelit.const import AlarmAreaState
+from aiocomelit.const import ALARM_AREA, AlarmAreaState
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import ComelitConfigEntry, ComelitVedoSystem
+from .coordinator import ComelitConfigEntry, ComelitSerialBridge, ComelitVedoSystem
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -56,15 +56,25 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Comelit VEDO system alarm control panel devices."""
 
-    coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
+    coordinator = config_entry.runtime_data
+    is_bridge = isinstance(coordinator, ComelitSerialBridge)
 
-    async_add_entities(
-        ComelitAlarmEntity(coordinator, device, config_entry.entry_id)
-        for device in coordinator.data["alarm_areas"].values()
-    )
+    if TYPE_CHECKING:
+        if is_bridge:
+            assert isinstance(coordinator, ComelitSerialBridge)
+        else:
+            assert isinstance(coordinator, ComelitVedoSystem)
+
+    if data := coordinator.data[ALARM_AREA]:
+        async_add_entities(
+            ComelitAlarmEntity(coordinator, device, config_entry.entry_id)
+            for device in data.values()
+        )
 
 
-class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanelEntity):
+class ComelitAlarmEntity(
+    CoordinatorEntity[ComelitVedoSystem | ComelitSerialBridge], AlarmControlPanelEntity
+):
     """Representation of a Ness alarm panel."""
 
     _attr_has_entity_name = True
@@ -78,7 +88,7 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
 
     def __init__(
         self,
-        coordinator: ComelitVedoSystem,
+        coordinator: ComelitVedoSystem | ComelitSerialBridge,
         area: ComelitVedoAreaObject,
         config_entry_entry_id: str,
     ) -> None:
@@ -95,7 +105,9 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
     @property
     def _area(self) -> ComelitVedoAreaObject:
         """Return area object."""
-        return self.coordinator.data["alarm_areas"][self._area_index]
+        return cast(
+            ComelitVedoAreaObject, self.coordinator.data[ALARM_AREA][self._area_index]
+        )
 
     @property
     def available(self) -> bool:

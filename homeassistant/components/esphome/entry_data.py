@@ -44,6 +44,7 @@ from aioesphomeapi import (
     UpdateInfo,
     UserService,
     ValveInfo,
+    WaterHeaterInfo,
     build_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
@@ -96,6 +97,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     TimeInfo: Platform.TIME,
     UpdateInfo: Platform.UPDATE,
     ValveInfo: Platform.VALVE,
+    WaterHeaterInfo: Platform.WATER_HEATER,
 }
 
 
@@ -441,14 +443,6 @@ class RuntimeEntryData:
             # Ensure we save the data if we are unloading before the
             # save delay has passed.
             await self.store.async_save(self._pending_storage())
-
-    async def async_update_listener(
-        self, hass: HomeAssistant, entry: ESPHomeConfigEntry
-    ) -> None:
-        """Handle options update."""
-        if self.original_options == entry.options:
-            return
-        hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
     @callback
     def async_on_disconnect(self) -> None:

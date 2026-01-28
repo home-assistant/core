@@ -93,39 +93,7 @@
       "message": "Invalid state for sending keys. Only 'hit' allowed for deferred sending."
     }
   },
-  "issues": {
-    "deprecated_keylock_sensor": {
-      "description": "Your LCN key lock binary sensor entity `{entity}` is being used in automations or scripts. A key lock switch entity is available and should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue.",
-      "title": "Deprecated LCN key lock binary sensor"
-    },
-    "deprecated_regulatorlock_sensor": {
-      "description": "Your LCN regulator lock binary sensor entity `{entity}` is being used in automations or scripts. A regulator lock switch entity is available and should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue.",
-      "title": "Deprecated LCN regulator lock binary sensor"
-    }
-  },
   "services": {
-    "address_to_device_id": {
-      "description": "Converts an LCN address into a device ID.",
-      "fields": {
-        "host": {
-          "description": "Host name as given in the integration panel.",
-          "name": "Host name"
-        },
-        "id": {
-          "description": "Module or group number of the target.",
-          "name": "Module or group ID"
-        },
-        "segment_id": {
-          "description": "Segment number of the target.",
-          "name": "Segment ID"
-        },
-        "type": {
-          "description": "Module type of the target.",
-          "name": "Type"
-        }
-      },
-      "name": "Address to device ID"
-    },
     "dyn_text": {
       "description": "Sends dynamic text to LCN-GTxD displays.",
       "fields": {

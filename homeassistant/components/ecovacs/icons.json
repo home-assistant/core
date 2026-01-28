@@ -81,6 +81,9 @@
       "active_map": {
         "default": "mdi:floor-plan"
       },
+      "auto_empty": {
+        "default": "mdi:delete-empty"
+      },
       "water_amount": {
         "default": "mdi:water"
       },
@@ -89,9 +92,6 @@
       }
     },
     "sensor": {
-      "auto_empty": {
-        "default": "mdi:delete-empty"
-      },
       "error": {
         "default": "mdi:alert-circle"
       },

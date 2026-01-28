@@ -5,17 +5,17 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from xbox.webapi.api.provider.people.models import Person
-from xbox.webapi.api.provider.titlehub.models import Title
+from pythonxbox.api.provider.people.models import Person
+from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import XboxConfigEntry
@@ -25,6 +25,8 @@ from .entity import (
     check_deprecated_entity,
     profile_pic,
 )
+
+PARALLEL_UPDATES = 0
 
 
 class XboxBinarySensor(StrEnum):
@@ -44,7 +46,6 @@ class XboxBinarySensorEntityDescription(
     """Xbox binary sensor description."""
 
     is_on_fn: Callable[[Person], bool | None]
-    deprecated: bool | None = None
 
 
 def profile_attributes(person: Person, _: Title | None) -> dict[str, Any]:
@@ -53,6 +54,7 @@ def profile_attributes(person: Person, _: Title | None) -> dict[str, Any]:
     attributes["display_name"] = person.display_name
     attributes["real_name"] = person.real_name or None
     attributes["bio"] = person.detail.bio if person.detail else None
+    attributes["location"] = person.detail.location if person.detail else None
     return attributes
 
 
@@ -110,30 +112,34 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox Live friends."""
-    xuids_added: set[str] = set()
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.presence
 
-    @callback
-    def add_entities() -> None:
-        nonlocal xuids_added
+    if TYPE_CHECKING:
+        assert entry.unique_id
+    async_add_entities(
+        [
+            XboxBinarySensorEntity(coordinator, entry.unique_id, description)
+            for description in SENSOR_DESCRIPTIONS
+            if check_deprecated_entity(
+                hass, entry.unique_id, description, BINARY_SENSOR_DOMAIN
+            )
+        ]
+    )
 
-        current_xuids = set(coordinator.data.presence)
-        if new_xuids := current_xuids - xuids_added:
-            for xuid in new_xuids:
-                async_add_entities(
-                    [
-                        XboxBinarySensorEntity(coordinator, xuid, description)
-                        for description in SENSOR_DESCRIPTIONS
-                        if check_deprecated_entity(
-                            hass, xuid, description, BINARY_SENSOR_DOMAIN
-                        )
-                    ]
+    for subentry_id, subentry in entry.subentries.items():
+        async_add_entities(
+            [
+                XboxBinarySensorEntity(coordinator, subentry.unique_id, description)
+                for description in SENSOR_DESCRIPTIONS
+                if subentry.unique_id
+                and check_deprecated_entity(
+                    hass, subentry.unique_id, description, BINARY_SENSOR_DOMAIN
                 )
-            xuids_added |= new_xuids
-        xuids_added &= current_xuids
-
-    coordinator.async_add_listener(add_entities)
-    add_entities()
+                and subentry.unique_id in coordinator.data.presence
+                and subentry.subentry_type == "friend"
+            ],
+            config_subentry_id=subentry_id,
+        )
 
 
 class XboxBinarySensorEntity(XboxBaseEntity, BinarySensorEntity):

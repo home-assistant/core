@@ -20,6 +20,9 @@
       "presenceState": "Online",
       "presenceText": "Last seen 49m ago: Xbox App",
       "presenceDevices": null,
+      "isFriend": true,
+      "isFriendRequestReceived": false,
+      "isFriendRequestSent": false,
       "isBroadcasting": false,
       "isCloaked": false,
       "isQuarantined": false,
@@ -30,8 +33,8 @@
       "search": null,
       "titleHistory": null,
       "multiplayerSummary": {
-        "InMultiplayerSession": 0,
-        "InParty": 0
+        "inMultiplayerSession": 0,
+        "inParty": 0
       },
       "recentPlayer": null,
       "follower": null,
@@ -67,7 +70,17 @@
         "mute": false,
         "followerCount": 105,
         "followingCount": 121,
-        "hasGamePass": true
+        "hasGamePass": true,
+        "isFriend": true,
+        "canBeFriended": true,
+        "canBeFollowed": true,
+        "friendCount": 150,
+        "isFriendRequestReceived": false,
+        "isFriendRequestSent": false,
+        "isFriendListShared": true,
+        "isFollowingCaller": false,
+        "isFollowedByCaller": false,
+        "isFavorite": true
       },
       "communityManagerTitles": null,
       "socialManager": null,
@@ -99,6 +112,9 @@
       "presenceState": "Online",
       "presenceText": "Online",
       "presenceDevices": null,
+      "isFriend": true,
+      "isFriendRequestReceived": false,
+      "isFriendRequestSent": false,
       "isBroadcasting": false,
       "isCloaked": null,
       "isQuarantined": false,
@@ -109,8 +125,8 @@
       "search": null,
       "titleHistory": null,
       "multiplayerSummary": {
-        "InMultiplayerSession": 0,
-        "InParty": 0
+        "inMultiplayerSession": 0,
+        "inParty": 0
       },
       "recentPlayer": null,
       "follower": null,
@@ -146,7 +162,17 @@
         "mute": false,
         "followerCount": 78,
         "followingCount": 83,
-        "hasGamePass": false
+        "hasGamePass": false,
+        "isFriend": true,
+        "canBeFriended": true,
+        "canBeFollowed": true,
+        "friendCount": 150,
+        "isFriendRequestReceived": false,
+        "isFriendRequestSent": false,
+        "isFriendListShared": true,
+        "isFollowingCaller": false,
+        "isFollowedByCaller": false,
+        "isFavorite": true
       },
       "communityManagerTitles": null,
       "socialManager": null,
@@ -178,6 +204,9 @@
       "presenceState": "Online",
       "presenceText": "Amazon Instant Video",
       "presenceDevices": null,
+      "isFriend": true,
+      "isFriendRequestReceived": false,
+      "isFriendRequestSent": false,
       "isBroadcasting": false,
       "isCloaked": null,
       "isQuarantined": false,
@@ -188,8 +217,8 @@
       "search": null,
       "titleHistory": null,
       "multiplayerSummary": {
-        "InMultiplayerSession": 0,
-        "InParty": 0
+        "inMultiplayerSession": 0,
+        "inParty": 0
       },
       "recentPlayer": null,
       "follower": null,
@@ -236,7 +265,17 @@
         "mute": false,
         "followerCount": 27659,
         "followingCount": 0,
-        "hasGamePass": false
+        "hasGamePass": false,
+        "isFriend": true,
+        "canBeFriended": true,
+        "canBeFollowed": true,
+        "friendCount": 150,
+        "isFriendRequestReceived": false,
+        "isFriendRequestSent": false,
+        "isFriendListShared": true,
+        "isFollowingCaller": false,
+        "isFollowedByCaller": false,
+        "isFavorite": true
       },
       "communityManagerTitles": null,
       "socialManager": null,

@@ -7,8 +7,17 @@ from unittest.mock import patch
 from aiohttp.test_utils import TestClient
 import pytest
 
+from homeassistant.components.mobile_app.const import (
+    ATTR_SENSOR_ATTRIBUTES,
+    ATTR_SENSOR_ICON,
+    ATTR_SENSOR_NAME,
+    ATTR_SENSOR_STATE,
+    ATTR_SENSOR_TYPE,
+    ATTR_SENSOR_UNIQUE_ID,
+)
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
+    CONF_WEBHOOK_ID,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -16,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM,
     US_CUSTOMARY_SYSTEM,
@@ -697,3 +707,80 @@ async def test_recreate_correct_from_entity_registry(
     assert entity_entry.capabilities == {
         "state_class": "measurement",
     }
+
+
+async def test_dispatcher_cleanup_on_unload(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that dispatcher connections are cleaned up on config entry unload."""
+
+    webhook_id = create_registrations[1]["webhook_id"]
+    entry = hass.config_entries.async_entries("mobile_app")[1]
+
+    # Send a dispatcher signal when config entry is loaded
+    async_dispatcher_send(
+        hass,
+        "mobile_app_sensor_register",
+        {
+            CONF_WEBHOOK_ID: webhook_id,
+            ATTR_SENSOR_NAME: "Test Before Unload",
+            ATTR_SENSOR_STATE: 42,
+            ATTR_SENSOR_TYPE: "sensor",
+            ATTR_SENSOR_UNIQUE_ID: "test_before_unload",
+            ATTR_SENSOR_ICON: "mdi:test",
+            ATTR_SENSOR_ATTRIBUTES: {},
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Check sensor was created
+    assert hass.states.get("sensor.test_before_unload") is not None
+
+    # Unload the config entry
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Send another dispatcher signal after unload
+    async_dispatcher_send(
+        hass,
+        "mobile_app_sensor_register",
+        {
+            CONF_WEBHOOK_ID: webhook_id,
+            ATTR_SENSOR_NAME: "Test After Unload",
+            ATTR_SENSOR_STATE: 99,
+            ATTR_SENSOR_TYPE: "sensor",
+            ATTR_SENSOR_UNIQUE_ID: "test_after_unload",
+            ATTR_SENSOR_ICON: "mdi:test",
+            ATTR_SENSOR_ATTRIBUTES: {},
+        },
+    )
+    await hass.async_block_till_done()
+
+    # The sensor should not be created because dispatcher was cleaned up
+    assert hass.states.get("sensor.test_after_unload") is None
+
+    # Reload the config entry
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Send dispatcher signal after reload
+    async_dispatcher_send(
+        hass,
+        "mobile_app_sensor_register",
+        {
+            CONF_WEBHOOK_ID: webhook_id,
+            ATTR_SENSOR_NAME: "Test After Reload",
+            ATTR_SENSOR_STATE: 123,
+            ATTR_SENSOR_TYPE: "sensor",
+            ATTR_SENSOR_UNIQUE_ID: "test_after_reload",
+            ATTR_SENSOR_ICON: "mdi:test",
+            ATTR_SENSOR_ATTRIBUTES: {},
+        },
+    )
+    await hass.async_block_till_done()
+
+    # This sensor should be created successfully after reload
+    assert hass.states.get("sensor.test_after_reload") is not None
+    assert hass.states.get("sensor.test_after_reload").state == "123"

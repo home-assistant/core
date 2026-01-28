@@ -4,7 +4,6 @@ from collections.abc import Generator
 from http import HTTPStatus
 from unittest.mock import patch
 
-from freezegun.api import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -28,7 +27,7 @@ def event_only() -> Generator[None]:
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@freeze_time("2025-01-01T03:30:00.000Z")
+@pytest.mark.freeze_time("2025-01-01T03:30:00.000Z")
 async def test_setup(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -129,7 +128,7 @@ async def test_setup(
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@freeze_time("2025-01-01T03:30:00.000+00:00")
+@pytest.mark.freeze_time("2025-01-01T03:30:00.000+00:00")
 async def test_webhook_event(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

@@ -47,7 +47,19 @@ async def test_setup_entry_maintenance(
 
 
 async def test_setup_gateway_offline(hass: HomeAssistant) -> None:
-    """Test setup entry fails on gateway offline."""
+    """Test setup entry with one gateway online and one gateway offline."""
+    entry = configure_integration(hass)
+    test_gateway = HomeControlMock()
+    with patch(
+        "homeassistant.components.devolo_home_control.HomeControl",
+        side_effect=[test_gateway, GatewayOfflineError],
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_setup_all_gateways_offline(hass: HomeAssistant) -> None:
+    """Test setup entry fails on all gateways offline."""
     entry = configure_integration(hass)
     with patch(
         "homeassistant.components.devolo_home_control.HomeControl",

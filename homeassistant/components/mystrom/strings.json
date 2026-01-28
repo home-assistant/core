@@ -22,6 +22,12 @@
     "sensor": {
       "avg_consumption": {
         "name": "Average consumption"
+      },
+      "energy_since_boot": {
+        "name": "Energy since boot"
+      },
+      "time_since_boot": {
+        "name": "Last restart"
       }
     }
   }

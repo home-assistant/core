@@ -30,8 +30,6 @@ async def test_setup_success(
     await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()
 
-    assert not hass.services.async_services().get(DOMAIN)
-
 
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
 async def test_expired_token_refresh_success(

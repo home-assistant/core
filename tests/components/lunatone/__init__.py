@@ -3,11 +3,13 @@
 from typing import Final
 
 from lunatone_rest_api_client.models import (
+    DALIBusData,
     DeviceData,
     DeviceInfoData,
     DevicesData,
     FeaturesStatus,
     InfoData,
+    LineStatus,
 )
 from lunatone_rest_api_client.models.common import ColorRGBData, ColorWAFData, Status
 from lunatone_rest_api_client.models.devices import DeviceStatus
@@ -54,17 +56,43 @@ DEVICE_DATA_LIST: Final[list[DeviceData]] = [
     ),
 ]
 DEVICES_DATA: Final[DevicesData] = DevicesData(devices=DEVICE_DATA_LIST)
+DEVICE_INFO_DATA: Final[DeviceInfoData] = DeviceInfoData(
+    serial=SERIAL_NUMBER,
+    gtin=192837465,
+    pcb="2a",
+    articleNumber=87654321,
+    productionYear=20,
+    productionWeek=1,
+)
 INFO_DATA: Final[InfoData] = InfoData(
     name="Test",
     version=VERSION,
-    device=DeviceInfoData(
-        serial=SERIAL_NUMBER,
-        gtin=192837465,
-        pcb="2a",
-        articleNumber=87654321,
-        productionYear=20,
-        productionWeek=1,
-    ),
+    device=DEVICE_INFO_DATA,
+    lines={
+        "0": DALIBusData(
+            sendBlockedInitialize=False,
+            sendBlockedQuiescent=False,
+            sendBlockedMacroRunning=False,
+            sendBufferFull=False,
+            lineStatus=LineStatus.OK,
+            device=DEVICE_INFO_DATA,
+        ),
+        "1": DALIBusData(
+            sendBlockedInitialize=False,
+            sendBlockedQuiescent=False,
+            sendBlockedMacroRunning=False,
+            sendBufferFull=False,
+            lineStatus=LineStatus.OK,
+            device=DeviceInfoData(
+                serial=54321,
+                gtin=101010101,
+                pcb="1a",
+                articleNumber=12345678,
+                productionYear=22,
+                productionWeek=10,
+            ),
+        ),
+    },
 )
 
 

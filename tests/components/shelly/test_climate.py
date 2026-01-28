@@ -118,8 +118,8 @@ async def test_climate_hvac_mode(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
-    mock_block_device.http_request.assert_called_once_with(
-        "get", "thermostat/0", {"target_t_enabled": 1, "target_t": 20.0}
+    mock_block_device.set_thermostat_state.assert_called_once_with(
+        0, target_t_enabled=1, target_t=20.0
     )
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 20.0)
@@ -136,8 +136,8 @@ async def test_climate_hvac_mode(
         blocking=True,
     )
 
-    mock_block_device.http_request.assert_called_with(
-        "get", "thermostat/0", {"target_t_enabled": 1, "target_t": "4"}
+    mock_block_device.set_thermostat_state.assert_called_with(
+        0, target_t_enabled=1, target_t=4.0
     )
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 4.0)
@@ -177,10 +177,10 @@ async def test_climate_set_temperature(
         blocking=True,
     )
 
-    mock_block_device.http_request.assert_called_once_with(
-        "get", "thermostat/0", {"target_t_enabled": 1, "target_t": "23.0"}
+    mock_block_device.set_thermostat_state.assert_called_once_with(
+        0, target_t_enabled=1, target_t=23.0
     )
-    mock_block_device.http_request.reset_mock()
+    mock_block_device.set_thermostat_state.reset_mock()
 
     # Test conversion from C to F
     monkeypatch.setattr(
@@ -200,8 +200,8 @@ async def test_climate_set_temperature(
         blocking=True,
     )
 
-    mock_block_device.http_request.assert_called_once_with(
-        "get", "thermostat/0", {"target_t_enabled": 1, "target_t": "68.0"}
+    mock_block_device.set_thermostat_state.assert_called_once_with(
+        0, target_t_enabled=1, target_t=68.0
     )
 
 
@@ -230,8 +230,8 @@ async def test_climate_set_preset_mode(
         blocking=True,
     )
 
-    mock_block_device.http_request.assert_called_once_with(
-        "get", "thermostat/0", {"schedule": 1, "schedule_profile": "2"}
+    mock_block_device.set_thermostat_state.assert_called_once_with(
+        0, schedule=1, schedule_profile=2
     )
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "mode", 2)
@@ -248,10 +248,8 @@ async def test_climate_set_preset_mode(
         blocking=True,
     )
 
-    assert len(mock_block_device.http_request.mock_calls) == 2
-    mock_block_device.http_request.assert_called_with(
-        "get", "thermostat/0", {"schedule": 0}
-    )
+    assert len(mock_block_device.set_thermostat_state.mock_calls) == 2
+    mock_block_device.set_thermostat_state.assert_called_with(0, schedule=0)
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "mode", 0)
     mock_block_device.mock_update()
@@ -319,8 +317,8 @@ async def test_block_restored_climate(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
-    mock_block_device.http_request.assert_called_once_with(
-        "get", "thermostat/0", {"target_t_enabled": 1, "target_t": 22.0}
+    mock_block_device.set_thermostat_state.assert_called_once_with(
+        0, target_t_enabled=1, target_t=22.0
     )
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 22.0)
@@ -396,8 +394,8 @@ async def test_block_restored_climate_us_customary(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
-    mock_block_device.http_request.assert_called_once_with(
-        "get", "thermostat/0", {"target_t_enabled": 1, "target_t": 10.0}
+    mock_block_device.set_thermostat_state.assert_called_once_with(
+        0, target_t_enabled=1, target_t=10.0
     )
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 10.0)
@@ -483,7 +481,7 @@ async def test_block_set_mode_connection_error(
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     monkeypatch.setattr(
         mock_block_device,
-        "http_request",
+        "set_thermostat_state",
         AsyncMock(side_effect=DeviceConnectionError),
     )
     await init_integration(hass, 1, sleep_period=1000)
@@ -511,7 +509,7 @@ async def test_block_set_mode_auth_error(
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     monkeypatch.setattr(
         mock_block_device,
-        "http_request",
+        "set_thermostat_state",
         AsyncMock(side_effect=InvalidAuthError),
     )
     entry = await init_integration(hass, 1, sleep_period=1000)

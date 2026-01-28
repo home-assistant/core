@@ -16,9 +16,15 @@ from homeassistant.components.satel_integra import (
 from homeassistant.components.satel_integra.const import DEFAULT_PORT
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
+
+MOCK_CODE = "1234"
 MOCK_CONFIG_DATA = {CONF_HOST: "192.168.0.2", CONF_PORT: DEFAULT_PORT}
-MOCK_CONFIG_OPTIONS = {CONF_CODE: "1234"}
+MOCK_CONFIG_OPTIONS = {CONF_CODE: MOCK_CODE}
+
+MOCK_ENTRY_ID = "1234567890"
 
 MOCK_PARTITION_SUBENTRY = ConfigSubentry(
     subentry_type=SUBENTRY_TYPE_PARTITION,
@@ -66,3 +72,11 @@ MOCK_SWITCHABLE_OUTPUT_SUBENTRY = ConfigSubentry(
         CONF_SWITCHABLE_OUTPUT_NUMBER: 1,
     },
 )
+
+
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry):
+    """Set up the component."""
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -13,7 +14,7 @@ from pyportainer import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer
+from pyportainer.models.docker import DockerContainer, DockerContainerStats
 from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
 from pyportainer.models.portainer import Endpoint
 
@@ -23,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, ENDPOINT_STATUS_DOWN
+from .const import CONTAINER_STATE_RUNNING, DOMAIN, ENDPOINT_STATUS_DOWN
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -39,9 +40,18 @@ class PortainerCoordinatorData:
     id: int
     name: str | None
     endpoint: Endpoint
-    containers: dict[str, DockerContainer]
+    containers: dict[str, PortainerContainerData]
     docker_version: DockerVersion
     docker_info: DockerInfo
+
+
+@dataclass(slots=True)
+class PortainerContainerData:
+    """Container data held by the Portainer coordinator."""
+
+    container: DockerContainer
+    stats: DockerContainerStats | None
+    stats_pre: DockerContainerStats | None
 
 
 class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorData]]):
@@ -72,7 +82,9 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             Callable[[list[PortainerCoordinatorData]], None]
         ] = []
         self.new_containers_callbacks: list[
-            Callable[[list[tuple[PortainerCoordinatorData, DockerContainer]]], None]
+            Callable[
+                [list[tuple[PortainerCoordinatorData, PortainerContainerData]]], None
+            ]
         ] = []
 
     async def _async_setup(self) -> None:
@@ -119,8 +131,6 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        else:
-            _LOGGER.debug("Fetched endpoints: %s", endpoints)
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
@@ -136,6 +146,53 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 containers = await self.portainer.get_containers(endpoint.id)
                 docker_version = await self.portainer.docker_version(endpoint.id)
                 docker_info = await self.portainer.docker_info(endpoint.id)
+
+                prev_endpoint = self.data.get(endpoint.id) if self.data else None
+                container_map: dict[str, PortainerContainerData] = {}
+
+                # Map containers, started and stopped
+                for container in containers:
+                    container_name = self._get_container_name(container.names[0])
+                    prev_container = (
+                        prev_endpoint.containers[container_name]
+                        if prev_endpoint
+                        else None
+                    )
+                    container_map[container_name] = PortainerContainerData(
+                        container=container,
+                        stats=None,
+                        stats_pre=prev_container.stats if prev_container else None,
+                    )
+
+                # Separately fetch stats for running containers
+                running_containers = [
+                    container
+                    for container in containers
+                    if container.state == CONTAINER_STATE_RUNNING
+                ]
+                if running_containers:
+                    container_stats = dict(
+                        zip(
+                            (
+                                self._get_container_name(container.names[0])
+                                for container in running_containers
+                            ),
+                            await asyncio.gather(
+                                *(
+                                    self.portainer.container_stats(
+                                        endpoint_id=endpoint.id,
+                                        container_id=container.id,
+                                    )
+                                    for container in running_containers
+                                )
+                            ),
+                            strict=False,
+                        )
+                    )
+
+                    # Now assign stats to the containers
+                    for container_name, stats in container_stats.items():
+                        container_map[container_name].stats = stats
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
                 raise UpdateFailed(
@@ -155,10 +212,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 id=endpoint.id,
                 name=endpoint.name,
                 endpoint=endpoint,
-                containers={
-                    container.names[0].replace("/", " ").strip(): container
-                    for container in containers
-                },
+                containers=container_map,
                 docker_version=docker_version,
                 docker_info=docker_info,
             )
@@ -179,11 +233,15 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
         # Surprise, we also handle containers here :)
         current_containers = {
-            (endpoint.id, container.id)
+            (endpoint.id, container_name)
             for endpoint in mapped_endpoints.values()
-            for container in endpoint.containers.values()
+            for container_name in endpoint.containers
         }
         new_containers = current_containers - self.known_containers
         if new_containers:
             _LOGGER.debug("New containers found: %s", new_containers)
             self.known_containers.update(new_containers)
+
+    def _get_container_name(self, container_name: str) -> str:
+        """Sanitize to get a proper container name."""
+        return container_name.replace("/", " ").strip()

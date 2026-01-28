@@ -299,8 +299,8 @@ def _create_climate_ui(xknx: XKNX, conf: ConfigExtractor, name: str) -> XknxClim
         group_address_active_state=conf.get_state_and_passive(CONF_GA_ACTIVE),
         group_address_command_value_state=conf.get_state_and_passive(CONF_GA_VALVE),
         sync_state=sync_state,
-        min_temp=conf.get(ClimateConf.MIN_TEMP),
-        max_temp=conf.get(ClimateConf.MAX_TEMP),
+        min_temp=conf.get(CONF_TARGET_TEMPERATURE, ClimateConf.MIN_TEMP),
+        max_temp=conf.get(CONF_TARGET_TEMPERATURE, ClimateConf.MAX_TEMP),
         mode=climate_mode,
         group_address_fan_speed=conf.get_write(CONF_GA_FAN_SPEED),
         group_address_fan_speed_state=conf.get_state_and_passive(CONF_GA_FAN_SPEED),
@@ -486,7 +486,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
                 ha_controller_modes.append(self._last_hvac_mode)
             ha_controller_modes.append(HVACMode.OFF)
 
-        hvac_modes = list(set(filter(None, ha_controller_modes)))
+        hvac_modes = sorted(set(filter(None, ha_controller_modes)))
         return (
             hvac_modes
             if hvac_modes

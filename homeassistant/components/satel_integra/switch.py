@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
+from satel_integra.satel_integra import AsyncSatel
+
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_CODE, CONF_NAME
+from homeassistant.config_entries import ConfigSubentry
+from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -17,8 +19,7 @@ from .const import (
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
     SatelConfigEntry,
 )
-
-_LOGGER = logging.getLogger(__name__)
+from .entity import SatelIntegraEntity
 
 
 async def async_setup_entry(
@@ -36,15 +37,15 @@ async def async_setup_entry(
     )
 
     for subentry in switchable_output_subentries:
-        switchable_output_num = subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
-        switchable_output_name = subentry.data[CONF_NAME]
+        switchable_output_num: int = subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
 
         async_add_entities(
             [
                 SatelIntegraSwitch(
                     controller,
+                    config_entry.entry_id,
+                    subentry,
                     switchable_output_num,
-                    switchable_output_name,
                     config_entry.options.get(CONF_CODE),
                 ),
             ],
@@ -52,62 +53,54 @@ async def async_setup_entry(
         )
 
 
-class SatelIntegraSwitch(SwitchEntity):
-    """Representation of an Satel switch."""
+class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
+    """Representation of an Satel Integra switch."""
 
-    _attr_should_poll = False
+    def __init__(
+        self,
+        controller: AsyncSatel,
+        config_entry_id: str,
+        subentry: ConfigSubentry,
+        device_number: int,
+        code: str | None,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(
+            controller,
+            config_entry_id,
+            subentry,
+            device_number,
+        )
 
-    def __init__(self, controller, device_number, device_name, code):
-        """Initialize the binary_sensor."""
-        self._device_number = device_number
-        self._attr_unique_id = f"satel_switch_{device_number}"
-        self._name = device_name
-        self._state = False
         self._code = code
-        self._satel = controller
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_OUTPUTS_UPDATED, self._devices_updated
+        self._attr_is_on = self._device_number in self._satel.violated_outputs
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_OUTPUTS_UPDATED, self._devices_updated
+            )
         )
 
     @callback
-    def _devices_updated(self, zones):
+    def _devices_updated(self, outputs: dict[int, int]) -> None:
         """Update switch state, if needed."""
-        _LOGGER.debug("Update switch name: %s zones: %s", self._name, zones)
-        if self._device_number in zones:
-            new_state = self._read_state()
-            _LOGGER.debug("New state: %s", new_state)
-            if new_state != self._state:
-                self._state = new_state
+        if self._device_number in outputs:
+            new_state = outputs[self._device_number] == 1
+            if new_state != self._attr_is_on:
+                self._attr_is_on = new_state
                 self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        _LOGGER.debug("Switch: %s status: %s, turning on", self._name, self._state)
         await self._satel.set_output(self._code, self._device_number, True)
+        self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        _LOGGER.debug(
-            "Switch name: %s status: %s, turning off", self._name, self._state
-        )
         await self._satel.set_output(self._code, self._device_number, False)
+        self._attr_is_on = False
         self.async_write_ha_state()
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        self._state = self._read_state()
-        return self._state
-
-    def _read_state(self):
-        """Read state of the device."""
-        return self._device_number in self._satel.violated_outputs
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name

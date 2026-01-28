@@ -25,7 +25,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType, VolDictType
 from homeassistant.util import slugify
 from homeassistant.util.network import is_ip_address
 
-from . import async_wait_for_elk_to_sync, hostname_from_url
+from . import ElkSyncWaiter, LoginFailed, hostname_from_url
 from .const import CONF_AUTO_CONFIGURE, DISCOVER_SCAN_TIMEOUT, DOMAIN, LOGIN_TIMEOUT
 from .discovery import (
     _short_mac,
@@ -89,8 +89,9 @@ async def validate_input(data: dict[str, str], mac: str | None) -> dict[str, str
     elk.connect()
 
     try:
-        if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, VALIDATE_TIMEOUT):
-            raise InvalidAuth
+        await ElkSyncWaiter(elk, LOGIN_TIMEOUT, VALIDATE_TIMEOUT).async_wait()
+    except LoginFailed as exc:
+        raise InvalidAuth from exc
     finally:
         elk.disconnect()
 
@@ -296,7 +297,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_discovered_connection()
             return await self.async_step_manual_connection()
 
-        current_unique_ids = self._async_current_ids()
+        current_unique_ids = self._async_current_ids(include_ignore=False)
         current_hosts = {
             hostname_from_url(entry.data[CONF_HOST])
             for entry in self._async_current_entries(include_ignore=False)

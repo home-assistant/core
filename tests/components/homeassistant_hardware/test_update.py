@@ -173,7 +173,12 @@ async def mock_async_setup_update_entities(
 class MockFirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Mock SkyConnect firmware update entity."""
 
-    bootloader_reset_methods = []
+    BOOTLOADER_RESET_METHODS = [ResetTarget.RTS_DTR]
+    APPLICATION_PROBE_METHODS = [
+        (ApplicationType.GECKO_BOOTLOADER, 115200),
+        (ApplicationType.EZSP, 115200),
+        (ApplicationType.SPINEL, 460800),
+    ]
 
     def __init__(
         self,
@@ -320,9 +325,8 @@ async def test_update_entity_installation(
         fw_data: bytes,
         expected_installed_firmware_type: ApplicationType,
         bootloader_reset_methods: Sequence[ResetTarget] = (),
+        application_probe_methods: Sequence[tuple[ApplicationType, int]] = (),
         progress_callback: Callable[[int, int], None] | None = None,
-        *,
-        domain: str = "homeassistant_hardware",
     ) -> FirmwareInfo:
         await asyncio.sleep(0)
         progress_callback(0, 100)

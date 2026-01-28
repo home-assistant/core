@@ -1,7 +1,6 @@
 """The tests for the hassio component."""
 
 from datetime import timedelta
-import logging
 import os
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -13,15 +12,13 @@ import pytest
 from voluptuous import Invalid
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
-from homeassistant.components import frontend, hassio
+from homeassistant.components import frontend
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.hassio import (
     ADDONS_COORDINATOR,
     DOMAIN,
     get_core_info,
-    get_supervisor_ip,
     hostname_from_addon_slug,
-    is_hassio as deprecated_is_hassio,
 )
 from homeassistant.components.hassio.config import STORAGE_KEY
 from homeassistant.components.hassio.const import (
@@ -32,15 +29,10 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.hassio import is_hassio
-from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    import_and_test_deprecated_constant,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
@@ -233,7 +225,7 @@ async def test_setup_api_ping(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert get_core_info(hass)["version_latest"] == "1.0.0"
     assert is_hassio(hass)
 
@@ -253,9 +245,7 @@ async def test_setup_api_panel(
         "component_name": "custom",
         "icon": None,
         "title": None,
-        "url_path": "hassio",
-        "require_admin": True,
-        "config_panel_domain": None,
+        "default_visible": True,
         "config": {
             "_panel_custom": {
                 "embed_iframe": True,
@@ -264,6 +254,30 @@ async def test_setup_api_panel(
                 "trust_external": False,
             }
         },
+        "url_path": "hassio",
+        "require_admin": True,
+        "config_panel_domain": None,
+    }
+
+
+async def test_setup_app_panel(hass: HomeAssistant) -> None:
+    """Test app panel is registered."""
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, "hassio", {})
+        await hass.async_block_till_done()
+        assert result
+
+    panels = hass.data[frontend.DATA_PANELS]
+
+    assert panels.get("app").to_response() == {
+        "component_name": "app",
+        "icon": None,
+        "title": None,
+        "default_visible": True,
+        "config": None,
+        "url_path": "app",
+        "require_admin": False,
+        "config_panel_domain": None,
     }
 
 
@@ -280,7 +294,7 @@ async def test_setup_api_push_api_data(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert not aioclient_mock.mock_calls[0][2]["ssl"]
     assert aioclient_mock.mock_calls[0][2]["port"] == 9999
     assert "watchdog" not in aioclient_mock.mock_calls[0][2]
@@ -301,7 +315,7 @@ async def test_setup_api_push_api_data_server_host(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert not aioclient_mock.mock_calls[0][2]["ssl"]
     assert aioclient_mock.mock_calls[0][2]["port"] == 9999
     assert not aioclient_mock.mock_calls[0][2]["watchdog"]
@@ -322,7 +336,7 @@ async def test_setup_api_push_api_data_default(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert not aioclient_mock.mock_calls[0][2]["ssl"]
     assert aioclient_mock.mock_calls[0][2]["port"] == 8123
     refresh_token = aioclient_mock.mock_calls[0][2]["refresh_token"]
@@ -403,7 +417,7 @@ async def test_setup_api_existing_hassio_user(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert not aioclient_mock.mock_calls[0][2]["ssl"]
     assert aioclient_mock.mock_calls[0][2]["port"] == 8123
     assert aioclient_mock.mock_calls[0][2]["refresh_token"] == token.token
@@ -422,7 +436,7 @@ async def test_setup_core_push_config(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert aioclient_mock.mock_calls[1][2]["timezone"] == "testzone"
 
     with patch("homeassistant.util.dt.set_default_time_zone"):
@@ -446,7 +460,7 @@ async def test_setup_hassio_no_additional_data(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
 
 
@@ -528,14 +542,14 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 23
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 24
     assert aioclient_mock.mock_calls[-1][2] == "test"
 
     await hass.services.async_call("hassio", "host_shutdown", {})
     await hass.services.async_call("hassio", "host_reboot", {})
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 25
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 26
 
     await hass.services.async_call("hassio", "backup_full", {})
     await hass.services.async_call(
@@ -550,7 +564,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 27
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 28
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 03:48:00",
         "homeassistant": True,
@@ -575,7 +589,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 29
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 30
     assert aioclient_mock.mock_calls[-1][2] == {
         "addons": ["test"],
         "folders": ["ssl"],
@@ -594,7 +608,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 30
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 31
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "backup_name",
         "location": "backup_share",
@@ -610,7 +624,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 31
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 32
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 03:48:00",
         "location": None,
@@ -629,7 +643,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 33
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 34
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 11:48:00",
         "location": None,
@@ -1070,12 +1084,16 @@ async def test_setup_hardware_integration(
             f"homeassistant.components.{integration}.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.homeassistant_yellow.config_flow.probe_silabs_firmware_info",
+            return_value=None,
+        ),
     ):
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 19
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -1085,69 +1103,6 @@ def test_hostname_from_addon_slug() -> None:
     assert (
         hostname_from_addon_slug("core_silabs_multiprotocol")
         == "core-silabs-multiprotocol"
-    )
-
-
-def test_deprecated_function_is_hassio(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test calling deprecated_is_hassio function will create log entry."""
-
-    deprecated_is_hassio(hass)
-    assert caplog.record_tuples == [
-        (
-            "homeassistant.components.hassio",
-            logging.WARNING,
-            "The deprecated function is_hassio was called. It will be "
-            "removed in HA Core 2025.11. Use homeassistant.helpers"
-            ".hassio.is_hassio instead",
-        )
-    ]
-
-
-def test_deprecated_function_get_supervisor_ip(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test calling get_supervisor_ip function will create log entry."""
-
-    get_supervisor_ip()
-    assert caplog.record_tuples == [
-        (
-            "homeassistant.helpers.hassio",
-            logging.WARNING,
-            "The deprecated function get_supervisor_ip was called. It will "
-            "be removed in HA Core 2025.11. Use homeassistant.helpers"
-            ".hassio.get_supervisor_ip instead",
-        )
-    ]
-
-
-@pytest.mark.parametrize(
-    ("constant_name", "replacement_name", "replacement"),
-    [
-        (
-            "HassioServiceInfo",
-            "homeassistant.helpers.service_info.hassio.HassioServiceInfo",
-            HassioServiceInfo,
-        ),
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    constant_name: str,
-    replacement_name: str,
-    replacement: Any,
-) -> None:
-    """Test deprecated automation constants."""
-    import_and_test_deprecated_constant(
-        caplog,
-        hassio,
-        constant_name,
-        replacement_name,
-        replacement,
-        "2025.11",
     )
 
 

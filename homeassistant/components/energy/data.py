@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
-from typing import Literal, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 
 import voluptuous as vol
 
@@ -15,6 +15,7 @@ from homeassistant.helpers import config_validation as cv, singleton, storage
 from .const import DOMAIN
 
 STORAGE_VERSION = 1
+STORAGE_MINOR_VERSION = 2
 STORAGE_KEY = DOMAIN
 
 
@@ -29,7 +30,7 @@ async def async_get_manager(hass: HomeAssistant) -> EnergyManager:
 class FlowFromGridSourceType(TypedDict):
     """Dictionary describing the 'from' stat for the grid source."""
 
-    # statistic_id of a an energy meter (kWh)
+    # statistic_id of an energy meter (kWh)
     stat_energy_from: str
 
     # statistic_id of costs ($) incurred from the energy meter
@@ -58,6 +59,14 @@ class FlowToGridSourceType(TypedDict):
     number_energy_price: float | None  # Price for energy ($/kWh)
 
 
+class GridPowerSourceType(TypedDict):
+    """Dictionary holding the source of grid power consumption."""
+
+    # statistic_id of a power meter (kW)
+    # negative values indicate grid return
+    stat_rate: str
+
+
 class GridSourceType(TypedDict):
     """Dictionary holding the source of grid energy consumption."""
 
@@ -65,6 +74,7 @@ class GridSourceType(TypedDict):
 
     flow_from: list[FlowFromGridSourceType]
     flow_to: list[FlowToGridSourceType]
+    power: NotRequired[list[GridPowerSourceType]]
 
     cost_adjustment_day: float
 
@@ -75,6 +85,7 @@ class SolarSourceType(TypedDict):
     type: Literal["solar"]
 
     stat_energy_from: str
+    stat_rate: NotRequired[str]
     config_entry_solar_forecast: list[str] | None
 
 
@@ -85,6 +96,8 @@ class BatterySourceType(TypedDict):
 
     stat_energy_from: str
     stat_energy_to: str
+    # positive when discharging, negative when charging
+    stat_rate: NotRequired[str]
 
 
 class GasSourceType(TypedDict):
@@ -136,12 +149,15 @@ class DeviceConsumption(TypedDict):
     # This is an ever increasing value
     stat_consumption: str
 
+    # Instantaneous rate of flow: W, L/min or m³/h
+    stat_rate: NotRequired[str]
+
     # An optional custom name for display in energy graphs
     name: str | None
 
     # An optional statistic_id identifying a device
     # that includes this device's consumption in its total
-    included_in_stat: str | None
+    included_in_stat: NotRequired[str]
 
 
 class EnergyPreferences(TypedDict):
@@ -149,6 +165,7 @@ class EnergyPreferences(TypedDict):
 
     energy_sources: list[SourceType]
     device_consumption: list[DeviceConsumption]
+    device_consumption_water: NotRequired[list[DeviceConsumption]]
 
 
 class EnergyPreferencesUpdate(EnergyPreferences, total=False):
@@ -194,6 +211,12 @@ FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
     }
 )
 
+GRID_POWER_SOURCE_SCHEMA = vol.Schema(
+    {
+        vol.Required("stat_rate"): str,
+    }
+)
+
 
 def _generate_unique_value_validator(key: str) -> Callable[[list[dict]], list[dict]]:
     """Generate a validator that ensures a value is only used once."""
@@ -224,6 +247,10 @@ GRID_SOURCE_SCHEMA = vol.Schema(
             [FLOW_TO_GRID_SOURCE_SCHEMA],
             _generate_unique_value_validator("stat_energy_to"),
         ),
+        vol.Optional("power"): vol.All(
+            [GRID_POWER_SOURCE_SCHEMA],
+            _generate_unique_value_validator("stat_rate"),
+        ),
         vol.Required("cost_adjustment_day"): vol.Coerce(float),
     }
 )
@@ -231,6 +258,7 @@ SOLAR_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("type"): "solar",
         vol.Required("stat_energy_from"): str,
+        vol.Optional("stat_rate"): str,
         vol.Optional("config_entry_solar_forecast"): vol.Any([str], None),
     }
 )
@@ -239,6 +267,7 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Required("type"): "battery",
         vol.Required("stat_energy_from"): str,
         vol.Required("stat_energy_to"): str,
+        vol.Optional("stat_rate"): str,
     }
 )
 GAS_SOURCE_SCHEMA = vol.Schema(
@@ -294,10 +323,28 @@ ENERGY_SOURCE_SCHEMA = vol.All(
 DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
     {
         vol.Required("stat_consumption"): str,
+        vol.Optional("stat_rate"): str,
         vol.Optional("name"): str,
         vol.Optional("included_in_stat"): str,
     }
 )
+
+
+class _EnergyPreferencesStore(storage.Store[EnergyPreferences]):
+    """Energy preferences store with migration support."""
+
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Migrate to the new version."""
+        data = old_data
+        if old_major_version == 1 and old_minor_version < 2:
+            # Add device_consumption_water field if it doesn't exist
+            data.setdefault("device_consumption_water", [])
+        return data
 
 
 class EnergyManager:
@@ -306,8 +353,8 @@ class EnergyManager:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize energy manager."""
         self._hass = hass
-        self._store = storage.Store[EnergyPreferences](
-            hass, STORAGE_VERSION, STORAGE_KEY
+        self._store = _EnergyPreferencesStore(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_MINOR_VERSION
         )
         self.data: EnergyPreferences | None = None
         self._update_listeners: list[Callable[[], Awaitable]] = []
@@ -322,6 +369,7 @@ class EnergyManager:
         return {
             "energy_sources": [],
             "device_consumption": [],
+            "device_consumption_water": [],
         }
 
     async def async_update(self, update: EnergyPreferencesUpdate) -> None:
@@ -334,6 +382,7 @@ class EnergyManager:
         for key in (
             "energy_sources",
             "device_consumption",
+            "device_consumption_water",
         ):
             if key in update:
                 data[key] = update[key]

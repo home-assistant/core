@@ -97,7 +97,7 @@ async def test_form_exceptions(
         user_input=MOCK_USER_SETUP,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": reason}
 
     mock_firefly_client.get_about.side_effect = None

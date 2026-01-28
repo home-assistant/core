@@ -35,6 +35,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from . import setup_platform
 from .conftest import create_config_entry
@@ -225,6 +228,52 @@ async def test_vehicle_refresh_ratelimited(
 
     assert (state := hass.states.get("sensor.test_battery_level"))
     assert state.state == "unknown"
+
+
+async def test_vehicle_refresh_ratelimited_no_after(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator refresh handles 429 without after."""
+
+    await setup_platform(hass, normal_config_entry)
+    # mock_vehicle_data called once during setup
+    assert mock_vehicle_data.call_count == 1
+
+    mock_vehicle_data.side_effect = RateLimited({})
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Called again during refresh, failed with RateLimited
+    assert mock_vehicle_data.call_count == 2
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Called again because skip refresh doesn't change interval
+    assert mock_vehicle_data.call_count == 3
+
+
+async def test_init_invalid_region(
+    hass: HomeAssistant,
+    expires_at: int,
+) -> None:
+    """Test init with an invalid region in the token."""
+
+    # ou_code 'other' should be caught by the region validation and set to None
+    config_entry = create_config_entry(
+        expires_at, [Scope.VEHICLE_DEVICE_DATA], region="other"
+    )
+
+    with patch("homeassistant.components.tesla_fleet.TeslaFleetApi") as mock_api:
+        await setup_platform(hass, config_entry)
+        # Check if TeslaFleetApi was called with region=None
+        mock_api.assert_called()
+        assert mock_api.call_args.kwargs.get("region") is None
 
 
 async def test_vehicle_sleep(
@@ -561,3 +610,20 @@ async def test_vehicle_with_location_scope(
     assert VehicleDataEndpoint.DRIVE_STATE in endpoints
     assert VehicleDataEndpoint.VEHICLE_STATE in endpoints
     assert VehicleDataEndpoint.VEHICLE_CONFIG in endpoints
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    normal_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.tesla_fleet.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(normal_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert normal_config_entry.state is ConfigEntryState.SETUP_RETRY

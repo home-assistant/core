@@ -135,6 +135,27 @@ WAVE_ENHANCE_SERVICE_INFO = BluetoothServiceInfoBleak(
     tx_power=0,
 )
 
+CORENTIUM_HOME_2_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="cc-cc-cc-cc-cc-cc",
+    address="cc:cc:cc:cc:cc:cc",
+    device=generate_ble_device(
+        address="cc:cc:cc:cc:cc:cc",
+        name="Airthings Corentium Home 2",
+    ),
+    rssi=-61,
+    manufacturer_data={820: b"\xe4/\xa5\xae\t\x00"},
+    service_data={},
+    service_uuids=[],
+    source="local",
+    advertisement=generate_advertisement_data(
+        manufacturer_data={820: b"\xe4/\xa5\xae\t\x00"},
+        service_uuids=[],
+    ),
+    connectable=True,
+    time=0,
+    tx_power=0,
+)
+
 VIEW_PLUS_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="cc-cc-cc-cc-cc-cc",
     address="cc:cc:cc:cc:cc:cc",
@@ -253,6 +274,7 @@ WAVE_ENHANCE_DEVICE_INFO = AirthingsDevice(
     name="Airthings Wave Enhance",
     identifier="123456",
     sensors={
+        "connectivity_mode": "Bluetooth",
         "lux": 25,
         "battery": 85,
         "humidity": 60.0,
@@ -261,6 +283,24 @@ WAVE_ENHANCE_DEVICE_INFO = AirthingsDevice(
         "voc": 155.0,
         "pressure": 1020,
         "noise": 40,
+    },
+    address="cc:cc:cc:cc:cc:cc",
+)
+
+CORENTIUM_HOME_2_DEVICE_INFO = AirthingsDevice(
+    manufacturer="Airthings AS",
+    hw_version="REV X",
+    sw_version="R-SUB-1.3.4-master+0",
+    model=AirthingsDeviceType.CORENTIUM_HOME_2,
+    name="Airthings Corentium Home 2",
+    identifier="123456",
+    sensors={
+        "connectivity_mode": "Bluetooth",
+        "battery": 90,
+        "temperature": 20.0,
+        "humidity": 55.0,
+        "radon_1day_avg": 45,
+        "radon_1day_level": "low",
     },
     address="cc:cc:cc:cc:cc:cc",
 )

@@ -220,6 +220,13 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("ch4_MIPEX"),
     ),
     AirQEntityDescription(
+        key="mold",
+        translation_key="mold",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("mold"),
+    ),
+    AirQEntityDescription(
         key="n2o",
         device_class=SensorDeviceClass.NITROUS_OXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -319,11 +326,25 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         value=lambda data: data.get("c3h8_MIPEX"),
     ),
     AirQEntityDescription(
-        key="refigerant",
-        translation_key="refigerant",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        key="r32",
+        translation_key="r32",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda data: data.get("refigerant"),
+        value=lambda data: data.get("r32"),
+    ),
+    AirQEntityDescription(
+        key="r454b",
+        translation_key="r454b",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("r454b"),
+    ),
+    AirQEntityDescription(
+        key="r454c",
+        translation_key="r454c",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.get("r454c"),
     ),
     AirQEntityDescription(
         key="sih4",

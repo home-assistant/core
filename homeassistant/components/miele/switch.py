@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final, cast
 
-import aiohttp
+from aiohttp import ClientResponseError
 from pymiele import MieleDevice
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -58,7 +58,7 @@ SWITCH_TYPES: Final[tuple[MieleSwitchDefinition, ...]] = (
         description=MieleSwitchDescription(
             key="supercooling",
             value_fn=lambda value: value.state_status,
-            on_value=StateStatus.SUPERCOOLING,
+            on_value=StateStatus.supercooling,
             translation_key="supercooling",
             on_cmd_data={PROCESS_ACTION: MieleActions.START_SUPERCOOL},
             off_cmd_data={PROCESS_ACTION: MieleActions.STOP_SUPERCOOL},
@@ -73,7 +73,7 @@ SWITCH_TYPES: Final[tuple[MieleSwitchDefinition, ...]] = (
         description=MieleSwitchDescription(
             key="superfreezing",
             value_fn=lambda value: value.state_status,
-            on_value=StateStatus.SUPERFREEZING,
+            on_value=StateStatus.superfreezing,
             translation_key="superfreezing",
             on_cmd_data={PROCESS_ACTION: MieleActions.START_SUPERFREEZE},
             off_cmd_data={PROCESS_ACTION: MieleActions.STOP_SUPERFREEZE},
@@ -117,7 +117,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switch platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
     added_devices: set[str] = set()
 
     def _async_add_new_devices() -> None:
@@ -165,7 +165,8 @@ class MieleSwitch(MieleEntity, SwitchEntity):
         """Set switch to mode."""
         try:
             await self.api.send_action(self._device_id, mode)
-        except aiohttp.ClientError as err:
+        except ClientResponseError as err:
+            _LOGGER.debug("Error setting switch state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
@@ -197,7 +198,8 @@ class MielePowerSwitch(MieleSwitch):
         """Set switch to mode."""
         try:
             await self.api.send_action(self._device_id, mode)
-        except aiohttp.ClientError as err:
+        except ClientResponseError as err:
+            _LOGGER.debug("Error setting switch state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",

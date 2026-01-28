@@ -227,6 +227,9 @@ class TodoItem:
     description: str | None = None
     """A more complete description than that provided by the summary."""
 
+    completed: datetime.datetime | None = None
+    """The date and time that a to-do item was marked completed."""
+
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "todo_items",

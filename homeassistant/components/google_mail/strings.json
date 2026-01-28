@@ -12,6 +12,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -45,6 +46,11 @@
       "vacation_end_date": {
         "name": "Vacation end date"
       }
+    }
+  },
+  "exceptions": {
+    "missing_from_for_alias": {
+      "message": "Missing 'from' email when setting an alias to show. You have to provide a 'from' email"
     }
   },
   "services": {

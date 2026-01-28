@@ -26,7 +26,7 @@ class BoschAlarmEntity(Entity):
         self._attr_should_poll = False
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
-            name=f"Bosch {panel.model}",
+            name=f"Bosch {panel.model.name}",
             manufacturer="Bosch Security Systems",
         )
 

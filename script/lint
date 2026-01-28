@@ -15,7 +15,7 @@ printf "%s\n" $files
 echo "=============="
 echo "LINT with ruff"
 echo "=============="
-pre-commit run ruff-check --files $files
+prek run ruff-check --files $files
 echo "================"
 echo "LINT with pylint"
 echo "================"

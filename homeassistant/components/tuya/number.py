@@ -23,11 +23,9 @@ from .const import (
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
     DPCode,
-    DPType,
 )
 from .entity import TuyaEntity
-from .models import IntegerTypeData
-from .util import ActionDPCodeNotFoundError
+from .models import DeviceWrapper, DPCodeIntegerWrapper
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
     DeviceCategory.BH: (
@@ -178,6 +176,14 @@ NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.ALARM_TIME,
             # This setting is called "Siren Duration" in the official Tuya app
             translation_key="siren_duration",
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.MSP: (
+        NumberEntityDescription(
+            key=DPCode.DELAY_CLEAN_TIME,
+            translation_key="delay_clean_time",
             device_class=NumberDeviceClass.DURATION,
             entity_category=EntityCategory.CONFIG,
         ),
@@ -456,9 +462,13 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := NUMBERS.get(device.category):
                 entities.extend(
-                    TuyaNumberEntity(device, manager, description)
+                    TuyaNumberEntity(device, manager, description, dpcode_wrapper)
                     for description in descriptions
-                    if description.key in device.status
+                    if (
+                        dpcode_wrapper := DPCodeIntegerWrapper.find_dpcode(
+                            device, description.key, prefer_function=True
+                        )
+                    )
                 )
 
         async_add_entities(entities)
@@ -473,35 +483,36 @@ async def async_setup_entry(
 class TuyaNumberEntity(TuyaEntity, NumberEntity):
     """Tuya Number Entity."""
 
-    _number: IntegerTypeData | None = None
-
     def __init__(
         self,
         device: CustomerDevice,
         device_manager: Manager,
         description: NumberEntityDescription,
+        dpcode_wrapper: DeviceWrapper[float],
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._dpcode_wrapper = dpcode_wrapper
 
-        if int_type := self.find_dpcode(
-            description.key, dptype=DPType.INTEGER, prefer_function=True
-        ):
-            self._number = int_type
-            self._attr_native_max_value = self._number.max_scaled
-            self._attr_native_min_value = self._number.min_scaled
-            self._attr_native_step = self._number.step_scaled
-            if description.native_unit_of_measurement is None:
-                self._attr_native_unit_of_measurement = int_type.unit
+        self._attr_native_max_value = dpcode_wrapper.max_value
+        self._attr_native_min_value = dpcode_wrapper.min_value
+        self._attr_native_step = dpcode_wrapper.value_step
+        if description.native_unit_of_measurement is None:
+            self._attr_native_unit_of_measurement = dpcode_wrapper.native_unit
+
+        self._validate_device_class_unit()
+
+    def _validate_device_class_unit(self) -> None:
+        """Validate device class unit compatibility."""
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
         if (
             self.device_class is not None
             and not self.device_class.startswith(DOMAIN)
-            and description.native_unit_of_measurement is None
+            and self.entity_description.native_unit_of_measurement is None
             # we do not need to check mappings if the API UOM is allowed
             and self.native_unit_of_measurement
             not in NUMBER_DEVICE_CLASS_UNITS[self.device_class]
@@ -538,26 +549,20 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
-        # Unknown or unsupported data type
-        if self._number is None:
-            return None
+        return self._read_wrapper(self._dpcode_wrapper)
 
-        # Raw value
-        if (value := self.device.status.get(self.entity_description.key)) is None:
-            return None
+    async def _handle_state_update(
+        self,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict[str, int] | None,
+    ) -> None:
+        """Handle state update, only if this entity's dpcode was actually updated."""
+        if self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        ):
+            return
+        self.async_write_ha_state()
 
-        return self._number.scale_value(value)
-
-    def set_native_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        if self._number is None:
-            raise ActionDPCodeNotFoundError(self.device, self.entity_description.key)
-
-        self._send_command(
-            [
-                {
-                    "code": self.entity_description.key,
-                    "value": self._number.scale_value_back(value),
-                }
-            ]
-        )
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, value)

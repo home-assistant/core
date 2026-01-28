@@ -2,12 +2,12 @@
 
 from datetime import UTC, datetime
 
-from aioamazondevices.api import AmazonDevice, AmazonDeviceSensor, AmazonSchedule
-from aioamazondevices.const import (
+from aioamazondevices.const.schedules import (
     NOTIFICATION_ALARM,
     NOTIFICATION_REMINDER,
     NOTIFICATION_TIMER,
 )
+from aioamazondevices.structures import AmazonDevice, AmazonDeviceSensor, AmazonSchedule
 
 TEST_CODE = "023123"
 TEST_PASSWORD = "fake_password"

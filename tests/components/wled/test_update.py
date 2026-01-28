@@ -1,71 +1,56 @@
 """Tests for the WLED update platform."""
 
-from unittest.mock import MagicMock
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from wled import Releases, WLEDError
 
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
-    ATTR_RELEASE_SUMMARY,
-    ATTR_RELEASE_URL,
-    ATTR_TITLE,
     DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
-    UpdateDeviceClass,
-    UpdateEntityFeature,
 )
 from homeassistant.components.wled.const import RELEASES_SCAN_INTERVAL
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ATTR_ENTITY_PICTURE,
-    ATTR_ICON,
-    ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    EntityCategory,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
 
-async def test_update_available(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test the firmware update available."""
-    assert (state := hass.states.get("update.wled_rgb_light_firmware"))
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == UpdateDeviceClass.FIRMWARE
-    assert state.state == STATE_ON
-    assert (
-        state.attributes[ATTR_ENTITY_PICTURE]
-        == "https://brands.home-assistant.io/_/wled/icon.png"
-    )
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.14.4"
-    assert state.attributes[ATTR_LATEST_VERSION] == "0.99.0"
-    assert state.attributes[ATTR_RELEASE_SUMMARY] is None
-    assert (
-        state.attributes[ATTR_RELEASE_URL]
-        == "https://github.com/Aircoookie/WLED/releases/tag/v0.99.0"
-    )
-    assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-        == UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION
-    )
-    assert state.attributes[ATTR_TITLE] == "WLED"
-    assert ATTR_ICON not in state.attributes
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.wled.PLATFORMS", [Platform.UPDATE]):
+        yield
 
-    assert (entry := entity_registry.async_get("update.wled_rgb_light_firmware"))
-    assert entry.unique_id == "aabbccddeeff"
-    assert entry.entity_category is EntityCategory.CONFIG
+
+async def test_update_available(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test states of the update."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    assert (state := hass.states.get("update.wled_rgb_light_firmware"))
+    assert state.state == STATE_ON
+
+    assert snapshot == state
 
 
 async def test_update_information_available(
@@ -73,6 +58,7 @@ async def test_update_information_available(
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
     mock_wled_releases: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test having no update information available at all."""
     mock_wled_releases.releases.return_value = Releases(
@@ -85,53 +71,23 @@ async def test_update_information_available(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("update.wled_rgb_light_firmware"))
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == UpdateDeviceClass.FIRMWARE
     assert state.state == STATE_UNKNOWN
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.14.4"
-    assert state.attributes[ATTR_LATEST_VERSION] is None
-    assert state.attributes[ATTR_RELEASE_SUMMARY] is None
-    assert state.attributes[ATTR_RELEASE_URL] is None
-    assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-        == UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION
-    )
-    assert state.attributes[ATTR_TITLE] == "WLED"
-    assert ATTR_ICON not in state.attributes
 
-    entry = entity_registry.async_get("update.wled_rgb_light_firmware")
-    assert entry
-    assert entry.unique_id == "aabbccddeeff"
-    assert entry.entity_category is EntityCategory.CONFIG
+    assert snapshot == state
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
 async def test_no_update_available(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test there is no update available."""
     assert (state := hass.states.get("update.wled_websocket_firmware"))
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == UpdateDeviceClass.FIRMWARE
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.99.0"
-    assert state.attributes[ATTR_LATEST_VERSION] == "0.99.0"
-    assert state.attributes[ATTR_RELEASE_SUMMARY] is None
-    assert (
-        state.attributes[ATTR_RELEASE_URL]
-        == "https://github.com/Aircoookie/WLED/releases/tag/v0.99.0"
-    )
-    assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-        == UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION
-    )
-    assert state.attributes[ATTR_TITLE] == "WLED"
-    assert ATTR_ICON not in state.attributes
 
-    assert ATTR_ICON not in state.attributes
-
-    assert (entry := entity_registry.async_get("update.wled_websocket_firmware"))
-    assert entry.unique_id == "aabbccddeeff"
-    assert entry.entity_category is EntityCategory.CONFIG
+    assert snapshot == state
 
 
 async def test_update_error(
@@ -151,7 +107,7 @@ async def test_update_error(
 
     assert (state := hass.states.get("update.wled_rgb_light_firmware"))
     assert state.state == STATE_UNAVAILABLE
-    assert "Invalid response from API" in caplog.text
+    assert "Invalid response from WLED API" in caplog.text
 
 
 async def test_update_stay_stable(

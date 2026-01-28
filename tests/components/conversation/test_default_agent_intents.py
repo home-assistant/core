@@ -3,7 +3,6 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import (
@@ -453,7 +452,7 @@ async def test_todo_add_item_fr(
         assert intent_obj.slots.get("item", {}).get("value", "").strip() == "farine"
 
 
-@freeze_time(
+@pytest.mark.freeze_time(
     datetime(
         year=2013,
         month=9,

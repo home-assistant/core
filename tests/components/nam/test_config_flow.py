@@ -103,6 +103,7 @@ async def test_form_create_entry_with_auth(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_successful(hass: HomeAssistant) -> None:
     """Test starting a reauthentication flow."""
     entry = MockConfigEntry(
@@ -375,6 +376,7 @@ async def test_zeroconf_errors(hass: HomeAssistant, error) -> None:
     assert result["reason"] == reason
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_successful(hass: HomeAssistant) -> None:
     """Test starting a reconfigure flow."""
     entry = MockConfigEntry(
@@ -412,6 +414,7 @@ async def test_reconfigure_successful(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_not_successful(hass: HomeAssistant) -> None:
     """Test starting a reconfigure flow but no connection found."""
     entry = MockConfigEntry(

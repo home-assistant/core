@@ -41,7 +41,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pymodbus": "Custom",
     "pytz": "CalVer",
     "requests": "SemVer",
-    "typing_extensions": "SemVer",
+    "typing-extensions": "SemVer",
     "urllib3": "SemVer",
     "yarl": "SemVer",
     "zeroconf": "SemVer",
@@ -94,6 +94,8 @@ FORBIDDEN_PACKAGES = {
     "async-timeout": "be replaced by asyncio.timeout (Python 3.11+)",
     # Only needed for tests
     "codecov": "not be a runtime dependency",
+    # Only needed for docs
+    "mkdocs": "not be a runtime dependency",
     # Does blocking I/O and should be replaced by pyserial-asyncio-fast
     # See https://github.com/home-assistant/core/pull/116635
     "pyserial-asyncio": "be replaced by pyserial-asyncio-fast",
@@ -101,6 +103,8 @@ FORBIDDEN_PACKAGES = {
     "pytest": "not be a runtime dependency",
     # Only needed for build
     "setuptools": "not be a runtime dependency",
+    # Only needed for docs
+    "sphinx": "not be a runtime dependency",
     # Only needed for build
     "wheel": "not be a runtime dependency",
 }
@@ -113,7 +117,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "airthings": {"airthings-cloud": {"async-timeout"}},
     "ampio": {"asmog": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
-    "apple_tv": {"pyatv": {"async-timeout"}},
     "blackbird": {
         # https://github.com/koolsb/pyblackbird/issues/12
         # pyblackbird > pyserial-asyncio
@@ -126,9 +129,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "pbr": {"setuptools"}
     },
     "delijn": {"pydelijn": {"async-timeout"}},
-    "devialet": {"async-upnp-client": {"async-timeout"}},
-    "dlna_dmr": {"async-upnp-client": {"async-timeout"}},
-    "dlna_dms": {"async-upnp-client": {"async-timeout"}},
     "efergy": {
         # https://github.com/tkdrob/pyefergy/issues/46
         # pyefergy > codecov
@@ -150,44 +150,14 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
     "github": {"aiogithubapi": {"async-timeout"}},
-    "guardian": {
-        # https://github.com/jsbronder/asyncio-dgram/issues/20
-        # aioguardian > asyncio-dgram > setuptools
-        "asyncio-dgram": {"setuptools"}
-    },
     "harmony": {"aioharmony": {"async-timeout"}},
-    "heatmiser": {
-        # https://github.com/andylockran/heatmiserV3/issues/96
-        # heatmiserV3 > pyserial-asyncio
-        "heatmiserv3": {"pyserial-asyncio"}
-    },
     "here_travel_time": {
         "here-routing": {"async-timeout"},
         "here-transit": {"async-timeout"},
     },
-    "hive": {
-        # https://github.com/Pyhass/Pyhiveapi/pull/88
-        # pyhive-integration > unasync > setuptools
-        "unasync": {"setuptools"}
-    },
     "homewizard": {"python-homewizard-energy": {"async-timeout"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
-    "influxdb": {
-        # https://github.com/influxdata/influxdb-client-python/issues/695
-        # influxdb-client > setuptools
-        "influxdb-client": {"setuptools"}
-    },
-    "insteon": {
-        # https://github.com/pyinsteon/pyinsteon/issues/430
-        # pyinsteon > pyserial-asyncio
-        "pyinsteon": {"pyserial-asyncio"}
-    },
     "izone": {"python-izone": {"async-timeout"}},
-    "keba": {
-        # https://github.com/jsbronder/asyncio-dgram/issues/20
-        # keba-kecontact > asyncio-dgram > setuptools
-        "asyncio-dgram": {"setuptools"}
-    },
     "kef": {"aiokef": {"async-timeout"}},
     "kodi": {"jsonrpc-websocket": {"async-timeout"}},
     "ld2410_ble": {"ld2410-ble": {"async-timeout"}},
@@ -196,10 +166,8 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "lifx": {"aiolifx": {"async-timeout"}},
     "linkplay": {
         "python-linkplay": {"async-timeout"},
-        "async-upnp-client": {"async-timeout"},
     },
     "loqed": {"loqedapi": {"async-timeout"}},
-    "matter": {"python-matter-server": {"async-timeout"}},
     "mediaroom": {"pymediaroom": {"async-timeout"}},
     "met": {"pymetno": {"async-timeout"}},
     "met_eireann": {"pymeteireann": {"async-timeout"}},
@@ -209,11 +177,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "microbeespy": {"setuptools"}
     },
     "mill": {"millheater": {"async-timeout"}, "mill-local": {"async-timeout"}},
-    "minecraft_server": {
-        # https://github.com/jsbronder/asyncio-dgram/issues/20
-        # mcstatus > asyncio-dgram > setuptools
-        "asyncio-dgram": {"setuptools"}
-    },
     "mochad": {
         # https://github.com/mtreinish/pymochad/issues/8
         # pymochad > pbr > setuptools
@@ -222,7 +185,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "opengarage": {"open-garage": {"async-timeout"}},
-    "openhome": {"async-upnp-client": {"async-timeout"}},
     "opensensemap": {"opensensemap-api": {"async-timeout"}},
     "opnsense": {
         # https://github.com/mtreinish/pyopnsense/issues/27
@@ -237,13 +199,15 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "ring": {"ring-doorbell": {"async-timeout"}},
     "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
-    "samsungtv": {"async-upnp-client": {"async-timeout"}},
     "screenlogic": {"screenlogicpy": {"async-timeout"}},
     "sense": {"sense-energy": {"async-timeout"}},
     "slimproto": {"aioslimproto": {"async-timeout"}},
-    "songpal": {"async-upnp-client": {"async-timeout"}},
-    "ssdp": {"async-upnp-client": {"async-timeout"}},
     "surepetcare": {"surepy": {"async-timeout"}},
+    "tami4": {
+        # https://github.com/SeleniumHQ/selenium/issues/16943
+        # tami4 > selenium > types*
+        "selenium": {"types-certifi", "types-urllib3"},
+    },
     "travisci": {
         # https://github.com/menegazzo/travispy seems to be unmaintained
         # and unused https://www.home-assistant.io/integrations/travisci
@@ -253,10 +217,8 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "travispy": {"pytest"},
     },
     "unifiprotect": {"uiprotect": {"async-timeout"}},
-    "upnp": {"async-upnp-client": {"async-timeout"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
     "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
-    "yeelight": {"async-upnp-client": {"async-timeout"}},
     "zamg": {"zamg": {"async-timeout"}},
     "zha": {
         # https://github.com/waveform80/colorzero/issues/9
@@ -283,8 +245,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "abode": {"jaraco-abode": {"jaraco-net"}},
     # https://github.com/coinbase/coinbase-advanced-py
     "coinbase": {"homeassistant": {"coinbase-advanced-py"}},
-    # https://github.com/ggrammar/pizzapi
-    "dominos": {"homeassistant": {"pizzapi"}},
     # https://github.com/u9n/dlms-cosem
     "dsmr": {"dsmr-parser": {"dlms-cosem"}},
     # https://github.com/ChrisMandich/PyFlume  # Fixed with >=0.7.1

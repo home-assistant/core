@@ -1,6 +1,6 @@
 """Test SMHI component setup process."""
 
-from pysmhi import SMHIPointForecast
+from pysmhi import SMHIFirePointForecast, SMHIPointForecast
 
 from homeassistant.components.smhi.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -34,6 +34,7 @@ async def test_migrate_entry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_client: SMHIPointForecast,
+    mock_fire_client: SMHIFirePointForecast,
 ) -> None:
     """Test migrate entry data."""
 
@@ -65,7 +66,9 @@ async def test_migrate_entry(
 
 
 async def test_migrate_from_future_version(
-    hass: HomeAssistant, mock_client: SMHIPointForecast
+    hass: HomeAssistant,
+    mock_client: SMHIPointForecast,
+    mock_fire_client: SMHIFirePointForecast,
 ) -> None:
     """Test migrate entry not possible from future version."""
     entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG_MIGRATE, version=4)
@@ -75,4 +78,4 @@ async def test_migrate_from_future_version(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
