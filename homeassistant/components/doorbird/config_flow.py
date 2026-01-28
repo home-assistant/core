@@ -12,6 +12,7 @@ from doorbirdpy import DoorBird
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_IGNORE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -218,6 +219,9 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if existing_entry:
+            if existing_entry.source == SOURCE_IGNORE:
+                raise AbortFlow("already_configured")
+
             # Check if the host is actually changing
             if existing_entry.data.get(CONF_HOST) != host:
                 await self._async_verify_existing_device_for_discovery(
