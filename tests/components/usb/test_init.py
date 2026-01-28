@@ -4,7 +4,6 @@ import asyncio
 from datetime import timedelta
 import logging
 import os
-from typing import Any
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
 import pytest
@@ -15,7 +14,6 @@ from homeassistant.components.usb.models import USBDevice
 from homeassistant.components.usb.utils import scan_serial_ports, usb_device_from_path
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -27,7 +25,6 @@ from . import (
 from tests.common import (
     MockModule,
     async_fire_time_changed,
-    import_and_test_deprecated_constant,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -1089,33 +1086,6 @@ async def test_cp2102n_ordering_on_macos(
 
     # We always use `cu.SLAB_USBtoUART`
     assert mock_config_flow.mock_calls[0][2]["data"].device == "/dev/cu.SLAB_USBtoUART2"
-
-
-@pytest.mark.parametrize(
-    ("constant_name", "replacement_name", "replacement"),
-    [
-        (
-            "UsbServiceInfo",
-            "homeassistant.helpers.service_info.usb.UsbServiceInfo",
-            UsbServiceInfo,
-        ),
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    constant_name: str,
-    replacement_name: str,
-    replacement: Any,
-) -> None:
-    """Test deprecated automation constants."""
-    import_and_test_deprecated_constant(
-        caplog,
-        usb,
-        constant_name,
-        replacement_name,
-        replacement,
-        "2026.2",
-    )
 
 
 @pytest.mark.usefixtures("force_usb_polling_watcher")

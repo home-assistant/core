@@ -28,6 +28,7 @@ async def test_sensor_setup(
     entity_registry: er.EntityRegistry,
     fc_class_mock,
     fh_class_mock,
+    fs_class_mock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup of Fritz!Tools sensors."""
