@@ -109,7 +109,6 @@ async def test_switch(
             cluster.commands_by_name["on"].schema,
             expect_reply=True,
             manufacturer=None,
-            tsn=None,
         )
         state = hass.states.get(entity_id)
         assert state
@@ -131,7 +130,6 @@ async def test_switch(
             cluster.commands_by_name["off"].schema,
             expect_reply=True,
             manufacturer=None,
-            tsn=None,
         )
         state = hass.states.get(entity_id)
         assert state

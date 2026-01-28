@@ -276,7 +276,6 @@ async def test_on_with_off_color(
         dev1_cluster_on_off.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     assert dev1_cluster_color.request.call_args == call(
         False,
@@ -286,7 +285,6 @@ async def test_on_with_off_color(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
     light1_state = hass.states.get(device_1_entity_id)
@@ -332,7 +330,6 @@ async def test_on_with_off_color(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     assert dev1_cluster_color.request.call_args == call(
         False,
@@ -342,7 +339,6 @@ async def test_on_with_off_color(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     assert dev1_cluster_level.request.call_args_list[1] == call(
         False,
@@ -352,7 +348,6 @@ async def test_on_with_off_color(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
     light1_state = hass.states.get(device_1_entity_id)
@@ -404,7 +399,6 @@ async def async_test_on_off_from_hass(
         cluster.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
     await async_test_off_from_hass(hass, cluster, entity_id)
@@ -428,7 +422,6 @@ async def async_test_off_from_hass(
         cluster.commands_by_name["off"].schema,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
 
@@ -459,7 +452,6 @@ async def async_test_level_on_off_from_hass(
         on_off_cluster.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -484,7 +476,6 @@ async def async_test_level_on_off_from_hass(
         transition_time=100,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -508,7 +499,6 @@ async def async_test_level_on_off_from_hass(
         transition_time=int(expected_default_transition),
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -558,7 +548,6 @@ async def async_test_flash_from_hass(
         effect_variant=general.Identify.EffectVariant.Default,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
 
