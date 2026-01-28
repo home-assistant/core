@@ -40,7 +40,7 @@ env:
   CACHE_VERSION: 2
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2026.2"
+  HA_SHORT_VERSION: "2026.3"
   DEFAULT_PYTHON: "3.14.2"
   ALL_PYTHON_VERSIONS: "['3.14.2']"
   # 10.3 is the oldest supported version
@@ -254,7 +254,7 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
           echo "::add-matcher::.github/workflows/matchers/codespell.json"
       - name: Run prek
-        uses: j178/prek-action@9d6a3097e0c1865ecce00cfb89fe80f2ee91b547 # v1.0.12
+        uses: j178/prek-action@564dda4cfa5e96aafdc4a5696c4bf7b46baae5ac # v1.1.0
         env:
           PREK_SKIP: no-commit-to-branch,mypy,pylint,gen_requirements_all,hassfest,hassfest-metadata,hassfest-mypy-config
           RUFF_OUTPUT_FORMAT: github

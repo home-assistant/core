@@ -210,6 +210,7 @@ aiobafi6==0.9.0
 
 # homeassistant.components.aws
 # homeassistant.components.aws_s3
+# homeassistant.components.cloudflare_r2
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
@@ -691,7 +692,7 @@ dbus-fast==3.1.2
 debugpy==1.8.17
 
 # homeassistant.components.ecovacs
-deebot-client==17.0.1
+deebot-client==17.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.ohmconnect
@@ -1044,7 +1045,7 @@ habluetooth==5.8.0
 hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
-hass-nabucasa==1.11.0
+hass-nabucasa==1.12.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1076,7 +1077,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260107.2
+home-assistant-frontend==20260128.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.1.6
@@ -1188,7 +1189,7 @@ kegtron-ble==1.0.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.1.15.112308
+knx-frontend==2026.1.28.162006
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1248,7 +1249,7 @@ loqedAPI==2.1.10
 luftdaten==0.7.4
 
 # homeassistant.components.lunatone
-lunatone-rest-api-client==0.5.7
+lunatone-rest-api-client==0.6.3
 
 # homeassistant.components.lupusec
 lupupy==0.3.2
@@ -1446,6 +1447,7 @@ open-garage==0.2.0
 # homeassistant.components.open_meteo
 open-meteo==0.3.2
 
+# homeassistant.components.cloud
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
 openai==2.15.0
@@ -1515,6 +1517,9 @@ poolsense==0.0.8
 
 # homeassistant.components.powerfox
 powerfox==2.0.0
+
+# homeassistant.components.prana
+prana-api-client==0.10.0
 
 # homeassistant.components.reddit
 praw==7.5.0
@@ -2040,7 +2045,7 @@ pyserial==3.5
 pyseventeentrack==1.1.1
 
 # homeassistant.components.sia
-pysiaalarm==3.1.1
+pysiaalarm==3.2.2
 
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.3.24
@@ -2758,7 +2763,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.84
+zha==0.0.87
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.68.0

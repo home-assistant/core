@@ -1,0 +1,105 @@
+{
+  "entity": {
+    "select": {
+      "aero_by_pass": {
+        "default": "mdi:valve",
+        "state": {
+          "off": "mdi:valve-closed",
+          "on": "mdi:valve-open"
+        }
+      },
+      "buffer_mode": {
+        "default": "mdi:database",
+        "state": {
+          "disabled": "mdi:water-boiler-off",
+          "schedule": "mdi:calendar-clock"
+        }
+      },
+      "dhw_circulation": {
+        "default": "mdi:pump",
+        "state": {
+          "disabled": "mdi:pump-off",
+          "schedule": "mdi:calendar-clock"
+        }
+      },
+      "heating_source_of_correction": {
+        "default": "mdi:tune-variant",
+        "state": {
+          "disabled": "mdi:cancel",
+          "nano_nr_1": "mdi:thermostat-box",
+          "nano_nr_2": "mdi:thermostat-box",
+          "nano_nr_3": "mdi:thermostat-box",
+          "nano_nr_4": "mdi:thermostat-box",
+          "nano_nr_5": "mdi:thermostat-box",
+          "no_corrections": "mdi:cancel",
+          "schedule": "mdi:calendar-clock",
+          "thermostat": "mdi:thermostat"
+        }
+      },
+      "language": {
+        "default": "mdi:translate"
+      },
+      "mixer_mode": {
+        "default": "mdi:valve",
+        "state": {
+          "disabled": "mdi:cancel",
+          "nano_nr_1": "mdi:thermostat-box",
+          "nano_nr_2": "mdi:thermostat-box",
+          "nano_nr_3": "mdi:thermostat-box",
+          "nano_nr_4": "mdi:thermostat-box",
+          "nano_nr_5": "mdi:thermostat-box",
+          "schedule": "mdi:calendar-clock",
+          "thermostat": "mdi:thermostat"
+        }
+      },
+      "mixer_mode_zone": {
+        "default": "mdi:valve",
+        "state": {
+          "disabled": "mdi:cancel",
+          "nano_nr_1": "mdi:thermostat-box",
+          "nano_nr_2": "mdi:thermostat-box",
+          "nano_nr_3": "mdi:thermostat-box",
+          "nano_nr_4": "mdi:thermostat-box",
+          "nano_nr_5": "mdi:thermostat-box",
+          "schedule": "mdi:calendar-clock",
+          "thermostat": "mdi:thermostat"
+        }
+      },
+      "nano_work_mode": {
+        "default": "mdi:cog-outline",
+        "state": {
+          "christmas": "mdi:pine-tree",
+          "manual_0": "mdi:home-floor-0",
+          "manual_1": "mdi:home-floor-1",
+          "manual_2": "mdi:home-floor-2",
+          "manual_3": "mdi:home-floor-3",
+          "out_of_home": "mdi:home-export-outline",
+          "schedule": "mdi:calendar-clock"
+        }
+      },
+      "operating_mode": {
+        "default": "mdi:cog",
+        "state": {
+          "disabled": "mdi:cog-off",
+          "eco": "mdi:leaf"
+        }
+      },
+      "solarcomp_operating_mode": {
+        "default": "mdi:heating-coil",
+        "state": {
+          "de_icing": "mdi:snowflake-melt",
+          "disabled": "mdi:cancel",
+          "holiday": "mdi:beach"
+        }
+      },
+      "work_mode": {
+        "default": "mdi:cog-outline",
+        "state": {
+          "cooling": "mdi:snowflake-thermometer",
+          "summer": "mdi:weather-sunny",
+          "winter": "mdi:snowflake"
+        }
+      }
+    }
+  }
+}
