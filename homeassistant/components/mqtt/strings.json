@@ -68,7 +68,7 @@
         "description": "Please enter the connection information of your MQTT broker."
       },
       "hassio_confirm": {
-        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the app {addon}?",
+        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the {addon} app?",
         "title": "MQTT broker via Home Assistant app"
       },
       "install_addon": {
