@@ -31,6 +31,11 @@ def mock_charger() -> Generator[MagicMock]:
             "serial": "deadbeeffeed",
             "model": "openevse_wifi_v1",
         }
+        # Websocket support
+        charger.ws_start = MagicMock()
+        charger.ws_disconnect = AsyncMock()
+        charger.websocket = MagicMock()
+        charger.callback = None
         # Status sensors
         charger.status = "Charging"
         charger.vehicle = True
@@ -64,10 +69,10 @@ def mock_charger() -> Generator[MagicMock]:
         # Energy sensors
         charger.usage_session = 15000  # 15 kWh in Wh
         charger.usage_total = 500000  # 500 kWh in Wh
-        charger.total_day = 10000  # 10 kWh in Wh
-        charger.total_week = 50000  # 50 kWh in Wh
-        charger.total_month = 200000  # 200 kWh in Wh
-        charger.total_year = 2000000  # 2000 kWh in Wh
+        charger.total_day = 10  # 10 kWh in Wh
+        charger.total_week = 50  # 50 kWh in Wh
+        charger.total_month = 200  # 200 kWh in Wh
+        charger.total_year = 2000  # 2000 kWh in Wh
         # Vehicle sensors
         charger.vehicle_soc = 75
         charger.vehicle_range = 250
