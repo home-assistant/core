@@ -689,6 +689,81 @@ async def test_show_progress_error(
     assert result["reason"] == "error"
 
 
+async def test_show_progress_task_callback_exception_logging(
+    hass: HomeAssistant, manager: MockFlowManager, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that exceptions in progress task callback are caught and logged."""
+    manager.hass = hass
+    task_evt = asyncio.Event()
+    events = async_capture_events(
+        hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED
+    )
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+        _progress_task: asyncio.Task[None] | None = None
+
+        async def _long_running_task(self) -> None:
+            await task_evt.wait()
+            raise TypeError("Internal error from task")
+
+        async def async_step_init(self, user_input=None):
+            if user_input is not None:
+                return await self.async_step_next()
+
+            return self.async_show_form(step_id="init")
+
+        async def async_step_next(self, user_input=None):
+            if self._progress_task is None:
+                self._progress_task = self.hass.async_create_task(
+                    self._long_running_task(), name="test_flow_task"
+                )
+
+            if not self._progress_task.done():
+                return self.async_show_progress(
+                    step_id="next",
+                    progress_action="task",
+                    progress_task=self._progress_task,
+                )
+
+            try:
+                await self._progress_task
+            finally:
+                self._progress_task = None
+
+            return self.async_show_progress_done(next_step_id="final")
+
+        async def async_step_final(self, user_input=None):
+            raise RuntimeError("Test error from final step, should not be reached")
+
+    # Start the config flow, it'll be in a progress state for a bit
+    init_result = await manager.async_init("test")
+    result = await manager.async_configure(init_result["flow_id"], {})
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
+
+    # Then trigger an error within the task
+    with caplog.at_level(logging.ERROR):
+        task_evt.set()
+        await hass.async_block_till_done()
+
+    # We log a traceback
+    assert "Internal error from task" in caplog.text
+    assert "Error processing progress task for" in caplog.text
+
+    # Frontend is notified to refresh
+    assert len(events) == 1
+    assert events[0].data == {
+        "handler": "test",
+        "flow_id": result["flow_id"],
+        "refresh": True,
+    }
+
+    # The flow should be aborted after the error
+    with pytest.raises(data_entry_flow.UnknownFlow):
+        await manager.async_configure(result["flow_id"])
+
+
 async def test_show_progress_hidden_from_frontend(
     hass: HomeAssistant, manager: MockFlowManager
 ) -> None:
