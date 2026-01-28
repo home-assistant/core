@@ -521,7 +521,9 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                     await self._async_configure(flow.flow_id)
 
             def schedule_configure(_: asyncio.Task) -> None:
-                self.hass.async_create_task(call_configure())
+                self.hass.async_create_background_task(
+                    call_configure(), name="flow configure"
+                )
 
             # The mypy ignores are a consequence of mypy not accepting the pop above
             progress_task.add_done_callback(schedule_configure)  # type: ignore[attr-defined]

@@ -137,3 +137,15 @@ def get_scheduled_timer_handles(loop: AbstractEventLoop) -> list[TimerHandle]:
     """Return a list of scheduled TimerHandles."""
     handles: list[TimerHandle] = loop._scheduled  # type: ignore[attr-defined] # noqa: SLF001
     return handles
+
+
+def maybe_call_unawaited_task_exception_handler(task: Task[Any]) -> None:
+    """Call the event loop exception handler if the task had an exception."""
+    if exception := task.exception():
+        task.get_loop().call_exception_handler(
+            {
+                "message": "unhandled exception in background task",
+                "exception": exception,
+                "task": task,
+            }
+        )

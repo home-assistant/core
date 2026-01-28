@@ -91,6 +91,7 @@ from .util.async_ import (
     cancelling,
     create_eager_task,
     get_scheduled_timer_handles,
+    maybe_call_unawaited_task_exception_handler,
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
@@ -824,14 +825,13 @@ class HomeAssistant:
         """
         if eager_start:
             task = create_eager_task(target, name=name, loop=self.loop)
-            if task.done():
-                return task
         else:
             # Use loop.create_task
             # to avoid the extra function call in asyncio.create_task.
             task = self.loop.create_task(target, name=name)
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.remove)
+        task.add_done_callback(maybe_call_unawaited_task_exception_handler)
         return task
 
     @callback
