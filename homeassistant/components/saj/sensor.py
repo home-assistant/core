@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -32,17 +33,23 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_start
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+
+from . import SAJConfigEntry
+from .const import CONNECTION_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
 MIN_INTERVAL = 5
 MAX_INTERVAL = 300
 
-INVERTER_TYPES = ["ethernet", "wifi"]
 
 SAJ_UNIT_MAPPINGS = {
     "": None,
@@ -57,11 +64,94 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_TYPE, default=INVERTER_TYPES[0]): vol.In(INVERTER_TYPES),
+        vol.Optional(CONF_TYPE, default=CONNECTION_TYPES[0]): vol.In(CONNECTION_TYPES),
         vol.Inclusive(CONF_USERNAME, "credentials"): cv.string,
         vol.Inclusive(CONF_PASSWORD, "credentials"): cv.string,
     }
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: SAJConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the SAJ sensors from a config entry."""
+    saj = entry.runtime_data
+    connection_type = entry.data[CONF_TYPE]
+    wifi = connection_type == CONNECTION_TYPES[1]
+
+    # Init all sensors
+    sensor_def = pysaj.Sensors(wifi)
+
+    # Read initial sensor data
+    try:
+        done = await saj.read(sensor_def)
+        if not done:
+            raise PlatformNotReady("Failed to read initial sensor data")
+    except pysaj.UnauthorizedException as err:
+        _LOGGER.error("Username and/or password is wrong")
+        raise PlatformNotReady("Authentication failed") from err
+    except pysaj.UnexpectedResponseException as err:
+        _LOGGER.error(
+            "Error in SAJ, please check host/ip address. Original error: %s", err
+        )
+        raise PlatformNotReady(f"Connection error: {err}") from err
+
+    # Create sensors
+    hass_sensors = [
+        SAJsensor(saj.serialnumber, sensor, inverter_name=None)
+        for sensor in sensor_def
+        if sensor.enabled
+    ]
+
+    # Add diagnostic sensors
+    diagnostic_sensors = [
+        SAJDiagnosticSensor(entry, "ip_address", entry.data[CONF_HOST]),
+        SAJDiagnosticSensor(entry, "connection_type", entry.data[CONF_TYPE]),
+        SAJDiagnosticSensor(entry, "serial_number", saj.serialnumber or "Unknown"),
+    ]
+
+    async_add_entities(hass_sensors + diagnostic_sensors)
+
+    async def async_saj() -> bool:
+        """Update all the SAJ sensors."""
+        success = await saj.read(sensor_def)
+
+        for sensor in hass_sensors:
+            state_unknown = False
+            # SAJ inverters are powered by DC via solar panels and thus are
+            # offline after the sun has set. If a sensor resets on a daily
+            # basis like "today_yield", this reset won't happen automatically.
+            # Code below checks if today > day when sensor was last updated
+            # and if so: set state to None.
+            # Sensors with live values like "temperature" or "current_power"
+            # will also be reset to None.
+            if not success and (
+                (sensor.per_day_basis and date.today() > sensor.date_updated)
+                or (not sensor.per_day_basis and not sensor.per_total_basis)
+            ):
+                state_unknown = True
+            sensor.async_update_values(unknown_state=state_unknown)
+
+        return success
+
+    remove_interval_update: CALLBACK_TYPE | None = None
+
+    @callback
+    def start_update_interval(hass: HomeAssistant) -> None:
+        """Start the update interval scheduling."""
+        nonlocal remove_interval_update
+        remove_interval_update = async_track_time_interval_backoff(hass, async_saj)
+
+    @callback
+    def stop_update_interval(event):
+        """Properly cancel the scheduled update."""
+        if remove_interval_update:
+            remove_interval_update()
+
+    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, stop_update_interval)
+    async_at_start(hass, start_update_interval)
 
 
 async def async_setup_platform(
@@ -73,7 +163,7 @@ async def async_setup_platform(
     """Set up the SAJ sensors."""
 
     remove_interval_update = None
-    wifi = config[CONF_TYPE] == INVERTER_TYPES[1]
+    wifi = config[CONF_TYPE] == CONNECTION_TYPES[1]
 
     # Init all sensors
     sensor_def = pysaj.Sensors(wifi)
@@ -142,7 +232,8 @@ async def async_setup_platform(
     @callback
     def stop_update_interval(event):
         """Properly cancel the scheduled update."""
-        remove_interval_update()
+        if remove_interval_update:
+            remove_interval_update()
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, stop_update_interval)
     async_at_start(hass, start_update_interval)
@@ -181,6 +272,7 @@ class SAJsensor(SensorEntity):
     """Representation of a SAJ sensor."""
 
     _attr_should_poll = False
+    _state: StateType
 
     def __init__(
         self,
@@ -217,7 +309,7 @@ class SAJsensor(SensorEntity):
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._state
 
@@ -251,3 +343,32 @@ class SAJsensor(SensorEntity):
 
         if update:
             self.async_write_ha_state()
+
+
+class SAJDiagnosticSensor(SensorEntity):
+    """Representation of a SAJ diagnostic sensor."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        key: str,
+        value: str | None,
+    ) -> None:
+        """Initialize the SAJ diagnostic sensor."""
+        self._entry = entry
+        self._key = key
+        self._attr_unique_id = f"{entry.entry_id}_{key}"
+        self._attr_translation_key = key
+        self._attr_native_value = value
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the state of the sensor."""
+        return (
+            str(self._attr_native_value)
+            if self._attr_native_value is not None
+            else None
+        )
