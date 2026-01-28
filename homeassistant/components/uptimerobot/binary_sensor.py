@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import STATUS_UP
 from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
 from .utils import new_device_listener
@@ -53,4 +54,4 @@ class UptimeRobotBinarySensor(UptimeRobotEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the entity is on."""
-        return bool(self.monitor.status == 2)
+        return bool(self.monitor.status == STATUS_UP)
