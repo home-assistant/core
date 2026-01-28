@@ -137,6 +137,8 @@ def create_b01_q7_trait() -> Mock:
     b01_trait.return_to_dock = AsyncMock(side_effect=return_to_dock_side_effect)
     b01_trait.find_me = AsyncMock()
     b01_trait.set_fan_speed = AsyncMock()
+    b01_trait.set_mode = AsyncMock()
+    b01_trait.set_water_level = AsyncMock()
     b01_trait.send = AsyncMock()
     return b01_trait
 
