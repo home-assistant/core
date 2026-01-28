@@ -99,7 +99,7 @@ class AbodeLight(AbodeDevice, LightEntity):
         return _hs
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode | None:
         """Return the color mode of the light."""
         if self._device.is_dimmable and self._device.is_color_capable:
             if self.hs_color is not None:
@@ -110,7 +110,7 @@ class AbodeLight(AbodeDevice, LightEntity):
         return ColorMode.ONOFF
 
     @property
-    def supported_color_modes(self) -> set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode] | None:
         """Flag supported color modes."""
         if self._device.is_dimmable and self._device.is_color_capable:
             return {ColorMode.COLOR_TEMP, ColorMode.HS}
