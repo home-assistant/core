@@ -6,7 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/iss",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": ["pyiss"],
-  "requirements": ["pyiss==1.0.1"],
+  "requirements": ["skyfield==1.49", "satellitetle==0.18.0", "pyiss==1.0.1"],
   "single_config_entry": true
 }
