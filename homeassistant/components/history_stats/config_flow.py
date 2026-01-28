@@ -36,6 +36,7 @@ from homeassistant.helpers.template import Template
 from .const import (
     CONF_DURATION,
     CONF_END,
+    CONF_MIN_STATE_DURATION,
     CONF_PERIOD_KEYS,
     CONF_START,
     CONF_TYPE_KEYS,
@@ -128,6 +129,9 @@ def _get_options_schema_with_entity_id(entity_id: str) -> vol.Schema:
             vol.Optional(CONF_START): TemplateSelector(),
             vol.Optional(CONF_END): TemplateSelector(),
             vol.Optional(CONF_DURATION): DurationSelector(
+                DurationSelectorConfig(enable_day=True, allow_negative=False),
+            ),
+            vol.Optional(CONF_MIN_STATE_DURATION): DurationSelector(
                 DurationSelectorConfig(enable_day=True, allow_negative=False)
             ),
         }
@@ -255,6 +259,7 @@ async def ws_start_preview(
     start = validated_data.get(CONF_START)
     end = validated_data.get(CONF_END)
     duration = validated_data.get(CONF_DURATION)
+    min_state_duration = validated_data.get(CONF_MIN_STATE_DURATION)
 
     history_stats = HistoryStats(
         hass,
@@ -263,6 +268,7 @@ async def ws_start_preview(
         Template(start, hass) if start else None,
         Template(end, hass) if end else None,
         timedelta(**duration) if duration else None,
+        timedelta(**min_state_duration) if min_state_duration else timedelta(0),
         True,
     )
     coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, None, name, True)
