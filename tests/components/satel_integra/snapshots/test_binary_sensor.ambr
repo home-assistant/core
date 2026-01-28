@@ -46,7 +46,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'unknown',
   })
 # ---
 # name: test_binary_sensors[binary_sensor.zone-entry]
@@ -96,7 +96,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'unknown',
   })
 # ---
 # name: test_binary_sensors[device-output]
