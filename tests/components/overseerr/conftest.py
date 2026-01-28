@@ -1,10 +1,17 @@
 """Overseerr tests configuration."""
 
 from collections.abc import Generator
+import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from python_overseerr import IssueCount, MovieDetails, RequestCount, RequestResponse
+from python_overseerr import (
+    Issue,
+    IssueCount,
+    MovieDetails,
+    RequestCount,
+    RequestResponse,
+)
 from python_overseerr.models import TVDetails, WebhookNotificationConfig
 
 from homeassistant.components.overseerr import CONF_CLOUDHOOK_URL
@@ -67,6 +74,20 @@ def mock_overseerr_client() -> Generator[AsyncMock]:
         client.get_tv_details.return_value = TVDetails.from_json(
             load_fixture("tv.json", DOMAIN)
         )
+        issues_data = json.loads(load_fixture("issues.json", DOMAIN))
+        client.get_issues.return_value = [
+            Issue.from_dict(issue) for issue in issues_data
+        ]
+        client.get_issue.return_value = Issue.from_json(
+            load_fixture("issue.json", DOMAIN)
+        )
+        client.create_issue.return_value = Issue.from_json(
+            load_fixture("issue.json", DOMAIN)
+        )
+        client.update_issue.return_value = Issue.from_json(
+            load_fixture("issue.json", DOMAIN)
+        )
+        client.delete_issue.return_value = None
         yield client
 
 

@@ -28,3 +28,87 @@ get_requests:
         number:
           min: 0
           mode: box
+
+get_issues:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    status:
+      selector:
+        select:
+          options:
+            - all
+            - open
+            - resolved
+          translation_key: issue_status
+
+create_issue:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    issue_type:
+      required: true
+      selector:
+        select:
+          options:
+            - video
+            - audio
+            - subtitle
+            - other
+          translation_key: issue_type
+    message:
+      required: true
+      selector:
+        text:
+          multiline: true
+    media_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+
+update_issue:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    issue_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+    status:
+      selector:
+        select:
+          options:
+            - open
+            - resolved
+          translation_key: issue_status_update
+    message:
+      selector:
+        text:
+          multiline: true
+
+delete_issue:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    issue_id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
