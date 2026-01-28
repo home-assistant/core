@@ -859,6 +859,9 @@ ekey-bionyxpy==1.0.0
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.9.14
 
+# homeassistant.components.electrolux
+electrolux-group-developer-sdk==0.2.0
+
 # homeassistant.components.elevenlabs
 elevenlabs==2.3.0
 

@@ -1,0 +1,11 @@
+{
+  "domain": "electrolux",
+  "name": "Electrolux",
+  "codeowners": ["@electrolux-oss"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/electrolux",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "quality_scale": "bronze",
+  "requirements": ["electrolux-group-developer-sdk==0.2.0"]
+}

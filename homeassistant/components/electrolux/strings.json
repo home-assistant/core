@@ -1,0 +1,59 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Electrolux account is already configured."
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the Electrolux API. Please check credentials and try again.",
+      "invalid_auth": "Authentication failed. Please check your credentials.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "discovery_confirm": {
+        "description": "A new appliance \"{device}\" has been discovered. Do you want to add it to Home Assistant?",
+        "title": "New {brand} appliance found"
+      },
+      "user": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "refresh_token": "Refresh token"
+        },
+        "data_description": {
+          "access_token": "The access token from Electrolux Group for Developer.",
+          "api_key": "Your Electrolux Group for Developer API key.",
+          "refresh_token": "The refresh token used to renew your access token."
+        },
+        "description": "Please [click here]({portal_link}) to generate new access and refresh tokens, then paste them below.",
+        "title": "Configure your Electrolux Group account"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "appliance_state": {
+        "name": "Appliance state"
+      },
+      "display_temperature": {
+        "name": "Current temperature"
+      },
+      "door_state": {
+        "name": "Door state"
+      },
+      "food_probe_state": {
+        "name": "Food probe state"
+      },
+      "food_probe_temperature": {
+        "name": "Food probe temperature"
+      },
+      "remote_control": {
+        "name": "Remote control",
+        "state": {
+          "disabled": "Disabled",
+          "enabled": "Enabled",
+          "not_safety_relevant_enabled": "Not safety relevant enabled"
+        }
+      }
+    }
+  }
+}
