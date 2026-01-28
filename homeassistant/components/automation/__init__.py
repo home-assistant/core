@@ -7,7 +7,7 @@ import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any, Literal, Protocol, cast
+from typing import Any, Protocol, cast
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -25,18 +25,11 @@ from homeassistant.const import (
     CONF_ACTIONS,
     CONF_ALIAS,
     CONF_CONDITIONS,
-    CONF_DEVICE_ID,
-    CONF_ENTITY_ID,
-    CONF_EVENT_DATA,
     CONF_ID,
     CONF_MODE,
-    CONF_OPTIONS,
     CONF_PATH,
-    CONF_PLATFORM,
-    CONF_TARGET,
     CONF_TRIGGERS,
     CONF_VARIABLES,
-    CONF_ZONE,
     EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
@@ -53,10 +46,13 @@ from homeassistant.core import (
     ServiceCall,
     callback,
     split_entity_id,
-    valid_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
-from homeassistant.helpers import condition as condition_helper, config_validation as cv
+from homeassistant.helpers import (
+    condition as condition_helper,
+    config_validation as cv,
+    trigger as trigger_helper,
+)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.issue_registry import (
@@ -86,7 +82,6 @@ from homeassistant.helpers.trace import (
     trace_get,
     trace_path,
 )
-from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
@@ -125,10 +120,18 @@ NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
 _EXPERIMENTAL_CONDITION_PLATFORMS = {
     "alarm_control_panel",
     "assist_satellite",
+    "climate",
     "device_tracker",
     "fan",
+    "humidifier",
+    "lawn_mower",
     "light",
+    "lock",
+    "media_player",
+    "person",
     "siren",
+    "switch",
+    "vacuum",
 }
 
 _EXPERIMENTAL_TRIGGER_PLATFORMS = {
@@ -610,7 +613,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 )
 
         for conf in self._trigger_config:
-            referenced |= set(_get_targets_from_trigger_config(conf, ATTR_LABEL_ID))
+            referenced |= set(trigger_helper.async_extract_targets(conf, ATTR_LABEL_ID))
         return referenced
 
     @cached_property
@@ -625,7 +628,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 )
 
         for conf in self._trigger_config:
-            referenced |= set(_get_targets_from_trigger_config(conf, ATTR_FLOOR_ID))
+            referenced |= set(trigger_helper.async_extract_targets(conf, ATTR_FLOOR_ID))
         return referenced
 
     @cached_property
@@ -638,7 +641,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 referenced |= condition_helper.async_extract_targets(conf, ATTR_AREA_ID)
 
         for conf in self._trigger_config:
-            referenced |= set(_get_targets_from_trigger_config(conf, ATTR_AREA_ID))
+            referenced |= set(trigger_helper.async_extract_targets(conf, ATTR_AREA_ID))
         return referenced
 
     @property
@@ -658,7 +661,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 referenced |= condition_helper.async_extract_devices(conf)
 
         for conf in self._trigger_config:
-            referenced |= set(_trigger_extract_devices(conf))
+            referenced |= set(trigger_helper.async_extract_devices(conf))
 
         return referenced
 
@@ -672,7 +675,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 referenced |= condition_helper.async_extract_entities(conf)
 
         for conf in self._trigger_config:
-            for entity_id in _trigger_extract_entities(conf):
+            for entity_id in trigger_helper.async_extract_entities(conf):
                 referenced.add(entity_id)
 
         return referenced
@@ -946,7 +949,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 self._logger.error("Error rendering trigger variables: %s", err)
                 return None
 
-        return await async_initialize_triggers(
+        return await trigger_helper.async_initialize_triggers(
             self.hass,
             self._trigger_config,
             self._async_trigger_if_enabled,
@@ -1228,78 +1231,6 @@ async def _async_process_if(
     result.config = if_configs
 
     return result
-
-
-@callback
-def _trigger_extract_devices(trigger_conf: dict) -> list[str]:
-    """Extract devices from a trigger config."""
-    if trigger_conf[CONF_PLATFORM] == "device":
-        return [trigger_conf[CONF_DEVICE_ID]]
-
-    if (
-        trigger_conf[CONF_PLATFORM] == "event"
-        and CONF_EVENT_DATA in trigger_conf
-        and CONF_DEVICE_ID in trigger_conf[CONF_EVENT_DATA]
-        and isinstance(trigger_conf[CONF_EVENT_DATA][CONF_DEVICE_ID], str)
-    ):
-        return [trigger_conf[CONF_EVENT_DATA][CONF_DEVICE_ID]]
-
-    if trigger_conf[CONF_PLATFORM] == "tag" and CONF_DEVICE_ID in trigger_conf:
-        return trigger_conf[CONF_DEVICE_ID]  # type: ignore[no-any-return]
-
-    if target_devices := _get_targets_from_trigger_config(trigger_conf, CONF_DEVICE_ID):
-        return target_devices
-
-    return []
-
-
-@callback
-def _trigger_extract_entities(trigger_conf: dict) -> list[str]:
-    """Extract entities from a trigger config."""
-    if trigger_conf[CONF_PLATFORM] in ("state", "numeric_state"):
-        return trigger_conf[CONF_ENTITY_ID]  # type: ignore[no-any-return]
-
-    if trigger_conf[CONF_PLATFORM] == "calendar":
-        return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]
-
-    if trigger_conf[CONF_PLATFORM] == "zone":
-        return trigger_conf[CONF_ENTITY_ID] + [trigger_conf[CONF_ZONE]]  # type: ignore[no-any-return]
-
-    if trigger_conf[CONF_PLATFORM] == "geo_location":
-        return [trigger_conf[CONF_ZONE]]
-
-    if trigger_conf[CONF_PLATFORM] == "sun":
-        return ["sun.sun"]
-
-    if (
-        trigger_conf[CONF_PLATFORM] == "event"
-        and CONF_EVENT_DATA in trigger_conf
-        and CONF_ENTITY_ID in trigger_conf[CONF_EVENT_DATA]
-        and isinstance(trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID], str)
-        and valid_entity_id(trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID])
-    ):
-        return [trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID]]
-
-    if target_entities := _get_targets_from_trigger_config(
-        trigger_conf, CONF_ENTITY_ID
-    ):
-        return target_entities
-
-    return []
-
-
-@callback
-def _get_targets_from_trigger_config(
-    config: dict,
-    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
-) -> list[str]:
-    """Extract targets from a target config."""
-    if not (target_conf := config.get(CONF_TARGET)):
-        return []
-    if not (targets := target_conf.get(target)):
-        return []
-
-    return [targets] if isinstance(targets, str) else targets
 
 
 @websocket_api.websocket_command({"type": "automation/config", "entity_id": str})

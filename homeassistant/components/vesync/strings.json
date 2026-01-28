@@ -1,8 +1,9 @@
 {
   "config": {
     "abort": {
+      "already_configured": "VeSync account is already configured",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "wrong_account": "The account you are trying to re-authenticate is different from the one configured"
     },
     "error": {
       "api_response_error": "API response error",
@@ -50,7 +51,6 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "advanced_sleep": "Advanced sleep",
               "auto": "[%key:common::state::auto%]",
               "normal": "[%key:common::state::normal%]",
               "pet": "Pet",

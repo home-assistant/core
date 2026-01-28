@@ -94,6 +94,7 @@ from .const import (
     ATTR_USER_ID,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     DOMAIN,
@@ -1099,15 +1100,24 @@ class TelegramNotificationService:
 
 def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:
     """Initialize telegram bot with proxy support."""
-    api_key: str = p_config[CONF_API_KEY]
-    proxy_url: str | None = p_config.get(CONF_PROXY_URL)
 
+    api_key: str = p_config[CONF_API_KEY]
+
+    proxy_url: str | None = p_config.get(CONF_PROXY_URL)
     if proxy_url is not None:
         proxy = httpx.Proxy(proxy_url)
         request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
     else:
         request = HTTPXRequest(connection_pool_size=8)
-    return Bot(token=api_key, request=request)
+
+    base_url: str = p_config[CONF_API_ENDPOINT]
+
+    return Bot(
+        token=api_key,
+        base_url=f"{base_url}/bot",
+        base_file_url=f"{base_url}/file/bot",
+        request=request,
+    )
 
 
 async def load_data(

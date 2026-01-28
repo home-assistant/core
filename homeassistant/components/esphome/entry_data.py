@@ -44,6 +44,7 @@ from aioesphomeapi import (
     UpdateInfo,
     UserService,
     ValveInfo,
+    WaterHeaterInfo,
     build_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
@@ -96,6 +97,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     TimeInfo: Platform.TIME,
     UpdateInfo: Platform.UPDATE,
     ValveInfo: Platform.VALVE,
+    WaterHeaterInfo: Platform.WATER_HEATER,
 }
 
 
