@@ -680,6 +680,13 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.__supports_stream = self.supported_features & CameraEntityFeature.STREAM
         await self.async_refresh_providers(write_state=False)
 
+    async def async_internal_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self._webrtc_provider:
+            await self._webrtc_provider.async_unregister_camera(self)
+            self._webrtc_provider = None
+        await super().async_internal_will_remove_from_hass()
+
     async def async_refresh_providers(self, *, write_state: bool = True) -> None:
         """Determine if any of the registered providers are suitable for this entity.
 
