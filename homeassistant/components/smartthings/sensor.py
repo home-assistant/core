@@ -912,9 +912,7 @@ CAPABILITY_TO_SENSORS: dict[
                     if Capability.CUSTOM_OUTING_MODE in status
                     else None
                 ),
-                component_fn=(
-                    lambda component: component in {"freezer", "cooler", "onedoor"}
-                ),
+                capability_ignore_list=[THERMOSTAT_CAPABILITIES],
                 component_translation_key={
                     "freezer": "freezer_temperature",
                     "cooler": "cooler_temperature",

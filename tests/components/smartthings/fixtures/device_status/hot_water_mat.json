@@ -1,0 +1,70 @@
+{
+    "components": {
+        "main": {
+            "switch": {
+                "switch": {
+                    "value": "off",
+                    "timestamp": "2021-04-06T16:44:10.518Z"
+                }
+            }
+        },
+        "Left": {
+            "switch": {
+                "switch": {
+                    "value": "off",
+                    "timestamp": "2021-04-06T16:44:10.518Z"
+                }
+            },
+            "thermostatHeatingSetpoint": {
+                "heatingSetpoint": {
+                    "value": 28,
+                    "unit": "C",
+                    "timestamp": "2021-04-06T16:44:10.518Z"
+                },
+                "heatingSetpointRange": {
+                    "value": {
+                        "minimum": 28,
+                        "maximum": 45,
+                        "step": 0.5
+                    }
+                }
+            },
+            "temperatureMeasurement": {
+                "temperature": {
+                    "value": 28,
+                    "unit": "C",
+                    "timestamp": "2021-04-06T16:44:10.518Z"
+                }
+            }
+        },
+        "Right": {
+            "switch": {
+                "switch": {
+                    "value": "on",
+                    "timestamp": "2021-04-06T16:44:10.518Z"
+                }
+            },
+            "thermostatHeatingSetpoint": {
+                "heatingSetpoint": {
+                    "value": 28.5,
+                    "unit": "C",
+                    "timestamp": "2021-04-06T16:44:10.518Z"
+                },
+                "heatingSetpointRange": {
+                    "value": {
+                        "minimum": 28,
+                        "maximum": 45,
+                        "step": 0.5
+                    }
+                }
+            },
+            "temperatureMeasurement": {
+                "temperature": {
+                    "value": 28.5,
+                    "unit": "C",
+                    "timestamp": "2021-04-06T16:44:10.518Z"
+                }
+            }
+        }
+    }
+}
