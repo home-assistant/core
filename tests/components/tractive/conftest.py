@@ -34,24 +34,6 @@ def mock_tractive_client() -> Generator[AsyncMock]:
             }
         entry.runtime_data.client._send_hardware_update(event)
 
-    def send_wellness_event(
-        entry: MockConfigEntry, event: dict[str, Any] | None = None
-    ):
-        """Send wellness event."""
-        if event is None:
-            event = {
-                "pet_id": "pet_id_123",
-                "sleep": {"minutes_day_sleep": 100, "minutes_night_sleep": 300},
-                "wellness": {"activity_label": "ok", "sleep_label": "good"},
-                "activity": {
-                    "calories": 999,
-                    "minutes_goal": 200,
-                    "minutes_active": 150,
-                    "minutes_rest": 122,
-                },
-            }
-        entry.runtime_data.client._send_wellness_update(event)
-
     def send_health_overview_event(
         entry: MockConfigEntry, event: dict[str, Any] | None = None
     ):
@@ -144,7 +126,6 @@ def mock_tractive_client() -> Generator[AsyncMock]:
         )
 
         client.send_hardware_event = send_hardware_event
-        client.send_wellness_event = send_wellness_event
         client.send_health_overview_event = send_health_overview_event
         client.send_position_event = send_position_event
         client.send_switch_event = send_switch_event
