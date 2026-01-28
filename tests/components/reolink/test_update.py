@@ -39,7 +39,7 @@ async def test_no_update(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.UPDATE}.{entity_name}_firmware"
+    entity_id = f"{Platform.UPDATE}.{entity_name}"
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
@@ -58,7 +58,7 @@ async def test_update_str(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.UPDATE}.{entity_name}_firmware"
+    entity_id = f"{Platform.UPDATE}.{entity_name}"
     assert hass.states.get(entity_id).state == STATE_ON
 
 
@@ -86,7 +86,7 @@ async def test_update_firm(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.UPDATE}.{entity_name}_firmware"
+    entity_id = f"{Platform.UPDATE}.{entity_name}"
     assert hass.states.get(entity_id).state == STATE_ON
     assert not hass.states.get(entity_id).attributes["in_progress"]
     assert hass.states.get(entity_id).attributes["update_percentage"] is None
@@ -183,7 +183,7 @@ async def test_update_firm_keeps_available(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.UPDATE}.{entity_name}_firmware"
+    entity_id = f"{Platform.UPDATE}.{entity_name}"
     assert hass.states.get(entity_id).state == STATE_ON
 
     async def mock_update_firmware(*args, **kwargs) -> None:
@@ -206,3 +206,39 @@ async def test_update_firm_keeps_available(
 
     # still available
     assert hass.states.get(entity_id).state == STATE_ON
+
+
+@pytest.mark.parametrize("entity_name", [TEST_NVR_NAME, TEST_CAM_NAME])
+async def test_external_firmware_update_detected(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+    entity_name: str,
+) -> None:
+    """Test that external firmware updates (via Reolink app) are detected."""
+    reolink_host.camera_sw_version.return_value = "v1.1.0.0.0.0000"
+    new_firmware = NewSoftwareVersion(
+        version_string="v3.3.0.226_23031644",
+        download_url=TEST_DOWNLOAD_URL,
+        release_notes=TEST_RELEASE_NOTES,
+    )
+    reolink_host.firmware_update_available.return_value = new_firmware
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.UPDATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"{Platform.UPDATE}.{entity_name}"
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # Simulate external firmware update via Reolink app
+    reolink_host.camera_sw_version.return_value = "v3.3.0.226_23031644"
+    reolink_host.firmware_update_available.return_value = False
+
+    # Trigger device coordinator update (simulates regular polling)
+    await config_entry.runtime_data.device_coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    # The firmware coordinator should have been refreshed, and update should be cleared
+    assert hass.states.get(entity_id).state == STATE_OFF
