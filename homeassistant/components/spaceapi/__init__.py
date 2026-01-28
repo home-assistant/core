@@ -249,6 +249,8 @@ class APISpaceApiView(HomeAssistantView):
 
     url = URL_API_SPACEAPI
     name = "api:spaceapi"
+    requires_auth = False
+    cors_allowed = True
 
     @staticmethod
     def get_sensor_data(hass, spaceapi, sensor):
