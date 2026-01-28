@@ -10,12 +10,12 @@
     "step": {
       "user": {
         "data": {
-          "tracked_addons": "Add-ons",
+          "tracked_apps": "Apps",
           "tracked_custom_integrations": "Custom integrations",
           "tracked_integrations": "Integrations"
         },
         "data_description": {
-          "tracked_addons": "Select the add-ons you want to track",
+          "tracked_apps": "Select the apps you want to track",
           "tracked_custom_integrations": "Select the custom integrations you want to track",
           "tracked_integrations": "Select the integrations you want to track"
         }
@@ -45,12 +45,12 @@
     "step": {
       "init": {
         "data": {
-          "tracked_addons": "[%key:component::analytics_insights::config::step::user::data::tracked_addons%]",
+          "tracked_apps": "[%key:component::analytics_insights::config::step::user::data::tracked_apps%]",
           "tracked_custom_integrations": "[%key:component::analytics_insights::config::step::user::data::tracked_custom_integrations%]",
           "tracked_integrations": "[%key:component::analytics_insights::config::step::user::data::tracked_integrations%]"
         },
         "data_description": {
-          "tracked_addons": "[%key:component::analytics_insights::config::step::user::data_description::tracked_addons%]",
+          "tracked_apps": "[%key:component::analytics_insights::config::step::user::data_description::tracked_apps%]",
           "tracked_custom_integrations": "[%key:component::analytics_insights::config::step::user::data_description::tracked_custom_integrations%]",
           "tracked_integrations": "[%key:component::analytics_insights::config::step::user::data_description::tracked_integrations%]"
         }

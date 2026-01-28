@@ -1045,7 +1045,7 @@ habluetooth==5.8.0
 hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
-hass-nabucasa==1.11.0
+hass-nabucasa==1.12.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1077,7 +1077,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260107.2
+home-assistant-frontend==20260128.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.1.6
@@ -1189,7 +1189,7 @@ kegtron-ble==1.0.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.1.15.112308
+knx-frontend==2026.1.28.162006
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1447,6 +1447,7 @@ open-garage==0.2.0
 # homeassistant.components.open_meteo
 open-meteo==0.3.2
 
+# homeassistant.components.cloud
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
 openai==2.15.0
@@ -2765,7 +2766,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.84
+zha==0.0.87
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.68.0
