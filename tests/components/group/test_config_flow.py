@@ -487,16 +487,7 @@ LIGHT_ATTRS = [
     },
     {"color_mode": "unknown"},
 ]
-LOCK_ATTRS = [
-    {
-        "supported_features": 1,
-        "group_entities": [
-            "lock.input_one",
-            "lock.input_two",
-        ],
-    },
-    {},
-]
+LOCK_ATTRS = [{"supported_features": 1}, {}]
 NOTIFY_ATTRS = [{"supported_features": 0}, {}]
 MEDIA_PLAYER_ATTRS = [{"supported_features": 0}, {}]
 SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"}]
