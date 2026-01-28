@@ -110,7 +110,7 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
         return self._device.rgb
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode:
         """Return the active color mode."""
 
         if (
