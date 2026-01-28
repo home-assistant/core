@@ -1765,6 +1765,9 @@ poolsense==0.0.8
 # homeassistant.components.powerfox
 powerfox==2.0.0
 
+# homeassistant.components.prana
+prana-api-client==0.10.0
+
 # homeassistant.components.reddit
 praw==7.5.0
 
