@@ -496,7 +496,7 @@ class EnergyManager:
     def _process_battery_power(
         self,
         source: BatterySourceType,
-        generate_entity_id: Callable[[str, PowerConfig], str | None],
+        generate_entity_id: Callable[[str, PowerConfig], str],
     ) -> BatterySourceType:
         """Set stat_rate for battery if power_config is specified."""
         if "power_config" not in source:
@@ -509,16 +509,12 @@ class EnergyManager:
             return {**source, "stat_rate": config["stat_rate"]}
 
         # For inverted or two-sensor config, set stat_rate to the generated entity_id
-        entity_id = generate_entity_id("battery", config)
-        if entity_id:
-            return {**source, "stat_rate": entity_id}
-
-        return source
+        return {**source, "stat_rate": generate_entity_id("battery", config)}
 
     def _process_grid_power(
         self,
         source: GridSourceType,
-        generate_entity_id: Callable[[str, PowerConfig], str | None],
+        generate_entity_id: Callable[[str, PowerConfig], str],
     ) -> GridSourceType:
         """Set stat_rate for grid power sources if power_config is specified."""
         if "power" not in source:
@@ -532,15 +528,13 @@ class EnergyManager:
                 # If power_config has stat_rate (standard), just use it directly
                 if "stat_rate" in config:
                     processed_power.append({**power, "stat_rate": config["stat_rate"]})
-                    continue
-
-                # For inverted or two-sensor config, set stat_rate to generated entity_id
-                entity_id = generate_entity_id("grid", config)
-                if entity_id:
-                    processed_power.append({**power, "stat_rate": entity_id})
-                    continue
-
-            processed_power.append(power)
+                else:
+                    # For inverted or two-sensor config, set stat_rate to generated entity_id
+                    processed_power.append(
+                        {**power, "stat_rate": generate_entity_id("grid", config)}
+                    )
+            else:
+                processed_power.append(power)
 
         return {**source, "power": processed_power}
 

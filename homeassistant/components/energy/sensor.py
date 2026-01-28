@@ -171,6 +171,9 @@ class SensorManager:
                 self.current_power_entities.pop(power_key)
                 await power_entity.async_remove()
 
+        # This guard is for the optional typing of EnergyManager.data.
+        # In practice, data is always set to default preferences in async_update
+        # before listeners are called, so this case should never happen.
         if not self.manager.data:
             await finish()
             return
@@ -282,28 +285,17 @@ class SensorManager:
     ) -> None:
         """Create a power sensor or keep an existing one."""
         unique_id = generate_power_sensor_unique_id(source_type, power_config)
-        if not unique_id:
-            return
 
         # If entity already exists, keep it
         if unique_id in to_remove:
             to_remove.pop(unique_id)
             return
 
-        # If we already have this entity, skip
-        if unique_id in self.current_power_entities:
-            return
-
-        entity_id = generate_power_sensor_entity_id(source_type, power_config)
-        # entity_id is guaranteed to be non-None here because generate_power_sensor_entity_id
-        # and generate_power_sensor_unique_id return None under identical conditions
-        assert entity_id is not None
-
         sensor = EnergyPowerSensor(
             source_type,
             power_config,
             unique_id,
-            entity_id,
+            generate_power_sensor_entity_id(source_type, power_config),
         )
         self.current_power_entities[unique_id] = sensor
         to_add.append(sensor)
