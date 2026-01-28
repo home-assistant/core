@@ -1,0 +1,84 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "U.S. Geological Survey Earthquake Hazards",
+        "description": "Configure the USGS Earthquake Feed to track earthquakes.",
+        "data": {
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "feed_type": "Feed type",
+          "radius": "Radius (km)",
+          "minimum_magnitude": "Minimum magnitude (Mw)"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure USGS Earthquake Feed",
+        "description": "Update the configuration for this USGS Earthquake Feed instance.",
+        "data": {
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "feed_type": "Feed type",
+          "radius": "Radius (km)",
+          "minimum_magnitude": "Minimum magnitude (Mw)"
+        }
+      },
+      "init": {
+        "title": "Options for USGS Earthquake Feed",
+        "description": "Update the configuration options.",
+        "data": {
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "feed_type": "Feed type",
+          "radius": "Radius (km)",
+          "minimum_magnitude": "Minimum magnitude (Mw)"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This location and feed type is already configured.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options for USGS Earthquake Feed",
+        "description": "Update the configuration options.",
+        "data": {
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "feed_type": "Feed type",
+          "radius": "Radius (km)",
+          "minimum_magnitude": "Minimum magnitude (Mw)"
+        }
+      }
+    }
+  },
+  "selector": {
+    "feed_type": {
+      "options": {
+        "past_hour_significant_earthquakes": "Past hour - Significant earthquakes",
+        "past_hour_m45_earthquakes": "Past hour - M4.5+ earthquakes",
+        "past_hour_m25_earthquakes": "Past hour - M2.5+ earthquakes",
+        "past_hour_m10_earthquakes": "Past hour - M1.0+ earthquakes",
+        "past_hour_all_earthquakes": "Past hour - All earthquakes",
+        "past_day_significant_earthquakes": "Past day - Significant earthquakes",
+        "past_day_m45_earthquakes": "Past day - M4.5+ earthquakes",
+        "past_day_m25_earthquakes": "Past day - M2.5+ earthquakes",
+        "past_day_m10_earthquakes": "Past day - M1.0+ earthquakes",
+        "past_day_all_earthquakes": "Past day - All earthquakes",
+        "past_week_significant_earthquakes": "Past week - Significant earthquakes",
+        "past_week_m45_earthquakes": "Past week - M4.5+ earthquakes",
+        "past_week_m25_earthquakes": "Past week - M2.5+ earthquakes",
+        "past_week_m10_earthquakes": "Past week - M1.0+ earthquakes",
+        "past_week_all_earthquakes": "Past week - All earthquakes",
+        "past_month_significant_earthquakes": "Past month - Significant earthquakes",
+        "past_month_m45_earthquakes": "Past month - M4.5+ earthquakes",
+        "past_month_m25_earthquakes": "Past month - M2.5+ earthquakes",
+        "past_month_m10_earthquakes": "Past month - M1.0+ earthquakes",
+        "past_month_all_earthquakes": "Past month - All earthquakes"
+      }
+    }
+  }
+}
