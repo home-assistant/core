@@ -1232,7 +1232,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Unload the config entry before stopping the add-on.
                 await self.hass.config_entries.async_unload(config_entry.entry_id)
                 addon_manager = get_addon_manager(self.hass)
-                _LOGGER.debug("Stopping Z-Wave JS add-on")
+                _LOGGER.debug("Stopping Z-Wave JS app")
                 try:
                     await addon_manager.async_stop_addon()
                 except AddonError as err:
@@ -1610,7 +1610,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             for addon_key, addon_val in self.original_addon_config.items()
             if addon_key in ADDON_USER_INPUT_MAP
         }
-        _LOGGER.debug("Reverting add-on options, reason: %s", reason)
+        _LOGGER.debug("Reverting app options, reason: %s", reason)
         return await self.async_step_configure_addon_reconfigure(addon_config_input)
 
     async def _async_backup_network(self) -> None:
