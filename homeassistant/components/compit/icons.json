@@ -1,0 +1,111 @@
+{
+  "entity": {
+    "sensor": {
+      "alarm_code": {
+        "default": "mdi:alert-circle",
+        "state": {
+          "no_alarm": "mdi:check-circle"
+        }
+      },
+      "battery_level": {
+        "default": "mdi:battery"
+      },
+      "boiler_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "calculated_heating_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "calculated_target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "charging_power": {
+        "default": "mdi:flash"
+      },
+      "circuit_target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "co2_percent": {
+        "default": "mdi:molecule-co2"
+      },
+      "collector_power": {
+        "default": "mdi:solar-power"
+      },
+      "collector_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "dhw_measured_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "energy_consumption": {
+        "default": "mdi:lightning-bolt"
+      },
+      "energy_sgready_yesterday": {
+        "default": "mdi:lightning-bolt"
+      },
+      "energy_today": {
+        "default": "mdi:lightning-bolt"
+      },
+      "energy_total": {
+        "default": "mdi:lightning-bolt"
+      },
+      "energy_yesterday": {
+        "default": "mdi:lightning-bolt"
+      },
+      "fuel_level": {
+        "default": "mdi:gauge"
+      },
+      "humidity": {
+        "default": "mdi:water-percent"
+      },
+      "mixer_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "outdoor_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "pk1_function": {
+        "default": "mdi:cog",
+        "state": {
+          "cooling": "mdi:snowflake-thermometer",
+          "off": "mdi:cog-off",
+          "summer": "mdi:weather-sunny",
+          "winter": "mdi:snowflake"
+        }
+      },
+      "pm10_level": {
+        "default": "mdi:air-filter",
+        "state": {
+          "exceeded": "mdi:alert",
+          "no_sensor": "mdi:cancel",
+          "normal": "mdi:air-filter",
+          "warning": "mdi:alert-circle-outline"
+        }
+      },
+      "pm25_level": {
+        "default": "mdi:air-filter",
+        "state": {
+          "exceeded": "mdi:alert",
+          "no_sensor": "mdi:cancel",
+          "normal": "mdi:air-filter",
+          "warning": "mdi:alert-circle-outline"
+        }
+      },
+      "return_circuit_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "tank_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "target_heating_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "ventilation_alarm": {
+        "default": "mdi:alert",
+        "state": {
+          "no_alarm": "mdi:check-circle"
+        }
+      }
+    }
+  }
+}
