@@ -78,10 +78,7 @@ DEFAULT_NAME = "Vacuum cleaner robot"
 _DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumActivity.IDLE, "2026.1")
 _DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumActivity.PAUSED, "2026.1")
 
-_BATTERY_DEPRECATION_IGNORED_PLATFORMS = (
-    "mqtt",
-    "template",
-)
+_BATTERY_DEPRECATION_IGNORED_PLATFORMS = ("template",)
 
 
 # mypy: disallow-any-generics
