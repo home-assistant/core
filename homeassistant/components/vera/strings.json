@@ -4,16 +4,40 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "Could not connect to controller with URL {base_url}"
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "step": {
+      "devices": {
+        "data": {
+          "exclude": "Devices to exclude",
+          "lights": "Switches to treat as lights"
+        },
+        "data_description": {
+          "exclude": "Select devices to exclude from Home Assistant",
+          "lights": "Select switch devices that should appear as lights instead"
+        },
+        "description": "Found {device_count} device(s). You can optionally exclude devices or configure switches to appear as lights.",
+        "title": "Configure Vera devices"
+      },
       "user": {
         "data": {
-          "exclude": "Vera device IDs to exclude from Home Assistant.",
-          "lights": "Vera switch device IDs to treat as lights in Home Assistant.",
           "vera_controller_url": "Controller URL"
         },
         "data_description": {
-          "vera_controller_url": "It should look like this: {sample_ip}"
-        }
+          "vera_controller_url": "Enter the URL of your Vera controller (e.g., {sample_ip})"
+        },
+        "description": "Enter the URL of your Vera controller to discover connected devices."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy": {
+        "name": "Energy"
+      },
+      "power": {
+        "name": "Power"
       }
     }
   },
@@ -21,8 +45,12 @@
     "step": {
       "init": {
         "data": {
-          "exclude": "[%key:component::vera::config::step::user::data::exclude%]",
-          "lights": "[%key:component::vera::config::step::user::data::lights%]"
+          "exclude": "Devices to exclude",
+          "lights": "Switches to treat as lights"
+        },
+        "data_description": {
+          "exclude": "Space-separated list of device IDs to exclude",
+          "lights": "Space-separated list of switch device IDs to treat as lights"
         },
         "description": "See the Vera documentation for details on optional parameters: {documentation_url}. Note: Any changes here require a restart of the Home Assistant server. To clear values, provide a space.",
         "title": "Vera controller options"

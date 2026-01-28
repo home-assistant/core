@@ -32,6 +32,7 @@ from .common import (
 )
 from .config_flow import fix_device_id_list, new_options
 from .const import CONF_CONTROLLER, DOMAIN
+from .hub import VeraHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,11 +121,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if device_type is not None:
             vera_devices[device_type].append(device)
 
+    # Create the hub device
+    hub = VeraHub(hass, controller, entry)
+    hub.async_update_device_registry()
+
     controller_data = ControllerData(
         controller=controller,
         devices=vera_devices,
         scenes=all_scenes,
         config_entry=entry,
+        hub=hub,
     )
 
     set_controller_data(hass, entry, controller_data)
