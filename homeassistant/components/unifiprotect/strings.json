@@ -323,6 +323,9 @@
       "chime_duration": {
         "name": "Chime duration"
       },
+      "chime_ring_volume": {
+        "name": "Ring volume ({camera_name})"
+      },
       "doorbell_ring_volume": {
         "name": "Doorbell ring volume"
       },

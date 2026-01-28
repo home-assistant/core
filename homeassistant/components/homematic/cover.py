@@ -78,7 +78,7 @@ class HMCover(HMDevice, CoverEntity):
         """Stop the device if in motion."""
         self._hmdevice.stop(self._channel)
 
-    def _init_data_struct(self):
+    def _init_data_struct(self) -> None:
         """Generate a data dictionary (self._data) from metadata."""
         self._state = "LEVEL"
         self._data.update({self._state: None})
@@ -138,7 +138,7 @@ class HMGarage(HMCover):
         """Return whether the cover is closed."""
         return self._hmdevice.is_closed(self._hm_get_state())
 
-    def _init_data_struct(self):
+    def _init_data_struct(self) -> None:
         """Generate a data dictionary (self._data) from metadata."""
         self._state = "DOOR_STATE"
         self._data.update({self._state: None})

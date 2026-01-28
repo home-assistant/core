@@ -30,6 +30,14 @@
       "ambient_noise": {
         "name": "Ambient noise"
       },
+      "connectivity_mode": {
+        "name": "Connectivity mode",
+        "state": {
+          "bluetooth": "Bluetooth",
+          "not_configured": "Not configured",
+          "smartlink": "SmartLink"
+        }
+      },
       "illuminance": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },

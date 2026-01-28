@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from eheimdigital.types import EheimDeviceType, FilterErrorCode
+from eheimdigital.types import FilterErrorCode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,8 +15,7 @@ from .conftest import init_integration
 from tests.common import MockConfigEntry, get_sensor_display_state, snapshot_platform
 
 
-@pytest.mark.usefixtures("classic_vario_mock")
-async def test_setup_classic_vario(
+async def test_setup(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -35,15 +34,15 @@ async def test_setup_classic_vario(
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
-        "00:00:00:00:00:03", EheimDeviceType.VERSION_EHEIM_CLASSIC_VARIO
-    )
-    await hass.async_block_till_done()
+    for device in eheimdigital_hub_mock.return_value.devices:
+        await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
+            device, eheimdigital_hub_mock.return_value.devices[device].device_type
+        )
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("classic_vario_mock")
 @pytest.mark.parametrize(
     ("device_name", "entity_list"),
     [
@@ -67,6 +66,25 @@ async def test_setup_classic_vario(
                 (
                     "sensor.mock_classicvario_remaining_hours_until_service",
                     "classic_vario_data",
+                    "serviceHour",
+                    100,
+                    str(round(100 / 24, 2)),
+                ),
+            ],
+        ),
+        (
+            "filter_mock",
+            [
+                (
+                    "sensor.mock_filter_current_speed",
+                    "filter_data",
+                    "freq",
+                    7200,
+                    str(round(72.0, 1)),
+                ),
+                (
+                    "sensor.mock_filter_remaining_hours_until_service",
+                    "filter_data",
                     "serviceHour",
                     100,
                     str(round(100 / 24, 2)),

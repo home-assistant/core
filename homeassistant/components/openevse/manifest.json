@@ -1,12 +1,14 @@
 {
   "domain": "openevse",
   "name": "OpenEVSE",
-  "codeowners": ["@c00w"],
+  "after_dependencies": ["zeroconf"],
+  "codeowners": ["@c00w", "@firstof9"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openevse",
   "integration_type": "device",
-  "iot_class": "local_polling",
+  "iot_class": "local_push",
   "loggers": ["openevsehttp"],
   "quality_scale": "legacy",
-  "requirements": ["python-openevse-http==0.2.1"]
+  "requirements": ["python-openevse-http==0.2.1"],
+  "zeroconf": ["_openevse._tcp.local."]
 }
