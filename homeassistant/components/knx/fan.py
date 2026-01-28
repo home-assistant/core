@@ -152,32 +152,28 @@ class KnxYamlFan(_KnxFan, KnxYamlEntity):
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX fan."""
         max_step = config.get(FanConf.MAX_STEP)
+        self._device = XknxFan(
+            xknx=knx_module.xknx,
+            name=config.get(CONF_NAME, ""),
+            group_address_speed=config.get(KNX_ADDRESS),
+            group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
+            group_address_oscillation=config.get(FanSchema.CONF_OSCILLATION_ADDRESS),
+            group_address_oscillation_state=config.get(
+                FanSchema.CONF_OSCILLATION_STATE_ADDRESS
+            ),
+            group_address_switch=config.get(FanSchema.CONF_SWITCH_ADDRESS),
+            group_address_switch_state=config.get(FanSchema.CONF_SWITCH_STATE_ADDRESS),
+            max_step=max_step,
+            sync_state=config.get(CONF_SYNC_STATE, True),
+        )
         super().__init__(
             knx_module=knx_module,
-            device=XknxFan(
-                xknx=knx_module.xknx,
-                name=config[CONF_NAME],
-                group_address_speed=config.get(KNX_ADDRESS),
-                group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
-                group_address_oscillation=config.get(
-                    FanSchema.CONF_OSCILLATION_ADDRESS
-                ),
-                group_address_oscillation_state=config.get(
-                    FanSchema.CONF_OSCILLATION_STATE_ADDRESS
-                ),
-                group_address_switch=config.get(FanSchema.CONF_SWITCH_ADDRESS),
-                group_address_switch_state=config.get(
-                    FanSchema.CONF_SWITCH_STATE_ADDRESS
-                ),
-                max_step=max_step,
-                sync_state=config.get(CONF_SYNC_STATE, True),
-            ),
+            unique_id=str(self._device.speed.group_address),
+            name=config.get(CONF_NAME),
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         # FanSpeedMode.STEP if max_step is set
         self._step_range: tuple[int, int] | None = (1, max_step) if max_step else None
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-
-        self._attr_unique_id = str(self._device.speed.group_address)
 
 
 class KnxUiFan(_KnxFan, KnxUiEntity):

@@ -200,16 +200,19 @@ class KnxYamlSensor(_KnxSensor, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
+        self._device = XknxSensor(
+            knx_module.xknx,
+            name=config.get(CONF_NAME, ""),
+            group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
+            sync_state=config[CONF_SYNC_STATE],
+            always_callback=True,
+            value_type=config[CONF_TYPE],
+        )
         super().__init__(
             knx_module=knx_module,
-            device=XknxSensor(
-                knx_module.xknx,
-                name=config[CONF_NAME],
-                group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
-                sync_state=config[CONF_SYNC_STATE],
-                always_callback=True,
-                value_type=config[CONF_TYPE],
-            ),
+            unique_id=str(self._device.sensor_value.group_address_state),
+            name=config.get(CONF_NAME),
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         if device_class := config.get(CONF_DEVICE_CLASS):
             self._attr_device_class = device_class
@@ -219,8 +222,6 @@ class KnxYamlSensor(_KnxSensor, KnxYamlEntity):
             )
 
         self._attr_force_update = config[SensorSchema.CONF_ALWAYS_CALLBACK]
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = str(self._device.sensor_value.group_address_state)
         self._attr_native_unit_of_measurement = self._device.unit_of_measurement()
         self._attr_state_class = config.get(CONF_STATE_CLASS)
         self._attr_extra_state_attributes = {}
