@@ -423,13 +423,59 @@ DISCOVERY_SCHEMAS = [
         entity_registry_enabled_default=False,
     ),
     # Qubino flush shutter
+    # Combine both switch_multilevel endpoints into shutter_tilt
+    # if operating mode (71) is set to venetian blind (1)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shutter_tilt",
+        manufacturer_id={0x0159},
+        product_id={0x0052, 0x0053},
+        product_type={0x0003},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={1},
+            type={ValueType.NUMBER},
+        ),
+        data_template=CoverTiltDataTemplate(
+            current_tilt_value_id=ZwaveValueID(
+                property_=CURRENT_VALUE_PROPERTY,
+                command_class=CommandClass.SWITCH_MULTILEVEL,
+                endpoint=2,
+            ),
+            target_tilt_value_id=ZwaveValueID(
+                property_=TARGET_VALUE_PROPERTY,
+                command_class=CommandClass.SWITCH_MULTILEVEL,
+                endpoint=2,
+            ),
+        ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.CONFIGURATION},
+                property={71},
+                endpoint={0},
+                value={1},
+            )
+        ],
+    ),
+    # Qubino flush shutter
+    # Disable endpoint 2 (slat),
+    # as these are either combined with endpoint one as shutter_tilt
+    # or it has no practical function.
+    # CC: Switch_Multilevel
     ZWaveDiscoverySchema(
         platform=Platform.COVER,
         hint="shutter",
         manufacturer_id={0x0159},
         product_id={0x0052, 0x0053},
         product_type={0x0003},
-        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            property={CURRENT_VALUE_PROPERTY},
+            endpoint={2},
+            type={ValueType.NUMBER},
+        ),
+        entity_registry_enabled_default=False,
     ),
     # Graber/Bali/Spring Fashion Covers
     ZWaveDiscoverySchema(

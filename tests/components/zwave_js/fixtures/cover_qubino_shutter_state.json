@@ -198,7 +198,7 @@
       }
     },
     {
-      "endpoint": 0,
+      "endpoint": 1,
       "commandClass": 38,
       "commandClassName": "Multilevel Switch",
       "property": "currentValue",
@@ -209,6 +209,41 @@
         "readable": true,
         "writeable": false,
         "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "min": 0,
+        "max": 99
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 2,
+      "commandClass": 38,
+      "commandClassName": "Multilevel Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 3,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 99
       },
@@ -408,7 +443,7 @@
         "allowManualEntry": false,
         "isFromConfig": true
       },
-      "value": 0
+      "value": 1
     },
     {
       "endpoint": 0,
