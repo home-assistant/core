@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'available': False,
+    'config_entry': dict({
+      'device_id': 'test_device_id',
+      'host': '10.0.0.131',
+      'model': 'Test Model',
+      'name': 'Test Device',
+    }),
+    'device_info': dict({
+      'dimmable': False,
+      'hw_version': 'Test HW Version',
+      'model': 'Test Model',
+      'name': 'Test Device',
+      'sw_version': 'Test Model Version',
+      'unique_id': 'test_device_id',
+      'wifi_dbm': -50,
+      'wifi_ssid': 'Test WiFi SSID',
+    }),
+    'settings': dict({
+      '433Mhz': dict({
+        'current': True,
+        'name': '433Mhz',
+      }),
+      'Cloud Access': dict({
+        'current': False,
+        'name': 'Cloud Access',
+      }),
+    }),
+    'state': None,
+  })
+# ---
