@@ -1041,7 +1041,7 @@
       "name": "Cloudflare",
       "integrations": {
         "cloudflare": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Cloudflare"
