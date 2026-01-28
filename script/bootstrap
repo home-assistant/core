@@ -9,8 +9,9 @@ cd "$(realpath "$(dirname "$0")/..")"
 echo "Installing development dependencies..."
 uv pip install \
   -e . \
-  -r requirements_test_all.txt \
+  -r requirements_test.txt \
   colorlog \
+  --constraint homeassistant/package_constraints.txt \
   --upgrade \
   --config-settings editable_mode=compat
 
