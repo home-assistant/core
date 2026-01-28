@@ -65,7 +65,14 @@
         "name": "Sender: {region_name} {slot_id}"
       },
       "severity": {
-        "name": "Severity: {region_name} {slot_id}"
+        "name": "Severity: {region_name} {slot_id}",
+        "state": {
+          "extreme": "Extreme",
+          "minor": "Minor",
+          "moderate": "Moderate",
+          "severe": "Severe",
+          "unknown": "Unknown"
+        }
       }
     }
   },
