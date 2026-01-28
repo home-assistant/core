@@ -142,7 +142,16 @@
     },
     "climate": {
       "thermostat": {
-        "name": "Thermostat"
+        "name": "Thermostat",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "going_to_sleep": "Going to sleep",
+              "vacation": "Vacation",
+              "wake": "Wake"
+            }
+          }
+        }
       }
     },
     "cover": {
