@@ -101,15 +101,15 @@ class Pet(SurePetcareBinarySensor):
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Get the latest data and update the state."""
         surepy_entity = cast(SurepyPet, surepy_entity)
-        position = surepy_entity._data.get("position", {})  # noqa: SLF001
-        device_id = position.get("device_id")
-        user_id = position.get("user_id")
         state = surepy_entity.location
         try:
             self._attr_is_on = bool(Location(state.where) == Location.INSIDE)
         except (KeyError, TypeError):
             self._attr_is_on = False
         if state:
+            position = surepy_entity._data.get("position", {})  # noqa: SLF001
+            device_id = position.get("device_id")
+            user_id = position.get("user_id")
             self._attr_extra_state_attributes = {
                 "since": state.since,
                 "where": state.where,
