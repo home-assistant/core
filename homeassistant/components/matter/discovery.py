@@ -211,14 +211,38 @@ def async_discover_entities(
                 if endpoint.has_attribute(None, optional_attribute):
                     attributes_to_watch.append(optional_attribute)
 
-        yield MatterEntityInfo(
-            endpoint=endpoint,
-            platform=schema.platform,
-            attributes_to_watch=attributes_to_watch,
-            entity_description=schema.entity_description,
-            entity_class=schema.entity_class,
-            discovery_schema=schema,
-        )
+        # Optionally read ClusterRevision if requested in schema
+        if getattr(schema, "cluster_revision", None) is not None:
+            CLUSTER_REVISION_ATTRIBUTE_ID = 65533  # 0xFFFD
+            cluster_revision_value = endpoint.get_attribute_value(
+                primary_attribute.cluster_id, CLUSTER_REVISION_ATTRIBUTE_ID
+            )
+            # Defensive: raise if not present
+            if cluster_revision_value is None:
+                raise RuntimeError(
+                    f"ClusterRevision attribute missing for cluster {primary_attribute.cluster_id} on endpoint {endpoint.endpoint_id}"
+                )
+            # Create a copy of the schema with cluster_revision set if needed (not required here)
+            # Or attach as needed to the entity info
+            entity_info = MatterEntityInfo(
+                endpoint=endpoint,
+                platform=schema.platform,
+                attributes_to_watch=attributes_to_watch,
+                entity_description=schema.entity_description,
+                entity_class=schema.entity_class,
+                discovery_schema=schema,
+            )
+            setattr(entity_info, "cluster_revision", cluster_revision_value)
+            yield entity_info
+        else:
+            yield MatterEntityInfo(
+                endpoint=endpoint,
+                platform=schema.platform,
+                attributes_to_watch=attributes_to_watch,
+                entity_description=schema.entity_description,
+                entity_class=schema.entity_class,
+                discovery_schema=schema,
+            )
 
         # prevent re-discovery of the primary attribute if not allowed
         if not schema.allow_multi:
