@@ -1,0 +1,117 @@
+# serializer version: 1
+# name: test_platform_setup_and_discovery[text.cat_feeder_meal_plan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'text.cat_feeder_meal_plan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Meal plan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Meal plan',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'meal_plan',
+    'unique_id': 'tuya.igkrtodqg14xvfxlqswwcmeal_plan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[text.cat_feeder_meal_plan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cat Feeder Meal plan',
+      'max': 255,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.cat_feeder_meal_plan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'fwceBQF/DgACAX8UAAQB',
+  })
+# ---
+# name: test_platform_setup_and_discovery[text.cleverio_pf100_meal_plan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'text.cleverio_pf100_meal_plan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Meal plan',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Meal plan',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'meal_plan',
+    'unique_id': 'tuya.iomszlsve0yyzkfwqswwcmeal_plan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[text.cleverio_pf100_meal_plan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Cleverio PF100 Meal plan',
+      'max': 255,
+      'min': 0,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.cleverio_pf100_meal_plan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'fwQAAgB/BgABAH8JAAIBfwwAAQB/DwACAX8VAAIBfxcAAQAIEgABAQ==',
+  })
+# ---
