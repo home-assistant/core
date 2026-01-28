@@ -80,8 +80,6 @@ async def async_setup_entry(
             # should not happen
             continue
 
-        assert properties is not None
-
         async_add_entities(
             [
                 EnOceanSensor(
