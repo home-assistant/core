@@ -5430,6 +5430,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "qube_heatpump": {
+      "name": "Qube Heat Pump",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "qvr_pro": {
       "name": "QVR Pro",
       "integration_type": "hub",

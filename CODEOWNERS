@@ -1317,6 +1317,8 @@ build.json @home-assistant/supervisor
 /tests/components/qnap_qsw/ @Noltari
 /homeassistant/components/quantum_gateway/ @cisasteelersfan
 /tests/components/quantum_gateway/ @cisasteelersfan
+/homeassistant/components/qube_heatpump/ @MattieGit
+/tests/components/qube_heatpump/ @MattieGit
 /homeassistant/components/qvr_pro/ @oblogic7
 /homeassistant/components/qwikswitch/ @kellerza
 /tests/components/qwikswitch/ @kellerza

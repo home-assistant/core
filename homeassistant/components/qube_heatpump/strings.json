@@ -1,0 +1,543 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured.",
+      "duplicate_ip": "Another Qube heat pump is already configured with this IP address. Configure each hub with a unique IP.",
+      "reconfigured": "Reconfiguration successful.",
+      "unknown_entry": "Unknown config entry."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect. Check host and port.",
+      "duplicate_ip": "A Qube heat pump using this IP address already exists. Choose a different host."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host/IP"
+        },
+        "data_description": {
+          "host": "Enter the IP address or hostname of your Qube heat pump (e.g. 192.168.1.50)."
+        },
+        "description": "Enter the heat pump IP or host.\nNeed help? See https://github.com/MattieGit/qube_heatpump/tree/main/wiki.",
+        "title": "Qube heat pump"
+      },
+      "reconfigure_confirm": {
+        "data": {
+          "host": "Host/IP",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "Enter the IP address or hostname of your Qube heat pump.",
+          "port": "Modbus TCP port (default: 502)."
+        },
+        "description": "Update connection settings for your Qube heat pump.",
+        "title": "Reconfigure Qube heat pump"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "al_dewpoint_active": {
+        "name": "Alarm: Dewpoint activated"
+      },
+      "al_maxtime_antileg_active": {
+        "name": "Alarm: Max time anti-legionella exceeded"
+      },
+      "al_maxtime_dhw_active": {
+        "name": "Alarm: Max time DHW exceeded"
+      },
+      "al_underfloorsafety_active": {
+        "name": "Alarm: Supply too hot (CV)"
+      },
+      "alarmmng_al_pwrplus": {
+        "name": "Alarm: Collective alarm compressor"
+      },
+      "alarmmng_al_workinghour": {
+        "name": "Alarm: Working hours"
+      },
+      "alrm_flw": {
+        "name": "Alarm: Flow CV"
+      },
+      "bms_demand": {
+        "name": "Heat demand active"
+      },
+      "boostersecurity": {
+        "name": "Digital input booster activated"
+      },
+      "bufferprb_en": {
+        "name": "Buffer sensor activated"
+      },
+      "coolingalrms": {
+        "name": "Alarm: Collective alarm cooling"
+      },
+      "daynightmode": {
+        "name": "Day/night mode status"
+      },
+      "dewpoint": {
+        "name": "Digital input dewpoint activated"
+      },
+      "dout_bufferpmp_val": {
+        "name": "Buffer pump output"
+      },
+      "dout_cooling_val": {
+        "name": "Cooling active output"
+      },
+      "dout_fourwayvlv_val": {
+        "name": "Four-way valve control"
+      },
+      "dout_heaterstep1_val": {
+        "name": "Heater 1 output"
+      },
+      "dout_heaterstep2_val": {
+        "name": "Heater 2 output"
+      },
+      "dout_heaterstep3_val": {
+        "name": "Heater 3 output"
+      },
+      "dout_srcpmp_val": {
+        "name": "Source pump power supply"
+      },
+      "dout_threewayvlv_val": {
+        "name": "Three-way valve output (CV/DHW)"
+      },
+      "dout_usrpmp_val": {
+        "name": "User pump power supply"
+      },
+      "en_dhwpid": {
+        "name": "DHW controller enabled"
+      },
+      "glbal": {
+        "name": "Global alarm"
+      },
+      "heatingalrms": {
+        "name": "Alarm: Collective alarm heating"
+      },
+      "id_demand": {
+        "name": "Digital input demand"
+      },
+      "id_summerwinter": {
+        "name": "Digital input summer mode activated"
+      },
+      "keybonoff": {
+        "name": "Heat pump keypad status"
+      },
+      "plantdemand": {
+        "name": "Plant sensor demand"
+      },
+      "plantprb_en": {
+        "name": "Plant sensor activated"
+      },
+      "qube_alarm_sensors_active": {
+        "name": "Qube alarm sensors active"
+      },
+      "req_antileg_1": {
+        "name": "Anti-legionella enabled"
+      },
+      "roomprb_en": {
+        "name": "Room sensor activated"
+      },
+      "srcflw": {
+        "name": "Digital input source flow activated"
+      },
+      "srsalrm": {
+        "name": "Alarm: Collective alarm source"
+      },
+      "surplus_pv": {
+        "name": "PV surplus active"
+      },
+      "thermostatdemand": {
+        "name": "Internal thermostat demand"
+      },
+      "usralrms": {
+        "name": "Alarm: Collective alarm CV"
+      }
+    },
+    "button": {
+      "qube_reload": {
+        "name": "Reload"
+      }
+    },
+    "select": {
+      "sgready_mode": {
+        "name": "SG Ready mode"
+      }
+    },
+    "sensor": {
+      "al_dewpoint_active": {
+        "name": "Alarm: Dewpoint activated"
+      },
+      "al_maxtime_antileg_active": {
+        "name": "Alarm: Max time anti-legionella exceeded"
+      },
+      "al_maxtime_dhw_active": {
+        "name": "Alarm: Max time DHW exceeded"
+      },
+      "al_underfloorsafety_active": {
+        "name": "Alarm: Supply too hot (CV)"
+      },
+      "alarmmng_al_pwrplus": {
+        "name": "Alarm: Collective alarm compressor"
+      },
+      "alarmmng_al_workinghour": {
+        "name": "Alarm: Working hours"
+      },
+      "alrm_flw": {
+        "name": "Alarm: Flow CV"
+      },
+      "aout_srcpmp_val": {
+        "name": "Source pump control %"
+      },
+      "aout_srcvalve_val": {
+        "name": "Source valve control %"
+      },
+      "aout_usrpmp_val": {
+        "name": "User (CV) pump control %"
+      },
+      "bldc_evd_powerplus_info_pump": {
+        "name": "Current compressor speed"
+      },
+      "bms_demand": {
+        "name": "Heat demand active"
+      },
+      "boostersecurity": {
+        "name": "Digital input booster activated"
+      },
+      "bufferprb_en": {
+        "name": "Buffer sensor activated"
+      },
+      "comppwrreq": {
+        "name": "Compressor demand %"
+      },
+      "coolingalrms": {
+        "name": "Alarm: Collective alarm cooling"
+      },
+      "coolsetp_1": {
+        "name": "Cooling setpoint"
+      },
+      "daynightmode": {
+        "name": "Day/night mode status"
+      },
+      "dewpoint": {
+        "name": "Digital input dewpoint activated"
+      },
+      "dhw_regreq": {
+        "name": "DHW regulation demand %"
+      },
+      "dhw_setp": {
+        "name": "DHW calculated setpoint"
+      },
+      "dhw_temp": {
+        "name": "DHW temperature"
+      },
+      "dout_bufferpmp_val": {
+        "name": "Buffer pump output"
+      },
+      "dout_cooling_val": {
+        "name": "Cooling active output"
+      },
+      "dout_fourwayvlv_val": {
+        "name": "Four-way valve control"
+      },
+      "dout_heaterstep1_val": {
+        "name": "Heater 1 output"
+      },
+      "dout_heaterstep2_val": {
+        "name": "Heater 2 output"
+      },
+      "dout_heaterstep3_val": {
+        "name": "Heater 3 output"
+      },
+      "dout_srcpmp_val": {
+        "name": "Source pump power supply"
+      },
+      "dout_threewayvlv_val": {
+        "name": "Three-way valve output (CV/DHW)"
+      },
+      "dout_usrpmp_val": {
+        "name": "User pump power supply"
+      },
+      "drieweg_status": {
+        "name": "Three-way valve status",
+        "state": {
+          "cv": "CV",
+          "dhw": "DHW"
+        }
+      },
+      "electric_consumption_cv_month": {
+        "name": "Electric consumption CV (month)"
+      },
+      "electric_consumption_sww_month": {
+        "name": "Electric consumption DHW (month)"
+      },
+      "en_dhwpid": {
+        "name": "DHW controller enabled"
+      },
+      "flow": {
+        "name": "Measured flow"
+      },
+      "generalmng_acumulatedpwr": {
+        "name": "Total electric consumption (excl. standby)"
+      },
+      "generalmng_acumulatedthermic": {
+        "name": "Total thermic yield"
+      },
+      "generalmng_cop": {
+        "name": "COP (calculated)"
+      },
+      "generalmng_eletricpwr": {
+        "name": "Total electric power (calculated)"
+      },
+      "generalmng_thermic_pwr": {
+        "name": "Current power"
+      },
+      "glbal": {
+        "name": "Global alarm"
+      },
+      "heatingalrms": {
+        "name": "Alarm: Collective alarm heating"
+      },
+      "heatsetp_1": {
+        "name": "Heating setpoint"
+      },
+      "id_demand": {
+        "name": "Digital input demand"
+      },
+      "id_summerwinter": {
+        "name": "Digital input summer mode activated"
+      },
+
+      "keybonoff": {
+        "name": "Heat pump keypad status"
+      },
+      "modbus_roomtemp": {
+        "name": "Linq room temperature"
+      },
+      "outtemp": {
+        "name": "Outside temperature"
+      },
+      "plantdemand": {
+        "name": "Plant sensor demand"
+      },
+      "plantprb_en": {
+        "name": "Plant sensor activated"
+      },
+      "plantsetp": {
+        "name": "Plant regulation setpoint"
+      },
+      "regsetp": {
+        "name": "Calculated heat pump setpoint"
+      },
+      "regulation_buffersetp_max": {
+        "name": "Max buffer setpoint (cooling)"
+      },
+      "regulation_buffersetp_min": {
+        "name": "Minimum setpoint buffer regulation"
+      },
+      "req_antileg_1": {
+        "name": "Anti-legionella enabled"
+      },
+      "rettemp": {
+        "name": "Return temperature CV"
+      },
+      "roomprb_en": {
+        "name": "Room sensor activated"
+      },
+      "roomtemp": {
+        "name": "Room temperature"
+      },
+      "scop_cv_day": {
+        "name": "SCOP CV (day)"
+      },
+      "scop_cv_month": {
+        "name": "SCOP CV (month)"
+      },
+      "scop_day": {
+        "name": "SCOP (day)"
+      },
+      "scop_month": {
+        "name": "SCOP (month)"
+      },
+      "scop_sww_day": {
+        "name": "SCOP DHW (day)"
+      },
+      "scop_sww_month": {
+        "name": "SCOP DHW (month)"
+      },
+      "srcflw": {
+        "name": "Digital input source flow activated"
+      },
+      "srcintemp": {
+        "name": "Source temperature from roof"
+      },
+      "srcouttemp": {
+        "name": "Source temperature to roof"
+      },
+      "srsalrm": {
+        "name": "Alarm: Collective alarm source"
+      },
+      "standby_energy": {
+        "name": "Standby energy"
+      },
+      "standby_power": {
+        "name": "Standby power"
+      },
+      "status_heatpump": {
+        "name": "Heat pump status",
+        "state": {
+          "alarm": "Alarm",
+          "compressor_shutdown": "Compressor shutdown",
+          "compressor_startup": "Compressor startup",
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
+          "heating_dhw": "Heating DHW",
+          "keyboard_off": "Keyboard off",
+          "standby": "[%key:common::state::standby%]",
+          "start_fail": "Start fail",
+          "unknown": "Unknown"
+        }
+      },
+      "supplytemp": {
+        "name": "Supply temperature CV"
+      },
+      "surplus_pv": {
+        "name": "PV surplus active"
+      },
+      "tapw_timeprogram_dhws": {
+        "name": "Minimum temperature DHW"
+      },
+      "tapw_timeprogram_dhws_prog": {
+        "name": "DHW temperature (active program)"
+      },
+      "tapw_timeprogram_dhwsetp_nolinq": {
+        "name": "User-defined DHW setpoint"
+      },
+      "tapw_timeprogram_dt_bms": {
+        "name": "dT flow temperature DHW"
+      },
+      "thermic_yield_cv_month": {
+        "name": "Thermic yield CV (month)"
+      },
+      "thermic_yield_month": {
+        "name": "Thermic yield (month)"
+      },
+      "thermic_yield_sww_month": {
+        "name": "Thermic yield DHW (month)"
+      },
+      "thermostat_coolsetp_day": {
+        "name": "Room setpoint cooling (day)"
+      },
+      "thermostat_coolsetp_night": {
+        "name": "Room setpoint cooling (night)"
+      },
+      "thermostat_heatsetp_day": {
+        "name": "Room setpoint heating (day)"
+      },
+      "thermostat_heatsetp_night": {
+        "name": "Room setpoint heating (night)"
+      },
+      "thermostatdemand": {
+        "name": "Internal thermostat demand"
+      },
+      "total_energy_incl_standby": {
+        "name": "Total electric consumption (incl. standby)"
+      },
+      "unitstatus": {
+        "name": "Status code"
+      },
+      "usr_pid_coolsetp": {
+        "name": "Cooling setpoint (no curve)"
+      },
+      "usr_pid_heatsetp": {
+        "name": "Heat setpoint (no curve)"
+      },
+      "usralrms": {
+        "name": "Alarm: Collective alarm CV"
+      },
+      "vierweg_status": {
+        "name": "Four-way valve status",
+        "state": {
+          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
+          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]"
+        }
+      },
+      "workinghours_cool_hrsret": {
+        "name": "Working hours cooling"
+      },
+      "workinghours_dhw_hrsret": {
+        "name": "Working hours DHW"
+      },
+      "workinghours_heat_hrsret": {
+        "name": "Working hours heating"
+      },
+      "workinghours_heater1_hrs": {
+        "name": "Working hours heater 1"
+      },
+      "workinghours_heater2_hrs": {
+        "name": "Working hours heater 2"
+      },
+      "workinghours_heater3_hrs": {
+        "name": "Working hours heater 3"
+      }
+    },
+    "switch": {
+      "antilegionella_frcstart_ant": {
+        "name": "Start Anti-legionella"
+      },
+      "bms_sgready_a": {
+        "name": "SG Ready A"
+      },
+      "bms_sgready_b": {
+        "name": "SG Ready B"
+      },
+      "bms_summerwinter": {
+        "name": "Activate summer mode (cooling)"
+      },
+      "en_plantsetp_compens": {
+        "name": "Enable heating curve"
+      },
+      "modbus_demand": {
+        "name": "Activate central heating"
+      },
+      "tapw_timeprogram_bms_forced": {
+        "name": "Activate DHW heating"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "cannot_connect": "Can not connect to Qube. Please check the IP address.",
+      "duplicate_ip": "Another Qube heat pump already uses this IP address.",
+      "invalid_host": "Enter a valid host or IP address."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "friendly_name_language": "Language for entity names",
+          "host": "Host/IP",
+          "label": "Hub label (suffix)",
+          "show_label_in_name": "Add hub label to entity IDs"
+        },
+        "data_description": {
+          "friendly_name_language": "Choose the language used for entity names. Note: Existing entities won't be renamed automatically.",
+          "host": "Enter the IP address or hostname of your Qube heat pump (e.g. 192.168.1.50).",
+          "label": "Optional shorthand label (e.g. qube1) used as suffix for entity IDs when multiple heat pumps are configured.",
+          "show_label_in_name": "Enable to append the hub label to entity IDs (e.g. sensor.qube1_temperature). This is recommended for multi-device setups."
+        },
+        "description": "Update the host if the heat pump IP changed, and choose whether to append the hub label to entity IDs.\nNeed help? See https://github.com/MattieGit/qube_heatpump/tree/main/wiki.\n\nEnable \"Add hub label\" to append the hub label such as \"qube1\" to entity IDs so they are easier to recognise when multiple heat pumps are configured. This is not recommended for single heat pump installs.\n\nCurrent IP: {resolved_ip}.",
+        "title": "Options"
+      }
+    }
+  },
+  "services": {
+    "reconfigure": {
+      "description": "Opens the integration's reconfigure flow so you can update the Modbus host or port from the Home Assistant UI.",
+      "fields": {
+        "entry_id": {
+          "description": "Optional integration entry_id to reconfigure. If omitted, the service will attempt to resolve the single configured entry automatically.",
+          "name": "Config entry ID"
+        }
+      },
+      "name": "Trigger reconfigure flow"
+    }
+  }
+}
