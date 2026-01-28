@@ -1,0 +1,61 @@
+{
+  "powerflow": {
+    "total_active_power": 11000,
+    "l1": {
+      "voltage": 230.0,
+      "current": 16.0,
+      "active_power": 3680,
+      "reactive_power": 0,
+      "apparent_power": 3680,
+      "power_factor": 100
+    },
+    "l2": {
+      "voltage": 230.0,
+      "current": 16.0,
+      "active_power": 3680,
+      "reactive_power": 0,
+      "apparent_power": 3680,
+      "power_factor": 100
+    },
+    "l3": {
+      "voltage": 230.0,
+      "current": 16.0,
+      "active_power": 3680,
+      "reactive_power": 0,
+      "apparent_power": 3680,
+      "power_factor": 100
+    },
+    "charging_voltage": 230.0,
+    "charging_current": 16.0,
+    "grid_frequency": 50.0,
+    "peak_power": 11000,
+    "total_reactive_power": 0,
+    "total_apparent_power": 11040,
+    "total_power_factor": 100,
+    "n": {
+      "current": 0.0
+    }
+  },
+  "general": {
+    "status": 3,
+    "charging_rate": 11.0,
+    "vehicle_connect_time": 100,
+    "vehicle_charging_time": 50,
+    "charge_count": 5,
+    "rcd_trigger": 0,
+    "warning_code": 0,
+    "error_code": 0
+  },
+  "temperatures": {
+    "housing": 35.0,
+    "connector_l1": 28.0,
+    "connector_l2": 29.0,
+    "connector_l3": 28.5,
+    "domestic_plug_1": 25.0,
+    "domestic_plug_2": 25.0
+  },
+  "energy": {
+    "total_charged_energy": 100000,
+    "charged_energy": 5000
+  }
+}

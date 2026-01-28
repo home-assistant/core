@@ -44,6 +44,11 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
             name=device_info.endpoint.name,
         )
 
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return super().available and self.device_id in self.coordinator.data
+
 
 class PortainerContainerEntity(PortainerCoordinatorEntity):
     """Base implementation for Portainer container."""
@@ -82,6 +87,15 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
                 f"{self.coordinator.config_entry.entry_id}_{self.endpoint_id}",
             ),
             translation_key=None if self.device_name else "unknown_container",
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return (
+            super().available
+            and self.endpoint_id in self.coordinator.data
+            and self.device_name in self.coordinator.data[self.endpoint_id].containers
         )
 
     @property
