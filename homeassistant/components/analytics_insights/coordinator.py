@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_TRACKED_ADDONS,
+    CONF_TRACKED_APPS,
     CONF_TRACKED_CUSTOM_INTEGRATIONS,
     CONF_TRACKED_INTEGRATIONS,
     DOMAIN,
@@ -35,7 +35,7 @@ class AnalyticsData:
 
     active_installations: int
     reports_integrations: int
-    addons: dict[str, int]
+    apps: dict[str, int]
     core_integrations: dict[str, int]
     custom_integrations: dict[str, int]
 
@@ -60,7 +60,7 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
             update_interval=timedelta(hours=12),
         )
         self._client = client
-        self._tracked_addons = self.config_entry.options.get(CONF_TRACKED_ADDONS, [])
+        self._tracked_apps = self.config_entry.options.get(CONF_TRACKED_APPS, [])
         self._tracked_integrations = self.config_entry.options[
             CONF_TRACKED_INTEGRATIONS
         ]
@@ -70,7 +70,9 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
 
     async def _async_update_data(self) -> AnalyticsData:
         try:
-            addons_data = await self._client.get_addons()
+            apps_data = (
+                await self._client.get_addons()
+            )  # Still add method name. Needs library update
             data = await self._client.get_current_analytics()
             custom_data = await self._client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError as err:
@@ -79,9 +81,7 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
             ) from err
         except HomeassistantAnalyticsNotModifiedError:
             return self.data
-        addons = {
-            addon: get_addon_value(addons_data, addon) for addon in self._tracked_addons
-        }
+        apps = {app: get_app_value(apps_data, app) for app in self._tracked_apps}
         core_integrations = {
             integration: data.integrations.get(integration, 0)
             for integration in self._tracked_integrations
@@ -93,14 +93,14 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
         return AnalyticsData(
             data.active_installations,
             data.reports_integrations,
-            addons,
+            apps,
             core_integrations,
             custom_integrations,
         )
 
 
-def get_addon_value(data: dict[str, Addon], name_slug: str) -> int:
-    """Get addon value."""
+def get_app_value(data: dict[str, Addon], name_slug: str) -> int:
+    """Get app value."""
     if name_slug in data:
         return data[name_slug].total
     return 0
