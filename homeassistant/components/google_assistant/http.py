@@ -28,6 +28,7 @@ from .const import (
     CONF_EXPOSE,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
+    CONF_EXPOSED_LABELS,
     CONF_PRIVATE_KEY,
     CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
@@ -164,6 +165,7 @@ class GoogleConfig(AbstractConfig):
         """Return if entity should be exposed."""
         expose_by_default = self._config.get(CONF_EXPOSE_BY_DEFAULT)
         exposed_domains = self._config.get(CONF_EXPOSED_DOMAINS)
+        exposed_labels = self._config.get(CONF_EXPOSED_LABELS)
 
         if state.attributes.get("view") is not None:
             # Ignore entities that are views
@@ -188,16 +190,24 @@ class GoogleConfig(AbstractConfig):
             expose_by_default and state.domain in exposed_domains
         )
 
+        # Check if entity has a label that's in the exposed_labels list
+        label_exposed = False
+        if exposed_labels and registry_entry and registry_entry.labels:
+            label_exposed = any(
+                label in exposed_labels for label in registry_entry.labels
+            )
+
         # Expose an entity by default if the entity's domain is exposed by default
         # and the entity is not a config or diagnostic entity
         entity_exposed_by_default = domain_exposed_by_default and not auxiliary_entity
 
         # Expose an entity if the entity's is exposed by default and
         # the configuration doesn't explicitly exclude it from being
-        # exposed, or if the entity is explicitly exposed
+        # exposed, or if the entity is explicitly exposed, or if it
+        # has an exposed label
         is_default_exposed = entity_exposed_by_default and explicit_expose is not False
 
-        return is_default_exposed or explicit_expose
+        return is_default_exposed or explicit_expose or label_exposed
 
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
