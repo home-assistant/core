@@ -56,7 +56,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> tuple[str
         raise InvalidAuth from err
 
     title: str = list(response["body"].values())[0].get("user_name", "")
-    unique_id: str = list(response["body"].values())[0].get("user_id", "")
+    unique_id: str = str(list(response["body"].values())[0].get("user_id", ""))
 
     # Return title to be used for hub name
     return (title, unique_id)
