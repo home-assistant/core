@@ -11,6 +11,7 @@ from homeassistant.components.tuya.const import DOMAIN
 from homeassistant.components.tuya.service import async_register_services
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 
 from . import initialize_entry
 
@@ -192,21 +193,101 @@ async def test_get_available_dp_codes_success(
     assert result["current_values"] == mock_device.status
 
 
-async def test_device_not_found(hass: HomeAssistant) -> None:
-    """Test service with non-existent device."""
+@pytest.mark.parametrize("mock_device_code", ["bzyd_45idzfufidgee7ir"])
+async def test_services_with_actual_device_lookup(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test services with actual _get_tuya_device implementation."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
     await async_register_services(hass)
 
-    with (
-        patch(
-            "homeassistant.components.tuya.service._get_tuya_device",
-            side_effect=HomeAssistantError("Device not found"),
-        ),
-        pytest.raises(HomeAssistantError),
-    ):
+    # Get the device ID from the device registry
+    device_registry = dr.async_get(hass)
+    device = list(device_registry.devices.values())[0]
+
+    # Test get_data
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_data",
+        {"device_id": device.id, "dp_code": "switch"},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["data"] == mock_device.status["switch"]
+
+    # Test set_data
+    result = await hass.services.async_call(
+        DOMAIN,
+        "set_data",
+        {"device_id": device.id, "dp_code": "switch", "data": False},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["success"] is True
+    mock_manager.send_commands.assert_called_once()
+
+    # Test get_available_dp_codes
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_available_dp_codes",
+        {"device_id": device.id},
+        blocking=True,
+        return_response=True,
+    )
+    assert set(result["settable_codes"]) == set(mock_device.function.keys())
+    assert set(result["readable_codes"]) == set(mock_device.status.keys())
+
+
+@pytest.mark.parametrize("mock_device_code", ["bzyd_45idzfufidgee7ir"])
+async def test_get_tuya_device_error_cases(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test _get_tuya_device error handling paths."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    await async_register_services(hass)
+
+    with pytest.raises(HomeAssistantError, match="Device .* not found"):
         await hass.services.async_call(
             DOMAIN,
             "get_data",
             {"device_id": "invalid_device_id", "dp_code": "switch"},
+            blocking=True,
+            return_response=True,
+        )
+
+    # Test: device is not a Tuya device
+    device_registry = dr.async_get(hass)
+    non_tuya_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("other_domain", "some_id")},
+        name="Non-Tuya Device",
+    )
+    with pytest.raises(HomeAssistantError, match="is not a Tuya device"):
+        await hass.services.async_call(
+            DOMAIN,
+            "get_data",
+            {"device_id": non_tuya_device.id, "dp_code": "switch"},
+            blocking=True,
+            return_response=True,
+        )
+
+    # Test: Tuya device not in config entry
+    tuya_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "unknown_tuya_id")},
+        name="Unknown Tuya Device",
+    )
+    with pytest.raises(HomeAssistantError, match="Tuya device .* not found"):
+        await hass.services.async_call(
+            DOMAIN,
+            "get_data",
+            {"device_id": tuya_device.id, "dp_code": "switch"},
             blocking=True,
             return_response=True,
         )
