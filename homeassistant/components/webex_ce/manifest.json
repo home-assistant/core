@@ -2,6 +2,7 @@
   "domain": "webex_ce",
   "name": "Cisco Webex Devices",
   "codeowners": ["@Simeon26"],
+  "version": "v1.0",
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/webex_ce",
