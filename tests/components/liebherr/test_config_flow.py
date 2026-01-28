@@ -1,9 +1,8 @@
 """Test the liebherr config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
-from pyliebherrhomeapi import Device, DeviceType
 from pyliebherrhomeapi.exceptions import (
     LiebherrAuthenticationError,
     LiebherrConnectionError,
@@ -21,11 +20,6 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
-MOCK_DEVICE = Device(
-    device_id="test_device_id",
-    nickname="Test Device",
-    device_type=DeviceType.FRIDGE,
-)
 MOCK_API_KEY = "test-api-key"
 MOCK_USER_INPUT = {CONF_API_KEY: MOCK_API_KEY}
 
@@ -38,18 +32,6 @@ MOCK_ZEROCONF_SERVICE_INFO = ZeroconfServiceInfo(
     name="liebherr-fridge._http._tcp.local.",
     properties={},
 )
-
-
-@pytest.fixture
-def mock_get_devices():
-    """Mock the LiebherrClient and get_devices call with a successful response."""
-    with patch(
-        "homeassistant.components.liebherr.config_flow.LiebherrClient",
-        autospec=True,
-    ) as mock_client_class:
-        mock_client = mock_client_class.return_value
-        mock_client.get_devices = AsyncMock(return_value=[MOCK_DEVICE])
-        yield mock_client.get_devices
 
 
 async def _start_flow(hass: HomeAssistant) -> ConfigFlowResult:
@@ -65,7 +47,6 @@ async def _start_flow(hass: HomeAssistant) -> ConfigFlowResult:
 async def _complete_flow_successfully(
     hass: HomeAssistant,
     flow_id: str,
-    mock_get_devices: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> ConfigFlowResult:
     """Complete a flow successfully and verify the result."""
@@ -83,14 +64,14 @@ async def test_form(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_setup_entry: AsyncMock,
-    mock_get_devices: AsyncMock,
+    mock_liebherr_client: MagicMock,
 ) -> None:
     """Test we get the form."""
     result = await _start_flow(hass)
     assert result == snapshot
 
     result = await _complete_flow_successfully(
-        hass, result.get("flow_id"), mock_get_devices, mock_setup_entry
+        hass, result.get("flow_id"), mock_setup_entry
     )
     assert result == snapshot
 
@@ -107,7 +88,7 @@ async def test_form_errors_with_recovery(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_setup_entry: AsyncMock,
-    mock_get_devices: AsyncMock,
+    mock_liebherr_client: MagicMock,
     side_effect: Exception,
     expected_error: str,
 ) -> None:
@@ -115,16 +96,16 @@ async def test_form_errors_with_recovery(
     result = await _start_flow(hass)
 
     # Trigger error
-    mock_get_devices.side_effect = side_effect
+    mock_liebherr_client.get_devices.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result.get("flow_id"), MOCK_USER_INPUT
     )
     assert result == snapshot
 
     # Recover and complete successfully
-    mock_get_devices.side_effect = None
+    mock_liebherr_client.get_devices.side_effect = None
     result = await _complete_flow_successfully(
-        hass, result.get("flow_id"), mock_get_devices, mock_setup_entry
+        hass, result.get("flow_id"), mock_setup_entry
     )
     assert result == snapshot
 
@@ -132,12 +113,12 @@ async def test_form_errors_with_recovery(
 async def test_form_no_devices(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_get_devices: AsyncMock,
+    mock_liebherr_client: MagicMock,
 ) -> None:
     """Test we handle no devices found."""
     result = await _start_flow(hass)
 
-    mock_get_devices.return_value = []
+    mock_liebherr_client.get_devices.return_value = []
     result = await hass.config_entries.flow.async_configure(
         result.get("flow_id"), MOCK_USER_INPUT
     )
@@ -147,7 +128,7 @@ async def test_form_no_devices(
 async def test_form_already_configured(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_get_devices: AsyncMock,
+    mock_liebherr_client: MagicMock,
 ) -> None:
     """Test we abort if already configured."""
     entry = MockConfigEntry(
@@ -168,7 +149,7 @@ async def test_zeroconf_discovery(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_setup_entry: AsyncMock,
-    mock_get_devices: AsyncMock,
+    mock_liebherr_client: MagicMock,
 ) -> None:
     """Test zeroconf discovery triggers the config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -181,7 +162,7 @@ async def test_zeroconf_discovery(
     assert result.get("step_id") == "user"
 
     result = await _complete_flow_successfully(
-        hass, result.get("flow_id"), mock_get_devices, mock_setup_entry
+        hass, result.get("flow_id"), mock_setup_entry
     )
     assert result == snapshot
 

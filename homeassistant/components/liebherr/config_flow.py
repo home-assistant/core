@@ -72,11 +72,11 @@ class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        # Use the discovered device name as unique ID for this discovery flow
+        # Abort if any Liebherr entry already exists (cloud API covers all devices)
+        self._async_abort_entries_match()
+
+        # Set unique ID to prevent duplicate discovery notifications for the same device
         await self.async_set_unique_id(discovery_info.name)
         self._abort_if_unique_id_configured()
-
-        # Also abort if any Liebherr entry exists (cloud API covers all devices)
-        self._async_abort_entries_match()
 
         return await self.async_step_user()

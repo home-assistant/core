@@ -3,14 +3,42 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyliebherrhomeapi import Device, DeviceType
+from pyliebherrhomeapi import (
+    Device,
+    DeviceState,
+    DeviceType,
+    TemperatureControl,
+    TemperatureUnit,
+    ZonePosition,
+)
 import pytest
 
 from homeassistant.components.liebherr.const import DOMAIN
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+MOCK_DEVICE = Device(
+    device_id="test_device_id",
+    nickname="Test Device",
+    device_type=DeviceType.FRIDGE,
+    device_name="CBNes1234",
+)
+
+MOCK_DEVICE_STATE = DeviceState(
+    device=MOCK_DEVICE,
+    controls=[
+        TemperatureControl(
+            zone_id=1,
+            zone_position=ZonePosition.TOP,
+            name="Fridge",
+            type="fridge",
+            value=5,
+            unit=TemperatureUnit.CELSIUS,
+        )
+    ],
+)
 
 
 @pytest.fixture
@@ -35,21 +63,27 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_liebherr_client() -> Generator[MagicMock]:
     """Return a mocked Liebherr client."""
-    with patch(
-        "homeassistant.components.liebherr.LiebherrClient", autospec=True
-    ) as mock_client:
+    with (
+        patch(
+            "homeassistant.components.liebherr.LiebherrClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.liebherr.config_flow.LiebherrClient",
+            new=mock_client,
+        ),
+    ):
         client = mock_client.return_value
-        client.get_devices.return_value = [
-            Device(
-                device_id="test_device_id",
-                nickname="Test Device",
-                device_type=DeviceType.FRIDGE,
-            )
-        ]
-        # Default empty device state - tests can override
-        client.get_device_state.return_value = None
+        client.get_devices.return_value = [MOCK_DEVICE]
+        client.get_device_state.return_value = MOCK_DEVICE_STATE
         client.set_temperature = AsyncMock()
         yield client
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.SENSOR]
 
 
 @pytest.fixture
