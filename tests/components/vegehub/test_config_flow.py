@@ -8,7 +8,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.vegehub.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import (
@@ -20,7 +19,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from .conftest import TEST_HOSTNAME, TEST_IP, TEST_SIMPLE_MAC
 
@@ -34,7 +36,7 @@ DISCOVERY_INFO = ZeroconfServiceInfo(
     type="mock_type",
     name="myVege",
     properties={
-        zeroconf.ATTR_PROPERTIES_ID: TEST_HOSTNAME,
+        ATTR_PROPERTIES_ID: TEST_HOSTNAME,
         "version": "5.1.1",
     },
 )
