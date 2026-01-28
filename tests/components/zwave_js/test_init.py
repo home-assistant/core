@@ -1320,7 +1320,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to stop the Z-Wave JS add-on" in caplog.text
+    assert "Failed to stop the Z-Wave JS app" in caplog.text
     stop_addon.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
