@@ -467,6 +467,21 @@ class SimpliSafe:
 
         self._system_notifications[system.system_id] = latest_notifications
 
+    @callback
+    def _async_start_websocket_if_needed(self) -> None:
+        """Start the websocket loop task if it isn't already running."""
+        task = self._websocket_task
+
+        if task and not task.done():
+            LOGGER.debug("Websocket loop already running")
+            return
+
+        LOGGER.debug("Starting websocket loop task")
+
+        self._websocket_task = self.entry.async_create_background_task(
+            self._hass, self._async_websocket_loop(), WEBSOCKET_LOOP_TASK_NAME
+        )
+
     async def _async_websocket_loop(self) -> None:
         assert self._api.websocket
 
@@ -557,9 +572,7 @@ class SimpliSafe:
         assert self._api.websocket
 
         self._api.websocket.add_event_callback(self._async_websocket_on_event)
-        self._websocket_task = self.entry.async_create_background_task(
-            self._hass, self._async_websocket_loop(), WEBSOCKET_LOOP_TASK_NAME
-        )
+        self._async_start_websocket_if_needed()
 
         self.systems = await self._api.async_get_systems()
         for system in self.systems.values():
@@ -603,9 +616,7 @@ class SimpliSafe:
             # Open a new websocket connection with the fresh token:
             assert self._api.websocket
             await self._async_cancel_websocket_loop()
-            self._websocket_task = self.entry.async_create_background_task(
-                self._hass, self._async_websocket_loop(), WEBSOCKET_LOOP_TASK_NAME
-            )
+            self._async_start_websocket_if_needed()
 
         self.entry.async_on_unload(
             self._api.add_refresh_token_callback(async_handle_refresh_token)
@@ -653,9 +664,4 @@ class SimpliSafe:
             # Restart websocket only if last update failed
             if self.coordinator and not self.coordinator.last_update_success:
                 if not self._websocket_task or self._websocket_task.done():
-                    LOGGER.debug("Restarting websocket loop after successful update")
-                    self._websocket_task = self.entry.async_create_background_task(
-                        self._hass,
-                        self._async_websocket_loop(),
-                        WEBSOCKET_LOOP_TASK_NAME,
-                    )
+                    self._async_start_websocket_if_needed()
