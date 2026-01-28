@@ -463,29 +463,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_redirect("/shopping-list", "/todo")
 
     # Developer tools moved to config panel in 2026.2
-    hass.http.register_redirect("/developer-tools", "/config/developer-tools")
-    hass.http.register_redirect("/developer-tools/yaml", "/config/developer-tools/yaml")
-    hass.http.register_redirect(
-        "/developer-tools/state", "/config/developer-tools/state"
-    )
-    hass.http.register_redirect(
-        "/developer-tools/action", "/config/developer-tools/action"
-    )
-    hass.http.register_redirect(
-        "/developer-tools/template", "/config/developer-tools/template"
-    )
-    hass.http.register_redirect(
-        "/developer-tools/event", "/config/developer-tools/event"
-    )
-    hass.http.register_redirect(
-        "/developer-tools/statistics", "/config/developer-tools/statistics"
-    )
-    hass.http.register_redirect(
-        "/developer-tools/assist", "/config/developer-tools/assist"
-    )
-    hass.http.register_redirect(
-        "/developer-tools/debug", "/config/developer-tools/debug"
-    )
+    for url in (
+        "/developer-tools",
+        "/developer-tools/yaml",
+        "/developer-tools/state",
+        "/developer-tools/action",
+        "/developer-tools/template",
+        "/developer-tools/event",
+        "/developer-tools/statistics",
+        "/developer-tools/assist",
+        "/developer-tools/debug",
+    ):
+        hass.http.register_redirect(url, f"/config{url}")
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
