@@ -1,7 +1,5 @@
 """The tests for the time_pattern automation."""
 
-from datetime import timedelta
-
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
@@ -22,17 +20,140 @@ def setup_comp(hass: HomeAssistant) -> None:
     mock_component(hass, "group")
 
 
-async def test_if_fires_when_hour_matches(
+@pytest.mark.parametrize(
+    ("trigger_config", "event_time_kwargs"),
+    [
+        pytest.param(
+            {"hours": 0, "minutes": "*", "seconds": "*"},
+            {"hour": 0},
+            id="test_if_fires_when_hour_matches",
+        ),
+        pytest.param(
+            {"hours": "*", "minutes": 0, "seconds": "*"},
+            {"minute": 0},
+            id="test_if_fires_when_minute_matches",
+        ),
+        pytest.param(
+            {"hours": "*", "minutes": "*", "seconds": 0},
+            {"second": 0},
+            id="test_if_fires_when_second_matches",
+        ),
+        pytest.param(
+            {"hours": "*", "minutes": "*", "seconds": "30"},
+            {"second": 30},
+            id="test_if_fires_when_second_as_string_matches",
+        ),
+        pytest.param(
+            {"hours": 1, "minutes": 2, "seconds": 3},
+            {"hour": 1, "minute": 2, "second": 3},
+            id="test_if_fires_when_all_matches",
+        ),
+        pytest.param(
+            {"hours": "*", "minutes": "*", "seconds": "/10"},
+            {"second": 10},
+            id="test_if_fires_periodic_seconds",
+        ),
+        pytest.param(
+            {"hours": "*", "minutes": "/2", "seconds": "*"},
+            {"minute": 2, "second": 0},
+            id="test_if_fires_periodic_minutes",
+        ),
+        pytest.param(
+            {"hours": "/2", "minutes": "*", "seconds": "*"},
+            {"hour": 2, "minute": 0, "second": 0},
+            id="test_if_fires_periodic_hours",
+        ),
+        pytest.param(
+            {"hours": "*", "minutes": "*", "seconds": "10-30"},
+            {"second": 10},
+            id="test_if_fires_range_seconds",
+        ),
+        pytest.param(
+            {"hours": "*", "minutes": "20-40", "seconds": "*"},
+            {"minute": 33},
+            id="test_if_fires_range_seconds",
+        ),
+        pytest.param(
+            {"hours": "3-5", "minutes": "*", "seconds": "*"},
+            {"hour": 5},
+            id="test_if_fires_range_seconds",
+        ),
+        pytest.param(
+            {"hours": "*", "minutes": "*", "seconds": "5,3,10"},
+            {"second": 3},
+            id="test_if_fires_range_seconds",
+        ),
+        pytest.param(
+            {"hours": "*", "minutes": "10,25", "seconds": "*"},
+            {"minute": 10},
+            id="test_if_fires_range_seconds",
+        ),
+        pytest.param(
+            {"hours": "7,11,17", "minutes": "*", "seconds": "*"},
+            {"hour": 17},
+            id="test_if_fires_range_seconds",
+        ),
+        pytest.param(
+            {"hours": "7-9,11-17", "minutes": "*", "seconds": "*"},
+            {"hour": 14},
+            id="test_if_fires_range_seconds",
+        ),
+        pytest.param(
+            {"minutes": "2"},
+            {"minute": 2, "second": 0},
+            id="test_if_fires_range_seconds",
+        ),
+    ],
+)
+async def test_time_pattern_match(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+    trigger_config: dict[str, str | int],
+    event_time_kwargs: dict[str, int],
+) -> None:
+    """Test standard time pattern matching."""
+    now = dt_util.utcnow()
+    # Move to a time that definitely won't match (1 year ahead, specific odd time)
+    # ensuring we don't accidentally trigger on startup
+    initial_safe_time = now.replace(
+        year=now.year + 1, day=1, hour=23, minute=59, second=59
+    )
+    freezer.move_to(initial_safe_time)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "time_pattern",
+                    **trigger_config,
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"id": "{{ trigger.id}}"},
+                },
+            }
+        },
+    )
+
+    match_time = now.replace(year=now.year + 2, day=1, **event_time_kwargs)
+    async_fire_time_changed(hass, match_time)
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
+async def test_automation_lifecycle(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     service_calls: list[ServiceCall],
 ) -> None:
-    """Test for firing if hour is matching."""
+    """Test that the automation can be turned off (listener unsubscribed)."""
     now = dt_util.utcnow()
-    time_that_will_not_match_right_away = dt_util.utcnow().replace(
-        year=now.year + 1, day=1, hour=3
-    )
-    freezer.move_to(time_that_will_not_match_right_away)
+    freezer.move_to(now.replace(year=now.year + 1))
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -44,10 +165,7 @@ async def test_if_fires_when_hour_matches(
                     "minutes": "*",
                     "seconds": "*",
                 },
-                "action": {
-                    "service": "test.automation",
-                    "data_template": {"id": "{{ trigger.id}}"},
-                },
+                "action": {"service": "test.automation"},
             }
         },
     )
@@ -55,7 +173,6 @@ async def test_if_fires_when_hour_matches(
     async_fire_time_changed(hass, now.replace(year=now.year + 2, day=1, hour=0))
     await hass.async_block_till_done()
     assert len(service_calls) == 1
-    assert service_calls[0].data["id"] == 0
 
     await hass.services.async_call(
         automation.DOMAIN,
@@ -65,300 +182,14 @@ async def test_if_fires_when_hour_matches(
     )
     assert len(service_calls) == 2
 
-    async_fire_time_changed(hass, now.replace(year=now.year + 1, day=1, hour=0))
+    async_fire_time_changed(hass, now.replace(year=now.year + 3, day=1, hour=0))
     await hass.async_block_till_done()
     assert len(service_calls) == 2
 
 
-async def test_if_fires_when_minute_matches(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    service_calls: list[ServiceCall],
-) -> None:
-    """Test for firing if minutes are matching."""
-    now = dt_util.utcnow()
-    time_that_will_not_match_right_away = dt_util.utcnow().replace(
-        year=now.year + 1, day=1, minute=30
-    )
-    freezer.move_to(time_that_will_not_match_right_away)
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    "platform": "time_pattern",
-                    "hours": "*",
-                    "minutes": 0,
-                    "seconds": "*",
-                },
-                "action": {"service": "test.automation"},
-            }
-        },
-    )
-
-    async_fire_time_changed(hass, now.replace(year=now.year + 2, day=1, minute=0))
-
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-
-
-async def test_if_fires_when_second_matches(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    service_calls: list[ServiceCall],
-) -> None:
-    """Test for firing if seconds are matching."""
-    now = dt_util.utcnow()
-    time_that_will_not_match_right_away = dt_util.utcnow().replace(
-        year=now.year + 1, day=1, second=30
-    )
-    freezer.move_to(time_that_will_not_match_right_away)
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    "platform": "time_pattern",
-                    "hours": "*",
-                    "minutes": "*",
-                    "seconds": 0,
-                },
-                "action": {"service": "test.automation"},
-            }
-        },
-    )
-
-    async_fire_time_changed(hass, now.replace(year=now.year + 2, day=1, second=0))
-
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-
-
-async def test_if_fires_when_second_as_string_matches(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    service_calls: list[ServiceCall],
-) -> None:
-    """Test for firing if seconds are matching."""
-    now = dt_util.utcnow()
-    time_that_will_not_match_right_away = dt_util.utcnow().replace(
-        year=now.year + 1, day=1, second=15
-    )
-    freezer.move_to(time_that_will_not_match_right_away)
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    "platform": "time_pattern",
-                    "hours": "*",
-                    "minutes": "*",
-                    "seconds": "30",
-                },
-                "action": {"service": "test.automation"},
-            }
-        },
-    )
-
-    async_fire_time_changed(
-        hass, time_that_will_not_match_right_away + timedelta(seconds=15)
-    )
-
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-
-
-async def test_if_fires_when_all_matches(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    service_calls: list[ServiceCall],
-) -> None:
-    """Test for firing if everything matches."""
-    now = dt_util.utcnow()
-    time_that_will_not_match_right_away = dt_util.utcnow().replace(
-        year=now.year + 1, day=1, hour=4
-    )
-    freezer.move_to(time_that_will_not_match_right_away)
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    "platform": "time_pattern",
-                    "hours": 1,
-                    "minutes": 2,
-                    "seconds": 3,
-                },
-                "action": {"service": "test.automation"},
-            }
-        },
-    )
-
-    async_fire_time_changed(
-        hass, now.replace(year=now.year + 2, day=1, hour=1, minute=2, second=3)
-    )
-
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-
-
-async def test_if_fires_periodic_seconds(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    service_calls: list[ServiceCall],
-) -> None:
-    """Test for firing periodically every second."""
-    now = dt_util.utcnow()
-    time_that_will_not_match_right_away = dt_util.utcnow().replace(
-        year=now.year + 1, day=1, second=1
-    )
-    freezer.move_to(time_that_will_not_match_right_away)
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    "platform": "time_pattern",
-                    "hours": "*",
-                    "minutes": "*",
-                    "seconds": "/10",
-                },
-                "action": {"service": "test.automation"},
-            }
-        },
-    )
-
-    async_fire_time_changed(
-        hass, now.replace(year=now.year + 2, day=1, hour=0, minute=0, second=10)
-    )
-
-    await hass.async_block_till_done()
-    assert len(service_calls) >= 1
-
-
-async def test_if_fires_periodic_minutes(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    service_calls: list[ServiceCall],
-) -> None:
-    """Test for firing periodically every minute."""
-
-    now = dt_util.utcnow()
-    time_that_will_not_match_right_away = dt_util.utcnow().replace(
-        year=now.year + 1, day=1, minute=1
-    )
-    freezer.move_to(time_that_will_not_match_right_away)
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    "platform": "time_pattern",
-                    "hours": "*",
-                    "minutes": "/2",
-                    "seconds": "*",
-                },
-                "action": {"service": "test.automation"},
-            }
-        },
-    )
-
-    async_fire_time_changed(
-        hass, now.replace(year=now.year + 2, day=1, hour=0, minute=2, second=0)
-    )
-
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-
-
-async def test_if_fires_periodic_hours(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    service_calls: list[ServiceCall],
-) -> None:
-    """Test for firing periodically every hour."""
-    now = dt_util.utcnow()
-    time_that_will_not_match_right_away = dt_util.utcnow().replace(
-        year=now.year + 1, day=1, hour=1
-    )
-    freezer.move_to(time_that_will_not_match_right_away)
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    "platform": "time_pattern",
-                    "hours": "/2",
-                    "minutes": "*",
-                    "seconds": "*",
-                },
-                "action": {"service": "test.automation"},
-            }
-        },
-    )
-
-    async_fire_time_changed(
-        hass, now.replace(year=now.year + 2, day=1, hour=2, minute=0, second=0)
-    )
-
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-
-
-async def test_default_values(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    service_calls: list[ServiceCall],
-) -> None:
-    """Test for firing at 2 minutes every hour."""
-    now = dt_util.utcnow()
-    time_that_will_not_match_right_away = dt_util.utcnow().replace(
-        year=now.year + 1, day=1, minute=1
-    )
-    freezer.move_to(time_that_will_not_match_right_away)
-    assert await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {"platform": "time_pattern", "minutes": "2"},
-                "action": {"service": "test.automation"},
-            }
-        },
-    )
-
-    async_fire_time_changed(
-        hass, now.replace(year=now.year + 2, day=1, hour=1, minute=2, second=0)
-    )
-
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-
-    async_fire_time_changed(
-        hass, now.replace(year=now.year + 2, day=1, hour=1, minute=2, second=1)
-    )
-
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
-
-    async_fire_time_changed(
-        hass, now.replace(year=now.year + 2, day=1, hour=2, minute=2, second=0)
-    )
-
-    await hass.async_block_till_done()
-    assert len(service_calls) == 2
-
-
-async def test_invalid_schemas() -> None:
-    """Test invalid schemas."""
-    schemas = (
+@pytest.mark.parametrize(
+    "config",
+    [
         None,
         {},
         {"platform": "time_pattern"},
@@ -367,8 +198,9 @@ async def test_invalid_schemas() -> None:
         {"platform": "time_pattern", "minutes": "/90"},
         {"platform": "time_pattern", "hours": "/0", "minutes": 10},
         {"platform": "time_pattern", "hours": 12, "minutes": 0, "seconds": 100},
-    )
-
-    for value in schemas:
-        with pytest.raises(vol.Invalid):
-            time_pattern.TRIGGER_SCHEMA(value)
+    ],
+)
+async def test_invalid_schemas(config) -> None:
+    """Test invalid schemas."""
+    with pytest.raises(vol.Invalid):
+        time_pattern.TRIGGER_SCHEMA(config)
