@@ -131,6 +131,7 @@ async def test_reconfigure_flow_webhooks(
         {
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
             SECTION_ADVANCED_SETTINGS: {
+                CONF_API_ENDPOINT: "http://mock_api_endpoint",
                 CONF_PROXY_URL: "https://test",
             },
         },
@@ -193,6 +194,10 @@ async def test_reconfigure_flow_webhooks(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_broadcast_config_entry.data[CONF_URL] == "https://reconfigure"
+    assert (
+        mock_broadcast_config_entry.data[CONF_API_ENDPOINT]
+        == "http://mock_api_endpoint"
+    )
     assert mock_broadcast_config_entry.data[CONF_TRUSTED_NETWORKS] == [
         "149.154.160.0/20"
     ]
