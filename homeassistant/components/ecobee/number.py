@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -67,14 +68,16 @@ async def async_setup_entry(
         for numbers in VENTILATOR_NUMBERS
     ]
 
-    _LOGGER.debug("Adding compressor min temp number (if present)")
-    entities.extend(
-        (
-            EcobeeCompressorMinTemp(data, index)
-            for index, thermostat in enumerate(data.ecobee.thermostats)
-            if thermostat["settings"]["hasHeatPump"]
-        )
-    )
+    _LOGGER.debug("Adding compressor min temp number and aux heat")
+    for index, thermostat in enumerate(data.ecobee.thermostats):
+        thermostat_settings: dict[str, Any] = thermostat["settings"]
+        if thermostat_settings["hasHeatPump"]:
+            compressor_entity = EcobeeCompressorMinTemp(data, index)
+            entities.append(compressor_entity)
+
+            if thermostat_settings["hasForcedAir"] or thermostat_settings["hasBoiler"]:
+                aux_entity = EcobeeAuxMaxOutdoorTemp(data, index)
+                entities.append(aux_entity)
 
     async_add_entities(entities, True)
 
@@ -165,5 +168,94 @@ class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
 
     def set_native_value(self, value: float) -> None:
         """Set new compressor minimum temperature."""
-        self.data.ecobee.set_aux_cutover_threshold(self.thermostat_index, value)
+        if (
+            aux_entity_value := self.thermostat["settings"].get("auxMaxOutdoorTemp")
+        ) is not None:
+            # We need to ensure there is at least a difference of 5 degrees between
+            # the auxiliary max outdoor temp and the compressor min temp.
+            difference = (aux_entity_value / 10) - int(value)
+
+            if difference < 5:
+                # Subtract 5 from our current value, round down to nearest 5 and ensure
+                # it is 0 or higher.
+                new_aux_value = max(int(value) + 5, 0)
+                _LOGGER.debug(
+                    "Adjusting auxiliary max outdoor temp to %s°F to maintain 5°F "
+                    "difference",
+                    new_aux_value,
+                )
+                self.data.ecobee.set_aux_maxtemp_threshold(
+                    self.thermostat_index, int(new_aux_value)
+                )
+
+        self.data.ecobee.set_aux_cutover_threshold(self.thermostat_index, int(value))
+        self.update_without_throttle = True
+
+
+class EcobeeAuxMaxOutdoorTemp(EcobeeBaseEntity, NumberEntity):
+    """Maximum outdoor temperature at which aux heat will operate.
+
+    This applies to dual-fuel systems to determine at which outdoor temperature
+    auxiliary heat shouldn't be used anymore.
+    """
+
+    _attr_device_class = NumberDeviceClass.TEMPERATURE
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:thermometer-off"
+    _attr_mode = NumberMode.BOX
+    _attr_native_min_value = 0
+    _attr_native_max_value = 80
+    _attr_native_step = 1
+    _attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
+    _attr_translation_key = "aux_max_outdoor_temp"
+
+    def __init__(
+        self,
+        data: EcobeeData,
+        thermostat_index: int,
+    ) -> None:
+        """Initialize ecobee auxiliary maximum outdoor temperature."""
+        super().__init__(data, thermostat_index)
+        self._attr_unique_id = f"{self.base_unique_id}_aux_max_outdoor_temp"
+        self.update_without_throttle = False
+
+    async def async_update(self) -> None:
+        """Get the latest state from the thermostat."""
+        if self.update_without_throttle:
+            await self.data.update(no_throttle=True)
+            self.update_without_throttle = False
+        else:
+            await self.data.update()
+
+        self._attr_native_value = (
+            (self.thermostat["settings"]["auxMaxOutdoorTemp"]) / 10
+        )
+
+    def set_native_value(self, value: float) -> None:
+        """Set new auxiliary maximum outdoor temperature."""
+        # We need to ensure there is at least a difference of 5 degrees between
+        # the auxiliary max outdoor temp and the compressor min temp.
+
+        if (
+            compressor_value := self.thermostat["settings"].get(
+                "compressorProtectionMinTemp"
+            )
+        ) is not None:
+            difference = int(value - (compressor_value / 10))
+
+            if difference < 5:
+                # Subtract 5 from our current value, round down to nearest 5 as
+                # compressor protection min temp only supports steps of 5, maximum is 65.
+                new_compressor_value = min(((value - 5) // 5) * 5, 65)
+
+                _LOGGER.debug(
+                    "Adjusting compressor protection min temp to %s°F to maintain 5°F "
+                    "difference",
+                    new_compressor_value,
+                )
+                self.data.ecobee.set_aux_cutover_threshold(
+                    self.thermostat_index, int(new_compressor_value)
+                )
+
+        self.data.ecobee.set_aux_maxtemp_threshold(self.thermostat_index, int(value))
         self.update_without_throttle = True
