@@ -99,7 +99,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_clean_box_empty-entry]
+# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_clean_water_box-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -112,7 +112,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.roborock_s7_2_dock_clean_box_empty',
+    'entity_id': 'binary_sensor.roborock_s7_2_dock_clean_water_box',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -120,12 +120,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Clean box empty',
+    'object_id_base': 'Clean water box',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Clean box empty',
+    'original_name': 'Clean water box',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -135,21 +135,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_clean_box_empty-state]
+# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_clean_water_box-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Roborock S7 2 Dock Clean box empty',
+      'friendly_name': 'Roborock S7 2 Dock Clean water box',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.roborock_s7_2_dock_clean_box_empty',
+    'entity_id': 'binary_sensor.roborock_s7_2_dock_clean_water_box',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_dirty_box_full-entry]
+# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_dirty_water_box-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -162,7 +162,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.roborock_s7_2_dock_dirty_box_full',
+    'entity_id': 'binary_sensor.roborock_s7_2_dock_dirty_water_box',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -170,12 +170,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Dirty box full',
+    'object_id_base': 'Dirty water box',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Dirty box full',
+    'original_name': 'Dirty water box',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -185,14 +185,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_dirty_box_full-state]
+# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_dirty_water_box-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Roborock S7 2 Dock Dirty box full',
+      'friendly_name': 'Roborock S7 2 Dock Dirty water box',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.roborock_s7_2_dock_dirty_box_full',
+    'entity_id': 'binary_sensor.roborock_s7_2_dock_dirty_water_box',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -449,7 +449,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_clean_box_empty-entry]
+# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_clean_water_box-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -462,7 +462,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_clean_box_empty',
+    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_clean_water_box',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -470,12 +470,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Clean box empty',
+    'object_id_base': 'Clean water box',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Clean box empty',
+    'original_name': 'Clean water box',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -485,21 +485,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_clean_box_empty-state]
+# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_clean_water_box-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Roborock S7 MaxV Dock Clean box empty',
+      'friendly_name': 'Roborock S7 MaxV Dock Clean water box',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_clean_box_empty',
+    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_clean_water_box',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_dirty_box_full-entry]
+# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_dirty_water_box-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -512,7 +512,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_dirty_box_full',
+    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_dirty_water_box',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -520,12 +520,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Dirty box full',
+    'object_id_base': 'Dirty water box',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Dirty box full',
+    'original_name': 'Dirty water box',
     'platform': 'roborock',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -535,14 +535,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_dirty_box_full-state]
+# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_dirty_water_box-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Roborock S7 MaxV Dock Dirty box full',
+      'friendly_name': 'Roborock S7 MaxV Dock Dirty water box',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_dirty_box_full',
+    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_dirty_water_box',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
