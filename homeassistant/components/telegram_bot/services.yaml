@@ -175,6 +175,89 @@ send_photo:
         number:
           mode: box
 
+send_media_group:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    chat_id:
+      example: "[12345, 67890] or 12345"
+      selector:
+        text:
+          multiple: true
+    media:
+      required: true
+      selector:
+        object:
+          multiple: true
+          label_field: url
+          description_field: caption
+          fields:
+            media_type:
+              selector:
+                select:
+                  options:
+                    - "audio"
+                    - "document"
+                    - "photo"
+                    - "video"
+                  translation_key: "media_type"
+            caption:
+              label: Caption
+              selector:
+                text:
+            url:
+              label: URL
+              selector:
+                text:
+                  type: url
+            verify_ssl:
+              label: Verify SSL
+              selector:
+                boolean:
+            authentication:
+              label: Authentication
+              selector:
+                select:
+                  options:
+                    - "basic"
+                    - "digest"
+                    - "bearer_token"
+                  translation_key: "authentication"
+            username:
+              label: Username
+              selector:
+                text:
+            password:
+              label: Password
+              selector:
+                text:
+                  type: password
+    parse_mode:
+      selector:
+        select:
+          options:
+            - "html"
+            - "markdown"
+            - "markdownv2"
+            - "plain_text"
+          translation_key: "parse_mode"
+    disable_notification:
+      selector:
+        boolean:
+    protect_content:
+      selector:
+        boolean:
+    reply_to_message_id:
+      selector:
+        number:
+          mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+
 send_sticker:
   fields:
     config_entry_id:

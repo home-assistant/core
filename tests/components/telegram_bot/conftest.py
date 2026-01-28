@@ -123,6 +123,18 @@ def mock_external_calls() -> Generator[None]:
             super().__init__(*args, **kwargs)
             self._bot_user = test_user
 
+    def mock_send_media_group(*args: Any, **kwargs: Any) -> list[Message]:
+        chat_id: int = args[0]
+        media = args[1]
+        return [
+            Message(
+                message_id=12345 + idx,
+                date=datetime.now(),
+                chat=Chat(id=chat_id, type=ChatType.PRIVATE),
+            )
+            for idx, _ in enumerate(media)
+        ]
+
     with (
         patch("homeassistant.components.telegram_bot.bot.Bot", BotMock),
         patch.object(BotMock, "get_chat", return_value=test_chat),
@@ -130,6 +142,7 @@ def mock_external_calls() -> Generator[None]:
         patch.object(BotMock, "bot", test_user),
         patch.object(BotMock, "send_message", return_value=message),
         patch.object(BotMock, "send_photo", return_value=message),
+        patch.object(BotMock, "send_media_group", side_effect=mock_send_media_group),
         patch.object(BotMock, "send_sticker", return_value=message),
         patch.object(BotMock, "send_video", return_value=message),
         patch.object(BotMock, "send_document", return_value=message),

@@ -54,6 +54,7 @@ from .const import (
     ATTR_IS_BIG,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
+    ATTR_MEDIA,
     ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_TAG,
@@ -64,6 +65,7 @@ from .const import (
     ATTR_OPTIONS,
     ATTR_PARSER,
     ATTR_PASSWORD,
+    ATTR_PROTECT_CONTENT,
     ATTR_QUESTION,
     ATTR_REACTION,
     ATTR_REPLY_TO_MSGID,
@@ -106,6 +108,7 @@ from .const import (
     SERVICE_SEND_CHAT_ACTION,
     SERVICE_SEND_DOCUMENT,
     SERVICE_SEND_LOCATION,
+    SERVICE_SEND_MEDIA_GROUP,
     SERVICE_SEND_MESSAGE,
     SERVICE_SEND_PHOTO,
     SERVICE_SEND_POLL,
@@ -190,6 +193,41 @@ SERVICE_SCHEMA_SEND_FILE = vol.All(
     cv.deprecated(ATTR_TIMEOUT), SERVICE_SCHEMA_BASE_SEND_FILE
 )
 
+SERVICE_SCHEMA_SEND_MEDIA_GROUP = vol.Schema(
+    {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Optional(ATTR_MEDIA): vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(ATTR_MEDIA_TYPE): vol.In(
+                            (
+                                str(InputMediaType.AUDIO),
+                                str(InputMediaType.VIDEO),
+                                str(InputMediaType.DOCUMENT),
+                                str(InputMediaType.PHOTO),
+                            )
+                        ),
+                        vol.Required(ATTR_URL): cv.string,
+                        vol.Optional(ATTR_CAPTION): cv.string,
+                        vol.Optional(ATTR_USERNAME): cv.string,
+                        vol.Optional(ATTR_PASSWORD): cv.string,
+                        vol.Optional(ATTR_AUTHENTICATION): cv.string,
+                        vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
+                    }
+                )
+            ],
+            vol.Length(min=1, max=10),
+        ),
+        vol.Optional(ATTR_PARSER): cv.string,
+        vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
+        vol.Optional(ATTR_PROTECT_CONTENT): cv.boolean,
+        vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
+        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
+    }
+)
 
 SERVICE_SCHEMA_SEND_STICKER = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
@@ -347,6 +385,7 @@ SERVICE_MAP: dict[str, VolSchemaType] = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_CHAT_ACTION: SERVICE_SCHEMA_SEND_CHAT_ACTION,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
+    SERVICE_SEND_MEDIA_GROUP: SERVICE_SCHEMA_SEND_MEDIA_GROUP,
     SERVICE_SEND_STICKER: SERVICE_SCHEMA_SEND_STICKER,
     SERVICE_SEND_ANIMATION: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_VIDEO: SERVICE_SCHEMA_SEND_FILE,
@@ -422,6 +461,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             messages = await notify_service.send_message(
                 context=service.context, **kwargs
             )
+        elif msgtype == SERVICE_SEND_MEDIA_GROUP:
+            send_media_group_response = await notify_service.send_media_group(
+                context=service.context, **kwargs
+            )
+
+            return {
+                "chats": [
+                    {"chat_id": send_media_group_response[0], "message_id": message_id}
+                    for message_id in send_media_group_response[1]
+                ]
+            }
         elif msgtype == SERVICE_SEND_CHAT_ACTION:
             messages = await notify_service.send_chat_action(
                 context=service.context, **kwargs
@@ -498,6 +548,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             SERVICE_SEND_MESSAGE,
             SERVICE_SEND_CHAT_ACTION,
             SERVICE_SEND_PHOTO,
+            SERVICE_SEND_MEDIA_GROUP,
             SERVICE_SEND_ANIMATION,
             SERVICE_SEND_VIDEO,
             SERVICE_SEND_VOICE,

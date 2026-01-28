@@ -731,6 +731,44 @@
       },
       "name": "Send location"
     },
+    "send_media_group": {
+      "description": "Sends media group.",
+      "fields": {
+        "chat_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
+        },
+        "config_entry_id": {
+          "description": "The config entry representing the Telegram bot to send the media group.",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]"
+        },
+        "disable_notification": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::disable_notification::name%]"
+        },
+        "media": {
+          "description": "A list of media to be sent.",
+          "name": "Media"
+        },
+        "message_thread_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]"
+        },
+        "parse_mode": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]"
+        },
+        "protect_content": {
+          "description": "Protects the contents of the sent message from forwarding and saving.",
+          "name": "Protect content"
+        },
+        "reply_to_message_id": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]"
+        }
+      },
+      "name": "Send media group"
+    },
     "send_message": {
       "description": "Sends a notification.",
       "fields": {
