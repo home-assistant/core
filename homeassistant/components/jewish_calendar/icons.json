@@ -5,6 +5,11 @@
       "issur_melacha_in_effect": { "default": "mdi:power-plug-off" },
       "motzei_shabbat_hag": { "default": "mdi:fire" }
     },
+    "calendar": {
+      "daily_events": { "default": "mdi:calendar" },
+      "learning_schedule": { "default": "mdi:book-open" },
+      "yearly_events": { "default": "mdi:calendar" }
+    },
     "sensor": {
       "alot_hashachar": { "default": "mdi:weather-sunset-up" },
       "chatzot_hayom": { "default": "mdi:calendar-clock" },
