@@ -61,7 +61,7 @@ def _validate_url_slug(value: Any) -> str:
     """Validate value is a valid url slug."""
     if value is None:
         raise vol.Invalid("Slug should not be None")
-    if "-" not in value:
+    if value != DOMAIN and "-" not in value:
         raise vol.Invalid("Url path needs to contain a hyphen (-)")
     str_value = str(value)
     slg = slugify(str_value, separator="-")
