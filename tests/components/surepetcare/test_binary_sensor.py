@@ -3,7 +3,7 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import HOUSEHOLD_ID, HUB_ID
+from . import HOUSEHOLD_ID, HUB_ID, MOCK_PET
 
 from tests.common import MockConfigEntry
 
@@ -32,3 +32,15 @@ async def test_binary_sensors(
         assert state.state == "on"
         entity = entity_registry.async_get(entity_id)
         assert entity.unique_id == unique_id
+
+
+async def test_binary_sensor_position_attributes(
+    hass: HomeAssistant,
+    surepetcare,
+    mock_config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test the device_id attribute of the pet binary sensor."""
+    state = hass.states.get("binary_sensor.pet")
+    assert state
+    assert state.attributes.get("device_id") == str(MOCK_PET["position"]["device_id"])
+    assert state.attributes.get("user_id") == str(MOCK_PET["position"]["user_id"])
