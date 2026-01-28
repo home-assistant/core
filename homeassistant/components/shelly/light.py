@@ -110,7 +110,7 @@ class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
     """Entity that controls a light on block based Shelly devices."""
 
     entity_description: BlockLightDescription
-    _attr_supported_color_modes: set[str]
+    _attr_supported_color_modes: set[ColorMode]
 
     def __init__(
         self,
