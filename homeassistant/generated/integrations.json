@@ -1530,6 +1530,13 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "echonet_lite": {
+      "name": "HEMS echonet lite",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling",
+      "single_config_entry": true
+    },
     "ecoal_boiler": {
       "name": "eSterownik eCoal.pl Boiler",
       "integration_type": "hub",
