@@ -41,5 +41,11 @@
         "name": "Error code"
       }
     }
+  },
+  "issues": {
+    "unknown_fan_speed": {
+      "description": "The CoolMaster integration has detected an unknown fan speed value from your HVAC unit: {fan_speed}. Support for unknown fan speeds will be removed in 2026.7.0.\n\nPlease report this fan speed on our [GitHub issue tracker]({issues_url})",
+      "title": "CoolMaster integration detected unknown fan speed"
+    }
   }
 }
