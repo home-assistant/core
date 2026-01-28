@@ -690,13 +690,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 async_get_supported_provider
             )
 
-        if old_provider != new_provider:
-            if old_provider:
-                await old_provider.async_unregister_camera(self)
-            if new_provider:
-                await new_provider.async_register_camera(self)
-            self._webrtc_provider = new_provider
-            self._invalidate_camera_capabilities_cache()
+        if old_provider == new_provider:
+            return
+        
+        if old_provider:
+            await old_provider.async_unregister_camera(self)
+        
+        if new_provider:
+            await new_provider.async_register_camera(self)
+        
+        self._webrtc_provider = new_provider
+        self._invalidate_camera_capabilities_cache()
             if write_state:
                 self.async_write_ha_state()
 
