@@ -9,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import (
     DOMAIN,
+    OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
 )
 from homeassistant.components.enphase_envoy.coordinator import MAC_VERIFICATION_DELAY
@@ -121,3 +122,79 @@ async def test_entry_diagnostics_with_interface_information(
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
     ) == snapshot(exclude=limit_diagnostic_attrs)
+
+
+@pytest.fixture(name="config_entry_additional_endpoints")
+def config_entry_additional_endpoints_fixture(
+    hass: HomeAssistant, config: dict[str, str]
+):
+    """Define a config entry fixture with edditional endpoints."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id="1234",
+        data=config,
+        options={
+            OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS: "/admin/lib/tariff,,/api/v1/production"
+        },
+    )
+
+
+async def test_entry_diagnostics_with_additional_endpoints(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry_additional_endpoints: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test config entry diagnostics with additional endpoints ignoring empty ones."""
+    await setup_integration(hass, config_entry_additional_endpoints)
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry_additional_endpoints
+    )
+    assert diagnostics == snapshot(exclude=limit_diagnostic_attrs)
+    assert (
+        diagnostics["additional_endpoints"]["/admin/lib/tariff"]
+        == "Testing request replies."
+    )
+    assert (
+        diagnostics["additional_endpoints"]["/api/v1/production"]
+        == "Testing request replies."
+    )
+
+
+@pytest.fixture(name="config_entry_wrong_additional_endpoints")
+def config_entry_wrong_additional_endpoints_fixture(
+    hass: HomeAssistant, config: dict[str, str]
+):
+    """Define a config entry fixture with faulty additional endpoint format."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id="1234",
+        data=config,
+        options={
+            OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS: "admin/lib/tariff,,/api/v1/production/"
+        },
+    )
+
+
+async def test_entry_diagnostics_with_wrong_additional_endpoints(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry_wrong_additional_endpoints: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test config entry diagnostics with faulty additional endpoints format."""
+    await setup_integration(hass, config_entry_wrong_additional_endpoints)
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry_wrong_additional_endpoints
+    )
+    assert diagnostics == snapshot(exclude=limit_diagnostic_attrs)
+    assert (
+        diagnostics["additional_endpoints"]["invalid format"]
+        == "admin/lib/tariff,,/api/v1/production/"
+    )

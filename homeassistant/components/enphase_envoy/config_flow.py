@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import VolDictType
@@ -31,6 +32,8 @@ from homeassistant.helpers.typing import VolDictType
 from .const import (
     DOMAIN,
     INVALID_AUTH_ERRORS,
+    OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS,
+    OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS_DEFAULT_VALUE,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
     OPTION_DISABLE_KEEP_ALIVE,
@@ -335,6 +338,24 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
+def validate_endpoints(
+    endpoints: str,
+    errors: dict[str, str],
+) -> None:
+    """Validate endpoints in string."""
+    endpoint_list = cv.ensure_list_csv(endpoints)
+
+    # verify all elements start with /
+    if not all(member[0] == "/" for member in endpoint_list if member != ""):
+        errors["base"] = "missing_/"
+        return
+    # verify all elements do not end in /
+    if not all(member[-1] != "/" for member in endpoint_list if member != ""):
+        errors["base"] = "trailing_/"
+        return
+    return
+
+
 class EnvoyOptionsFlowHandler(OptionsFlowWithReload):
     """Envoy config flow options handler."""
 
@@ -342,34 +363,51 @@ class EnvoyOptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            validate_endpoints(
+                user_input[OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS],
+                errors=errors,
+            )
+            if not errors:
+                return self.async_create_entry(title="", data=user_input)
 
         if TYPE_CHECKING:
             assert self.config_entry.unique_id is not None
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
-                        default=self.config_entry.options.get(
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(
                             OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
-                            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
-                        ),
-                    ): bool,
-                    vol.Required(
-                        OPTION_DISABLE_KEEP_ALIVE,
-                        default=self.config_entry.options.get(
+                            default=self.config_entry.options.get(
+                                OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
+                                OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+                            ),
+                        ): bool,
+                        vol.Required(
                             OPTION_DISABLE_KEEP_ALIVE,
-                            OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
-                        ),
-                    ): bool,
-                }
+                            default=self.config_entry.options.get(
+                                OPTION_DISABLE_KEEP_ALIVE,
+                                OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
+                            ),
+                        ): bool,
+                        vol.Optional(
+                            OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS,
+                            default=self.config_entry.options.get(
+                                OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS,
+                                OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS_DEFAULT_VALUE,
+                            ),
+                        ): str,
+                    },
+                ),
+                without_avoid_reflect_keys(user_input or self.config_entry.options),
             ),
             description_placeholders={
                 CONF_SERIAL: self.config_entry.unique_id,
                 CONF_HOST: self.config_entry.data[CONF_HOST],
             },
+            errors=errors,
         )

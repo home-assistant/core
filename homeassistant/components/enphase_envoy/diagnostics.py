@@ -20,11 +20,18 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
 
-from .const import OPTION_DIAGNOSTICS_INCLUDE_FIXTURES
+from .const import (
+    OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS,
+    OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
+)
 from .coordinator import EnphaseConfigEntry
 
 CONF_TITLE = "title"
@@ -43,7 +50,6 @@ TO_REDACT = {
 
 async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
     """Collect Envoy endpoints to use for test fixture set."""
-    fixture_data: dict[str, Any] = {}
     end_points = [
         "/info",
         "/api/v1/production",
@@ -68,6 +74,14 @@ async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
         "/ivp/pdm/device_data",
         "/home",
     ]
+    return await _get_requests(envoy, serial, end_points)
+
+
+async def _get_requests(
+    envoy: Envoy, serial: str, end_points: list[str]
+) -> dict[str, Any]:
+    """Collect Envoy endpoints list request replies."""
+    fixture_data: dict[str, Any] = {}
 
     for end_point in end_points:
         try:
@@ -188,6 +202,22 @@ async def async_get_config_entry_diagnostics(
     if entry.options.get(OPTION_DIAGNOSTICS_INCLUDE_FIXTURES, False):
         fixture_data = await _get_fixture_collection(envoy=envoy, serial=old_serial)
 
+    additional_data: dict[str, Any] = {}
+    if additional_endpoints := entry.options.get(
+        OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS, []
+    ):
+        # remove empty strings, enforce all starting with / and not ending with '/'
+        if endpoint_list := [
+            endpoint
+            for endpoint in cv.ensure_list_csv(additional_endpoints)
+            if endpoint.strip() and endpoint[0] == "/" and endpoint[-1] != "/"
+        ]:
+            additional_data = await _get_requests(
+                envoy=envoy, serial=old_serial, end_points=endpoint_list
+            )
+        else:
+            additional_data = {"invalid format": additional_endpoints}
+
     diagnostic_data: dict[str, Any] = {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "envoy_properties": envoy_properties,
@@ -195,6 +225,7 @@ async def async_get_config_entry_diagnostics(
         "envoy_model_data": envoy_model,
         "envoy_entities_by_device": json_loads(device_entities_cleaned),
         "fixtures": fixture_data,
+        "additional_endpoints": additional_data,
     }
 
     return diagnostic_data
