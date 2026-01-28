@@ -198,9 +198,13 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_APPS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
-        # Deprecated (with no deadline yet), use apps instead
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
+        vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
+            cv.ensure_list, [VALID_ADDON_SLUG]
+        ),
+        # Legacy "addons", "apps" is preferred
+        vol.Exclusive(ATTR_ADDONS, "apps_or_addons"): vol.All(
+            cv.ensure_list, [VALID_ADDON_SLUG]
+        ),
     }
 )
 
@@ -215,9 +219,13 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_APPS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
-        # Deprecated (with no deadline yet), use apps instead
-        vol.Optional(ATTR_ADDONS): vol.All(cv.ensure_list, [VALID_ADDON_SLUG]),
+        vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
+            cv.ensure_list, [VALID_ADDON_SLUG]
+        ),
+        # Legacy "addons", "apps" is preferred
+        vol.Exclusive(ATTR_ADDONS, "apps_or_addons"): vol.All(
+            cv.ensure_list, [VALID_ADDON_SLUG]
+        ),
     }
 )
 
@@ -408,16 +416,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         api_endpoint = MAP_SERVICE_API[service.service]
 
         data = service.data.copy()
-        # Handle both app and addon parameters (app takes precedence)
         addon = data.pop(ATTR_APP, None) or data.pop(ATTR_ADDON, None)
         slug = data.pop(ATTR_SLUG, None)
 
-        # Handle both apps and addons parameters for backup/restore services
-        apps = data.pop(ATTR_APPS, None)
-        addons = data.pop(ATTR_ADDONS, None)
-        if apps or addons:
-            # apps takes precedence if both provided, but we still want to use "addons" in API
-            data[ATTR_ADDONS] = apps or addons
+        if addons := data.pop(ATTR_APPS, None) or data.pop(ATTR_ADDONS, None):
+            data[ATTR_ADDONS] = addons
 
         payload = None
 
