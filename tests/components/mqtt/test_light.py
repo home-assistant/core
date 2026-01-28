@@ -502,7 +502,7 @@ async def test_controlling_state_via_topic(
     async_fire_mqtt_message(hass, "test_light_rgb/color_temp/status", "300")
     light_state = hass.states.get("light.test")
     assert light_state.attributes.get("brightness") == 100
-    assert light_state.attributes["color_temp"] == 300
+    assert light_state.attributes.get(light.ATTR_COLOR_TEMP_KELVIN) == 3333
     assert light_state.attributes.get(light.ATTR_COLOR_MODE) == "color_temp"
     assert light_state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) == color_modes
 
@@ -2839,9 +2839,9 @@ async def test_discovery_update_light_topic_and_template(
             ],
             "on",
             [
-                ("brightness", 100),
-                ("color_temp", 123),
-                ("effect", "cycle"),
+                (light.ATTR_BRIGHTNESS, 100),
+                (light.ATTR_COLOR_TEMP_KELVIN, 8130),
+                (light.ATTR_EFFECT, "cycle"),
             ],
         ),
         (
@@ -2890,9 +2890,9 @@ async def test_discovery_update_light_topic_and_template(
             ],
             "on",
             [
-                ("brightness", 50),
-                ("color_temp", 200),
-                ("effect", "loop"),
+                (light.ATTR_BRIGHTNESS, 50),
+                (light.ATTR_COLOR_TEMP_KELVIN, 5000),
+                (light.ATTR_EFFECT, "loop"),
             ],
         ),
         (
@@ -2911,7 +2911,11 @@ async def test_discovery_update_light_topic_and_template(
                 ),
             ],
             "on",
-            [("brightness", 50), ("color_temp", 200), ("effect", "loop")],
+            [
+                (light.ATTR_BRIGHTNESS, 50),
+                (light.ATTR_COLOR_TEMP_KELVIN, 5000),
+                (light.ATTR_EFFECT, "loop"),
+            ],
         ),
         (
             [("test_light_rgb/state1", '{"state1":{"state":"OFF"}}')],
@@ -3093,9 +3097,9 @@ async def test_discovery_update_light_template(
             ],
             "on",
             [
-                ("brightness", 100),
-                ("color_temp", 123),
-                ("effect", "cycle"),
+                (light.ATTR_BRIGHTNESS, 100),
+                (light.ATTR_COLOR_TEMP_KELVIN, 8130),
+                (light.ATTR_EFFECT, "cycle"),
             ],
         ),
         (
@@ -3111,7 +3115,7 @@ async def test_discovery_update_light_template(
                 )
             ],
             "on",
-            [("hs_color", (1, 2))],
+            [(light.ATTR_HS_COLOR, (1, 2))],
         ),
         (
             [
@@ -3121,7 +3125,7 @@ async def test_discovery_update_light_template(
                 )
             ],
             "on",
-            [("rgb_color", (255, 127, 63))],
+            [(light.ATTR_RGB_COLOR, (255, 127, 63))],
         ),
         (
             [
@@ -3131,7 +3135,7 @@ async def test_discovery_update_light_template(
                 )
             ],
             "on",
-            [("xy_color", (0.3, 0.4))],
+            [(light.ATTR_XY_COLOR, (0.3, 0.4))],
         ),
     ]
     state_data2 = [
@@ -3144,9 +3148,9 @@ async def test_discovery_update_light_template(
             ],
             "on",
             [
-                ("brightness", 50),
-                ("color_temp", 200),
-                ("effect", "loop"),
+                (light.ATTR_BRIGHTNESS, 50),
+                (light.ATTR_COLOR_TEMP_KELVIN, 5000),
+                (light.ATTR_EFFECT, "loop"),
             ],
         ),
         (
@@ -3157,7 +3161,11 @@ async def test_discovery_update_light_template(
                 ),
             ],
             "on",
-            [("brightness", 50), ("color_temp", 200), ("effect", "loop")],
+            [
+                (light.ATTR_BRIGHTNESS, 50),
+                (light.ATTR_COLOR_TEMP_KELVIN, 5000),
+                (light.ATTR_EFFECT, "loop"),
+            ],
         ),
         (
             [("test_light_rgb/state1", '{"state1":{"state":"OFF"}}')],
@@ -3177,7 +3185,7 @@ async def test_discovery_update_light_template(
                 )
             ],
             "on",
-            [("hs_color", (1.2, 2.2))],
+            [(light.ATTR_HS_COLOR, (1.2, 2.2))],
         ),
         (
             [
@@ -3187,7 +3195,7 @@ async def test_discovery_update_light_template(
                 )
             ],
             "on",
-            [("hs_color", (1.2, 2.2))],
+            [(light.ATTR_HS_COLOR, (1.2, 2.2))],
         ),
         (
             [
@@ -3197,7 +3205,7 @@ async def test_discovery_update_light_template(
                 )
             ],
             "on",
-            [("rgb_color", (63, 127, 255))],
+            [(light.ATTR_RGB_COLOR, (63, 127, 255))],
         ),
         (
             [
@@ -3207,7 +3215,7 @@ async def test_discovery_update_light_template(
                 )
             ],
             "on",
-            [("rgb_color", (63, 127, 255))],
+            [(light.ATTR_RGB_COLOR, (63, 127, 255))],
         ),
         (
             [
@@ -3217,7 +3225,7 @@ async def test_discovery_update_light_template(
                 )
             ],
             "on",
-            [("xy_color", (0.4, 0.3))],
+            [(light.ATTR_XY_COLOR, (0.4, 0.3))],
         ),
         (
             [
@@ -3227,7 +3235,7 @@ async def test_discovery_update_light_template(
                 )
             ],
             "on",
-            [("xy_color", (0.4, 0.3))],
+            [(light.ATTR_XY_COLOR, (0.4, 0.3))],
         ),
     ]
 
@@ -3362,8 +3370,8 @@ async def test_max_mireds(
     await mqtt_mock_entry()
 
     state = hass.states.get("light.test")
-    assert state.attributes.get("min_mireds") == 153
-    assert state.attributes.get("max_mireds") == 370
+    assert state.attributes.get(light.ATTR_MIN_COLOR_TEMP_KELVIN) == 2702
+    assert state.attributes.get(light.ATTR_MAX_COLOR_TEMP_KELVIN) == 6535
 
 
 @pytest.mark.parametrize(
@@ -3390,7 +3398,7 @@ async def test_max_mireds(
         (
             light.SERVICE_TURN_ON,
             "brightness_command_topic",
-            {"color_temp": "200", "brightness": "50"},
+            {"color_temp_kelvin": "5000", "brightness": "50"},
             50,
             "brightness_command_template",
             "value",
@@ -3408,7 +3416,7 @@ async def test_max_mireds(
         (
             light.SERVICE_TURN_ON,
             "color_temp_command_topic",
-            {"color_temp": "200"},
+            {"color_temp_kelvin": "5000"},
             200,
             "color_temp_command_template",
             "value",
@@ -3504,24 +3512,42 @@ async def test_reloadable(
         (
             "color_mode_state_topic",
             "rgb",
-            "color_mode",
+            light.ATTR_COLOR_MODE,
             "rgb",
             ("state_topic", "ON"),
         ),
-        ("color_temp_state_topic", "200", "color_temp", 200, ("state_topic", "ON")),
-        ("effect_state_topic", "random", "effect", "random", ("state_topic", "ON")),
-        ("hs_state_topic", "200,50", "hs_color", (200, 50), ("state_topic", "ON")),
+        (
+            "color_temp_state_topic",
+            "200",
+            light.ATTR_COLOR_TEMP_KELVIN,
+            5000,
+            ("state_topic", "ON"),
+        ),
+        (
+            "effect_state_topic",
+            "random",
+            light.ATTR_EFFECT,
+            "random",
+            ("state_topic", "ON"),
+        ),
+        (
+            "hs_state_topic",
+            "200,50",
+            light.ATTR_HS_COLOR,
+            (200, 50),
+            ("state_topic", "ON"),
+        ),
         (
             "xy_state_topic",
             "128,128",
-            "xy_color",
+            light.ATTR_XY_COLOR,
             (128, 128),
             ("state_topic", "ON"),
         ),
         (
             "rgb_state_topic",
             "255,0,240",
-            "rgb_color",
+            light.ATTR_RGB_COLOR,
             (255, 0, 240),
             ("state_topic", "ON"),
         ),
