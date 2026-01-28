@@ -5,6 +5,17 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
+from tuya_device_handlers.type_information import (
+    EnumTypeInformation,
+    IntegerTypeInformation,
+)
+from tuya_device_handlers.utils import RemapHelper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.cover import (
@@ -22,14 +33,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-)
-from .type_information import EnumTypeInformation, IntegerTypeInformation
-from .util import RemapHelper
 
 
 class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
@@ -84,7 +87,7 @@ class _InstructionBooleanWrapper(DPCodeBooleanWrapper):
     options = ["open", "close"]
     _ACTION_MAPPINGS = {"open": True, "close": False}
 
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: str) -> bool:
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: str) -> bool:  # type: ignore[override]
         return self._ACTION_MAPPINGS[value]
 
 
@@ -130,7 +133,7 @@ class _IsClosedEnumWrapper(DPCodeEnumWrapper):
         "fully_open": False,
     }
 
-    def read_device_status(self, device: CustomerDevice) -> bool | None:
+    def read_device_status(self, device: CustomerDevice) -> bool | None:  # type: ignore[override]
         if (value := super().read_device_status(device)) is None:
             return None
         return self._MAPPINGS.get(value)

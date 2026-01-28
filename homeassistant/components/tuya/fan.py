@@ -4,6 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.base import DeviceWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
+from tuya_device_handlers.type_information import IntegerTypeInformation
+from tuya_device_handlers.utils import RemapHelper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.fan import (
@@ -23,14 +31,7 @@ from homeassistant.util.percentage import (
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-)
-from .type_information import IntegerTypeInformation
-from .util import RemapHelper, get_dpcode
+from .util import get_dpcode
 
 _DIRECTION_DPCODES = (DPCode.FAN_DIRECTION,)
 _MODE_DPCODES = (DPCode.FAN_MODE, DPCode.MODE)
@@ -82,7 +83,7 @@ def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
 class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
     """Wrapper for fan speed DP code (from an enum)."""
 
-    def read_device_status(self, device: CustomerDevice) -> int | None:
+    def read_device_status(self, device: CustomerDevice) -> int | None:  # type: ignore[override]
         """Get the current speed as a percentage."""
         if (value := super().read_device_status(device)) is None:
             return None
