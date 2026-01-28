@@ -3,7 +3,11 @@
     "step": {
       "user": {
         "data": {
+          "after_kind": "On — type",
+          "after_offset_min": "On — offset (minutes)",
           "after_time": "On time",
+          "before_kind": "Off — type",
+          "before_offset_min": "Off — offset (minutes)",
           "before_time": "Off time",
           "name": "[%key:common::config_flow::data::name%]"
         },
@@ -16,7 +20,11 @@
     "step": {
       "init": {
         "data": {
+          "after_kind": "[%key:component::tod::config::step::user::data::after_kind%]",
+          "after_offset_min": "[%key:component::tod::config::step::user::data::after_offset_min%]",
           "after_time": "[%key:component::tod::config::step::user::data::after_time%]",
+          "before_kind": "[%key:component::tod::config::step::user::data::before_kind%]",
+          "before_offset_min": "[%key:component::tod::config::step::user::data::before_offset_min%]",
           "before_time": "[%key:component::tod::config::step::user::data::before_time%]"
         }
       }
