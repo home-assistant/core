@@ -1284,6 +1284,15 @@
       "control_status": {
         "name": "Control status"
       },
+      "dc_current": {
+        "name": "DC current"
+      },
+      "dc_power": {
+        "name": "DC power"
+      },
+      "dc_voltage": {
+        "name": "DC voltage"
+      },
       "device_run_time": {
         "name": "Device run time"
       },

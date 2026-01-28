@@ -4286,6 +4286,25 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "wait_for_trigger": {
+                        "platform": "state",
+                        "entity_id": "sensor.test",
+                        "target": {"label_id": "label_wait_trigger"},
+                    },
+                },
+                {
+                    "wait_for_trigger": {
+                        "platform": "state",
+                        "entity_id": "sensor.test",
+                        "target": {
+                            "label_id": [
+                                "label_wait_trigger_list_1",
+                                "label_wait_trigger_list_2",
+                            ]
+                        },
+                    },
+                },
             ]
         ),
         "Test Name",
@@ -4309,6 +4328,9 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
         "label_service_list_1",
         "label_service_list_2",
         "label_service_not_list",
+        "label_wait_trigger",
+        "label_wait_trigger_list_1",
+        "label_wait_trigger_list_2",
     }
     # Test we cache results.
     assert script_obj.referenced_labels is script_obj.referenced_labels
@@ -4418,6 +4440,25 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "wait_for_trigger": {
+                        "platform": "state",
+                        "entity_id": "sensor.test",
+                        "target": {"floor_id": "floor_wait_trigger"},
+                    },
+                },
+                {
+                    "wait_for_trigger": {
+                        "platform": "state",
+                        "entity_id": "sensor.test",
+                        "target": {
+                            "floor_id": [
+                                "floor_wait_trigger_list_1",
+                                "floor_wait_trigger_list_2",
+                            ]
+                        },
+                    },
+                },
             ]
         ),
         "Test Name",
@@ -4440,6 +4481,9 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
         "floor_sequence",
         "floor_service_list",
         "floor_service_not_list",
+        "floor_wait_trigger",
+        "floor_wait_trigger_list_1",
+        "floor_wait_trigger_list_2",
     }
     # Test we cache results.
     assert script_obj.referenced_floors is script_obj.referenced_floors
@@ -4549,6 +4593,25 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "wait_for_trigger": {
+                        "platform": "state",
+                        "entity_id": "sensor.test",
+                        "target": {"area_id": "area_wait_trigger"},
+                    },
+                },
+                {
+                    "wait_for_trigger": {
+                        "platform": "state",
+                        "entity_id": "sensor.test",
+                        "target": {
+                            "area_id": [
+                                "area_wait_trigger_list_1",
+                                "area_wait_trigger_list_2",
+                            ]
+                        },
+                    },
+                },
             ]
         ),
         "Test Name",
@@ -4571,6 +4634,9 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
         "area_sequence",
         "area_service_list",
         "area_service_not_list",
+        "area_wait_trigger",
+        "area_wait_trigger_list_1",
+        "area_wait_trigger_list_2",
         # 'area_service_template',  # no area extraction from template
     }
     # Test we cache results.
@@ -4692,6 +4758,21 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "wait_for_trigger": {
+                        "platform": "state",
+                        "entity_id": ["sensor.wait_trigger_state"],
+                    },
+                },
+                {
+                    "wait_for_trigger": {
+                        "platform": "state",
+                        "entity_id": [
+                            "sensor.wait_trigger_state_list_1",
+                            "sensor.wait_trigger_state_list_2",
+                        ],
+                    },
+                },
             ]
         ),
         "Test Name",
@@ -4718,6 +4799,9 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
         # "light.service_template",  # no entity extraction from template
         "scene.hello",
         "sensor.condition",
+        "sensor.wait_trigger_state",
+        "sensor.wait_trigger_state_list_1",
+        "sensor.wait_trigger_state_list_2",
     }
     # Test we cache results.
     assert script_obj.referenced_entities is script_obj.referenced_entities
@@ -4834,6 +4918,32 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "wait_for_trigger": {
+                        "platform": "device",
+                        "device_id": "wait-trigger-device",
+                        "domain": "switch",
+                    },
+                },
+                {
+                    "wait_for_trigger": {
+                        "platform": "state",
+                        "entity_id": "sensor.test",
+                        "target": {"device_id": "wait-trigger-target"},
+                    },
+                },
+                {
+                    "wait_for_trigger": {
+                        "platform": "state",
+                        "entity_id": "sensor.test",
+                        "target": {
+                            "device_id": [
+                                "wait-trigger-target-list-1",
+                                "wait-trigger-target-list-2",
+                            ]
+                        },
+                    },
+                },
             ]
         ),
         "Test Name",
@@ -4859,6 +4969,10 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
         "if-else",
         "parallel-device",
         "sequence-device",
+        "wait-trigger-device",
+        "wait-trigger-target",
+        "wait-trigger-target-list-1",
+        "wait-trigger-target-list-2",
     }
     # Test we cache results.
     assert script_obj.referenced_devices is script_obj.referenced_devices
