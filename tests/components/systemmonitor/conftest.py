@@ -25,6 +25,18 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+MOCK_PRESSURE_INFO = {
+    "cpu": {"some": {"avg10": 1.1, "avg60": 2.2, "avg300": 3.3, "total": 12345}},
+    "memory": {
+        "some": {"avg10": 4.4, "avg60": 5.5, "avg300": 6.6, "total": 54321},
+        "full": {"avg10": 0.4, "avg60": 0.5, "avg300": 0.6, "total": 432},
+    },
+    "io": {
+        "some": {"avg10": 7.7, "avg60": 8.8, "avg300": 9.9, "total": 67890},
+        "full": {"avg10": 0.7, "avg60": 0.8, "avg300": 0.9, "total": 789},
+    },
+}
+
 
 @pytest.fixture(autouse=True)
 def mock_sys_platform() -> Generator[None]:
@@ -133,9 +145,15 @@ def mock_process() -> list[MockProcess]:
 @pytest.fixture
 def mock_psutil(mock_process: list[MockProcess]) -> Generator:
     """Mock psutil."""
-    with patch(
-        "homeassistant.components.systemmonitor.ha_psutil.PsutilWrapper",
-    ) as psutil_wrapper:
+    with (
+        patch(
+            "homeassistant.components.systemmonitor.ha_psutil.PsutilWrapper",
+        ) as psutil_wrapper,
+        patch(
+            "homeassistant.components.systemmonitor.coordinator.get_all_pressure_info",
+            return_value=MOCK_PRESSURE_INFO,
+        ),
+    ):
         _wrapper = psutil_wrapper.return_value
         _wrapper.psutil = NonCallableMock()
         mock_psutil = _wrapper.psutil
