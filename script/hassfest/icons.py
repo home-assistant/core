@@ -145,10 +145,7 @@ def icon_schema(
 ) -> vol.Schema:
     """Create an icon schema."""
 
-    state_validator = cv.schema_with_slug_keys(
-        icon_value_validator,
-        slug_validator=translation_key_validator,
-    )
+    state_validator = vol.Schema({str: icon_value_validator})
 
     range_validator = cv.schema_with_slug_keys(
         icon_value_validator,
