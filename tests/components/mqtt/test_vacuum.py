@@ -676,7 +676,6 @@ async def test_publishing_with_custom_encoding(
     domain = vacuum.DOMAIN
     config = deepcopy(DEFAULT_CONFIG)
     config[mqtt.DOMAIN][domain]["supported_features"] = [
-        "battery",
         "clean_spot",
         "fan_speed",
         "locate",
@@ -785,7 +784,6 @@ async def test_setup_manual_entity_from_yaml(
         ("availability-topic", "online", "offline"),
         ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
         ("vacuum/state", '{"state": "cleaning"}', '{"state": "docked"}'),
-        ("vacuum/state", '{"battery_level": 71}', '{"battery_level": 60}'),
         ("vacuum/state", '{"fan_speed": "max"}', '{"fan_speed": "min"}'),
     ],
 )
