@@ -17,6 +17,8 @@ DOMAIN = "hassio"
 
 ATTR_ADDON = "addon"
 ATTR_ADDONS = "addons"
+ATTR_APP = "app"
+ATTR_APPS = "apps"
 ATTR_ADMIN = "admin"
 ATTR_COMPRESSED = "compressed"
 ATTR_CONFIG = "config"

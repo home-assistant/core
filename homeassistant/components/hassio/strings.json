@@ -336,6 +336,50 @@
       },
       "name": "Stop add-on"
     },
+    "app_restart": {
+      "description": "Restarts a Home Assistant app.",
+      "fields": {
+        "app": {
+          "description": "The app to restart.",
+          "name": "[%key:component::hassio::services::app_start::fields::app::name%]"
+        }
+      },
+      "name": "Restart app"
+    },
+    "app_start": {
+      "description": "Starts a Home Assistant app.",
+      "fields": {
+        "app": {
+          "description": "The app to start.",
+          "name": "App"
+        }
+      },
+      "name": "Start app"
+    },
+    "app_stdin": {
+      "description": "Writes data to the standard input of a Home Assistant app.",
+      "fields": {
+        "app": {
+          "description": "The app to write to.",
+          "name": "[%key:component::hassio::services::app_start::fields::app::name%]"
+        },
+        "input": {
+          "description": "The data to write.",
+          "name": "Input"
+        }
+      },
+      "name": "Write data to app stdin"
+    },
+    "app_stop": {
+      "description": "Stops a Home Assistant app.",
+      "fields": {
+        "app": {
+          "description": "The app to stop.",
+          "name": "[%key:component::hassio::services::app_start::fields::app::name%]"
+        }
+      },
+      "name": "Stop app"
+    },
     "backup_full": {
       "description": "Creates a full backup.",
       "fields": {
@@ -366,8 +410,12 @@
       "description": "Creates a partial backup.",
       "fields": {
         "addons": {
-          "description": "List of add-ons to include in the backup. Use the name slug of each add-on.",
-          "name": "Add-ons"
+          "description": "List of apps (formerly add-ons) to include in the backup. Use the slug of each app. Legacy option - use apps instead.",
+          "name": "Add-ons (legacy)"
+        },
+        "apps": {
+          "description": "List of apps to include in the backup. Use the slug of each app.",
+          "name": "Apps"
         },
         "compressed": {
           "description": "[%key:component::hassio::services::backup_full::fields::compressed::description%]",
@@ -426,8 +474,12 @@
       "description": "Restores from a partial backup.",
       "fields": {
         "addons": {
-          "description": "List of add-ons to restore from the backup. Use the name slug of each add-on.",
+          "description": "List of apps (formerly add-ons) to restore from the backup. Use the slug of each app. Legacy option - use apps instead.",
           "name": "[%key:component::hassio::services::backup_partial::fields::addons::name%]"
+        },
+        "apps": {
+          "description": "List of apps to restore from the backup. Use the slug of each app.",
+          "name": "[%key:component::hassio::services::backup_partial::fields::apps::name%]"
         },
         "folders": {
           "description": "List of directories to restore from the backup.",
