@@ -114,7 +114,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             return
 
         # determine opening/closing state
-        if not self._attr_current_cover_position:
+        if self._attr_current_cover_position is None:
             self._attr_is_opening = None
             self._attr_is_closing = None
         elif kwargs[ATTR_POSITION] == self._attr_current_cover_position:
