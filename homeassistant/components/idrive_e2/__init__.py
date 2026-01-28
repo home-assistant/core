@@ -28,10 +28,22 @@ type IDriveE2ConfigEntry = ConfigEntry[S3Client]
 _LOGGER = logging.getLogger(__name__)
 
 
+async def _async_safe_client_close(client: S3Client | None) -> None:
+    """Close client without masking the original exception."""
+    if client is None:
+        return
+    try:
+        # Best effort to close the client which doesn't mask the setup exception
+        await client.close()
+    except Exception:  # noqa: BLE001
+        _LOGGER.debug("Failed to close aiobotocore client", exc_info=True)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> bool:
     """Set up IDrive e2 from a config entry."""
 
     session = AioSession()
+    cm: Any | None = None
     client: S3Client | None = None
     try:
         cm = session.create_client(
@@ -44,8 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> 
         client = await cm.__aenter__()
         await cast(Any, client).head_bucket(Bucket=entry.data[CONF_BUCKET])
     except ClientError as err:
-        if client is not None:
-            await client.close()
+        await _async_safe_client_close(client)
         if "Not Found" in str(err):
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
@@ -58,15 +69,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> 
             translation_key="invalid_credentials",
         ) from err
     except ValueError as err:
-        if client is not None:
-            await client.close()
+        await _async_safe_client_close(client)
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_endpoint_url",
         ) from err
     except ConnectionError as err:
-        if client is not None:
-            await client.close()
+        await _async_safe_client_close(client)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
