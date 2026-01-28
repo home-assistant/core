@@ -1087,6 +1087,9 @@ homelink-integration-api==0.0.1
 # homeassistant.components.homematicip_cloud
 homematicip==2.5.0
 
+# homeassistant.components.homevolt
+homevolt==0.2.4
+
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
 

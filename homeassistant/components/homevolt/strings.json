@@ -1,0 +1,198 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your Homevolt battery on your local network.",
+          "password": "The local password configured for your Homevolt battery, if required."
+        },
+        "description": "Connect Home Assistant to your Homevolt battery over the local network.",
+        "title": "Homevolt Local"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "available_charging_energy": {
+        "name": "Available charging energy"
+      },
+      "available_charging_power": {
+        "name": "Available charging power"
+      },
+      "available_discharge_energy": {
+        "name": "Available discharge energy"
+      },
+      "available_discharge_power": {
+        "name": "Available discharge power"
+      },
+      "average_rssi_grid": {
+        "name": "Grid average RSSI"
+      },
+      "average_rssi_load": {
+        "name": "Load average RSSI"
+      },
+      "battery_state_of_charge": {
+        "name": "Battery state of charge"
+      },
+      "charge_cycles": {
+        "name": "Charge cycles"
+      },
+      "energy_exported_grid": {
+        "name": "Grid exported energy"
+      },
+      "energy_exported_load": {
+        "name": "Load exported energy"
+      },
+      "energy_imported_grid": {
+        "name": "Grid imported energy"
+      },
+      "energy_imported_load": {
+        "name": "Load imported energy"
+      },
+      "exported_energy": {
+        "name": "Exported energy"
+      },
+      "frequency": {
+        "name": "Frequency"
+      },
+      "imported_energy": {
+        "name": "Imported energy"
+      },
+      "l1_current": {
+        "name": "L1 current"
+      },
+      "l1_current_grid": {
+        "name": "Grid L1 current"
+      },
+      "l1_current_load": {
+        "name": "Load L1 current"
+      },
+      "l1_l2_voltage": {
+        "name": "L1-L2 voltage"
+      },
+      "l1_power_grid": {
+        "name": "Grid L1 power"
+      },
+      "l1_power_load": {
+        "name": "Load L1 power"
+      },
+      "l1_voltage": {
+        "name": "L1 voltage"
+      },
+      "l1_voltage_grid": {
+        "name": "Grid L1 voltage"
+      },
+      "l1_voltage_load": {
+        "name": "Load L1 voltage"
+      },
+      "l2_current": {
+        "name": "L2 current"
+      },
+      "l2_current_grid": {
+        "name": "Grid L2 current"
+      },
+      "l2_current_load": {
+        "name": "Load L2 current"
+      },
+      "l2_l3_voltage": {
+        "name": "L2-L3 voltage"
+      },
+      "l2_power_grid": {
+        "name": "Grid L2 power"
+      },
+      "l2_power_load": {
+        "name": "Load L2 power"
+      },
+      "l2_voltage": {
+        "name": "L2 voltage"
+      },
+      "l2_voltage_grid": {
+        "name": "Grid L2 voltage"
+      },
+      "l2_voltage_load": {
+        "name": "Load L2 voltage"
+      },
+      "l3_current": {
+        "name": "L3 current"
+      },
+      "l3_current_grid": {
+        "name": "Grid L3 current"
+      },
+      "l3_current_load": {
+        "name": "Load L3 current"
+      },
+      "l3_l1_voltage": {
+        "name": "L3-L1 voltage"
+      },
+      "l3_power_grid": {
+        "name": "Grid L3 power"
+      },
+      "l3_power_load": {
+        "name": "Load L3 power"
+      },
+      "l3_voltage": {
+        "name": "L3 voltage"
+      },
+      "l3_voltage_grid": {
+        "name": "Grid L3 voltage"
+      },
+      "l3_voltage_load": {
+        "name": "Load L3 voltage"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "power_grid": {
+        "name": "Grid power"
+      },
+      "power_load": {
+        "name": "Load power"
+      },
+      "rssi_grid": {
+        "name": "Grid RSSI"
+      },
+      "rssi_load": {
+        "name": "Load RSSI"
+      },
+      "schedule_id": {
+        "name": "Schedule ID"
+      },
+      "schedule_max_discharge": {
+        "name": "Schedule max discharge"
+      },
+      "schedule_max_power": {
+        "name": "Schedule max power"
+      },
+      "schedule_power_setpoint": {
+        "name": "Schedule power setpoint"
+      },
+      "schedule_type": {
+        "name": "Schedule type"
+      },
+      "state_of_charge": {
+        "name": "State of charge"
+      },
+      "system_temperature": {
+        "name": "System temperature"
+      },
+      "tmax": {
+        "name": "Maximum temperature"
+      },
+      "tmin": {
+        "name": "Minimum temperature"
+      }
+    }
+  }
+}
