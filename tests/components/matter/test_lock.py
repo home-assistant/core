@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
+from matter_server.common.errors import MatterError
 from matter_server.common.models import EventType, MatterNodeEvent
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -11,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntityFeature, LockState
 from homeassistant.const import ATTR_CODE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
@@ -530,3 +531,187 @@ async def test_get_credential_status(
     assert result["exists"] is False
     assert result["credential_type"] == 1
     assert result["credential_index"] == 99
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_set_lock_usercode_failure(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set usercode raises error on non-zero status."""
+    matter_client.send_device_command.return_value = {
+        "status": 133,
+        "userIndex": None,
+        "nextCredentialIndex": None,
+    }
+
+    with pytest.raises(HomeAssistantError, match="SetCredential failed with status"):
+        await hass.services.async_call(
+            "matter",
+            "set_lock_usercode",
+            {
+                "entity_id": "lock.mock_door_lock",
+                "code_slot": 1,
+                "usercode": "1234",
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_set_lock_usercode_occupied_retry(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set usercode retries with kModify when slot is occupied."""
+    # First call returns status 3 (Occupied), second call (kModify) succeeds
+    matter_client.send_device_command.side_effect = [
+        {"status": 3, "userIndex": None, "nextCredentialIndex": None},
+        {"status": 0, "userIndex": 1, "nextCredentialIndex": 2},
+    ]
+
+    await hass.services.async_call(
+        "matter",
+        "set_lock_usercode",
+        {
+            "entity_id": "lock.mock_door_lock",
+            "code_slot": 5,
+            "usercode": "9999",
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 2
+    # Verify second call used kModify
+    second_call = matter_client.send_device_command.call_args_list[1]
+    assert (
+        second_call.kwargs["command"].operationType
+        == clusters.DoorLock.Enums.DataOperationTypeEnum.kModify
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_set_lock_usercode_duplicate(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set usercode treats duplicate status as success."""
+    matter_client.send_device_command.return_value = {
+        "status": 2,
+        "userIndex": 1,
+        "nextCredentialIndex": 2,
+    }
+
+    # Should not raise
+    await hass.services.async_call(
+        "matter",
+        "set_lock_usercode",
+        {
+            "entity_id": "lock.mock_door_lock",
+            "code_slot": 1,
+            "usercode": "1234",
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_set_lock_usercode_transport_error(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set usercode raises error on transport failure."""
+    matter_client.send_device_command.side_effect = MatterError("Transport error")
+
+    with pytest.raises(HomeAssistantError, match="Failed to send SetCredential"):
+        await hass.services.async_call(
+            "matter",
+            "set_lock_usercode",
+            {
+                "entity_id": "lock.mock_door_lock",
+                "code_slot": 1,
+                "usercode": "1234",
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_get_lock_user_transport_error(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get user returns error info on transport failure."""
+    matter_client.send_device_command.side_effect = MatterError("Transport error")
+
+    response = await hass.services.async_call(
+        "matter",
+        "get_lock_user",
+        {
+            "entity_id": "lock.mock_door_lock",
+            "user_index": 1,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    result = response["lock.mock_door_lock"]
+    assert result["exists"] is False
+    assert result["user_index"] == 1
+    assert "error" in result
+    assert "Transport error" in result["error"]
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_clear_lock_usercode_error(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test clear usercode propagates errors."""
+    matter_client.send_device_command.side_effect = MatterError("Command failed")
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "matter",
+            "clear_lock_usercode",
+            {
+                "entity_id": "lock.mock_door_lock",
+                "code_slot": 3,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_get_credential_status_transport_error(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get credential status returns error info on transport failure."""
+    matter_client.send_device_command.side_effect = MatterError("Transport error")
+
+    response = await hass.services.async_call(
+        "matter",
+        "get_credential_status",
+        {
+            "entity_id": "lock.mock_door_lock",
+            "credential_type": 1,
+            "credential_index": 1,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    result = response["lock.mock_door_lock"]
+    assert result["exists"] is False
+    assert result["credential_type"] == 1
+    assert result["credential_index"] == 1
+    assert "error" in result
+    assert "Transport error" in result["error"]

@@ -176,6 +176,7 @@
           "event_type": {
             "state": {
               "door_lock_alarm": "Alarm",
+              "door_state_change": "Door state change",
               "lock_operation": "Lock operation",
               "lock_operation_error": "Lock operation error"
             }

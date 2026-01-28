@@ -138,6 +138,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
 DOOR_LOCK_EVENT_TYPES_MAP = {
     # mapping from raw DoorLock event id's to translation keys
     0: "door_lock_alarm",  # clusters.DoorLock.Events.DoorLockAlarm
+    1: "door_state_change",  # clusters.DoorLock.Events.DoorStateChange
     2: "lock_operation",  # clusters.DoorLock.Events.LockOperation
     3: "lock_operation_error",  # clusters.DoorLock.Events.LockOperationError
 }

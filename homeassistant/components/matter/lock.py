@@ -208,52 +208,106 @@ class MatterLock(MatterEntity, LockEntity):
         code_slot maps to credential_index (1-based).
         Passing userIndex=0 tells the lock to auto-assign or create a user.
         """
-        result = await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=clusters.DoorLock.Commands.SetCredential(
-                operationType=clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd,
-                credential=clusters.DoorLock.Structs.CredentialStruct(
-                    credentialType=clusters.DoorLock.Enums.CredentialTypeEnum.kPin,
-                    credentialIndex=code_slot,
-                ),
-                credentialData=usercode.encode(),
-                userIndex=0,  # 0 = let the lock auto-assign a user
-                userStatus=clusters.DoorLock.Enums.UserStatusEnum.kOccupiedEnabled,
-                userType=clusters.DoorLock.Enums.UserTypeEnum.kUnrestrictedUser,
-            ),
-            timed_request_timeout_ms=1000,
+        # Use matter_client.send_device_command directly (bypassing the entity
+        # wrapper) to capture the SetCredentialResponse status and user index.
+        credential = clusters.DoorLock.Structs.CredentialStruct(
+            credentialType=clusters.DoorLock.Enums.CredentialTypeEnum.kPin,
+            credentialIndex=code_slot,
         )
-        if isinstance(result, dict):
-            status = result.get("status", -1)
-            if status != 0:
-                raise HomeAssistantError(
-                    f"SetCredential failed with status {status} for slot {code_slot}. "
-                    "The lock may not support remote PIN management."
-                )
+        try:
+            result = await self.matter_client.send_device_command(
+                node_id=self._endpoint.node.node_id,
+                endpoint_id=self._endpoint.endpoint_id,
+                command=clusters.DoorLock.Commands.SetCredential(
+                    operationType=clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd,
+                    credential=credential,
+                    credentialData=usercode.encode(),
+                    userIndex=0,  # 0 = let the lock auto-assign a user
+                    userStatus=clusters.DoorLock.Enums.UserStatusEnum.kOccupiedEnabled,
+                    userType=clusters.DoorLock.Enums.UserTypeEnum.kUnrestrictedUser,
+                ),
+                timed_request_timeout_ms=1000,
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to send SetCredential command for slot {code_slot}: {err}"
+            ) from err
+
+        if not isinstance(result, dict):
+            return
+
+        status = result.get("status", -1)
+        if status == 0:
             LOGGER.debug(
                 "SetCredential succeeded for slot %s, userIndex=%s",
                 code_slot,
                 result.get("userIndex"),
             )
+            return
+
+        # Status 2 = Duplicate (same credential data already exists)
+        if status == 2:
+            LOGGER.debug(
+                "SetCredential: credential already exists in slot %s (duplicate)",
+                code_slot,
+            )
+            return
+
+        # Status 3 = Occupied (slot in use) - retry with kModify to update
+        if status == 3:
+            LOGGER.debug(
+                "SetCredential: slot %s occupied, retrying with kModify",
+                code_slot,
+            )
+            try:
+                result = await self.matter_client.send_device_command(
+                    node_id=self._endpoint.node.node_id,
+                    endpoint_id=self._endpoint.endpoint_id,
+                    command=clusters.DoorLock.Commands.SetCredential(
+                        operationType=clusters.DoorLock.Enums.DataOperationTypeEnum.kModify,
+                        credential=credential,
+                        credentialData=usercode.encode(),
+                        userIndex=0,
+                        userStatus=clusters.DoorLock.Enums.UserStatusEnum.kOccupiedEnabled,
+                        userType=clusters.DoorLock.Enums.UserTypeEnum.kUnrestrictedUser,
+                    ),
+                    timed_request_timeout_ms=1000,
+                )
+            except MatterError as err:
+                raise HomeAssistantError(
+                    f"Failed to modify credential in slot {code_slot}: {err}"
+                ) from err
+            if isinstance(result, dict) and result.get("status", -1) != 0:
+                raise HomeAssistantError(
+                    f"SetCredential (modify) failed with status "
+                    f"{result.get('status')} for slot {code_slot}."
+                )
+            LOGGER.debug(
+                "SetCredential (modify) succeeded for slot %s", code_slot
+            )
+            return
+
+        raise HomeAssistantError(
+            f"SetCredential failed with status {status} for slot {code_slot}. "
+            "The lock may not support remote PIN management."
+        )
 
     async def async_clear_usercode(self, code_slot: int) -> None:
         """Clear a usercode on the lock."""
-        try:
-            await self.send_device_command(
-                command=clusters.DoorLock.Commands.ClearCredential(
-                    credential=clusters.DoorLock.Structs.CredentialStruct(
-                        credentialType=clusters.DoorLock.Enums.CredentialTypeEnum.kPin,
-                        credentialIndex=code_slot,
-                    ),
+        await self.send_device_command(
+            command=clusters.DoorLock.Commands.ClearCredential(
+                credential=clusters.DoorLock.Structs.CredentialStruct(
+                    credentialType=clusters.DoorLock.Enums.CredentialTypeEnum.kPin,
+                    credentialIndex=code_slot,
                 ),
-                timed_request_timeout_ms=1000,
-            )
-        except (MatterError, HomeAssistantError) as err:
-            LOGGER.warning("ClearCredential failed for slot %s: %s", code_slot, err)
+            ),
+            timed_request_timeout_ms=1000,
+        )
 
     async def async_get_user(self, user_index: int) -> dict[str, Any]:
         """Get user information from the lock."""
+        # Use matter_client.send_device_command directly (bypassing the entity
+        # wrapper) to capture the GetUserResponse data.
         try:
             result = await self.matter_client.send_device_command(
                 node_id=self._endpoint.node.node_id,
@@ -286,17 +340,33 @@ class MatterLock(MatterEntity, LockEntity):
         self, credential_type: int, credential_index: int
     ) -> dict[str, Any]:
         """Get credential status from the lock."""
+        # Use matter_client.send_device_command directly (bypassing the entity
+        # wrapper) to capture the GetCredentialStatusResponse data.
         credential = clusters.DoorLock.Structs.CredentialStruct(
             credentialType=credential_type,
             credentialIndex=credential_index,
         )
-        result = await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=clusters.DoorLock.Commands.GetCredentialStatus(
-                credential=credential,
-            ),
-        )
+        try:
+            result = await self.matter_client.send_device_command(
+                node_id=self._endpoint.node.node_id,
+                endpoint_id=self._endpoint.endpoint_id,
+                command=clusters.DoorLock.Commands.GetCredentialStatus(
+                    credential=credential,
+                ),
+            )
+        except (MatterError, HomeAssistantError) as err:
+            LOGGER.warning(
+                "GetCredentialStatus failed for type %s index %s: %s",
+                credential_type,
+                credential_index,
+                err,
+            )
+            return {
+                "credential_type": credential_type,
+                "credential_index": credential_index,
+                "exists": False,
+                "error": str(err),
+            }
         if result is None:
             return {
                 "credential_type": credential_type,
