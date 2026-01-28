@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "switch": {
+      "auto": {
+        "default": "mdi:fan-auto"
+      },
+      "auto_plus": {
+        "default": "mdi:fan-auto"
+      },
+      "bound": {
+        "default": "mdi:link"
+      },
+      "heater": {
+        "default": "mdi:radiator"
+      },
+      "winter": {
+        "default": "mdi:snowflake"
+      }
+    }
+  }
+}

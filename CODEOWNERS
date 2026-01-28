@@ -1265,6 +1265,8 @@ build.json @home-assistant/supervisor
 /tests/components/powerfox/ @klaasnicolaas
 /homeassistant/components/powerwall/ @bdraco @jrester @daniel-simpson
 /tests/components/powerwall/ @bdraco @jrester @daniel-simpson
+/homeassistant/components/prana/ @prana-dev-official
+/tests/components/prana/ @prana-dev-official
 /homeassistant/components/private_ble_device/ @Jc2k
 /tests/components/private_ble_device/ @Jc2k
 /homeassistant/components/probe_plus/ @pantherale0
