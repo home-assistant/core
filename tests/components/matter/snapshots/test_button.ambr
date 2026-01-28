@@ -1397,6 +1397,55 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[eve_shutter][button.eve_shutter_switch_20eci1701_calibration_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.eve_shutter_switch_20eci1701_calibration_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Calibration mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibration mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration_mode',
+    'unique_id': '00000000000004D2-0000000000000094-MatterNodeDevice-1-WindowCoveringCalibrationMode-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[eve_shutter][button.eve_shutter_switch_20eci1701_calibration_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eve Shutter Switch 20ECI1701 Calibration mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.eve_shutter_switch_20eci1701_calibration_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[eve_shutter][button.eve_shutter_switch_20eci1701_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4028,6 +4077,153 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[window_covering_full][button.mock_full_window_covering_calibration_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.mock_full_window_covering_calibration_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Calibration mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibration mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration_mode',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringCalibrationMode-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[window_covering_full][button.mock_full_window_covering_calibration_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Full Window Covering Calibration mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_full_window_covering_calibration_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[window_covering_lift][button.mock_lift_window_covering_calibration_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.mock_lift_window_covering_calibration_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Calibration mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibration mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration_mode',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringCalibrationMode-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[window_covering_lift][button.mock_lift_window_covering_calibration_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lift Window Covering Calibration mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_lift_window_covering_calibration_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[window_covering_pa_lift][button.longan_link_wncv_da01_calibration_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.longan_link_wncv_da01_calibration_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Calibration mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibration mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration_mode',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-WindowCoveringCalibrationMode-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[window_covering_pa_lift][button.longan_link_wncv_da01_calibration_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Longan link WNCV DA01 Calibration mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.longan_link_wncv_da01_calibration_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[window_covering_pa_lift][button.longan_link_wncv_da01_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4078,6 +4274,104 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[window_covering_pa_tilt][button.mock_pa_tilt_window_covering_calibration_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.mock_pa_tilt_window_covering_calibration_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Calibration mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibration mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration_mode',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringCalibrationMode-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[window_covering_pa_tilt][button.mock_pa_tilt_window_covering_calibration_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock PA Tilt Window Covering Calibration mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_pa_tilt_window_covering_calibration_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[window_covering_tilt][button.mock_tilt_window_covering_calibration_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.mock_tilt_window_covering_calibration_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Calibration mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibration mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration_mode',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-WindowCoveringCalibrationMode-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[window_covering_tilt][button.mock_tilt_window_covering_calibration_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Tilt Window Covering Calibration mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.mock_tilt_window_covering_calibration_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[yandex_smart_socket][button.yndx_00540_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4122,6 +4416,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'button.yndx_00540_identify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[zemismart_mt25b][button.zemismart_mt25b_roller_motor_calibration_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.zemismart_mt25b_roller_motor_calibration_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Calibration mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibration mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'calibration_mode',
+    'unique_id': '00000000000004D2-000000000000007A-MatterNodeDevice-1-WindowCoveringCalibrationMode-258-23',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[zemismart_mt25b][button.zemismart_mt25b_roller_motor_calibration_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Zemismart MT25B Roller Motor Calibration mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.zemismart_mt25b_roller_motor_calibration_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

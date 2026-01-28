@@ -107,3 +107,34 @@ async def test_smoke_detector_self_test(
         endpoint_id=1,
         command=clusters.SmokeCoAlarm.Commands.SelfTestRequest(),
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_shutter"])
+async def test_window_covering_calibration_button(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test button entity is created for a Matter WindowCovering calibration mode."""
+    state = hass.states.get("button.eve_shutter_switch_20eci1701_calibration_mode")
+    assert state
+    assert (
+        state.attributes["friendly_name"]
+        == "Eve Shutter Switch 20ECI1701 Calibration mode"
+    )
+
+    # test press action to enable calibration mode
+    await hass.services.async_call(
+        "button",
+        "press",
+        {
+            "entity_id": "button.eve_shutter_switch_20eci1701_calibration_mode",
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path="1/258/23",
+        value=0 | int(clusters.WindowCovering.Bitmaps.Mode.kCalibrationMode),
+    )

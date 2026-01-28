@@ -118,6 +118,9 @@
       }
     },
     "button": {
+      "calibration_mode": {
+        "name": "Calibration mode"
+      },
       "cancel_boost": {
         "name": "Cancel boost"
       },
