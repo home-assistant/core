@@ -3389,7 +3389,7 @@ async def test_max_mireds(
         (
             light.SERVICE_TURN_ON,
             "white_command_topic",
-            {"white": "255"},
+            {light.ATTR_WHITE: "255"},
             255,
             None,
             None,
@@ -3398,7 +3398,7 @@ async def test_max_mireds(
         (
             light.SERVICE_TURN_ON,
             "brightness_command_topic",
-            {"color_temp_kelvin": "5000", "brightness": "50"},
+            {light.ATTR_COLOR_TEMP_KELVIN: "5000", light.ATTR_BRIGHTNESS: "50"},
             50,
             "brightness_command_template",
             "value",
@@ -3407,7 +3407,7 @@ async def test_max_mireds(
         (
             light.SERVICE_TURN_ON,
             "effect_command_topic",
-            {"rgb_color": [255, 128, 0], "effect": "color_loop"},
+            {light.ATTR_RGB_COLOR: [255, 128, 0], light.ATTR_EFFECT: "color_loop"},
             "color_loop",
             "effect_command_template",
             "value",
@@ -3416,7 +3416,7 @@ async def test_max_mireds(
         (
             light.SERVICE_TURN_ON,
             "color_temp_command_topic",
-            {"color_temp_kelvin": "5000"},
+            {light.ATTR_COLOR_TEMP_KELVIN: "5000"},
             200,
             "color_temp_command_template",
             "value",
@@ -3425,7 +3425,7 @@ async def test_max_mireds(
         (
             light.SERVICE_TURN_ON,
             "rgb_command_topic",
-            {"rgb_color": [255, 128, 0]},
+            {light.ATTR_RGB_COLOR: [255, 128, 0]},
             "255,128,0",
             "rgb_command_template",
             "red",
@@ -3434,7 +3434,7 @@ async def test_max_mireds(
         (
             light.SERVICE_TURN_ON,
             "hs_command_topic",
-            {"rgb_color": [255, 128, 0]},
+            {light.ATTR_RGB_COLOR: [255, 128, 0]},
             "30.118,100.0",
             "hs_command_template",
             "hue",
@@ -3443,7 +3443,7 @@ async def test_max_mireds(
         (
             light.SERVICE_TURN_ON,
             "xy_command_topic",
-            {"hs_color": [30.118, 100.0]},
+            {light.ATTR_HS_COLOR: [30.118, 100.0]},
             "0.611,0.375",
             "xy_command_template",
             "x * 10",
