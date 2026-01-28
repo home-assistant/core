@@ -357,7 +357,7 @@
       "name": "Start app"
     },
     "app_stdin": {
-      "description": "Writes data to the Home Assistant app's standard input.",
+      "description": "Writes data to the standard input of a Home Assistant app.",
       "fields": {
         "app": {
           "description": "The app to write to.",
@@ -410,8 +410,8 @@
       "description": "Creates a partial backup.",
       "fields": {
         "addons": {
-          "description": "List of apps (formerly add-ons) to include in the backup. Use the slug of each app. Deprecated: use apps instead.",
-          "name": "Add-ons (deprecated)"
+          "description": "List of apps (formerly add-ons) to include in the backup. Use the slug of each app. Legacy option - use apps instead.",
+          "name": "Add-ons (legacy)"
         },
         "apps": {
           "description": "List of apps to include in the backup. Use the slug of each app.",
@@ -474,7 +474,7 @@
       "description": "Restores from a partial backup.",
       "fields": {
         "addons": {
-          "description": "List of apps (formerly add-ons) to restore from the backup. Use the slug of each app. Deprecated: use apps instead.",
+          "description": "List of apps (formerly add-ons) to restore from the backup. Use the slug of each app. Legacy option - use apps instead.",
           "name": "[%key:component::hassio::services::backup_partial::fields::addons::name%]"
         },
         "apps": {
