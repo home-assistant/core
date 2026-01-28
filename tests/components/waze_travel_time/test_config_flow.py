@@ -13,6 +13,7 @@ from homeassistant.components.waze_travel_time.const import (
     CONF_INCL_FILTER,
     CONF_ORIGIN,
     CONF_REALTIME,
+    CONF_TIME_DELTA,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
     DEFAULT_NAME,
@@ -120,6 +121,7 @@ async def test_options(hass: HomeAssistant) -> None:
             CONF_EXCL_FILTER: ["ExcludeThis"],
             CONF_INCL_FILTER: ["IncludeThis"],
             CONF_REALTIME: False,
+            CONF_TIME_DELTA: 0,
             CONF_UNITS: IMPERIAL_UNITS,
             CONF_VEHICLE_TYPE: "taxi",
         },
@@ -133,6 +135,7 @@ async def test_options(hass: HomeAssistant) -> None:
         CONF_EXCL_FILTER: ["ExcludeThis"],
         CONF_INCL_FILTER: ["IncludeThis"],
         CONF_REALTIME: False,
+        CONF_TIME_DELTA: 0.0,
         CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",
     }
@@ -144,6 +147,7 @@ async def test_options(hass: HomeAssistant) -> None:
         CONF_EXCL_FILTER: ["ExcludeThis"],
         CONF_INCL_FILTER: ["IncludeThis"],
         CONF_REALTIME: False,
+        CONF_TIME_DELTA: 0.0,
         CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",
     }
@@ -231,6 +235,7 @@ async def test_reset_filters(hass: HomeAssistant) -> None:
             CONF_AVOID_SUBSCRIPTION_ROADS: True,
             CONF_AVOID_TOLL_ROADS: True,
             CONF_REALTIME: False,
+            CONF_TIME_DELTA: 0,
             CONF_UNITS: IMPERIAL_UNITS,
             CONF_VEHICLE_TYPE: "taxi",
         },
@@ -243,6 +248,7 @@ async def test_reset_filters(hass: HomeAssistant) -> None:
         CONF_EXCL_FILTER: [""],
         CONF_INCL_FILTER: [""],
         CONF_REALTIME: False,
+        CONF_TIME_DELTA: 0.0,
         CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",
     }

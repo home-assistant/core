@@ -17,6 +17,9 @@ from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -35,6 +38,7 @@ from .const import (
     CONF_INCL_FILTER,
     CONF_ORIGIN,
     CONF_REALTIME,
+    CONF_TIME_DELTA,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
     DEFAULT_FILTER,
@@ -82,6 +86,14 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(CONF_AVOID_TOLL_ROADS): BooleanSelector(),
         vol.Optional(CONF_AVOID_SUBSCRIPTION_ROADS): BooleanSelector(),
         vol.Optional(CONF_AVOID_FERRIES): BooleanSelector(),
+        vol.Optional(CONF_TIME_DELTA): NumberSelector(
+            NumberSelectorConfig(
+                mode=NumberSelectorMode.BOX,
+                min=-10080,
+                max=10080,
+                unit_of_measurement="minutes",
+            )
+        ),
     }
 )
 
@@ -102,7 +114,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def default_options(hass: HomeAssistant) -> dict[str, str | bool | list[str]]:
+def default_options(hass: HomeAssistant) -> dict[str, str | bool | list[str] | float]:
     """Get the default options."""
     defaults = DEFAULT_OPTIONS.copy()
     if hass.config.units is US_CUSTOMARY_SYSTEM:
@@ -136,7 +148,7 @@ class WazeOptionsFlow(OptionsFlow):
 class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Waze Travel Time."""
 
-    VERSION = 2
+    VERSION = 3
 
     @staticmethod
     @callback

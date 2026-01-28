@@ -9,6 +9,7 @@ from homeassistant.components.waze_travel_time.const import (
     CONF_EXCL_FILTER,
     CONF_INCL_FILTER,
     CONF_REALTIME,
+    CONF_TIME_DELTA,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
     DEFAULT_AVOID_FERRIES,
@@ -17,6 +18,7 @@ from homeassistant.components.waze_travel_time.const import (
     DEFAULT_FILTER,
     DEFAULT_OPTIONS,
     DEFAULT_REALTIME,
+    DEFAULT_TIME_DELTA,
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
     METRIC_UNITS,
@@ -46,6 +48,7 @@ async def test_service_get_travel_times(hass: HomeAssistant) -> None:
             "region": "us",
             "units": "imperial",
             "incl_filter": ["IncludeThis"],
+            "time_delta": 60,
         },
         blocking=True,
         return_response=True,
@@ -90,7 +93,7 @@ async def test_service_get_travel_times_empty_response(
 
 
 @pytest.mark.usefixtures("mock_update")
-async def test_migrate_entry_v1_v2(hass: HomeAssistant) -> None:
+async def test_migrate_entry_v1_v3(hass: HomeAssistant) -> None:
     """Test successful migration of entry data."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -113,9 +116,10 @@ async def test_migrate_entry_v1_v2(hass: HomeAssistant) -> None:
     updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
 
     assert updated_entry.state is ConfigEntryState.LOADED
-    assert updated_entry.version == 2
+    assert updated_entry.version == 3
     assert updated_entry.options[CONF_INCL_FILTER] == DEFAULT_FILTER
     assert updated_entry.options[CONF_EXCL_FILTER] == DEFAULT_FILTER
+    assert updated_entry.options[CONF_TIME_DELTA] == DEFAULT_TIME_DELTA
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -140,6 +144,37 @@ async def test_migrate_entry_v1_v2(hass: HomeAssistant) -> None:
     updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
 
     assert updated_entry.state is ConfigEntryState.LOADED
-    assert updated_entry.version == 2
+    assert updated_entry.version == 3
     assert updated_entry.options[CONF_INCL_FILTER] == ["IncludeThis"]
     assert updated_entry.options[CONF_EXCL_FILTER] == ["ExcludeThis"]
+    assert updated_entry.options[CONF_TIME_DELTA] == DEFAULT_TIME_DELTA
+
+
+@pytest.mark.usefixtures("mock_update")
+async def test_migrate_entry_v2_v3(hass: HomeAssistant) -> None:
+    """Test successful migration of entry from version 2 to 3."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        data=MOCK_CONFIG,
+        options={
+            CONF_REALTIME: DEFAULT_REALTIME,
+            CONF_VEHICLE_TYPE: DEFAULT_VEHICLE_TYPE,
+            CONF_UNITS: METRIC_UNITS,
+            CONF_AVOID_FERRIES: DEFAULT_AVOID_FERRIES,
+            CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
+            CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
+            CONF_INCL_FILTER: DEFAULT_FILTER,
+            CONF_EXCL_FILTER: DEFAULT_FILTER,
+        },
+    )
+
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+
+    assert updated_entry.state is ConfigEntryState.LOADED
+    assert updated_entry.version == 3
+    assert updated_entry.options[CONF_TIME_DELTA] == DEFAULT_TIME_DELTA

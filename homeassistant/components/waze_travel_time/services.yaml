@@ -65,3 +65,12 @@ get_travel_times:
       selector:
         text:
           multiple: true
+    time_delta:
+      required: false
+      default: 0
+      selector:
+        number:
+          min: -10080
+          max: 10080
+          mode: box
+          unit_of_measurement: minutes

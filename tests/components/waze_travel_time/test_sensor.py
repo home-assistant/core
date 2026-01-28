@@ -11,6 +11,7 @@ from homeassistant.components.waze_travel_time.const import (
     CONF_EXCL_FILTER,
     CONF_INCL_FILTER,
     CONF_REALTIME,
+    CONF_TIME_DELTA,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
     DEFAULT_OPTIONS,
@@ -78,6 +79,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
                 CONF_AVOID_FERRIES: True,
                 CONF_INCL_FILTER: [""],
                 CONF_EXCL_FILTER: [""],
+                CONF_TIME_DELTA: 0,
             },
         )
     ],
@@ -104,6 +106,7 @@ async def test_imperial(hass: HomeAssistant) -> None:
                 CONF_AVOID_FERRIES: True,
                 CONF_INCL_FILTER: ["IncludeThis"],
                 CONF_EXCL_FILTER: [""],
+                CONF_TIME_DELTA: 0,
             },
         )
     ],
@@ -128,6 +131,7 @@ async def test_incl_filter(hass: HomeAssistant) -> None:
                 CONF_AVOID_FERRIES: True,
                 CONF_INCL_FILTER: [""],
                 CONF_EXCL_FILTER: ["ExcludeThis"],
+                CONF_TIME_DELTA: 0,
             },
         )
     ],
