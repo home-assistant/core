@@ -524,7 +524,7 @@ async def test_edit_device_with_invalid_sender_id_fails(hass: HomeAssistant) -> 
 
 
 async def test_edit_device_with_empty_name_fails(hass: HomeAssistant) -> None:
-    """Test that editing a device with empyt name will be prevented."""
+    """Test that editing a device with empty name will be prevented."""
     mock_config_entry = MockConfigEntry(
         title="",
         domain=DOMAIN,
