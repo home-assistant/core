@@ -25,6 +25,9 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
 )
 from homeassistant.util.dt import utcnow
 
@@ -352,6 +355,19 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         """Error handling for _async_setup."""
         try:
             await self._async_setup()
+
+        except (
+            OAuth2TokenRequestReauthError,
+            OAuth2TokenRequestTransientError,
+            OAuth2TokenRequestError,
+        ) as err:
+            if isinstance(err, OAuth2TokenRequestReauthError):
+                self.last_exception = err
+                self.last_update_success = False
+                # Non-recoverable error
+                raise ConfigEntryAuthFailed from err
+            raise
+
         except (
             TimeoutError,
             requests.exceptions.Timeout,
@@ -420,6 +436,36 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Timeout fetching %s data", self.name)
+                self.last_update_success = False
+
+        except (
+            OAuth2TokenRequestReauthError,
+            OAuth2TokenRequestTransientError,
+            OAuth2TokenRequestError,
+        ) as err:
+            self.last_exception = err
+            if isinstance(err, OAuth2TokenRequestReauthError):
+                # Non-recoverable error
+                auth_failed = True
+                if self.last_update_success:
+                    if log_failures:
+                        self.logger.error(
+                            "Authentication failed while fetching %s data: %s",
+                            self.name,
+                            err,
+                        )
+                    self.last_update_success = False
+                if raise_on_auth_failed:
+                    raise ConfigEntryAuthFailed from err
+
+                if self.config_entry:
+                    self.config_entry.async_start_reauth(self.hass)
+                return
+
+            # Recoverable error
+            if self.last_update_success:
+                if log_failures:
+                    self.logger.error("Error fetching %s data: %s", self.name, err)
                 self.last_update_success = False
 
         except (aiohttp.ClientError, requests.exceptions.RequestException) as err:

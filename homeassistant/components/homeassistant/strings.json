@@ -27,6 +27,15 @@
     "multiple_integration_config_errors": {
       "message": "Failed to process config for integration {domain} due to multiple ({errors}) errors. Check the logs for more information."
     },
+    "oauth2_helper_reauth_required": {
+      "message": "Credentials are invalid, re-authentication required"
+    },
+    "oauth2_helper_refresh_failed": {
+      "message": "OAuth2 token refresh failed for {domain}"
+    },
+    "oauth2_helper_refresh_transient": {
+      "message": "Temporary error refreshing credentials for {domain}, try again later"
+    },
     "platform_component_load_err": {
       "message": "Platform error: {domain} - {error}."
     },
