@@ -17,7 +17,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -47,7 +47,7 @@ TEST_STATE_TRIGGER = {
 async def async_setup_legacy_format(
     hass: HomeAssistant, count: int, climate_config: dict[str, Any]
 ) -> None:
-    """Do setup of climate integration via legacy format."""
+    """Set up climate via legacy YAML format."""
     config = {"climate": {"platform": "template", "thermostats": climate_config}}
 
     with assert_setup_component(count, climate.DOMAIN):
@@ -61,7 +61,7 @@ async def async_setup_legacy_format(
 async def async_setup_modern_format(
     hass: HomeAssistant, count: int, climate_config: dict[str, Any]
 ) -> None:
-    """Do setup of climate integration via modern format."""
+    """Set up climate via modern YAML format."""
     config = {"template": {"climate": climate_config}}
 
     with assert_setup_component(count, template.DOMAIN):
@@ -75,7 +75,7 @@ async def async_setup_modern_format(
 async def async_setup_trigger_format(
     hass: HomeAssistant, count: int, climate_config: dict[str, Any]
 ) -> None:
-    """Do setup of climate integration via trigger format."""
+    """Set up climate via trigger-based YAML format."""
     config = {"template": {**TEST_STATE_TRIGGER, "climate": climate_config}}
 
     with assert_setup_component(count, template.DOMAIN):
@@ -92,7 +92,7 @@ async def async_setup_climate_config(
     style: ConfigurationStyle,
     climate_config: dict[str, Any],
 ) -> None:
-    """Do setup of climate integration."""
+    """Set up climate for the requested configuration style."""
     if style == ConfigurationStyle.LEGACY:
         await async_setup_legacy_format(hass, count, climate_config)
     elif style == ConfigurationStyle.MODERN:
@@ -108,7 +108,7 @@ async def setup_climate(
     style: ConfigurationStyle,
     climate_config: dict[str, Any],
 ) -> None:
-    """Do setup of climate integration."""
+    """Fixture to set up a climate entity."""
     await async_setup_climate_config(hass, count, style, climate_config)
 
 
@@ -148,13 +148,12 @@ async def test_template_state_text(
     climate_config: dict[str, Any],
     entity_id: str,
 ) -> None:
-    """Test the state text of a template climate."""
+    """Test the state of a template climate."""
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == HVACMode.HEAT
 
 
-@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "style",
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
@@ -162,7 +161,7 @@ async def test_template_state_text(
 async def test_template_state_attributes(
     hass: HomeAssistant, style: ConfigurationStyle
 ) -> None:
-    """Test the state attributes of a template climate."""
+    """Test state attributes of a template climate."""
     hass.states.async_set("sensor.temp", "22")
     hass.states.async_set("sensor.target", "20")
     hass.states.async_set("sensor.mode", "cool")
@@ -219,13 +218,12 @@ async def test_template_state_attributes(
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
 
-@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "style",
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_actions(hass: HomeAssistant, style: ConfigurationStyle) -> None:
-    """Test actions of the template climate."""
+    """Test actions of a template climate."""
     assert await async_setup_component(
         hass, "input_boolean", {"input_boolean": {"test_hvac": {}}}
     )
@@ -276,13 +274,12 @@ async def test_actions(hass: HomeAssistant, style: ConfigurationStyle) -> None:
     assert hass.states.get("input_number.test_temp").state == "25.0"
 
 
-@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "style",
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_optimistic_mode(hass: HomeAssistant, style: ConfigurationStyle) -> None:
-    """Test optimistic mode when no state template is defined."""
+    """Test optimistic mode when no state templates are defined."""
     assert await async_setup_component(
         hass, "input_boolean", {"input_boolean": {"test": {}}}
     )
@@ -332,11 +329,89 @@ async def test_optimistic_mode(hass: HomeAssistant, style: ConfigurationStyle) -
     assert state.attributes[ATTR_FAN_MODE] == "high"
 
 
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_invalid_hvac_mode_logs_and_sets_unknown(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid hvac_mode logs and results in unknown state."""
+    hass.states.async_set("sensor.mode", "heat")
+    await hass.async_block_till_done()
+
+    base = {
+        "hvac_mode": "{{ states('sensor.mode') }}",
+        "hvac_modes": ["heat", "off"],
+        "set_hvac_mode": [{"action": "script.turn_on"}],
+    }
+
+    if style == ConfigurationStyle.LEGACY:
+        climate_config: dict[str, Any] = {TEST_OBJECT_ID: base}
+    else:
+        climate_config = {"name": TEST_OBJECT_ID, **base}
+
+    await async_setup_climate_config(hass, 1, style, climate_config)
+
+    caplog.clear()
+
+    hass.states.async_set("sensor.mode", "dog")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert "Received invalid climate hvac_mode" in caplog.text
+    assert "dog" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_invalid_hvac_action_logs_and_clears_attribute(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid hvac_action logs and clears attribute."""
+    hass.states.async_set("sensor.mode", "heat")
+    hass.states.async_set("sensor.action", "idle")
+    await hass.async_block_till_done()
+
+    base = {
+        "hvac_mode": "{{ states('sensor.mode') }}",
+        "hvac_action": "{{ states('sensor.action') }}",
+        "hvac_modes": ["heat", "off"],
+        "set_hvac_mode": [{"action": "script.turn_on"}],
+    }
+
+    if style == ConfigurationStyle.LEGACY:
+        climate_config: dict[str, Any] = {TEST_OBJECT_ID: base}
+    else:
+        climate_config = {"name": TEST_OBJECT_ID, **base}
+
+    await async_setup_climate_config(hass, 1, style, climate_config)
+
+    caplog.clear()
+
+    hass.states.async_set("sensor.action", "barking")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get(ATTR_HVAC_ACTION) is None
+    assert "Received invalid climate hvac_action" in caplog.text
+    assert "barking" in caplog.text
+
+
 async def test_setup_config_entry(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Tests creating a climate from a config entry."""
+    """Test creating a climate from a config entry."""
     hass.states.async_set("sensor.test_temp", "21.5", {})
     await hass.async_block_till_done()
 
