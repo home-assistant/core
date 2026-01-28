@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
+from homeassistant.components.analytics_insights import CONF_TRACKED_APPS
 from homeassistant.components.analytics_insights.const import (
     CONF_TRACKED_INTEGRATIONS,
     DOMAIN,
@@ -85,3 +86,6 @@ async def test_migration_v1_to_v2(
 
     assert addon_entity_samba_after.unique_id == "app_core_samba_active_installations"
     assert core_entity_after.unique_id == "core_youtube_active_installations"
+
+    assert "tracked_addons" not in entry.options
+    assert entry.options[CONF_TRACKED_APPS] == ["core_samba"]
