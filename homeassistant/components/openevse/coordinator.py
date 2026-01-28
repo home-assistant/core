@@ -15,7 +15,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=30)
+# Fallback polling interval - websocket provides real-time updates
+SCAN_INTERVAL = timedelta(minutes=5)
 
 type OpenEVSEConfigEntry = ConfigEntry[OpenEVSEDataUpdateCoordinator]
 
@@ -40,6 +41,21 @@ class OpenEVSEDataUpdateCoordinator(DataUpdateCoordinator[None]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
+        # Set up websocket callback for push updates
+        self.charger.callback = self._async_websocket_callback
+
+    async def _async_websocket_callback(self) -> None:
+        """Handle websocket data update."""
+        self.async_set_updated_data(None)
+
+    def start_websocket(self) -> None:
+        """Start the websocket listener."""
+        self.charger.ws_start()
+
+    async def async_stop_websocket(self) -> None:
+        """Stop the websocket listener."""
+        if self.charger.websocket:
+            await self.charger.ws_disconnect()
 
     async def _async_update_data(self) -> None:
         """Fetch data from OpenEVSE charger."""

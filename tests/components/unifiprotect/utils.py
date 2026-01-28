@@ -177,7 +177,7 @@ def add_device(
         return
 
     device._api = bootstrap.api
-    if isinstance(device, Camera):
+    if isinstance(device, Camera) and device.model is ModelType.CAMERA:
         for channel in device.channels:
             channel._api = bootstrap.api
 

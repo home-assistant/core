@@ -489,6 +489,15 @@ def test_addon_selector_schema(schema, valid_selections, invalid_selections) -> 
 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
+    [({}, ("abc123",), (None,))],
+)
+def test_app_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test app selector."""
+    _test_selector("app", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
     [({}, ("abc123", "/backup"), (None, "abc@123", "abc 123", ""))],
 )
 def test_backup_location_selector_schema(
