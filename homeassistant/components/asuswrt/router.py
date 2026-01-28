@@ -284,7 +284,7 @@ class AsusWrtRouter:
         _LOGGER.debug("Checking devices for ASUS router %s", self.host)
         try:
             wrt_devices = await self._api.async_get_connected_devices()
-        except (OSError, AsusRouterError) as exc:
+        except (ConnectionError, AsusRouterError) as exc:
             if not self._connect_error:
                 self._connect_error = True
                 _LOGGER.error(

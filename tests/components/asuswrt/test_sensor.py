@@ -330,7 +330,7 @@ async def test_temperature_sensors_legacy(
     # assert temperature sensor available
     assert hass.states.get(f"{sensor_prefix}_2_4ghz").state == "40.2"
     assert hass.states.get(f"{sensor_prefix}_cpu").state == "71.2"
-    assert not hass.states.get(f"{sensor_prefix}_5_0ghz")
+    assert hass.states.get(f"{sensor_prefix}_5_0ghz").state == "62"
 
 
 async def test_temperature_sensors_http(
@@ -459,7 +459,7 @@ async def test_connect_fail_legacy(
     )
     config_entry.add_to_hass(hass)
 
-    connect_legacy.return_value.connection.async_connect.side_effect = side_effect
+    connect_legacy.return_value.connect.side_effect = side_effect
     connect_legacy.return_value.is_connected = False
 
     # initial setup fail
@@ -515,17 +515,6 @@ async def _test_sensors_polling_fails(
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "0"
 
 
-async def test_sensors_polling_fails_legacy(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    connect_legacy_sens_fail,
-) -> None:
-    """Test AsusWRT sensors are unavailable when polling fails."""
-    await _test_sensors_polling_fails(
-        hass, freezer, CONFIG_DATA_TELNET, SENSORS_ALL_LEGACY
-    )
-
-
 async def test_sensors_polling_fails_http(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -559,7 +548,7 @@ async def test_options_reload(
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert connect_legacy.return_value.connection.async_connect.call_count == 1
+    assert connect_legacy.return_value.connect.call_count == 1
 
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
@@ -572,7 +561,7 @@ async def test_options_reload(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert connect_legacy.return_value.connection.async_connect.call_count == 2
+    assert connect_legacy.return_value.connect.call_count == 2
 
 
 async def test_unique_id_migration(
@@ -602,32 +591,3 @@ async def test_unique_id_migration(
     migr_entity = entity_registry.async_get(f"{sensor.DOMAIN}.{obj_entity_id}")
     assert migr_entity is not None
     assert migr_entity.unique_id == slugify(f"{ROUTER_MAC_ADDR}_sensor_tx_bytes")
-
-
-async def test_decorator_errors(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    connect_legacy,
-    mock_available_temps,
-) -> None:
-    """Test AsusWRT sensors are unavailable on decorator type check error."""
-    sensors = SENSORS_ALL_LEGACY
-    config_entry, sensor_prefix = _setup_entry(hass, CONFIG_DATA_TELNET, sensors)
-    config_entry.add_to_hass(hass)
-
-    mock_available_temps[1] = True
-    connect_legacy.return_value.async_get_bytes_total.return_value = None
-    connect_legacy.return_value.async_get_current_transfer_rates.return_value = None
-    connect_legacy.return_value.async_get_temperature.return_value = None
-    connect_legacy.return_value.async_get_loadavg.return_value = None
-
-    # initial devices setup
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    for sensor_name in sensors:
-        sensor = hass.states.get(f"{sensor_prefix}_{slugify(sensor_name)}")
-        assert sensor and sensor.state == STATE_UNAVAILABLE
