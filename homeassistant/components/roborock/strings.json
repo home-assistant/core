@@ -41,8 +41,14 @@
   },
   "entity": {
     "binary_sensor": {
+      "clean_box_empty": {
+        "name": "Clean water box"
+      },
       "clean_fluid_empty": {
         "name": "Cleaning fluid"
+      },
+      "dirty_box_full": {
+        "name": "Dirty water box"
       },
       "in_cleaning": {
         "name": "Cleaning"
@@ -80,6 +86,14 @@
       }
     },
     "select": {
+      "cleaning_mode": {
+        "name": "Cleaning mode",
+        "state": {
+          "mop": "Mop only",
+          "vac_and_mop": "Vacuum and mop",
+          "vacuum": "Vacuum only"
+        }
+      },
       "dust_collection_mode": {
         "name": "Empty mode",
         "state": {
@@ -120,6 +134,14 @@
       },
       "selected_map": {
         "name": "Selected map"
+      },
+      "water_flow": {
+        "name": "Water flow",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
       }
     },
     "sensor": {

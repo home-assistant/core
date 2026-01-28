@@ -832,6 +832,11 @@ ZEROCONF = {
             "domain": "hunterdouglas_powerview",
         },
     ],
+    "_prana._tcp.local.": [
+        {
+            "domain": "prana",
+        },
+    ],
     "_printer._tcp.local.": [
         {
             "domain": "brother",
