@@ -139,44 +139,119 @@ class WebexCECallStatusSensor(SensorEntity):
     @callback
     def _handle_call_feedback(self, params: dict[str, Any], feedback_id: str) -> None:
         """Handle call feedback from the device."""
-        _LOGGER.info("Received call feedback for %s: %s", self.unique_id, params)
+        _LOGGER.info("[CALL_FEEDBACK] Received for %s: %s", self.unique_id, params)
+        _LOGGER.info(
+            "[CALL_FEEDBACK] Current state BEFORE processing: %s",
+            self._attr_native_value,
+        )
 
-        try:
-            call_data = params.get("Status", {}).get("Call")
-            _LOGGER.info("Call data type: %s, value: %s", type(call_data), call_data)
-
-            # Call can be an array or None
-            if isinstance(call_data, list):
-                # Use first call if multiple
-                self._call_data = call_data[0] if call_data else None
-            elif isinstance(call_data, dict):
-                # Single call as dict
-                self._call_data = call_data
-            else:
-                # No active calls
-                self._call_data = None
-
-            _LOGGER.info("Processed call_data: %s", self._call_data)
-            self._update_state()
-        except (AttributeError, KeyError, TypeError) as err:
-            _LOGGER.warning(
-                "Unexpected call feedback format: %s, error: %s", params, err
-            )
+        # Always fetch full call status when we receive any call feedback
+        _LOGGER.info("[CALL_FEEDBACK] Triggering full call status refresh")
+        self.hass.async_create_task(self._refresh_call_status())
 
     @callback
     def _handle_conference_feedback(
         self, params: dict[str, Any], feedback_id: str
     ) -> None:
         """Handle conference feedback from the device."""
-        _LOGGER.info("Received conference feedback for %s: %s", self.unique_id, params)
+        _LOGGER.info("[CONF_FEEDBACK] Received for %s: %s", self.unique_id, params)
+        _LOGGER.info(
+            "[CONF_FEEDBACK] Current state BEFORE processing: %s",
+            self._attr_native_value,
+        )
+        _LOGGER.info("[CONF_FEEDBACK] Current call_data: %s", self._call_data)
 
         try:
             self._conference_data = params.get("Status", {}).get("Conference")
+            _LOGGER.info(
+                "[CONF_FEEDBACK] Extracted conference_data: %s", self._conference_data
+            )
             self._update_state()
         except (AttributeError, KeyError, TypeError) as err:
             _LOGGER.warning(
-                "Unexpected conference feedback format: %s, error: %s", params, err
+                "[CONF_FEEDBACK] Unexpected conference feedback format: %s, error: %s",
+                params,
+                err,
             )
+
+    async def _refresh_conference_status(self) -> None:
+        """Refresh conference status by querying the device."""
+        try:
+            _LOGGER.info(
+                "[CONF_REFRESH] Starting conference status refresh for %s",
+                self.unique_id,
+            )
+            _LOGGER.info(
+                "[CONF_REFRESH] Current conference_data BEFORE query: %s",
+                self._conference_data,
+            )
+            conference_status = await self._client.xget(["Status", "Conference"])
+            self._conference_data = conference_status
+            _LOGGER.info(
+                "[CONF_REFRESH] Retrieved conference data from device: %s",
+                self._conference_data,
+            )
+            _LOGGER.info("[CONF_REFRESH] Calling _update_state after refresh")
+            self._update_state()
+        except Exception as err:  # noqa: BLE001 - Broad exception OK for background task
+            _LOGGER.warning(
+                "[CONF_REFRESH] Could not refresh conference status: %s", err
+            )
+            # Still update state with what we have
+            _LOGGER.info(
+                "[CONF_REFRESH] Calling _update_state after error (with existing data)"
+            )
+            self._update_state()
+
+    async def _refresh_call_status(self) -> None:
+        """Refresh call status by querying the device."""
+        try:
+            _LOGGER.info(
+                "[CALL_REFRESH] Starting call status refresh for %s",
+                self.unique_id,
+            )
+            _LOGGER.info(
+                "[CALL_REFRESH] Current call_data BEFORE query: %s",
+                self._call_data,
+            )
+
+            # Fetch full Call status
+            call_status = await self._client.xget(["Status", "Call"])
+
+            # Process call status (handle list or dict)
+            if isinstance(call_status, list):
+                self._call_data = call_status[0] if call_status else None
+            elif isinstance(call_status, dict):
+                self._call_data = call_status
+            else:
+                self._call_data = None
+
+            _LOGGER.info(
+                "[CALL_REFRESH] Retrieved call data from device: %s",
+                self._call_data,
+            )
+
+            # If call data is None, also refresh conference status
+            if self._call_data is None:
+                _LOGGER.info(
+                    "[CALL_REFRESH] Call data is None, also refreshing conference"
+                )
+                conference_status = await self._client.xget(["Status", "Conference"])
+                self._conference_data = conference_status
+                _LOGGER.info(
+                    "[CALL_REFRESH] Retrieved conference data: %s",
+                    self._conference_data,
+                )
+
+            _LOGGER.info("[CALL_REFRESH] Calling _update_state after refresh")
+            self._update_state()
+        except Exception as err:  # noqa: BLE001 - Broad exception OK for background task
+            _LOGGER.warning("[CALL_REFRESH] Could not refresh call status: %s", err)
+            # Still update state with what we have
+            _LOGGER.info(
+                "[CALL_REFRESH] Calling _update_state after error (with existing data)"
+            )
+            self._update_state()
 
     def _extract_call_attributes(self) -> dict[str, Any]:
         """Extract attributes from call data."""
@@ -243,15 +318,63 @@ class WebexCECallStatusSensor(SensorEntity):
     def _update_state(self) -> None:
         """Update the sensor state and attributes based on call and conference data."""
         attributes = {}
-        _LOGGER.info("Updating state, call_data: %s", self._call_data)
+        _LOGGER.info(
+            "[UPDATE_STATE] === Starting state update ===",
+        )
+        _LOGGER.info("[UPDATE_STATE] Current state: %s", self._attr_native_value)
+        _LOGGER.info("[UPDATE_STATE] call_data: %s", self._call_data)
+        _LOGGER.info("[UPDATE_STATE] conference_data: %s", self._conference_data)
+
+        # Check if there's an active conference even if call_data is None
+        has_active_conference = False
+        if self._conference_data and isinstance(self._conference_data, dict):
+            # Check if there's an active meeting with actual data
+            active_meeting = self._conference_data.get("ActiveMeeting")
+            # ActiveMeeting should be a dict with at least a Name or Id
+            has_meeting = isinstance(active_meeting, dict) and (
+                active_meeting.get("Name") or active_meeting.get("Id")
+            )
+            _LOGGER.info(
+                "[UPDATE_STATE] Active meeting check: active_meeting=%s, has_meeting=%s",
+                active_meeting,
+                has_meeting,
+            )
+
+            # Check if there's conference call info (list with items or non-empty dict)
+            call_info = self._conference_data.get("Call")
+            has_call = (isinstance(call_info, list) and len(call_info) > 0) or (
+                isinstance(call_info, dict) and call_info
+            )
+            _LOGGER.info(
+                "[UPDATE_STATE] Conference call check: call_info=%s, type=%s, has_call=%s",
+                call_info,
+                type(call_info),
+                has_call,
+            )
+
+            has_active_conference = has_meeting or has_call
+            _LOGGER.info(
+                "[UPDATE_STATE] Final has_active_conference: %s",
+                has_active_conference,
+            )
 
         if self._call_data:
             # Extract call status
             status = self._call_data.get("Status", "").lower()
-            _LOGGER.info("Call status (lowercased): %s", status)
+            answer_state = self._call_data.get("AnswerState", "")
+            _LOGGER.info("[UPDATE_STATE] Branch: HAS CALL DATA")
+            _LOGGER.info("[UPDATE_STATE] Call status (lowercased): %s", status)
+            _LOGGER.info("[UPDATE_STATE] AnswerState: %s", answer_state)
 
+            # If AnswerState is Answered, the call is connected regardless of Status field
+            # (Status field may not be present once call is established)
+            if answer_state == "Answered":
+                self._attr_native_value = "connected"
+                _LOGGER.info(
+                    "[UPDATE_STATE] AnswerState is Answered, setting to connected"
+                )
             # Map status to our states
-            if status in ("connected", "connected"):
+            elif status in ("connected", "connected"):
                 self._attr_native_value = "connected"
             elif status in ("ringing", "alerting"):
                 self._attr_native_value = "ringing"
@@ -264,7 +387,9 @@ class WebexCECallStatusSensor(SensorEntity):
             else:
                 self._attr_native_value = status or "idle"
 
-            _LOGGER.info("Set native_value to: %s", self._attr_native_value)
+            _LOGGER.info(
+                "[UPDATE_STATE] Set native_value to: %s", self._attr_native_value
+            )
 
             # Extract call attributes
             attributes.update(self._extract_call_attributes())
@@ -280,14 +405,44 @@ class WebexCECallStatusSensor(SensorEntity):
                 duration = dt_util.utcnow() - self._call_start_time
                 attributes["duration"] = str(duration).split(".", maxsplit=1)[0]
                 attributes["duration_seconds"] = int(duration.total_seconds())
+        elif has_active_conference:
+            # No call_data but there's an active conference/meeting
+            # Keep the state as connected and maintain call start time
+            _LOGGER.info("[UPDATE_STATE] Branch: HAS ACTIVE CONFERENCE (no call_data)")
+            _LOGGER.info(
+                "[UPDATE_STATE] Setting state to connected due to active conference"
+            )
+            self._attr_native_value = "connected"
+
+            # Start timing from now if we don't have a start time
+            if not self._call_start_time:
+                self._call_start_time = dt_util.utcnow()
+                _LOGGER.info(
+                    "[UPDATE_STATE] Started call timer: %s", self._call_start_time
+                )
+
+            # Calculate duration
+            if self._call_start_time:
+                duration = dt_util.utcnow() - self._call_start_time
+                attributes["duration"] = str(duration).split(".", maxsplit=1)[0]
+                attributes["duration_seconds"] = int(duration.total_seconds())
+                _LOGGER.info(
+                    "[UPDATE_STATE] Duration: %s seconds",
+                    attributes["duration_seconds"],
+                )
         else:
-            # No active call
+            # No active call or conference
+            _LOGGER.info("[UPDATE_STATE] Branch: NO CALL AND NO CONFERENCE")
+            _LOGGER.info("[UPDATE_STATE] Setting state to idle")
             self._attr_native_value = "idle"
             self._call_start_time = None
 
         # Add conference information
         attributes.update(self._extract_conference_attributes())
 
+        _LOGGER.info("[UPDATE_STATE] Final state: %s", self._attr_native_value)
+        _LOGGER.info("[UPDATE_STATE] Final attributes: %s", attributes)
+        _LOGGER.info("[UPDATE_STATE] === End state update ===")
         self._attr_extra_state_attributes = attributes
         self.async_write_ha_state()
 
