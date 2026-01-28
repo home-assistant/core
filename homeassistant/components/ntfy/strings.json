@@ -299,6 +299,9 @@
     },
     "timeout_error": {
       "message": "Failed to connect to ntfy service due to a connection timeout"
+    },
+    "too_many_actions": {
+      "message": "Too many actions defined. A maximum of 3 is supported"
     }
   },
   "issues": {
@@ -315,6 +318,19 @@
     }
   },
   "selector": {
+    "actions": {
+      "fields": {
+        "action": "Action type",
+        "body": "Body of the HTTP request ('http' action only)",
+        "clear": "Clear notification after action button is tapped",
+        "extras": "Extras to include in the intent as key-value pairs ('broadcast' action only)",
+        "headers": "Additional HTTP headers as key-value pairs ('http' action only)",
+        "intent": "Android intent to send when the 'broadcast' action is triggered",
+        "label": "Label of the action button",
+        "method": "HTTP method to use for the 'http' action",
+        "url": "URL to open for the 'view' action or to request for the 'http' action"
+      }
+    },
     "priority": {
       "options": {
         "1": "Minimum",
@@ -349,6 +365,10 @@
     "publish": {
       "description": "Publishes a notification message to a ntfy topic",
       "fields": {
+        "actions": {
+          "description": "Up to three actions ('view', 'broadcast', or 'http') can be added as buttons below the notification. Actions are executed when the corresponding button is tapped or clicked.",
+          "name": "Action buttons"
+        },
         "attach": {
           "description": "Attach images or other files by URL.",
           "name": "Attachment URL"

@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aiontfy import Message
+from aiontfy import BroadcastAction, HttpAction, Message, ViewAction
 from aiontfy.exceptions import (
     NtfyException,
     NtfyHTTPError,
@@ -34,7 +34,7 @@ from .entity import NtfyBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-
+MAX_ACTIONS_ALLOWED = 3  # ntfy only supports up to 3 actions per notification
 
 SERVICE_PUBLISH = "publish"
 SERVICE_CLEAR = "clear"
@@ -49,7 +49,52 @@ ATTR_MARKDOWN = "markdown"
 ATTR_PRIORITY = "priority"
 ATTR_TAGS = "tags"
 ATTR_SEQUENCE_ID = "sequence_id"
+ATTR_ACTIONS = "actions"
+ATTR_ACTION = "action"
+ATTR_VIEW = "view"
+ATTR_BROADCAST = "broadcast"
+ATTR_HTTP = "http"
+ATTR_LABEL = "label"
+ATTR_URL = "url"
+ATTR_CLEAR = "clear"
+ATTR_INTENT = "intent"
+ATTR_EXTRAS = "extras"
+ATTR_METHOD = "method"
+ATTR_HEADERS = "headers"
+ATTR_BODY = "body"
+ACTIONS_MAP = {
+    ATTR_VIEW: ViewAction,
+    ATTR_BROADCAST: BroadcastAction,
+    ATTR_HTTP: HttpAction,
+}
 
+ACTION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_LABEL): cv.string,
+        vol.Optional(ATTR_CLEAR, default=False): cv.boolean,
+    }
+)
+VIEW_SCHEMA = ACTION_SCHEMA.extend(
+    {
+        vol.Optional(ATTR_ACTION): vol.All(str, "view"),
+        vol.Required(ATTR_URL): cv.url,
+    }
+)
+BROADCAST_SCHEMA = ACTION_SCHEMA.extend(
+    {
+        vol.Optional(ATTR_ACTION): vol.All(str, "broadcast"),
+        vol.Optional(ATTR_INTENT): cv.string,
+        vol.Optional(ATTR_EXTRAS): dict[str, str],
+    }
+)
+HTTP_SCHEMA = VIEW_SCHEMA.extend(
+    {
+        vol.Optional(ATTR_ACTION): vol.All(str, "http"),
+        vol.Optional(ATTR_METHOD): cv.string,
+        vol.Optional(ATTR_HEADERS): dict[str, str],
+        vol.Optional(ATTR_BODY): cv.string,
+    }
+)
 SERVICE_PUBLISH_SCHEMA = cv.make_entity_service_schema(
     {
         vol.Optional(ATTR_TITLE): cv.string,
@@ -67,6 +112,9 @@ SERVICE_PUBLISH_SCHEMA = cv.make_entity_service_schema(
         vol.Optional(ATTR_CALL): cv.string,
         vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
         vol.Optional(ATTR_SEQUENCE_ID): cv.string,
+        vol.Optional(ATTR_ACTIONS): vol.All(
+            cv.ensure_list, [vol.Any(VIEW_SCHEMA, BROADCAST_SCHEMA, HTTP_SCHEMA)]
+        ),
     }
 )
 
@@ -144,6 +192,17 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                     translation_domain=DOMAIN,
                     translation_key="delay_no_call",
                 )
+
+        actions: list[dict[str, Any]] | None = params.get(ATTR_ACTIONS)
+        if actions:
+            if len(actions) > MAX_ACTIONS_ALLOWED:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="too_many_actions",
+                )
+            params["actions"] = [
+                ACTIONS_MAP[action.pop(ATTR_ACTION)](**action) for action in actions
+            ]
 
         msg = Message(topic=self.topic, **params)
         try:

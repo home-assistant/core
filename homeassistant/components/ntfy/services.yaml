@@ -88,6 +88,59 @@ publish:
           type: url
           autocomplete: url
       example: https://example.org/logo.png
+    actions:
+      selector:
+        object:
+          label_field: "label"
+          description_field: "url"
+          multiple: true
+          translation_key: actions
+          fields:
+            action:
+              selector:
+                select:
+                  options:
+                    - value: view
+                      label: Open website/app
+                    - value: broadcast
+                      label: Send Android broadcast
+                    - value: http
+                      label: Send HTTP request
+                  translation_key: action_type
+                  mode: dropdown
+            label:
+              selector:
+                text:
+              required: true
+            url:
+              selector:
+                text:
+                  type: url
+            intent:
+              selector:
+                text:
+            extras:
+              selector:
+                object:
+            method:
+              selector:
+                select:
+                  options:
+                    - GET
+                    - POST
+                    - PUT
+                    - DELETE
+                  custom_value: true
+            headers:
+              selector:
+                object:
+            body:
+              selector:
+                text:
+                  multiline: true
+            clear:
+              selector:
+                boolean:
     sequence_id:
       required: false
       selector:
