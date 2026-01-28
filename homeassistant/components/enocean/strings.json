@@ -4,7 +4,7 @@
       "invalid_dongle_path": "Invalid dongle path"
     },
     "error": {
-      "invalid_dongle_path": "No valid dongle found for this path"
+      "invalid_dongle_path": "Could not connect to EnOcean dongle. Verify the path or network URL is correct and the device is accessible."
     },
     "flow_title": "{name}",
     "step": {
@@ -13,18 +13,18 @@
           "device": "USB dongle"
         },
         "data_description": {
-          "device": "Path to your EnOcean USB dongle."
+          "device": "Path to your EnOcean dongle. Supports local USB devices and network serial connections."
         },
         "description": "Select your EnOcean USB dongle."
       },
       "manual": {
         "data": {
-          "device": "[%key:component::enocean::config::step::detect::data::device%]"
+          "device": "Device path or network URL"
         },
         "data_description": {
-          "device": "[%key:component::enocean::config::step::detect::data_description::device%]"
+          "device": "Path to your EnOcean dongle.\n\nExamples:\n• Local USB: `/dev/ttyUSB0` or `/dev/serial/by-id/usb-EnOcean_...`\n• Network (RFC2217): `rfc2217://hostname:port`\n• Network (raw socket): `socket://hostname:port`"
         },
-        "description": "Enter the path to your EnOcean USB dongle."
+        "description": "Enter the path to your EnOcean dongle or network URL for remote access."
       }
     }
   },
