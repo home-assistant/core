@@ -48,6 +48,16 @@
         }
       }
     },
+    "select": {
+      "timetable": {
+        "name": "Schedule Days",
+        "state": {
+          "one_day": "Mon - Sun",
+          "seven_day": "Mon, Tue, Wed, Thu, Fri, Sat, Sun",
+          "three_day": "Mon - Fri, Sat, Sun"
+        }
+      }
+    },
     "sensor": {
       "ac": {
         "name": "AC"
