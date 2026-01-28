@@ -288,17 +288,17 @@ async def test_browse_media_metadata_backfill(
         )
 
     assert media.children
-    file_item = next(child for child in media.children if child["title"] == "Test Song")
-    assert file_item["title"] == "Test Song"
-    assert file_item["media_metadata"]["artist"] == "Test Artist"
-    assert file_item["thumbnail"].endswith("track.mp3.ha_cover.jpg")
+    file_item = next(child for child in media.children if child.title == "Test Song")
+    assert file_item.title == "Test Song"
+    assert file_item.media_metadata["artist"] == "Test Artist"
+    assert file_item.thumbnail.endswith("track.mp3.ha_cover.jpg")
 
     meta_file = metadata_path(track)
     assert meta_file.exists()
     cover_file = track.with_name("track.mp3.ha_cover.jpg")
     assert cover_file.exists()
 
-    child_ids = {child["media_content_id"] for child in media.children}
+    child_ids = {child.media_content_id for child in media.children}
     assert f"{const.URI_SCHEME}{const.DOMAIN}/test_dir/{meta_file.name}" not in child_ids
     assert (
         f"{const.URI_SCHEME}{const.DOMAIN}/test_dir/{cover_file.name}" not in child_ids
