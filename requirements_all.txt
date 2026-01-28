@@ -704,7 +704,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.16.0
+bthome-ble==3.17.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
