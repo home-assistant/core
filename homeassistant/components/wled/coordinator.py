@@ -99,7 +99,10 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 return
 
             try:
-                await self.wled.listen(callback=self.async_set_updated_data)
+                # Stop polling as long as we have a websocket. WS will push
+                # updates to us
+                self.update_interval = None
+                await self.wled.listen(callback=websocket_data_update)
             except WLEDConnectionClosedError as err:
                 self.last_update_success = False
                 self.logger.info(err)
@@ -107,6 +110,10 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 self.last_update_success = False
                 self.async_update_listeners()
                 self.logger.error(err)
+            finally:
+                # Pull data immediately and restart polling
+                self.update_interval = SCAN_INTERVAL
+                self.hass.async_create_task(self.async_request_refresh())
 
             # Ensure we are disconnected
             await self.wled.disconnect()
@@ -118,6 +125,18 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             """Close WebSocket connection."""
             self.unsub = None
             await self.wled.disconnect()
+
+        presets_last_modified = None
+
+        def websocket_data_update(device: WLEDDevice) -> None:
+            self.async_set_updated_data(device)
+
+            # If Presets timestamp changes, update presets by polling (wled.update).
+            # Needed until https://github.com/frenck/python-wled/pull/1931 lands
+            nonlocal presets_last_modified
+            if presets_last_modified != device.info.filesystem.last_modified:
+                presets_last_modified = device.info.filesystem.last_modified
+                self.hass.async_create_task(self.async_request_refresh())
 
         # Clean disconnect WebSocket on Home Assistant shutdown
         self.unsub = self.hass.bus.async_listen_once(
