@@ -4,15 +4,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from html import unescape
-import json
 from typing import Any
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
-from defusedxml import ElementTree as ET
 from wiim.consts import (
-    AUDIO_AUX_MODE_IDS,
-    CMD_TO_MODE_MAP,
     PLAY_MEDIUMS_CTRL,
     SUPPORTED_INPUT_MODES_BY_MODEL,
     SUPPORTED_OUTPUT_MODES_BY_MODEL,
@@ -22,12 +17,10 @@ from wiim.consts import (
     InputMode,
     LoopMode as SDKLoopMode,
     PlayingStatus as SDKPlayingStatus,
-    PlayMediumToInputMode,
     WiimHttpCommand,
     wiimDeviceType,
 )
 from wiim.exceptions import WiimException, WiimRequestException
-from wiim.handler import parse_last_change_event
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components import media_source
@@ -262,6 +255,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._attr_is_volume_muted = self._device.is_muted
 
         # Determine current group role (leader/follower/standalone)
+        group_info = None
         wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
         is_current_device_leader = False
         if wiim_data and wiim_data.controller:
@@ -299,6 +293,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             if current_loop_mode is not None:
                 self.fromIntToRepeatShuffle(current_loop_mode)
 
+            # Output Mode
+            self._attr_sound_mode = self._device.output_mode
+
             # Current Track Info / Media Metadata
             if self._device.current_track_info:
                 self._attr_media_title = self._device.current_track_info.get("title")
@@ -313,7 +310,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self._attr_media_content_type = MediaType.MUSIC
                 self._attr_media_duration = self._device.current_track_duration
                 self._attr_media_position = self._device.current_position
-                # if self._attr_state in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
                 if self._attr_state == MediaPlayerState.PLAYING:
                     self._attr_media_position_updated_at = utcnow()
             else:
@@ -416,67 +412,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
     async def _update_output_mode(self) -> None:
         if self._device.supports_http_api:
-            try:
-                response = await self._device.get_audio_output_hw_mode()
-                hardware_output_mode: dict[str, Any] = {}
-                if isinstance(response, dict):
-                    hardware_output_mode = response
-                elif isinstance(response, str):
-                    try:
-                        hardware_output_mode = json.loads(response)
-                    except ValueError:
-                        SDK_LOGGER.warning(
-                            "Device %s: Failed to parse output mode JSON: %s",
-                            self.entity_id,
-                            response,
-                        )
-                        return
-
-                hardware = hardware_output_mode.get("hardware")
-                if hardware is None:
-                    output_mode = 0
-                else:
-                    output_mode = int(hardware)
-                source = hardware_output_mode.get("source")
-                if source is None:
-                    source_mode = 0
-                else:
-                    source_mode = int(source)
-                if source_mode == 1:
-                    self._attr_sound_mode = AudioOutputHwMode.OTHER_OUT.display_name  # type: ignore[attr-defined]
-                elif (
-                    self._attr_unique_id
-                    and any(key in self._attr_unique_id for key in AUDIO_AUX_MODE_IDS)
-                    and output_mode == 2
-                ):
-                    self._attr_sound_mode = AudioOutputHwMode.SPEAKER_OUT.display_name  # type: ignore[attr-defined]
-                else:
-
-                    def get_output_mode_display_name_by_cmd(
-                        cmd: int,
-                    ) -> str:
-                        mode = CMD_TO_MODE_MAP.get(cmd)
-                        if mode:
-                            return mode.display_name  # type: ignore[attr-defined]
-                        return AudioOutputHwMode.OTHER_OUT.display_name  # type: ignore[attr-defined]
-
-                    try:
-                        self._attr_sound_mode = get_output_mode_display_name_by_cmd(
-                            output_mode
-                        )
-                    except ValueError:
-                        self._attr_sound_mode = AudioOutputHwMode.OTHER_OUT.display_name  # type: ignore[attr-defined]
-                        SDK_LOGGER.debug("Output mode is out range.")
-            except WiimRequestException as e:
-                SDK_LOGGER.error(
-                    f"Device {self.entity_id}: Failed to get initial HTTP output mode: {e}"
-                )
-            except Exception as e:
-                SDK_LOGGER.error(
-                    f"Device {self.entity_id}: Unexpected error fetching initial HTTP output mode: {e}",
-                    exc_info=True,
-                )
-                raise
+            self._attr_sound_mode = await self._device.get_audio_output_hw_mode()
         else:
             SDK_LOGGER.error(
                 f"Device {self.entity_id}: HTTP API not available for initial output mode fetch."
@@ -504,38 +440,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
             self.hass.async_create_task(_wrapped())
 
-    async def _sync_device_duration_and_position(self):
-        try:
-            # Call GetPositionInfo directly on the AVTransport service
-            position_response = await self._device.async_set_AVT_cmd(
-                WiimHttpCommand.POSITION_INFO
-            )
-            position_str = position_response.get("RelTime")
-            duration_str = position_response.get("TrackDuration")
-            if position_str:
-                position = self._device.parse_duration(position_str)
-                position = max(position, 0)
-                duration = self._device.parse_duration(duration_str)
-                self._device.current_position = position
-                self._device.current_track_duration = duration
-                self._attr_media_duration = duration
-                self._attr_media_position = position
-                # self._attr_media_position_updated_at = utcnow()
-                SDK_LOGGER.debug(
-                    f"Device {self.entity_id}: Fetched position {position} from GetPositionInfo after play command."
-                )
-            else:
-                SDK_LOGGER.debug(
-                    f"Device {self.entity_id}: No RelTime in GetPositionInfo response after play command."
-                )
-        except Exception as e:
-            SDK_LOGGER.warning(
-                f"Device {self.entity_id}: Failed to get position info from GetPositionInfo after play: {e}"
-            )
-            raise
-
-        self._update_ha_state_from_sdk_cache()
-
     @callback
     def _handle_sdk_av_transport_event(
         self, service: UpnpService, state_variables: list[UpnpStateVariable]
@@ -545,30 +449,14 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         This method updates the internal SDK device state based on events,
         then triggers a full HA state refresh from the device's cache.
         """
-        SDK_LOGGER.debug(
-            "Device %s: Received AVTransport event: %s", self.entity_id, state_variables
-        )
-        last_change_sv = next(
-            (sv for sv in state_variables if sv.name == "LastChange"), None
-        )
-        if not last_change_sv or last_change_sv.value is None:
-            SDK_LOGGER.debug(
-                "Device %s: No LastChange in AVTransport event or value is None.",
-                self.entity_id,
-            )
-            return
 
-        try:
-            event_data = parse_last_change_event(str(last_change_sv.value), SDK_LOGGER)
-        except Exception as e:
-            SDK_LOGGER.error(
-                "Device %s: Error parsing AVTransport LastChange event: %s. Data: %s",
-                self.entity_id,
-                e,
-                last_change_sv.value,
-                exc_info=True,
-            )
-            raise
+        SDK_LOGGER.debug(
+            "Device %s: Received AVTransport event: %s",
+            self.entity_id,
+            self._device.event_data,
+        )
+
+        event_data = self._device.event_data
 
         if "TransportState" in event_data:
             sdk_status_str = event_data["TransportState"]
@@ -581,19 +469,12 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     )
                     self._device.current_position = 0
                     self._device.current_track_duration = 0
-                    # self._device.current_track_info = {}
                     self._attr_media_position_updated_at = None
-                    # self._attr_media_title = None
-                    # self._attr_media_artist = None
-                    # self._attr_media_album_name = None
-                    # self._attr_media_image_url = None
-                    # self._attr_media_content_id = None
-                    # self._attr_media_content_type = None
                     self._attr_media_duration = None
                     self._attr_media_position = None
                 elif sdk_status in {SDKPlayingStatus.PAUSED, SDKPlayingStatus.PLAYING}:
                     self.hass.async_create_task(
-                        self._sync_device_duration_and_position()
+                        self._device.sync_device_duration_and_position()
                     )
             except ValueError:
                 SDK_LOGGER.warning(
@@ -601,140 +482,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     self.entity_id,
                     sdk_status_str,
                 )
-
-        if "CurrentTrackDuration" in event_data:
-            duration = self._device.parse_duration(event_data["CurrentTrackDuration"])
-            self._device.current_track_duration = duration
-
-        if "RelativeTimePosition" in event_data:
-            position = self._device.parse_duration(event_data["RelativeTimePosition"])
-            position = max(position, 0)
-            self._device.current_position = position
-            self._attr_media_position_updated_at = utcnow()
-
-        if "A_ARG_TYPE_SeekTarget" in event_data:
-            position_str = event_data["A_ARG_TYPE_SeekTarget"]
-            SDK_LOGGER.debug(
-                f"Device {self.entity_id}: Using A_ARG_TYPE_SeekTarget: {position_str}"
-            )
-
-            if position_str:
-                try:
-                    position = self._device.parse_duration(position_str)
-                    self._device.current_position = position
-                    self._attr_media_position_updated_at = utcnow()
-                    SDK_LOGGER.debug(
-                        f"Device {self.entity_id}: Updated media position to {position} seconds."
-                    )
-                except ValueError:
-                    SDK_LOGGER.warning(
-                        f"Device {self.entity_id}: Could not parse position string '{position_str}'."
-                    )
-
-        if "PlaybackStorageMedium" in event_data:
-            playMedium = PlayMediumToInputMode.get(
-                event_data["PlaybackStorageMedium"], 1
-            )
-            new_mode = InputMode(playMedium)  # type: ignore[call-arg]
-            self._device.play_mode = new_mode.display_name  # type: ignore[attr-defined]
-
-        # Prioritize AVTransportURIMetaData for media metadata if available, otherwise fallback to CurrentTrackMetaData
-        media_metadata_key = None
-        if event_data.get("AVTransportURIMetaData"):
-            media_metadata_key = "AVTransportURIMetaData"
-        elif event_data.get("CurrentTrackMetaData"):
-            media_metadata_key = "CurrentTrackMetaData"
-
-        if media_metadata_key:
-            try:
-                meta = event_data[media_metadata_key]
-                if isinstance(meta, str):
-                    SDK_LOGGER.warning(
-                        "Device %s: %s is raw XML in event, not parsed by SDK. Attempting to parse.",
-                        self.entity_id,
-                        media_metadata_key,
-                    )
-                    try:
-                        root = ET.fromstring(unescape(meta))
-                        didl_ns = {
-                            "didl": "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/",
-                            "dc": "http://purl.org/dc/elements/1.1/",
-                            "upnp": "urn:schemas-upnp-org:metadata-1-0/upnp/",
-                        }
-                        item_elem = root.find("didl:item", namespaces=didl_ns)
-                        if item_elem is not None:
-                            res_elem = item_elem.find("res", namespaces=didl_ns)
-                        else:
-                            res_elem = None
-
-                        duration_str = (
-                            res_elem.get("duration", "") if res_elem is not None else ""
-                        )
-                        try:
-                            duration = int(duration_str) if duration_str else 0
-                        except ValueError:
-                            duration = 0
-
-                        if item_elem:
-                            meta = {
-                                "title": item_elem.findtext(
-                                    "dc:title", default="", namespaces=didl_ns
-                                ),
-                                "artist": item_elem.findtext(
-                                    "upnp:artist", default="", namespaces=didl_ns
-                                ),
-                                "album": item_elem.findtext(
-                                    "upnp:album", default="", namespaces=didl_ns
-                                ),
-                                "albumArtURI": item_elem.findtext(
-                                    "upnp:albumArtURI", default="", namespaces=didl_ns
-                                ),
-                                "res": item_elem.findtext(
-                                    "res", default="", namespaces=didl_ns
-                                ),
-                                "duration": duration,
-                            }
-                        else:
-                            SDK_LOGGER.warning(
-                                "Device %s: No 'item' element found in parsed %s XML.",
-                                self.entity_id,
-                                media_metadata_key,
-                            )
-                            meta = {}
-                    except ET.ParseError as xml_e:
-                        SDK_LOGGER.error(
-                            "Device %s: Failed to parse XML from %s: %s",
-                            self.entity_id,
-                            media_metadata_key,
-                            xml_e,
-                        )
-                        meta = {}
-
-                # Update the device's internal current_track_info dictionary
-                self._device.current_track_info = {
-                    "title": meta.get("title"),
-                    "artist": meta.get("artist"),
-                    "album": meta.get("album"),
-                    "uri": meta.get("res"),
-                    "duration": (
-                        self._device.parse_duration(meta.get("duration"))
-                        if meta.get("duration")
-                        else None
-                    ),
-                    "albumArtURI": self._device.make_absolute_url(
-                        meta.get("albumArtURI")
-                    ),
-                }
-
-            except Exception as e:
-                SDK_LOGGER.error(
-                    "Device %s: Error processing metadata from %s AVTransport event: %s",
-                    self.entity_id,
-                    media_metadata_key,
-                    e,
-                    exc_info=True,
-                )
-                raise
 
         self._update_ha_state_from_sdk_cache()
 
@@ -748,130 +495,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self.entity_id,
             state_variables,
         )
-        last_change_sv = next(
-            (sv for sv in state_variables if sv.name == "LastChange"), None
-        )
-        if not last_change_sv or last_change_sv.value is None:
-            SDK_LOGGER.debug(
-                "Device %s: No LastChange in RenderingControl event or value is None.",
-                self.entity_id,
-            )
-            return
-
-        try:
-            event_data = parse_last_change_event(str(last_change_sv.value), SDK_LOGGER)
-        except Exception as e:
-            SDK_LOGGER.error(
-                "Device %s: Error parsing RenderingControl LastChange event: %s. Data: %s",
-                self.entity_id,
-                e,
-                last_change_sv.value,
-                exc_info=True,
-            )
-            raise
-
-        # Update _device's internal state
-        if "Volume" in event_data:
-            vol_data = event_data["Volume"]
-            master_volume_val = None
-            if isinstance(vol_data, list):
-                master_channel_vol = next(
-                    (
-                        ch_vol
-                        for ch_vol in vol_data
-                        if ch_vol.get("channel") == "Master"
-                    ),
-                    None,
-                )
-                if master_channel_vol:
-                    master_volume_val = master_channel_vol.get("val")
-            elif isinstance(vol_data, dict):
-                master_volume_val = vol_data.get("val")
-
-            if master_volume_val is not None:
-                try:
-                    self._device.volume = int(master_volume_val)
-                except ValueError:
-                    SDK_LOGGER.warning(
-                        "Device %s: Invalid volume value from event: %s",
-                        self.entity_id,
-                        master_volume_val,
-                    )
-
-        if "Mute" in event_data:
-            mute_data = event_data["Mute"]
-            master_mute_val = None
-            if isinstance(mute_data, list):
-                master_channel_mute = next(
-                    (
-                        ch_mute
-                        for ch_mute in mute_data
-                        if ch_mute.get("channel") == "Master"
-                    ),
-                    None,
-                )
-                if master_channel_mute:
-                    master_mute_val = master_channel_mute.get("val")
-            elif isinstance(mute_data, dict):
-                master_mute_val = mute_data.get("val")
-
-            if master_mute_val is not None:
-                new_mute_state = str(master_mute_val) == "1" or master_mute_val is True
-                self._device.is_muted = new_mute_state
-
-        commonevent_str = event_data.get("commonevent")
-        if not commonevent_str:
-            self._update_ha_state_from_sdk_cache()
-            return
-
-        try:
-            commonevent = json.loads(commonevent_str)
-            category = commonevent.get("category")
-            body = commonevent.get("body", {})
-
-            if category == "bluetooth":
-                connected = body.get("connected")
-                if connected == 1:
-                    self._attr_sound_mode = AudioOutputHwMode.OTHER_OUT.display_name  # type: ignore[attr-defined]
-
-            elif category == "hardware":
-                output_mode_val = body.get("output_mode")
-                if output_mode_val is not None:
-                    try:
-                        if (
-                            self._attr_unique_id
-                            and any(
-                                key in self._attr_unique_id
-                                for key in AUDIO_AUX_MODE_IDS
-                            )
-                            and output_mode_val == "AUDIO_OUTPUT_AUX_MODE"
-                        ):
-                            self._attr_sound_mode = (
-                                AudioOutputHwMode.SPEAKER_OUT.display_name  # type: ignore[attr-defined]
-                            )
-                        else:
-                            self._attr_sound_mode = (
-                                self.get_display_name_by_command_str(output_mode_val)
-                            )
-
-                    except ValueError:
-                        SDK_LOGGER.warning(
-                            "Device %s: Unknown AudioOutputHwMode value received in hardware event: %s",
-                            self.entity_id,
-                            output_mode_val,
-                        )
-
-        except json.JSONDecodeError as e:
-            SDK_LOGGER.debug(f"Failed to parse commonevent JSON: {e}")
 
         self._update_ha_state_from_sdk_cache()
-
-    def get_display_name_by_command_str(self, command_str: str) -> str | None:
-        """Helper to get display name from command string for AudioOutputHwMode."""
-        for mode in AudioOutputHwMode:
-            if hasattr(mode, "command_str") and mode.command_str == command_str:
-                return mode.display_name  # type: ignore[attr-defined]
-        return AudioOutputHwMode.OTHER_OUT.display_name  # type: ignore[attr-defined]
 
     @callback
     def _handle_sdk_play_queue_event(
@@ -881,52 +506,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         SDK_LOGGER.debug(
             "Device %s: Received PlayQueue event: %s", self.entity_id, state_variables
         )
-        last_change_sv = next(
-            (sv for sv in state_variables if sv.name == "LastChange"), None
-        )
-        if not last_change_sv or last_change_sv.value is None:
-            SDK_LOGGER.debug(
-                "Device %s: No LastChange in PlayQueue event or value is None.",
-                self.entity_id,
-            )
-            return
-
-        try:
-            event_data = parse_last_change_event(str(last_change_sv.value), SDK_LOGGER)
-        except Exception as e:
-            SDK_LOGGER.error(
-                "Device %s: Error parsing PlayQueue LastChange event: %s. Data: %s",
-                self.entity_id,
-                e,
-                last_change_sv.value,
-                exc_info=True,
-            )
-            raise
-
-        # Update _device's internal state
-        if "LoopMode" in event_data:  # Corrected from LoopMode
-            loop_mode_val = event_data["LoopMode"]
-            try:
-                self._device.loop_mode = SDKLoopMode(loop_mode_val)
-            except ValueError:
-                SDK_LOGGER.warning(
-                    "Device %s: Invalid loopmode value (not an integer) from PlayQueue event: %s",
-                    self.entity_id,
-                    loop_mode_val,
-                )
-
-        if "LoopMpde" in event_data:  # Corrected from LoopMpde
-            loop_mode_val = event_data["LoopMpde"]
-            try:
-                self._device.loop_mode = SDKLoopMode(loop_mode_val)
-            except ValueError:
-                SDK_LOGGER.warning(
-                    "Device %s: Invalid loopmode value (not an integer) from PlayQueue event: %s",
-                    self.entity_id,
-                    loop_mode_val,
-                )
-
-        # After updating the _device's internal state, trigger a full HA state update
         self._update_ha_state_from_sdk_cache()
 
     def fromIntToRepeatShuffle(self, loopmode_val: Any) -> None:
@@ -1296,9 +875,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         """Set volume level, range 0-1."""
         try:
             await self._device.async_set_volume(int(volume * 100))
-            self._attr_volume_level = volume
-            if self.hass and self.entity_id:
-                self.async_write_ha_state()
+            self._update_ha_state_from_sdk_cache()
         except WiimException as e:
             SDK_LOGGER.warning(f"Failed to set volume on {self.entity_id}: {e}")
             await self._async_handle_critical_error(e)
@@ -1311,9 +888,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         """Mute (true) or unmute (false) media player."""
         try:
             await self._device.async_set_mute(mute)
-            self._attr_is_volume_muted = mute
-            if self.hass and self.entity_id:
-                self.async_write_ha_state()
+            self._update_ha_state_from_sdk_cache()
         except WiimException as e:
             SDK_LOGGER.warning(f"Failed to mute volume on {self.entity_id}: {e}")
             await self._async_handle_critical_error(e)
@@ -1410,10 +985,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self.entity_id,
             )
             await self._device.async_play()
-            self._attr_state = MediaPlayerState.PLAYING
-            # self._update_supported_features()
-            if self.hass and self.entity_id:
-                self.async_write_ha_state()
+            self._update_ha_state_from_sdk_cache()
         except WiimException as e:
             SDK_LOGGER.warning(
                 f"Failed to execute play command on {self.entity_id}: {e}"
@@ -1449,18 +1021,14 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self.entity_id,
             )
             await self._device.async_pause()
-            self._attr_state = MediaPlayerState.PAUSED
-            # self._update_supported_features()
-            if self.hass and self.entity_id:
-                self.async_write_ha_state()
+            await self._device.sync_device_duration_and_position()
+            self._update_ha_state_from_sdk_cache()
         except WiimException as e:
             SDK_LOGGER.warning(
                 f"Failed to execute pause command on {self.entity_id}: {e}"
             )
             await self._async_handle_critical_error(e)
             raise HomeAssistantError(f"Failed to pause on {self.entity_id}: {e}") from e
-
-        await self._sync_device_duration_and_position()
 
     @exception_wrap
     async def async_media_stop(self) -> None:
@@ -1490,10 +1058,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self.entity_id,
             )
             await self._device.async_stop()
-            self._attr_state = MediaPlayerState.IDLE
-            # self._update_supported_features()
-            if self.hass and self.entity_id:
-                self.async_write_ha_state()
+            self._update_ha_state_from_sdk_cache()
         except WiimException as e:
             SDK_LOGGER.warning(
                 f"Failed to execute stop command on {self.entity_id}: {e}"
@@ -1693,33 +1258,21 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         """Set repeat mode."""
         sdk_loop_mode_int = self.fromRepeatToInt(repeat)
         await self._device.async_set_loop_mode(SDKLoopMode(sdk_loop_mode_int))
-
-        self._attr_repeat = repeat
-        # self._update_supported_features()
-        if self.hass and self.entity_id:
-            self.async_write_ha_state()
+        self._update_ha_state_from_sdk_cache()
 
     @exception_wrap
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         sdk_loop_mode_int = self.fromShuffleToInt(shuffle)
         await self._device.async_set_loop_mode(SDKLoopMode(sdk_loop_mode_int))
-
-        self._attr_shuffle = shuffle
-        # self._update_supported_features()
-        if self.hass and self.entity_id:
-            self.async_write_ha_state()
+        self._update_ha_state_from_sdk_cache()
 
     @exception_wrap
     async def async_select_source(self, source: str) -> None:
         """Select input mode."""
-        # await self._device.async_set_play_mode(source)
         try:
             await self._device.async_set_play_mode(source)
-            self._attr_source = source
-
-            if self.hass and self.entity_id:
-                self.async_write_ha_state()
+            self._update_ha_state_from_sdk_cache()
         except WiimException as e:
             SDK_LOGGER.error(f"Failed to select source on {self.entity_id}: {e}")
             await self._async_handle_critical_error(e)
@@ -1730,7 +1283,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
     @exception_wrap
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select output mode (e.g., optical, coaxial)."""
-        # await self._device.async_set_output_mode(sound_mode)
 
         try:
             if sound_mode == AudioOutputHwMode.OTHER_OUT.display_name:  # type: ignore[attr-defined]
@@ -1738,10 +1290,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     self.async_write_ha_state()
                 return
             await self._device.async_set_output_mode(sound_mode)
-            self._attr_sound_mode = sound_mode
-
-            if self.hass and self.entity_id:
-                self.async_write_ha_state()
+            self._update_ha_state_from_sdk_cache()
         except WiimException as e:
             SDK_LOGGER.error(f"Failed to select output mode on {self.entity_id}: {e}")
             await self._async_handle_critical_error(e)
@@ -1804,7 +1353,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     "audio/"
                 ),
             )
-            # return media_sources_item
 
             if media_sources_item.children:
                 children.extend(media_sources_item.children)
@@ -1860,7 +1408,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             playlist_track_items: list = []
             try:
                 sdk_playlist_tracks = await self._device.async_get_queue_items()
-                # trackSourceQueue = sdk_playlist_tracks["SourceName"]
                 trackSourceQueue = next(
                     (
                         item["SourceName"]
@@ -1924,7 +1471,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     uri = item.get("uri")
                     if not uri:
                         continue
-                    # SDK_LOGGER.debug("browse_media: uri=%s, name=%s, image_url=%s", item["uri"], item["name"], item["image_url"])
                     playlist_track_items.append(
                         BrowseMedia(
                             media_class=MediaClass.TRACK,

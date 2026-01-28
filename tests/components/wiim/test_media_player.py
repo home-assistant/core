@@ -2,9 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from async_upnp_client.client import UpnpService, UpnpStateVariable
 import pytest
-from wiim.consts import InputMode, LoopMode, PlayingStatus
+from wiim.consts import InputMode, PlayingStatus
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.media_player import (
@@ -178,7 +177,6 @@ async def test_media_player_pause(
     }  # type: ignore[assignment]
 
     entity.hass = mock_hass
-
     entity._device = mock_wiim_device
 
     mock_wiim_device.async_set_AVT_cmd = AsyncMock(
@@ -221,10 +219,13 @@ async def test_media_player_stop(
 
 @pytest.mark.asyncio
 async def test_media_player_set_volume(
-    mock_wiim_media_player_entity: WiimMediaPlayerEntity, mock_wiim_device: WiimDevice
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
 ) -> None:
     """Test media player set volume service."""
     entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
     with patch.object(
         mock_wiim_device, "async_set_volume", new_callable=AsyncMock
     ) as mock_set_volume:
@@ -234,10 +235,13 @@ async def test_media_player_set_volume(
 
 @pytest.mark.asyncio
 async def test_media_player_mute_volume(
-    mock_wiim_media_player_entity: WiimMediaPlayerEntity, mock_wiim_device: WiimDevice
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
 ) -> None:
     """Test media player mute volume service."""
     entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
     with patch.object(
         mock_wiim_device, "async_set_mute", new_callable=AsyncMock
     ) as mock_set_mute:
@@ -263,10 +267,13 @@ async def test_media_player_play_media_url(
 
 @pytest.mark.asyncio
 async def test_media_player_select_source(
-    mock_wiim_media_player_entity: WiimMediaPlayerEntity, mock_wiim_device: WiimDevice
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
 ) -> None:
     """Test media player select source service."""
     entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
 
     with patch.object(
         mock_wiim_device, "async_set_play_mode", new_callable=AsyncMock
@@ -277,10 +284,13 @@ async def test_media_player_select_source(
 
 @pytest.mark.asyncio
 async def test_media_player_select_sound_mode(
-    mock_wiim_media_player_entity: WiimMediaPlayerEntity, mock_wiim_device: WiimDevice
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
 ) -> None:
     """Test media player select sound mode service."""
     entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
 
     with patch.object(
         mock_wiim_device, "async_set_output_mode", new_callable=AsyncMock
@@ -366,10 +376,13 @@ async def test_media_player_previous(
 
 @pytest.mark.asyncio
 async def test_media_player_set_repeat_mode(
-    mock_wiim_media_player_entity: WiimMediaPlayerEntity, mock_wiim_device: WiimDevice
+    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
+    mock_wiim_device: WiimDevice,
+    mock_hass: HomeAssistant,
 ) -> None:
     """Test media player set repeat mode service."""
     entity = mock_wiim_media_player_entity
+    entity.hass = mock_hass
     with patch.object(
         mock_wiim_device, "async_set_loop_mode", new_callable=AsyncMock
     ) as mock_loop_mode:
@@ -527,64 +540,3 @@ async def test_media_player_browse_media_playlists_queue(
 
         mock_get_queue_items.assert_awaited_once()
         mock_set_AVT_cmd.assert_awaited_once()
-
-
-@pytest.mark.asyncio
-async def test_handle_sdk_events(
-    mock_wiim_media_player_entity: WiimMediaPlayerEntity,
-    mock_wiim_device: WiimDevice,
-    mock_hass_for_media_player: HomeAssistant,
-) -> None:
-    """Test that the entity handles multiple SDK event handlers."""
-    entity = mock_wiim_media_player_entity
-    entity.hass = mock_hass_for_media_player
-
-    entity.hass.data = {
-        DOMAIN: WiimData(controller=MagicMock(), entity_id_to_udn_map={})
-    }  # type: ignore[assignment]
-
-    entity._device.playing_status = PlayingStatus.STOPPED
-
-    sv = MagicMock(spec=UpnpStateVariable)
-    sv.name = "LastChange"
-    sv.value = "<xml>"
-
-    svs = MagicMock(spec=UpnpStateVariable)
-    svs.name = "LastChange"
-    svs.value = "<xml>"
-
-    mock_service = MagicMock(spec=UpnpService)
-
-    with patch.object(
-        entity, "_update_ha_state_from_sdk_cache", new=MagicMock()
-    ) as mock_update:
-        # 1) AVTransport event
-        with patch(
-            "homeassistant.components.wiim.media_player.parse_last_change_event",
-            return_value={"TransportState": "PLAYING"},
-        ):
-            entity._handle_sdk_av_transport_event(mock_service, [sv])
-            assert entity._device.playing_status == PlayingStatus.PLAYING
-            mock_update.assert_called_once()
-            mock_update.reset_mock()
-
-        # 2) Rendering Control event
-        entity._device.volume = 50
-        with patch(
-            "homeassistant.components.wiim.media_player.parse_last_change_event",
-            return_value={"Volume": [{"channel": "Master", "val": 80}]},
-        ):
-            entity._handle_sdk_rendering_control_event(mock_service, [svs])
-            assert entity._device.volume == 80
-            mock_update.assert_called_once()
-            mock_update.reset_mock()
-
-        # 3) Play Queue event
-        entity._device.loop_mode = LoopMode.SHUFFLE_DISABLE_REPEAT_NONE
-        with patch(
-            "homeassistant.components.wiim.media_player.parse_last_change_event",
-            return_value={"LoopMode": LoopMode.SHUFFLE_ENABLE_REPEAT_ALL},
-        ):
-            entity._handle_sdk_play_queue_event(mock_service, [svs])
-            assert entity._device.loop_mode == LoopMode.SHUFFLE_ENABLE_REPEAT_ALL
-            mock_update.assert_called_once()

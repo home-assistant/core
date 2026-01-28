@@ -130,6 +130,7 @@ def mock_wiim_device() -> WiimDevice:
     wiim_device._device_info_properties = ""
     wiim_device._player_properties = ""
     wiim_device._manufacturer = "Linkplay Tech"
+    wiim_device.output_mode = "speaker"
 
     wiim_device.upnp_device = MagicMock()
     wiim_device.upnp_device.udn = wiim_device.udn
@@ -157,6 +158,7 @@ def mock_wiim_device() -> WiimDevice:
     wiim_device.async_get_audio_output_modes = AsyncMock(return_value=[])
     wiim_device.async_get_input_modes = AsyncMock(return_value=[])
     wiim_device.async_get_play_mediums = AsyncMock(return_value=[])
+    wiim_device.sync_device_duration_and_position = AsyncMock()
 
     return wiim_device
 
