@@ -1713,7 +1713,7 @@ pydroplet==2.3.4
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.1.28
+pyeconet==0.2.1
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.4.0
