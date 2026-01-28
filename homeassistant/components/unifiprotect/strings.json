@@ -406,6 +406,19 @@
       "paired_camera": {
         "name": "Paired camera"
       },
+      "ptz_patrol": {
+        "name": "PTZ patrol",
+        "state": {
+          "stop": "[%key:common::state::stopped%]"
+        }
+      },
+      "ptz_preset": {
+        "name": "PTZ preset",
+        "state": {
+          "home": "Home",
+          "idle": "[%key:common::state::idle%]"
+        }
+      },
       "recording_mode": {
         "name": "Recording mode",
         "state": {

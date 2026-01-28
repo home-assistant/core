@@ -246,6 +246,12 @@
       "paired_camera": {
         "default": "mdi:cctv"
       },
+      "ptz_patrol": {
+        "default": "mdi:rotate-360"
+      },
+      "ptz_preset": {
+        "default": "mdi:camera-marker"
+      },
       "recording_mode": {
         "default": "mdi:video-outline"
       }

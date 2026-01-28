@@ -14,6 +14,8 @@ from uiprotect.data import (
     LightModeEnableType,
     LightModeType,
     Liveview,
+    PTZPatrol,
+    PTZPreset,
     RecordingMode,
     Viewer,
 )
@@ -25,6 +27,8 @@ from homeassistant.components.unifiprotect.select import (
     CAMERA_SELECTS,
     LIGHT_MODE_OFF,
     LIGHT_SELECTS,
+    PTZ_PATROL_STOP,
+    PTZ_PRESET_IDLE,
     VIEWER_SELECTS,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, ATTR_OPTION, Platform
@@ -554,3 +558,180 @@ async def test_select_set_option_viewer(
         )
 
         mock_method.assert_called_once_with(liveview)
+
+
+# --- PTZ Test Helpers ---
+
+
+def _ptz_entity_id(camera: Camera, suffix: str) -> str:
+    """Generate PTZ entity ID."""
+    return f"select.{camera.name.lower().replace(' ', '_')}_{suffix}"
+
+
+def _make_presets() -> list[PTZPreset]:
+    """Create mock PTZ presets."""
+    return [
+        PTZPreset(
+            id="preset1",
+            name="Preset 1",
+            slot=0,
+            ptz={"pan": 100, "tilt": 50, "zoom": 0},
+        ),
+        PTZPreset(
+            id="preset2",
+            name="Preset 2",
+            slot=1,
+            ptz={"pan": 200, "tilt": 100, "zoom": 50},
+        ),
+    ]
+
+
+def _make_patrols(camera_id: str) -> list[PTZPatrol]:
+    """Create mock PTZ patrols."""
+    return [
+        PTZPatrol(
+            id="patrol1",
+            name="Patrol 1",
+            slot=0,
+            presets=[0, 1],
+            presetDurationSeconds=10,
+            camera=camera_id,
+        ),
+        PTZPatrol(
+            id="patrol2",
+            name="Patrol 2",
+            slot=1,
+            presets=[0],
+            presetDurationSeconds=5,
+            camera=camera_id,
+        ),
+    ]
+
+
+async def _setup_ptz_camera(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    ptz_camera: Camera,
+    *,
+    presets: list[PTZPreset] | None = None,
+    patrols: list[PTZPatrol] | None = None,
+) -> None:
+    """Set up PTZ camera with mocked presets and patrols."""
+    ptz_camera.get_ptz_presets.return_value = presets or []
+    ptz_camera.get_ptz_patrols.return_value = patrols or []
+    ufp.api.bootstrap.nvr.system_info.ustorage = None
+    await init_entry(hass, ufp, [ptz_camera])
+
+
+# --- PTZ Tests ---
+
+
+async def test_select_ptz_preset_setup(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test PTZ preset select entity setup."""
+    await _setup_ptz_camera(hass, ufp, ptz_camera, presets=_make_presets())
+
+    # PTZ camera should have 2 additional select entities (preset + patrol)
+    # Regular camera has 2 (recording_mode, infrared_mode), PTZ has 2 + 2 = 4
+    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+
+    # Verify preset entity exists and has correct options
+    state = hass.states.get(_ptz_entity_id(ptz_camera, "ptz_preset"))
+    assert state is not None
+    assert state.state == PTZ_PRESET_IDLE
+    options = state.attributes.get(ATTR_OPTIONS, [])
+    assert options == ["idle", "home", "Preset 1", "Preset 2"]
+
+
+async def test_select_ptz_patrol_setup(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test PTZ patrol select entity setup."""
+    await _setup_ptz_camera(hass, ufp, ptz_camera, patrols=_make_patrols(ptz_camera.id))
+
+    state = hass.states.get(_ptz_entity_id(ptz_camera, "ptz_patrol"))
+    assert state is not None
+    assert state.state == PTZ_PATROL_STOP
+    options = state.attributes.get(ATTR_OPTIONS, [])
+    assert options == ["stop", "Patrol 1", "Patrol 2"]
+
+
+async def test_select_ptz_preset_goto(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test selecting a PTZ preset."""
+    await _setup_ptz_camera(hass, ufp, ptz_camera, presets=_make_presets()[:1])
+
+    entity_id = _ptz_entity_id(ptz_camera, "ptz_preset")
+    with patch_ufp_method(
+        ptz_camera, "ptz_goto_preset_public", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Preset 1"},
+            blocking=True,
+        )
+        mock_method.assert_called_once_with(slot=0)
+
+
+async def test_select_ptz_preset_goto_home(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test selecting the Home PTZ preset."""
+    await _setup_ptz_camera(hass, ufp, ptz_camera)
+
+    entity_id = _ptz_entity_id(ptz_camera, "ptz_preset")
+    with patch_ufp_method(
+        ptz_camera, "ptz_goto_preset_public", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "home"},
+            blocking=True,
+        )
+        mock_method.assert_called_once_with(slot=-1)
+
+
+async def test_select_ptz_patrol_start(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test starting a PTZ patrol."""
+    await _setup_ptz_camera(
+        hass, ufp, ptz_camera, patrols=_make_patrols(ptz_camera.id)[:1]
+    )
+
+    entity_id = _ptz_entity_id(ptz_camera, "ptz_patrol")
+    with patch_ufp_method(
+        ptz_camera, "ptz_patrol_start_public", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Patrol 1"},
+            blocking=True,
+        )
+        mock_method.assert_called_once_with(slot=0)
+
+
+async def test_select_ptz_patrol_stop(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test stopping a PTZ patrol."""
+    await _setup_ptz_camera(
+        hass, ufp, ptz_camera, patrols=_make_patrols(ptz_camera.id)[:1]
+    )
+
+    entity_id = _ptz_entity_id(ptz_camera, "ptz_patrol")
+    with patch_ufp_method(
+        ptz_camera, "ptz_patrol_stop_public", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "stop"},
+            blocking=True,
+        )
+        mock_method.assert_called_once()

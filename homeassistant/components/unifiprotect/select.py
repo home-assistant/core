@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
@@ -98,6 +99,16 @@ MOTION_MODE_TO_LIGHT_MODE = [
     {"id": LightModeType.MANUAL.value, "name": LIGHT_MODE_OFF},
 ]
 
+# PTZ constants - IDs must match state keys in strings.json for translation
+PTZ_PRESET_HOME_SLOT = -1
+PTZ_PRESET_HOME = "home"
+PTZ_PATROL_STOP = "stop"
+PTZ_PRESET_IDLE = "idle"
+_PTZ_PRESET_RESET_DELAY = 0.5  # Seconds to wait before resetting preset to Idle
+
+_KEY_PTZ_PRESET = "ptz_preset"
+_KEY_PTZ_PATROL = "ptz_patrol"
+
 DEVICE_RECORDING_MODES = [
     {"id": mode.value, "name": mode.value} for mode in list(RecordingMode)
 ]
@@ -189,6 +200,21 @@ async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
     await obj.set_liveview(liveview)
 
 
+async def _set_ptz_preset(obj: Camera, preset_slot: str) -> None:
+    """Set PTZ camera to preset position."""
+    slot = int(preset_slot)
+    await obj.ptz_goto_preset_public(slot=slot)
+
+
+async def _set_ptz_patrol(obj: Camera, patrol_slot: str) -> None:
+    """Start or stop PTZ patrol."""
+    if patrol_slot == PTZ_PATROL_STOP:
+        await obj.ptz_patrol_stop_public()
+    else:
+        slot = int(patrol_slot)
+        await obj.ptz_patrol_start_public(slot=slot)
+
+
 CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription(
         key="recording_mode",
@@ -240,6 +266,26 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_options=HDR_MODES,
         ufp_value="hdr_mode_display",
         ufp_set_method="set_hdr_mode",
+        ufp_perm=PermRequired.WRITE,
+    ),
+)
+
+# PTZ Select entity descriptions - these need special async handling
+PTZ_CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
+    ProtectSelectEntityDescription[Camera](
+        key=_KEY_PTZ_PRESET,
+        translation_key="ptz_preset",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="feature_flags.is_ptz",
+        ufp_set_method_fn=_set_ptz_preset,
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSelectEntityDescription[Camera](
+        key=_KEY_PTZ_PATROL,
+        translation_key="ptz_patrol",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="feature_flags.is_ptz",
+        ufp_set_method_fn=_set_ptz_patrol,
         ufp_perm=PermRequired.WRITE,
     ),
 )
@@ -338,6 +384,32 @@ async def async_setup_entry(
                 ufp_device=device,
             )
         )
+        # Add PTZ select entities for cameras
+        if isinstance(device, Camera):
+            hass.async_create_task(
+                _async_add_ptz_entities(data, device),
+                name="unifiprotect_add_ptz_entities",
+            )
+
+    async def _async_add_ptz_entities(
+        protect_data: ProtectData, camera: Camera | None = None
+    ) -> None:
+        """Add PTZ select entities asynchronously."""
+        entities: list[ProtectPTZSelect] = []
+        cameras = (
+            [camera] if camera else list(protect_data.api.bootstrap.cameras.values())
+        )
+
+        for cam in cameras:
+            if not cam.feature_flags.is_ptz:
+                continue
+            entities.extend(
+                ProtectPTZSelect(protect_data, cam, description)
+                for description in PTZ_CAMERA_SELECTS
+            )
+
+        if entities:
+            async_add_entities(entities)
 
     data.async_subscribe_adopt(_add_new_device)
     async_add_entities(
@@ -345,6 +417,8 @@ async def async_setup_entry(
             data, ProtectSelects, model_descriptions=_MODEL_DESCRIPTIONS
         )
     )
+    # Add PTZ entities for existing cameras
+    await _async_add_ptz_entities(data)
 
 
 class ProtectSelects(ProtectDeviceEntity, SelectEntity):
@@ -411,3 +485,137 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         if self.entity_description.ufp_enum_type is not None:
             unifi_value = self.entity_description.ufp_enum_type(unifi_value)
         await self.entity_description.ufp_set(self.device, unifi_value)
+
+
+class ProtectPTZSelect(ProtectDeviceEntity, SelectEntity):
+    """A UniFi Protect PTZ Select Entity with async options loading."""
+
+    device: Camera
+    entity_description: ProtectSelectEntityDescription
+    _state_attrs = ("_attr_available", "_attr_options", "_attr_current_option")
+
+    def __init__(
+        self,
+        data: ProtectData,
+        device: Camera,
+        description: ProtectSelectEntityDescription,
+    ) -> None:
+        """Initialize the PTZ select entity."""
+        super().__init__(data, device, description)
+        self._attr_options: list[str] = []
+        self._attr_current_option: str | None = None
+        self._hass_to_unifi_options: dict[str, str] = {}
+        self._unifi_to_hass_options: dict[str, str] = {}
+        self._reset_timer: asyncio.TimerHandle | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Load PTZ options when entity is added to hass."""
+        await super().async_added_to_hass()
+        await self._async_load_options()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel any pending timers when entity is removed."""
+        if self._reset_timer is not None:
+            self._reset_timer.cancel()
+            self._reset_timer = None
+        await super().async_will_remove_from_hass()
+
+    async def _async_load_options(self) -> None:
+        """Load PTZ options from the camera."""
+        if self.entity_description.key == _KEY_PTZ_PRESET:
+            await self._async_load_preset_options()
+        elif self.entity_description.key == _KEY_PTZ_PATROL:
+            await self._async_load_patrol_options()
+
+    async def _async_load_preset_options(self) -> None:
+        """Load PTZ preset options from the camera."""
+        presets = await self.device.get_ptz_presets()
+
+        self._hass_to_unifi_options = {
+            PTZ_PRESET_IDLE: PTZ_PRESET_IDLE,
+            PTZ_PRESET_HOME: str(PTZ_PRESET_HOME_SLOT),
+        }
+        self._hass_to_unifi_options.update(
+            {preset.name: str(preset.slot) for preset in presets}
+        )
+        self._unifi_to_hass_options = {
+            v: k for k, v in self._hass_to_unifi_options.items()
+        }
+        self._attr_options = list(self._hass_to_unifi_options)
+        self._attr_current_option = PTZ_PRESET_IDLE
+        self.async_write_ha_state()
+
+    async def _async_load_patrol_options(self) -> None:
+        """Load PTZ patrol options from the camera."""
+        patrols = await self.device.get_ptz_patrols()
+
+        self._hass_to_unifi_options = {PTZ_PATROL_STOP: PTZ_PATROL_STOP}
+        self._hass_to_unifi_options.update(
+            {patrol.name: str(patrol.slot) for patrol in patrols}
+        )
+        self._unifi_to_hass_options = {
+            v: k for k, v in self._hass_to_unifi_options.items()
+        }
+        self._attr_options = list(self._hass_to_unifi_options)
+        # Set initial state based on active patrol
+        self._update_patrol_state()
+        self.async_write_ha_state()
+
+    def _update_patrol_state(self) -> None:
+        """Update the patrol state based on active_patrol_slot."""
+        if self.device.active_patrol_slot is not None:
+            # A patrol is running - show which one
+            slot_str = str(self.device.active_patrol_slot)
+            self._attr_current_option = self._unifi_to_hass_options.get(
+                slot_str, PTZ_PATROL_STOP
+            )
+        else:
+            # No patrol running - show Stop
+            self._attr_current_option = PTZ_PATROL_STOP
+
+    @callback
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        # Update patrol state from websocket updates
+        if self.entity_description.key == _KEY_PTZ_PATROL:
+            self._update_patrol_state()
+        elif self.entity_description.key == _KEY_PTZ_PRESET:
+            # Always reset preset to Idle - it's a command, not a state
+            self._attr_current_option = PTZ_PRESET_IDLE
+
+    @async_ufp_instance_command
+    async def async_select_option(self, option: str) -> None:
+        """Change the PTZ Select Entity Option."""
+        unifi_value = self._hass_to_unifi_options.get(option)
+        if unifi_value is None:
+            return
+
+        # Ignore selection of the Idle placeholder
+        if unifi_value == PTZ_PRESET_IDLE:
+            return
+
+        if self.entity_description.ufp_set_method_fn is None:
+            return
+        await self.entity_description.ufp_set_method_fn(self.device, unifi_value)
+
+        # Reset preset to Idle after command execution
+        if self.entity_description.key == _KEY_PTZ_PRESET:
+            # Set to selected option first, then schedule reset
+            # This forces the frontend to see a state change
+            self._attr_current_option = option
+            self.async_write_ha_state()
+
+            @callback
+            def _reset_to_idle() -> None:
+                """Reset preset to Idle after delay."""
+                self._reset_timer = None
+                self._attr_current_option = PTZ_PRESET_IDLE
+                self.async_write_ha_state()
+
+            # Cancel any existing timer before scheduling new one
+            if self._reset_timer is not None:
+                self._reset_timer.cancel()
+            self._reset_timer = self.hass.loop.call_later(
+                _PTZ_PRESET_RESET_DELAY, _reset_to_idle
+            )
+        # For patrols: State will be updated via websocket when active_patrol_slot changes
