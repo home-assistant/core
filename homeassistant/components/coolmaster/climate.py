@@ -19,9 +19,10 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SUPPORTED_MODES
+from .const import CONF_SUPPORTED_MODES, DOMAIN
 from .coordinator import CoolmasterConfigEntry, CoolmasterDataUpdateCoordinator
 from .entity import CoolmasterEntity
 
@@ -59,7 +60,7 @@ async def async_setup_entry(
     supported_modes: list[str] = config_entry.data[CONF_SUPPORTED_MODES]
     async_add_entities(
         CoolmasterClimate(
-            coordinator, unit_id, [HVACMode(mode) for mode in supported_modes]
+            hass, coordinator, unit_id, [HVACMode(mode) for mode in supported_modes]
         )
         for unit_id in coordinator.data
     )
@@ -72,6 +73,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         coordinator: CoolmasterDataUpdateCoordinator,
         unit_id: str,
         supported_modes: list[HVACMode],
@@ -80,6 +82,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         super().__init__(coordinator, unit_id)
         self._attr_hvac_modes = supported_modes
         self._attr_unique_id = unit_id
+        self._hass = hass
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
@@ -126,7 +129,25 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         """Return the fan setting."""
 
         # Normalize to lowercase for lookup, and pass unknown values through.
-        return CM_TO_HA_FAN.get(self._unit.fan_speed.lower(), self._unit.fan_speed)
+        fan_speed_lower = self._unit.fan_speed.lower()
+        if fan_speed_lower not in CM_TO_HA_FAN:
+            # TODO(2026.7.0): Stop supporting unknown fan speeds.
+            ir.async_create_issue(
+                self._hass,
+                DOMAIN,
+                "unknown_fan_speed",
+                is_fixable=False,
+                breaks_in_ha_version="2026.7.0",
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="unknown_fan_speed",
+                translation_placeholders={
+                    "fan_speed": self._unit.fan_speed,
+                    "issues_url": "https://github.com/home-assistant/core/issues",
+                },
+            )
+            return fan_speed_lower
+
+        return CM_TO_HA_FAN[fan_speed_lower]
 
     @property
     def fan_modes(self):
