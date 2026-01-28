@@ -48,9 +48,7 @@ rules:
   discovery: done
   docs-data-update: done
   docs-examples: done
-  docs-known-limitations:
-    status: exempt
-    comment: There are currently no known limitations for this integration.
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
