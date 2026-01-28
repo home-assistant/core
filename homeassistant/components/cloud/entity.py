@@ -8,29 +8,28 @@ import logging
 import re
 from typing import Any, Literal, cast
 
-from hass_nabucasa import (
-    Cloud,
+from hass_nabucasa import Cloud, NabuCasaBaseError
+from hass_nabucasa.llm import (
     LLMAuthenticationError,
     LLMRateLimitError,
+    LLMResponseCompletedEvent,
     LLMResponseError,
+    LLMResponseErrorEvent,
+    LLMResponseFailedEvent,
+    LLMResponseFunctionCallArgumentsDeltaEvent,
+    LLMResponseFunctionCallArgumentsDoneEvent,
+    LLMResponseFunctionCallOutputItem,
+    LLMResponseImageOutputItem,
+    LLMResponseIncompleteEvent,
+    LLMResponseMessageOutputItem,
+    LLMResponseOutputItemAddedEvent,
+    LLMResponseOutputItemDoneEvent,
+    LLMResponseOutputTextDeltaEvent,
+    LLMResponseReasoningOutputItem,
+    LLMResponseReasoningSummaryTextDeltaEvent,
+    LLMResponseWebSearchCallOutputItem,
+    LLMResponseWebSearchCallSearchingEvent,
     LLMServiceError,
-    NabuCasaBaseError,
-    ResponseCompletedEvent,
-    ResponseErrorEvent,
-    ResponseFailedEvent,
-    ResponseFunctionCallArgumentsDeltaEvent,
-    ResponseFunctionCallArgumentsDoneEvent,
-    ResponseFunctionCallOutputItem,
-    ResponseImageOutputItem,
-    ResponseIncompleteEvent,
-    ResponseMessageOutputItem,
-    ResponseOutputItemAddedEvent,
-    ResponseOutputItemDoneEvent,
-    ResponseOutputTextDeltaEvent,
-    ResponseReasoningOutputItem,
-    ResponseReasoningSummaryTextDeltaEvent,
-    ResponseWebSearchCallOutputItem,
-    ResponseWebSearchCallSearchingEvent,
 )
 from openai.types.responses import (
     FunctionToolParam,
@@ -253,7 +252,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
     """Transform stream result into HA format."""
     last_summary_index = None
     last_role: Literal["assistant", "tool_result"] | None = None
-    current_tool_call: ResponseFunctionCallOutputItem | None = None
+    current_tool_call: LLMResponseFunctionCallOutputItem | None = None
 
     # Non-reasoning models don't follow our request to remove citations, so we remove
     # them manually here. They always follow the same pattern: the citation is always
@@ -265,8 +264,8 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
     async for event in stream:
         _LOGGER.debug("Event[%s]", getattr(event, "type", None))
 
-        if isinstance(event, ResponseOutputItemAddedEvent):
-            if isinstance(event.item, ResponseFunctionCallOutputItem):
+        if isinstance(event, LLMResponseOutputItemAddedEvent):
+            if isinstance(event.item, LLMResponseFunctionCallOutputItem):
                 # OpenAI has tool calls as individual events
                 # while HA puts tool calls inside the assistant message.
                 # We turn them into individual assistant content for HA
@@ -276,9 +275,9 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 last_summary_index = None
                 current_tool_call = event.item
             elif (
-                isinstance(event.item, ResponseMessageOutputItem)
+                isinstance(event.item, LLMResponseMessageOutputItem)
                 or (
-                    isinstance(event.item, ResponseReasoningOutputItem)
+                    isinstance(event.item, LLMResponseReasoningOutputItem)
                     and last_summary_index is not None
                 )  # Subsequent ResponseReasoningItem
                 or last_role != "assistant"
@@ -287,14 +286,14 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 last_role = "assistant"
                 last_summary_index = None
 
-        elif isinstance(event, ResponseOutputItemDoneEvent):
-            if isinstance(event.item, ResponseReasoningOutputItem):
+        elif isinstance(event, LLMResponseOutputItemDoneEvent):
+            if isinstance(event.item, LLMResponseReasoningOutputItem):
                 encrypted_content = event.item.encrypted_content
                 summary = event.item.summary
 
                 yield {
-                    "native": ResponseReasoningItem(
-                        type="reasoning",
+                    "native": LLMResponseReasoningOutputItem(
+                        type=event.item.type,
                         id=event.item.id,
                         summary=[],
                         encrypted_content=encrypted_content,
@@ -302,7 +301,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 }
 
                 last_summary_index = len(summary) - 1 if summary else None
-            elif isinstance(event.item, ResponseWebSearchCallOutputItem):
+            elif isinstance(event.item, LLMResponseWebSearchCallOutputItem):
                 action_dict = event.item.action
                 yield {
                     "tool_calls": [
@@ -321,11 +320,11 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     "tool_result": {"status": event.item.status},
                 }
                 last_role = "tool_result"
-            elif isinstance(event.item, ResponseImageOutputItem):
+            elif isinstance(event.item, LLMResponseImageOutputItem):
                 yield {"native": event.item.raw}
                 last_summary_index = -1  # Trigger new assistant message on next turn
 
-        elif isinstance(event, ResponseOutputTextDeltaEvent):
+        elif isinstance(event, LLMResponseOutputTextDeltaEvent):
             data = event.delta
             if remove_parentheses:
                 data = data.removeprefix(")")
@@ -344,7 +343,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
             if data:
                 yield {"content": data}
 
-        elif isinstance(event, ResponseReasoningSummaryTextDeltaEvent):
+        elif isinstance(event, LLMResponseReasoningSummaryTextDeltaEvent):
             # OpenAI can output several reasoning summaries
             # in a single ResponseReasoningItem. We split them as separate
             # AssistantContent messages. Only last of them will have
@@ -358,14 +357,14 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
             last_summary_index = event.summary_index
             yield {"thinking_content": event.delta}
 
-        elif isinstance(event, ResponseFunctionCallArgumentsDeltaEvent):
+        elif isinstance(event, LLMResponseFunctionCallArgumentsDeltaEvent):
             if current_tool_call is not None:
                 current_tool_call.arguments += event.delta
 
-        elif isinstance(event, ResponseWebSearchCallSearchingEvent):
+        elif isinstance(event, LLMResponseWebSearchCallSearchingEvent):
             yield {"role": "assistant"}
 
-        elif isinstance(event, ResponseFunctionCallArgumentsDoneEvent):
+        elif isinstance(event, LLMResponseFunctionCallArgumentsDoneEvent):
             if current_tool_call is not None:
                 current_tool_call.status = "completed"
 
@@ -385,7 +384,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     ]
                 }
 
-        elif isinstance(event, ResponseCompletedEvent):
+        elif isinstance(event, LLMResponseCompletedEvent):
             response = event.response
             if response and "usage" in response:
                 usage = response["usage"]
@@ -398,7 +397,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     }
                 )
 
-        elif isinstance(event, ResponseIncompleteEvent):
+        elif isinstance(event, LLMResponseIncompleteEvent):
             response = event.response
             if response and "usage" in response:
                 usage = response["usage"]
@@ -429,7 +428,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
 
             raise HomeAssistantError(f"OpenAI response incomplete: {reason}")
 
-        elif isinstance(event, ResponseFailedEvent):
+        elif isinstance(event, LLMResponseFailedEvent):
             response = event.response
             if response and "usage" in response:
                 usage = response["usage"]
@@ -446,7 +445,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 reason = response["error"].get("message") or reason
             raise HomeAssistantError(f"OpenAI response failed: {reason}")
 
-        elif isinstance(event, ResponseErrorEvent):
+        elif isinstance(event, LLMResponseErrorEvent):
             raise HomeAssistantError(f"OpenAI response error: {event.message}")
 
 
