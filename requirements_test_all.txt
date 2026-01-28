@@ -2348,6 +2348,9 @@ ruuvitag-ble==0.4.0
 # homeassistant.components.yamaha
 rxv==0.7.0
 
+# homeassistant.components.ryse
+ryseble==1.9.0
+
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
 
