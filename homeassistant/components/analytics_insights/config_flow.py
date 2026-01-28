@@ -43,6 +43,8 @@ INTEGRATION_TYPES_WITHOUT_ANALYTICS = (
 class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Homeassistant Analytics."""
 
+    VERSION = 2
+
     @staticmethod
     @callback
     def async_get_options_flow(
