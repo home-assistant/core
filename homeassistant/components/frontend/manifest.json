@@ -23,5 +23,5 @@
     "winter_mode": {}
   },
   "quality_scale": "internal",
-  "requirements": ["home-assistant-frontend==20260128.0"]
+  "requirements": ["home-assistant-frontend==20260128.1"]
 }
