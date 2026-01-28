@@ -384,16 +384,16 @@
   },
   "services": {
     "get_available_dp_codes": {
-      "default": "mdi:code-braces"
+      "service": "mdi:code-braces"
     },
     "get_data": {
-      "default": "mdi:database-eye"
+      "service": "mdi:database-eye"
     },
     "set_data": {
-      "default": "mdi:database-edit"
+      "service": "mdi:database-edit"
     },
     "set_direction": {
-      "default": "mdi:arrow-left-right"
+      "service": "mdi:arrow-left-right"
     }
   }
 }
