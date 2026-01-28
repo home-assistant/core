@@ -69,6 +69,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
 from . import AnthropicConfigEntry
@@ -84,14 +85,11 @@ from .const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT,
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
     NON_THINKING_MODELS,
-    RECOMMENDED_CHAT_MODEL,
-    RECOMMENDED_MAX_TOKENS,
-    RECOMMENDED_TEMPERATURE,
-    RECOMMENDED_THINKING_BUDGET,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -196,7 +194,7 @@ def _convert_content(
                 tool_result_block = ToolResultBlockParam(
                     type="tool_result",
                     tool_use_id=content.tool_call_id,
-                    content=json.dumps(content.tool_result),
+                    content=json_dumps(content.tool_result),
                 )
                 external_tool = False
             if not messages or messages[-1]["role"] != (
@@ -392,7 +390,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     type="tool_use",
                     id=response.content_block.id,
                     name=response.content_block.name,
-                    input="",
+                    input={},
                 )
                 current_tool_args = ""
                 if response.content_block.name == output_tool:
@@ -459,7 +457,7 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                     type="server_tool_use",
                     id=response.content_block.id,
                     name=response.content_block.name,
-                    input="",
+                    input={},
                 )
                 current_tool_args = ""
             elif isinstance(response.content_block, WebSearchToolResultBlock):
@@ -586,7 +584,7 @@ class AnthropicBaseLLMEntity(Entity):
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="Anthropic",
-            model="Claude",
+            model=subentry.data.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL]),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
@@ -604,17 +602,19 @@ class AnthropicBaseLLMEntity(Entity):
             raise TypeError("First message must be a system message")
         messages = _convert_content(chat_log.content[1:])
 
-        model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
 
         model_args = MessageCreateParamsStreaming(
             model=model,
             messages=messages,
-            max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+            max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
             system=system.content,
             stream=True,
         )
 
-        thinking_budget = options.get(CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET)
+        thinking_budget = options.get(
+            CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
+        )
         if (
             not model.startswith(tuple(NON_THINKING_MODELS))
             and thinking_budget >= MIN_THINKING_BUDGET
@@ -625,7 +625,7 @@ class AnthropicBaseLLMEntity(Entity):
         else:
             model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
             model_args["temperature"] = options.get(
-                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+                CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
             )
 
         tools: list[ToolUnionParam] = []

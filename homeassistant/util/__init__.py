@@ -97,6 +97,20 @@ def get_random_string(length: int = 10) -> str:
     return "".join(generator.choice(source_chars) for _ in range(length))
 
 
+# Adapted from https://github.com/okunishinishi/python-stringcase, with improvements
+def snakecase(text: str) -> str:
+    """Convert a string to snake_case."""
+    text = re.sub(r"[\s.-]", "_", text)
+    if not text.isupper():
+        # Underscore before last uppercase of groups of 2+ uppercase ("HTTPResponse", "IPAddress")
+        text = re.sub(
+            r"[A-Z]{2,}(?=[A-Z][^A-Z])", lambda match: match.group(0) + "_", text
+        )
+        # Underscore between non-uppercase followed by uppercase
+        text = re.sub(r"(?<=[^A-Z_])[A-Z]", lambda match: "_" + match.group(0), text)
+    return text.lower()
+
+
 class Throttle:
     """A class for throttling the execution of tasks.
 

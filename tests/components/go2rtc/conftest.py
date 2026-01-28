@@ -1,10 +1,11 @@
 """Go2rtc test configuration."""
 
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
 from awesomeversion import AwesomeVersion
-from go2rtc_client.rest import _StreamClient, _WebRTCClient
+from go2rtc_client.rest import _SchemesClient, _StreamClient, _WebRTCClient
 import pytest
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
@@ -39,6 +40,23 @@ def rest_client() -> Generator[AsyncMock]:
         patch("homeassistant.components.go2rtc.server.Go2RtcRestClient", mock_client),
     ):
         client = mock_client.return_value
+        client.schemes = schemes = Mock(spec_set=_SchemesClient)
+        schemes.list.return_value = {
+            "onvif",
+            "exec",
+            "http",
+            "rtmps",
+            "https",
+            "rtmpx",
+            "httpx",
+            "rtsps",
+            "webrtc",
+            "rtmp",
+            "tcp",
+            "rtsp",
+            "rtspx",
+            "ffmpeg",
+        }
         client.streams = streams = Mock(spec_set=_StreamClient)
         streams.list.return_value = {}
         client.validate_server_version = AsyncMock(
@@ -211,3 +229,15 @@ async def init_test_integration(
         await hass.async_block_till_done()
 
     return test_camera
+
+
+@pytest.fixture
+def server_dir(tmp_path: Path) -> Generator[Path]:
+    """Fixture to provide a temporary directory for the server."""
+    server_dir = tmp_path / "go2rtc"
+    server_dir.mkdir()
+    with patch(
+        "homeassistant.components.go2rtc.mkdtemp",
+        return_value=str(server_dir),
+    ):
+        yield server_dir

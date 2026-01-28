@@ -241,5 +241,19 @@
     "cannot_connect": {
       "message": "Cannot connect to APC UPS Daemon."
     }
+  },
+  "issues": {
+    "apc_deprecated": {
+      "description": "The {entity_name} sensor (`{entity_id}`) is deprecated because it exposes internal details of the APC UPS Daemon response.\n\nIt is still referenced in the following automations or scripts:\n{items}\n\nUpdate those automations or scripts to use supported APC UPS entities instead. Reload the APC UPS Daemon integration afterwards to resolve this issue.",
+      "title": "{entity_name} sensor is deprecated"
+    },
+    "available_via_device_info": {
+      "description": "The {entity_name} sensor (`{entity_id}`) is deprecated because the same value is available from the device registry via `device_attr(\"{device_id}\", \"{available_via_device_attr}\")`.\n\nIt is still referenced in the following automations or scripts:\n{items}\n\nUpdate those automations or scripts to use the `device_attr` helper instead of this sensor. Reload the APC UPS Daemon integration afterwards to resolve this issue.",
+      "title": "{entity_name} sensor is deprecated"
+    },
+    "date_deprecated": {
+      "description": "The {entity_name} sensor (`{entity_id}`) is deprecated because the timestamp is already available from other APC UPS sensors via their last updated time.\n\nIt is still referenced in the following automations or scripts:\n{items}\n\nUpdate those automations or scripts to reference any entity's `last_updated` attribute instead (for example, `states.binary_sensor.apcups_online_status.last_updated`). Reload the APC UPS Daemon integration afterwards to resolve this issue.",
+      "title": "{entity_name} sensor is deprecated"
+    }
   }
 }

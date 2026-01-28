@@ -492,6 +492,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 await asyncio.sleep(_ANNOUNCEMENT_AFTER_DELAY)
         except Exception:
             _LOGGER.exception("Unexpected error while playing announcement")
+            self._announcement = None
             raise
         finally:
             self._run_pipeline_task = None

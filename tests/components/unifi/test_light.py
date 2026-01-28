@@ -86,6 +86,24 @@ DEVICE_LED_OFF = {
     "hw_caps": 2,
 }
 
+DEVICE_WITH_LED_NO_RGB = {
+    "board_rev": 2,
+    "device_id": "mock-id-4",
+    "ip": "10.0.0.4",
+    "last_seen": 1562600145,
+    "mac": "10:00:00:00:01:04",
+    "model": "US-16-150W",
+    "name": "Device LED No RGB",
+    "next_interval": 20,
+    "state": 1,
+    "type": "usw",
+    "version": "4.0.42.10433",
+    "led_override": "on",
+    "led_override_color": "#ffffff",
+    "led_override_color_brightness": 100,
+    "hw_caps": 0,
+}
+
 
 @pytest.mark.parametrize("device_payload", [[DEVICE_WITH_LED, DEVICE_WITHOUT_LED]])
 @pytest.mark.usefixtures("config_entry_setup")
@@ -321,3 +339,90 @@ async def test_light_platform_snapshot(
     with patch("homeassistant.components.unifi.PLATFORMS", [Platform.LIGHT]):
         config_entry = await config_entry_factory()
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.parametrize("device_payload", [[DEVICE_WITH_LED_NO_RGB]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_light_onoff_mode_only(
+    hass: HomeAssistant,
+) -> None:
+    """Test light with ONOFF mode only (no LED ring support)."""
+    assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1
+
+    light_entity = hass.states.get("light.device_led_no_rgb_led")
+    assert light_entity is not None
+    assert light_entity.state == STATE_ON
+    # Device without LED ring support should not expose brightness or RGB
+    assert light_entity.attributes.get("brightness") is None
+    assert light_entity.attributes.get("rgb_color") is None
+    assert light_entity.attributes.get("supported_color_modes") == ["onoff"]
+    assert light_entity.attributes.get("color_mode") == "onoff"
+
+
+@pytest.mark.parametrize("device_payload", [[DEVICE_WITH_LED_NO_RGB]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_light_onoff_mode_turn_on_off(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test ONOFF-only light turn on and off."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.put(
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/rest/device/mock-id-4",
+    )
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.device_led_no_rgb_led"},
+        blocking=True,
+    )
+
+    assert aioclient_mock.call_count == 1
+    call_data = aioclient_mock.mock_calls[0][2]
+    assert call_data["led_override"] == "off"
+    # Should not send brightness or color for ONOFF-only devices
+    assert call_data.get("led_override_color_brightness") is None
+    assert call_data.get("led_override_color") is None
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.device_led_no_rgb_led"},
+        blocking=True,
+    )
+
+    assert aioclient_mock.call_count == 2
+    call_data = aioclient_mock.mock_calls[1][2]
+    assert call_data["led_override"] == "on"
+    # Should not send brightness or color for ONOFF-only devices
+    assert call_data.get("led_override_color_brightness") is None
+    assert call_data.get("led_override_color") is None
+
+
+@pytest.mark.parametrize("device_payload", [[DEVICE_WITH_LED, DEVICE_WITH_LED_NO_RGB]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_light_rgb_vs_onoff_modes(
+    hass: HomeAssistant,
+) -> None:
+    """Test that RGB and ONOFF modes are correctly assigned based on device capabilities."""
+    assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 2
+
+    # Device with LED ring support should have RGB mode
+    rgb_light = hass.states.get("light.device_with_led_led")
+    assert rgb_light is not None
+    assert rgb_light.state == STATE_ON
+    assert rgb_light.attributes.get("supported_color_modes") == ["rgb"]
+    assert rgb_light.attributes.get("color_mode") == "rgb"
+    assert rgb_light.attributes.get("brightness") == 204
+    assert rgb_light.attributes.get("rgb_color") == (0, 0, 255)
+
+    # Device without LED ring support should have ONOFF mode
+    onoff_light = hass.states.get("light.device_led_no_rgb_led")
+    assert onoff_light is not None
+    assert onoff_light.state == STATE_ON
+    assert onoff_light.attributes.get("supported_color_modes") == ["onoff"]
+    assert onoff_light.attributes.get("color_mode") == "onoff"
+    assert onoff_light.attributes.get("brightness") is None
+    assert onoff_light.attributes.get("rgb_color") is None

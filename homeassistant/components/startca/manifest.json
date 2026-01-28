@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/startca",
   "iot_class": "cloud_polling",
   "quality_scale": "legacy",
-  "requirements": ["xmltodict==0.13.0"]
+  "requirements": ["xmltodict==1.0.2"]
 }

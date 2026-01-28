@@ -452,6 +452,11 @@ class Entity(
     # Entity description instance for this Entity
     entity_description: EntityDescription
 
+    # Integration suggested object id, derived from entity_id, if it is set by the
+    # integration before the entity is added.
+    # Only handled internally, never to be used by integrations.
+    internal_integration_suggested_object_id: str | None
+
     # If we reported if this entity was slow
     _slow_reported = False
 
@@ -489,6 +494,10 @@ class Entity(
 
     # The device entry for this entity
     device_entry: dr.DeviceEntry | None = None
+
+    # Cached friendly name as (original_name, computed_friendly_name)
+    # Invalidated on relevant registry changes
+    _cached_friendly_name: tuple[str | None, str | None] | None = None
 
     # Hold list for functions to call on remove.
     _on_remove: list[CALLBACK_TYPE] | None = None
@@ -581,22 +590,6 @@ class Entity(
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._attr_unique_id
-
-    @cached_property
-    def use_device_name(self) -> bool:
-        """Return if this entity does not have its own name.
-
-        Should be True if the entity represents the single main feature of a device.
-        """
-        if hasattr(self, "_attr_name"):
-            return not self._attr_name
-        if (
-            name_translation_key := self._name_translation_key
-        ) and name_translation_key in self.platform_data.platform_translations:
-            return False
-        if hasattr(self, "entity_description"):
-            return not self.entity_description.name
-        return not self.name
 
     @cached_property
     def has_entity_name(self) -> bool:
@@ -715,7 +708,7 @@ class Entity(
 
     @property
     def suggested_object_id(self) -> str | None:
-        """Return input for object id."""
+        """Return suggested object id."""
         if (
             # Check our class has overridden the name property from Entity
             # We need to use type.__getattribute__ to retrieve the underlying
@@ -733,6 +726,7 @@ class Entity(
             )
         else:
             name = self.name
+
         return None if name is UNDEFINED else name
 
     @cached_property
@@ -1038,38 +1032,28 @@ class Entity(
             return f"{state:.{FLOAT_PRECISION}}"
         return str(state)
 
-    def _friendly_name_internal(self) -> str | None:
-        """Return the friendly name.
-
-        If has_entity_name is False, this returns self.name
-        If has_entity_name is True, this returns device.name + self.name
-        """
-        name = self.name
-        if name is UNDEFINED:
-            name = None
-
-        if not self.has_entity_name or not (device_entry := self.device_entry):
-            return name
-
-        device_name = device_entry.name_by_user or device_entry.name
-        if name is None and self.use_device_name:
-            return device_name
-        return f"{device_name} {name}" if device_name else name
-
     @callback
     def _async_calculate_state(self) -> CalculatedState:
         """Calculate state string and attribute mapping."""
-        state, attr, _, _, _ = self.__async_calculate_state()
+        state, attr, _, _, _, _ = self.__async_calculate_state()
         return CalculatedState(state, attr)
 
     def __async_calculate_state(
         self,
-    ) -> tuple[str, dict[str, Any], Mapping[str, Any] | None, str | None, int | None]:
+    ) -> tuple[
+        str,
+        dict[str, Any],
+        str | None,
+        Mapping[str, Any] | None,
+        str | None,
+        int | None,
+    ]:
         """Calculate state string and attribute mapping.
 
         Returns a tuple:
         state - the stringified state
         attr - the attribute dictionary
+        original_name - the original name which may be overridden
         capability_attr - a mapping with capability attributes
         original_device_class - the device class which may be overridden
         supported_features - the supported features
@@ -1111,15 +1095,39 @@ class Entity(
         if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
-        if (
-            name := (entry and entry.name) or self._friendly_name_internal()
-        ) is not None:
+        original_name = self.name
+        if original_name is UNDEFINED:
+            original_name = None
+
+        # Use cached friendly name if available and original_name hasn't changed.
+        # Cache is invalidated on relevant registry changes.
+        if (cached := self._cached_friendly_name) is not None and (
+            cached[0] == original_name
+        ):
+            name = cached[1]
+        else:
+            if entry is None:
+                name = original_name
+            else:
+                name = er.async_get(self.hass).async_generate_full_name(
+                    entry, original_name=original_name
+                )
+            self._cached_friendly_name = (original_name, name)
+
+        if name:
             attr[ATTR_FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
-        return (state, attr, capability_attr, original_device_class, supported_features)
+        return (
+            state,
+            attr,
+            original_name,
+            capability_attr,
+            original_device_class,
+            supported_features,
+        )
 
     @callback
     def _async_write_ha_state(self) -> None:
@@ -1145,19 +1153,25 @@ class Entity(
             return
 
         state_calculate_start = timer()
-        state, attr, capabilities, original_device_class, supported_features = (
-            self.__async_calculate_state()
-        )
+        (
+            state,
+            attr,
+            original_name,
+            capabilities,
+            original_device_class,
+            supported_features,
+        ) = self.__async_calculate_state()
         time_now = timer()
 
         if entry := self.registry_entry:
-            # Make sure capabilities in the entity registry are up to date. Capabilities
-            # include capability attributes, device class and supported features
+            # Make sure capabilities and other data in the entity registry are up to date.
+            # Capabilities include capability attributes, device class and supported features.
             supported_features = supported_features or 0
             if (
                 capabilities != entry.capabilities
                 or original_device_class != entry.original_device_class
                 or supported_features != entry.supported_features
+                or original_name != entry.original_name
             ):
                 if not self.__capabilities_updated_at_reported:
                     # _Entity__capabilities_updated_at is because of name mangling
@@ -1190,6 +1204,7 @@ class Entity(
                     self.entity_id,
                     capabilities=capabilities,
                     original_device_class=original_device_class,
+                    original_name=original_name,
                     supported_features=supported_features,
                 )
 
@@ -1527,6 +1542,11 @@ class Entity(
         if "device_id" in data["changes"]:
             self._async_subscribe_device_updates()
 
+        # Invalidate friendly name cache if relevant fields changed
+        changes = data["changes"]
+        if "name" in changes or "has_entity_name" in changes or "device_id" in changes:
+            self._cached_friendly_name = None
+
         ent_reg = er.async_get(self.hass)
         old = self.registry_entry
         registry_entry = ent_reg.async_get(data["entity_id"])
@@ -1553,7 +1573,9 @@ class Entity(
         # Clear the remove future to handle entity added again after entity id change
         self.__remove_future = None
         self._platform_state = EntityPlatformState.NOT_ADDED
-        await self.platform.async_add_entities([self])
+        await self.platform.async_add_entities(
+            [self], config_subentry_id=registry_entry.config_subentry_id
+        )
 
     @callback
     def _async_unsubscribe_device_updates(self) -> None:
@@ -1576,6 +1598,7 @@ class Entity(
         if "name" not in data["changes"] and "name_by_user" not in data["changes"]:
             return
 
+        self._cached_friendly_name = None
         self.device_entry = dr.async_get(self.hass).async_get(data["device_id"])
         self.async_write_ha_state()
 

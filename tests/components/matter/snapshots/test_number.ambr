@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hold time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -83,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hold time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -115,6 +117,65 @@
     'state': '10',
   })
 # ---
+# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_occupied_setback-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 3.0,
+      'min': 0.5,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.floor_heating_thermostat_occupied_setback',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Occupied setback',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Occupied setback',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'occupied_setback',
+    'unique_id': '00000000000004D2-0000000000000064-MatterNodeDevice-1-ThermostatOccupiedSetback-513-52',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_numbers[aqara_thermostat_w500][number.floor_heating_thermostat_occupied_setback-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Floor Heating Thermostat Occupied setback',
+      'max': 3.0,
+      'min': 0.5,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.5,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.floor_heating_thermostat_occupied_setback',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.5',
+  })
+# ---
 # name: test_numbers[aqara_u200][number.aqara_smart_lock_u200_user_code_temporary_disable_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -141,6 +202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User code temporary disable time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -199,6 +261,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrong code limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -256,6 +319,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -313,6 +377,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -371,6 +436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -428,6 +494,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -486,6 +553,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -544,6 +612,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -601,6 +670,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -633,7 +703,7 @@
     'state': '1.0',
   })
 # ---
-# name: test_numbers[door_lock][number.mock_door_lock_autorelock_time-entry]
+# name: test_numbers[door_lock][number.mock_door_lock_auto_relock_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -651,7 +721,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_autorelock_time',
+    'entity_id': 'number.mock_door_lock_auto_relock_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -659,11 +729,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-relock time',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Autorelock time',
+    'original_name': 'Auto-relock time',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -673,10 +744,10 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[door_lock][number.mock_door_lock_autorelock_time-state]
+# name: test_numbers[door_lock][number.mock_door_lock_auto_relock_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Autorelock time',
+      'friendly_name': 'Mock Door Lock Auto-relock time',
       'max': 65534,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -684,7 +755,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_autorelock_time',
+    'entity_id': 'number.mock_door_lock_auto_relock_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -717,6 +788,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User code temporary disable time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -775,6 +847,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrong code limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -806,7 +879,7 @@
     'state': '3',
   })
 # ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_with_unbolt_autorelock_time-entry]
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_with_unbolt_auto_relock_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -824,7 +897,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_with_unbolt_autorelock_time',
+    'entity_id': 'number.mock_door_lock_with_unbolt_auto_relock_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -832,11 +905,12 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto-relock time',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Autorelock time',
+    'original_name': 'Auto-relock time',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -846,10 +920,10 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_with_unbolt_autorelock_time-state]
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_with_unbolt_auto_relock_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Autorelock time',
+      'friendly_name': 'Mock Door Lock with unbolt Auto-relock time',
       'max': 65534,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -857,7 +931,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_with_unbolt_autorelock_time',
+    'entity_id': 'number.mock_door_lock_with_unbolt_auto_relock_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -890,6 +964,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User code temporary disable time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -948,6 +1023,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrong code limit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -979,7 +1055,7 @@
     'state': '3',
   })
 # ---
-# name: test_numbers[eve_thermo][number.eve_thermo_temperature_offset-entry]
+# name: test_numbers[eve_thermo_v4][number.eve_thermo_20ebp1701_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -997,7 +1073,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.eve_thermo_temperature_offset',
+    'entity_id': 'number.eve_thermo_20ebp1701_temperature_offset',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1005,6 +1081,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature offset',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -1019,11 +1096,11 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[eve_thermo][number.eve_thermo_temperature_offset-state]
+# name: test_numbers[eve_thermo_v4][number.eve_thermo_20ebp1701_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Eve Thermo Temperature offset',
+      'friendly_name': 'Eve Thermo 20EBP1701 Temperature offset',
       'max': 50,
       'min': -50,
       'mode': <NumberMode.BOX: 'box'>,
@@ -1031,11 +1108,71 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.eve_thermo_temperature_offset',
+    'entity_id': 'number.eve_thermo_20ebp1701_temperature_offset',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_numbers[eve_thermo_v5][number.eve_thermo_20ecd1701_temperature_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 50,
+      'min': -50,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.eve_thermo_20ecd1701_temperature_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature offset',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature offset',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_offset',
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-EveTemperatureOffset-513-16',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_numbers[eve_thermo_v5][number.eve_thermo_20ecd1701_temperature_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Eve Thermo 20ECD1701 Temperature offset',
+      'max': 50,
+      'min': -50,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.5,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.eve_thermo_20ecd1701_temperature_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-1.5',
   })
 # ---
 # name: test_numbers[eve_weather_sensor][number.eve_weather_altitude_above_sea_level-entry]
@@ -1064,6 +1201,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Altitude above sea level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
@@ -1123,6 +1261,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1180,6 +1319,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hold time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1238,6 +1378,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED off intensity (Load Control)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1295,6 +1436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED on intensity (Load Control)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1352,6 +1494,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off transition time (Load Control)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1410,6 +1553,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level (Load Control)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1467,6 +1611,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level (RGB Indicator)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1524,6 +1669,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time (Load Control)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1582,6 +1728,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time (RGB Indicator)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1640,6 +1787,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On transition time (Load Control)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1698,6 +1846,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking time',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -1731,6 +1880,182 @@
     'state': '30',
   })
 # ---
+# name: test_numbers[mock_lock][number.mock_lock_auto_relock_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_lock_auto_relock_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auto-relock time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto-relock time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_relock_timer',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_lock][number.mock_lock_auto_relock_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock Auto-relock time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_lock_auto_relock_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_numbers[mock_lock][number.mock_lock_user_code_temporary_disable_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_lock_user_code_temporary_disable_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'User code temporary disable time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User code temporary disable time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_code_temporary_disable_time',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_lock][number.mock_lock_user_code_temporary_disable_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock User code temporary disable time',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_lock_user_code_temporary_disable_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_numbers[mock_lock][number.mock_lock_wrong_code_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_lock_wrong_code_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wrong code limit',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wrong code limit',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wrong_code_entry_limit',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[mock_lock][number.mock_lock_wrong_code_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock Wrong code limit',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_lock_wrong_code_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_numbers[mounted_dimmable_load_control_fixture][number.mock_mounted_dimmable_load_control_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1757,6 +2082,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1814,6 +2140,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED off intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1871,6 +2198,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED on intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1928,6 +2256,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1986,6 +2315,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level (1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2043,6 +2373,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level (6)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2100,6 +2431,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2158,6 +2490,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2216,6 +2549,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2274,6 +2608,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2331,6 +2666,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2389,6 +2725,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2447,6 +2784,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2505,6 +2843,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2562,6 +2901,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2620,6 +2960,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2678,6 +3019,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2736,6 +3078,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2793,6 +3136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2851,6 +3195,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2909,6 +3254,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2966,6 +3312,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On/Off transition time',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3024,6 +3371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature setpoint',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3082,6 +3430,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3139,6 +3488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Setpoint',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3171,6 +3521,182 @@
     'state': '100.0',
   })
 # ---
+# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_auto_relock_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.secuyou_smart_lock_auto_relock_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auto-relock time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto-relock time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_relock_timer',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_auto_relock_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Secuyou Smart Lock Auto-relock time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.secuyou_smart_lock_auto_relock_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_user_code_temporary_disable_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.secuyou_smart_lock_user_code_temporary_disable_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'User code temporary disable time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User code temporary disable time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_code_temporary_disable_time',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_user_code_temporary_disable_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Secuyou Smart Lock User code temporary disable time',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.secuyou_smart_lock_user_code_temporary_disable_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_wrong_code_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.secuyou_smart_lock_wrong_code_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wrong code limit',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wrong code limit',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wrong_code_entry_limit',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_wrong_code_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Secuyou Smart Lock Wrong code limit',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.secuyou_smart_lock_wrong_code_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_numbers[silabs_laundrywasher][number.laundrywasher_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3197,6 +3723,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature setpoint',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3255,6 +3782,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature setpoint (2)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3313,6 +3841,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature setpoint (3)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3345,6 +3874,65 @@
     'state': '4.0',
   })
 # ---
+# name: test_numbers[speaker][number.mock_speaker_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.mock_speaker_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Volume',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'speaker_setpoint',
+    'unique_id': '00000000000004D2-000000000000006B-MatterNodeDevice-1-speaker_setpoint-8-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_numbers[speaker][number.mock_speaker_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock speaker Volume',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_speaker_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '47',
+  })
+# ---
 # name: test_numbers[valve][number.valve_default_open_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3371,6 +3959,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Default open duration',
     'options': dict({
     }),
     'original_device_class': None,

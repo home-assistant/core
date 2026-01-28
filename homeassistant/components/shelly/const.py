@@ -168,6 +168,7 @@ INPUTS_EVENTS_SUBTYPES: Final = {
     "button2": 2,
     "button3": 3,
     "button4": 4,
+    "button5": 5,
 }
 
 SHBTN_MODELS: Final = [MODEL_BUTTON1, MODEL_BUTTON1_V2]
@@ -254,6 +255,8 @@ OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
     "outbound_websocket_incorrectly_enabled_{unique}"
 )
 DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
+OPEN_WIFI_AP_ISSUE_ID = "open_wifi_ap_{unique}"
+COIOT_UNCONFIGURED_ISSUE_ID = "coiot_unconfigured_{unique}"
 
 
 class DeprecatedFirmwareInfo(TypedDict):
@@ -339,3 +342,8 @@ MODEL_TOP_EV_CHARGER_EVE01 = "EVE01"
 MODEL_FRANKEVER_IRRIGATION_CONTROLLER = "Irrigation"
 
 ROLE_GENERIC = "generic"
+
+TRV_CHANNEL = 0
+
+ATTR_KEY = "key"
+ATTR_VALUE = "value"

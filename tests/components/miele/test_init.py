@@ -3,7 +3,7 @@
 from datetime import timedelta
 import http
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
@@ -109,7 +109,7 @@ async def test_devices_multiple_created_count(
     """Test that multiple devices are created."""
     await setup_integration(hass, mock_config_entry)
 
-    assert len(device_registry.devices) == 5
+    assert len(device_registry.devices) == 7
 
 
 async def test_device_info(
@@ -205,7 +205,7 @@ async def test_setup_all_platforms(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert len(device_registry.devices) == prev_devices + 2
+    assert len(device_registry.devices) == prev_devices + 1
 
     # Check a sample sensor for each new device
     assert hass.states.get("sensor.dishwasher").state == "in_use"
@@ -215,7 +215,7 @@ async def test_setup_all_platforms(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        ClientResponseError("test", "Test"),
+        ClientResponseError(Mock(), Mock()),
         TimeoutError,
     ],
     ids=[

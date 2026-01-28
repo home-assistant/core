@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from base64 import b64decode
+from dataclasses import dataclass
+from typing import Any
+
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.event import (
@@ -16,68 +20,143 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeEnumWrapper
+from .models import (
+    DeviceWrapper,
+    DPCodeEnumWrapper,
+    DPCodeRawWrapper,
+    DPCodeStringWrapper,
+    DPCodeTypeInformationWrapper,
+)
+
+
+class _EventEnumWrapper(DPCodeEnumWrapper):
+    """Wrapper for event enum DP codes."""
+
+    def read_device_status(self, device: CustomerDevice) -> tuple[str, None] | None:
+        """Return the event details."""
+        if (raw_value := super().read_device_status(device)) is None:
+            return None
+        return (raw_value, None)
+
+
+class _AlarmMessageWrapper(DPCodeStringWrapper):
+    """Wrapper for a STRING message on DPCode.ALARM_MESSAGE."""
+
+    def __init__(self, dpcode: str, type_information: Any) -> None:
+        """Init _AlarmMessageWrapper."""
+        super().__init__(dpcode, type_information)
+        self.options = ["triggered"]
+
+    def read_device_status(
+        self, device: CustomerDevice
+    ) -> tuple[str, dict[str, Any]] | None:
+        """Return the event attributes for the alarm message."""
+        if (raw_value := super().read_device_status(device)) is None:
+            return None
+        return ("triggered", {"message": b64decode(raw_value).decode("utf-8")})
+
+
+class _DoorbellPicWrapper(DPCodeRawWrapper):
+    """Wrapper for a RAW message on DPCode.DOORBELL_PIC.
+
+    It is expected that the RAW data is base64/utf8 encoded URL of the picture.
+    """
+
+    def __init__(self, dpcode: str, type_information: Any) -> None:
+        """Init _DoorbellPicWrapper."""
+        super().__init__(dpcode, type_information)
+        self.options = ["triggered"]
+
+    def read_device_status(
+        self, device: CustomerDevice
+    ) -> tuple[str, dict[str, Any]] | None:
+        """Return the event attributes for the doorbell picture."""
+        if (status := super().read_device_status(device)) is None:
+            return None
+        return ("triggered", {"message": status.decode("utf-8")})
+
+
+@dataclass(frozen=True)
+class TuyaEventEntityDescription(EventEntityDescription):
+    """Describe a Tuya Event entity."""
+
+    wrapper_class: type[DPCodeTypeInformationWrapper] = _EventEnumWrapper
+
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default status set of each category (that don't have a set instruction)
 # end up being events.
-EVENTS: dict[DeviceCategory, tuple[EventEntityDescription, ...]] = {
+EVENTS: dict[DeviceCategory, tuple[TuyaEventEntityDescription, ...]] = {
+    DeviceCategory.SP: (
+        TuyaEventEntityDescription(
+            key=DPCode.ALARM_MESSAGE,
+            device_class=EventDeviceClass.DOORBELL,
+            translation_key="doorbell_message",
+            wrapper_class=_AlarmMessageWrapper,
+        ),
+        TuyaEventEntityDescription(
+            key=DPCode.DOORBELL_PIC,
+            device_class=EventDeviceClass.DOORBELL,
+            translation_key="doorbell_picture",
+            wrapper_class=_DoorbellPicWrapper,
+        ),
+    ),
     DeviceCategory.WXKG: (
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE1,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "1"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE2,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "2"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE3,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "3"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE4,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "4"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE5,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "5"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE6,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "6"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE7,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "7"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE8,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "8"},
         ),
-        EventEntityDescription(
+        TuyaEventEntityDescription(
             key=DPCode.SWITCH_MODE9,
             device_class=EventDeviceClass.BUTTON,
             translation_key="numbered_button",
             translation_placeholders={"button_number": "9"},
         ),
-    )
+    ),
 }
 
 
@@ -102,8 +181,8 @@ async def async_setup_entry(
                     )
                     for description in descriptions
                     if (
-                        dpcode_wrapper := DPCodeEnumWrapper.find_dpcode(
-                            device, description.key, prefer_function=True
+                        dpcode_wrapper := description.wrapper_class.find_dpcode(
+                            device, description.key
                         )
                     )
                 )
@@ -127,26 +206,25 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: EventEntityDescription,
-        dpcode_wrapper: DPCodeEnumWrapper,
+        dpcode_wrapper: DeviceWrapper[tuple[str, dict[str, Any] | None]],
     ) -> None:
         """Init Tuya event entity."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._dpcode_wrapper = dpcode_wrapper
-        self._attr_event_types = dpcode_wrapper.type_information.range
+        self._attr_event_types = dpcode_wrapper.options
 
     async def _handle_state_update(
         self,
         updated_status_properties: list[str] | None,
-        dp_timestamps: dict | None = None,
+        dp_timestamps: dict[str, int] | None,
     ) -> None:
-        if (
-            updated_status_properties is None
-            or self._dpcode_wrapper.dpcode not in updated_status_properties
-            or (value := self._dpcode_wrapper.read_device_status(self.device)) is None
-        ):
+        if self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        ) or not (event_data := self._dpcode_wrapper.read_device_status(self.device)):
             return
 
-        self._trigger_event(value)
+        event_type, event_attributes = event_data
+        self._trigger_event(event_type, event_attributes)
         self.async_write_ha_state()

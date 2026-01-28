@@ -2,10 +2,10 @@
 
 from http import HTTPStatus
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
-from aiosenz import TOKEN_ENDPOINT
 from httpx import HTTPStatusError, RequestError
+from pysenz import TOKEN_ENDPOINT
 import pytest
 
 from homeassistant.components.senz.const import DOMAIN
@@ -129,7 +129,7 @@ async def test_expired_token_refresh_failure(
         (
             HTTPStatusError(
                 message="Exception",
-                request=None,
+                request=Mock(),
                 response=MagicMock(status_code=HTTPStatus.UNAUTHORIZED),
             ),
             ConfigEntryState.SETUP_ERROR,
@@ -137,7 +137,7 @@ async def test_expired_token_refresh_failure(
         (
             HTTPStatusError(
                 message="Exception",
-                request=None,
+                request=Mock(),
                 response=MagicMock(status_code=HTTPStatus.FORBIDDEN),
             ),
             ConfigEntryState.SETUP_RETRY,

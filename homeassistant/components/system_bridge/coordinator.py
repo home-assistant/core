@@ -13,13 +13,13 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.websocket_client import WebSocketClient
-from systembridgemodels.modules import (
+from systembridgeconnector.models.modules import (
     GetData,
     Module,
     ModulesData,
     RegisterDataListener,
 )
+from systembridgeconnector.websocket_client import WebSocketClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (

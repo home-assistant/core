@@ -27,6 +27,7 @@ from homeassistant.helpers.issue_registry import (
 )
 
 from .const import (
+    ADDONS_COORDINATOR,
     ATTR_DATA,
     ATTR_HEALTHY,
     ATTR_STARTUP,
@@ -49,6 +50,7 @@ from .const import (
     ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_SYSTEM_FREE_SPACE,
+    ISSUE_MOUNT_MOUNT_FAILED,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
     PLACEHOLDER_KEY_FREE_SPACE,
@@ -57,7 +59,7 @@ from .const import (
     STARTUP_COMPLETE,
     UPDATE_KEY_SUPERVISOR,
 )
-from .coordinator import get_addons_info, get_host_info
+from .coordinator import HassioDataUpdateCoordinator, get_addons_info, get_host_info
 from .handler import HassIO, get_supervisor_client
 
 ISSUE_KEY_UNHEALTHY = "unhealthy"
@@ -77,7 +79,7 @@ UNSUPPORTED_SKIP_REPAIR = {"privileged"}
 # Keys (type + context) of issues that when found should be made into a repair
 ISSUE_KEYS_FOR_REPAIRS = {
     ISSUE_KEY_ADDON_BOOT_FAIL,
-    "issue_mount_mount_failed",
+    ISSUE_MOUNT_MOUNT_FAILED,
     "issue_system_multiple_data_disks",
     "issue_system_reboot_required",
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
@@ -284,6 +286,9 @@ class SupervisorIssues:
                 else:
                     placeholders[PLACEHOLDER_KEY_FREE_SPACE] = "<2"
 
+            if issue.key == ISSUE_MOUNT_MOUNT_FAILED:
+                self._async_coordinator_refresh()
+
             async_create_issue(
                 self._hass,
                 DOMAIN,
@@ -335,6 +340,9 @@ class SupervisorIssues:
 
         if issue.key in ISSUE_KEYS_FOR_REPAIRS:
             async_delete_issue(self._hass, DOMAIN, issue.uuid.hex)
+
+            if issue.key == ISSUE_MOUNT_MOUNT_FAILED:
+                self._async_coordinator_refresh()
 
         del self._issues[issue.uuid]
 
@@ -406,3 +414,11 @@ class SupervisorIssues:
 
         elif event[ATTR_WS_EVENT] == EVENT_ISSUE_REMOVED:
             self.remove_issue(Issue.from_dict(event[ATTR_DATA]))
+
+    def _async_coordinator_refresh(self) -> None:
+        """Refresh coordinator to update latest data in entities."""
+        coordinator: HassioDataUpdateCoordinator | None
+        if coordinator := self._hass.data.get(ADDONS_COORDINATOR):
+            coordinator.config_entry.async_create_task(
+                self._hass, coordinator.async_refresh()
+            )

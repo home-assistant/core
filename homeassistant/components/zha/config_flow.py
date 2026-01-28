@@ -15,7 +15,7 @@ from typing import Any
 import voluptuous as vol
 from zha.application.const import RadioType
 import zigpy.backups
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, CONF_NWK_TX_POWER
+from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import CannotWriteNetworkSettings, DestructiveWriteNetworkSettings
 
 from homeassistant.components import onboarding, usb
@@ -196,7 +196,6 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._restore_backup_task: asyncio.Task[None] | None = None
         self._reset_old_radio_task: asyncio.Task[None] | None = None
         self._form_network_task: asyncio.Task[None] | None = None
-        self._extra_network_config: dict[str, Any] = {}
 
         # Progress flow steps cannot abort so we need to store the abort reason and then
         # re-raise it in a dedicated step
@@ -658,7 +657,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
     async def _async_form_new_network(self) -> None:
         """Do the work of forming a new network."""
-        await self._radio_mgr.async_form_network(config=self._extra_network_config)
+        await self._radio_mgr.async_form_network()
         # Load the newly formed network settings to get the network info
         await self._radio_mgr.async_load_network_settings()
 
@@ -681,6 +680,13 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         try:
             await self._form_network_task
+        except Exception as exc:
+            _LOGGER.exception("Failed to form new network")
+            self._progress_error = AbortFlow(
+                reason="cannot_form_network",
+                description_placeholders={"error": str(exc)},
+            )
+            return self.async_show_progress_done(next_step_id="progress_failed")
         finally:
             self._form_network_task = None
 
@@ -1067,9 +1073,6 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         device_settings = discovery_data["port"]
         device_path = device_settings[CONF_DEVICE_PATH]
         self._flow_strategy = discovery_data.get("flow_strategy")
-
-        if "tx_power" in discovery_data:
-            self._extra_network_config[CONF_NWK_TX_POWER] = discovery_data["tx_power"]
 
         await self._set_unique_id_and_update_ignored_flow(
             unique_id=f"{name}_{radio_type.name}_{device_path}",

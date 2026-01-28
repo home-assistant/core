@@ -1,171 +1,88 @@
 """Test for Roborock init."""
 
-from copy import deepcopy
-from http import HTTPStatus
+import datetime
 import pathlib
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from roborock import (
-    RoborockException,
     RoborockInvalidCredentials,
     RoborockInvalidUserAgreement,
     RoborockNoUserAgreement,
 )
+from roborock.exceptions import RoborockException
+from roborock.mqtt.session import MqttSessionUnauthorized
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
-from .mock_data import (
-    HOME_DATA,
-    NETWORK_INFO,
-    NETWORK_INFO_2,
-    ROBOROCK_RRUID,
-    USER_EMAIL,
-)
+from .conftest import FakeDevice
+from .mock_data import ROBOROCK_RRUID, USER_EMAIL
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 
 async def test_unload_entry(
-    hass: HomeAssistant, bypass_api_fixture, setup_entry: MockConfigEntry
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    device_manager: AsyncMock,
 ) -> None:
-    """Test unloading roboorck integration."""
+    """Test unloading roborock integration."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert setup_entry.state is ConfigEntryState.LOADED
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.async_release"
-    ) as mock_disconnect:
-        assert await hass.config_entries.async_unload(setup_entry.entry_id)
-        await hass.async_block_till_done()
-        assert mock_disconnect.call_count == 2
-        assert setup_entry.state is ConfigEntryState.NOT_LOADED
+
+    assert device_manager.get_devices.called
+    assert not device_manager.close.called
+
+    # Unload the config entry and verify that the device manager is closed
+    assert await hass.config_entries.async_unload(setup_entry.entry_id)
+    await hass.async_block_till_done()
+    assert setup_entry.state is ConfigEntryState.NOT_LOADED
+
+    assert device_manager.close.called
 
 
-async def test_config_entry_not_ready(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
-) -> None:
-    """Test that when coordinator update fails, entry retries."""
-    with (
-        patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
-            side_effect=RoborockException(),
-        ),
-    ):
-        await async_setup_component(hass, DOMAIN, {})
-        assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_config_entry_not_ready_home_data(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
-) -> None:
-    """Test that when we fail to get home data, entry retries."""
-    with (
-        patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
-            side_effect=RoborockException(),
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
-            side_effect=RoborockException(),
-        ),
-    ):
-        await async_setup_component(hass, DOMAIN, {})
-        assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_get_networking_fails(
+async def test_home_assistant_stop(
     hass: HomeAssistant,
-    mock_roborock_entry: MockConfigEntry,
-    bypass_api_fixture_v1_only,
+    setup_entry: MockConfigEntry,
+    device_manager: AsyncMock,
 ) -> None:
-    """Test that when networking fails, we attempt to retry."""
-    with patch(
-        "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
-        side_effect=RoborockException(),
-    ):
-        await async_setup_component(hass, DOMAIN, {})
-        assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
+    """Test shutting down Home Assistant."""
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert setup_entry.state is ConfigEntryState.LOADED
+
+    assert not device_manager.close.called
+
+    # Perform Home Assistant stop and verify that device manager is closed
+    await hass.async_stop()
+
+    assert device_manager.close.called
 
 
-async def test_get_networking_fails_none(
-    hass: HomeAssistant,
-    mock_roborock_entry: MockConfigEntry,
-    bypass_api_fixture_v1_only,
-) -> None:
-    """Test that when networking returns None, we attempt to retry."""
-    with patch(
-        "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
-        return_value=None,
-    ):
-        await async_setup_component(hass, DOMAIN, {})
-        assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_cloud_client_fails_props(
-    hass: HomeAssistant,
-    mock_roborock_entry: MockConfigEntry,
-    bypass_api_fixture_v1_only,
-) -> None:
-    """Test that if networking succeeds, but we can't communicate with the vacuum, we can't get props, fail."""
-    with (
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.ping",
-            side_effect=RoborockException(),
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_prop",
-            side_effect=RoborockException(),
-        ),
-    ):
-        await async_setup_component(hass, DOMAIN, {})
-        assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_local_client_fails_props(
-    hass: HomeAssistant,
-    mock_roborock_entry: MockConfigEntry,
-    bypass_api_fixture_v1_only,
-) -> None:
-    """Test that if networking succeeds, but we can't communicate locally with the vacuum, we can't get props, fail."""
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
-        side_effect=RoborockException(),
-    ):
-        await async_setup_component(hass, DOMAIN, {})
-        assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_fail_maps(
-    hass: HomeAssistant,
-    mock_roborock_entry: MockConfigEntry,
-    bypass_api_fixture_v1_only,
-) -> None:
-    """Test that the integration fails to load if we fail to get the maps."""
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_multi_maps_list",
-        side_effect=RoborockException(),
-    ):
-        await async_setup_component(hass, DOMAIN, {})
-        assert mock_roborock_entry.state is ConfigEntryState.SETUP_RETRY
-
-
+@pytest.mark.parametrize(
+    "side_effect", [RoborockInvalidCredentials(), MqttSessionUnauthorized()]
+)
 async def test_reauth_started(
-    hass: HomeAssistant, bypass_api_fixture, mock_roborock_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    side_effect: Exception,
 ) -> None:
     """Test reauth flow started."""
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
-        side_effect=RoborockInvalidCredentials(),
+        "homeassistant.components.roborock.create_device_manager",
+        side_effect=side_effect,
     ):
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
@@ -175,114 +92,142 @@ async def test_reauth_started(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
-@pytest.mark.parametrize("platforms", [[Platform.IMAGE]])
-async def test_remove_from_hass(
+async def test_mqtt_session_unauthorized_hook_called(
     hass: HomeAssistant,
-    bypass_api_fixture,
-    setup_entry: MockConfigEntry,
-    hass_client: ClientSessionGenerator,
-    storage_path: pathlib.Path,
+    mock_roborock_entry: MockConfigEntry,
+    device_manager: AsyncMock,
 ) -> None:
-    """Test that removing from hass removes any existing images."""
+    """Test that the mqtt session unauthorized hook is called on unauthorized event."""
+    device_manager_kwargs = {}
 
-    # Ensure some image content is cached
-    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
-    client = await hass_client()
-    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-    assert resp.status == HTTPStatus.OK
+    def create_device_manager(*args: Any, **kwargs: Any) -> AsyncMock:
+        nonlocal device_manager_kwargs
+        device_manager_kwargs = kwargs
+        return device_manager
 
-    config_entry_storage = storage_path / setup_entry.entry_id
-    assert not config_entry_storage.exists()
+    with patch(
+        "homeassistant.components.roborock.create_device_manager",
+        side_effect=create_device_manager,
+    ):
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_roborock_entry.state is ConfigEntryState.LOADED
 
-    # Flush to disk
-    await hass.config_entries.async_unload(setup_entry.entry_id)
-    assert config_entry_storage.exists()
-    paths = list(config_entry_storage.walk())
-    assert len(paths) == 4  # Two map image and two directories
+    flows = hass.config_entries.flow.async_progress()
+    assert not flows
 
-    await hass.config_entries.async_remove(setup_entry.entry_id)
-    # After removal, directories should be empty.
-    assert not config_entry_storage.exists()
+    # Simulate an unauthorized event by calling the captured hook
+    assert device_manager_kwargs
+    mqtt_session_unauthorized_hook = device_manager_kwargs.get(
+        "mqtt_session_unauthorized_hook"
+    )
+    assert mqtt_session_unauthorized_hook
+    mqtt_session_unauthorized_hook()
+
+    # Verify that reauth flow is started
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
 
 
 @pytest.mark.parametrize("platforms", [[Platform.IMAGE]])
-async def test_oserror_remove_image(
+@pytest.mark.parametrize(
+    ("exists", "is_dir", "rmtree_called"),
+    [
+        (True, True, True),
+        (False, False, False),
+        (True, False, False),
+    ],
+    ids=[
+        "old_storage_removed",
+        "new_storage_ignored",
+        "no_existing_storage",
+    ],
+)
+async def test_remove_old_storage_directory(
     hass: HomeAssistant,
-    bypass_api_fixture,
-    setup_entry: MockConfigEntry,
+    mock_roborock_entry: MockConfigEntry,
+    storage_path: pathlib.Path,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    exists: bool,
+    is_dir: bool,
+    rmtree_called: bool,
+) -> None:
+    """Test cleanup of old old map storage."""
+    with (
+        patch(
+            "homeassistant.components.roborock.roborock_storage.Path.exists",
+            return_value=exists,
+        ),
+        patch(
+            "homeassistant.components.roborock.roborock_storage.Path.is_dir",
+            return_value=is_dir,
+        ),
+        patch(
+            "homeassistant.components.roborock.roborock_storage.shutil.rmtree",
+        ) as mock_rmtree,
+    ):
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    assert mock_rmtree.called == rmtree_called
+
+
+@pytest.mark.parametrize("platforms", [[Platform.IMAGE]])
+async def test_oserror_remove_storage_directory(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
     storage_path: pathlib.Path,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that we gracefully handle failing to remove an image."""
-
-    # Ensure some image content is cached
-    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
-    client = await hass_client()
-    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-    assert resp.status == HTTPStatus.OK
-
-    # Image content is saved when unloading
-    config_entry_storage = storage_path / setup_entry.entry_id
-    assert not config_entry_storage.exists()
-    await hass.config_entries.async_unload(setup_entry.entry_id)
-
-    assert config_entry_storage.exists()
-    paths = list(config_entry_storage.walk())
-    assert len(paths) == 4  # Two map image and two directories
-
-    with patch(
-        "homeassistant.components.roborock.roborock_storage.shutil.rmtree",
-        side_effect=OSError,
+    """Test that we gracefully handle failing to remove old map storage."""
+    with (
+        patch(
+            "homeassistant.components.roborock.roborock_storage.Path.exists",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.roborock.roborock_storage.Path.is_dir",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.roborock.roborock_storage.shutil.rmtree",
+            side_effect=OSError,
+        ) as mock_rmtree,
     ):
-        await hass.config_entries.async_remove(setup_entry.entry_id)
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    assert mock_rmtree.called
     assert "Unable to remove map files" in caplog.text
 
 
 async def test_not_supported_protocol(
     hass: HomeAssistant,
-    bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
+    fake_devices: list[FakeDevice],
 ) -> None:
     """Test that we output a message on incorrect protocol."""
-    home_data_copy = deepcopy(HOME_DATA)
-    home_data_copy.received_devices[0].pv = "random"
-    with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
-        return_value=home_data_copy,
-    ):
-        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
-        await hass.async_block_till_done()
-    assert "because its protocol version random" in caplog.text
-
-
-async def test_not_supported_a01_device(
-    hass: HomeAssistant,
-    bypass_api_fixture,
-    mock_roborock_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test that we output a message on incorrect category."""
-    home_data_copy = deepcopy(HOME_DATA)
-    home_data_copy.products[2].category = "random"
-    with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
-        return_value=home_data_copy,
-    ):
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-    assert "The device you added is not yet supported" in caplog.text
+    fake_devices[0].v1_properties = None
+    fake_devices[0].zeo = None
+    fake_devices[0].dyad = None
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    assert "because its protocol version " in caplog.text
 
 
 async def test_invalid_user_agreement(
     hass: HomeAssistant,
-    bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
 ) -> None:
     """Test that we fail setting up if the user agreement is out of date."""
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
+        "homeassistant.components.roborock.create_device_manager",
         side_effect=RoborockInvalidUserAgreement(),
     ):
         await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
@@ -294,12 +239,11 @@ async def test_invalid_user_agreement(
 
 async def test_no_user_agreement(
     hass: HomeAssistant,
-    bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
 ) -> None:
     """Test that we fail setting up if the user has no agreement."""
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
+        "homeassistant.components.roborock.create_device_manager",
         side_effect=RoborockNoUserAgreement(),
     ):
         await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
@@ -310,79 +254,82 @@ async def test_no_user_agreement(
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_stale_device(
     hass: HomeAssistant,
-    bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
     device_registry: DeviceRegistry,
+    fake_devices: list[FakeDevice],
 ) -> None:
     """Test that we remove a device if it no longer is given by home_data."""
-    with patch(
-        "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
-        side_effect=[NETWORK_INFO, NETWORK_INFO_2],
-    ):
-        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
     existing_devices = device_registry.devices.get_devices_for_config_entry_id(
         mock_roborock_entry.entry_id
     )
-    assert len(existing_devices) == 6  # 2 for each robot, 1 for A01, 1 for Zeo
-    hd = deepcopy(HOME_DATA)
-    hd.devices = [hd.devices[0]]
+    assert {device.name for device in existing_devices} == {
+        "Roborock S7 MaxV",
+        "Roborock S7 MaxV Dock",
+        "Roborock S7 2",
+        "Roborock S7 2 Dock",
+        "Dyad Pro",
+        "Zeo One",
+        "Roborock Q7",
+    }
+    fake_devices.pop(0)  # Remove one robot
 
-    with (
-        patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
-            return_value=hd,
-        ),
-        patch(
-            "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
-            side_effect=[NETWORK_INFO, NETWORK_INFO_2],
-        ),
-    ):
-        await hass.config_entries.async_reload(mock_roborock_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_reload(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
     new_devices = device_registry.devices.get_devices_for_config_entry_id(
         mock_roborock_entry.entry_id
     )
-    assert (
-        len(new_devices) == 4
-    )  # 2 for the one remaining robot. 1 for both the A01s which are shared and
-    # therefore not deleted.
+    assert {device.name for device in new_devices} == {
+        "Roborock S7 2",
+        "Roborock S7 2 Dock",
+        "Dyad Pro",
+        "Zeo One",
+        "Roborock Q7",
+    }
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_no_stale_device(
     hass: HomeAssistant,
-    bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
     device_registry: DeviceRegistry,
+    fake_devices: list[FakeDevice],
 ) -> None:
     """Test that we don't remove a device if fails to setup."""
-    with patch(
-        "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
-        side_effect=[NETWORK_INFO, NETWORK_INFO_2],
-    ):
-        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     assert mock_roborock_entry.state is ConfigEntryState.LOADED
     existing_devices = device_registry.devices.get_devices_for_config_entry_id(
         mock_roborock_entry.entry_id
     )
-    assert len(existing_devices) == 6  # 2 for each robot, 1 for A01, 1 for Zeo
+    assert {device.name for device in existing_devices} == {
+        "Roborock S7 MaxV",
+        "Roborock S7 MaxV Dock",
+        "Roborock S7 2",
+        "Roborock S7 2 Dock",
+        "Dyad Pro",
+        "Zeo One",
+        "Roborock Q7",
+    }
 
-    with patch(
-        "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
-        side_effect=[NETWORK_INFO, RoborockException],
-    ):
-        await hass.config_entries.async_reload(mock_roborock_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_reload(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
     new_devices = device_registry.devices.get_devices_for_config_entry_id(
         mock_roborock_entry.entry_id
     )
-    assert len(new_devices) == 6  # 2 for each robot, 1 for A01, 1 for Zeo
+    assert {device.name for device in new_devices} == {
+        "Roborock S7 MaxV",
+        "Roborock S7 MaxV Dock",
+        "Roborock S7 2",
+        "Roborock S7 2 Dock",
+        "Dyad Pro",
+        "Zeo One",
+        "Roborock Q7",
+    }
 
 
 async def test_migrate_config_entry_unique_id(
     hass: HomeAssistant,
-    bypass_api_fixture,
     config_entry_data: dict[str, Any],
 ) -> None:
     """Test migrating the config entry unique id."""
@@ -400,3 +347,234 @@ async def test_migrate_config_entry_unique_id(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == ROBOROCK_RRUID
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_update_unavailability_threshold(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that a small number of update failures are suppressed before marking a device unavailable."""
+    await async_setup_component(hass, HA_DOMAIN, {})
+    assert setup_entry.state is ConfigEntryState.LOADED
+
+    # We pick an arbitrary sensor to test for availability
+    sensor_entity_id = "sensor.roborock_s7_maxv_battery"
+    expected_state = "100"
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state == expected_state
+
+    # Simulate a few update failures below the threshold
+    assert fake_vacuum.v1_properties is not None
+    fake_vacuum.v1_properties.status.refresh.side_effect = RoborockException(
+        "Simulated update failure"
+    )
+
+    # Move forward in time less than the threshold
+    freezer.tick(datetime.timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Force a coordinator refresh.
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: sensor_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Verify that the entity is still available
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state == expected_state
+
+    # Move forward in time to exceed the threshold
+    freezer.tick(datetime.timedelta(minutes=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Verify that the entity is now unavailable
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+
+    # Now restore normal update behavior and refresh.
+    fake_vacuum.v1_properties.status.refresh.side_effect = None
+
+    freezer.tick(datetime.timedelta(seconds=45))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Verify that the entity recovers and is available again
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state == expected_state
+
+
+async def test_cloud_api_repair(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that a repair is created when we use the cloud api."""
+
+    # Fake that the device is only reachable via cloud
+    fake_vacuum.is_connected = True
+    fake_vacuum.is_local_connected = False
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1
+    # Check that both expected device names are present, regardless of order
+    assert all(
+        issue.translation_key == "cloud_api_used"
+        for issue in issue_registry.issues.values()
+    )
+    names = {
+        issue.translation_placeholders["device_name"]
+        for issue in issue_registry.issues.values()
+    }
+    assert names == {"Roborock S7 MaxV"}
+    await hass.config_entries.async_unload(mock_roborock_entry.entry_id)
+
+    # Now fake that the device is reachable locally again
+    fake_vacuum.is_local_connected = True
+
+    # Set it back up
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_cloud_api_repair_cleared_on_update(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a repair is created then cleared if the device is reachable locally again."""
+
+    # Fake that the device is only reachable via cloud
+    fake_vacuum.is_connected = True
+    fake_vacuum.is_local_connected = False
+
+    # Load the integration and verify that a repair issue is created
+    await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1
+
+    # Fake that the device is reachable locally again.
+    fake_vacuum.is_local_connected = True
+
+    # Refresh the coordinator using an arbitrary sensor, which should
+    # clear the repair issue.
+    sensor_entity_id = "sensor.roborock_s7_maxv_battery"
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: sensor_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Verify that the repair issue is cleared
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 0
+
+    # Fake the device is cloud only again. Refreshing the coordinator
+    # should not recreate the repair issue.
+    fake_vacuum.is_local_connected = False
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: sensor_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Verify that the repair issue still does not exist
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_zeo_device_fails_setup(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Simulate an error while setting up a zeo device."""
+    # We have a single zeo device in the test setup. Find it then set it to fail.
+    zeo_device = next(
+        (device for device in fake_devices if device.zeo is not None),
+        None,
+    )
+    assert zeo_device is not None
+    zeo_device.zeo.query_values.side_effect = RoborockException("Simulated Zeo failure")
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    # The current behavior is that we do not add the Zeo device if it fails to setup
+    found_devices = device_registry.devices.get_devices_for_config_entry_id(
+        mock_roborock_entry.entry_id
+    )
+    assert {device.name for device in found_devices} == {
+        "Roborock S7 MaxV",
+        "Roborock S7 MaxV Dock",
+        "Roborock S7 2",
+        "Roborock S7 2 Dock",
+        "Dyad Pro",
+        "Roborock Q7",
+        # Zeo device is missing
+    }
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_dyad_device_fails_setup(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Simulate an error while setting up a dyad device."""
+    # We have a single dyad device in the test setup. Find it then set it to fail.
+    dyad_device = next(
+        (device for device in fake_devices if device.dyad is not None),
+        None,
+    )
+    assert dyad_device is not None
+    dyad_device.dyad.query_values.side_effect = RoborockException(
+        "Simulated Dyad failure"
+    )
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    # The current behavior is that we do not add the Dyad device if it fails to setup
+    found_devices = device_registry.devices.get_devices_for_config_entry_id(
+        mock_roborock_entry.entry_id
+    )
+    assert {device.name for device in found_devices} == {
+        "Roborock S7 MaxV",
+        "Roborock S7 MaxV Dock",
+        "Roborock S7 2",
+        "Roborock S7 2 Dock",
+        # Dyad device is missing
+        "Zeo One",
+        "Roborock Q7",
+    }

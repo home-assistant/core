@@ -201,7 +201,7 @@ async def test_battery_sensor_description(
     state = hass.states.get("sensor.smoke_sensor_battery_type") is None
 
 
-@pytest.mark.parametrize("node_fixture", ["eve_thermo"])
+@pytest.mark.parametrize("node_fixture", ["eve_thermo_v4"])
 async def test_eve_thermo_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -209,31 +209,31 @@ async def test_eve_thermo_sensor(
 ) -> None:
     """Test Eve Thermo."""
     # Valve position
-    state = hass.states.get("sensor.eve_thermo_valve_position")
+    state = hass.states.get("sensor.eve_thermo_20ebp1701_valve_position")
     assert state
     assert state.state == "10"
 
     set_node_attribute(matter_node, 1, 319486977, 319422488, 0)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.eve_thermo_valve_position")
+    state = hass.states.get("sensor.eve_thermo_20ebp1701_valve_position")
     assert state
     assert state.state == "0"
 
     # LocalTemperature
-    state = hass.states.get("sensor.eve_thermo_temperature")
+    state = hass.states.get("sensor.eve_thermo_20ebp1701_temperature")
     assert state
     assert state.state == "21.0"
 
     set_node_attribute(matter_node, 1, 513, 0, 1800)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.eve_thermo_temperature")
+    state = hass.states.get("sensor.eve_thermo_20ebp1701_temperature")
     assert state
     assert state.state == "18.0"
 
 
-@pytest.mark.parametrize("node_fixture", ["thermostat"])
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
 async def test_thermostat_outdoor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -642,7 +642,7 @@ async def test_vacuum_actions(
     assert state
     assert state.state == "2025-08-29T21:00:00+00:00"
 
-    set_node_attribute(matter_node, 1, 336, 4, 1756502000)
+    set_node_attribute(matter_node, 1, 336, 4, 809817200)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("sensor.mock_vacuum_estimated_end_time")
@@ -695,5 +695,72 @@ async def test_vacuum_operational_error_sensor(
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("sensor.mock_vacuum_operational_error")
+    assert state
+    assert state.state == "unknown"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("node_fixture", ["mock_lock"])
+async def test_optional_door_event_sensors_from_featuremap(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test discovery of optional door event sensors in doorlock featuremap."""
+    entity_id_open = "sensor.mock_lock_door_open_events"
+    entity_id_closed = "sensor.mock_lock_door_closed_events"
+
+    # Check that the entities are created
+    state = hass.states.get(entity_id_open)
+    assert state
+    assert state.state == "5"
+
+    state = hass.states.get(entity_id_closed)
+    assert state
+    assert state.state == "3"
+
+    # Test updating the sensor values
+    set_node_attribute(matter_node, 1, 257, 4, 10)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id_open)
+    assert state
+    assert state.state == "10"
+
+    set_node_attribute(matter_node, 1, 257, 5, 8)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id_closed)
+    assert state
+    assert state.state == "8"
+
+
+@pytest.mark.parametrize("node_fixture", ["valve"])
+async def test_valve(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test valve AutoCloseTime sensor with Matter epoch microseconds conversion."""
+    # ValveConfigurationAndControl Cluster / AutoCloseTime attribute (1/129/2)
+    # Initial value is 789004800000000 microseconds = 2025-01-01 00:00:00 UTC
+    state = hass.states.get("sensor.valve_auto_close_time")
+    assert state
+    assert state.state == "2025-01-01T00:00:00+00:00"
+
+    # Set to another timestamp: 820540800000000 microseconds
+    # = 820540800 seconds since 2000-01-01 = 1767225600 Unix epoch
+    # = 2026-01-01 00:00:00 UTC
+    set_node_attribute(matter_node, 1, 129, 2, 820540800000000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.valve_auto_close_time")
+    assert state
+    assert state.state == "2026-01-01T00:00:00+00:00"
+
+    # Test setting to 0 (invalid/null) - should result in unknown state
+    set_node_attribute(matter_node, 1, 129, 2, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.valve_auto_close_time")
     assert state
     assert state.state == "unknown"

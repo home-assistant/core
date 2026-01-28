@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.lutron_caseta import DOMAIN
 from homeassistant.components.lutron_caseta.const import (
@@ -90,7 +90,9 @@ _LEAP_DEVICE_TYPES = {
 class MockBridge:
     """Mock Lutron bridge that emulates configured connected status."""
 
-    def __init__(self, can_connect=True, timeout_on_connect=False) -> None:
+    def __init__(
+        self, can_connect=True, timeout_on_connect=False, smart_away_state=""
+    ) -> None:
         """Initialize MockBridge instance with configured mock connectivity."""
         self.timeout_on_connect = timeout_on_connect
         self.can_connect = can_connect
@@ -101,6 +103,23 @@ class MockBridge:
         self.devices = self.load_devices()
         self.buttons = self.load_buttons()
         self._subscribers: dict[str, list] = {}
+        self.smart_away_state = smart_away_state
+        self._smart_away_subscribers = []
+
+        self.activate_smart_away = AsyncMock(side_effect=self._activate)
+        self.deactivate_smart_away = AsyncMock(side_effect=self._deactivate)
+
+    async def _activate(self):
+        """Activate smart away."""
+        self.smart_away_state = "Enabled"
+        for callback in self._smart_away_subscribers:
+            callback(self.smart_away_state)
+
+    async def _deactivate(self):
+        """Deactivate smart away."""
+        self.smart_away_state = "Disabled"
+        for callback in self._smart_away_subscribers:
+            callback(self.smart_away_state)
 
     async def connect(self):
         """Connect the mock bridge."""
@@ -114,6 +133,10 @@ class MockBridge:
         if device_id not in self._subscribers:
             self._subscribers[device_id] = []
         self._subscribers[device_id].append(callback_)
+
+    def add_smart_away_subscriber(self, callback_):
+        """Add a smart away subscriber."""
+        self._smart_away_subscribers.append(callback_)
 
     def add_button_subscriber(self, button_id: str, callback_):
         """Mock a listener for button presses."""
@@ -354,6 +377,7 @@ async def async_setup_integration(
     can_connect: bool = True,
     timeout_during_connect: bool = False,
     timeout_during_configure: bool = False,
+    smart_away_state: str = "",
 ) -> MockConfigEntry:
     """Set up a mock bridge."""
     if config_entry_id is None:
@@ -370,7 +394,9 @@ async def async_setup_integration(
         if not timeout_during_connect:
             on_connect_callback()
         return mock_bridge(
-            can_connect=can_connect, timeout_on_connect=timeout_during_configure
+            can_connect=can_connect,
+            timeout_on_connect=timeout_during_configure,
+            smart_away_state=smart_away_state,
         )
 
     with patch(

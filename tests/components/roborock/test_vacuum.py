@@ -1,8 +1,7 @@
 """Tests for Roborock vacuums."""
 
-import copy
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, call
 
 import pytest
 from roborock import RoborockException
@@ -32,12 +31,15 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .mock_data import MAP_DATA, PROP
+from .conftest import FakeDevice, set_trait_attributes
+from .mock_data import STATUS
 
 from tests.common import MockConfigEntry
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = "abc123"
+Q7_ENTITY_ID = "vacuum.roborock_q7"
+Q7_DEVICE_ID = "q7_duid"
 
 
 @pytest.fixture
@@ -46,14 +48,13 @@ def platforms() -> list[Platform]:
     # Note: Currently the Image platform is required to make these tests pass since
     # some initialization of the coordinator happens as a side effect of loading
     # image platform. Fix that and remove IMAGE here.
-    return [Platform.VACUUM, Platform.IMAGE]
+    return [Platform.VACUUM]
 
 
 async def test_registry_entries(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    bypass_api_fixture,
     setup_entry: MockConfigEntry,
 ) -> None:
     """Tests devices are registered in the entity registry."""
@@ -90,12 +91,12 @@ async def test_registry_entries(
 )
 async def test_commands(
     hass: HomeAssistant,
-    bypass_api_fixture,
     setup_entry: MockConfigEntry,
     service: str,
     command: str,
     service_params: dict[str, Any],
     called_params: list | None,
+    vacuum_command: Mock,
 ) -> None:
     """Test sending commands to the vacuum."""
 
@@ -103,42 +104,14 @@ async def test_commands(
     assert vacuum
 
     data = {ATTR_ENTITY_ID: ENTITY_ID, **(service_params or {})}
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
-    ) as mock_send_command:
-        await hass.services.async_call(
-            Platform.VACUUM,
-            service,
-            data,
-            blocking=True,
-        )
-        assert mock_send_command.call_count == 1
-        assert mock_send_command.call_args[0][0] == command
-        assert mock_send_command.call_args[0][1] == called_params
-
-
-async def test_cloud_command(
-    hass: HomeAssistant,
-    bypass_api_fixture,
-    setup_entry: MockConfigEntry,
-) -> None:
-    """Test sending commands to the vacuum."""
-
-    vacuum = hass.states.get(ENTITY_ID)
-    assert vacuum
-
-    data = {ATTR_ENTITY_ID: ENTITY_ID, "command": "get_map_v1"}
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.send_command"
-    ) as mock_send_command:
-        await hass.services.async_call(
-            Platform.VACUUM,
-            SERVICE_SEND_COMMAND,
-            data,
-            blocking=True,
-        )
-        assert mock_send_command.call_count == 1
-        assert mock_send_command.call_args[0][0] == RoborockCommand.GET_MAP_V1
+    await hass.services.async_call(
+        Platform.VACUUM,
+        service,
+        data,
+        blocking=True,
+    )
+    assert vacuum_command.send.call_count == 1
+    assert vacuum_command.send.call_args == call(command, params=called_params)
 
 
 @pytest.mark.parametrize(
@@ -154,50 +127,46 @@ async def test_cloud_command(
 )
 async def test_resume_cleaning(
     hass: HomeAssistant,
-    bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
     in_cleaning_int: int,
     in_returning_int: int,
     expected_command: RoborockCommand,
+    fake_vacuum: FakeDevice,
+    vacuum_command: Mock,
 ) -> None:
     """Test resuming clean on start button when a clean is paused."""
-    prop = copy.deepcopy(PROP)
-    prop.status.in_cleaning = in_cleaning_int
-    prop.status.in_returning = in_returning_int
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_prop",
-        return_value=prop,
-    ):
-        await async_setup_component(hass, DOMAIN, {})
+
+    async def refresh_properties() -> None:
+        set_trait_attributes(fake_vacuum.v1_properties.status, STATUS)
+        fake_vacuum.v1_properties.status.in_cleaning = in_cleaning_int
+        fake_vacuum.v1_properties.status.in_returning = in_returning_int
+
+    fake_vacuum.v1_properties.status.refresh.side_effect = refresh_properties
+
+    await async_setup_component(hass, DOMAIN, {})
     vacuum = hass.states.get(ENTITY_ID)
     assert vacuum
 
     data = {ATTR_ENTITY_ID: ENTITY_ID}
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
-    ) as mock_send_command:
-        await hass.services.async_call(
-            Platform.VACUUM,
-            SERVICE_START,
-            data,
-            blocking=True,
-        )
-        assert mock_send_command.call_count == 1
-        assert mock_send_command.call_args[0][0] == expected_command
+    await hass.services.async_call(
+        Platform.VACUUM,
+        SERVICE_START,
+        data,
+        blocking=True,
+    )
+    assert vacuum_command.send.call_count == 1
+    assert vacuum_command.send.call_args[0][0] == expected_command
 
 
 async def test_failed_user_command(
     hass: HomeAssistant,
-    bypass_api_fixture,
     setup_entry: MockConfigEntry,
+    vacuum_command: Mock,
 ) -> None:
     """Test that when a user sends an invalid command, we raise HomeAssistantError."""
     data = {ATTR_ENTITY_ID: ENTITY_ID, "command": "fake_command"}
+    vacuum_command.send.side_effect = RoborockException()
     with (
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command",
-            side_effect=RoborockException(),
-        ),
         pytest.raises(HomeAssistantError, match="Error while calling fake_command"),
     ):
         await hass.services.async_call(
@@ -210,7 +179,6 @@ async def test_failed_user_command(
 
 async def test_get_maps(
     hass: HomeAssistant,
-    bypass_api_fixture,
     setup_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -227,74 +195,59 @@ async def test_get_maps(
 
 async def test_goto(
     hass: HomeAssistant,
-    bypass_api_fixture,
     setup_entry: MockConfigEntry,
+    vacuum_command: Mock,
 ) -> None:
     """Test sending the vacuum to specific coordinates."""
     vacuum = hass.states.get(ENTITY_ID)
     assert vacuum
 
     data = {ATTR_ENTITY_ID: ENTITY_ID, "x": 25500, "y": 25500}
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
-    ) as mock_send_command:
-        await hass.services.async_call(
-            DOMAIN,
-            SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
-            data,
-            blocking=True,
-        )
-        assert mock_send_command.call_count == 1
-        assert mock_send_command.call_args[0][0] == RoborockCommand.APP_GOTO_TARGET
-        assert mock_send_command.call_args[0][1] == [25500, 25500]
+    await hass.services.async_call(
+        DOMAIN,
+        SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
+        data,
+        blocking=True,
+    )
+    assert vacuum_command.send.call_count == 1
+    assert vacuum_command.send.call_args == (
+        call(RoborockCommand.APP_GOTO_TARGET, params=[25500, 25500])
+    )
 
 
 async def test_get_current_position(
     hass: HomeAssistant,
-    bypass_api_fixture,
     setup_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    fake_vacuum: FakeDevice,
 ) -> None:
     """Test that the service for getting the current position outputs the correct coordinates."""
-    map_data = copy.deepcopy(MAP_DATA)
-    map_data.vacuum_position = Point(x=123, y=456)
-    map_data.image = None
-    with (
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
-            return_value=b"",
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
-            return_value=map_data,
-        ),
-    ):
-        response = await hass.services.async_call(
-            DOMAIN,
-            GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-            {ATTR_ENTITY_ID: ENTITY_ID},
-            blocking=True,
-            return_response=True,
-        )
-        assert response == {
-            "vacuum.roborock_s7_maxv": {
-                "x": 123,
-                "y": 456,
-            },
-        }
+    fake_vacuum.v1_properties.map_content.map_data.vacuum_position = Point(x=123, y=456)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "vacuum.roborock_s7_maxv": {
+            "x": 123,
+            "y": 456,
+        },
+    }
 
 
 async def test_get_current_position_no_map_data(
     hass: HomeAssistant,
-    bypass_api_fixture,
     setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
 ) -> None:
     """Test that the service for getting the current position handles no map data error."""
+    fake_vacuum.v1_properties.map_content.map_data = None
+
     with (
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
-            return_value=None,
-        ),
         pytest.raises(
             HomeAssistantError, match="Something went wrong creating the map"
         ),
@@ -310,21 +263,13 @@ async def test_get_current_position_no_map_data(
 
 async def test_get_current_position_no_robot_position(
     hass: HomeAssistant,
-    bypass_api_fixture,
     setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
 ) -> None:
     """Test that the service for getting the current position handles no robot position error."""
-    map_data = copy.deepcopy(MAP_DATA)
-    map_data.vacuum_position = None
+    fake_vacuum.v1_properties.map_content.map_data.vacuum_position = None
+
     with (
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
-            return_value=b"",
-        ),
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockMapDataParser.parse",
-            return_value=map_data,
-        ),
         pytest.raises(HomeAssistantError, match="Robot position not found"),
     ):
         await hass.services.async_call(
@@ -334,3 +279,220 @@ async def test_get_current_position_no_robot_position(
             blocking=True,
             return_response=True,
         )
+
+
+# Tests for RoborockQ7Vacuum
+
+
+@pytest.fixture
+def fake_q7_vacuum(fake_devices: list[FakeDevice]) -> FakeDevice:
+    """Get the fake Q7 vacuum device."""
+    # The Q7 is the fourth device in the list (index 3) based on HOME_DATA
+    return fake_devices[3]
+
+
+@pytest.fixture(name="q7_vacuum_api", autouse=False)
+def fake_q7_vacuum_api_fixture(
+    fake_q7_vacuum: FakeDevice,
+    send_message_exception: Exception | None,
+) -> Mock:
+    """Get the fake Q7 vacuum device API for asserting that commands happened."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    api = fake_q7_vacuum.b01_q7_properties
+    if send_message_exception is not None:
+        # For exception tests, override side effects to raise the exception
+        api.start_clean.side_effect = send_message_exception
+        api.pause_clean.side_effect = send_message_exception
+        api.stop_clean.side_effect = send_message_exception
+        api.return_to_dock.side_effect = send_message_exception
+        api.find_me.side_effect = send_message_exception
+        api.set_fan_speed.side_effect = send_message_exception
+        api.send.side_effect = send_message_exception
+    return api
+
+
+async def test_q7_registry_entries(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Tests Q7 devices are registered in the entity registry."""
+    entity_entry = entity_registry.async_get(Q7_ENTITY_ID)
+    assert entity_entry.unique_id == Q7_DEVICE_ID
+
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+
+
+@pytest.mark.parametrize(
+    ("service", "api_method", "service_params", "expected_activity"),
+    [
+        (SERVICE_START, "start_clean", None, "cleaning"),
+        (SERVICE_PAUSE, "pause_clean", None, "paused"),
+        (SERVICE_STOP, "stop_clean", None, "idle"),
+        (SERVICE_RETURN_TO_BASE, "return_to_dock", None, "returning"),
+    ],
+)
+async def test_q7_state_changing_commands(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    service: str,
+    api_method: str,
+    service_params: dict[str, Any] | None,
+    expected_activity: str,
+    q7_vacuum_api: Mock,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test sending state-changing commands to the Q7 vacuum."""
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+
+    data = {ATTR_ENTITY_ID: Q7_ENTITY_ID, **(service_params or {})}
+    await hass.services.async_call(
+        Platform.VACUUM,
+        service,
+        data,
+        blocking=True,
+    )
+    api_call = getattr(q7_vacuum_api, api_method)
+    assert api_call.call_count == 1
+    assert api_call.call_args[0] == ()
+
+    # Verify the entity state was updated
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    # Force coordinator refresh to get updated state
+    coordinator = setup_entry.runtime_data.b01[0]
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == expected_activity
+
+
+async def test_q7_locate_command(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test sending locate command to the Q7 vacuum."""
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+
+    await hass.services.async_call(
+        Platform.VACUUM,
+        SERVICE_LOCATE,
+        {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+        blocking=True,
+    )
+    assert q7_vacuum_api.find_me.call_count == 1
+    assert q7_vacuum_api.find_me.call_args[0] == ()
+
+
+async def test_q7_set_fan_speed_command(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test sending set_fan_speed command to the Q7 vacuum."""
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+
+    await hass.services.async_call(
+        Platform.VACUUM,
+        SERVICE_SET_FAN_SPEED,
+        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "fan_speed": "quiet"},
+        blocking=True,
+    )
+    assert q7_vacuum_api.set_fan_speed.call_count == 1
+    # set_fan_speed is called with the fan speed value as first argument
+    assert len(q7_vacuum_api.set_fan_speed.call_args[0]) == 1
+
+
+async def test_q7_send_command(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test sending custom command to the Q7 vacuum."""
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+
+    await hass.services.async_call(
+        Platform.VACUUM,
+        SERVICE_SEND_COMMAND,
+        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "command": "test_command"},
+        blocking=True,
+    )
+    assert q7_vacuum_api.send.call_count == 1
+    # send is called with command as first argument and params as second
+    assert q7_vacuum_api.send.call_args[0] == ("test_command", None)
+
+
+@pytest.mark.parametrize(
+    ("service", "api_method", "service_params"),
+    [
+        (SERVICE_START, "start_clean", None),
+        (SERVICE_PAUSE, "pause_clean", None),
+        (SERVICE_STOP, "stop_clean", None),
+        (SERVICE_RETURN_TO_BASE, "return_to_dock", None),
+        (SERVICE_LOCATE, "find_me", None),
+        (SERVICE_SET_FAN_SPEED, "set_fan_speed", {"fan_speed": "quiet"}),
+        (SERVICE_SEND_COMMAND, "send", {"command": "test_command"}),
+    ],
+)
+@pytest.mark.parametrize("send_message_exception", [RoborockException()])
+async def test_q7_failed_commands(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    service: str,
+    api_method: str,
+    service_params: dict[str, Any] | None,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test that when Q7 commands fail, we raise HomeAssistantError."""
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+    # Store the original state to verify it doesn't change on error
+    original_state = vacuum.state
+
+    data = {ATTR_ENTITY_ID: Q7_ENTITY_ID, **(service_params or {})}
+    command_name = (
+        service_params.get("command", api_method) if service_params else api_method
+    )
+
+    with pytest.raises(HomeAssistantError, match=f"Error while calling {command_name}"):
+        await hass.services.async_call(
+            Platform.VACUUM,
+            service,
+            data,
+            blocking=True,
+        )
+
+    # Verify the entity state remains unchanged after failed command
+    await hass.async_block_till_done()
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == original_state
+
+
+async def test_q7_activity_none_status(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test that activity returns None when status is None."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    # Set status to None
+    fake_q7_vacuum.b01_q7_properties._props_data.status = None
+
+    # Force coordinator refresh to get updated state
+    coordinator = setup_entry.runtime_data.b01[0]
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    # Verify the entity state is unknown when status is None
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == "unknown"

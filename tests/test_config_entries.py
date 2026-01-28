@@ -1382,7 +1382,7 @@ async def test_reauth_issue_flow_returns_abort(
     issue = await _test_reauth_issue(hass, manager, issue_registry)
 
     result = await manager.flow.async_configure(issue.data["flow_id"], {})
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert len(issue_registry.issues) == 0
 
 
@@ -3415,7 +3415,7 @@ async def test_unique_id_update_existing_entry_without_reload(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert result["description_placeholders"]["title"] == "Other device"
     assert entry.data["host"] == "1.1.1.1"
@@ -3468,7 +3468,7 @@ async def test_unique_id_update_existing_entry_with_reload(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert result["description_placeholders"]["title"] == "Other device"
     assert entry.data["host"] == "1.1.1.1"
@@ -3489,7 +3489,7 @@ async def test_unique_id_update_existing_entry_with_reload(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert result["description_placeholders"]["title"] == "Other device"
     assert entry.data["host"] == "2.2.2.2"
@@ -3545,7 +3545,7 @@ async def test_unique_id_from_discovery_in_setup_retry(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(async_reload.mock_calls) == 0
 
@@ -3567,7 +3567,7 @@ async def test_unique_id_from_discovery_in_setup_retry(
         )
         await hass.async_block_till_done()
 
-    assert discovery_result["type"] == FlowResultType.ABORT
+    assert discovery_result["type"] is FlowResultType.ABORT
     assert discovery_result["reason"] == "already_configured"
     assert len(async_reload.mock_calls) == 1
 
@@ -3613,7 +3613,7 @@ async def test_unique_id_not_update_existing_entry(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "0.0.0.0"
     assert entry.data["additional"] == "data"
@@ -5506,7 +5506,7 @@ async def test_async_abort_entries_match(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
 
     # For a domain with no entries, there should never be a match
@@ -5519,7 +5519,7 @@ async def test_async_abort_entries_match(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_match"
 
 
@@ -5565,7 +5565,7 @@ async def test_async_abort_entries_match_context(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
 
 
@@ -5659,7 +5659,7 @@ async def test_async_abort_entries_match_options_flow(
             original_entry.entry_id, data=matchers
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
 
 
@@ -5865,7 +5865,7 @@ async def test_unique_id_update_while_setup_in_progress(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
@@ -6620,7 +6620,7 @@ async def test_update_entry_and_reload(
     if raises:
         assert isinstance(err, raises)
     else:
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == reason
     # Assert entry was reloaded
     assert len(comp.async_setup_entry.mock_calls) == calls_entry_load_unload[0]
@@ -6697,7 +6697,7 @@ async def test_update_entry_without_reload(
     assert entry.data == {"vendor": "data2"}
     assert entry.options == {"vendor": "options2"}
     assert entry.state == config_entries.ConfigEntryState.LOADED
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
     # Assert entry is not reloaded
     assert len(comp.async_setup_entry.mock_calls) == 1
@@ -6844,7 +6844,7 @@ async def test_update_subentry_and_abort(
     if raises:
         assert isinstance(err, raises)
     else:
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reconfigure_successful"
 
 
@@ -9204,12 +9204,12 @@ async def test_options_flow_config_entry(
         == "The config entry is not available during initialisation"
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {}
 
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"]["entry_id"] == original_entry.entry_id
     assert result["errors"]["entry"] is original_entry
@@ -9218,7 +9218,7 @@ async def test_options_flow_config_entry(
     options_flow.handler = "123"
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"]["entry_id"] == "123"
     assert isinstance(result["errors"]["entry"], config_entries.UnknownEntry)
@@ -9228,7 +9228,7 @@ async def test_options_flow_config_entry(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"abort": True}
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "abort"
 
 
@@ -9404,7 +9404,7 @@ async def test_add_description_placeholder_automatically(
     assert len(flows) == 1
 
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], None)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {"name": "test_title"}
 
 
@@ -9428,7 +9428,7 @@ async def test_add_description_placeholder_automatically_not_overwrites(
     assert len(flows) == 1
 
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], None)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {"name": "Custom title"}
 
 
@@ -9727,3 +9727,31 @@ async def test_config_flow_create_entry_with_next_flow(hass: HomeAssistant) -> N
     assert result["next_flow"][0] == config_entries.FlowType.CONFIG_FLOW
     # Verify the target flow exists
     hass.config_entries.flow.async_get(result["next_flow"][1])
+
+
+async def test_canceled_exceptions_are_propagated(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Tests that base exceptions like cancellations are not swallowed."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    start = asyncio.Event()
+    abort = asyncio.Event()
+
+    async def _setup(_: HomeAssistant, __: ConfigEntry) -> bool:
+        start.set()
+        await abort.wait()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup_entry=_setup))
+    mock_platform(hass, "test.config_flow", None)
+
+    entry.add_to_hass(hass)
+
+    task = hass.async_create_task(manager.async_setup(entry.entry_id))
+    await start.wait()
+    task.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await task
+
+    abort.set()

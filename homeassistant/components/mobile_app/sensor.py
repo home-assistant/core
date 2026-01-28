@@ -86,24 +86,26 @@ class MobileAppSensor(MobileAppEntity, RestoreSensor):
 
     async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""
-        await super().async_restore_last_state(last_state)
         config = self._config
-        if not (last_sensor_data := await self.async_get_last_sensor_data()):
-            # Workaround to handle migration to RestoreSensor, can be removed
-            # in HA Core 2023.4
-            config[ATTR_SENSOR_STATE] = None
-            webhook_id = self._entry.data[CONF_WEBHOOK_ID]
-            if TYPE_CHECKING:
-                assert self.unique_id is not None
-            sensor_unique_id = _extract_sensor_unique_id(webhook_id, self.unique_id)
-            if (
-                self.device_class == SensorDeviceClass.TEMPERATURE
-                and sensor_unique_id == "battery_temperature"
-            ):
-                config[ATTR_SENSOR_UOM] = UnitOfTemperature.CELSIUS
-        else:
-            config[ATTR_SENSOR_STATE] = last_sensor_data.native_value
-            config[ATTR_SENSOR_UOM] = last_sensor_data.native_unit_of_measurement
+        if config[ATTR_SENSOR_STATE] in (None, STATE_UNKNOWN):
+            await super().async_restore_last_state(last_state)
+
+            if not (last_sensor_data := await self.async_get_last_sensor_data()):
+                # Workaround to handle migration to RestoreSensor, can be removed
+                # in HA Core 2023.4
+                config[ATTR_SENSOR_STATE] = None
+                webhook_id = self._entry.data[CONF_WEBHOOK_ID]
+                if TYPE_CHECKING:
+                    assert self.unique_id is not None
+                sensor_unique_id = _extract_sensor_unique_id(webhook_id, self.unique_id)
+                if (
+                    self.device_class == SensorDeviceClass.TEMPERATURE
+                    and sensor_unique_id == "battery_temperature"
+                ):
+                    config[ATTR_SENSOR_UOM] = UnitOfTemperature.CELSIUS
+            else:
+                config[ATTR_SENSOR_STATE] = last_sensor_data.native_value
+                config[ATTR_SENSOR_UOM] = last_sensor_data.native_unit_of_measurement
 
         self._async_update_attr_from_config()
 

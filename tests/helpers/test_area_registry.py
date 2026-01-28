@@ -1,6 +1,6 @@
 """Tests for the Area Registry."""
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from functools import partial
 from typing import Any
 
@@ -438,15 +438,64 @@ async def test_migration_from_1_1(
     """Test migration from version 1.1."""
     hass_storage[ar.STORAGE_KEY] = {
         "version": 1,
-        "data": {"areas": [{"id": "12345A", "name": "mock"}]},
+        "data": {
+            "areas": [
+                {"id": "12345A", "name": "AAA"},
+                {"id": "12345B", "name": "CCC"},
+                {"id": "12345C", "name": "bbb"},
+            ]
+        },
     }
 
     await ar.async_load(hass)
     registry = ar.async_get(hass)
 
     # Test data was loaded
-    entry = registry.async_get_or_create("mock")
+    entry = registry.async_get_or_create("AAA")
     assert entry.id == "12345A"
+
+    # Check sort order
+    assert list(registry.async_list_areas()) == [
+        ar.AreaEntry(
+            name="AAA",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id=None,
+            humidity_entity_id=None,
+            icon=None,
+            id="12345A",
+            labels=set(),
+            picture=None,
+            temperature_entity_id=None,
+        ),
+        ar.AreaEntry(
+            name="bbb",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id=None,
+            humidity_entity_id=None,
+            icon=None,
+            id="12345C",
+            labels=set(),
+            picture=None,
+            temperature_entity_id=None,
+        ),
+        ar.AreaEntry(
+            name="CCC",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id=None,
+            humidity_entity_id=None,
+            icon=None,
+            id="12345B",
+            labels=set(),
+            picture=None,
+            temperature_entity_id=None,
+        ),
+    ]
 
     # Check we store migrated data
     await flush_store(registry._store)
@@ -458,17 +507,43 @@ async def test_migration_from_1_1(
             "areas": [
                 {
                     "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "floor_id": None,
+                    "humidity_entity_id": None,
                     "icon": None,
                     "id": "12345A",
                     "labels": [],
-                    "name": "mock",
-                    "picture": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
                     "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "AAA",
+                    "picture": None,
                     "temperature_entity_id": None,
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": None,
                     "humidity_entity_id": None,
-                }
+                    "icon": None,
+                    "id": "12345C",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "bbb",
+                    "picture": None,
+                    "temperature_entity_id": None,
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": None,
+                    "humidity_entity_id": None,
+                    "icon": None,
+                    "id": "12345B",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "CCC",
+                    "picture": None,
+                    "temperature_entity_id": None,
+                },
             ]
         },
     }

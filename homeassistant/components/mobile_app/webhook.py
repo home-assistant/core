@@ -79,7 +79,6 @@ from .const import (
     ATTR_SENSOR_STATE,
     ATTR_SENSOR_STATE_CLASS,
     ATTR_SENSOR_TYPE,
-    ATTR_SENSOR_TYPE_BINARY_SENSOR,
     ATTR_SENSOR_TYPE_SENSOR,
     ATTR_SENSOR_UNIQUE_ID,
     ATTR_SENSOR_UOM,
@@ -98,12 +97,14 @@ from .const import (
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
+    DATA_PENDING_UPDATES,
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
     SCHEMA_APP_DATA,
+    SENSOR_TYPES,
     SIGNAL_LOCATION_UPDATE,
     SIGNAL_SENSOR_UPDATE,
 )
@@ -124,8 +125,6 @@ DELAY_SAVE = 10
 WEBHOOK_COMMANDS: Registry[
     str, Callable[[HomeAssistant, ConfigEntry, Any], Coroutine[Any, Any, Response]]
 ] = Registry()
-
-SENSOR_TYPES = (ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR)
 
 WEBHOOK_PAYLOAD_SCHEMA = vol.Any(
     vol.Schema(
@@ -601,14 +600,16 @@ async def webhook_register_sensor(
         if changes:
             entity_registry.async_update_entity(existing_sensor, **changes)
 
-        async_dispatcher_send(hass, f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}", data)
+        _async_update_sensor_entity(
+            hass, entity_type=entity_type, unique_store_key=unique_store_key, data=data
+        )
     else:
         data[CONF_UNIQUE_ID] = unique_store_key
         data[CONF_NAME] = (
             f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
         )
 
-        register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"
+        register_signal = f"{DOMAIN}_{entity_type}_register"
         async_dispatcher_send(hass, register_signal, data)
 
     return webhook_response(
@@ -685,10 +686,12 @@ async def webhook_update_sensor_states(
             continue
 
         sensor[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
-        async_dispatcher_send(
+
+        _async_update_sensor_entity(
             hass,
-            f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}",
-            sensor,
+            entity_type=entity_type,
+            unique_store_key=unique_store_key,
+            data=sensor,
         )
 
         resp[unique_id] = {"success": True}
@@ -697,9 +700,24 @@ async def webhook_update_sensor_states(
         entry = entity_registry.async_get(entity_id)
 
         if entry and entry.disabled_by:
+            # Inform the app that the entity is disabled
             resp[unique_id]["is_disabled"] = True
 
     return webhook_response(resp, registration=config_entry.data)
+
+
+def _async_update_sensor_entity(
+    hass: HomeAssistant, entity_type: str, unique_store_key: str, data: dict[str, Any]
+) -> None:
+    """Update a sensor entity with new data."""
+    # Replace existing pending update with the latest sensor data.
+    hass.data[DOMAIN][DATA_PENDING_UPDATES][entity_type][unique_store_key] = data
+
+    # The signal might not be handled if the entity was just enabled, but the data is stored
+    # in pending updates and will be applied on entity initialization.
+    async_dispatcher_send(
+        hass, f"{SIGNAL_SENSOR_UPDATE}-{entity_type}-{unique_store_key}"
+    )
 
 
 @WEBHOOK_COMMANDS.register("get_zones")
@@ -738,10 +756,9 @@ async def webhook_get_config(
         "theme_color": MANIFEST_JSON["theme_color"],
     }
 
-    if CONF_CLOUDHOOK_URL in config_entry.data:
-        resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
-
     if cloud.async_active_subscription(hass):
+        if CONF_CLOUDHOOK_URL in config_entry.data:
+            resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
         with suppress(cloud.CloudNotAvailable):
             resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
 

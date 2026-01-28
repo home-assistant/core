@@ -37,13 +37,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensors."""
 
-    entities: list[SensorEntity] = []
-    for device in entry.runtime_data.device_manager.devices.values():
-        if TemperatureTrait.NAME in device.traits:
-            entities.append(TemperatureSensor(device))
-        if HumidityTrait.NAME in device.traits:
-            entities.append(HumiditySensor(device))
-    async_add_entities(entities)
+    def devices_added(devices: list[Device]) -> None:
+        entities: list[SensorEntity] = []
+        for device in devices:
+            if TemperatureTrait.NAME in device.traits:
+                entities.append(TemperatureSensor(device))
+            if HumidityTrait.NAME in device.traits:
+                entities.append(HumiditySensor(device))
+        async_add_entities(entities)
+
+    entry.runtime_data.register_devices_listener(devices_added)
 
 
 class SensorBase(SensorEntity):

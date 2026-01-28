@@ -1,13 +1,16 @@
-"""Fixtures for Teslemetry."""
+"""Test fixtures for Teslemetry component."""
 
 from __future__ import annotations
 
 from collections.abc import Generator
 from copy import deepcopy
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from teslemetry_stream.stream import recursive_match
+
+from homeassistant.components.teslemetry.const import TOKEN_URL
 
 from .const import (
     COMMAND_OK,
@@ -20,6 +23,36 @@ from .const import (
     VEHICLE_DATA,
     WAKE_UP_ONLINE,
 )
+
+from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+@pytest.fixture
+def mock_setup_entry():
+    """Mock Teslemetry async_setup_entry method."""
+    with patch(
+        "homeassistant.components.teslemetry.async_setup_entry", return_value=True
+    ) as mock_async_setup_entry:
+        yield mock_async_setup_entry
+
+
+@pytest.fixture
+def mock_token_response() -> dict[str, Any]:
+    """Return a mock OAuth token response."""
+    return {
+        "refresh_token": "mock-refresh-token",
+        "access_token": "mock-access-token",
+        "type": "Bearer",
+        "expires_in": 60,
+    }
+
+
+@pytest.fixture
+def mock_token_post(
+    aioclient_mock: AiohttpClientMocker, mock_token_response: dict[str, Any]
+) -> None:
+    """Mock the OAuth token endpoint."""
+    aioclient_mock.post(TOKEN_URL, json=mock_token_response)
 
 
 @pytest.fixture(autouse=True)

@@ -1,0 +1,36 @@
+# serializer version: 1
+# name: test_setup_creates_nvr_device
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://127.0.0.1',
+    'connections': set({
+      tuple(
+        'mac',
+        'a1:e0:0c:82:69:24',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'unifiprotect',
+        'A1E00C826924',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Ubiquiti',
+    'model': 'UNVR-PRO',
+    'model_id': 'UNVR-PRO',
+    'name': 'UnifiProtect',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '6.0.0',
+    'via_device_id': None,
+  })
+# ---

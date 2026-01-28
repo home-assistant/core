@@ -3,10 +3,12 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+import dateutil.parser
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.apcupsd.const import DOMAIN
+from homeassistant.components import automation, script
+from homeassistant.components.apcupsd.const import DEPRECATED_SENSORS, DOMAIN
 from homeassistant.components.apcupsd.coordinator import REQUEST_REFRESH_COOLDOWN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -15,7 +17,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
@@ -146,13 +152,17 @@ async def test_sensor_unknown(
 
     # Simulate an event (a self test) such that "LASTSTEST" field is being reported, the state of
     # the sensor should be properly updated with the corresponding value.
+    last_self_test_value = "1970-01-01 00:00:00 +0000"
     mock_request_status.return_value = MOCK_MINIMAL_STATUS | {
-        "LASTSTEST": "1970-01-01 00:00:00 0000"
+        "LASTSTEST": last_self_test_value
     }
     future = utcnow() + timedelta(minutes=2)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
-    assert hass.states.get(last_self_test_id).state == "1970-01-01 00:00:00 0000"
+    assert (
+        hass.states.get(last_self_test_id).state
+        == dateutil.parser.parse(last_self_test_value).isoformat()
+    )
 
     # Simulate another event (e.g., daemon restart) such that "LASTSTEST" is no longer reported.
     mock_request_status.return_value = MOCK_MINIMAL_STATUS
@@ -161,3 +171,76 @@ async def test_sensor_unknown(
     await hass.async_block_till_done()
     # The state should become unknown again.
     assert hass.states.get(last_self_test_id).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(("entity_key", "issue_key"), DEPRECATED_SENSORS.items())
+async def test_deprecated_sensor_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_request_status: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    entity_key: str,
+    issue_key: str,
+) -> None:
+    """Ensure the issue lists automations and scripts referencing a deprecated sensor."""
+    issue_registry = ir.async_get(hass)
+    unique_id = f"{mock_request_status.return_value['SERIALNO']}_{entity_key}"
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    assert entity_id
+
+    # No issue yet.
+    issue_id = f"{issue_key}_{entity_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+    # Add automations and scripts referencing the deprecated sensor.
+    entity_slug = slugify(entity_key)
+    automation_object_id = f"apcupsd_auto_{entity_slug}"
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": automation_object_id,
+                "alias": f"APC UPS automation ({entity_key})",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {
+                    "action": "automation.turn_on",
+                    "target": {"entity_id": f"automation.{automation_object_id}"},
+                },
+            }
+        },
+    )
+
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                f"apcupsd_script_{entity_slug}": {
+                    "alias": f"APC UPS script ({entity_key})",
+                    "sequence": [
+                        {
+                            "condition": "state",
+                            "entity_id": entity_id,
+                            "state": "on",
+                        }
+                    ],
+                }
+            }
+        },
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    # Redact the device ID in the placeholder for consistency.
+    issue.translation_placeholders["device_id"] = "<ANY>"
+    assert issue == snapshot
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Assert the issue is no longer present.
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0

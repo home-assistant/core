@@ -16,8 +16,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.anthropic.config_flow import (
-    RECOMMENDED_AI_TASK_OPTIONS,
-    RECOMMENDED_CONVERSATION_OPTIONS,
+    DEFAULT_AI_TASK_OPTIONS,
+    DEFAULT_CONVERSATION_OPTIONS,
 )
 from homeassistant.components.anthropic.const import (
     CONF_CHAT_MODEL,
@@ -33,12 +33,10 @@ from homeassistant.components.anthropic.const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    DEFAULT,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
-    RECOMMENDED_CHAT_MODEL,
-    RECOMMENDED_MAX_TOKENS,
-    RECOMMENDED_THINKING_BUDGET,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -87,13 +85,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["subentries"] == [
         {
             "subentry_type": "conversation",
-            "data": RECOMMENDED_CONVERSATION_OPTIONS,
+            "data": DEFAULT_CONVERSATION_OPTIONS,
             "title": DEFAULT_CONVERSATION_NAME,
             "unique_id": None,
         },
         {
             "subentry_type": "ai_task_data",
-            "data": RECOMMENDED_AI_TASK_OPTIONS,
+            "data": DEFAULT_AI_TASK_OPTIONS,
             "title": DEFAULT_AI_TASK_NAME,
             "unique_id": None,
         },
@@ -144,13 +142,13 @@ async def test_creating_conversation_subentry(
 
     result2 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_NAME: "Mock name", **RECOMMENDED_CONVERSATION_OPTIONS},
+        {CONF_NAME: "Mock name", **DEFAULT_CONVERSATION_OPTIONS},
     )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Mock name"
 
-    processed_options = RECOMMENDED_CONVERSATION_OPTIONS.copy()
+    processed_options = DEFAULT_CONVERSATION_OPTIONS.copy()
     processed_options[CONF_PROMPT] = processed_options[CONF_PROMPT].strip()
 
     assert result2["data"] == processed_options
@@ -265,7 +263,7 @@ async def test_subentry_web_search_user_location(
             "recommended": False,
         },
     )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "advanced"
 
     # Configure advanced step
@@ -276,7 +274,7 @@ async def test_subentry_web_search_user_location(
             "chat_model": "claude-sonnet-4-5",
         },
     )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "model"
 
     hass.config.country = "US"
@@ -339,6 +337,103 @@ async def test_subentry_web_search_user_location(
     }
 
 
+async def test_model_list(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test fetching and processing the list of models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    # Configure initial step
+    options = await hass.config_entries.subentries.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "You are a helpful assistant",
+            "recommended": False,
+        },
+    )
+    assert options["type"] is FlowResultType.FORM
+    assert options["step_id"] == "advanced"
+    assert options["data_schema"].schema["chat_model"].config["options"] == [
+        {
+            "label": "Claude Opus 4.5",
+            "value": "claude-opus-4-5",
+        },
+        {
+            "label": "Claude Haiku 4.5",
+            "value": "claude-haiku-4-5",
+        },
+        {
+            "label": "Claude Sonnet 4.5",
+            "value": "claude-sonnet-4-5",
+        },
+        {
+            "label": "Claude Opus 4.1",
+            "value": "claude-opus-4-1",
+        },
+        {
+            "label": "Claude Opus 4",
+            "value": "claude-opus-4-0",
+        },
+        {
+            "label": "Claude Sonnet 4",
+            "value": "claude-sonnet-4-0",
+        },
+        {
+            "label": "Claude Sonnet 3.7",
+            "value": "claude-3-7-sonnet-latest",
+        },
+        {
+            "label": "Claude Haiku 3.5",
+            "value": "claude-3-5-haiku-latest",
+        },
+        {
+            "label": "Claude Haiku 3",
+            "value": "claude-3-haiku-20240307",
+        },
+        {
+            "label": "Claude Opus 3",
+            "value": "claude-3-opus-20240229",
+        },
+    ]
+
+
+async def test_model_list_error(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test exception handling during fetching the list of models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    # Configure initial step
+    with patch(
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
+        new_callable=AsyncMock,
+        side_effect=InternalServerError(
+            message=None,
+            response=Response(
+                status_code=500,
+                request=Request(method="POST", url=URL()),
+            ),
+            body=None,
+        ),
+    ):
+        options = await hass.config_entries.subentries.async_configure(
+            options_flow["flow_id"],
+            {
+                "prompt": "You are a helpful assistant",
+                "recommended": False,
+            },
+        )
+    assert options["type"] is FlowResultType.FORM
+    assert options["step_id"] == "advanced"
+    assert options["data_schema"].schema["chat_model"].config["options"] == []
+
+
 @pytest.mark.parametrize(
     ("current_options", "new_options", "expected_options"),
     [
@@ -382,7 +477,7 @@ async def test_subentry_web_search_user_location(
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-3-opus",
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
             },
         ),
         (  # Model with web search options
@@ -419,7 +514,7 @@ async def test_subentry_web_search_user_location(
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-3-5-haiku-latest",
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -457,7 +552,7 @@ async def test_subentry_web_search_user_location(
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "claude-sonnet-4-5",
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_THINKING_BUDGET: 2048,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
@@ -484,8 +579,8 @@ async def test_subentry_web_search_user_location(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -496,9 +591,9 @@ async def test_subentry_web_search_user_location(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.3,
-                CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
-                CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
-                CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
+                CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_BUDGET: DEFAULT[CONF_THINKING_BUDGET],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
@@ -539,7 +634,7 @@ async def test_subentry_options_switching(
     assert subentry_flow["step_id"] == "init"
 
     for step_options in new_options:
-        assert subentry_flow["type"] == FlowResultType.FORM
+        assert subentry_flow["type"] is FlowResultType.FORM
         assert not subentry_flow["errors"]
 
         # Test that current options are showed as suggested values:
@@ -683,3 +778,49 @@ async def test_creating_ai_task_subentry_advanced(
         CONF_WEB_SEARCH_USER_LOCATION: False,
         CONF_THINKING_BUDGET: 0,
     }
+
+
+@pytest.mark.parametrize(
+    ("current_llm_apis", "suggested_llm_apis", "expected_options"),
+    [
+        ("assist", ["assist"], ["assist"]),
+        (["assist"], ["assist"], ["assist"]),
+        ("non-existent", [], ["assist"]),
+        (["non-existent"], [], ["assist"]),
+        (["assist", "non-existent"], ["assist"], ["assist"]),
+    ],
+)
+async def test_reconfigure_conversation_subentry_llm_api_schema(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    current_llm_apis: list[str],
+    suggested_llm_apis: list[str],
+    expected_options: list[str],
+) -> None:
+    """Test llm_hass_api field values when reconfiguring a conversation subentry."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={CONF_LLM_HASS_API: current_llm_apis},
+    )
+    await hass.async_block_till_done()
+
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
+
+    # Only valid LLM APIs should be suggested and shown as options
+    schema = subentry_flow["data_schema"].schema
+    key = next(k for k in schema if k == CONF_LLM_HASS_API)
+    assert key.description
+    assert key.description.get("suggested_value") == suggested_llm_apis
+    field_schema = schema[key]
+    assert field_schema.config
+    assert [
+        opt["value"] for opt in field_schema.config.get("options")
+    ] == expected_options

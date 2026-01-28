@@ -40,9 +40,9 @@ env:
   CACHE_VERSION: 2
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2025.12"
-  DEFAULT_PYTHON: "3.13"
-  ALL_PYTHON_VERSIONS: "['3.13', '3.14']"
+  HA_SHORT_VERSION: "2026.2"
+  DEFAULT_PYTHON: "3.13.11"
+  ALL_PYTHON_VERSIONS: "['3.13.11', '3.14.2']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -59,7 +59,6 @@ env:
   # 15 is the latest version
   # - 15.2 is the latest (as of 9 Feb 2023)
   POSTGRESQL_VERSIONS: "['postgres:12.14','postgres:15.2']"
-  PRE_COMMIT_CACHE: ~/.cache/pre-commit
   UV_CACHE_DIR: /tmp/uv-cache
   APT_CACHE_BASE: /home/runner/work/apt
   APT_CACHE_DIR: /home/runner/work/apt/cache
@@ -83,7 +82,6 @@ jobs:
       integrations_glob: ${{ steps.info.outputs.integrations_glob }}
       integrations: ${{ steps.integrations.outputs.changes }}
       apt_cache_key: ${{ steps.generate_apt_cache_key.outputs.key }}
-      pre-commit_cache_key: ${{ steps.generate_pre-commit_cache_key.outputs.key }}
       python_cache_key: ${{ steps.generate_python_cache_key.outputs.key }}
       requirements: ${{ steps.core.outputs.requirements }}
       mariadb_groups: ${{ steps.info.outputs.mariadb_groups }}
@@ -99,7 +97,7 @@ jobs:
     steps:
       - &checkout
         name: Check out code from GitHub
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: |
@@ -111,11 +109,6 @@ jobs:
             hashFiles('requirements_all.txt') }}-${{
             hashFiles('homeassistant/package_constraints.txt') }}-${{
             hashFiles('script/gen_requirements_all.py') }}" >> $GITHUB_OUTPUT
-      - name: Generate partial pre-commit restore key
-        id: generate_pre-commit_cache_key
-        run: >-
-          echo "key=pre-commit-${{ env.CACHE_VERSION }}-${{
-            hashFiles('.pre-commit-config.yaml') }}"  >> $GITHUB_OUTPUT
       - name: Generate partial apt restore key
         id: generate_apt_cache_key
         run: |
@@ -244,8 +237,8 @@ jobs:
           echo "skip_coverage: ${skip_coverage}"
           echo "skip_coverage=${skip_coverage}" >> $GITHUB_OUTPUT
 
-  pre-commit:
-    name: Prepare pre-commit base
+  prek:
+    name: Run prek checks
     runs-on: *runs-on-ubuntu
     needs: [info]
     if: |
@@ -254,147 +247,17 @@ jobs:
       && github.event.inputs.audit-licenses-only != 'true'
     steps:
       - *checkout
-      - &setup-python-default
-        name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: &actions-setup-python actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-          check-latest: true
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: &actions-cache actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: venv
-          key: &key-pre-commit-venv >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
-              needs.info.outputs.pre-commit_cache_key }}
-      - name: Create Python virtual environment
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          python -m venv venv
-          . venv/bin/activate
-          python --version
-          pip install "$(grep '^uv' < requirements.txt)"
-          uv pip install "$(cat requirements_test.txt | grep pre-commit)"
-      - name: Restore pre-commit environment from cache
-        id: cache-precommit
-        uses: *actions-cache
-        with:
-          path: ${{ env.PRE_COMMIT_CACHE }}
-          lookup-only: true
-          key: &key-pre-commit-env >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-              needs.info.outputs.pre-commit_cache_key }}
-      - name: Install pre-commit dependencies
-        if: steps.cache-precommit.outputs.cache-hit != 'true'
-        run: |
-          . venv/bin/activate
-          pre-commit install-hooks
-
-  lint-ruff-format:
-    name: Check ruff-format
-    runs-on: *runs-on-ubuntu
-    needs: &needs-pre-commit
-      - info
-      - pre-commit
-    steps:
-      - *checkout
-      - *setup-python-default
-      - &cache-restore-pre-commit-venv
-        name: Restore base Python virtual environment
-        id: cache-venv
-        uses: &actions-cache-restore actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: *key-pre-commit-venv
-      - &cache-restore-pre-commit-env
-        name: Restore pre-commit environment from cache
-        id: cache-precommit
-        uses: *actions-cache-restore
-        with:
-          path: ${{ env.PRE_COMMIT_CACHE }}
-          fail-on-cache-miss: true
-          key: *key-pre-commit-env
-      - name: Run ruff-format
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual ruff-format --all-files --show-diff-on-failure
-        env:
-          RUFF_OUTPUT_FORMAT: github
-
-  lint-ruff:
-    name: Check ruff
-    runs-on: *runs-on-ubuntu
-    needs: *needs-pre-commit
-    steps:
-      - *checkout
-      - *setup-python-default
-      - *cache-restore-pre-commit-venv
-      - *cache-restore-pre-commit-env
-      - name: Run ruff
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual ruff-check --all-files --show-diff-on-failure
-        env:
-          RUFF_OUTPUT_FORMAT: github
-
-  lint-other:
-    name: Check other linters
-    runs-on: *runs-on-ubuntu
-    needs: *needs-pre-commit
-    steps:
-      - *checkout
-      - *setup-python-default
-      - *cache-restore-pre-commit-venv
-      - *cache-restore-pre-commit-env
-
-      - name: Register yamllint problem matcher
+      - name: Register problem matchers
         run: |
           echo "::add-matcher::.github/workflows/matchers/yamllint.json"
-      - name: Run yamllint
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual yamllint --all-files --show-diff-on-failure
-
-      - name: Register check-json problem matcher
-        run: |
           echo "::add-matcher::.github/workflows/matchers/check-json.json"
-      - name: Run check-json
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual check-json --all-files --show-diff-on-failure
-
-      - name: Run prettier (fully)
-        if: needs.info.outputs.test_full_suite == 'true'
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual prettier --all-files --show-diff-on-failure
-
-      - name: Run prettier (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
-        shell: bash
-        run: |
-          . venv/bin/activate
-          shopt -s globstar
-          pre-commit run --hook-stage manual prettier --show-diff-on-failure --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
-
-      - name: Register check executables problem matcher
-        run: |
           echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
-      - name: Run executables check
-        run: |
-          . venv/bin/activate
-          pre-commit run --hook-stage manual check-executables-have-shebangs --all-files --show-diff-on-failure
-
-      - name: Register codespell problem matcher
-        run: |
           echo "::add-matcher::.github/workflows/matchers/codespell.json"
-      - name: Run codespell
-        run: |
-          . venv/bin/activate
-          pre-commit run --show-diff-on-failure --hook-stage manual codespell --all-files
+      - name: Run prek
+        uses: j178/prek-action@564dda4cfa5e96aafdc4a5696c4bf7b46baae5ac # v1.1.0
+        env:
+          PREK_SKIP: no-commit-to-branch,mypy,pylint,gen_requirements_all,hassfest,hassfest-metadata,hassfest-mypy-config
+          RUFF_OUTPUT_FORMAT: github
 
   lint-hadolint:
     name: Check ${{ matrix.file }}
@@ -434,7 +297,7 @@ jobs:
       - &setup-python-matrix
         name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: *actions-setup-python
+        uses: &actions-setup-python actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -447,7 +310,7 @@ jobs:
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: *actions-cache
+        uses: &actions-cache actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: venv
           key: &key-python-venv >-
@@ -511,7 +374,7 @@ jobs:
           fi
       - name: Save apt cache
         if: steps.cache-apt-check.outputs.cache-hit != 'true'
-        uses: &actions-cache-save actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: &actions-cache-save actions/cache/save@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: *path-apt-cache
           key: *key-apt-cache
@@ -534,7 +397,7 @@ jobs:
           python --version
           uv pip freeze >> pip_freeze.txt
       - name: Upload pip_freeze artifact
-        uses: &actions-upload-artifact actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: &actions-upload-artifact actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: pip-freeze-${{ matrix.python-version }}
           path: pip_freeze.txt
@@ -562,7 +425,7 @@ jobs:
     steps:
       - &cache-restore-apt
         name: Restore apt cache
-        uses: *actions-cache-restore
+        uses: &actions-cache-restore actions/cache/restore@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: *path-apt-cache
           fail-on-cache-miss: true
@@ -579,7 +442,13 @@ jobs:
             -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             libturbojpeg
       - *checkout
-      - *setup-python-default
+      - &setup-python-default
+        name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: *actions-setup-python
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+          check-latest: true
       - &cache-restore-python-default
         name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
@@ -609,6 +478,22 @@ jobs:
         run: |
           . venv/bin/activate
           python -m script.gen_requirements_all validate
+
+  gen-copilot-instructions:
+    name: Check copilot instructions
+    runs-on: *runs-on-ubuntu
+    needs:
+      - info
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+    steps:
+      - *checkout
+      - *setup-python-default
+      - name: Run gen_copilot_instructions.py
+        run: |
+          python -m script.gen_copilot_instructions validate
 
   dependency-review:
     name: Dependency review
@@ -782,9 +667,7 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-other
-      - lint-ruff
-      - lint-ruff-format
+      - prek
       - mypy
     steps:
       - *cache-restore-apt
@@ -823,9 +706,7 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-other
-      - lint-ruff
-      - lint-ruff-format
+      - prek
       - mypy
       - prepare-pytest-full
     if: |
@@ -864,7 +745,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Download pytest_buckets
-        uses: &actions-download-artifact actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        uses: &actions-download-artifact actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: pytest_buckets
       - &compile-english-translations
@@ -949,9 +830,7 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-other
-      - lint-ruff
-      - lint-ruff-format
+      - prek
       - mypy
     if: |
       needs.info.outputs.lint_only != 'true'
@@ -1066,9 +945,7 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-other
-      - lint-ruff
-      - lint-ruff-format
+      - prek
       - mypy
     if: |
       needs.info.outputs.lint_only != 'true'
@@ -1188,7 +1065,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1202,9 +1079,7 @@ jobs:
       - base
       - gen-requirements-all
       - hassfest
-      - lint-other
-      - lint-ruff
-      - lint-ruff-format
+      - prek
       - mypy
     if: |
       needs.info.outputs.lint_only != 'true'
@@ -1313,7 +1188,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -1328,6 +1203,8 @@ jobs:
       - pytest-postgres
       - pytest-mariadb
     timeout-minutes: 10
+    permissions:
+      id-token: write
     # codecov/test-results-action currently doesn't support tokenless uploads
     # therefore we can't run it on forks
     if: |
@@ -1339,8 +1216,9 @@ jobs:
         with:
           pattern: test-results-*
       - name: Upload test results to Codecov
-        uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
+          report_type: test_results
           fail_ci_if_error: true
           verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          use_oidc: true

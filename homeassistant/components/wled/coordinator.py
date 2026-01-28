@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from wled import (
     WLED,
     Device as WLEDDevice,
@@ -9,12 +11,15 @@ from wled import (
     WLEDConnectionClosedError,
     WLEDError,
     WLEDReleases,
+    WLEDUnsupportedVersionError,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -27,6 +32,17 @@ from .const import (
 )
 
 type WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
+
+
+def normalize_mac_address(mac: str) -> str:
+    """Normalize a MAC address to lowercase without separators.
+
+    This format is used by WLED firmware as well as unique IDs in Home Assistant.
+
+    The homeassistant.helpers.device_registry.format_mac function is preferred but
+    returns MAC addresses with colons as separators.
+    """
+    return mac.lower().replace(":", "").replace(".", "").replace("-", "").strip()
 
 
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
@@ -47,6 +63,10 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         )
         self.wled = WLED(entry.data[CONF_HOST], session=async_get_clientsession(hass))
         self.unsub: CALLBACK_TYPE | None = None
+
+        if TYPE_CHECKING:
+            assert entry.unique_id
+        self.config_mac_address = normalize_mac_address(entry.unique_id)
 
         super().__init__(
             hass,
@@ -113,12 +133,31 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         """Fetch data from WLED."""
         try:
             device = await self.wled.update()
+        except WLEDUnsupportedVersionError as error:
+            # Error message from WLED library contains version info
+            # better to show that to user, but it is not translatable.
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_version",
+                translation_placeholders={"error": str(error)},
+            ) from error
         except WLEDError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_response_wled_error",
                 translation_placeholders={"error": str(error)},
             ) from error
+
+        device_mac_address = normalize_mac_address(device.info.mac_address)
+        if device_mac_address != self.config_mac_address:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="mac_address_mismatch",
+                translation_placeholders={
+                    "expected_mac": format_mac(self.config_mac_address).upper(),
+                    "actual_mac": format_mac(device_mac_address).upper(),
+                },
+            )
 
         # If the device supports a WebSocket, try activating it.
         if (

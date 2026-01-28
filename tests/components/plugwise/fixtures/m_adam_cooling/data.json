@@ -60,7 +60,7 @@
     "firmware": "2020-11-04T01:00:00+01:00",
     "hardware": "1",
     "location": "f871b8c4d63549319221e294e4f88074",
-    "model": "Tom/Floor",
+    "model": "Tom",
     "model_id": "106-03",
     "name": "Tom Badkamer",
     "sensors": {
@@ -88,6 +88,21 @@
     "sensors": {
       "setpoint": 23.5,
       "temperature": 24.0
+    },
+    "vendor": "Plugwise"
+  },
+  "c9293d1d68ee48fc8843c6f0dee2b6be": {
+    "dev_class": "pumping",
+    "members": [
+      "854f8a9b0e7e425db97f1f110e1ce4b3",
+      "ad4838d7d35c4d6ea796ee12ae5aedf8"
+    ],
+    "model": "Group",
+    "name": "Vloerverwarming",
+    "sensors": {
+      "electricity_consumed": 45.0,
+      "electricity_produced": 0.0,
+      "temperature": 20.1
     },
     "vendor": "Plugwise"
   },
@@ -173,8 +188,12 @@
       "2568cc4b9c1e401495d4741a5f89bee1",
       "29542b2b6a6a4169acecc15c72a599b8"
     ],
-    "model": "Switchgroup",
+    "model": "Group",
     "name": "Test",
+    "sensors": {
+      "electricity_consumed": 16.5,
+      "electricity_produced": 0.0
+    },
     "switches": {
       "relay": true
     },
