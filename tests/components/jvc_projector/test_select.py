@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 from jvcprojector import command as cmd
-import pytest
 
 from homeassistant.components.select import (
     ATTR_OPTIONS,
@@ -14,18 +13,11 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_OPTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MOCK_MAC
-
 from tests.common import MockConfigEntry
 
 INPUT_ENTITY_ID = "select.jvc_projector_input"
 
 
-@pytest.mark.parametrize(
-    "mock_device",
-    [{"get": {"mac": MOCK_MAC, "power": "on", "input": "hdmi-1"}}],
-    indirect=True,
-)
 async def test_input_select(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

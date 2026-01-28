@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import POWER
 from .coordinator import JVCConfigEntry
 from .entity import JvcProjectorEntity
 
@@ -65,6 +64,8 @@ RENAMED_COMMANDS: dict[str, str] = {
     "hdmi2": cmd.Remote.HDMI2,
 }
 
+ON_STATUS = (cmd.Power.ON, cmd.Power.WARMING)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -86,7 +87,7 @@ class JvcProjectorRemote(JvcProjectorEntity, RemoteEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the entity is on."""
-        return self.coordinator.data[POWER] in (cmd.Power.ON, cmd.Power.WARMING)
+        return self.coordinator.data.get(cmd.Power.name) in ON_STATUS
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
