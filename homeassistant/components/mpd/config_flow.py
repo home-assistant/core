@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
 from .const import DOMAIN, LOGGER
+from .util import async_resolve_host
 
 SCHEMA = vol.Schema(
     {
@@ -39,8 +40,12 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
             client.timeout = 30
             client.idletimeout = 10
             try:
+                # Resolve hostname using zeroconf if needed
+                resolved_host = await async_resolve_host(
+                    self.hass, user_input[CONF_HOST]
+                )
                 async with timeout(35):
-                    await client.connect(user_input[CONF_HOST], user_input[CONF_PORT])
+                    await client.connect(resolved_host, user_input[CONF_PORT])
                     if CONF_PASSWORD in user_input:
                         await client.password(user_input[CONF_PASSWORD])
                     with suppress(mpd.ConnectionError):
