@@ -11,7 +11,8 @@ CONF_ENTRY_CODE = "code"
 CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
 CONF_SHOW_BACKGROUND = "show_background"
-
+CONF_REGION = "region"
+REGION_OPTIONS = ["auto", "us", "eu", "ru", "cn"]
 # Option Flow steps
 DRAWABLES = "drawables"
 
