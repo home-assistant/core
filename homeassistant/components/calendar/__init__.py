@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
-from http import HTTPStatus
-from itertools import groupby
 import logging
 import re
-from typing import Any, Final, cast, final
+from collections.abc import Callable, Iterable
+from http import HTTPStatus
+from itertools import groupby
+from typing import Any, Final, Optional, TypedDict, cast, final
 
+import voluptuous as vol
 from aiohttp import web
 from dateutil.rrule import rrulestr
-import voluptuous as vol
 
 from homeassistant.components import frontend, http, websocket_api
 from homeassistant.components.websocket_api import (
@@ -272,6 +272,18 @@ WEBSOCKET_EVENT_SCHEMA = vol.Schema(
     )
 )
 
+CalendarEventArgs = TypedDict(
+    "CalendarEventArgs",
+    {
+        "dtstart": datetime.date | datetime.datetime,
+        "dtend": datetime.date | datetime.datetime,
+        "summary": str,
+        "description": Optional[str],
+        "location": Optional[str],
+        "rrule": Optional[str],
+    },
+)
+
 # Validation for the CalendarEvent dataclass
 CALENDAR_EVENT_SCHEMA = vol.Schema(
     vol.All(
@@ -507,6 +519,19 @@ class CalendarEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes calendar entities."""
 
 
+CalendarEventAttributes = TypedDict(
+    "CalendarEventAttributes",
+    {
+        "message": str,
+        "all_day": bool,
+        "start_time": str,
+        "end_time": str,
+        "location": str,
+        "description": str,
+    },
+)
+
+
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
 
@@ -543,7 +568,7 @@ class CalendarEntity(Entity):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, Any] | None:
+    def state_attributes(self) -> CalendarEventAttributes | None:
         """Return the entity state attributes."""
         if (event := self.event) is None:
             return None
@@ -637,7 +662,7 @@ class CalendarEntity(Entity):
         """Return calendar events within a datetime range."""
         raise NotImplementedError
 
-    async def async_create_event(self, **kwargs: Any) -> None:
+    async def async_create_event(self, **kwargs: CalendarEventArgs) -> None:
         """Add a new event to calendar."""
         raise NotImplementedError
 
@@ -653,11 +678,11 @@ class CalendarEntity(Entity):
     async def async_update_event(
         self,
         uid: str,
-        event: dict[str, Any],
+        event: CalendarEventArgs,
         recurrence_id: str | None = None,
         recurrence_range: str | None = None,
     ) -> None:
-        """Delete an event on the calendar."""
+        """Update an event on the calendar."""
         raise NotImplementedError
 
 
