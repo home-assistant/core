@@ -17,10 +17,15 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
+    NotifyEntity,
+    NotifyEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, CONF_WEBHOOK_ID
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -43,6 +48,7 @@ from .const import (
     DATA_PUSH_CHANNEL,
     DOMAIN,
 )
+from .entity import MobileAppEntity
 from .util import supports_push
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,6 +99,24 @@ async def async_get_service(
     """Get the mobile_app notification service."""
     service = hass.data[DOMAIN][DATA_NOTIFY] = MobileAppNotificationService()
     return service
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Add notify entity for mobile_app."""
+    if not supports_push(hass, config_entry.data[CONF_WEBHOOK_ID]):
+        return
+
+    config = {
+        CONF_UNIQUE_ID: f"{config_entry.unique_id}_notify",
+        CONF_NAME: "Notify",
+    }
+
+    async_add_entities([MobileAppNotifyEntity(config, config_entry)])
+    return
 
 
 class MobileAppNotificationService(BaseNotificationService):
@@ -197,3 +221,33 @@ class MobileAppNotificationService(BaseNotificationService):
             _LOGGER.error("Timeout sending notification to %s", push_url)
         except aiohttp.ClientError as err:
             _LOGGER.error("Error sending notification to %s: %r", push_url, err)
+
+
+class MobileAppNotifyEntity(MobileAppEntity, NotifyEntity):
+    """Notify entity for mobile_app."""
+
+    _attr_supported_features = NotifyEntityFeature(1)
+    _attr_has_entity_name = True
+
+    async def async_send_message(
+        self, message: str, title: str | None = None, **kwargs
+    ) -> None:
+        """Send a message."""
+
+        service: MobileAppNotificationService = self.hass.data[DOMAIN][DATA_NOTIFY]
+        kwargs[ATTR_TARGET] = [self._entry.data[CONF_WEBHOOK_ID]]
+        if title:
+            kwargs[ATTR_TITLE] = title
+
+        await service.async_send_message(message=message, **kwargs)
+
+    @callback
+    def _async_update_attr_from_config(self) -> None:
+        # Needs to be defined for MobileAppEntity.__init__.
+        return
+
+    async def async_restore_last_state(self, last_state: State) -> None:
+        """Restore previous state."""
+        # Needs to be defined for MobileAppEntity.async_added_to_hass.
+        # NotifyEntity/HomeAssistant takes care of restoring.
+        return
