@@ -10,10 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ElectroluxConfigEntry
 from .api import ElectroluxApiClient
 from .const import NEW_APPLIANCE
-from .coordinator import ElectroluxDataUpdateCoordinator
+from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
 
 

@@ -31,8 +31,7 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ElectroluxConfigEntry
-from .coordinator import ElectroluxDataUpdateCoordinator
+from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
 from .entity_helper import async_setup_entities_helper
 
