@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-import logging
 from typing import cast
 
 from aioptdevices.interface import PTDevicesStatusStates
@@ -26,14 +25,13 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import PTDevicesConfigEntry, PTDevicesCoordinator
+from .entity import PTDevicesEntity
 
-_LOGGER = logging.getLogger(__name__)
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 class PTDevicesSensors(StrEnum):
@@ -47,7 +45,6 @@ class PTDevicesSensors(StrEnum):
     DEVICE_LAST_REPORT = "reported"
     DEVICE_WIFI_STRENGTH = "wifi_signal"
     DEVICE_BATTERY_VOLTAGE = "battery_voltage"
-    DEVICE_BATTERY_STATUS = "battery_status"
     TX_LAST_REPORT = "tx_reported"
     TX_SIGNAL_STRENGTH = "tx_signal"
 
@@ -123,14 +120,6 @@ SENSOR_DESCRIPTIONS: tuple[PTDevicesSensorEntityDescription, ...] = (
         ),
     ),
     PTDevicesSensorEntityDescription(
-        key=PTDevicesSensors.DEVICE_BATTERY_STATUS,
-        translation_key=PTDevicesSensors.DEVICE_BATTERY_STATUS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: cast(
-            str, data.get(PTDevicesSensors.DEVICE_BATTERY_STATUS)
-        ),
-    ),
-    PTDevicesSensorEntityDescription(
         key=PTDevicesSensors.DEVICE_BATTERY_VOLTAGE,
         translation_key=PTDevicesSensors.DEVICE_BATTERY_VOLTAGE,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -154,10 +143,13 @@ async def async_setup_entry(
     """Set up PTDevices sensors from config entries."""
     coordinator = config_entry.runtime_data
 
+    known_devices: set[str] = set()
+
     def _check_device() -> None:
         current_devices = set(coordinator.data.keys())
-        new_devices = current_devices - coordinator.previous_devices
+        new_devices = current_devices - known_devices
         if new_devices:
+            known_devices.update(new_devices)
             for device_id in new_devices:
                 device = coordinator.data[device_id]
                 async_add_entity(
@@ -165,20 +157,14 @@ async def async_setup_entry(
                     for sensor in SENSOR_DESCRIPTIONS
                     if sensor.key in device
                 )
-        coordinator.previous_devices = current_devices
 
     _check_device()
     config_entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
-# Coordinator is used to centralize the data updates
-PARALLEL_UPDATES = 0
-
-
-class PTDevicesSensorEntity(CoordinatorEntity[PTDevicesCoordinator], SensorEntity):
+class PTDevicesSensorEntity(PTDevicesEntity, SensorEntity):
     """Sensor entity for PTDevices Integration."""
 
-    _attr_has_entity_name = True
     entity_description: PTDevicesSensorEntityDescription
 
     def __init__(
@@ -188,41 +174,15 @@ class PTDevicesSensorEntity(CoordinatorEntity[PTDevicesCoordinator], SensorEntit
         device_id: str,
     ) -> None:
         """Initialize sensor."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(
+            coordinator=coordinator,
+            sensor_key=description.key,
+            device_id=device_id,
+        )
 
         self.entity_description = description
-        self._device_id = device_id
-        self._attr_unique_id = f"{device_id}_{description.key}"
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            configuration_url=f"https://www.ptdevices.com/device/level/{self._device_id}",
-            manufacturer="ParemTech inc.",
-            model=self.coordinator.data[self._device_id].get(
-                "device_type",
-                None,
-            ),
-            sw_version=self.coordinator.data[self._device_id].get(
-                "version",
-                None,
-            ),
-            name=self.coordinator.data[self._device_id].get(
-                "title",
-                None,
-            ),
-        )
 
     @property
     def native_value(self) -> float | int | str | None:
         """Return the state of the senor."""
-        # return self.coordinator.data[self._device_id].get(self.entity_description.key)
-        return self.entity_description.value_fn(self.coordinator.data[self._device_id])
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            super().available
-            and self.entity_description.key
-            in self.coordinator.data.get(self._device_id, {})
-        )
+        return self.entity_description.value_fn(self.device)

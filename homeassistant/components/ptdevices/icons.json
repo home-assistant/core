@@ -1,9 +1,6 @@
 {
   "entity": {
     "sensor": {
-      "battery_status": {
-        "default": "mdi:battery"
-      },
       "battery_voltage": {
         "default": "mdi:battery"
       },

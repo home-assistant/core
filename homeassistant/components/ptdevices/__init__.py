@@ -14,6 +14,7 @@ from .coordinator import PTDevicesConfigEntry, PTDevicesCoordinator
 
 _PLATFORMS: list[Platform] = [
     Platform.SENSOR,
+    Platform.BINARY_SENSOR,
 ]
 
 
