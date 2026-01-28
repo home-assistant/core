@@ -1,0 +1,52 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "CityBikes Network",
+        "description": "Select a bike share network from the list.",
+        "data": {
+          "network": "Network"
+        }
+      },
+      "radius": {
+        "title": "Filter by radius",
+        "description": "Select your location on the map and set a radius (in meters) to filter stations. Default radius is 1000 meters.",
+        "data": {
+          "location": "Location"
+        }
+      },
+      "stations": {
+        "title": "Which station to monitor",
+        "description": "Configure which stations to monitor for {network}{radius}. Found {count} station(s).",
+        "data": {
+          "name": "Name for the hub",
+          "all_stations": "All stations",
+          "stations": "Explicit list"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to CityBikes API",
+      "unknown": "Unexpected error",
+      "network_required": "Please select a network",
+      "no_stations_selected": "Please select at least one station or enable 'All stations'"
+    },
+    "abort": {
+      "already_configured": "This network is already configured"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "bikes": {
+        "name": "Bikes"
+      },
+      "ebikes": {
+        "name": "E-bikes"
+      },
+      "empty_slots": {
+        "name": "Empty slots"
+      }
+    }
+  }
+}
+
