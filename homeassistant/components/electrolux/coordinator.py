@@ -1,7 +1,14 @@
 """Electrolux coordinator class."""
 
+from __future__ import annotations
+
+from asyncio import Task
+from dataclasses import dataclass
 import logging
 
+from electrolux_group_developer_sdk.client.appliances.appliance_data import (
+    ApplianceData,
+)
 from electrolux_group_developer_sdk.client.client_exception import (
     ApplianceClientException,
 )
@@ -17,13 +24,26 @@ from .const import DOMAIN
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
+@dataclass(kw_only=True, slots=True)
+class ElectroluxData:
+    """Electrolux data type."""
+
+    client: ElectroluxApiClient
+    appliances: list[ApplianceData]
+    coordinators: dict[str, ElectroluxDataUpdateCoordinator]
+    sse_task: Task
+
+
+type ElectroluxConfigEntry = ConfigEntry[ElectroluxData]
+
+
 class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
     """Class for fetching appliance data from the API."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: ElectroluxConfigEntry,
         client: ElectroluxApiClient,
         appliance_id: str,
     ) -> None:

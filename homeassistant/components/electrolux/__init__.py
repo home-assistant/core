@@ -1,20 +1,15 @@
 """The Electrolux integration."""
 
-from asyncio import CancelledError, Task
+from asyncio import CancelledError
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
 import logging
 
 from electrolux_group_developer_sdk.auth.token_manager import TokenManager
 from electrolux_group_developer_sdk.client.appliance_client import ApplianceClient
-from electrolux_group_developer_sdk.client.appliances.appliance_data import (
-    ApplianceData,
-)
 from electrolux_group_developer_sdk.client.failed_connection_exception import (
     FailedConnectionException,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -23,26 +18,17 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .api import ElectroluxApiClient
 from .const import CONF_REFRESH_TOKEN, DOMAIN, NEW_APPLIANCE, USER_AGENT
-from .coordinator import ElectroluxDataUpdateCoordinator
+from .coordinator import (
+    ElectroluxConfigEntry,
+    ElectroluxData,
+    ElectroluxDataUpdateCoordinator,
+)
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.SENSOR,
 ]
-
-
-@dataclass(kw_only=True, slots=True)
-class ElectroluxData:
-    """Electrolux data type."""
-
-    client: ElectroluxApiClient
-    appliances: list[ApplianceData]
-    coordinators: dict[str, ElectroluxDataUpdateCoordinator]
-    sse_task: Task
-
-
-type ElectroluxConfigEntry = ConfigEntry[ElectroluxData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> bool:
