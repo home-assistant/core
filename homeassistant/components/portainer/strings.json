@@ -155,11 +155,34 @@
     "invalid_auth_no_details": {
       "message": "An error occurred while trying to authenticate."
     },
+    "invalid_target": {
+      "message": "Invalid device targeted."
+    },
     "timeout_connect": {
       "message": "A timeout occurred while trying to connect to the Portainer instance: {error}"
     },
     "timeout_connect_no_details": {
       "message": "A timeout occurred while trying to connect to the Portainer instance."
+    }
+  },
+  "services": {
+    "prune_images": {
+      "description": "Prune unused images on a Portainer endpoint.",
+      "fields": {
+        "dangling": {
+          "description": "If true, only prune dangling images.",
+          "name": "Dangling"
+        },
+        "device_id": {
+          "description": "The endpoint to prune images on.",
+          "name": "Endpoint"
+        },
+        "until": {
+          "description": "Prune images unused for at least this time duration in the past. If not provided, all unused images will be pruned.",
+          "name": "Until"
+        }
+      },
+      "name": "Prune unused images"
     }
   }
 }

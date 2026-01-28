@@ -23,6 +23,8 @@ MOCK_TEST_CONFIG = {
     CONF_VERIFY_SSL: True,
 }
 
+TEST_ENTRY = "portainer_test_entry_123"
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -78,6 +80,6 @@ def mock_config_entry() -> MockConfigEntry:
         title="Portainer test",
         data=MOCK_TEST_CONFIG,
         unique_id=MOCK_TEST_CONFIG[CONF_API_TOKEN],
-        entry_id="portainer_test_entry_123",
+        entry_id=TEST_ENTRY,
         version=2,
     )

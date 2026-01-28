@@ -67,5 +67,10 @@
         }
       }
     }
+  },
+  "services": {
+    "prune_images": {
+      "service": "mdi:delete-sweep"
+    }
   }
 }
