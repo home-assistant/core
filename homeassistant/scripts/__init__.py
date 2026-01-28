@@ -61,7 +61,7 @@ def run(args: list[str]) -> int:
             print("Aborting script, could not install dependency", req)
             return 1
 
-    asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
+    asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))  # type: ignore[deprecated]
 
     return script.run(args[1:])
 
