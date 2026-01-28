@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "minor_version": 5,
+  "key": "core.config_entries",
+  "data": {
+    "entries": [
+      {"created_at":"2025-03-31T02:47:25.009446+00:00","data":{"api_key":"test-apikey","password":"new-password","username":"test-username"},"disabled_by":null,"discovery_keys":{},"domain":"gaposa","entry_id":"01JQN1HFJHMF0HE8M42C8K8XEH","minor_version":1,"modified_at":"2025-03-31T02:47:25.012563+00:00","options":{},"pref_disable_new_entities":false,"pref_disable_polling":false,"source":"user","subentries":[],"title":"Mock Title","unique_id":null,"version":1}
+    ]
+  }
+}

@@ -2074,6 +2074,9 @@ pyfritzhome==0.6.19
 # homeassistant.components.ifttt
 pyfttt==0.3
 
+# homeassistant.components.gaposa
+pygaposa==0.2.4
+
 # homeassistant.components.skybeacon
 pygatt[GATTTOOL]==4.0.5
 
