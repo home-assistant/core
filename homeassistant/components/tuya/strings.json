@@ -1146,16 +1146,6 @@
         }
       },
       "name": "Set device data"
-    },
-    "set_direction": {
-      "description": "Set the direction of the cover motor (e.g., forward or back).",
-      "fields": {
-        "direction": {
-          "description": "The direction to set (typically 'forward' or 'back').",
-          "name": "Direction"
-        }
-      },
-      "name": "Set direction"
     }
   }
 }

@@ -1,14 +1,3 @@
-set_direction:
-  target:
-    entity:
-      domain: cover
-  fields:
-    direction:
-      example: "forward"
-      required: true
-      selector:
-        text:
-
 get_available_dp_codes:
   fields:
     device_id:

@@ -391,9 +391,6 @@
     },
     "set_data": {
       "service": "mdi:database-edit"
-    },
-    "set_direction": {
-      "service": "mdi:arrow-left-right"
     }
   }
 }
