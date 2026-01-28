@@ -11,10 +11,14 @@ from homematicip.base.enums import (
     OpticalSignalBehaviour,
     RGBColorState,
 )
-from homematicip.base.functionalChannels import NotificationLightChannel
+from homematicip.base.functionalChannels import (
+    NotificationLightChannel,
+    NotificationMp3SoundChannel,
+)
 from homematicip.device import (
     BrandDimmer,
     BrandSwitchNotificationLight,
+    CombinationSignallingDevice,
     Device,
     Dimmer,
     DinRailDimmer3,
@@ -93,6 +97,8 @@ async def async_setup_entry(
             (Dimmer, PluggableDimmer, BrandDimmer, FullFlushDimmer),
         ):
             entities.append(HomematicipDimmer(hap, device))
+        elif isinstance(device, CombinationSignallingDevice):
+            entities.append(HomematicipCombinationSignallingLight(hap, device))
 
     async_add_entities(entities)
 
@@ -421,3 +427,85 @@ def _convert_color(color: tuple) -> RGBColorState:
     if 270 < hue <= 330:
         return RGBColorState.PURPLE
     return RGBColorState.RED
+
+
+class HomematicipCombinationSignallingLight(HomematicipGenericEntity, LightEntity):
+    """Representation of the HomematicIP combination signalling device light (HmIP-MP3P)."""
+
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+
+    def __init__(
+        self, hap: HomematicipHAP, device: CombinationSignallingDevice
+    ) -> None:
+        """Initialize the combination signalling light entity."""
+        super().__init__(hap, device, channel=1, is_multi_channel=False)
+
+        self._color_switcher: dict[str, tuple[float, float]] = {
+            "WHITE": (0.0, 0.0),
+            "RED": (0.0, 100.0),
+            "YELLOW": (60.0, 100.0),
+            "GREEN": (120.0, 100.0),
+            "TURQUOISE": (180.0, 100.0),
+            "BLUE": (240.0, 100.0),
+            "PURPLE": (300.0, 100.0),
+        }
+
+    @property
+    def _func_channel(self) -> NotificationMp3SoundChannel:
+        return self._device.functionalChannels[self._channel]
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if light is on."""
+        return (
+            self._func_channel.dimLevel is not None
+            and self._func_channel.dimLevel > 0.0
+        )
+
+    @property
+    def brightness(self) -> int:
+        """Return the brightness of this light between 0..255."""
+        return int((self._func_channel.dimLevel or 0.0) * 255)
+
+    @property
+    def hs_color(self) -> tuple[float, float]:
+        """Return the hue and saturation color value [float, float]."""
+        simple_rgb_color = self._func_channel.simpleRGBColorState
+        return self._color_switcher.get(simple_rgb_color, (0.0, 0.0))
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the light."""
+        state_attr = super().extra_state_attributes
+
+        if self.is_on:
+            state_attr[ATTR_COLOR_NAME] = self._func_channel.simpleRGBColorState
+
+        return state_attr
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the light on."""
+        # Use hs_color from kwargs, if not applicable use current hs_color.
+        hs_color = kwargs.get(ATTR_HS_COLOR, self.hs_color)
+        simple_rgb_color = _convert_color(hs_color)
+
+        # Use brightness from kwargs, if not applicable use current brightness.
+        brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
+
+        # If no kwargs, use default value.
+        if not kwargs:
+            brightness = 255
+
+        # Minimum brightness is 10, otherwise the led is disabled
+        brightness = max(10, brightness)
+        dim_level = brightness / 255.0
+
+        await self._func_channel.set_rgb_dim_level_async(
+            rgb_color_state=simple_rgb_color.name,
+            dim_level=dim_level,
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the light off."""
+        await self._func_channel.turn_off_async()
