@@ -18,6 +18,7 @@ from homeassistant.components.aws_s3.backup import (
 )
 from homeassistant.components.aws_s3.const import (
     CONF_ENDPOINT_URL,
+    CONF_PREFIX,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
 )
@@ -421,7 +422,7 @@ async def test_cache_expiration(
     # Mock the entry
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"bucket": "test-bucket"},
+        data={"bucket": "test-bucket", "prefix": "test/"},
         unique_id="test-unique-id",
         title="Test S3",
     )
@@ -470,3 +471,193 @@ async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
     remove_listener()
 
     assert DATA_BACKUP_AGENT_LISTENERS not in hass.data
+
+
+async def test_prefix_used_in_api_calls(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    test_backup: AgentBackup,
+) -> None:
+    """Test that prefix is correctly used in all S3 API calls."""
+    # Create config entry with prefix
+    prefix = "backups/homeassistant/"
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"bucket": "test-bucket", CONF_PREFIX: prefix},
+        unique_id="test-unique-id",
+        title="Test S3",
+    )
+    mock_entry.runtime_data = mock_client
+
+    # Create agent
+    agent = S3BackupAgent(hass, mock_entry)
+
+    # Mock backup filenames
+    tar_filename, metadata_filename = suggested_filenames(test_backup)
+    expected_tar_key = f"{prefix}{tar_filename}"
+    expected_metadata_key = f"{prefix}{metadata_filename}"
+
+    # Test list_objects_v2 uses prefix
+    mock_client.list_objects_v2.return_value = {"Contents": []}
+    await agent.async_list_backups()
+
+    mock_client.list_objects_v2.assert_called_with(
+        Bucket="test-bucket",
+        Prefix=prefix,
+    )
+
+    # Test upload uses prefix in put_object calls
+    mock_backup_data = b"test backup data"
+    await agent.async_upload_backup(test_backup, lambda: [mock_backup_data])
+
+    # Check that put_object was called with prefixed keys
+    put_object_calls = mock_client.put_object.call_args_list
+    assert len(put_object_calls) >= 2  # At least tar and metadata files
+
+    # Find the metadata and tar file calls
+    metadata_call = None
+    tar_call = None
+    for call in put_object_calls:
+        key = call[1]["Key"]  # Get the Key parameter
+        if key == expected_metadata_key:
+            metadata_call = call
+        elif key == expected_tar_key:
+            tar_call = call
+
+    assert metadata_call is not None, f"Metadata call with key {expected_metadata_key} not found"
+    assert tar_call is not None, f"Tar call with key {expected_tar_key} not found"
+
+    # Test download uses prefix
+    mock_body = AsyncMock()
+    mock_body.iter_chunks.return_value = [b"backup data"]
+    mock_client.get_object.return_value = {"Body": mock_body}
+
+    async for _ in await agent.async_download_backup(test_backup.backup_id):
+        pass
+
+    mock_client.get_object.assert_called_with(
+        Bucket="test-bucket",
+        Key=expected_tar_key,
+    )
+
+    # Test delete uses prefix
+    await agent.async_delete_backup(test_backup.backup_id)
+
+    delete_calls = mock_client.delete_object.call_args_list
+    assert len(delete_calls) == 2  # Should delete both tar and metadata files
+
+    deleted_keys = {call[1]["Key"] for call in delete_calls}
+    assert expected_tar_key in deleted_keys
+    assert expected_metadata_key in deleted_keys
+
+
+async def test_backward_compatibility_no_prefix(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    test_backup: AgentBackup,
+) -> None:
+    """Test that old config entries without prefix still work."""
+    # Create config entry without prefix (simulating old config)
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"bucket": "test-bucket"},  # No CONF_PREFIX key
+        unique_id="test-unique-id",
+        title="Test S3",
+    )
+    mock_entry.runtime_data = mock_client
+
+    # Create agent - should work without errors
+    agent = S3BackupAgent(hass, mock_entry)
+
+    # Verify prefix defaults to empty string
+    assert agent._prefix == ""
+
+    # Mock backup filenames
+    tar_filename, metadata_filename = suggested_filenames(test_backup)
+
+    # Test list_objects_v2 works without prefix
+    mock_client.list_objects_v2.return_value = {"Contents": []}
+    await agent.async_list_backups()
+
+    mock_client.list_objects_v2.assert_called_with(
+        Bucket="test-bucket",
+        Prefix="",  # Empty prefix
+    )
+
+    # Test upload works without prefix
+    mock_backup_data = b"test backup data"
+    await agent.async_upload_backup(test_backup, lambda: [mock_backup_data])
+
+    # Check that put_object was called with non-prefixed keys
+    put_object_calls = mock_client.put_object.call_args_list
+    keys_used = {call[1]["Key"] for call in put_object_calls}
+    assert tar_filename in keys_used
+    assert metadata_filename in keys_used
+
+
+async def test_empty_prefix_behavior(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    test_backup: AgentBackup,
+) -> None:
+    """Test that empty prefix string behaves the same as no prefix."""
+    # Create config entry with empty prefix
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"bucket": "test-bucket", CONF_PREFIX: ""},
+        unique_id="test-unique-id",
+        title="Test S3",
+    )
+    mock_entry.runtime_data = mock_client
+
+    # Create agent
+    agent = S3BackupAgent(hass, mock_entry)
+
+    # Verify prefix is empty string
+    assert agent._prefix == ""
+
+    # Mock backup filenames
+    tar_filename, metadata_filename = suggested_filenames(test_backup)
+
+    # Test that _add_prefix with empty prefix returns original key
+    assert agent._add_prefix(tar_filename) == tar_filename
+    assert agent._add_prefix(metadata_filename) == metadata_filename
+
+    # Test list_objects_v2 works with empty prefix
+    mock_client.list_objects_v2.return_value = {"Contents": []}
+    await agent.async_list_backups()
+
+    mock_client.list_objects_v2.assert_called_with(
+        Bucket="test-bucket",
+        Prefix="",
+    )
+
+
+async def test_prefix_add_prefix_method(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+) -> None:
+    """Test the _add_prefix method behavior with different prefixes."""
+    # Test with trailing slash prefix
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"bucket": "test-bucket", CONF_PREFIX: "backups/"},
+        unique_id="test-unique-id",
+        title="Test S3",
+    )
+    mock_entry.runtime_data = mock_client
+    agent = S3BackupAgent(hass, mock_entry)
+
+    assert agent._add_prefix("file.tar") == "backups/file.tar"
+
+    # Test with no trailing slash prefix
+    mock_entry.data[CONF_PREFIX] = "backups"
+    agent = S3BackupAgent(hass, mock_entry)
+
+    assert agent._add_prefix("file.tar") == "backupsfile.tar"
+
+    # Test with complex prefix
+    mock_entry.data[CONF_PREFIX] = "my-org/homeassistant/prod/"
+    agent = S3BackupAgent(hass, mock_entry)
+
+    assert agent._add_prefix("file.tar") == "my-org/homeassistant/prod/file.tar"
