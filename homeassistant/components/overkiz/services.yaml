@@ -1,0 +1,23 @@
+set_cover_position_and_tilt_position:
+  fields:
+    position:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    tilt_position:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+  target:
+    entity:
+      integration: overkiz
+      domain: cover
+      supported_features:
+        - cover.CoverEntityFeature.SET_POSITION
+        - cover.CoverEntityFeature.SET_TILT_POSITION
