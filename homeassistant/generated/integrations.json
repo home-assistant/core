@@ -5307,6 +5307,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "pulsegrow": {
+      "name": "Pulse Grow",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "pure_energie": {
       "name": "Pure Energie",
       "integration_type": "device",

@@ -1,0 +1,31 @@
+{
+  "id": 999,
+  "growId": 456,
+  "hidden": false,
+  "deviceType": 2,
+  "sensorType": 1,
+  "displayOrder": 0,
+  "name": "Test pH Sensor",
+  "hubId": 789,
+  "templateId": null,
+  "dayStart": "06:00",
+  "nightStart": "18:00",
+  "parSensorSubtype": null,
+  "mostRecentDataPoint": {
+    "sensorId": 999,
+    "createdAt": "2024-01-01T00:00:00Z",
+    "dataPointValues": [
+      {
+        "paramName": "pH",
+        "paramValue": 6.5,
+        "measuringUnit": ""
+      },
+      {
+        "paramName": "Temperature",
+        "paramValue": 22.5,
+        "measuringUnit": "C"
+      }
+    ]
+  },
+  "lastHourDataPointDtos": null
+}

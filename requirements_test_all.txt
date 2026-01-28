@@ -340,6 +340,9 @@ aiopegelonline==0.1.1
 # homeassistant.components.acmeda
 aiopulse==0.4.6
 
+# homeassistant.components.pulsegrow
+aiopulsegrow==25.12.6
+
 # homeassistant.components.purpleair
 aiopurpleair==2025.08.1
 

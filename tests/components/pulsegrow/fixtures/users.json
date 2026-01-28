@@ -1,0 +1,9 @@
+[
+  {
+    "userId": "test-account-id",
+    "userEmail": "test@example.com",
+    "userName": "Test User",
+    "lastActive": "2024-01-01T00:00:00Z",
+    "role": "owner"
+  }
+]
