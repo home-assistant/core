@@ -67,8 +67,8 @@ class RoborockB01SelectDescription(SelectEntityDescription):
 
 B01_SELECT_DESCRIPTIONS: list[RoborockB01SelectDescription] = [
     RoborockB01SelectDescription(
-        key="water_level",
-        translation_key="mop_intensity",
+        key="water_flow",
+        translation_key="water_flow",
         api_fn=lambda api, value: api.set_water_level(
             WaterLevelMapping.from_value(value)
         ),

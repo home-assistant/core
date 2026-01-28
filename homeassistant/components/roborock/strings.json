@@ -128,6 +128,14 @@
       },
       "selected_map": {
         "name": "Selected map"
+      },
+      "water_flow": {
+        "name": "Water flow",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
       }
     },
     "sensor": {

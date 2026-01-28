@@ -196,8 +196,8 @@ async def test_update_success_q7_water_level(
     setup_entry: MockConfigEntry,
     q7_device: FakeDevice,
 ) -> None:
-    """Test allowed changing values for Q7 water level select entity."""
-    entity_id = "select.roborock_q7_mop_intensity"
+    """Test allowed changing values for Q7 water flow select entity."""
+    entity_id = "select.roborock_q7_water_flow"
     assert hass.states.get(entity_id) is not None
 
     # Test setting value
@@ -221,17 +221,19 @@ async def test_update_failure_q7_water_level(
     setup_entry: MockConfigEntry,
     q7_device: FakeDevice,
 ) -> None:
-    """Test failure when setting Q7 water level."""
+    """Test failure when setting Q7 water flow."""
     assert q7_device.b01_q7_properties
     q7_device.b01_q7_properties.set_water_level.side_effect = RoborockException
+    entity_id = "select.roborock_q7_water_flow"
+    assert hass.states.get(entity_id) is not None
 
-    with pytest.raises(HomeAssistantError, match="Error while calling water_level"):
+    with pytest.raises(HomeAssistantError, match="Error while calling water_flow"):
         await hass.services.async_call(
             "select",
             SERVICE_SELECT_OPTION,
             service_data={"option": "high"},
             blocking=True,
-            target={"entity_id": "select.roborock_q7_mop_intensity"},
+            target={"entity_id": entity_id},
         )
 
 
