@@ -902,7 +902,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     entity_description: LightEntityDescription
     _attr_brightness: int | None = None
-    _attr_color_mode: ColorMode | str | None = None
+    _attr_color_mode: ColorMode | None = None
     _attr_color_temp_kelvin: int | None = None
     _attr_effect_list: list[str] | None = None
     _attr_effect: str | None = None
@@ -915,7 +915,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_rgb_color: tuple[int, int, int] | None = None
     _attr_rgbw_color: tuple[int, int, int, int] | None = None
     _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
-    _attr_supported_color_modes: set[ColorMode] | set[str] | None = None
+    _attr_supported_color_modes: set[ColorMode] | None = None
     _attr_supported_features: LightEntityFeature = LightEntityFeature(0)
     _attr_xy_color: tuple[float, float] | None = None
 
@@ -1339,7 +1339,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return data
 
     @property
-    def _light_internal_supported_color_modes(self) -> set[ColorMode] | set[str]:
+    def _light_internal_supported_color_modes(self) -> set[ColorMode]:
         """Calculate supported color modes with backwards compatibility."""
         if (_supported_color_modes := self.supported_color_modes) is not None:
             self.__validate_supported_color_modes(_supported_color_modes)
@@ -1379,7 +1379,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return supported_color_modes
 
     @cached_property
-    def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
+    def supported_color_modes(self) -> set[ColorMode] | None:
         """Flag supported color modes."""
         return self._attr_supported_color_modes
 
