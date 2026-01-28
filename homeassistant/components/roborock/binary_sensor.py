@@ -65,6 +65,22 @@ BINARY_SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: data.status.water_shortage_status,
     ),
     RoborockBinarySensorDescription(
+        key="dirty_box_full",
+        translation_key="dirty_box_full",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status.dirty_water_box_status,
+        is_dock_entity=True,
+    ),
+    RoborockBinarySensorDescription(
+        key="clean_box_empty",
+        translation_key="clean_box_empty",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status.clear_water_box_status,
+        is_dock_entity=True,
+    ),
+    RoborockBinarySensorDescription(
         key="clean_fluid_empty",
         translation_key="clean_fluid_empty",
         device_class=BinarySensorDeviceClass.PROBLEM,

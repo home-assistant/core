@@ -41,9 +41,16 @@
   },
   "entity": {
     "binary_sensor": {
+      "clean_box_empty": {
+        "name": "Clean box empty"
+      },
       "clean_fluid_empty": {
         "name": "Cleaning fluid"
       },
+      "dirty_box_full": {
+        "name": "Dirty box full"
+      },
+
       "in_cleaning": {
         "name": "Cleaning"
       },
