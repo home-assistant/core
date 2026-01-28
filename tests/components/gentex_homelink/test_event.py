@@ -1,77 +1,55 @@
 """Test that the devices and entities are correctly configured."""
 
-from unittest.mock import patch
+import time
+from unittest.mock import AsyncMock
 
-from homelink.model.button import Button
-from homelink.model.device import Device
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.gentex_homelink import async_setup_entry
-from homeassistant.components.gentex_homelink.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-from tests.typing import ClientSessionGenerator
+from . import setup_integration, update_callback
 
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
-TEST_CONFIG_ENTRY_ID = "ABC123"
-
-"""Mock classes for testing."""
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-deviceInst = Device(id="TestDevice", name="TestDevice")
-deviceInst.buttons = [
-    Button(id="1", name="Button 1", device=deviceInst),
-    Button(id="2", name="Button 2", device=deviceInst),
-    Button(id="3", name="Button 3", device=deviceInst),
-]
-
-
-@pytest.fixture
-async def test_setup_config(
+async def test_entities(
     hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    caplog: pytest.LogCaptureFixture,
+    mock_config_entry: MockConfigEntry,
+    mock_mqtt_provider: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Setup config entry."""
-    with patch(
-        "homeassistant.components.gentex_homelink.MQTTProvider", autospec=True
-    ) as MockProvider:
-        instance = MockProvider.return_value
-        instance.discover.return_value = [deviceInst]
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            unique_id=None,
-            version=1,
-            data={"auth_implementation": "gentex_homelink"},
-            state=ConfigEntryState.LOADED,
-        )
-        config_entry.add_to_hass(hass)
-        result = await async_setup_entry(hass, config_entry)
-
-        # Assert configuration worked without errors
-        assert result
-
-
-async def test_device_registered(hass: HomeAssistant, test_setup_config) -> None:
-    """Check if a device is registered."""
-    # Assert we got a device with the test ID
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device([(DOMAIN, "TestDevice")])
-    assert device
-    assert device.name == "TestDevice"
-
-
-def test_entities_registered(hass: HomeAssistant, test_setup_config) -> None:
     """Check if the entities are registered."""
-    comp = er.async_get(hass)
-    button_names = {"Button 1", "Button 2", "Button 3"}
-    registered_button_names = {b.original_name for b in comp.entities.values()}
+    await setup_integration(hass, mock_config_entry)
 
-    assert button_names == registered_button_names
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.freeze_time("2021-07-30")
+async def test_entities_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mqtt_provider: AsyncMock,
+) -> None:
+    """Check if the entities are updated."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("event.testdevice_button_1").state == STATE_UNKNOWN
+
+    await update_callback(
+        hass,
+        mock_mqtt_provider,
+        "state",
+        {
+            "1": {"requestId": "rid1", "timestamp": time.time()},
+            "2": {"requestId": "rid2", "timestamp": time.time()},
+            "3": {"requestId": "rid3", "timestamp": time.time()},
+        },
+    )
+    assert (
+        hass.states.get("event.testdevice_button_1").state
+        == "2021-07-30T00:00:00.000+00:00"
+    )

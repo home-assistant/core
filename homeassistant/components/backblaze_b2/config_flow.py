@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from b2sdk.v2 import B2Api, InMemoryAccountInfo, exception
+from b2sdk.v2 import exception
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -17,6 +17,8 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+# Import from b2_client to ensure timeout configuration is applied
+from .b2_client import B2Api, InMemoryAccountInfo
 from .const import (
     BACKBLAZE_REALM,
     CONF_APPLICATION_KEY,
@@ -172,8 +174,12 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Backblaze B2 bucket '%s' does not exist", user_input[CONF_BUCKET]
             )
             errors[CONF_BUCKET] = "invalid_bucket_name"
-        except exception.ConnectionReset:
-            _LOGGER.error("Failed to connect to Backblaze B2. Connection reset")
+        except (
+            exception.B2ConnectionError,
+            exception.B2RequestTimeout,
+            exception.ConnectionReset,
+        ) as err:
+            _LOGGER.error("Failed to connect to Backblaze B2: %s", err)
             errors["base"] = "cannot_connect"
         except exception.MissingAccountData:
             # This generally indicates an issue with how InMemoryAccountInfo is used

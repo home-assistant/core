@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass
 from typing import Any, ClassVar, Self, cast
 
@@ -10,7 +11,7 @@ from tuya_sharing import CustomerDevice
 from homeassistant.util.json import json_loads_object
 
 from .const import LOGGER, DPType
-from .util import parse_dptype, remap_value
+from .util import parse_dptype
 
 # Dictionary to track logged warnings to avoid spamming logs
 # Keyed by device ID
@@ -40,7 +41,7 @@ class TypeInformation[T]:
 
     _DPTYPE: ClassVar[DPType]
     dpcode: str
-    type_data: str | None = None
+    type_data: str
 
     def process_raw_value(
         self, raw_value: Any | None, device: CustomerDevice
@@ -53,7 +54,9 @@ class TypeInformation[T]:
         return raw_value
 
     @classmethod
-    def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
+    def _from_json(
+        cls, dpcode: str, type_data: str, *, report_type: str | None
+    ) -> Self | None:
         """Load JSON string and return a TypeInformation object."""
         return cls(dpcode=dpcode, type_data=type_data)
 
@@ -79,13 +82,18 @@ class TypeInformation[T]:
         )
 
         for dpcode in dpcodes:
+            report_type = (
+                sr.report_type if (sr := device.status_range.get(dpcode)) else None
+            )
             for device_specs in lookup_tuple:
                 if (
                     (current_definition := device_specs.get(dpcode))
                     and parse_dptype(current_definition.type) is cls._DPTYPE
                     and (
                         type_information := cls._from_json(
-                            dpcode=dpcode, type_data=current_definition.values
+                            dpcode=dpcode,
+                            type_data=current_definition.values,
+                            report_type=report_type,
                         )
                     )
                 ):
@@ -103,14 +111,16 @@ class BitmapTypeInformation(TypeInformation[int]):
     label: list[str]
 
     @classmethod
-    def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
+    def _from_json(
+        cls, dpcode: str, type_data: str, *, report_type: str | None
+    ) -> Self | None:
         """Load JSON string and return a BitmapTypeInformation object."""
-        if not (parsed := json_loads_object(type_data)):
+        if not (parsed := cast(dict[str, Any] | None, json_loads_object(type_data))):
             return None
         return cls(
             dpcode=dpcode,
             type_data=type_data,
-            **cast(dict[str, list[str]], parsed),
+            label=parsed["label"],
         )
 
 
@@ -176,7 +186,9 @@ class EnumTypeInformation(TypeInformation[str]):
         return raw_value
 
     @classmethod
-    def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
+    def _from_json(
+        cls, dpcode: str, type_data: str, *, report_type: str | None
+    ) -> Self | None:
         """Load JSON string and return an EnumTypeInformation object."""
         if not (parsed := json_loads_object(type_data)):
             return None
@@ -198,21 +210,7 @@ class IntegerTypeInformation(TypeInformation[float]):
     scale: int
     step: int
     unit: str | None = None
-
-    @property
-    def max_scaled(self) -> float:
-        """Return the max scaled."""
-        return self.scale_value(self.max)
-
-    @property
-    def min_scaled(self) -> float:
-        """Return the min scaled."""
-        return self.scale_value(self.min)
-
-    @property
-    def step_scaled(self) -> float:
-        """Return the step scaled."""
-        return self.step / (10**self.scale)
+    report_type: str | None
 
     def scale_value(self, value: int) -> float:
         """Scale a value."""
@@ -221,26 +219,6 @@ class IntegerTypeInformation(TypeInformation[float]):
     def scale_value_back(self, value: float) -> int:
         """Return raw value for scaled."""
         return round(value * (10**self.scale))
-
-    def remap_value_to(
-        self,
-        value: float,
-        to_min: float = 0,
-        to_max: float = 255,
-        reverse: bool = False,
-    ) -> float:
-        """Remap a value from this range to a new range."""
-        return remap_value(value, self.min, self.max, to_min, to_max, reverse)
-
-    def remap_value_from(
-        self,
-        value: float,
-        from_min: float = 0,
-        from_max: float = 255,
-        reverse: bool = False,
-    ) -> float:
-        """Remap a value from its current range to this range."""
-        return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     def process_raw_value(
         self, raw_value: Any | None, device: CustomerDevice
@@ -268,7 +246,9 @@ class IntegerTypeInformation(TypeInformation[float]):
         return raw_value / (10**self.scale)
 
     @classmethod
-    def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
+    def _from_json(
+        cls, dpcode: str, type_data: str, *, report_type: str | None
+    ) -> Self | None:
         """Load JSON string and return an IntegerTypeInformation object."""
         if not (parsed := cast(dict[str, Any] | None, json_loads_object(type_data))):
             return None
@@ -281,21 +261,38 @@ class IntegerTypeInformation(TypeInformation[float]):
             scale=int(parsed["scale"]),
             step=int(parsed["step"]),
             unit=parsed.get("unit"),
+            report_type=report_type,
         )
 
 
 @dataclass(kw_only=True)
-class JsonTypeInformation(TypeInformation[Any]):
+class JsonTypeInformation(TypeInformation[dict[str, Any]]):
     """Json type information."""
 
     _DPTYPE = DPType.JSON
 
+    def process_raw_value(
+        self, raw_value: Any | None, device: CustomerDevice
+    ) -> dict[str, Any] | None:
+        """Read and process raw value against this type information."""
+        if raw_value is None:
+            return None
+        return json_loads_object(raw_value)
+
 
 @dataclass(kw_only=True)
-class RawTypeInformation(TypeInformation[Any]):
+class RawTypeInformation(TypeInformation[bytes]):
     """Raw type information."""
 
     _DPTYPE = DPType.RAW
+
+    def process_raw_value(
+        self, raw_value: Any | None, device: CustomerDevice
+    ) -> bytes | None:
+        """Read and process raw value against this type information."""
+        if raw_value is None:
+            return None
+        return base64.b64decode(raw_value)
 
 
 @dataclass(kw_only=True)

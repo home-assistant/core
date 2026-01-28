@@ -1,11 +1,13 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_modules": "No Velbus modules found, please check your VLP file."
     },
     "step": {
       "network": {
@@ -41,18 +43,49 @@
           "usbselect": "Via USB device"
         },
         "title": "Define the Velbus connection"
+      },
+      "vlp": {
+        "data": {
+          "vlp_file": "Path to VLP file"
+        },
+        "data_description": {
+          "vlp_file": "Select the VLP file from your filesystem."
+        },
+        "description": "You can optionally provide a VLP file to improve module detection. The VLP file is the config file from VelbusLink that contains all module information. If you do not provide it now, you can always add it later in the integration options. Without this file, Home Assistant will try to detect the modules automatically, but this can take longer time and some modules might not be detected correctly.",
+        "title": "Optional VLP file"
       }
     }
   },
   "exceptions": {
+    "api_call_failed": {
+      "message": "Action execute for {entity} failed."
+    },
+    "clear_cache_failed": {
+      "message": "Could not clear the Velbus cache: {error}"
+    },
+    "connection_failed": {
+      "message": "Could not connect to Velbus."
+    },
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
     },
     "invalid_hvac_mode": {
       "message": "Climate mode {hvac_mode} is not supported."
     },
+    "module_not_found": {
+      "message": "Module with address {address} not found."
+    },
     "not_loaded": {
       "message": "{target} is not loaded."
+    },
+    "scan_failed": {
+      "message": "Scan service: {error}."
+    },
+    "set_memo_text_failed": {
+      "message": "Failed to set the memo text on the Velbus module: {error}."
+    },
+    "sync_clock_failed": {
+      "message": "Failed to sync the Velbus clock: {error}."
     }
   },
   "issues": {

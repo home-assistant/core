@@ -223,10 +223,10 @@ class ServiceParams(TypedDict):
 
 
 @deprecated_class(
-    "homeassistant.helpers.target.TargetSelectorData",
+    "homeassistant.helpers.target.TargetSelection",
     breaks_in_ha_version="2026.8",
 )
-class ServiceTargetSelector(target_helpers.TargetSelectorData):
+class ServiceTargetSelector(target_helpers.TargetSelection):
     """Class to hold a target selector for a service."""
 
     def __init__(self, service_call: ServiceCall) -> None:
@@ -406,9 +406,9 @@ async def async_extract_entities[_EntityT: Entity](
     if data_ent_id == ENTITY_MATCH_ALL:
         return [entity for entity in entities if entity.available]
 
-    selector_data = target_helpers.TargetSelectorData(service_call.data)
+    target_selection = target_helpers.TargetSelection(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        service_call.hass, selector_data, expand_group
+        service_call.hass, target_selection, expand_group
     )
     combined = referenced.referenced | referenced.indirectly_referenced
 
@@ -438,9 +438,9 @@ async def async_extract_entity_ids(
 
     Will convert group entity ids to the entity ids it represents.
     """
-    selector_data = target_helpers.TargetSelectorData(service_call.data)
+    target_selection = target_helpers.TargetSelection(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        service_call.hass, selector_data, expand_group
+        service_call.hass, target_selection, expand_group
     )
     return referenced.referenced | referenced.indirectly_referenced
 
@@ -454,9 +454,9 @@ def async_extract_referenced_entity_ids(
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a service call."""
-    selector_data = target_helpers.TargetSelectorData(service_call.data)
+    target_selection = target_helpers.TargetSelection(service_call.data)
     selected = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group
+        hass, target_selection, expand_group
     )
     return SelectedEntities(**dataclasses.asdict(selected))
 
@@ -466,9 +466,9 @@ async def async_extract_config_entry_ids(
     service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
     """Extract referenced config entry ids from a service call."""
-    selector_data = target_helpers.TargetSelectorData(service_call.data)
+    target_selection = target_helpers.TargetSelection(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        service_call.hass, selector_data, expand_group
+        service_call.hass, target_selection, expand_group
     )
     ent_reg = entity_registry.async_get(service_call.hass)
     dev_reg = device_registry.async_get(service_call.hass)
@@ -752,9 +752,9 @@ async def entity_service_call(
         all_referenced: set[str] | None = None
     else:
         # A set of entities we're trying to target.
-        selector_data = target_helpers.TargetSelectorData(call.data)
+        target_selection = target_helpers.TargetSelection(call.data)
         referenced = target_helpers.async_extract_referenced_entity_ids(
-            hass, selector_data, True
+            hass, target_selection, True
         )
         all_referenced = referenced.referenced | referenced.indirectly_referenced
 

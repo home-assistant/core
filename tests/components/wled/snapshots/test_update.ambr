@@ -1,0 +1,141 @@
+# serializer version: 1
+# name: test_no_update_available[rgb_websocket]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'device_class': 'firmware',
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/wled/icon.png',
+      'friendly_name': 'WLED WebSocket Firmware',
+      'in_progress': False,
+      'installed_version': '0.99.0',
+      'latest_version': '0.99.0',
+      'release_summary': None,
+      'release_url': 'https://github.com/wled/WLED/releases/tag/v0.99.0',
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 3>,
+      'title': 'WLED',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.wled_websocket_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_update_available.2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'device_class': 'firmware',
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/wled/icon.png',
+      'friendly_name': 'WLED RGB Light Firmware',
+      'in_progress': False,
+      'installed_version': '0.14.4',
+      'latest_version': '0.99.0',
+      'release_summary': None,
+      'release_url': 'https://github.com/wled/WLED/releases/tag/v0.99.0',
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 3>,
+      'title': 'WLED',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.wled_rgb_light_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_update_available[update.wled_rgb_light_firmware-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.wled_rgb_light_firmware',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Firmware',
+    'options': dict({
+    }),
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
+    'original_icon': None,
+    'original_name': 'Firmware',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': 'aabbccddeeff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_available[update.wled_rgb_light_firmware-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'device_class': 'firmware',
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/wled/icon.png',
+      'friendly_name': 'WLED RGB Light Firmware',
+      'in_progress': False,
+      'installed_version': '0.14.4',
+      'latest_version': '0.99.0',
+      'release_summary': None,
+      'release_url': 'https://github.com/wled/WLED/releases/tag/v0.99.0',
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 3>,
+      'title': 'WLED',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.wled_rgb_light_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_update_information_available
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'device_class': 'firmware',
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/wled/icon.png',
+      'friendly_name': 'WLED RGB Light Firmware',
+      'in_progress': False,
+      'installed_version': '0.14.4',
+      'latest_version': None,
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 3>,
+      'title': 'WLED',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.wled_rgb_light_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

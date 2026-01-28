@@ -25,7 +25,7 @@ from homeassistant.const import (
     EVENT_PANELS_UPDATED,
     EVENT_THEMES_UPDATED,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.icon import async_get_icons
@@ -36,11 +36,15 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.hass_dict import HassKey
 
-from .storage import async_setup_frontend_storage
+from .storage import (
+    async_setup_frontend_storage,
+    async_system_store as async_system_store,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "frontend"
+CONF_NAME_DARK = "name_dark"
 CONF_THEMES = "themes"
 CONF_THEMES_MODES = "modes"
 CONF_THEMES_LIGHT = "light"
@@ -526,6 +530,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def _validate_selected_theme(theme: str) -> str:
+    """Validate that a user selected theme is a valid theme."""
+    if theme in (DEFAULT_THEME, VALUE_NO_THEME):
+        return theme
+    hass = async_get_hass()
+    if theme not in hass.data[DATA_THEMES]:
+        raise vol.Invalid(f"Theme {theme} not found")
+    return theme
+
+
 async def _async_setup_themes(
     hass: HomeAssistant, themes: dict[str, Any] | None
 ) -> None:
@@ -569,27 +583,32 @@ async def _async_setup_themes(
     @callback
     def set_theme(call: ServiceCall) -> None:
         """Set backend-preferred theme."""
-        name = call.data[CONF_NAME]
-        mode = call.data.get("mode", "light")
 
-        if (
-            name not in (DEFAULT_THEME, VALUE_NO_THEME)
-            and name not in hass.data[DATA_THEMES]
-        ):
-            _LOGGER.warning("Theme %s not found", name)
-            return
+        def _update_hass_theme(theme: str, light: bool) -> None:
+            theme_key = DATA_DEFAULT_THEME if light else DATA_DEFAULT_DARK_THEME
+            if theme == VALUE_NO_THEME:
+                to_set = DEFAULT_THEME if light else None
+            else:
+                _LOGGER.info(
+                    "Theme %s set as default %s theme",
+                    theme,
+                    "light" if light else "dark",
+                )
+                to_set = theme
+            hass.data[theme_key] = to_set
 
-        light_mode = mode == "light"
-
-        theme_key = DATA_DEFAULT_THEME if light_mode else DATA_DEFAULT_DARK_THEME
-
-        if name == VALUE_NO_THEME:
-            to_set = DEFAULT_THEME if light_mode else None
+        name = call.data.get(CONF_NAME)
+        if name is not None and CONF_MODE in call.data:
+            mode = call.data.get("mode", "light")
+            light_mode = mode == "light"
+            _update_hass_theme(name, light_mode)
         else:
-            _LOGGER.info("Theme %s set as default %s theme", name, mode)
-            to_set = name
+            name_dark = call.data.get(CONF_NAME_DARK)
+            if name:
+                _update_hass_theme(name, True)
+            if name_dark:
+                _update_hass_theme(name_dark, False)
 
-        hass.data[theme_key] = to_set
         store.async_delay_save(
             lambda: {
                 DATA_DEFAULT_THEME: hass.data[DATA_DEFAULT_THEME],
@@ -624,11 +643,13 @@ async def _async_setup_themes(
         DOMAIN,
         SERVICE_SET_THEME,
         set_theme,
-        vol.Schema(
+        vol.All(
             {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Optional(CONF_MODE): vol.Any("dark", "light"),
-            }
+                vol.Optional(CONF_NAME): _validate_selected_theme,
+                vol.Exclusive(CONF_NAME_DARK, "dark_modes"): _validate_selected_theme,
+                vol.Exclusive(CONF_MODE, "dark_modes"): vol.Any("dark", "light"),
+            },
+            cv.has_at_least_one_key(CONF_NAME, CONF_NAME_DARK),
         ),
     )
 

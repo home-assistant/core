@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AREA 1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -72,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AREA 2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -124,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'AREA 3',
     'options': dict({
     }),
     'original_device_class': None,

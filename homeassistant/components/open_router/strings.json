@@ -22,6 +22,7 @@
     "ai_task_data": {
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "The main integration entry is not loaded. Please ensure the integration is loaded before reconfiguring.",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "entry_type": "AI task",
@@ -29,16 +30,21 @@
         "user": "Add AI task"
       },
       "step": {
-        "user": {
+        "init": {
           "data": {
-            "model": "[%key:component::open_router::config_subentries::conversation::step::user::data::model%]"
-          }
+            "model": "[%key:component::open_router::config_subentries::conversation::step::init::data::model%]"
+          },
+          "data_description": {
+            "model": "The model to use for the AI task"
+          },
+          "description": "Configure the AI task"
         }
       }
     },
     "conversation": {
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "[%key:component::open_router::config_subentries::ai_task_data::abort::entry_not_loaded%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "entry_type": "Conversation agent",
@@ -46,7 +52,7 @@
         "user": "Add conversation agent"
       },
       "step": {
-        "user": {
+        "init": {
           "data": {
             "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
             "model": "Model",
@@ -56,7 +62,7 @@
             "model": "The model to use for the conversation agent",
             "prompt": "Instruct how the LLM should respond. This can be a template."
           },
-          "description": "Configure the new conversation agent"
+          "description": "Configure the conversation agent"
         }
       }
     }

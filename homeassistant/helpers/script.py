@@ -86,7 +86,7 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType, SignalTypeFormat
 
 from . import condition, config_validation as cv, service, template
-from .condition import ConditionCheckerType, trace_condition_function
+from .condition import ConditionCheckerTypeOptional, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptRunVariables, ScriptVariables
@@ -675,12 +675,14 @@ class _ScriptRun:
 
     ### Condition actions ###
 
-    async def _async_get_condition(self, config: ConfigType) -> ConditionCheckerType:
+    async def _async_get_condition(
+        self, config: ConfigType
+    ) -> ConditionCheckerTypeOptional:
         return await self._script._async_get_condition(config)  # noqa: SLF001
 
     def _test_conditions(
         self,
-        conditions: list[ConditionCheckerType],
+        conditions: list[ConditionCheckerTypeOptional],
         name: str,
         condition_path: str | None = None,
     ) -> bool | None:
@@ -1404,12 +1406,12 @@ def _referenced_extract_ids(data: Any, key: str, found: set[str]) -> None:
 
 
 class _ChooseData(TypedDict):
-    choices: list[tuple[list[ConditionCheckerType], Script]]
+    choices: list[tuple[list[ConditionCheckerTypeOptional], Script]]
     default: Script | None
 
 
 class _IfData(TypedDict):
-    if_conditions: list[ConditionCheckerType]
+    if_conditions: list[ConditionCheckerTypeOptional]
     if_then: Script
     if_else: Script | None
 
@@ -1486,7 +1488,9 @@ class Script:
         self._max_exceeded = max_exceeded
         if script_mode == SCRIPT_MODE_QUEUED:
             self._queue_lck = asyncio.Lock()
-        self._config_cache: dict[frozenset[tuple[str, str]], ConditionCheckerType] = {}
+        self._config_cache: dict[
+            frozenset[tuple[str, str]], ConditionCheckerTypeOptional
+        ] = {}
         self._repeat_script: dict[int, Script] = {}
         self._choose_data: dict[int, _ChooseData] = {}
         self._if_data: dict[int, _IfData] = {}
@@ -1597,8 +1601,13 @@ class Script:
                 ):
                     _referenced_extract_ids(data, target, referenced)
 
+            elif action == cv.SCRIPT_ACTION_CHECK_CONDITION:
+                referenced |= condition.async_extract_targets(step, target)
+
             elif action == cv.SCRIPT_ACTION_CHOOSE:
                 for choice in step[CONF_CHOOSE]:
+                    for cond in choice[CONF_CONDITIONS]:
+                        referenced |= condition.async_extract_targets(cond, target)
                     Script._find_referenced_target(
                         target, referenced, choice[CONF_SEQUENCE]
                     )
@@ -1608,6 +1617,8 @@ class Script:
                     )
 
             elif action == cv.SCRIPT_ACTION_IF:
+                for cond in step[CONF_IF]:
+                    referenced |= condition.async_extract_targets(cond, target)
                 Script._find_referenced_target(target, referenced, step[CONF_THEN])
                 if CONF_ELSE in step:
                     Script._find_referenced_target(target, referenced, step[CONF_ELSE])
@@ -1857,7 +1868,9 @@ class Script:
             return
         await asyncio.shield(create_eager_task(self._async_stop(aws, update_state)))
 
-    async def _async_get_condition(self, config: ConfigType) -> ConditionCheckerType:
+    async def _async_get_condition(
+        self, config: ConfigType
+    ) -> ConditionCheckerTypeOptional:
         config_cache_key = frozenset((k, str(v)) for k, v in config.items())
         if not (cond := self._config_cache.get(config_cache_key)):
             cond = await condition.async_from_config(self._hass, config)

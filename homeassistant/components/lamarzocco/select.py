@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from pylamarzocco.const import (
+    DoseMode,
     ModelName,
     PreExtractionMode,
     SmartStandByType,
@@ -13,7 +14,7 @@ from pylamarzocco.const import (
 )
 from pylamarzocco.devices import LaMarzoccoMachine
 from pylamarzocco.exceptions import RequestNotSuccessful
-from pylamarzocco.models import PreBrewing, SteamBoilerLevel
+from pylamarzocco.models import BrewByWeightDoses, PreBrewing, SteamBoilerLevel
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -49,6 +50,14 @@ STANDBY_MODE_HA_TO_LM = {
 }
 
 STANDBY_MODE_LM_TO_HA = {value: key for key, value in STANDBY_MODE_HA_TO_LM.items()}
+
+DOSE_MODE_HA_TO_LM = {
+    "continuous": DoseMode.CONTINUOUS,
+    "dose1": DoseMode.DOSE_1,
+    "dose2": DoseMode.DOSE_2,
+}
+
+DOSE_MODE_LM_TO_HA = {value: key for key, value in DOSE_MODE_HA_TO_LM.items()}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -116,6 +125,33 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
         current_option_fn=lambda machine: STANDBY_MODE_LM_TO_HA[
             machine.schedule.smart_wake_up_sleep.smart_stand_by_after
         ],
+    ),
+    LaMarzoccoSelectEntityDescription(
+        key="bbw_dose_mode",
+        translation_key="bbw_dose_mode",
+        entity_category=EntityCategory.CONFIG,
+        options=["continuous", "dose1", "dose2"],
+        select_option_fn=lambda machine, option: machine.set_brew_by_weight_dose_mode(
+            mode=DOSE_MODE_HA_TO_LM[option]
+        ),
+        current_option_fn=lambda machine: DOSE_MODE_LM_TO_HA[
+            cast(
+                BrewByWeightDoses,
+                machine.dashboard.config[WidgetType.CM_BREW_BY_WEIGHT_DOSES],
+            ).mode
+        ],
+        available_fn=lambda coordinator: (
+            cast(
+                BrewByWeightDoses,
+                coordinator.device.dashboard.config[WidgetType.CM_BREW_BY_WEIGHT_DOSES],
+            ).scale_connected
+        ),
+        supported_fn=(
+            lambda coordinator: coordinator.device.dashboard.model_name
+            in (ModelName.LINEA_MINI, ModelName.LINEA_MINI_R)
+            and WidgetType.CM_BREW_BY_WEIGHT_DOSES
+            in coordinator.device.dashboard.config
+        ),
     ),
 )
 

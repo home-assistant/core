@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -125,6 +127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -184,6 +187,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -243,6 +247,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -275,6 +280,73 @@
     'state': '9.7412109375',
   })
 # ---
+# name: test_all_entities[sensor.focused_einstein_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+        'dead',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.focused_einstein_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'State',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'State',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_state',
+    'unique_id': 'portainer_test_entry_123_focused_einstein_container_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.focused_einstein_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'focused_einstein State',
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+        'dead',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.focused_einstein_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'running',
+  })
+# ---
 # name: test_all_entities[sensor.funny_chatelet_cpu_usage_total-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -298,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -351,6 +424,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -401,6 +475,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -460,6 +535,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -519,6 +595,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -551,6 +628,73 @@
     'state': '9.7412109375',
   })
 # ---
+# name: test_all_entities[sensor.funny_chatelet_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+        'dead',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.funny_chatelet_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'State',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'State',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_state',
+    'unique_id': 'portainer_test_entry_123_funny_chatelet_container_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.funny_chatelet_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'funny_chatelet State',
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+        'dead',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.funny_chatelet_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'running',
+  })
+# ---
 # name: test_all_entities[sensor.my_environment_api_version-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -572,6 +716,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'API version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -620,6 +765,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Architecture',
     'options': dict({
     }),
     'original_device_class': None,
@@ -670,6 +816,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Container count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -721,6 +868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers paused',
     'options': dict({
     }),
     'original_device_class': None,
@@ -772,6 +920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers running',
     'options': dict({
     }),
     'original_device_class': None,
@@ -823,6 +972,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Containers stopped',
     'options': dict({
     }),
     'original_device_class': None,
@@ -872,6 +1022,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Docker version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -922,6 +1073,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -971,6 +1123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kernel version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1019,6 +1172,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating system',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1067,6 +1221,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating system version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1117,6 +1272,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total CPU',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1168,6 +1324,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total memory',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1227,6 +1384,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1280,6 +1438,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1330,6 +1489,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1389,6 +1549,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1448,6 +1609,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1480,6 +1642,73 @@
     'state': '9.7412109375',
   })
 # ---
+# name: test_all_entities[sensor.practical_morse_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+        'dead',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.practical_morse_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'State',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'State',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_state',
+    'unique_id': 'portainer_test_entry_123_practical_morse_container_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.practical_morse_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'practical_morse State',
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+        'dead',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.practical_morse_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'running',
+  })
+# ---
 # name: test_all_entities[sensor.serene_banach_cpu_usage_total-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1503,6 +1732,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1556,6 +1786,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1606,6 +1837,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1665,6 +1897,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1724,6 +1957,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1756,6 +1990,73 @@
     'state': '9.7412109375',
   })
 # ---
+# name: test_all_entities[sensor.serene_banach_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+        'dead',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.serene_banach_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'State',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'State',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_state',
+    'unique_id': 'portainer_test_entry_123_serene_banach_container_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'serene_banach State',
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+        'dead',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.serene_banach_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'running',
+  })
+# ---
 # name: test_all_entities[sensor.stoic_turing_cpu_usage_total-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1779,6 +2080,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CPU usage total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1832,6 +2134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Image',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1882,6 +2185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1941,6 +2245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2000,6 +2305,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory usage percentage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2030,5 +2336,72 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '9.7412109375',
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+        'dead',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.stoic_turing_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'State',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'State',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_state',
+    'unique_id': 'portainer_test_entry_123_stoic_turing_container_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'stoic_turing State',
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+        'dead',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stoic_turing_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'running',
   })
 # ---

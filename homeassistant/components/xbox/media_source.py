@@ -209,7 +209,7 @@ class XboxSource(MediaSource):
             if images is not None:
                 try:
                     return PlayMedia(
-                        images[int(identifier.media_id)].url,
+                        to_https(images[int(identifier.media_id)].url),
                         MIME_TYPE_MAP[ATTR_SCREENSHOTS],
                     )
                 except (ValueError, IndexError):
@@ -641,7 +641,7 @@ class XboxSource(MediaSource):
 
 def gamerpic(config_entry: XboxConfigEntry) -> str | None:
     """Return gamerpic."""
-    coordinator = config_entry.runtime_data.status
+    coordinator = config_entry.runtime_data.presence
     if TYPE_CHECKING:
         assert config_entry.unique_id
     person = coordinator.data.presence[coordinator.client.xuid]

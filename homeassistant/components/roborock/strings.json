@@ -41,6 +41,15 @@
   },
   "entity": {
     "binary_sensor": {
+      "clean_box_empty": {
+        "name": "Clean water box"
+      },
+      "clean_fluid_empty": {
+        "name": "Cleaning fluid"
+      },
+      "dirty_box_full": {
+        "name": "Dirty water box"
+      },
       "in_cleaning": {
         "name": "Cleaning"
       },
@@ -213,6 +222,25 @@
       "mop_drying_remaining_time": {
         "name": "Mop drying remaining time"
       },
+      "mop_life_time_left": {
+        "name": "Mop life time left"
+      },
+      "q7_status": {
+        "name": "Status",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "docking": "[%key:component::roborock::entity::sensor::status::state::docking%]",
+          "mop_airdrying": "Mop air drying",
+          "mop_cleaning": "Mop cleaning",
+          "moping": "Mopping",
+          "paused": "[%key:common::state::paused%]",
+          "sleeping": "Sleeping",
+          "sweep_moping": "Sweep mopping",
+          "sweep_moping_2": "Sweep mopping",
+          "updating": "[%key:component::roborock::entity::sensor::status::state::updating%]",
+          "waiting_for_orders": "Waiting for orders"
+        }
+      },
       "sensor_time_left": {
         "name": "Sensor time left"
       },
@@ -345,6 +373,7 @@
       "zeo_state": {
         "name": "State",
         "state": {
+          "aftercare": "Aftercare",
           "cooling": "Cooling",
           "done": "Done",
           "drying": "Drying",
@@ -353,6 +382,7 @@
           "spinning": "Spinning",
           "standby": "[%key:common::state::standby%]",
           "under_delay_start": "Delayed start",
+          "waiting_for_aftercare": "Waiting for aftercare",
           "washing": "Washing",
           "weighing": "Weighing"
         }
@@ -425,6 +455,9 @@
     },
     "map_failure": {
       "message": "Something went wrong creating the map"
+    },
+    "mqtt_unauthorized": {
+      "message": "Roborock MQTT servers rejected the connection due to rate limiting or invalid credentials. You may either attempt to reauthenticate or wait and reload the integration."
     },
     "no_coordinators": {
       "message": "No devices were able to successfully setup"

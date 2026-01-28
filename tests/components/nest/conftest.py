@@ -313,7 +313,7 @@ async def setup_base_platform(
             await hass.async_block_till_done()
 
         yield _setup_func
-        if config_entry.state == ConfigEntryState.LOADED:
+        if config_entry.state is ConfigEntryState.LOADED:
             await hass.config_entries.async_unload(config_entry.entry_id)
 
 

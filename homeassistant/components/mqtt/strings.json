@@ -46,7 +46,7 @@
           "ws_path": "WebSocket path"
         },
         "data_description": {
-          "advanced_options": "Enable and select **Next** to set advanced options.",
+          "advanced_options": "Enable and select **Submit** to set advanced options.",
           "broker": "The hostname or IP address of your MQTT broker.",
           "certificate": "The custom CA certificate file to validate your MQTT brokers certificate.",
           "client_cert": "The client certificate to authenticate against your MQTT broker.",

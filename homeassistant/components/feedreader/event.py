@@ -19,6 +19,9 @@ from .coordinator import FeedReaderCoordinator
 
 LOGGER = logging.getLogger(__name__)
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 ATTR_CONTENT = "content"
 ATTR_DESCRIPTION = "description"
 ATTR_LINK = "link"
@@ -42,16 +45,15 @@ class FeedReaderEvent(CoordinatorEntity[FeedReaderCoordinator], EventEntity):
     _attr_event_types = [EVENT_FEEDREADER]
     _attr_name = None
     _attr_has_entity_name = True
+    _attr_translation_key = "latest_feed"
     _unrecorded_attributes = frozenset(
         {ATTR_CONTENT, ATTR_DESCRIPTION, ATTR_TITLE, ATTR_LINK}
     )
-    coordinator: FeedReaderCoordinator
 
     def __init__(self, coordinator: FeedReaderCoordinator) -> None:
         """Initialize the feedreader event."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_latest_feed"
-        self._attr_translation_key = "latest_feed"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             name=coordinator.config_entry.title,

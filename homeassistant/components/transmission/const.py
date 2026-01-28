@@ -39,10 +39,14 @@ DEFAULT_SCAN_INTERVAL = 120
 STATE_ATTR_TORRENT_INFO = "torrent_info"
 
 ATTR_DELETE_DATA = "delete_data"
+ATTR_LABELS = "labels"
 ATTR_TORRENT = "torrent"
+ATTR_TORRENTS = "torrents"
 ATTR_DOWNLOAD_PATH = "download_path"
+ATTR_TORRENT_FILTER = "torrent_filter"
 
 SERVICE_ADD_TORRENT = "add_torrent"
+SERVICE_GET_TORRENTS = "get_torrents"
 SERVICE_REMOVE_TORRENT = "remove_torrent"
 SERVICE_START_TORRENT = "start_torrent"
 SERVICE_STOP_TORRENT = "stop_torrent"
@@ -54,3 +58,14 @@ EVENT_DOWNLOADED_TORRENT = "transmission_downloaded_torrent"
 STATE_UP_DOWN = "up_down"
 STATE_SEEDING = "seeding"
 STATE_DOWNLOADING = "downloading"
+
+FILTER_MODES: dict[str, list[str] | None] = {
+    "started": ["downloading"],
+    "completed": ["seeding"],
+    "paused": ["stopped"],
+    "active": [
+        "seeding",
+        "downloading",
+    ],
+    "all": None,
+}

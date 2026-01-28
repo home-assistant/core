@@ -6,6 +6,7 @@ from unittest.mock import Mock
 from mozart_api.exceptions import ApiException
 from mozart_api.models import (
     Action,
+    BatteryState,
     ListeningModeRef,
     OverlayPlayRequest,
     OverlayPlayRequestTextToSpeechTextToSpeech,
@@ -71,14 +72,21 @@ TEST_NAME_4 = f"{TEST_MODEL_A5}-{TEST_SERIAL_NUMBER_4}"
 TEST_JID_4 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_4}@products.bang-olufsen.com"
 TEST_MEDIA_PLAYER_ENTITY_ID_4 = f"media_player.beosound_a5_{TEST_SERIAL_NUMBER_4}"
 TEST_HOST_4 = "192.168.0.4"
+TEST_BATTERY_SENSOR_ENTITY_ID = f"sensor.beosound_a5_{TEST_SERIAL_NUMBER_4}_battery"
+TEST_BATTERY_CHARGING_BINARY_SENSOR_ENTITY_ID = (
+    f"binary_sensor.beosound_a5_{TEST_SERIAL_NUMBER_4}_charging"
+)
 
 # Beoremote One
 TEST_REMOTE_SERIAL = "55555555"
 TEST_REMOTE_SERIAL_PAIRED = f"{TEST_REMOTE_SERIAL}_{TEST_SERIAL_NUMBER}"
 TEST_REMOTE_SW_VERSION = "1.0.0"
 
-TEST_BUTTON_EVENT_ENTITY_ID = "event.beosound_balance_11111111_play_pause"
 TEST_REMOTE_KEY_EVENT_ENTITY_ID = "event.beoremote_one_55555555_11111111_control_play"
+TEST_REMOTE_BATTERY_LEVEL_SENSOR_ENTITY_ID = (
+    "sensor.beoremote_one_55555555_11111111_battery"
+)
+TEST_BUTTON_EVENT_ENTITY_ID = "event.beosound_balance_11111111_play_pause"
 
 TEST_HOSTNAME_ZEROCONF = TEST_NAME.replace(" ", "-") + ".local."
 TEST_TYPE_ZEROCONF = "_bangolufsen._tcp.local."
@@ -180,6 +188,14 @@ TEST_PLAYBACK_METADATA = PlaybackContentMetadata(
     track=1,
     source_internal_id="123",
 )
+TEST_PLAYBACK_METADATA_VIDEO = PlaybackContentMetadata(
+    encoding="unknown",
+    organization="HDMI A",
+    title="HDMI A",
+    source_internal_id="hdmi_1",
+    output_channel_processing="TrueImage",
+    output_Channels="5.0.2",
+)
 TEST_PLAYBACK_ERROR = PlaybackError(error="Test error")
 TEST_PLAYBACK_PROGRESS = PlaybackProgress(progress=123)
 TEST_PLAYBACK_STATE_PAUSED = RenderingState(value="paused")
@@ -247,3 +263,10 @@ TEST_SOUND_MODES = [
     TEST_ACTIVE_SOUND_MODE_NAME_2,
     f"{TEST_SOUND_MODE_NAME} 2 (345)",
 ]
+TEST_BATTERY = BatteryState(
+    battery_level=5,
+    is_charging=False,
+    remaining_charging_time_minutes=0,
+    remaining_playing_time_minutes=0,
+    state="BatteryVeryLow",
+)

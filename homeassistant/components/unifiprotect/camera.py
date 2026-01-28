@@ -29,7 +29,7 @@ from .const import (
 )
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
-from .utils import get_camera_base_name
+from .utils import async_ufp_instance_command, get_camera_base_name
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -114,7 +114,7 @@ def _async_camera_entities(
         hass, entry, data, ufp_device
     ):
         # do not enable streaming for package camera
-        # 2 FPS causes a lot of buferring
+        # 2 FPS causes a lot of buffering
         entities.append(
             ProtectCamera(
                 data,
@@ -260,10 +260,12 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         """Return the Stream Source."""
         return self._stream_source
 
+    @async_ufp_instance_command
     async def async_enable_motion_detection(self) -> None:
         """Call the job and enable motion detection."""
         await self.device.set_motion_detection(True)
 
+    @async_ufp_instance_command
     async def async_disable_motion_detection(self) -> None:
         """Call the job and disable motion detection."""
         await self.device.set_motion_detection(False)

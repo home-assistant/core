@@ -14,7 +14,7 @@ WORKDIR "/github/workspace"
 COPY . /usr/src/homeassistant
 
 # Uv is only needed during build
-RUN --mount=from=ghcr.io/astral-sh/uv:0.9.6,source=/uv,target=/bin/uv \
+RUN --mount=from=ghcr.io/astral-sh/uv:0.9.26,source=/uv,target=/bin/uv \
     # Uv creates a lock file in /tmp
     --mount=type=tmpfs,target=/tmp \
     # Required for PyTurboJPEG
@@ -24,17 +24,9 @@ RUN --mount=from=ghcr.io/astral-sh/uv:0.9.6,source=/uv,target=/bin/uv \
         --no-cache \
         -c /usr/src/homeassistant/homeassistant/package_constraints.txt \
         -r /usr/src/homeassistant/requirements.txt \
-        stdlib-list==0.10.0 \
         pipdeptree==2.26.1 \
         tqdm==4.67.1 \
-        ruff==0.13.0 \
-        PyTurboJPEG==1.8.0 \
-        ha-ffmpeg==3.2.2 \
-        hassil==3.5.0 \
-        home-assistant-intents==2025.12.2 \
-        mutagen==1.47.0 \
-        pysilero-vad==3.0.0 \
-        pyspeex-noise==1.0.2
+        ruff==0.14.13
 
 LABEL "name"="hassfest"
 LABEL "maintainer"="Home Assistant <hello@home-assistant.io>"

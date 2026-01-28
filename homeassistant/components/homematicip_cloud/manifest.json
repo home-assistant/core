@@ -4,7 +4,8 @@
   "codeowners": ["@hahn-th"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/homematicip_cloud",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["homematicip"],
-  "requirements": ["homematicip==2.4.0"]
+  "requirements": ["homematicip==2.5.0"]
 }

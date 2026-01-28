@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flash lights',
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Homelink',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Honk horn',
     'options': dict({
     }),
     'original_device_class': None,
@@ -164,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Keyless driving',
     'options': dict({
     }),
     'original_device_class': None,
@@ -212,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Play fart',
     'options': dict({
     }),
     'original_device_class': None,
@@ -260,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wake',
     'options': dict({
     }),
     'original_device_class': None,

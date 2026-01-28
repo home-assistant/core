@@ -6,7 +6,6 @@ from collections.abc import Callable, Generator
 from datetime import datetime, timedelta
 from functools import partial
 from ipaddress import IPv4Address
-import json
 from pathlib import Path
 from tempfile import gettempdir
 from typing import Any
@@ -47,7 +46,7 @@ from homeassistant.util import dt as dt_util
 from . import _patch_discovery
 from .utils import MockUFPFixture
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
 
@@ -64,7 +63,7 @@ DEFAULT_API_KEY = "test-api-key"
 def mock_nvr():
     """Mock UniFi Protect Camera device."""
 
-    data = json.loads(load_fixture("sample_nvr.json", integration=DOMAIN))
+    data = load_json_object_fixture("sample_nvr.json", DOMAIN)
     nvr = NVR.from_unifi_dict(**data)
 
     # disable pydantic validation so mocking can happen
@@ -91,6 +90,7 @@ def mock_ufp_config_entry():
             CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
         },
         version=2,
+        unique_id="A1E00C826924",
     )
 
 
@@ -98,7 +98,7 @@ def mock_ufp_config_entry():
 def old_nvr():
     """Mock UniFi Protect Camera device."""
 
-    data = json.loads(load_fixture("sample_nvr.json", integration=DOMAIN))
+    data = load_json_object_fixture("sample_nvr.json", DOMAIN)
     data["version"] = "1.19.0"
     return NVR.from_unifi_dict(**data)
 
@@ -106,7 +106,7 @@ def old_nvr():
 @pytest.fixture(name="bootstrap")
 def bootstrap_fixture(nvr: NVR):
     """Mock Bootstrap fixture."""
-    data = json.loads(load_fixture("sample_bootstrap.json", integration=DOMAIN))
+    data = load_json_object_fixture("sample_bootstrap.json", DOMAIN)
     data["nvr"] = nvr
     data["cameras"] = []
     data["lights"] = []
@@ -187,7 +187,7 @@ def mock_entry(
 def liveview():
     """Mock UniFi Protect Liveview."""
 
-    data = json.loads(load_fixture("sample_liveview.json", integration=DOMAIN))
+    data = load_json_object_fixture("sample_liveview.json", DOMAIN)
     return Liveview.from_unifi_dict(**data)
 
 
@@ -198,7 +198,7 @@ def camera_fixture(fixed_now: datetime):
     # disable pydantic validation so mocking can happen
     Camera.model_config["validate_assignment"] = False
 
-    data = json.loads(load_fixture("sample_camera.json", integration=DOMAIN))
+    data = load_json_object_fixture("sample_camera.json", DOMAIN)
     camera = Camera.from_unifi_dict(**data)
     camera.last_motion = fixed_now - timedelta(hours=1)
 
@@ -227,6 +227,22 @@ def camera_all_fixture(camera: Camera):
     all_camera.channels.append(low_channel)
 
     return all_camera
+
+
+@pytest.fixture(name="camera_all_features")
+def camera_all_features_fixture(fixed_now: datetime):
+    """Mock UniFi Protect Camera device with all features enabled."""
+
+    # disable pydantic validation so mocking can happen
+    Camera.model_config["validate_assignment"] = False
+
+    data = load_json_object_fixture("sample_camera_all_features.json", DOMAIN)
+    camera = Camera.from_unifi_dict(**data)
+    camera.last_motion = fixed_now - timedelta(hours=1)
+
+    yield camera
+
+    Camera.model_config["validate_assignment"] = True
 
 
 @pytest.fixture(name="doorbell")
@@ -284,7 +300,7 @@ def light_fixture():
     # disable pydantic validation so mocking can happen
     Light.model_config["validate_assignment"] = False
 
-    data = json.loads(load_fixture("sample_light.json", integration=DOMAIN))
+    data = load_json_object_fixture("sample_light.json", DOMAIN)
     yield Light.from_unifi_dict(**data)
 
     Light.model_config["validate_assignment"] = True
@@ -307,7 +323,7 @@ def viewer():
     # disable pydantic validation so mocking can happen
     Viewer.model_config["validate_assignment"] = False
 
-    data = json.loads(load_fixture("sample_viewport.json", integration=DOMAIN))
+    data = load_json_object_fixture("sample_viewport.json", DOMAIN)
     yield Viewer.from_unifi_dict(**data)
 
     Viewer.model_config["validate_assignment"] = True
@@ -320,7 +336,7 @@ def sensor_fixture(fixed_now: datetime):
     # disable pydantic validation so mocking can happen
     Sensor.model_config["validate_assignment"] = False
 
-    data = json.loads(load_fixture("sample_sensor.json", integration=DOMAIN))
+    data = load_json_object_fixture("sample_sensor.json", DOMAIN)
     sensor: Sensor = Sensor.from_unifi_dict(**data)
     sensor.motion_detected_at = fixed_now - timedelta(hours=1)
     sensor.open_status_changed_at = fixed_now - timedelta(hours=1)
@@ -331,7 +347,7 @@ def sensor_fixture(fixed_now: datetime):
 
 
 @pytest.fixture(name="sensor_all")
-def csensor_all_fixture(sensor: Sensor):
+def sensor_all_fixture(sensor: Sensor):
     """Mock UniFi Protect Sensor device."""
 
     all_sensor = sensor.model_copy()
@@ -352,7 +368,7 @@ def doorlock_fixture():
     # disable pydantic validation so mocking can happen
     Doorlock.model_config["validate_assignment"] = False
 
-    data = json.loads(load_fixture("sample_doorlock.json", integration=DOMAIN))
+    data = load_json_object_fixture("sample_doorlock.json", DOMAIN)
     yield Doorlock.from_unifi_dict(**data)
 
     Doorlock.model_config["validate_assignment"] = True
@@ -375,7 +391,7 @@ def chime():
     # disable pydantic validation so mocking can happen
     Chime.model_config["validate_assignment"] = False
 
-    data = json.loads(load_fixture("sample_chime.json", integration=DOMAIN))
+    data = load_json_object_fixture("sample_chime.json", DOMAIN)
     yield Chime.from_unifi_dict(**data)
 
     Chime.model_config["validate_assignment"] = True

@@ -9,6 +9,7 @@ from librehardwaremonitor_api import (
     LibreHardwareMonitorClient,
     LibreHardwareMonitorConnectionError,
     LibreHardwareMonitorNoDevicesError,
+    LibreHardwareMonitorUnauthorizedError,
 )
 from librehardwaremonitor_api.model import (
     DeviceId,
@@ -17,8 +18,9 @@ from librehardwaremonitor_api.model import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -48,9 +50,12 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
 
-        host = config_entry.data[CONF_HOST]
-        port = config_entry.data[CONF_PORT]
-        self._api = LibreHardwareMonitorClient(host, port)
+        self._api = LibreHardwareMonitorClient(
+            host=config_entry.data[CONF_HOST],
+            port=config_entry.data[CONF_PORT],
+            username=config_entry.data.get(CONF_USERNAME),
+            password=config_entry.data.get(CONF_PASSWORD),
+        )
         device_entries: list[DeviceEntry] = dr.async_entries_for_config_entry(
             registry=dr.async_get(self.hass), config_entry_id=config_entry.entry_id
         )
@@ -65,8 +70,11 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             lhm_data = await self._api.get_data()
         except LibreHardwareMonitorConnectionError as err:
             raise UpdateFailed(
-                "LibreHardwareMonitor connection failed, will retry"
+                "LibreHardwareMonitor connection failed, will retry", retry_after=25
             ) from err
+        except LibreHardwareMonitorUnauthorizedError as err:
+            _LOGGER.error("Authentication against LibreHardwareMonitor instance failed")
+            raise ConfigEntryAuthFailed("Authentication failed") from err
         except LibreHardwareMonitorNoDevicesError as err:
             raise UpdateFailed("No sensor data available, will retry") from err
 

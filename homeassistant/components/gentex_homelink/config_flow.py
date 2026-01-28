@@ -5,9 +5,10 @@ from typing import Any
 
 import botocore.exceptions
 from homelink.auth.srp_auth import SRPAuth
+import jwt
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
@@ -34,12 +35,10 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Ask for username and password."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
-
             srp_auth = SRPAuth()
             try:
                 tokens = await self.hass.async_add_executor_job(
@@ -48,12 +47,17 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                 )
             except botocore.exceptions.ClientError:
-                _LOGGER.exception("Error authenticating homelink account")
                 errors["base"] = "srp_auth_failed"
             except Exception:
                 _LOGGER.exception("An unexpected error occurred")
                 errors["base"] = "unknown"
             else:
+                access_token = jwt.decode(
+                    tokens["AuthenticationResult"]["AccessToken"],
+                    options={"verify_signature": False},
+                )
+                await self.async_set_unique_id(access_token["sub"])
+                self._abort_if_unique_id_configured()
                 self.external_data = {"tokens": tokens}
                 return await self.async_step_creation()
 
