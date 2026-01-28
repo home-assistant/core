@@ -607,12 +607,15 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
         # Check if still pending (response may have arrived)
         if self._pending_command == command:
-            _LOGGER.warning(
-                "Command '%s' timed out after %d seconds, marking unavailable",
-                command,
-                self._command_timeout_seconds,
-            )
-            self._attr_available = False
-            self.async_write_ha_state()
+            if self._attr_state == MediaPlayerState.OFF:
+                _LOGGER.info("Device is off, ignoring timeout")
+            else:
+                _LOGGER.warning(
+                    "Command '%s' timed out after %d seconds, marking unavailable",
+                    command,
+                    self._command_timeout_seconds,
+                )
+                self._attr_available = False
+                self.async_write_ha_state()
             self._command_timeout_task = None
             self._pending_command = None
