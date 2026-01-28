@@ -44,7 +44,6 @@ def account_meta(data: Account) -> Mapping[str, Any]:
         "display_name": data.display_name,
         "bio": data.note,
         "created": dt_util.as_local(data.created_at).date(),
-        "extra_fields": {f.name: f.value for f in data.fields},
     }
 
 
