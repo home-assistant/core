@@ -12,6 +12,7 @@ import pytest
 from homeassistant.components import media_source, websocket_api
 from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import const
+from homeassistant.components.media_source.metadata import MediaCover, metadata_path
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
@@ -266,6 +267,74 @@ async def test_upload_view(
 
     assert res.status == 401
     assert not (Path(temp_dir) / "no-admin-test.png").is_file()
+
+
+async def test_browse_media_metadata_backfill(
+    hass: HomeAssistant, temp_dir: str
+) -> None:
+    """Backfill metadata during browse."""
+    track = Path(temp_dir) / "track.mp3"
+    track.write_bytes(b"ID3")
+
+    cover = MediaCover(b"cover-data", "image/jpeg")
+    metadata = {"title": "Test Song", "artist": "Test Artist"}
+
+    with patch(
+        "homeassistant.components.media_source.local_source.extract_metadata",
+        return_value=(metadata, cover),
+    ):
+        media = await media_source.async_browse_media(
+            hass, f"{const.URI_SCHEME}{const.DOMAIN}/test_dir/."
+        )
+
+    assert media.children
+    file_item = next(child for child in media.children if child["title"] == "Test Song")
+    assert file_item["title"] == "Test Song"
+    assert file_item["media_metadata"]["artist"] == "Test Artist"
+    assert file_item["thumbnail"].endswith("track.mp3.ha_cover.jpg")
+
+    meta_file = metadata_path(track)
+    assert meta_file.exists()
+    cover_file = track.with_name("track.mp3.ha_cover.jpg")
+    assert cover_file.exists()
+
+    child_ids = {child["media_content_id"] for child in media.children}
+    assert f"{const.URI_SCHEME}{const.DOMAIN}/test_dir/{meta_file.name}" not in child_ids
+    assert (
+        f"{const.URI_SCHEME}{const.DOMAIN}/test_dir/{cover_file.name}" not in child_ids
+    )
+
+
+async def test_remove_media_removes_sidecars(
+    hass: HomeAssistant,
+    temp_dir: str,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Ensure sidecars are removed with media file."""
+    assert hass_admin_user.is_admin
+    track = Path(temp_dir) / "track.mp3"
+    track.write_bytes(b"ID3")
+
+    meta_file = metadata_path(track)
+    meta_file.write_text("{}", encoding="utf-8")
+    cover_file = track.with_name("track.mp3.ha_cover.jpg")
+    cover_file.write_bytes(b"cover-data")
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "media_source/local_source/remove",
+            "media_content_id": f"{const.URI_SCHEME}{const.DOMAIN}/test_dir/{track.name}",
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+
+    assert not track.exists()
+    assert not meta_file.exists()
+    assert not cover_file.exists()
 
 
 async def test_remove_file(

@@ -22,6 +22,15 @@ from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES, MEDIA_SOURCE_DATA
 from .error import Unresolvable
+from .metadata import (
+    COVER_SUFFIX,
+    cover_path,
+    extract_metadata,
+    is_metadata_sidecar,
+    metadata_path,
+    read_metadata,
+    write_metadata,
+)
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
 MAX_UPLOAD_SIZE = 1024 * 1024 * 10
@@ -108,6 +117,7 @@ class LocalSource(MediaSource):
                 raise PathNotSupportedError("Path is not a file")
 
             item_path.unlink()
+            _remove_sidecars(item_path)
 
         await self.hass.async_add_executor_job(_do_delete)
 
@@ -148,6 +158,10 @@ class LocalSource(MediaSource):
 
         await self.hass.async_add_executor_job(
             _do_move,
+        )
+
+        await self.hass.async_add_executor_job(
+            _extract_and_store_metadata, target_dir / uploaded_file.filename
         )
 
         return f"{target_folder.media_source_id}/{uploaded_file.filename}"
@@ -229,6 +243,9 @@ class LocalSource(MediaSource):
         is_file = path.is_file()
         is_dir = path.is_dir()
 
+        if is_file and is_metadata_sidecar(path):
+            return None
+
         # Make sure it's a file or directory
         if not is_file and not is_dir:
             return None
@@ -240,6 +257,14 @@ class LocalSource(MediaSource):
             return None
 
         title = path.name
+        media_metadata = None
+        if is_file:
+            media_metadata = read_metadata(path)
+            if media_metadata is None:
+                _extract_and_store_metadata(path)
+                media_metadata = read_metadata(path)
+            if media_metadata and media_metadata.get("title"):
+                title = str(media_metadata["title"])
 
         media_class = MediaClass.DIRECTORY
         if mime_type:
@@ -255,7 +280,16 @@ class LocalSource(MediaSource):
             title=title,
             can_play=is_file,
             can_expand=is_dir,
+            media_metadata=media_metadata,
         )
+
+        if media_metadata and (cover_name := media_metadata.get("cover")):
+            cover_file = path.with_name(cover_name)
+            if cover_file.exists():
+                relative_cover = cover_file.relative_to(self.media_dirs[source_dir_id])
+                media.thumbnail = (
+                    f"{self.url_prefix}/{source_dir_id}/{relative_cover.as_posix()}"
+                )
 
         if is_file or is_child:
             return media
@@ -272,6 +306,44 @@ class LocalSource(MediaSource):
         media.children.sort(key=lambda child: (child.can_play, child.title))
 
         return media
+
+
+def _extract_and_store_metadata(path: Path) -> None:
+    """Extract metadata and write sidecar files."""
+    mime_type, _ = mimetypes.guess_type(str(path))
+    if not mime_type or not mime_type.startswith("audio/"):
+        return
+
+    metadata, cover = extract_metadata(path)
+    if cover:
+        extension = ".png" if cover.mime_type == "image/png" else ".jpg"
+        cover_file = cover_path(path, extension)
+        try:
+            cover_file.write_bytes(cover.data)
+            metadata["cover"] = cover_file.name
+        except OSError as err:
+            LOGGER.debug("Failed writing cover art for %s: %s", path, err)
+
+    if metadata or cover:
+        write_metadata(path, metadata)
+    else:
+        write_metadata(path, {})
+
+
+def _remove_sidecars(path: Path) -> None:
+    """Remove metadata and cover sidecars for a media file."""
+    meta_file = metadata_path(path)
+    if meta_file.exists():
+        try:
+            meta_file.unlink()
+        except OSError as err:
+            LOGGER.debug("Failed removing metadata for %s: %s", path, err)
+
+    for cover_file in path.parent.glob(f"{path.name}{COVER_SUFFIX}.*"):
+        try:
+            cover_file.unlink()
+        except OSError as err:
+            LOGGER.debug("Failed removing cover art for %s: %s", path, err)
 
 
 class LocalMediaView(http.HomeAssistantView):
