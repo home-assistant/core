@@ -282,6 +282,7 @@ FLOWS = {
         "hdfury",
         "heos",
         "here_travel_time",
+        "hidromotic",
         "hikvision",
         "hisense_aehw4a1",
         "hive",

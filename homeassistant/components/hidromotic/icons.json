@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "switch": {
+      "auto_riego": {
+        "default": "mdi:water-sync"
+      }
+    }
+  }
+}

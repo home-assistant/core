@@ -672,6 +672,8 @@ build.json @home-assistant/supervisor
 /tests/components/heos/ @andrewsayre
 /homeassistant/components/here_travel_time/ @eifinger
 /tests/components/here_travel_time/ @eifinger
+/homeassistant/components/hidromotic/ @bulju
+/tests/components/hidromotic/ @bulju
 /homeassistant/components/hikvision/ @mezz64 @ptarjan
 /tests/components/hikvision/ @mezz64 @ptarjan
 /homeassistant/components/hikvisioncam/ @fbradyirl

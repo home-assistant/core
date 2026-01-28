@@ -1,0 +1,74 @@
+rules:
+  # Bronze
+  config-flow: done
+  brands: done
+  dependency-transparency: done
+  common-modules: done
+  has-entity-name: done
+  action-setup:
+    status: exempt
+    comment: |
+      The integration does not provide any actions.
+  appropriate-polling:
+    status: done
+    comment: |
+      The integration uses WebSocket push updates, not polling.
+  test-before-configure: done
+  entity-event-setup:
+    status: done
+    comment: |
+      Integration uses WebSocket for real-time updates.
+  unique-config-entry: done
+  entity-unique-id: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  test-before-setup: done
+  docs-high-level-description: done
+  config-flow-test-coverage: done
+  docs-actions:
+    status: exempt
+    comment: |
+      The integration does not provide any actions.
+  runtime-data: done
+  # Silver
+  log-when-unavailable: todo
+  config-entry-unloading: done
+  reauthentication-flow: todo
+  action-exceptions:
+    status: exempt
+    comment: |
+      The integration does not provide any actions.
+  docs-installation-parameters: todo
+  integration-owner: done
+  parallel-updates: todo
+  test-coverage: todo
+  docs-configuration-parameters: todo
+  entity-unavailable: done
+
+  # Gold
+  docs-examples: todo
+  discovery-update-info: todo
+  entity-device-class: todo
+  entity-translations: done
+  docs-data-update: todo
+  entity-disabled-by-default: todo
+  discovery: todo
+  exception-translations: todo
+  devices: done
+  docs-supported-devices: todo
+  icon-translations: todo
+  docs-known-limitations: todo
+  stale-devices: todo
+  docs-supported-functions: todo
+  repair-issues: todo
+  reconfiguration-flow: todo
+  entity-category: todo
+  dynamic-devices: todo
+  docs-troubleshooting: todo
+  diagnostics: todo
+  docs-use-cases: todo
+
+  # Platinum
+  async-dependency: done
+  strict-typing: todo
+  inject-websession: todo
