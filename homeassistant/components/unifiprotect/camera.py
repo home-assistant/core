@@ -1,4 +1,9 @@
-"""Support for Ubiquiti's UniFi Protect NVR."""
+"""Support for Ubiquiti's UniFi Protect NVR.
+
+Camera entities use the public API (get_rtsps_streams) exclusively for obtaining
+RTSPS stream URLs. This provides stable stream URLs that work
+reliably with Home Assistant's stream integration.
+"""
 
 from __future__ import annotations
 
@@ -11,6 +16,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     StateType,
 )
+from uiprotect.exceptions import ClientError, NotAuthorized, NvrError
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant, callback
@@ -33,6 +39,15 @@ from .utils import async_ufp_instance_command, get_camera_base_name
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
+
+# Mapping of channel IDs to quality names for the public API (get_rtsps_streams)
+# The public API returns stream URLs by quality name, not by channel ID
+CHANNEL_ID_TO_QUALITY: dict[int, str] = {
+    0: "high",
+    1: "medium",
+    2: "low",
+    3: "package",
+}
 
 
 @callback
@@ -67,8 +82,11 @@ def _get_camera_channels(
     data: ProtectData,
     ufp_device: UFPCamera | None = None,
 ) -> Generator[tuple[UFPCamera, CameraChannel, bool]]:
-    """Get all the camera channels."""
+    """Get all the camera channels.
 
+    Creates camera entities for all available channels (high, medium, low, package).
+    Stream availability is determined by the public API at runtime.
+    """
     cameras = data.get_cameras() if ufp_device is None else [ufp_device]
     for camera in cameras:
         if not camera.channels:
@@ -84,22 +102,13 @@ def _get_camera_channels(
 
         is_default = True
         for channel in camera.channels:
+            # Package channel is created if available, but disabled by default
             if channel.is_package:
-                yield camera, channel, True
-            elif channel.is_rtsp_enabled:
+                yield camera, channel, False
+            # For regular channels, create entities for all known quality levels
+            elif channel.id in CHANNEL_ID_TO_QUALITY:
                 yield camera, channel, is_default
                 is_default = False
-
-        # no RTSP enabled use first channel with no stream
-        if is_default and not camera.is_third_party_camera:
-            # Only create repair issue if RTSP is not disabled globally
-            if not data.disable_stream:
-                _create_rtsp_repair(hass, entry, data, camera)
-            else:
-                ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{camera.id}")
-            yield camera, camera.channels[0], True
-        else:
-            ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{camera.id}")
 
 
 def _async_camera_entities(
@@ -121,22 +130,9 @@ def _async_camera_entities(
                 camera,
                 channel,
                 is_default,
-                True,
                 disable_stream or channel.is_package,
             )
         )
-
-        if channel.is_rtsp_enabled and not channel.is_package:
-            entities.append(
-                ProtectCamera(
-                    data,
-                    camera,
-                    channel,
-                    is_default,
-                    False,
-                    disable_stream,
-                )
-            )
     return entities
 
 
@@ -175,48 +171,141 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         "_attr_motion_detection_enabled",
     )
 
+    @property
+    def _rtsp_issue_id(self) -> str:
+        """Return the repair issue ID for RTSP disabled."""
+        return f"rtsp_disabled_{self.device.id}"
+
+    @property
+    def _should_stream(self) -> bool:
+        """Return whether streaming should be attempted."""
+        return not self._disable_stream and self._quality is not None
+
     def __init__(
         self,
         data: ProtectData,
         camera: UFPCamera,
         channel: CameraChannel,
         is_default: bool,
-        secure: bool,
         disable_stream: bool,
     ) -> None:
         """Initialize an UniFi camera."""
         self.channel = channel
-        self._secure = secure
         self._disable_stream = disable_stream
         self._last_image: bytes | None = None
+        self._quality = CHANNEL_ID_TO_QUALITY.get(channel.id)
         super().__init__(data, camera)
         device = self.device
 
-        camera_name = get_camera_base_name(channel)
-        if self._secure:
-            self._attr_unique_id = f"{device.mac}_{channel.id}"
-            self._attr_name = camera_name
-        else:
-            self._attr_unique_id = f"{device.mac}_{channel.id}_insecure"
-            self._attr_name = f"{camera_name} (insecure)"
+        self._attr_unique_id = f"{device.mac}_{channel.id}"
+        self._attr_name = get_camera_base_name(channel)
         # only the default (first) channel is enabled by default
-        self._attr_entity_registry_enabled_default = is_default and secure
+        self._attr_entity_registry_enabled_default = is_default
         # Set the stream source before finishing the init
         # because async_added_to_hass is too late and camera
         # integration uses async_internal_added_to_hass to access
         # the stream source which is called before async_added_to_hass
         self._async_set_stream_source()
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity is added to hass."""
+        await super().async_added_to_hass()
+        # Listen for stream cache invalidation signals
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, self.data.streams_signal, self._async_handle_streams_signal
+            )
+        )
+        # Fetch or create RTSPS streams from public API
+        await self._async_refresh_rtsps_streams()
+
+    @callback
+    def _async_handle_streams_signal(self, camera_id: str | None = None) -> None:
+        """Handle streams signal - refresh if our camera is affected."""
+        if camera_id is None or camera_id == self.device.id:
+            self.hass.async_create_task(
+                self._async_refresh_rtsps_streams(), eager_start=True
+            )
+
+    async def _async_refresh_rtsps_streams(self) -> None:
+        """Refresh RTSPS streams from cache or API."""
+        if not self._should_stream:
+            # Delete any existing repair issue if streaming is disabled
+            ir.async_delete_issue(self.hass, DOMAIN, self._rtsp_issue_id)
+            return
+
+        # Type narrowing - _should_stream ensures _quality is not None
+        quality = self._quality
+        assert quality is not None
+
+        # Check if camera has been checked during setup (pre-fetched sequentially)
+        if self.data.is_camera_rtsps_checked(self.device.id):
+            cached_streams = self.data.get_camera_rtsps_streams(self.device.id)
+            if cached_streams is not None and cached_streams.get_stream_url(quality):
+                self._async_set_stream_source()
+                self.async_write_ha_state()
+                ir.async_delete_issue(self.hass, DOMAIN, self._rtsp_issue_id)
+            else:
+                # No streams or this quality not available - create repair
+                self._maybe_create_rtsp_repair()
+            return
+
+        # Not yet checked - fetch from API (individual camera refresh after signal)
+        try:
+            streams = await self.device.get_rtsps_streams()
+            self.data.set_camera_rtsps_streams(self.device.id, streams)
+            if streams is not None and streams.get_stream_url(quality):
+                self._async_set_stream_source()
+                self.async_write_ha_state()
+                ir.async_delete_issue(self.hass, DOMAIN, self._rtsp_issue_id)
+            else:
+                self._maybe_create_rtsp_repair()
+        except NotAuthorized:
+            _LOGGER.warning(
+                "Cannot fetch RTSPS streams without API key, streaming will be disabled"
+            )
+            # Mark as checked to prevent repeated API calls
+            self.data.set_camera_rtsps_streams(self.device.id, None)
+        except (ClientError, NvrError):
+            _LOGGER.exception("Error fetching RTSPS streams from public API")
+            # Mark as checked to prevent repeated API calls
+            self.data.set_camera_rtsps_streams(self.device.id, None)
+
+    @callback
+    def _maybe_create_rtsp_repair(self) -> None:
+        """Create RTSP repair issue if applicable."""
+        if not self.device.is_third_party_camera and not self.data.disable_stream:
+            _create_rtsp_repair(
+                self.hass,
+                self.data.config_entry,
+                self.data,
+                self.device,
+            )
+
     @callback
     def _async_set_stream_source(self) -> None:
-        channel = self.channel
-        enable_stream = not self._disable_stream and channel.is_rtsp_enabled
-        # SRTP disabled because go2rtc does not support it
-        # https://github.com/AlexxIT/go2rtc/#source-rtsp
-        rtsp_url = channel.rtsps_no_srtp_url if self._secure else channel.rtsp_url
-        source = rtsp_url if enable_stream else None
-        self._attr_supported_features = _ENABLE_FEATURE if source else _DISABLE_FEATURE
-        self._stream_source = source
+        """Set stream source from public API cache."""
+        if not self._should_stream:
+            self._attr_supported_features = _DISABLE_FEATURE
+            self._stream_source = None
+            return
+
+        # Type narrowing - _should_stream ensures _quality is not None
+        quality = self._quality
+        assert quality is not None
+
+        # Use public API URL from central RTSPS streams cache
+        cached_streams = self.data.get_camera_rtsps_streams(self.device.id)
+        if cached_streams is not None:
+            stream_url = cached_streams.get_stream_url(quality)
+            if stream_url is not None:
+                self._attr_supported_features = _ENABLE_FEATURE
+                self._stream_source = stream_url
+                return
+
+        # No public API stream available
+        self._attr_supported_features = _DISABLE_FEATURE
+        self._stream_source = None
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:

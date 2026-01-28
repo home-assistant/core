@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from uiprotect import ProtectApiClient
+from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     NVR,
     Bootstrap,
@@ -50,6 +51,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
 
+
 # Common test data constants
 DEFAULT_HOST = "1.1.1.1"
 DEFAULT_PORT = 443
@@ -57,6 +59,68 @@ DEFAULT_VERIFY_SSL = False
 DEFAULT_USERNAME = "test-username"
 DEFAULT_PASSWORD = "test-password"
 DEFAULT_API_KEY = "test-api-key"
+
+
+def create_mock_rtsps_streams(
+    active_qualities: list[str] | None = None,
+    available_qualities: list[str] | None = None,
+    host: str = DEFAULT_HOST,
+) -> RTSPSStreams:
+    """Create a mock RTSPSStreams object for testing.
+
+    Args:
+        active_qualities: List of active stream qualities (e.g., ["high", "medium", "low"])
+        available_qualities: List of available stream qualities
+        host: The host for constructing stream URLs
+
+    Returns:
+        A mock RTSPSStreams object with the specified configuration
+    """
+    if active_qualities is None:
+        active_qualities = ["high", "medium", "low"]
+    if available_qualities is None:
+        available_qualities = ["high", "medium", "low"]
+
+    mock_streams = Mock(spec=RTSPSStreams)
+    mock_streams.get_active_stream_qualities.return_value = active_qualities
+    mock_streams.get_available_stream_qualities.return_value = available_qualities
+
+    def get_stream_url(quality: str) -> str | None:
+        if quality in active_qualities:
+            return f"rtsps://{host}:7441/test_{quality}_stream?enableSrtp"
+        return None
+
+    mock_streams.get_stream_url.side_effect = get_stream_url
+    return mock_streams
+
+
+@pytest.fixture
+def rtsps_disabled() -> bool:
+    """Override this fixture to True to simulate no active RTSP streams."""
+    return False
+
+
+@pytest.fixture(autouse=True)
+def mock_camera_rtsps_methods(rtsps_disabled: bool):
+    """Mock RTSPS stream methods on Camera class for all tests.
+
+    By default, returns active streams for high, medium, low.
+    Override the rtsps_disabled fixture to True to simulate no active streams.
+    """
+    if rtsps_disabled:
+        # Return None to simulate no active RTSP streams
+        mock_get = AsyncMock(return_value=None)
+        mock_create = AsyncMock(return_value=None)
+    else:
+        mock_streams = create_mock_rtsps_streams(["high", "medium", "low"])
+        mock_get = AsyncMock(return_value=mock_streams)
+        mock_create = AsyncMock(return_value=mock_streams)
+
+    with (
+        patch.object(Camera, "get_rtsps_streams", mock_get),
+        patch.object(Camera, "create_rtsps_streams", mock_create),
+    ):
+        yield
 
 
 @pytest.fixture(name="nvr")
@@ -152,7 +216,10 @@ def mock_ufp_client(bootstrap: Bootstrap):
 
 @pytest.fixture(name="ufp")
 def mock_entry(
-    hass: HomeAssistant, ufp_config_entry: MockConfigEntry, ufp_client: ProtectApiClient
+    hass: HomeAssistant,
+    ufp_config_entry: MockConfigEntry,
+    ufp_client: ProtectApiClient,
+    mock_camera_rtsps_methods,  # Ensure RTSPS methods are mocked before ufp setup
 ):
     """Mock ProtectApiClient for testing."""
 
@@ -240,6 +307,9 @@ def camera_all_features_fixture(fixed_now: datetime):
     camera = Camera.from_unifi_dict(**data)
     camera.last_motion = fixed_now - timedelta(hours=1)
 
+    # Note: get_rtsps_streams is mocked on the API client, not the camera
+    # See conftest camera fixture for pattern
+
     yield camera
 
     Camera.model_config["validate_assignment"] = True
@@ -279,6 +349,9 @@ def doorbell_fixture(camera: Camera, fixed_now: datetime):
     doorbell.feature_flags.has_package_camera = True
     doorbell.feature_flags.has_led_status = True
     doorbell.last_ring = fixed_now - timedelta(hours=1)
+
+    # Note: get_rtsps_streams is mocked by autouse fixture mock_camera_rtsps_methods
+
     return doorbell
 
 

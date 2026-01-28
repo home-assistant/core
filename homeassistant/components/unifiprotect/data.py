@@ -1,4 +1,10 @@
-"""Base class for protect data."""
+"""Base class for protect data.
+
+This module provides centralized data management for UniFi Protect, including:
+- RTSPS stream URL caching via the public API (get_rtsps_streams)
+- WebSocket event handling and device updates
+- Automatic stream cache refresh on WebSocket reconnect or IP changes
+"""
 
 from __future__ import annotations
 
@@ -10,6 +16,7 @@ import logging
 from typing import TYPE_CHECKING, Any, cast
 
 from uiprotect import ProtectApiClient
+from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     NVR,
     Camera,
@@ -19,7 +26,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     WSSubscriptionMessage,
 )
-from uiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.exceptions import ClientError, NotAuthorized, NvrError
 from uiprotect.utils import log_event
 from uiprotect.websocket import WebsocketState
 
@@ -41,6 +48,7 @@ from .const import (
     DISPATCH_ADD,
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
+    DISPATCH_STREAMS,
     DOMAIN,
 )
 from .utils import async_get_devices_by_type
@@ -84,11 +92,19 @@ class ProtectData:
         self._pending_camera_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
         self._auth_failures = 0
+        self._camera_rtsps_streams: dict[str, RTSPSStreams] = {}
+        self._camera_rtsps_checked: set[str] = set()
         self.last_update_success = False
         self.api = protect
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
         self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
+        self.streams_signal = _async_dispatch_id(entry, DISPATCH_STREAMS)
+
+    @property
+    def config_entry(self) -> UFPConfigEntry:
+        """Return the config entry."""
+        return self._entry
 
     @property
     def disable_stream(self) -> bool:
@@ -99,6 +115,48 @@ class ProtectData:
     def max_events(self) -> int:
         """Max number of events to load at once."""
         return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)  # type: ignore[no-any-return]
+
+    def get_camera_rtsps_streams(self, camera_id: str) -> RTSPSStreams | None:
+        """Get cached RTSPS streams for a camera."""
+        return self._camera_rtsps_streams.get(camera_id)
+
+    def is_camera_rtsps_checked(self, camera_id: str) -> bool:
+        """Check if RTSPS streams have been fetched for a camera."""
+        return camera_id in self._camera_rtsps_checked
+
+    def set_camera_rtsps_streams(
+        self, camera_id: str, streams: RTSPSStreams | None
+    ) -> None:
+        """Set cached RTSPS streams for a camera."""
+        self._camera_rtsps_checked.add(camera_id)
+        if streams is not None:
+            self._camera_rtsps_streams[camera_id] = streams
+        elif camera_id in self._camera_rtsps_streams:
+            del self._camera_rtsps_streams[camera_id]
+
+    @callback
+    def async_update_camera_rtsps_streams(
+        self, camera_id: str, streams: RTSPSStreams
+    ) -> None:
+        """Update cached RTSPS streams for a camera and signal entities to refresh."""
+        self._camera_rtsps_checked.add(camera_id)
+        self._camera_rtsps_streams[camera_id] = streams
+        async_dispatcher_send(self._hass, self.streams_signal, camera_id)
+
+    @callback
+    def async_clear_rtsps_streams_cache(self) -> None:
+        """Clear all cached RTSPS streams and signal entities to refresh."""
+        self._camera_rtsps_streams.clear()
+        self._camera_rtsps_checked.clear()
+        async_dispatcher_send(self._hass, self.streams_signal)
+
+    @callback
+    def async_clear_camera_rtsps_streams(self, camera_id: str) -> None:
+        """Clear cached RTSPS streams for a specific camera and signal to refresh."""
+        self._camera_rtsps_checked.discard(camera_id)
+        if camera_id in self._camera_rtsps_streams:
+            del self._camera_rtsps_streams[camera_id]
+            async_dispatcher_send(self._hass, self.streams_signal, camera_id)
 
     @callback
     def async_subscribe_adopt(
@@ -126,8 +184,7 @@ class ProtectData:
             Generator[Camera], self.get_by_types({ModelType.CAMERA}, ignore_unadopted)
         )
 
-    @callback
-    def async_setup(self) -> None:
+    async def async_setup(self) -> None:
         """Subscribe and do the refresh."""
         self.last_update_success = True
         self._async_update_change(True, force_update=True)
@@ -139,11 +196,45 @@ class ProtectData:
                 self._hass, self._async_poll, self._update_interval
             ),
         ]
+        # Pre-fetch RTSPS streams for all cameras to avoid rate limiting
+        # when individual camera entities are set up
+        await self._async_fetch_all_rtsps_streams()
+
+    async def _async_fetch_all_rtsps_streams(self) -> None:
+        """Fetch RTSPS streams for all cameras sequentially to avoid rate limiting."""
+        if self.disable_stream:
+            return
+        for camera in self.get_cameras():
+            if camera.id in self._camera_rtsps_checked:
+                continue
+            try:
+                streams = await camera.get_rtsps_streams()
+                # Always mark as checked, even if streams is None
+                self.set_camera_rtsps_streams(camera.id, streams)
+            except NotAuthorized:
+                _LOGGER.warning(
+                    "Cannot fetch RTSPS streams without API key for %s",
+                    camera.display_name,
+                )
+                break  # No point trying other cameras if auth is missing
+            except (ClientError, NvrError) as ex:
+                _LOGGER.debug(
+                    "Error fetching RTSPS streams for %s: %s",
+                    camera.display_name,
+                    ex,
+                )
+                # Mark as checked to prevent repeated API calls from entities
+                self.set_camera_rtsps_streams(camera.id, None)
 
     @callback
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:
         """Handle a change in the websocket state."""
-        self._async_update_change(state is WebsocketState.CONNECTED)
+        was_connected = self.last_update_success
+        is_connected = state is WebsocketState.CONNECTED
+        self._async_update_change(is_connected)
+        # Refresh RTSPS streams when reconnecting after a disconnect
+        if is_connected and not was_connected:
+            self.async_clear_rtsps_streams_cache()
 
     def _async_update_change(
         self,
@@ -230,13 +321,18 @@ class ProtectData:
         self, device: ProtectAdoptableDeviceModel | NVR, changed_data: dict[str, Any]
     ) -> None:
         self._async_signal_device_update(device)
-        if (
-            device.model is ModelType.CAMERA
-            and device.id in self._pending_camera_ids
-            and "channels" in changed_data
-        ):
-            self._pending_camera_ids.remove(device.id)
-            async_dispatcher_send(self._hass, self.channels_signal, device)
+        if device.model is ModelType.CAMERA:
+            if device.id in self._pending_camera_ids and "channels" in changed_data:
+                self._pending_camera_ids.remove(device.id)
+                async_dispatcher_send(self._hass, self.channels_signal, device)
+
+            # Channels or IP address changed, invalidate stream URL cache for this camera
+            if (
+                "channels" in changed_data
+                or "host" in changed_data
+                or "connection_host" in changed_data
+            ):
+                self.async_clear_camera_rtsps_streams(device.id)
 
         # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
         if "doorbell_settings" in changed_data:
