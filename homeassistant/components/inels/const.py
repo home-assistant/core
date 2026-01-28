@@ -7,8 +7,6 @@ from homeassistant.const import Platform
 DOMAIN = "inels"
 TITLE = "iNELS"
 
-PLATFORMS: list[Platform] = [
-    Platform.SWITCH,
-]
+PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
 
 LOGGER = logging.getLogger(__package__)

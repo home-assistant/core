@@ -123,7 +123,7 @@ async def test_switch_turn_on(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: get_entity_id(entity_config, index)},
+            {ATTR_ENTITY_ID: get_entity_id(hass, entity_config, index)},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -157,7 +157,7 @@ async def test_switch_turn_off(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: get_entity_id(entity_config, index)},
+            {ATTR_ENTITY_ID: get_entity_id(hass, entity_config, index)},
             blocking=True,
         )
         await hass.async_block_till_done()
