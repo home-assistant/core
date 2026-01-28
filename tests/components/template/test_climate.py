@@ -48,7 +48,7 @@ async def async_setup_legacy_format(
     hass: HomeAssistant, count: int, climate_config: dict[str, Any]
 ) -> None:
     """Set up climate via legacy YAML format."""
-    config = {"climate": {"platform": "template", "thermostats": climate_config}}
+    config = {"climate": [{"platform": "template", "thermostats": climate_config}]}
 
     with assert_setup_component(count, climate.DOMAIN):
         assert await async_setup_component(hass, climate.DOMAIN, config)
