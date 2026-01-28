@@ -20,8 +20,10 @@ from telegram.constants import ChatType
 from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
     CONF_ALLOWED_CHAT_IDS,
+    CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_TRUSTED_NETWORKS,
+    DEFAULT_API_ENDPOINT,
     DOMAIN,
     PARSER_MD,
     PLATFORM_BROADCAST,
@@ -44,6 +46,7 @@ def mock_polling_config_entry() -> MockConfigEntry:
         data={
             CONF_PLATFORM: PLATFORM_POLLING,
             CONF_API_KEY: "mock api key",
+            CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
         },
         options={ATTR_PARSER: PARSER_MD},
         subentries_data=[
@@ -60,6 +63,7 @@ def mock_polling_config_entry() -> MockConfigEntry:
                 title="mock chat 2",
             ),
         ],
+        minor_version=2,
     )
 
 
@@ -133,6 +137,7 @@ def mock_external_calls() -> Generator[None]:
         patch.object(BotMock, "send_animation", return_value=message),
         patch.object(BotMock, "send_location", return_value=message),
         patch.object(BotMock, "send_poll", return_value=message),
+        patch.object(BotMock, "log_out", return_value=True),
         patch("telegram.ext.Updater._bootstrap"),
     ):
         yield
@@ -253,6 +258,7 @@ def mock_broadcast_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_PLATFORM: PLATFORM_BROADCAST,
+            CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
             CONF_API_KEY: "mock api key",
         },
         options={ATTR_PARSER: PARSER_MD},
@@ -270,6 +276,7 @@ def mock_broadcast_config_entry() -> MockConfigEntry:
                 title="mock chat 2",
             ),
         ],
+        minor_version=2,
     )
 
 
@@ -283,6 +290,7 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
             CONF_API_KEY: "mock api key",
             CONF_URL: "https://test",
+            CONF_API_ENDPOINT: "http://mock/bot",
             CONF_TRUSTED_NETWORKS: ["127.0.0.1"],
         },
         options={ATTR_PARSER: PARSER_MD},
@@ -294,6 +302,7 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
                 title="mock chat",
             )
         ],
+        minor_version=2,
     )
 
 
