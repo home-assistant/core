@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 import json
-import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -18,8 +17,6 @@ from homeassistant.components.mqtt.vacuum import (
     services_to_strings,
 )
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_ICON,
-    ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
     SERVICE_CLEAN_SPOT,
@@ -33,7 +30,6 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import CONF_NAME, ENTITY_MATCH_ALL, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
 
 from .common import (
     help_custom_config,
@@ -335,78 +331,6 @@ async def test_status(
     assert state.state == STATE_UNKNOWN
 
 
-# Use of the battery feature was deprecated in HA Core 2025.8
-# and will be removed with HA Core 2026.2
-@pytest.mark.parametrize(
-    "hass_config",
-    [
-        help_custom_config(
-            vacuum.DOMAIN,
-            DEFAULT_CONFIG,
-            ({mqttvacuum.CONF_SUPPORTED_FEATURES: ["battery"]},),
-        )
-    ],
-)
-async def test_status_with_deprecated_battery_feature(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test status updates from the vacuum with deprecated battery feature."""
-    await mqtt_mock_entry()
-    state = hass.states.get("vacuum.mqtttest")
-    assert state.state == STATE_UNKNOWN
-
-    message = """{
-        "battery_level": 54,
-        "state": "cleaning"
-    }"""
-    async_fire_mqtt_message(hass, "vacuum/state", message)
-    state = hass.states.get("vacuum.mqtttest")
-    assert state.state == VacuumActivity.CLEANING
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 54
-    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-50"
-
-    message = """{
-        "battery_level": 61,
-        "state": "docked"
-    }"""
-
-    async_fire_mqtt_message(hass, "vacuum/state", message)
-    state = hass.states.get("vacuum.mqtttest")
-    assert state.state == VacuumActivity.DOCKED
-    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-charging-60"
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 61
-
-    message = '{"state":null}'
-    async_fire_mqtt_message(hass, "vacuum/state", message)
-    state = hass.states.get("vacuum.mqtttest")
-    assert state.state == STATE_UNKNOWN
-    assert (
-        "MQTT vacuum entity vacuum.mqtttest implements "
-        "the battery feature which is deprecated." in caplog.text
-    )
-
-    # assert a repair issue was created for the entity
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(
-        mqtt.DOMAIN, "deprecated_vacuum_battery_feature_vacuum.mqtttest"
-    )
-    assert issue is not None
-    assert issue.issue_domain == "vacuum"
-    assert issue.translation_key == "deprecated_vacuum_battery_feature"
-    assert issue.translation_placeholders == {"entity_id": "vacuum.mqtttest"}
-    assert not [
-        record
-        for record in caplog.records
-        if record.name == "homeassistant.helpers.frame"
-        and record.levelno >= logging.WARNING
-    ]
-    assert (
-        "mqtt' is setting the battery_level which has been deprecated"
-    ) not in caplog.text
-
-
 @pytest.mark.parametrize(
     "hass_config",
     [
@@ -440,8 +364,6 @@ async def test_no_fan_vacuum(
     assert state.state == VacuumActivity.CLEANING
     assert state.attributes.get(ATTR_FAN_SPEED) is None
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 54
-    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-50"
 
     message = """{
         "battery_level": 54,
@@ -455,9 +377,6 @@ async def test_no_fan_vacuum(
     assert state.attributes.get(ATTR_FAN_SPEED) is None
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) is None
 
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 54
-    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-50"
-
     message = """{
         "battery_level": 61,
         "state": "docked"
@@ -466,8 +385,6 @@ async def test_no_fan_vacuum(
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
     assert state.state == VacuumActivity.DOCKED
-    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-charging-60"
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 61
 
 
 @pytest.mark.parametrize("hass_config", [CONFIG_ALL_SERVICES])
@@ -759,7 +676,6 @@ async def test_publishing_with_custom_encoding(
     domain = vacuum.DOMAIN
     config = deepcopy(DEFAULT_CONFIG)
     config[mqtt.DOMAIN][domain]["supported_features"] = [
-        "battery",
         "clean_spot",
         "fan_speed",
         "locate",
@@ -868,7 +784,6 @@ async def test_setup_manual_entity_from_yaml(
         ("availability-topic", "online", "offline"),
         ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
         ("vacuum/state", '{"state": "cleaning"}', '{"state": "docked"}'),
-        ("vacuum/state", '{"battery_level": 71}', '{"battery_level": 60}'),
         ("vacuum/state", '{"fan_speed": "max"}', '{"fan_speed": "min"}'),
     ],
 )
