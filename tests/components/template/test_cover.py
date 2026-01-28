@@ -358,9 +358,9 @@ async def setup_empty_action(
         (CoverState.CLOSED, CoverState.CLOSED, ""),
         (CoverState.OPENING, CoverState.OPENING, ""),
         (CoverState.CLOSING, CoverState.CLOSING, ""),
-        ("dog", STATE_UNKNOWN, "Received invalid cover is_on state: dog"),
-        ("cat", STATE_UNKNOWN, "Received invalid cover is_on state: cat"),
-        ("bear", STATE_UNKNOWN, "Received invalid cover is_on state: bear"),
+        ("dog", STATE_UNKNOWN, "Received invalid cover state: dog"),
+        ("cat", STATE_UNKNOWN, "Received invalid cover state: cat"),
+        ("bear", STATE_UNKNOWN, "Received invalid cover state: bear"),
     ],
 )
 @pytest.mark.usefixtures("setup_state_cover")
@@ -459,7 +459,7 @@ async def test_template_state_states(
                     TEST_STATE_ENTITY_ID,
                     "dog",
                     CoverState.OPEN,
-                    "Received invalid cover is_on state: dog",
+                    "Received invalid cover state: dog",
                     None,
                 ),
             ]
