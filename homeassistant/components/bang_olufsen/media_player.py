@@ -735,7 +735,7 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
             await self._client.set_active_source(source_id=key)
         else:
             # Video
-            await self._client.post_remote_trigger(id=key)
+            await self._client.post_remote_trigger(id=key)  # type: ignore[arg-type]
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select a sound mode."""
@@ -894,7 +894,9 @@ class BeoMediaPlayer(BeoEntity, MediaPlayerEntity):
                     translation_key="play_media_error",
                     translation_placeholders={
                         "media_type": media_type,
-                        "error_message": json.loads(error.body)["message"],
+                        "error_message": json.loads(error.body)["message"]
+                        if error.body is not None
+                        else "",
                     },
                 ) from error
 
