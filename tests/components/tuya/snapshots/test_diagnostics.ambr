@@ -226,70 +226,87 @@
     }),
     'status_range': dict({
       'alarm_delay_time': dict({
+        'report_type': None,
         'type': 'Integer',
         'value': '{"unit":"s","min":0,"max":999,"scale":0,"step":1}',
       }),
       'alarm_msg': dict({
+        'report_type': None,
         'type': 'Raw',
         'value': '{}',
       }),
       'alarm_time': dict({
+        'report_type': None,
         'type': 'Integer',
         'value': '{"unit":"min","min":0,"max":999,"scale":0,"step":1}',
       }),
       'delay_set': dict({
+        'report_type': None,
         'type': 'Integer',
         'value': '{"unit":"s","min":0,"max":999,"scale":0,"step":1}',
       }),
       'master_mode': dict({
+        'report_type': None,
         'type': 'Enum',
         'value': '{"range":["disarmed","arm","home","sos"]}',
       }),
       'master_state': dict({
+        'report_type': None,
         'type': 'Enum',
         'value': '{"range":["normal","alarm"]}',
       }),
       'muffling': dict({
+        'report_type': None,
         'type': 'Boolean',
         'value': '{}',
       }),
       'sub_admin': dict({
+        'report_type': None,
         'type': 'Raw',
         'value': '{}',
       }),
       'sub_class': dict({
+        'report_type': None,
         'type': 'Enum',
         'value': '{"range":["remote_controller","detector"]}',
       }),
       'sub_state': dict({
+        'report_type': None,
         'type': 'Enum',
         'value': '{"range":["normal","alarm","fault","others"]}',
       }),
       'switch_alarm_light': dict({
+        'report_type': None,
         'type': 'Boolean',
         'value': '{}',
       }),
       'switch_alarm_propel': dict({
+        'report_type': None,
         'type': 'Boolean',
         'value': '{}',
       }),
       'switch_alarm_sound': dict({
+        'report_type': None,
         'type': 'Boolean',
         'value': '{}',
       }),
       'switch_kb_light': dict({
+        'report_type': None,
         'type': 'Boolean',
         'value': '{}',
       }),
       'switch_kb_sound': dict({
+        'report_type': None,
         'type': 'Boolean',
         'value': '{}',
       }),
       'switch_mode_sound': dict({
+        'report_type': None,
         'type': 'Boolean',
         'value': '{}',
       }),
       'telnet_state': dict({
+        'report_type': None,
         'type': 'Enum',
         'value': '{"range":["normal","network_no","phone_no","sim_card_no","network_search","signal_level_1","signal_level_2","signal_level_3","signal_level_4","signal_level_5"]}',
       }),
@@ -387,26 +404,32 @@
     }),
     'status_range': dict({
       'alarm_time': dict({
+        'report_type': None,
         'type': 'Integer',
         'value': '{"unit":"s","min":0,"max":3600,"scale":0,"step":1}',
       }),
       'checking_result': dict({
+        'report_type': None,
         'type': 'Enum',
         'value': '{"range":["checking","check_success","check_failure","others"]}',
       }),
       'gas_sensor_status': dict({
+        'report_type': None,
         'type': 'Enum',
         'value': '{"range":["alarm","normal"]}',
       }),
       'gas_sensor_value': dict({
+        'report_type': None,
         'type': 'Integer',
         'value': '{"unit":"ppm","min":0,"max":999,"scale":0,"step":1}',
       }),
       'muffling': dict({
+        'report_type': None,
         'type': 'Boolean',
         'value': '{}',
       }),
       'self_checking': dict({
+        'report_type': None,
         'type': 'Boolean',
         'value': '{}',
       }),
@@ -534,38 +557,47 @@
     }),
     'status_range': dict({
       'countdown_1': dict({
+        'report_type': None,
         'type': 'Integer',
         'value': '{"unit":"s","min":0,"max":86400,"scale":0,"step":1}',
       }),
       'cycle_time': dict({
+        'report_type': None,
         'type': 'String',
         'value': '{"maxlen":255}',
       }),
       'random_time': dict({
+        'report_type': None,
         'type': 'String',
         'value': '{"maxlen":255}',
       }),
       'relay_status': dict({
+        'report_type': None,
         'type': 'Enum',
         'value': '{"range":["0","1","2"]}',
       }),
       'remote_add': dict({
+        'report_type': None,
         'type': 'Raw',
         'value': '{}',
       }),
       'remote_list': dict({
+        'report_type': None,
         'type': 'Raw',
         'value': '{}',
       }),
       'switch_1': dict({
+        'report_type': None,
         'type': 'Boolean',
         'value': '{}',
       }),
       'switch_inching': dict({
+        'report_type': None,
         'type': 'String',
         'value': '{"maxlen":255}',
       }),
       'switch_type': dict({
+        'report_type': None,
         'type': 'Enum',
         'value': '{"range":["flip","sync","button"]}',
       }),
@@ -663,26 +695,32 @@
         }),
         'status_range': dict({
           'alarm_time': dict({
+            'report_type': None,
             'type': 'Integer',
             'value': '{"unit":"s","min":0,"max":3600,"scale":0,"step":1}',
           }),
           'checking_result': dict({
+            'report_type': None,
             'type': 'Enum',
             'value': '{"range":["checking","check_success","check_failure","others"]}',
           }),
           'gas_sensor_status': dict({
+            'report_type': None,
             'type': 'Enum',
             'value': '{"range":["alarm","normal"]}',
           }),
           'gas_sensor_value': dict({
+            'report_type': None,
             'type': 'Integer',
             'value': '{"unit":"ppm","min":0,"max":999,"scale":0,"step":1}',
           }),
           'muffling': dict({
+            'report_type': None,
             'type': 'Boolean',
             'value': '{}',
           }),
           'self_checking': dict({
+            'report_type': None,
             'type': 'Boolean',
             'value': '{}',
           }),

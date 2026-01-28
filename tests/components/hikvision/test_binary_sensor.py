@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     STATE_OFF,
+    Platform,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import (
@@ -37,6 +38,12 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Platforms, which should be loaded during the test."""
+    return [Platform.BINARY_SENSOR]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -119,6 +126,7 @@ async def test_binary_sensor_no_sensors(
     assert len(states) == 0
 
 
+@pytest.mark.parametrize("amount_of_channels", [2])
 async def test_binary_sensor_nvr_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -132,11 +140,11 @@ async def test_binary_sensor_nvr_device(
 
     await setup_integration(hass, mock_config_entry)
 
-    # NVR sensors should include channel number in name
-    state = hass.states.get("binary_sensor.front_camera_motion_1")
+    # NVR sensors are on per-channel devices
+    state = hass.states.get("binary_sensor.front_camera_channel_1_motion")
     assert state is not None
 
-    state = hass.states.get("binary_sensor.front_camera_motion_2")
+    state = hass.states.get("binary_sensor.front_camera_channel_2_motion")
     assert state is not None
 
 
@@ -293,6 +301,10 @@ async def test_binary_sensor_update_callback(
     ]
     callback_func = add_callback_call[0][0]
     callback_func("motion detected")
+
+    # Wait for the event loop to process the scheduled state update
+    # (callback uses call_soon_threadsafe to schedule update in event loop)
+    await hass.async_block_till_done()
 
     # Verify state was updated
     state = hass.states.get("binary_sensor.front_camera_motion")

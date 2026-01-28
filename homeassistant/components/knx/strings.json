@@ -154,6 +154,27 @@
     }
   },
   "config_panel": {
+    "dashboard": {
+      "connection_flow": {
+        "description": "Reconfigure KNX connection or import a new KNX keyring file",
+        "title": "Connection settings"
+      },
+      "options_flow": {
+        "description": "Configure integration settings",
+        "title": "Integration options"
+      },
+      "project_upload": {
+        "description": "Import a KNX project file to help configure group addresses and datapoint types",
+        "title": "[%key:component::knx::config_panel::dialogs::project_upload::title%]"
+      }
+    },
+    "dialogs": {
+      "project_upload": {
+        "description": "Details such as group address names, datapoint types, devices and group objects are extracted from your project file. The ETS project file itself and its optional password are not stored.\n\n`.knxproj` files exported by ETS 4, 5 or 6 are supported.",
+        "file_upload_label": "ETS project file",
+        "title": "Import ETS project"
+      }
+    },
     "dpt": {
       "options": {
         "5": "Generic 1-byte unsigned integer",
@@ -684,7 +705,6 @@
             }
           }
         },
-        "header": "Create new entity",
         "light": {
           "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
           "knx": {
@@ -837,6 +857,23 @@
             }
           }
         },
+        "text": {
+          "description": "The KNX text platform is used as an interface to text objects.",
+          "knx": {
+            "ga_text": {
+              "description": "The group address of the text object.",
+              "label": "Text"
+            },
+            "mode": {
+              "description": "Select how the entity is displayed in Home Assistant.",
+              "label": "[%key:common::config_flow::data::mode%]",
+              "options": {
+                "password": "[%key:common::config_flow::data::password%]",
+                "text": "[%key:component::text::entity_component::_::state_attributes::mode::state::text%]"
+              }
+            }
+          }
+        },
         "time": {
           "description": "The KNX time platform is used as an interface to time objects.",
           "knx": {
@@ -846,11 +883,25 @@
             }
           }
         },
+        "title": "Create KNX entity",
         "type_selection": {
-          "header": "Create KNX entity",
-          "title": "Select entity type"
+          "header": "Select entity type"
         }
-      }
+      },
+      "description": "Add and manage KNX entities",
+      "title": "Entities"
+    },
+    "group_monitor": {
+      "description": "Monitor KNX group communication",
+      "title": "Group monitor"
+    },
+    "info": {
+      "description": "Version information, manage KNX project file",
+      "title": "Information"
+    },
+    "project": {
+      "description": "Inspect imported group addresses",
+      "title": "Project"
     }
   },
   "device_automation": {

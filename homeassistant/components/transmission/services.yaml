@@ -15,6 +15,11 @@ add_torrent:
       example: "/path/to/download/directory"
       selector:
         text:
+    labels:
+      required: false
+      example: "Notify,Remove"
+      selector:
+        text:
 
 get_torrents:
   fields:

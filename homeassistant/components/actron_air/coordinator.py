@@ -8,6 +8,7 @@ from datetime import timedelta
 from actron_neo_api import (
     ActronAirACSystem,
     ActronAirAPI,
+    ActronAirAPIError,
     ActronAirAuthError,
     ActronAirStatus,
 )
@@ -15,7 +16,7 @@ from actron_neo_api import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import _LOGGER, DOMAIN
@@ -69,6 +70,12 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirACSystem]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_error",
+            ) from err
+        except ActronAirAPIError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": repr(err)},
             ) from err
 
         self.status = self.api.state_manager.get_status(self.serial_number)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from aiosenz import Thermostat
+from pysenz import Thermostat
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

@@ -64,6 +64,9 @@ def get_device_list_classic(
 
     user_id = login_response["user"]["id"]
 
+    # Legacy support: DEFAULT_PLANT_ID ("0") triggers auto-selection of first plant.
+    # Modern config flow always sets a specific plant_id, but old config entries
+    # from earlier versions may still have plant_id="0".
     if plant_id == DEFAULT_PLANT_ID:
         try:
             plant_info = api.plant_list(user_id)
@@ -131,7 +134,9 @@ def get_device_list(
         return get_device_list_v1(api, config)
     if api_version == "classic":
         return get_device_list_classic(api, config)
-    raise ConfigEntryError(f"Unknown API version: {api_version}")
+    # Defensive: api_version is hardcoded in async_setup_entry as "v1" or "classic"
+    # This line is unreachable through normal execution but kept as a safeguard
+    raise ConfigEntryError(f"Unknown API version: {api_version}")  # pragma: no cover
 
 
 async def async_setup_entry(

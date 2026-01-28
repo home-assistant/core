@@ -17,6 +17,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -240,3 +241,64 @@ async def test_select_dosing_set_high_low(
     # Verify state
     cl_set_state = hass.states.get("select.pool_device_chlorine_dosing_set")
     assert cl_set_state.state == "low"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_actions_cannot_connect_select(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """When the client write method raises, ServiceValidationError('cannot_connect') is raised."""
+    client = mock_pooldose_client
+    entity_id = "select.pool_device_ph_dosing_set"
+    before = hass.states.get(entity_id)
+    assert before is not None
+
+    client.is_connected = False
+    client.set_select = AsyncMock(return_value=False)
+
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {"entity_id": entity_id, "option": "acid"},
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "cannot_connect"
+
+    after = hass.states.get(entity_id)
+    assert after is not None
+    assert before.state == after.state
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_actions_write_rejected_select(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """When the client write method returns False, ServiceValidationError('write_rejected') is raised."""
+    client = mock_pooldose_client
+    entity_id = "select.pool_device_ph_dosing_set"
+    before = hass.states.get(entity_id)
+    assert before is not None
+
+    client.set_select = AsyncMock(return_value=False)
+
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {"entity_id": entity_id, "option": "acid"},
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "write_rejected"
+
+    after = hass.states.get(entity_id)
+    assert after is not None
+    assert before.state == after.state

@@ -3,6 +3,17 @@
     "button": {
       "cleanup": {
         "default": "mdi:broom"
+      },
+      "wake_on_lan": {
+        "default": "mdi:lan-pending"
+      }
+    },
+    "device_tracker": {
+      "device_tracker": {
+        "default": "mdi:lan-disconnect",
+        "state": {
+          "home": "mdi:lan-connect"
+        }
       }
     },
     "sensor": {
@@ -47,6 +58,11 @@
       },
       "max_kb_s_sent": {
         "default": "mdi:upload"
+      }
+    },
+    "switch": {
+      "internet_access": {
+        "default": "mdi:router-wireless-settings"
       }
     }
   },

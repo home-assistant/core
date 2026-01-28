@@ -38,6 +38,8 @@ APPLICATION_CREDENTIALS = [
     "smartthings",
     "spotify",
     "tesla_fleet",
+    "teslemetry",
+    "tibber",
     "twitch",
     "volvo",
     "watts",

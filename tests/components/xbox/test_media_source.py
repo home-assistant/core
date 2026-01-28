@@ -275,7 +275,7 @@ async def test_browse_media_account_not_configured_exception(
         ),
         (
             "/271958441785640/1297287135/game_media/0",
-            "http://store-images.s-microsoft.com/image/apps.35725.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.c4bf34f8-ad40-4af3-914e-a85e75a76bed",
+            "https://store-images.s-microsoft.com/image/apps.35725.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.c4bf34f8-ad40-4af3-914e-a85e75a76bed",
             "image/png",
         ),
     ],

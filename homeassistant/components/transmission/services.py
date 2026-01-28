@@ -17,6 +17,7 @@ from homeassistant.helpers import config_validation as cv, selector
 from .const import (
     ATTR_DELETE_DATA,
     ATTR_DOWNLOAD_PATH,
+    ATTR_LABELS,
     ATTR_TORRENT,
     ATTR_TORRENT_FILTER,
     ATTR_TORRENTS,
@@ -59,6 +60,7 @@ SERVICE_ADD_TORRENT_SCHEMA = vol.All(
         {
             vol.Required(ATTR_TORRENT): cv.string,
             vol.Optional(ATTR_DOWNLOAD_PATH): cv.string,
+            vol.Optional(ATTR_LABELS): cv.string,
         }
     ),
 )
@@ -120,6 +122,9 @@ async def _async_add_torrent(service: ServiceCall) -> None:
     coordinator = _get_coordinator_from_service_data(service)
     torrent: str = service.data[ATTR_TORRENT]
     download_path: str | None = service.data.get(ATTR_DOWNLOAD_PATH)
+    labels: list[str] | None = (
+        service.data[ATTR_LABELS].split(",") if ATTR_LABELS in service.data else None
+    )
 
     if not (
         torrent.startswith(("http", "ftp:", "magnet:"))
@@ -130,12 +135,14 @@ async def _async_add_torrent(service: ServiceCall) -> None:
             translation_key="could_not_add_torrent",
         )
 
-    if download_path:
-        await service.hass.async_add_executor_job(
-            partial(coordinator.api.add_torrent, torrent, download_dir=download_path)
+    await service.hass.async_add_executor_job(
+        partial(
+            coordinator.api.add_torrent,
+            torrent,
+            labels=labels,
+            download_dir=download_path,
         )
-    else:
-        await service.hass.async_add_executor_job(coordinator.api.add_torrent, torrent)
+    )
     await coordinator.async_request_refresh()
 
 

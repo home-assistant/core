@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VeluxConfigEntry
-from .entity import VeluxEntity
+from .entity import VeluxEntity, wrap_pyvlx_call_exceptions
 
 PARALLEL_UPDATES = 1
 
@@ -98,10 +98,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
-        # do not use the node's closed state but rely on cover position
-        # until https://github.com/Julius2342/pyvlx/pull/543 is merged.
-        # once merged this can again return self.node.position.closed
-        return self.current_cover_position == 0
+        return self.node.position.closed
 
     @property
     def is_opening(self) -> bool:
@@ -113,14 +110,17 @@ class VeluxCover(VeluxEntity, CoverEntity):
         """Return if the cover is closing or not."""
         return self.node.is_closing
 
+    @wrap_pyvlx_call_exceptions
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.node.close(wait_for_completion=False)
 
+    @wrap_pyvlx_call_exceptions
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.node.open(wait_for_completion=False)
 
+    @wrap_pyvlx_call_exceptions
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position_percent = 100 - kwargs[ATTR_POSITION]
@@ -129,22 +129,27 @@ class VeluxCover(VeluxEntity, CoverEntity):
             Position(position_percent=position_percent), wait_for_completion=False
         )
 
+    @wrap_pyvlx_call_exceptions
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.node.stop(wait_for_completion=False)
 
+    @wrap_pyvlx_call_exceptions
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close cover tilt."""
         await cast(Blind, self.node).close_orientation(wait_for_completion=False)
 
+    @wrap_pyvlx_call_exceptions
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open cover tilt."""
         await cast(Blind, self.node).open_orientation(wait_for_completion=False)
 
+    @wrap_pyvlx_call_exceptions
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop cover tilt."""
         await cast(Blind, self.node).stop_orientation(wait_for_completion=False)
 
+    @wrap_pyvlx_call_exceptions
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move cover tilt to a specific position."""
         position_percent = 100 - kwargs[ATTR_TILT_POSITION]
