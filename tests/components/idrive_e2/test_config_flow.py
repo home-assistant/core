@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from botocore.exceptions import EndpointConnectionError
@@ -29,7 +29,18 @@ from .const import USER_INPUT
 from tests.common import MockConfigEntry
 
 
-def _mock_aiobotocore_cm(client: Any) -> MagicMock:
+@pytest.fixture
+def mock_aiobotocore_s3_client() -> Generator[AsyncMock]:
+    """Patch AioSession.create_client to return a mocked async context manager."""
+    client = AsyncMock()
+    with patch(
+        "homeassistant.components.idrive_e2.config_flow.AioSession.create_client",
+        return_value=_mock_aiobotocore_cm(client),
+    ):
+        yield client
+
+
+def _mock_aiobotocore_cm(client: AsyncMock) -> MagicMock:
     """Return an async context manager yielding the provided client."""
     cm = MagicMock()
     cm.__aenter__ = AsyncMock(return_value=client)
@@ -37,54 +48,42 @@ def _mock_aiobotocore_cm(client: Any) -> MagicMock:
     return cm
 
 
-async def test_list_buckets_success() -> None:
+async def test_list_buckets_success(mock_aiobotocore_s3_client: AsyncMock) -> None:
     """Test _list_buckets returns bucket names."""
-    mock_client = AsyncMock()
-    mock_client.list_buckets.return_value = {
+    mock_aiobotocore_s3_client.list_buckets.return_value = {
         "Buckets": [{"Name": "bucket1"}, {"Name": "bucket2"}]
     }
-    with patch(
-        "homeassistant.components.idrive_e2.config_flow.AioSession.create_client",
-        return_value=_mock_aiobotocore_cm(mock_client),
-    ):
-        buckets = await _list_buckets(
-            USER_INPUT[CONF_ENDPOINT_URL],
-            USER_INPUT[CONF_ACCESS_KEY_ID],
-            USER_INPUT[CONF_SECRET_ACCESS_KEY],
-        )
-        assert buckets == ["bucket1", "bucket2"]
+
+    buckets = await _list_buckets(
+        USER_INPUT[CONF_ENDPOINT_URL],
+        USER_INPUT[CONF_ACCESS_KEY_ID],
+        USER_INPUT[CONF_SECRET_ACCESS_KEY],
+    )
+    assert buckets == ["bucket1", "bucket2"]
 
 
-async def test_list_buckets_empty() -> None:
+async def test_list_buckets_empty(mock_aiobotocore_s3_client: AsyncMock) -> None:
     """Test _list_buckets returns empty list if no buckets."""
-    mock_client = AsyncMock()
-    mock_client.list_buckets.return_value = {"Buckets": []}
-    with patch(
-        "homeassistant.components.idrive_e2.config_flow.AioSession.create_client",
-        return_value=_mock_aiobotocore_cm(mock_client),
-    ):
-        buckets = await _list_buckets(
-            USER_INPUT[CONF_ENDPOINT_URL],
-            USER_INPUT[CONF_ACCESS_KEY_ID],
-            USER_INPUT[CONF_SECRET_ACCESS_KEY],
-        )
-        assert buckets == []
+    mock_aiobotocore_s3_client.list_buckets.return_value = {"Buckets": []}
+
+    buckets = await _list_buckets(
+        USER_INPUT[CONF_ENDPOINT_URL],
+        USER_INPUT[CONF_ACCESS_KEY_ID],
+        USER_INPUT[CONF_SECRET_ACCESS_KEY],
+    )
+    assert buckets == []
 
 
-async def test_list_buckets_missing_name() -> None:
+async def test_list_buckets_missing_name(mock_aiobotocore_s3_client: AsyncMock) -> None:
     """Test _list_buckets skips buckets without Name."""
-    mock_client = AsyncMock()
-    mock_client.list_buckets.return_value = {"Buckets": [{}]}
-    with patch(
-        "homeassistant.components.idrive_e2.config_flow.AioSession.create_client",
-        return_value=_mock_aiobotocore_cm(mock_client),
-    ):
-        buckets = await _list_buckets(
-            USER_INPUT[CONF_ENDPOINT_URL],
-            USER_INPUT[CONF_ACCESS_KEY_ID],
-            USER_INPUT[CONF_SECRET_ACCESS_KEY],
-        )
-        assert buckets == []
+    mock_aiobotocore_s3_client.list_buckets.return_value = {"Buckets": [{}]}
+
+    buckets = await _list_buckets(
+        USER_INPUT[CONF_ENDPOINT_URL],
+        USER_INPUT[CONF_ACCESS_KEY_ID],
+        USER_INPUT[CONF_SECRET_ACCESS_KEY],
+    )
+    assert buckets == []
 
 
 async def _async_start_flow(
@@ -107,58 +106,60 @@ async def _async_start_flow(
     flow.hass = hass
     selected = bucket or user_input[CONF_BUCKET]
 
-    # Step 1: submit user credentials
+    # Determine whether the injected exception should be raised by the bucket step
+    is_bucket_exception = isinstance(
+        exception, (EndpointConnectionError, ValueError, ClientError)
+    )
+
+    # Patch the aiohttp session used by the IDriveE2Client
     mock_session = AsyncMock()
-    with patch(
-        "homeassistant.components.idrive_e2.config_flow.async_get_clientsession",
-        return_value=mock_session,
-    ):
-        is_bucket_exception = isinstance(
-            exception, (EndpointConnectionError, ValueError, ClientError)
+
+    # Patch the IDriveE2Client
+    mock_client = AsyncMock()
+    if exception is not None and not is_bucket_exception:
+        mock_client.get_region_endpoint = AsyncMock(side_effect=exception)
+    else:
+        mock_client.get_region_endpoint = AsyncMock(
+            return_value=user_input[CONF_ENDPOINT_URL]
         )
 
-        # Patch the IDriveE2Client class instantiated by the flow for the endpoint URL
-        mock_client = AsyncMock()
-        if exception is not None and not is_bucket_exception:
-            mock_client.get_region_endpoint = AsyncMock(side_effect=exception)
-        else:
-            mock_client.get_region_endpoint = AsyncMock(
-                return_value=user_input[CONF_ENDPOINT_URL]
-            )
+    # Patch _list_buckets
+    mock_list_buckets = AsyncMock()
+    if is_bucket_exception and exception is not None:
+        mock_list_buckets.side_effect = exception
+    else:
+        mock_list_buckets.return_value = [selected]
 
-        with patch(
+    with (
+        patch(
+            "homeassistant.components.idrive_e2.config_flow.async_get_clientsession",
+            return_value=mock_session,
+        ),
+        patch(
             "homeassistant.components.idrive_e2.config_flow.IDriveE2Client",
             return_value=mock_client,
-        ):
-            mock_list_buckets = AsyncMock()
-            if is_bucket_exception and exception is not None:
-                mock_list_buckets.side_effect = exception
-            else:
-                mock_list_buckets.return_value = [selected]
-
-            with patch(
-                "homeassistant.components.idrive_e2.config_flow._list_buckets",
-                new=mock_list_buckets,
-            ):
-                result = await flow.async_step_user(
-                    {
-                        "access_key_id": user_input["access_key_id"],
-                        "secret_access_key": user_input["secret_access_key"],
-                    }
-                )
-
-    # If the error is from the bucket step, the flow returns to the user step (FORM).
-    if is_bucket_exception:
-        return result
-
-    # No exception: proceed into the bucket step
-    if not exception:
-        assert result.get("type") is FlowResultType.FORM
-        assert result.get("step_id") == "bucket"
-        with patch(
+        ),
+        patch(
             "homeassistant.components.idrive_e2.config_flow._list_buckets",
-            new=AsyncMock(return_value=[selected]),
-        ):
+            new=mock_list_buckets,
+        ),
+    ):
+        # Step user: submit credentials
+        result = await flow.async_step_user(
+            {
+                "access_key_id": user_input["access_key_id"],
+                "secret_access_key": user_input["secret_access_key"],
+            }
+        )
+
+        # If the error is from bucket listing, the flow returns to the user form
+        if is_bucket_exception:
+            return result
+
+        # No exception: proceed into the bucket step and submit selection
+        if exception is None:
+            assert result.get("type") is FlowResultType.FORM
+            assert result.get("step_id") == "bucket"
             try:
                 return await flow.async_step_bucket({CONF_BUCKET: selected})
             except Exception as err:
@@ -166,7 +167,7 @@ async def _async_start_flow(
                     return flow.async_abort(reason=err.reason)
                 raise
 
-    return result
+        return result
 
 
 async def test_flow(hass: HomeAssistant) -> None:

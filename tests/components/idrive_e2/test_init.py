@@ -1,5 +1,6 @@
 """Test the IDrive e2 storage integration."""
 
+import logging
 from unittest.mock import AsyncMock, patch
 
 from botocore.exceptions import (
@@ -9,12 +10,32 @@ from botocore.exceptions import (
 )
 import pytest
 
+from homeassistant.components.idrive_e2 import _async_safe_client_close
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+
+
+async def test_async_safe_client_close_no_client() -> None:
+    """Test safe close returns early when client is None."""
+    await _async_safe_client_close(None)
+
+
+async def test_async_safe_client_close_close_raises(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test safe close swallows close exceptions and logs debug."""
+    caplog.set_level(logging.DEBUG)
+
+    client = AsyncMock()
+    client.close.side_effect = RuntimeError("boom")
+
+    await _async_safe_client_close(client)
+
+    assert "Failed to close aiobotocore client" in caplog.text
 
 
 async def test_load_unload_config_entry(
