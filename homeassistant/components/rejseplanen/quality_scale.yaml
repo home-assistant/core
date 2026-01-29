@@ -1,0 +1,78 @@
+rules:
+  # Bronze (mandatory)
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions
+  appropriate-polling: done
+  brands:
+    status: exempt
+    comment: Integration uses generic public transport API without specific brands
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not provide custom actions
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not provide custom actions
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: Due to high availability REST API
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Integration does not use authentication requiring reauth
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: todo
+    comment: Needs explicit device_registry.async_get_or_create per subentry to
+      ensure devices are owned by subentries (not yet implemented)
+  diagnostics:
+    status: todo
+    comment: Coordinator exposes diagnostics_attributes but integration-level
+      diagnostics collection (async_get_config_entry_diagnostics) is not added
+  discovery-update-info: todo
+  discovery: todo
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  strict-typing: todo
+  async-dependency: todo
+  inject-websession: todo

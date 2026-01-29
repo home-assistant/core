@@ -2366,6 +2366,9 @@ pyrate-limiter==3.9.0
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
 
+# homeassistant.components.rejseplanen
+pyrejseplan==1.0.6
+
 # homeassistant.components.repetier
 pyrepetierng==0.1.0
 
@@ -2767,9 +2770,6 @@ ring-doorbell==0.9.13
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
-
-# homeassistant.components.rejseplanen
-rjpl==0.3.6
 
 # homeassistant.components.rocketchat
 rocketchat-API==0.6.1
