@@ -122,7 +122,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'no_alarm',
   })
 # ---
 # name: test_sensor_entities_snapshot[sensor.nano_color_2_ventilation_gear-entry]
@@ -627,7 +627,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '22.0',
   })
 # ---
 # name: test_sensor_entities_snapshot[sensor.r_900_calculated_dhw_temperature-entry]
@@ -1026,6 +1026,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '15.5',
   })
 # ---
