@@ -19,11 +19,5 @@
       }
     }
   },
-  "services": {
-    "shuffle": {
-      "description": "Update the image entity with a new random image from the configured media.",
-      "name": "Shuffle"
-    }
-  },
   "title": "Photo Frame"
 }

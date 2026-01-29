@@ -3,5 +3,3 @@
 DOMAIN = "photo_frame"
 
 CONF_MEDIA = "media"
-
-SERVICE_SHUFFLE = "shuffle"

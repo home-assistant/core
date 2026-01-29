@@ -13,7 +13,9 @@ rules:
   dependency-transparency:
     status: exempt
     comment: No dependencies.
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: No actions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
