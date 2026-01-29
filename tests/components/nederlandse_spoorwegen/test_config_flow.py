@@ -4,6 +4,7 @@ from datetime import time
 from typing import Any
 from unittest.mock import AsyncMock
 
+from ns_api import NoDataReceivedError
 import pytest
 from requests import ConnectionError as RequestsConnectionError, HTTPError, Timeout
 
@@ -314,6 +315,7 @@ async def test_config_flow_import_already_configured(
         (HTTPError("Invalid API key"), "invalid_auth"),
         (Timeout("Cannot connect"), "cannot_connect"),
         (RequestsConnectionError("Cannot connect"), "cannot_connect"),
+        (NoDataReceivedError("Unexpected error"), "no_data"),
         (Exception("Unexpected error"), "unknown"),
     ],
 )

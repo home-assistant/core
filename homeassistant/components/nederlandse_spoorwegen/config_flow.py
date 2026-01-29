@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from ns_api import NSAPI, Station
+from ns_api import NSAPI, NoDataReceivedError, Station
 from requests.exceptions import (
     ConnectionError as RequestsConnectionError,
     HTTPError,
@@ -62,6 +62,11 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except (RequestsConnectionError, Timeout):
             errors["base"] = "cannot_connect"
+        except NoDataReceivedError:
+            _LOGGER.exception(
+                "No data received. This could mean that there was an issue with consuming the API"
+            )
+            errors["base"] = "no_data"
         except Exception:
             _LOGGER.exception("Unexpected exception validating API key")
             errors["base"] = "unknown"
@@ -144,6 +149,11 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_auth")
         except (RequestsConnectionError, Timeout):
             return self.async_abort(reason="cannot_connect")
+        except NoDataReceivedError:
+            _LOGGER.exception(
+                "No data received. This could mean that there was an issue with consuming the API"
+            )
+            return self.async_abort(reason="no_data")
         except Exception:
             _LOGGER.exception("Unexpected exception validating API key")
             return self.async_abort(reason="unknown")
@@ -205,7 +215,13 @@ class RouteSubentryFlowHandler(ConfigSubentryFlow):
                         client.get_stations
                     )
                 }
-            except (RequestsConnectionError, Timeout, HTTPError, ValueError):
+            except (
+                RequestsConnectionError,
+                Timeout,
+                HTTPError,
+                ValueError,
+                NoDataReceivedError,
+            ):
                 return self.async_abort(reason="cannot_connect")
 
         options = [
