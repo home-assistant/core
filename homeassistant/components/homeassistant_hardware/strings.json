@@ -11,7 +11,7 @@
         "zha_still_using_stick": "This {model} is in use by the Zigbee Home Automation integration. Please migrate your Zigbee network to another adapter or delete the integration and try again."
       },
       "progress": {
-        "install_firmware": "Installing {firmware_name} firmware.\n\nDo not make any changes to your hardware or software until this finishes.",
+        "install_firmware": "Installing {firmware_name} firmware on {model}.\n\nDo not make any changes to your hardware or software until this finishes.",
         "install_otbr_addon": "Installing add-on",
         "start_otbr_addon": "Starting add-on"
       },
