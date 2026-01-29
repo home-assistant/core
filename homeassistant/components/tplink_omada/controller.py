@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from typing import TYPE_CHECKING
 
 from tplink_omada_client import OmadaSiteClient
@@ -117,6 +117,13 @@ class OmadaSiteController:
             )
 
         return self._switch_port_coordinators[switch.mac]
+
+    @property
+    def switch_port_coordinator_map(
+        self,
+    ) -> Mapping[str, OmadaSwitchPortCoordinator]:
+        """Return known switch port coordinators indexed by MAC address."""
+        return self._switch_port_coordinators
 
     @property
     def gateway_coordinator(self) -> OmadaGatewayCoordinator | None:

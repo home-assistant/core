@@ -10,6 +10,7 @@ from tplink_omada_client.clients import OmadaConnectedClient
 
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_CLIENTS
+from homeassistant.components.tplink_omada.device_tracker import CLIENT_CLEANUP_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -44,6 +45,7 @@ async def init_integration(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     return mock_config_entry
 
@@ -60,8 +62,8 @@ async def test_device_scanner_created(
 
     updated_entity = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert not updated_entity.disabled
-    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + CLIENT_CLEANUP_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get(entity_id)
     assert entity is not None
@@ -81,8 +83,8 @@ async def test_device_scanner_update_to_away_nulls_properties(
 
     updated_entity = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert not updated_entity.disabled
-    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + CLIENT_CLEANUP_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get(entity_id)
     await _setup_client_disconnect(
@@ -115,3 +117,27 @@ async def _setup_client_disconnect(
 
     mock_omada_site_client.get_connected_clients.reset_mock()
     mock_omada_site_client.get_connected_clients.side_effect = get_filtered_clients
+
+
+async def test_automatic_stale_tracker_cleanup(
+    hass: HomeAssistant,
+    mock_omada_clients_only_site_client: MagicMock,
+    init_integration: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Verify that stale client tracker entities are removed automatically."""
+
+    unknown = entity_registry.async_get_or_create(
+        domain="device_tracker",
+        platform=DOMAIN,
+        unique_id="scanner_Default_11-11-11-11-11-11",
+        config_entry=init_integration,
+    )
+
+    assert entity_registry.async_get(unknown.entity_id)
+
+    async_fire_time_changed(hass, utcnow() + CLIENT_CLEANUP_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_omada_clients_only_site_client.get_known_clients.call_count >= 2
+    assert entity_registry.async_get(unknown.entity_id) is None

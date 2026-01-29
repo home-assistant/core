@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from tplink_omada_client import OmadaSite
-from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
@@ -13,11 +12,17 @@ from tplink_omada_client.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
+from .cleanup import (
+    CLEANUP_INTERVAL,
+    async_cleanup_client_trackers,
+    async_cleanup_devices,
+)
 from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
 from .controller import OmadaSiteController
@@ -70,7 +75,79 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     entry.runtime_data = controller
 
-    _remove_old_devices(hass, entry, controller.devices_coordinator.data)
+    await async_cleanup_devices(
+        hass,
+        config_entry_ids={entry.entry_id},
+    )
+
+    await async_cleanup_client_trackers(
+        hass,
+        config_entry_ids={entry.entry_id},
+        raise_on_error=False,
+    )
+
+    async def _async_cleanup_devices_task() -> None:
+        await async_cleanup_devices(
+            hass,
+            config_entry_ids={entry.entry_id},
+        )
+
+    @callback
+    def _schedule_device_cleanup() -> None:
+        entry.async_create_background_task(
+            hass,
+            _async_cleanup_devices_task(),
+            "tplink_omada device cleanup",
+        )
+
+    _schedule_device_cleanup()
+
+    entry.async_on_unload(
+        controller.devices_coordinator.async_add_listener(_schedule_device_cleanup)
+    )
+
+    @callback
+    def _handle_device_cleanup_interval(_: object) -> None:
+        _schedule_device_cleanup()
+
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass, _handle_device_cleanup_interval, CLEANUP_INTERVAL
+        )
+    )
+
+    async def _async_cleanup_client_trackers_task() -> None:
+        await async_cleanup_client_trackers(
+            hass,
+            config_entry_ids={entry.entry_id},
+            raise_on_error=False,
+        )
+
+    @callback
+    def _schedule_client_tracker_cleanup() -> None:
+        entry.async_create_background_task(
+            hass,
+            _async_cleanup_client_trackers_task(),
+            "tplink_omada client tracker cleanup",
+        )
+
+    _schedule_client_tracker_cleanup()
+
+    entry.async_on_unload(
+        controller.clients_coordinator.async_add_listener(
+            _schedule_client_tracker_cleanup
+        )
+    )
+
+    @callback
+    def _handle_client_tracker_cleanup_interval(_: object) -> None:
+        _schedule_client_tracker_cleanup()
+
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass, _handle_client_tracker_cleanup_interval, CLEANUP_INTERVAL
+        )
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -80,22 +157,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-def _remove_old_devices(
-    hass: HomeAssistant,
-    entry: OmadaConfigEntry,
-    omada_devices: dict[str, OmadaListDevice],
-) -> None:
-    device_registry = dr.async_get(hass)
-
-    for registered_device in device_registry.devices.get_devices_for_config_entry_id(
-        entry.entry_id
-    ):
-        mac = next(
-            (i[1] for i in registered_device.identifiers if i[0] == DOMAIN), None
-        )
-        if mac and mac not in omada_devices:
-            device_registry.async_update_device(
-                registered_device.id, remove_config_entry_id=entry.entry_id
-            )

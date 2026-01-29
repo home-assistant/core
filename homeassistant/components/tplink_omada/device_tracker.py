@@ -10,8 +10,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OmadaConfigEntry
+from .cleanup import CLEANUP_INTERVAL
 from .config_flow import CONF_SITE
 from .controller import OmadaClientsCoordinator
+
+CLIENT_CLEANUP_INTERVAL = CLEANUP_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 

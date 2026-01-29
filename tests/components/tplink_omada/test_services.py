@@ -5,11 +5,15 @@ from unittest.mock import MagicMock
 import pytest
 from tplink_omada_client.exceptions import OmadaClientException
 
+from homeassistant.components.tplink_omada.cleanup import (
+    async_cleanup_client_trackers,
+    async_cleanup_devices,
+)
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.services import async_setup_services
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -157,30 +161,25 @@ async def test_service_reconnect_failed_raises_homeassistanterror(
     mock_omada_site_client.reconnect_client.assert_awaited_once_with(mac)
 
 
-async def test_service_cleanup_client_trackers_all_entities(
+async def test_cleanup_helpers_remove_unknown_clients(
     hass: HomeAssistant,
     mock_omada_clients_only_site_client: MagicMock,
     mock_omada_clients_only_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test cleanup client trackers service removes unknown clients."""
+    """Test helper removes entities for unknown clients."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
-    # At this point, entities have been created by the integration for all known clients
-    # Let's find one of those and two unknown ones to test
     all_entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
     device_trackers = [e for e in all_entities if e.domain == "device_tracker"]
-
-    # Should have 4 device trackers from fixture
     assert len(device_trackers) == 4
 
-    # Add two unknown clients (not in Omada)
     unknown_client_entity_1 = entity_registry.async_get_or_create(
         domain="device_tracker",
         platform=DOMAIN,
@@ -195,7 +194,6 @@ async def test_service_cleanup_client_trackers_all_entities(
         config_entry=mock_config_entry,
     )
 
-    # Add unknown client already disabled (should not be touched)
     already_disabled_entity = entity_registry.async_get_or_create(
         domain="device_tracker",
         platform=DOMAIN,
@@ -204,7 +202,6 @@ async def test_service_cleanup_client_trackers_all_entities(
         disabled_by=er.RegistryEntryDisabler.USER,
     )
 
-    # Add a non-device_tracker entity (should be ignored)
     sensor_entity = entity_registry.async_get_or_create(
         domain="sensor",
         platform=DOMAIN,
@@ -212,48 +209,36 @@ async def test_service_cleanup_client_trackers_all_entities(
         config_entry=mock_config_entry,
     )
 
-    # Verify initial state - note known_client_entity may be disabled by default
-    # but the others should be as we set them
     assert not unknown_client_entity_1.disabled
     assert not unknown_client_entity_2.disabled
     assert already_disabled_entity.disabled
     assert not sensor_entity.disabled
 
-    # Call the cleanup service (no entity_id = all entities)
-    await hass.services.async_call(
-        DOMAIN,
-        "cleanup_client_trackers",
-        {},
-        blocking=True,
+    await async_cleanup_client_trackers(
+        hass,
+        config_entry_ids={mock_config_entry.entry_id},
+        raise_on_error=True,
     )
-    await hass.async_block_till_done()
 
-    # Verify results
-    # Unknown clients should be removed (deleted)
     assert entity_registry.async_get(unknown_client_entity_1.entity_id) is None
     assert entity_registry.async_get(unknown_client_entity_2.entity_id) is None
-
-    # Already disabled entity should also be removed
     assert entity_registry.async_get(already_disabled_entity.entity_id) is None
-
-    # Sensor should remain unaffected
     assert entity_registry.async_get(sensor_entity.entity_id) is not None
 
 
-async def test_service_cleanup_client_trackers_single_entity(
+async def test_cleanup_helpers_target_specific_entity(
     hass: HomeAssistant,
     mock_omada_clients_only_site_client: MagicMock,
     mock_omada_clients_only_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test cleanup can target a single specific entity."""
+    """Test cleanup helper can target individual entities."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
-    # Create two unknown clients
     unknown_1 = entity_registry.async_get_or_create(
         domain="device_tracker",
         platform=DOMAIN,
@@ -268,16 +253,39 @@ async def test_service_cleanup_client_trackers_single_entity(
         config_entry=mock_config_entry,
     )
 
-    # Target only one entity for cleanup
-    await hass.services.async_call(
-        DOMAIN,
-        "cleanup_client_trackers",
-        {"entity_id": unknown_1.entity_id},
-        blocking=True,
+    await async_cleanup_client_trackers(
+        hass,
+        entity_ids=[unknown_1.entity_id],
+        raise_on_error=True,
     )
+
+    assert entity_registry.async_get(unknown_1.entity_id) is None
+    assert entity_registry.async_get(unknown_2.entity_id) is not None
+
+
+async def test_cleanup_devices_removes_orphans(
+    hass: HomeAssistant,
+    mock_omada_clients_only_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Ensure orphaned devices are removed by the helper."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Only targeted entity should be removed
-    assert entity_registry.async_get(unknown_1.entity_id) is None
-    # Other unknown entity should remain
-    assert entity_registry.async_get(unknown_2.entity_id) is not None
+    orphan = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "AA:BB:CC:DD:EE:FF")},
+        manufacturer="TP-Link",
+        model="Test",
+        name="Orphan",
+    )
+    assert device_registry.async_get(orphan.id)
+
+    await async_cleanup_devices(
+        hass,
+        config_entry_ids={mock_config_entry.entry_id},
+    )
+
+    assert device_registry.async_get(orphan.id) is None

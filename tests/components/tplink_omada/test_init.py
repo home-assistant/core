@@ -12,7 +12,7 @@ from tplink_omada_client.exceptions import (
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -88,3 +88,33 @@ async def test_missing_devices_removed_at_startup(
     await hass.async_block_till_done()
 
     assert device_registry.async_get(device_entry.id) is None
+
+
+async def test_missing_client_trackers_removed_at_startup(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test missing client trackers are removed at startup."""
+
+    mock_config_entry = MockConfigEntry(
+        title="Test Omada Controller",
+        domain=DOMAIN,
+        data=dict(MOCK_ENTRY_DATA),
+        unique_id="12345",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    tracker = entity_registry.async_get_or_create(
+        domain="device_tracker",
+        platform=DOMAIN,
+        unique_id="scanner_Default_11-11-11-11-11-11",
+        config_entry=mock_config_entry,
+    )
+
+    assert entity_registry.async_get(tracker.entity_id)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entity_registry.async_get(tracker.entity_id) is None

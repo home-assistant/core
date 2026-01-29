@@ -29,9 +29,6 @@
     }
   },
   "services": {
-    "cleanup_client_trackers": {
-      "service": "mdi:delete-sweep"
-    },
     "reconnect_client": {
       "service": "mdi:sync"
     }
