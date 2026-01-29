@@ -166,7 +166,7 @@
   },
   "services": {
     "alarm_arm_away": {
-      "description": "Arms the alarm in the away mode.",
+      "description": "Arms an alarm in the away mode.",
       "fields": {
         "code": {
           "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]",
@@ -176,7 +176,7 @@
       "name": "Arm away"
     },
     "alarm_arm_custom_bypass": {
-      "description": "Arms the alarm while allowing to bypass a custom area.",
+      "description": "Arms an alarm while allowing to bypass a custom area.",
       "fields": {
         "code": {
           "description": "Code to arm the alarm.",
@@ -186,7 +186,7 @@
       "name": "Arm with custom bypass"
     },
     "alarm_arm_home": {
-      "description": "Arms the alarm in the home mode.",
+      "description": "Arms an alarm in the home mode.",
       "fields": {
         "code": {
           "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]",
@@ -196,7 +196,7 @@
       "name": "Arm home"
     },
     "alarm_arm_night": {
-      "description": "Arms the alarm in the night mode.",
+      "description": "Arms an alarm in the night mode.",
       "fields": {
         "code": {
           "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]",
@@ -206,7 +206,7 @@
       "name": "Arm night"
     },
     "alarm_arm_vacation": {
-      "description": "Arms the alarm in the vacation mode.",
+      "description": "Arms an alarm in the vacation mode.",
       "fields": {
         "code": {
           "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]",
@@ -216,7 +216,7 @@
       "name": "Arm vacation"
     },
     "alarm_disarm": {
-      "description": "Disarms the alarm.",
+      "description": "Disarms an alarm.",
       "fields": {
         "code": {
           "description": "Code to disarm the alarm.",
@@ -226,7 +226,7 @@
       "name": "Disarm"
     },
     "alarm_trigger": {
-      "description": "Triggers the alarm manually.",
+      "description": "Triggers an alarm manually.",
       "fields": {
         "code": {
           "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]",
