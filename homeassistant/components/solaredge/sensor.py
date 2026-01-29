@@ -30,6 +30,7 @@ from .coordinator import (
     SolarEdgeInventoryDataService,
     SolarEdgeOverviewDataService,
     SolarEdgePowerFlowDataService,
+    SolarEdgeStorageDataService,
 )
 from .types import SolarEdgeConfigEntry
 
@@ -207,6 +208,24 @@ SENSOR_TYPES = [
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
     ),
+    SolarEdgeSensorEntityDescription(
+        key="battery_charge_today",
+        json_key="battery_charge_today",
+        translation_key="battery_charge_today",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SolarEdgeSensorEntityDescription(
+        key="battery_discharge_today",
+        json_key="battery_discharge_today",
+        translation_key="battery_discharge_today",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
 ]
 
 
@@ -251,8 +270,9 @@ class SolarEdgeSensorFactory:
         inventory = SolarEdgeInventoryDataService(hass, config_entry, api, site_id)
         flow = SolarEdgePowerFlowDataService(hass, config_entry, api, site_id)
         energy = SolarEdgeEnergyDetailsService(hass, config_entry, api, site_id)
+        storage = SolarEdgeStorageDataService(hass, config_entry, api, site_id)
 
-        self.all_services = (details, overview, inventory, flow, energy)
+        self.all_services = (details, overview, inventory, flow, energy, storage)
 
         self.services: dict[
             str,
@@ -288,6 +308,9 @@ class SolarEdgeSensorFactory:
             "selfconsumption_energy",
         ):
             self.services[key] = (SolarEdgeEnergyDetailsSensor, energy)
+
+        for key in ("battery_charge_today", "battery_discharge_today"):
+            self.services[key] = (SolarEdgeStorageEnergySensor, storage)
 
     def create_sensor(
         self, sensor_type: SolarEdgeSensorEntityDescription
@@ -434,3 +457,12 @@ class SolarEdgeStorageLevelSensor(SolarEdgeSensorEntity):
         if attr and "soc" in attr:
             return attr["soc"]
         return None
+
+
+class SolarEdgeStorageEnergySensor(SolarEdgeSensorEntity):
+    """Representation of an SolarEdge Monitoring API storage energy sensor."""
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        return self.data_service.data.get(self.entity_description.json_key)

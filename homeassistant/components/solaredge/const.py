@@ -8,6 +8,8 @@ DOMAIN = "solaredge"
 
 LOGGER = logging.getLogger(__package__)
 
+SOLAREDGE_API_URL = "https://monitoringapi.solaredge.com"
+
 DATA_API_CLIENT: Final = "api_client"
 DATA_MODULES_COORDINATOR: Final = "modules_coordinator"
 
@@ -22,6 +24,7 @@ DETAILS_UPDATE_DELAY = timedelta(hours=12)
 INVENTORY_UPDATE_DELAY = timedelta(hours=12)
 POWER_FLOW_UPDATE_DELAY = timedelta(minutes=15)
 ENERGY_DETAILS_DELAY = timedelta(minutes=15)
+STORAGE_DATA_UPDATE_DELAY = timedelta(minutes=15)
 MODULE_STATISTICS_UPDATE_DELAY = timedelta(hours=12)
 
 SCAN_INTERVAL = timedelta(minutes=15)
