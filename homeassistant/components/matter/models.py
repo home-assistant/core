@@ -127,6 +127,10 @@ class MatterDiscoverySchema:
     # for example for the DoorSensor on a DoorLock Cluster
     featuremap_contains: int | None = None
 
+    # [optional] the primary attribute's cluster revision must match this value
+    # corresponds to the ClusterRevision attribute in Matter clusters
+    cluster_revision: int | None = None
+
     # [optional] bool to specify if this primary value may be discovered
     # by multiple platforms
     allow_multi: bool = False
