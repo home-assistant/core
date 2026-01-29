@@ -107,7 +107,6 @@ STATES_ORDER = [
     STATE_UNAVAILABLE,
     MediaPlayerState.OFF,
     MediaPlayerState.IDLE,
-    MediaPlayerState.STANDBY,
     MediaPlayerState.ON,
     MediaPlayerState.PAUSED,
     MediaPlayerState.BUFFERING,
