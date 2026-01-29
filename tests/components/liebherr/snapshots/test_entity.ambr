@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_liebherr_entity_with_device_type
+  dict({
+    'identifiers': set({
+      tuple(
+        'liebherr',
+        'test_device_id',
+      ),
+    }),
+    'manufacturer': 'Liebherr',
+    'model': 'Fridge',
+    'model_id': 'CBNes1234',
+    'name': 'Test Device',
+  })
+# ---
+# name: test_liebherr_entity_without_device_type
+  dict({
+    'identifiers': set({
+      tuple(
+        'liebherr',
+        'test_device_id_2',
+      ),
+    }),
+    'manufacturer': 'Liebherr',
+    'model': None,
+    'model_id': 'CBNes5678',
+    'name': 'CBNes5678',
+  })
+# ---
+# name: test_liebherr_zone_entity_temperature_control
+  1
+# ---
+# name: test_liebherr_zone_entity_temperature_control.1
+  <ZonePosition.TOP: 'top'>
+# ---
+# name: test_liebherr_zone_entity_temperature_control.2
+  5
+# ---

@@ -921,6 +921,8 @@ build.json @home-assistant/supervisor
 /tests/components/libre_hardware_monitor/ @Sab44
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
+/homeassistant/components/liebherr/ @mettolen
+/tests/components/liebherr/ @mettolen
 /homeassistant/components/lifx/ @Djelibeybi
 /tests/components/lifx/ @Djelibeybi
 /homeassistant/components/light/ @home-assistant/core
