@@ -1,5 +1,6 @@
 """Tests for the syncthing integration."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 from aiosyncthing.exceptions import SyncthingError
@@ -25,6 +26,8 @@ SERVER_ENTITY_ID = f"sensor.{SERVER_ID_SHORT}_{SERVER_ID_SHORT}_{SERVER_NAME_HA}
 MOCK_SYSTEM_STATUS = {"myID": SERVER_ID}
 
 MOCK_SYSTEM_VERSION = {"version": "v1.23.0"}
+
+MOCK_PING = {"ping": "pong"}
 
 MOCK_CONFIG = {
     "folders": [
@@ -211,6 +214,7 @@ def create_mock_syncthing_client(
         for mock in (
             mock_system.status,
             mock_system.version,
+            mock_system.ping,
             mock_system.config,
             mock_config.devices,
             mock_database.status,
@@ -221,6 +225,7 @@ def create_mock_syncthing_client(
     else:
         mock_system.status = AsyncMock(return_value=MOCK_SYSTEM_STATUS)
         mock_system.version = AsyncMock(return_value=MOCK_SYSTEM_VERSION)
+        mock_system.ping = AsyncMock(return_value=MOCK_PING)
         mock_system.config = AsyncMock(return_value=MOCK_CONFIG)
 
         async def devices_side_effect(device_id: str):
@@ -236,7 +241,8 @@ def create_mock_syncthing_client(
         # Create async generator for events.listen
         async def mock_listen():
             """Mock events.listen that doesn't block."""
-            while False:
+            while True:
+                await asyncio.sleep(0)
                 yield
 
         mock_events.listen = mock_listen
