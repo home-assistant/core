@@ -1,8 +1,7 @@
 {
   "domain": "nanoleaf",
   "name": "Nanoleaf",
-  "version": "2.0.0",
-  "codeowners": ["@loebi-ch", "@JaspervRijbroek", "@jonathanrobichaud4"],
+  "codeowners": ["@milanmeu", "@joostlek", "@loebi-ch", "@JaspervRijbroek", "@jonathanrobichaud4"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nanoleaf",
   "homekit": {
@@ -11,7 +10,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["aionanoleaf2"],
-  "requirements": ["aionanoleaf2>=1.0.0"],
+  "requirements": ["aionanoleaf2==1.0.2"],
   "ssdp": [
     {
       "st": "Nanoleaf_aurora:light"
