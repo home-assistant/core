@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 from datetime import datetime, timedelta
-from functools import partial
 import logging
 import os
 import sys
@@ -26,12 +25,6 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstant,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service_info.usb import UsbServiceInfo as _UsbServiceInfo
 from homeassistant.helpers.typing import ConfigType
@@ -106,13 +99,6 @@ def async_get_usb_matchers_for_device(
     """Return a list of matchers that match the given device."""
     usb_discovery: USBDiscovery = hass.data[DOMAIN]
     return usb_discovery.async_get_usb_matchers_for_device(device)
-
-
-_DEPRECATED_UsbServiceInfo = DeprecatedConstant(
-    _UsbServiceInfo,
-    "homeassistant.helpers.service_info.usb.UsbServiceInfo",
-    "2026.2",
-)
 
 
 @overload
@@ -484,11 +470,3 @@ async def websocket_usb_scan(
     """Scan for new usb devices."""
     await async_request_scan(hass)
     connection.send_result(msg["id"])
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
