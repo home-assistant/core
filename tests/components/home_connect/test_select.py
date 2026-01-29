@@ -1105,3 +1105,34 @@ async def test_options_available_when_program_is_null(
     state = hass.states.get(entity_id)
     assert state
     assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_restore_option_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test that option entities are restored if the available program does not include them but they existed once."""
+    entity_id = "select.washer_temperature"
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[],
+        )
+    )
+
+    entity_registry.async_get_or_create(
+        Platform.SELECT,
+        DOMAIN,
+        f"{appliance.ha_id}-{OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE}",
+        suggested_object_id="washer_temperature",
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
