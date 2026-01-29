@@ -129,6 +129,7 @@ class FreeboxRouter:
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
         self.sensors_ftth: dict[str, Any] = {}
+        self.ftth_info: dict[str, Any] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}

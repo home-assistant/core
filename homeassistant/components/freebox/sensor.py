@@ -119,6 +119,9 @@ async def async_setup_entry(
         [FreeboxSensor(router, description) for description in CONNECTION_SENSORS]
     )
     entities.extend(
+        [FreeboxSensor(router, description) for description in FTTH_SENSORS]
+    )
+    entities.extend(
         [FreeboxCallSensor(router, description) for description in CALL_SENSORS]
     )
 
