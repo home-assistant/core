@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -43,13 +41,6 @@ def _async_get_switchbot_entry_for_device_id(
             translation_placeholders={"device_id": device_id},
         )
 
-    if not device_entry.config_entries:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_without_config_entry",
-            translation_placeholders={"device_id": device_id},
-        )
-
     entries = [
         hass.config_entries.async_get_entry(entry_id)
         for entry_id in device_entry.config_entries
@@ -80,7 +71,7 @@ def _async_get_switchbot_entry_for_device_id(
             translation_placeholders={"device_id": device_id},
         )
 
-    return cast(SwitchbotConfigEntry, loaded_entry)
+    return loaded_entry
 
 
 def _is_supported_keypad(entry: SwitchbotConfigEntry) -> bool:
