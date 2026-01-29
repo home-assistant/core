@@ -6,9 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 142,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGB: 'rgb'>,
@@ -49,7 +47,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 205,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 333,
       'color_temp_kelvin': 2999,
       'friendly_name': 'Bedroom Lamp',
       'hs_color': tuple(
@@ -57,9 +54,7 @@
         56.922,
       ),
       'max_color_temp_kelvin': 7000,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 142,
       'rgb_color': tuple(
         255,
         177,
@@ -90,9 +85,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 142,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGB: 'rgb'>,
@@ -133,7 +126,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 230,
       'color_mode': <ColorMode.RGB: 'rgb'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Lamp Bulb 1',
       'hs_color': tuple(
@@ -141,9 +133,7 @@
         33.333,
       ),
       'max_color_temp_kelvin': 7000,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 142,
       'rgb_color': tuple(
         120,
         145,
@@ -174,9 +164,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 142,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGB: 'rgb'>,
@@ -217,9 +205,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Lamp Bulb 2',
       'max_color_temp_kelvin': 7000,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 142,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGB: 'rgb'>,
