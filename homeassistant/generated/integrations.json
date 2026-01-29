@@ -7240,6 +7240,12 @@
       "config_flow": false,
       "iot_class": "calculated"
     },
+    "unraid": {
+      "name": "Unraid",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "upb": {
       "name": "Universal Powerline Bus (UPB)",
       "integration_type": "hub",

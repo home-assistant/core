@@ -1740,6 +1740,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/unifiled/ @florisvdk
 /homeassistant/components/unifiprotect/ @RaHehl
 /tests/components/unifiprotect/ @RaHehl
+/homeassistant/components/unraid/ @ruaan-deysel
+/tests/components/unraid/ @ruaan-deysel
 /homeassistant/components/upb/ @gwww
 /tests/components/upb/ @gwww
 /homeassistant/components/upc_connect/ @pvizeli @fabaff

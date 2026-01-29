@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "cpu_temp": {
+        "default": "mdi:thermometer"
+      },
+      "cpu_usage": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "ram_usage": {
+        "default": "mdi:memory"
+      },
+      "ram_used": {
+        "default": "mdi:memory"
+      },
+      "uptime": {
+        "default": "mdi:clock-outline"
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Unraid server is already configured.",
+      "cannot_get_version": "Could not retrieve version info from server.",
+      "no_server_uuid": "Could not retrieve server UUID. Ensure your Unraid server is properly configured.",
+      "unsupported_version": "Unraid version not supported. Minimum required: Unraid 7.2.0 (API v4.21.0)."
+    },
+    "error": {
+      "base": "Unexpected error occurred. Check Home Assistant logs for details.",
+      "cannot_connect": "Cannot connect. Verify the host and port are correct and reachable.",
+      "invalid_auth": "Invalid API key or insufficient permissions. Ensure the key has ADMIN role.",
+      "unknown": "Unexpected error occurred. Check Home Assistant logs for details."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "api_key": "Generate in Unraid Settings → Management Access → API Keys. Requires ADMIN role.",
+          "host": "IP address (for example, 192.168.1.100) or hostname/domain of your Unraid server.",
+          "port": "HTTP port number (default: 80). Secure connections are handled automatically."
+        },
+        "description": "Connect to your Unraid server using the GraphQL API. Requires Unraid 7.2.0 or newer.",
+        "title": "Connect to Unraid"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cpu_temp": {
+        "name": "CPU temperature"
+      },
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
+      "ram_usage": {
+        "name": "RAM usage"
+      },
+      "ram_used": {
+        "name": "RAM used"
+      },
+      "uptime": {
+        "name": "Up since"
+      }
+    }
+  }
+}

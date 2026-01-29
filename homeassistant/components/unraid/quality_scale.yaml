@@ -1,0 +1,197 @@
+# Quality Scale for Unraid Integration
+# https://developers.home-assistant.io/docs/core/integration-quality-scale/
+
+rules:
+  # ============================================================================
+  # 🥉 Bronze (Minimum requirements for all integrations)
+  # ============================================================================
+
+  # Service actions are registered in async_setup
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom service actions.
+
+  # If it's a polling integration, set an appropriate polling interval
+  appropriate-polling: done
+
+  # Has branding assets available for the integration
+  brands: done
+
+  # Place common patterns in common modules
+  common-modules: done
+
+  # Full test coverage for the config flow
+  config-flow-test-coverage: done
+
+  # Integration needs to be able to be set up via the UI
+  config-flow: done
+
+  # Dependency transparency
+  dependency-transparency: done
+
+  # The documentation describes the provided service actions that can be used
+  docs-actions:
+    status: exempt
+    comment: Integration does not provide custom service actions.
+
+  # The documentation includes a high-level description
+  docs-high-level-description: done
+
+  # The documentation provides step-by-step installation instructions
+  docs-installation-instructions: done
+
+  # The documentation provides removal instructions
+  docs-removal-instructions: done
+
+  # Entity events are subscribed in the correct lifecycle methods
+  entity-event-setup:
+    status: exempt
+    comment: Integration uses coordinators for data updates, no direct event subscriptions.
+
+  # Entities have a unique ID
+  entity-unique-id: done
+
+  # Entities use has_entity_name = True
+  has-entity-name: done
+
+  # Use ConfigEntry.runtime_data to store runtime data
+  runtime-data: done
+
+  # Test a connection in the config flow
+  test-before-configure: done
+
+  # Check during integration initialization if we are able to set it up correctly
+  test-before-setup: done
+
+  # Don't allow the same device or service to be set up twice
+  unique-config-entry: done
+
+  # ============================================================================
+  # 🥈 Silver (Improved reliability and robustness)
+  # ============================================================================
+
+  # Service actions raise exceptions when encountering failures
+  action-exceptions:
+    status: exempt
+    comment: Integration currently only provides read only entities
+
+  # Support config entry unloading
+  config-entry-unloading: done
+
+  # The documentation describes all integration configuration options
+  docs-configuration-parameters: todo
+
+  # The documentation describes all integration installation parameters
+  docs-installation-parameters: todo
+
+  # Mark entity unavailable if appropriate
+  entity-unavailable: done
+
+  # Has an integration owner
+  integration-owner: done
+
+  # Log once when unavailable and once when back connected
+  log-when-unavailable: done
+
+  # Number of parallel updates is specified
+  parallel-updates: done
+
+  # Reauthentication needs to be available via the UI
+  reauthentication-flow: todo
+
+  # Above 95% test coverage for all integration modules
+  test-coverage: todo
+
+  # ============================================================================
+  # 🥇 Gold (Best user experience)
+  # ============================================================================
+
+  # The integration creates devices
+  devices: done
+
+  # Implements diagnostics
+  diagnostics: todo
+
+  # Integration uses discovery info to update network information
+  discovery-update-info:
+    status: exempt
+    comment: Unraid servers do not support network discovery protocols.
+
+  # Devices can be discovered
+  discovery:
+    status: exempt
+    comment: Unraid servers do not support SSDP/mDNS/DHCP discovery.
+
+  # The documentation describes how data is updated
+  docs-data-update: todo
+
+  # The documentation provides automation examples
+  docs-examples: todo
+
+  # The documentation describes known limitations
+  docs-known-limitations: todo
+
+  # The documentation describes known supported / unsupported devices
+  docs-supported-devices: done
+
+  # The documentation describes the supported functionality
+  docs-supported-functions: todo
+
+  # The documentation provides troubleshooting information
+  docs-troubleshooting: todo
+
+  # The documentation describes use cases
+  docs-use-cases: todo
+
+  # Devices added after integration setup
+  dynamic-devices:
+    status: exempt
+    comment: Single device per server, no dynamic device addition.
+
+  # Entities are assigned an appropriate EntityCategory
+  entity-category:
+    status: exempt
+    comment: Current sensors are primary measurements, not diagnostic or config.
+
+  # Entities use device classes where possible
+  entity-device-class: done
+
+  # Integration disables less popular (or noisy) entities
+  entity-disabled-by-default:
+    status: exempt
+    comment: All current sensors are primary metrics, none disabled by default.
+
+  # Entities have translated names
+  entity-translations: done
+
+  # Exception messages are translatable
+  exception-translations: todo
+
+  # Entities implement icon translations
+  icon-translations: todo
+
+  # Integrations should have a reconfigure flow
+  reconfiguration-flow: todo
+
+  # Repair issues and repair flows are used when user intervention is needed
+  repair-issues:
+    status: exempt
+    comment: No actionable repair issues identified for current scope.
+
+  # Stale devices are removed
+  stale-devices:
+    status: exempt
+    comment: Single device per server, no stale device management needed.
+
+  # ============================================================================
+  # 🏆 Platinum (Highest standards)
+  # ============================================================================
+
+  # Dependency is async
+  async-dependency: done
+
+  # The integration dependency supports passing in a websession
+  inject-websession: done
+
+  # Strict typing
+  strict-typing: todo
