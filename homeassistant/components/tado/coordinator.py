@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -34,7 +35,15 @@ SCAN_INTERVAL = timedelta(minutes=5)
 SCAN_MOBILE_DEVICE_INTERVAL = timedelta(minutes=5)
 
 
-class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
+@dataclass
+class TadoRateLimit:
+    """Class to hold Tado rate limit information."""
+
+    limit: int
+    remaining: int
+
+
+class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage API calls from and to Tado via PyTado."""
 
     tado: Tado
@@ -68,31 +77,48 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.home_name: str
         self.zones: list[dict[Any, Any]] = []
         self.devices: list[dict[Any, Any]] = []
-        self.data: dict[str, dict] = {
+        self.data: dict[str, Any] = {
             "device": {},
             "weather": {},
             "geofence": {},
             "zone": {},
+            "rate_limit": TadoRateLimit(limit=0, remaining=0),
         }
+
+        self.rate_limit: TadoRateLimit | None = None
 
     @property
     def fallback(self) -> str:
         """Return fallback flag to Smart Schedule."""
         return self._fallback
 
-    async def _async_update_data(self) -> dict[str, dict]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the (initial) latest data from Tado."""
 
-        try:
-            _LOGGER.debug("Preloading home data")
-            tado_home_call = await self.hass.async_add_executor_job(self._tado.get_me)
-            _LOGGER.debug("Preloading zones and devices")
-            self.zones = await self.hass.async_add_executor_job(self._tado.get_zones)
-            self.devices = await self.hass.async_add_executor_job(
-                self._tado.get_devices
+        def _load_tado_data() -> tuple[dict, list, list, dict[str, str]]:
+            """Load Tado data in one call."""
+            _LOGGER.debug("Preloading Tado data")
+            return (
+                self._tado.get_me(),
+                self._tado.get_zones(),
+                self._tado.get_devices(),
+                self._tado.rate_limit_info(),
             )
+
+        try:
+            (
+                tado_home_call,
+                self.zones,
+                self.devices,
+                rate_limit_info,
+            ) = await self.hass.async_add_executor_job(_load_tado_data)
         except RequestException as err:
             raise UpdateFailed(f"Error during Tado setup: {err}") from err
+
+        self.rate_limit = TadoRateLimit(
+            limit=int(rate_limit_info.get("per-day") or 0),
+            remaining=int(rate_limit_info.get("remaining") or 0),
+        )
 
         tado_home = tado_home_call["homes"][0]
         self.home_id = tado_home["id"]
@@ -106,6 +132,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.data["zone"] = zones
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
+        self.data["rate_limit"] = TadoRateLimit(
+            limit=self.rate_limit.limit,
+            remaining=self.rate_limit.remaining,
+        )
 
         refresh_token = await self.hass.async_add_executor_job(
             self._tado.get_refresh_token

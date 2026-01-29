@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 from homeassistant.components.sensor import (
+    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -22,6 +23,7 @@ from . import TadoConfigEntry
 from .const import (
     CONDITIONS_MAP,
     SENSOR_DATA_CATEGORY_GEOFENCE,
+    SENSOR_DATA_CATEGORY_RATE_LIMIT,
     SENSOR_DATA_CATEGORY_WEATHER,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
@@ -130,6 +132,24 @@ HOME_SENSORS = [
         translation_key="automatic_geofencing",
         state_fn=get_automatic_geofencing,
         data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
+    ),
+    TadoSensorEntityDescription(
+        key="rate_limit_remaining",
+        translation_key="rate_limit_remaining",
+        state_fn=lambda data: data.remaining,
+        data_category=SENSOR_DATA_CATEGORY_RATE_LIMIT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    TadoSensorEntityDescription(
+        key="rate_limit",
+        translation_key="rate_limit",
+        state_fn=lambda data: data.limit,
+        data_category=SENSOR_DATA_CATEGORY_RATE_LIMIT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 ]
 
@@ -248,12 +268,17 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         try:
             tado_weather_data = self.coordinator.data["weather"]
             tado_geofence_data = self.coordinator.data["geofence"]
+            tado_rate_limit_data = self.coordinator.data["rate_limit"]
         except KeyError:
             return
 
         if self.entity_description.data_category is not None:
             if self.entity_description.data_category == SENSOR_DATA_CATEGORY_WEATHER:
                 tado_sensor_data = tado_weather_data
+            elif (
+                self.entity_description.data_category == SENSOR_DATA_CATEGORY_RATE_LIMIT
+            ):
+                tado_sensor_data = tado_rate_limit_data
             else:
                 tado_sensor_data = tado_geofence_data
         self._attr_native_value = self.entity_description.state_fn(tado_sensor_data)

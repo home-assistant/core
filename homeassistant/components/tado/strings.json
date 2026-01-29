@@ -64,6 +64,12 @@
       "outdoor_temperature": {
         "name": "Outdoor temperature"
       },
+      "rate_limit": {
+        "name": "API rate limit"
+      },
+      "rate_limit_remaining": {
+        "name": "API calls remaining"
+      },
       "solar_percentage": {
         "name": "Solar percentage"
       },
