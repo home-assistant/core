@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2026.2.0.dev0"
+version = "2026.3.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -18,11 +18,10 @@ classifiers = [
   "Intended Audience :: End Users/Desktop",
   "Intended Audience :: Developers",
   "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
   "Topic :: Home Automation",
 ]
-requires-python = ">=3.13.2"
+requires-python = ">=3.14.2"
 dependencies = [
   "aiodns==4.0.0",
   # Integrations may depend on hassio integration without listing it to
@@ -48,7 +47,7 @@ dependencies = [
   "fnv-hash-fast==1.6.0",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==1.11.0",
+  "hass-nabucasa==1.12.0",
   # When bumping httpx, please check the version pins of
   # httpcore, anyio, and h11 in gen_requirements_all
   "httpx==0.28.1",
@@ -102,7 +101,7 @@ include-package-data = true
 include = ["homeassistant*"]
 
 [tool.pylint.MAIN]
-py-version = "3.13"
+py-version = "3.14"
 # Use a conservative default here; 2 should speed up most setups and not hurt
 # any too bad. Override on command line as appropriate.
 jobs = 2
@@ -561,8 +560,6 @@ filterwarnings = [
   # - pkg_resources
   # https://pypi.org/project/aiomusiccast/ - v0.14.8 - 2023-03-20
   "ignore:pkg_resources is deprecated as an API:UserWarning:aiomusiccast",
-  # https://github.com/eavanvalkenburg/pysiaalarm/blob/v3.1.1/src/pysiaalarm/data/data.py#L7 - v3.1.1 - 2023-04-17
-  "ignore:pkg_resources is deprecated as an API:UserWarning:pysiaalarm.data.data",
   # https://pypi.org/project/pybotvac/ - v0.0.28 - 2025-06-11
   "ignore:pkg_resources is deprecated as an API:UserWarning:pybotvac.version",
   # - SyntaxWarning - is with literal

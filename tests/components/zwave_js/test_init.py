@@ -1320,7 +1320,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to stop the Z-Wave JS add-on" in caplog.text
+    assert "Failed to stop the Z-Wave JS app" in caplog.text
     stop_addon.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
@@ -1342,7 +1342,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to create a backup of the Z-Wave JS add-on" in caplog.text
+    assert "Failed to create a backup of the Z-Wave JS app" in caplog.text
     create_backup.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
@@ -1365,7 +1365,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_args == call("core_zwave_js")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text
+    assert "Failed to uninstall the Z-Wave JS app" in caplog.text
 
 
 @pytest.mark.usefixtures("climate_radio_thermostat_ct100_plus", "lock_schlage_be469")
