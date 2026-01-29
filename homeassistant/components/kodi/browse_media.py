@@ -4,13 +4,17 @@ import asyncio
 import contextlib
 import logging
 
+from rapidfuzz import fuzz, process, utils
+
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
     MediaClass,
     MediaType,
+    SearchMediaQuery,
 )
+from homeassistant.helpers.network import is_internal_request
 
 PLAYABLE_MEDIA_TYPES = [
     MediaType.ALBUM,
@@ -360,3 +364,100 @@ async def get_media_info(media_library, search_id, search_type):
         title = "Channels"
 
     return thumbnail, title, media
+
+
+async def search_items(
+    hass, media_library, query: SearchMediaQuery, get_browse_image_url
+) -> list[BrowseMedia]:
+    """Search the items for the query."""
+
+    media_filter_classes = query.media_filter_classes
+    media_filter_classes_supported_for_search = [
+        MediaClass.MOVIE,
+        MediaClass.TV_SHOW,
+    ]
+
+    is_internal = is_internal_request(hass)
+
+    if media_filter_classes:
+        media_filter_classes = [
+            t
+            for t in media_filter_classes
+            if t in media_filter_classes_supported_for_search
+        ]
+    else:
+        media_filter_classes = media_filter_classes_supported_for_search
+
+    if query.media_content_id and media_source.is_media_source_id(
+        query.media_content_id
+    ):
+        result = await media_source.async_browse_media(
+            hass, query.media_content_id, content_filter=media_source_content_filter
+        )
+        return [result]
+
+    results = []
+
+    if MediaClass.MOVIE in media_filter_classes:
+        movies = (await media_library.get_movies()).get("movies", [])
+        movies_names = [i["label"] for i in movies]
+        matching_movie_indices = process.extract(
+            query.search_query,
+            movies_names,
+            scorer=fuzz.WRatio,
+            processor=utils.default_process,
+            score_cutoff=80,
+            limit=None,
+        )
+
+        matching_movies = [
+            movies[idx] for (label, fuzz_score, idx) in matching_movie_indices
+        ]
+
+        results.extend(matching_movies)
+
+    if MediaClass.TV_SHOW in media_filter_classes:
+        tvshows = (await media_library.get_tv_shows()).get("tvshows", [])
+        tvshow_names = {i["tvshowid"]: i["label"] for i in tvshows}
+        matching_tvshow_ids = process.extract(
+            query.search_query,
+            tvshow_names,
+            scorer=fuzz.WRatio,
+            processor=utils.default_process,
+            score_cutoff=80,
+            limit=None,
+        )
+
+        matching_tvshow_ids = [
+            tvshowid for (label, fuzz_score, tvshowid) in matching_tvshow_ids
+        ]
+
+        for tvshowid in matching_tvshow_ids:
+            episodes = (
+                await media_library.get_episodes(
+                    tvshowid, 0, properties=["playcount", "firstaired"]
+                )
+            )["episodes"]
+            episodes = [ep for ep in episodes if not ep["playcount"]]
+            episodes.sort(key=lambda m: m["firstaired"])
+            if episodes:
+                results.append(episodes[0])
+
+    async def _get_thumbnail_url(
+        media_content_type,
+        media_content_id,
+        media_image_id=None,
+        thumbnail_url=None,
+    ):
+        if is_internal:
+            return media_library.thumbnail_url(thumbnail_url)
+
+        return get_browse_image_url(
+            media_content_type,
+            media_content_id,
+            media_image_id,
+        )
+
+    return await asyncio.gather(
+        *(item_payload(item, _get_thumbnail_url) for item in results)
+    )
