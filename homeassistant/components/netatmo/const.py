@@ -42,6 +42,7 @@ API_SCOPES_EXCLUDED_FROM_CLOUD = [
 ]
 
 NETATMO_CREATE_BATTERY = "netatmo_create_battery"
+NETATMO_CREATE_BINARY_SENSOR = "netatmo_create_binary_sensor"
 NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
 NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
@@ -190,6 +191,23 @@ MODE_LIGHT_AUTO = "auto"
 MODE_LIGHT_OFF = "off"
 MODE_LIGHT_ON = "on"
 CAMERA_LIGHT_MODES = [MODE_LIGHT_ON, MODE_LIGHT_OFF, MODE_LIGHT_AUTO]
+
+# Door tag categories
+DOORTAG_CATEGORY_DOOR = "door"
+DOORTAG_CATEGORY_FURNITURE = "furniture"
+DOORTAG_CATEGORY_GARAGE = "garage"
+DOORTAG_CATEGORY_GATE = "gate"
+DOORTAG_CATEGORY_OTHER = "other"
+DOORTAG_CATEGORY_WINDOW = "window"
+# Door tag statuses
+DOORTAG_STATUS_CALIBRATING = "calibrating"
+DOORTAG_STATUS_CALIBRATION_FAILED = "calibration_failed"
+DOORTAG_STATUS_CLOSED = "closed"
+DOORTAG_STATUS_MAINTENANCE = "maintenance"
+DOORTAG_STATUS_NO_NEWS = "no_news"
+DOORTAG_STATUS_OPEN = "open"
+DOORTAG_STATUS_UNDEFINED = "undefined"
+DOORTAG_STATUS_WEAK_SIGNAL = "weak_signal"
 
 # Webhook push_types MUST follow exactly Netatmo's naming on products!
 # See https://dev.netatmo.com/apidocumentation
