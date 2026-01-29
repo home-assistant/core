@@ -139,7 +139,7 @@ class MobileAppNotificationService(BaseNotificationService):
                         "Device not connected to local push notifications"
                     )
                 _LOGGER.warning(
-                    "Device %s not connected to local push notifications, skipping",
+                    "Device with webhook id %s not connected to local push notifications, skipping",
                     target,
                 )
                 continue
