@@ -1,0 +1,13 @@
+{
+  "domain": "cielo_home",
+  "name": "Cielo Home",
+  "codeowners": ["@ihsan-cielo", "@mudasar-cielo"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/cielo_home",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["cielo_home", "cieloconnectapi"],
+  "quality_scale": "bronze",
+  "requirements": ["cielo-connect-api==1.0.3"],
+  "single_config_entry": true
+}

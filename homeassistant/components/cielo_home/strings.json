@@ -1,0 +1,79 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "Cannot connect",
+      "invalid_auth": "Invalid or expired API key! Kindly generate a new one",
+      "no_devices": "No devices found; make sure devices are set up in the Cielo Home app",
+      "no_username": "No valid user information found for the API key",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Follow the [documentation]({url}) to get your API key"
+        },
+        "title": "Reauthenticate Cielo Home"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Follow the [documentation]({url}) to get your API key"
+        },
+        "description": "Sign in with your API key",
+        "title": "Connect to Cielo Home"
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "climate_device": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "high": "[%key:common::state::high%]",
+              "low": "[%key:common::state::low%]",
+              "medium": "[%key:common::state::medium%]",
+              "quiet": "Quiet",
+              "super_high": "Super high",
+              "ultra_high": "Ultra high"
+            }
+          },
+          "swing_mode": {
+            "state": {
+              "adjust": "Adjust",
+              "auto": "[%key:common::state::auto%]",
+              "auto-stop": "Auto-stop",
+              "pos1": "Pos 1",
+              "pos10": "Pos 10",
+              "pos11": "Pos 11",
+              "pos12": "Pos 12",
+              "pos13": "Pos 13",
+              "pos14": "Pos 14",
+              "pos15": "Pos 15",
+              "pos2": "Pos 2",
+              "pos3": "Pos 3",
+              "pos4": "Pos 4",
+              "pos5": "Pos 5",
+              "pos6": "Pos 6",
+              "pos7": "Pos 7",
+              "pos8": "Pos 8",
+              "pos9": "Pos 9",
+              "swing": "Swing"
+            }
+          }
+        }
+      }
+    }
+  }
+}
