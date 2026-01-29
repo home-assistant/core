@@ -28,6 +28,159 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "a0": {
+        "name": "A0"
+      },
+      "a0b1": {
+        "name": "A0B1"
+      },
+      "a1": {
+        "name": "A1"
+      },
+      "a1b0": {
+        "name": "A1B0"
+      },
+      "ab0": {
+        "name": "AB0"
+      },
+      "ab1": {
+        "name": "AB1"
+      },
+      "b0": {
+        "name": "B0"
+      },
+      "b1": {
+        "name": "B1"
+      },
+      "learning": {
+        "name": "Learning mode active"
+      }
+    },
+    "button": {
+      "query_state": {
+        "name": "Query state"
+      },
+      "toggle_learning": {
+        "name": "Learning start/stop"
+      }
+    },
+    "number": {
+      "max_brightness": {
+        "name": "Max. brightness"
+      },
+      "min_brightness": {
+        "name": "Min. brightness"
+      },
+      "ramping_time": {
+        "name": "Ramping time"
+      }
+    },
+    "select": {
+      "sender_id": {
+        "name": "Learning sender ID"
+      }
+    },
+    "sensor": {
+      "base_id": {
+        "name": "Base ID"
+      },
+      "device_brightness": {
+        "name": "Brightness"
+      },
+      "dimming_range": {
+        "name": "Dimming range"
+      },
+      "last_seen": {
+        "name": "Last seen"
+      },
+      "learning_countdown": {
+        "name": "Learning seconds remaining"
+      },
+      "supply_voltage": {
+        "name": "Supply voltage"
+      },
+      "telegrams_received": {
+        "name": "Telegrams received"
+      }
+    },
+    "switch": {
+      "switch_1": {
+        "name": "Switch 1"
+      },
+      "switch_2": {
+        "name": "Switch 2"
+      },
+      "switch_3": {
+        "name": "Switch 3"
+      },
+      "switch_4": {
+        "name": "Switch 4"
+      },
+      "switch_5": {
+        "name": "Switch 5"
+      },
+      "switch_6": {
+        "name": "Switch 6"
+      },
+      "switch_7": {
+        "name": "Switch 7"
+      },
+      "switch_8": {
+        "name": "Switch 8"
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "device_already_configured": "An EnOcean device with this device ID is already configured. Duplicate entries are not possible.",
+      "device_name_empty": "Device name is empty.",
+      "invalid_device_id": "Device ID is not a valid EnOcean ID. A valid EnOcean ID consists of four hexadecimal parts (with at most two digits) separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7').",
+      "invalid_sender_id": "Sender ID is not a valid EnOcean ID. A valid EnOcean ID consists of four hexadecimal parts (with at most two digits) separated by colons and is usually printed on the device (e.g. '1E:F4:BA:C7'). Only the dongle's base IDs or its chip ID can be used for sending."
+    },
+    "step": {
+      "add_device": {
+        "data": {
+          "device_class": "Device class",
+          "device_type_id": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
+          "id": "Device ID",
+          "name": "Name",
+          "sender_id": "Sender ID (defaults to dongle's base ID; do not change unless necessary)"
+        },
+        "description": "To add an EnOcean device you need to specify at least its device type and its ID.",
+        "title": "Add new EnOcean device"
+      },
+      "delete_device": {
+        "data": { "id": "EnOcean ID" },
+        "description": "Select an EnOcean device to delete. The corresponding Home Assistant device and all its entities will also be deleted.",
+        "title": "Delete EnOcean device"
+      },
+      "edit_device": {
+        "data": {
+          "device_type_id": "Manufacturer and model or EnOcean Equipment Profile (EEP)",
+          "id": "Device ID",
+          "name": "Name",
+          "sender_id": "Sender ID (defaults to dongle's base ID; do not change unless necessary)"
+        },
+        "description": "You can change the EnOcean device's model or EEP, its name or the EnOcean ID which is used to send data to this device. Note that editing the model or EEP of the EnOcean device will also change the Home Assistant device and its entities.",
+        "title": "Edit EnOcean device"
+      },
+      "init": {
+        "description": "Configuration of the EnOcean integration",
+        "menu_options": {
+          "add_device": "Add new device",
+          "delete_device": "Delete configured device",
+          "select_device_to_edit": "Edit configured device"
+        }
+      },
+      "select_device_to_edit": {
+        "data": { "device": "Device" },
+        "description": "Select the EnOcean device whose settings you want to change.",
+        "title": "Select EnOcean device for editing"
+      }
+    }
+  },
   "selector": {
     "devices": {
       "options": {

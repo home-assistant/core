@@ -191,6 +191,7 @@ homeassistant.components.energy.*
 homeassistant.components.energyid.*
 homeassistant.components.energyzero.*
 homeassistant.components.enigma2.*
+homeassistant.components.enocean.*
 homeassistant.components.enphase_envoy.*
 homeassistant.components.eq3btsmart.*
 homeassistant.components.esphome.*
