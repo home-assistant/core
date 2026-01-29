@@ -328,7 +328,7 @@ def create_time_server_exposures(
     config: KNXTimeServerStoreModel,
 ) -> list[KnxExposeTime]:
     """Create exposures from UI config store time server config."""
-    expusures: list[KnxExposeTime] = []
+    exposures: list[KnxExposeTime] = []
     device_cls: type[DateDevice | DateTimeDevice | TimeDevice]
     for expose_type, data in config.items():
         if not data or (ga := data.get("write")) is None:  # type: ignore[attr-defined]
@@ -342,7 +342,7 @@ def create_time_server_exposures(
                 device_cls = DateTimeDevice
             case _:
                 continue
-        expusures.append(
+        exposures.append(
             KnxExposeTime(
                 xknx=xknx,
                 options=KnxExposeTimeOptions(
@@ -352,9 +352,9 @@ def create_time_server_exposures(
                 ),
             )
         )
-    for exposure in expusures:
+    for exposure in exposures:
         exposure.async_register()
-    return expusures
+    return exposures
 
 
 class KnxExposeTime:
