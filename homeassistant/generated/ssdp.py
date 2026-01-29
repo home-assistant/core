@@ -141,6 +141,12 @@ SSDP = {
             "manufacturer": "Logitech",
         },
     ],
+    "hegel": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "manufacturer": "Hegel",
+        },
+    ],
     "heos": [
         {
             "st": "urn:schemas-denon-com:device:ACT-Denon:1",

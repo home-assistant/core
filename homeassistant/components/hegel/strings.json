@@ -1,0 +1,25 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "no_host_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "discovery_confirm": {
+        "data": {
+          "model": "Model"
+        },
+        "data_description": {
+          "model": "Select your Hegel amplifier model for proper input mapping"
+        },
+        "description": "Discovered Hegel amplifier **{name}** at `{host}`. Confirm the model to complete setup.",
+        "title": "Confirm Hegel amplifier"
+      }
+    }
+  }
+}

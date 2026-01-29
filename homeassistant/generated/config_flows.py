@@ -281,6 +281,7 @@ FLOWS = {
         "hanna",
         "harmony",
         "hdfury",
+        "hegel",
         "heos",
         "here_travel_time",
         "hikvision",
