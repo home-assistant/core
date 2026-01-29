@@ -23,7 +23,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import UnitOfTime
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -32,16 +32,9 @@ from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    ATTR_STOP_ID,
-    CONF_DEPARTURE_TYPE,
-    CONF_DIRECTION,
-    CONF_ROUTE,
-    CONF_STOP_ID,
-    DOMAIN,
-)
+from .const import CONF_DEPARTURE_TYPE, CONF_DIRECTION, CONF_STOP_ID, DOMAIN
 from .coordinator import RejseplanenConfigEntry, RejseplanenDataUpdateCoordinator
-from .entity import RejseplanenEntity
+from .entity import RejseplanenEntity, RejseplanenEntityContext
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,17 +133,6 @@ def _get_delay_minutes(
     return max(0, delay_minutes)
 
 
-def _get_departures_list_attributes(
-    departures: list[Departure], tz: zoneinfo.ZoneInfo
-) -> dict[str, Any]:
-    """Get structured departures data for dashboard display."""
-    current_departures = _get_current_departures(departures, tz)
-
-    return {
-        "total_departures": len(current_departures),
-    }
-
-
 # SENSORS tuple definition
 SENSORS: tuple[RejseplanenSensorEntityDescription, ...] = (
     RejseplanenSensorEntityDescription(
@@ -206,7 +188,6 @@ SENSORS: tuple[RejseplanenSensorEntityDescription, ...] = (
         key="departures",
         translation_key="no_departures",
         value_fn=lambda departures, tz: len(_get_current_departures(departures, tz)),
-        attr_fn=_get_departures_list_attributes,
     ),
 )
 
@@ -272,28 +253,24 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
         entity_description: RejseplanenSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, int(config.data[CONF_STOP_ID]))
+        context = RejseplanenEntityContext(
+            stop_id=config.data[CONF_STOP_ID],
+            name=config.title,
+            subentry_id=config.subentry_id,
+        )
+        super().__init__(coordinator, context)
         self.entity_description = entity_description
 
         self._departure_cleanup_unsubscribe: CALLBACK_TYPE | None = None
         self._last_cleanup_time: datetime | None = None
 
-        self._stop_id = int(config.data[CONF_STOP_ID])
-        self._route = config.data[CONF_ROUTE]
+        self._stop_id = context.stop_id
         self._direction = config.data[CONF_DIRECTION]
         self._departure_type = config.data[CONF_DEPARTURE_TYPE]
-        self._attr_unique_id = f"{config.subentry_id}_{entity_description.key}"
-
+        self._attr_unique_id = f"{context.subentry_id}_{entity_description.key}"
         # Calculate bitflag for filtering
         self._departure_type_bitflag = coordinator.api.calculate_departure_type_bitflag(
             self._departure_type
-        )
-        # Create a device for this configured stop using the configuration
-        # values so the device entry contains useful metadata for the stop.
-        self._attr_device_info = dr.DeviceInfo(
-            identifiers={(DOMAIN, config.subentry_id)},
-            name=config.data.get("name"),
-            manufacturer="Rejseplanen",
         )
 
     async def async_added_to_hass(self) -> None:
@@ -357,26 +334,25 @@ class RejseplanenTransportSensor(RejseplanenEntity, SensorEntity):
         )
         return self.entity_description.value_fn(departures, tz)
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        base_attributes = {ATTR_STOP_ID: self._stop_id}
+    # @property
+    # def extra_state_attributes(self) -> dict[str, Any]:
+    #     """Return the state attributes."""
+    #     base_attributes = {ATTR_STOP_ID: self._stop_id}
 
-        if self.entity_description.attr_fn:
-            departures = self._get_filtered_departures()
-            tz = dt_util.get_time_zone(self.hass.config.time_zone) or zoneinfo.ZoneInfo(
-                "UTC"
-            )
-            additional_attrs = self.entity_description.attr_fn(departures, tz)
-            base_attributes.update(additional_attrs)
+    #     if self.entity_description.attr_fn:
+    #         departures = self._get_filtered_departures()
+    #         tz = dt_util.get_time_zone(self.hass.config.time_zone) or zoneinfo.ZoneInfo(
+    #             "UTC"
+    #         )
+    #         additional_attrs = self.entity_description.attr_fn(departures, tz)
+    #         base_attributes.update(additional_attrs)
 
-        return base_attributes
+    #     return base_attributes
 
     def _get_filtered_departures(self) -> list[Departure]:
         """Get filtered departures based on the configured parameters."""
         return self.coordinator.get_filtered_departures(
             stop_id=self._stop_id,
-            route_filter=self._route if self._route else None,
             direction_filter=self._direction if self._direction else None,
             departure_type_filter=self._departure_type_bitflag,
         )

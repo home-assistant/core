@@ -2,13 +2,25 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import RejseplanenDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class RejseplanenEntityContext:
+    """Context for a Rejseplanen entity."""
+
+    stop_id: int
+    name: str
+    subentry_id: str
 
 
 class RejseplanenEntity(CoordinatorEntity[RejseplanenDataUpdateCoordinator]):
@@ -20,21 +32,16 @@ class RejseplanenEntity(CoordinatorEntity[RejseplanenDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: RejseplanenDataUpdateCoordinator,
-        stop_id: int,
+        context: RejseplanenEntityContext,
     ) -> None:
         """Initialize base entity."""
-        super().__init__(coordinator, context=stop_id)
+        super().__init__(coordinator, context=context)
 
-        self._stop_id = stop_id
+        self._stop_id = context.stop_id
 
-    async def async_added_to_hass(self) -> None:
-        """Handle entity being added to hass."""
-        await super().async_added_to_hass()
-        # Register stop ID with coordinator
-        self.coordinator.add_stop_id(self._stop_id)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Handle removal of the entity from Home Assistant."""
-        await super().async_will_remove_from_hass()
-        # Clean up stop ID from coordinator
-        self.coordinator.remove_stop_id(self._stop_id)
+        # values so the device entry contains useful metadata for the stop.
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, context.subentry_id)},
+            name=context.name,
+            manufacturer="Rejseplanen",
+        )

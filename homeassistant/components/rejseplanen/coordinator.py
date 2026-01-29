@@ -9,14 +9,13 @@ from py_rejseplan.api.departures import DeparturesAPIClient
 from py_rejseplan.dataclasses.departure import Departure
 from py_rejseplan.dataclasses.departure_board import DepartureBoard
 from py_rejseplan.exceptions import APIError, ConnectionError, HTTPError
-from reactivex import throw
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, SCAN_INTERVAL_MINUTES
+from .const import CONF_API_KEY, DOMAIN, SCAN_INTERVAL_MINUTES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,12 +29,10 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
         self,
         hass: HomeAssistant,
         config_entry: RejseplanenConfigEntry,
-        context: object = None,
     ) -> None:
         """Initialize."""
 
-        self.api = DeparturesAPIClient(auth_key=config_entry.data["api_key"])
-        self._stop_ids: set[int] = set()
+        self.api = DeparturesAPIClient(auth_key=config_entry.data[CONF_API_KEY])
         self.last_update_success_time: datetime | None = None
 
         super().__init__(
@@ -60,41 +57,37 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
                 f"Connection error while fetching data: {error}"
             ) from error
         except TypeError as error:
+            stop_ids = {context.stop_id for context in self.async_contexts()}
             raise UpdateFailed(
-                f"Type error fetching data for stop {self._stop_ids}: {error}"
-            ) from error
-        except Exception as error:  # Catch any other unexpected errors
-            raise UpdateFailed(
-                f"Unexpected error fetching data for stop {self._stop_ids}: {error}"
+                f"Type error fetching data for stop {stop_ids}: {error}"
             ) from error
 
         self.last_update_success_time = dt_util.now()
         return board
 
-    def add_stop_id(self, stop_id: int):
-        """Add a stop ID to the coordinator."""
-        self._stop_ids.add(stop_id)
-
-    def remove_stop_id(self, stop_id: int):
-        """Remove a stop ID from the coordinator."""
-        self._stop_ids.discard(stop_id)
-
     def _fetch_data(self) -> DepartureBoard:
         """Fetch data from Rejseplanen API."""
-        if not self._stop_ids:
+        if not self.async_contexts():
             _LOGGER.warning(
                 "No stops registered, Please add a stop through the UI configuration. Data not fetched"
             )
-            throw(UpdateFailed("No stops registered for data fetching."))
-        _LOGGER.debug("Fetching data for stop IDs: %s", self._stop_ids)
+            return DepartureBoard(
+                serverVersion="",
+                dialectVersion="",
+                planRtTs=dt_util.utcnow(),
+                requestId="",
+                technicalMessages=[],
+                departures=[],
+            )
         # Get all departures for this stop
-        departure_board, _ = self.api.get_departures(list(self._stop_ids))
+        stop_ids = {context.stop_id for context in self.async_contexts()}
+        _LOGGER.debug("Fetching data for stop IDs: %s", stop_ids)
+        departure_board, _ = self.api.get_departures(list(stop_ids))
         return departure_board
 
     def get_filtered_departures(
         self: RejseplanenDataUpdateCoordinator,
         stop_id: int,
-        route_filter: list[str] | None = None,
         direction_filter: list[str] | None = None,
         departure_type_filter: int | None = None,
     ) -> list[Departure]:

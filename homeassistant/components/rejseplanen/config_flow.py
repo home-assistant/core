@@ -1,5 +1,7 @@
 """Config flow for Rejseplanen integration."""
 
+from typing import Any
+
 from py_rejseplan.api.departures import DeparturesAPIClient as Rejseplanen
 from py_rejseplan.dataclasses.transport_mappings import DEPARTURE_TYPE_TO_CLASS
 import voluptuous as vol
@@ -11,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -29,7 +31,6 @@ from .const import (
     CONF_DEPARTURE_TYPE,
     CONF_DIRECTION,
     CONF_NAME,
-    CONF_ROUTE,
     CONF_STOP_ID,
     DEFAULT_STOP_NAME,
     DOMAIN,
@@ -70,15 +71,6 @@ CONFIG_STOP_SCHEMA = vol.Schema(
 )
 
 
-def _is_stop_name_already_configured(hass: HomeAssistant, new_data: str) -> bool:
-    """Check if the stop name is already configured."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        for subentry in entry.subentries.values():
-            if subentry.title.lower() == new_data.lower():
-                return True
-    return False
-
-
 class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle configflow for Rejseplanen integration."""
 
@@ -95,11 +87,11 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self,
-        user_input: dict[str, str] | None = None,
+        user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle the initial step of the config flow."""
 
-        self._async_abort_entries_match()
+        self._async_abort_entries_match(user_input)
 
         if user_input is None:
             return self.async_show_form(
@@ -110,7 +102,6 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         auth_key = user_input[CONF_API_KEY]
-        # api = Rejseplanen(base_url="https://www.rejseplanen.dk/api/", auth_key=auth_key)
         api = Rejseplanen(auth_key=auth_key)
 
         try:
@@ -139,23 +130,20 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
 class RejseplanenSubentryStopFlow(ConfigSubentryFlow):
     """Handle subentry flow for Rejseplanen stops."""
 
-    async def async_step_stop(
+    async def async_step_user(
         self,
-        user_input: dict[str, str] | None = None,
+        user_input: dict[str, Any] | None = None,
     ) -> SubentryFlowResult:
         """Handle the stop subentry step."""
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            stop_id = int(user_input[CONF_STOP_ID])
+            stop_id = user_input[CONF_STOP_ID]
             name = user_input[CONF_NAME]
-
-            if _is_stop_name_already_configured(self.hass, name):
-                errors["base"] = "stop_name_already_configured"
 
             if errors:
                 return self.async_show_form(
-                    step_id="stop",
+                    step_id="user",
                     data_schema=self.add_suggested_values_to_schema(
                         CONFIG_STOP_SCHEMA, user_input
                     ),
@@ -176,13 +164,9 @@ class RejseplanenSubentryStopFlow(ConfigSubentryFlow):
                     CONF_NAME: name,
                     CONF_DEPARTURE_TYPE: departure_types,
                     CONF_DIRECTION: user_input.get(CONF_DIRECTION, []),
-                    CONF_ROUTE: user_input.get(CONF_ROUTE, []),
                 },
             )
-        user_input = {}
         return self.async_show_form(
-            step_id="stop",
+            step_id="user",
             data_schema=CONFIG_STOP_SCHEMA,
         )
-
-    async_step_user = async_step_stop
