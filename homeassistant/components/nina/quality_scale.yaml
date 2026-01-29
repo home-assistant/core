@@ -1,19 +1,13 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: |
-      This integration does not provide additional actions.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: |
-      This integration does not provide additional actions.
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -29,10 +23,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: |
-      This integration does not provide additional actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -62,7 +53,7 @@ rules:
   docs-supported-devices:
     status: exempt
     comment: |
-      This integration exposes Home Assistant devices only for logical grouping and does not integrate specific physical devices that need to be documented as supported hardware.
+      This integration does not use devices.
   docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
@@ -72,7 +63,7 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
