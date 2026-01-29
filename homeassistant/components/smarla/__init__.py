@@ -3,7 +3,7 @@
 from pysmarlaapi import Connection, Federwiege
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
@@ -14,7 +14,9 @@ type FederwiegeConfigEntry = ConfigEntry[Federwiege]
 
 async def async_setup_entry(hass: HomeAssistant, entry: FederwiegeConfigEntry) -> bool:
     """Set up this integration using UI."""
-    connection = Connection(HOST, token_b64=entry.data[CONF_ACCESS_TOKEN])
+    connection = Connection(
+        entry.data.get(CONF_HOST, HOST), token_b64=entry.data[CONF_ACCESS_TOKEN]
+    )
 
     # Check if token still has access
     if not await connection.refresh_token():

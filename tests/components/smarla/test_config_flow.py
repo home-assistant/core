@@ -19,7 +19,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     """Test creating a config entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -44,7 +44,7 @@ async def test_malformed_token(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_USER},
+            context={"source": SOURCE_USER, "show_advanced_options": True},
             data=MOCK_USER_INPUT,
         )
 
@@ -68,7 +68,7 @@ async def test_invalid_auth(hass: HomeAssistant, mock_connection: MagicMock) -> 
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_USER},
+            context={"source": SOURCE_USER, "show_advanced_options": True},
             data=MOCK_USER_INPUT,
         )
 
@@ -93,7 +93,7 @@ async def test_device_exists_abort(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
         data=MOCK_USER_INPUT,
     )
 

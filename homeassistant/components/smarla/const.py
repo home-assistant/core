@@ -5,6 +5,7 @@ from homeassistant.const import Platform
 DOMAIN = "smarla"
 
 HOST = "https://devices.swing2sleep.de"
+HOST_DEV = "https://federwiege-dev.explicatis.com"
 
 PLATFORMS = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
