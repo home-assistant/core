@@ -107,8 +107,7 @@ CONFIG_SCHEMA = vol.Schema(
 class LovelaceData:
     """Dataclass to store information in hass.data."""
 
-    mode: str  # Kept for backward compatibility
-    resource_mode: str  # The actual mode used for resources (yaml or storage)
+    resource_mode: str  # The mode used for resources (yaml or storage)
     dashboards: dict[str | None, dashboard.LovelaceConfig]
     resources: resources.ResourceYAMLCollection | resources.ResourceStorageCollection
     yaml_dashboards: dict[str | None, ConfigType]
@@ -215,8 +214,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _async_create_yaml_mode_repair(hass)
 
     hass.data[LOVELACE_DATA] = LovelaceData(
-        mode=MODE_STORAGE,  # Kept for backward compatibility
-        resource_mode=resource_mode,  # The actual mode used for resources
+        resource_mode=resource_mode,
         # We store a dictionary mapping url_path: config. None is the default.
         dashboards={None: default_config},
         resources=resource_collection,
