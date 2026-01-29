@@ -1,6 +1,6 @@
 """Test Roborock Image platform."""
 
-import copy
+from copy import deepcopy
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -150,7 +150,7 @@ async def test_map_status_change(
     fake_vacuum.v1_properties.home.home_map_content = {
         0: MapContent(
             image_content=b"\x89PNG-003",
-            map_data=copy.deepcopy(MAP_DATA),
+            map_data=deepcopy(MAP_DATA),
         )
     }
 
@@ -221,3 +221,90 @@ async def test_image_entity_naming(
     assert {
         state.entity_id for state in hass.states.async_all("image")
     } == expected_entity_ids
+
+
+async def test_coordinator_update_no_image_change_no_state_write(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that state is not written when coordinator updates but image hasn't changed.
+
+    This means no state_changed event is fired, and therefore no logbook entry is created,
+    which prevents Activity spam during vacuum cleaning sessions.
+    """
+    entity_id = "image.roborock_s7_maxv_upstairs"
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    # Get the initial last_updated timestamp
+    initial_last_updated = state.last_updated
+    initial_last_changed = state.last_changed
+
+    # Trigger a coordinator update WITHOUT changing the image
+    assert fake_vacuum.v1_properties is not None
+    fake_vacuum.v1_properties.status.in_cleaning = 1
+
+    # Use 91 seconds to exceed the 90-second cleaning interval
+    now = dt_util.utcnow() + timedelta(seconds=91)
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
+        ),
+    ):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+    # State should NOT have been written since image didn't change
+    new_state = hass.states.get(entity_id)
+    assert new_state is not None
+    # last_updated and last_changed should remain the same
+    assert new_state.last_updated == initial_last_updated
+    assert new_state.last_changed == initial_last_changed
+
+
+async def test_coordinator_update_with_image_change_writes_state(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that state IS written when coordinator updates and image has changed."""
+    entity_id = "image.roborock_s7_maxv_upstairs"
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    # Get the initial last_updated timestamp
+    initial_last_updated = state.last_updated
+    initial_last_changed = state.last_changed
+
+    # Trigger a coordinator update WITH changing the image
+    assert fake_vacuum.v1_properties is not None
+    assert fake_vacuum.v1_properties.home is not None
+    fake_vacuum.v1_properties.status.in_cleaning = 1
+    # Update the image in home_map_content (which is what the image entity reads from)
+    fake_vacuum.v1_properties.home.home_map_content = {
+        map_flag: MapContent(
+            image_content=b"\x89PNG-NEW",
+            map_data=deepcopy(MAP_DATA),
+        )
+        for map_flag in fake_vacuum.v1_properties.home.home_map_content or {}
+    }
+
+    # Use 91 seconds to exceed the 90-second cleaning interval
+    now = dt_util.utcnow() + timedelta(seconds=91)
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.dt_util.utcnow",
+            return_value=now,
+        ),
+    ):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+    # State SHOULD have been written since image changed
+    new_state = hass.states.get(entity_id)
+    assert new_state is not None
+    # last_updated should be newer
+    assert new_state.last_updated > initial_last_updated
+    assert new_state.last_changed > initial_last_changed

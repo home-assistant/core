@@ -12,6 +12,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
@@ -77,6 +78,9 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass load any previously cached maps from disk."""
         await super().async_added_to_hass()
+        # Initialize cached_map to the current image content
+        if (map_content := self._map_content) is not None:
+            self.cached_map = map_content.image_content
         self._attr_image_last_updated = self.coordinator.last_home_update
         self.async_write_ha_state()
 
@@ -97,9 +101,8 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
             return
         if self.cached_map != map_content.image_content:
             self.cached_map = map_content.image_content
-            self._attr_image_last_updated = self.coordinator.last_home_update
-
-        super()._handle_coordinator_update()
+            self._attr_image_last_updated = dt_util.utcnow()
+            super()._handle_coordinator_update()
 
     async def async_image(self) -> bytes | None:
         """Get the cached image."""
