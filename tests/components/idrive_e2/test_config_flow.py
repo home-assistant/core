@@ -99,24 +99,19 @@ async def _async_start_flow(
         flow.hass = hass
         return await flow.async_step_user()
 
-    # Instantiate the flow directly
     if user_input is None:
         user_input = USER_INPUT
+
     flow = IDriveE2ConfigFlow()
     flow.hass = hass
     selected = bucket or user_input[CONF_BUCKET]
 
-    # Determine whether the injected exception should be raised by the bucket step
-    is_bucket_exception = isinstance(
-        exception, (EndpointConnectionError, ValueError, ClientError)
-    )
-
     # Patch the aiohttp session used by the IDriveE2Client
     mock_session = AsyncMock()
 
-    # Patch the IDriveE2Client
+    # Patch IDriveE2Client
     mock_client = AsyncMock()
-    if exception is not None and not is_bucket_exception:
+    if isinstance(exception, (InvalidAuth, CannotConnect)):
         mock_client.get_region_endpoint = AsyncMock(side_effect=exception)
     else:
         mock_client.get_region_endpoint = AsyncMock(
@@ -125,7 +120,7 @@ async def _async_start_flow(
 
     # Patch _list_buckets
     mock_list_buckets = AsyncMock()
-    if is_bucket_exception and exception is not None:
+    if isinstance(exception, (ClientError, ValueError, EndpointConnectionError)):
         mock_list_buckets.side_effect = exception
     else:
         mock_list_buckets.return_value = [selected]
@@ -144,7 +139,7 @@ async def _async_start_flow(
             new=mock_list_buckets,
         ),
     ):
-        # Step user: submit credentials
+        # Step user: Submit credentials
         result = await flow.async_step_user(
             {
                 "access_key_id": user_input["access_key_id"],
@@ -152,22 +147,21 @@ async def _async_start_flow(
             }
         )
 
-        # If the error is from bucket listing, the flow returns to the user form
-        if is_bucket_exception:
+        # If we injected an exception, the flow should already have returned the user form.
+        if exception is not None:
             return result
 
-        # No exception: proceed into the bucket step and submit selection
-        if exception is None:
-            assert result.get("type") is FlowResultType.FORM
-            assert result.get("step_id") == "bucket"
-            try:
-                return await flow.async_step_bucket({CONF_BUCKET: selected})
-            except Exception as err:
-                if isinstance(err, AbortFlow):
-                    return flow.async_abort(reason=err.reason)
-                raise
+        # Success path: user step returns the bucket form (because it calls async_step_bucket())
+        assert result.get("type") is FlowResultType.FORM
+        assert result.get("step_id") == "bucket"
 
-        return result
+        # Submit bucket choice
+        try:
+            return await flow.async_step_bucket({CONF_BUCKET: selected})
+        except Exception as err:
+            if isinstance(err, AbortFlow):
+                return flow.async_abort(reason=err.reason)
+            raise
 
 
 async def test_flow(hass: HomeAssistant) -> None:
@@ -194,7 +188,7 @@ async def test_flow(hass: HomeAssistant) -> None:
         ),
     ],
 )
-async def test_flow_bucket_step_errors(
+async def test_flow_user_step_errors(
     hass: HomeAssistant,
     exception: Exception,
     errors: dict[str, str],

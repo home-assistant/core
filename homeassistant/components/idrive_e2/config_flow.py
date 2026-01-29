@@ -60,6 +60,7 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
     _access_key: str
     _secret_key: str
     _endpoint_url: str
+    _buckets: list[str]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -69,31 +70,42 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             session = async_get_clientsession(self.hass)
             client = IDriveE2Client(session)
+
             try:
                 endpoint = await client.get_region_endpoint(
                     user_input[CONF_ACCESS_KEY_ID]
                 )
-            except InvalidAuth:
+                # Get the list of buckets belonging to the provided credentials
+                buckets = await _list_buckets(
+                    endpoint,
+                    user_input[CONF_ACCESS_KEY_ID],
+                    user_input[CONF_SECRET_ACCESS_KEY],
+                )
+            except (InvalidAuth, ClientError):
                 errors["base"] = "invalid_credentials"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except ValueError:
+                errors["base"] = "invalid_endpoint_url"
+            except ConnectionError:
+                errors["base"] = "cannot_connect"
 
-            if not errors:
-                # Process to the next step (select bucket)
-                self._access_key = user_input[CONF_ACCESS_KEY_ID]
-                self._secret_key = user_input[CONF_SECRET_ACCESS_KEY]
-                self._endpoint_url = endpoint
-                return await self.async_step_bucket()
+            if errors:
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=self.add_suggested_values_to_schema(
+                        STEP_USER_DATA_SCHEMA, user_input
+                    ),
+                    errors=errors,
+                )
 
-            # Show the userform with the entered data and errors
-            # Prefill the access key and secret key fields with the previous values
-            return self.async_show_form(
-                step_id="user",
-                data_schema=self.add_suggested_values_to_schema(
-                    STEP_USER_DATA_SCHEMA, user_input
-                ),
-                errors=errors,
-            )
+            # Store validated data for the next step
+            self._access_key = user_input[CONF_ACCESS_KEY_ID]
+            self._secret_key = user_input[CONF_SECRET_ACCESS_KEY]
+            self._endpoint_url = endpoint
+            self._buckets = buckets
+
+            return await self.async_step_bucket()
 
         return self.async_show_form(
             step_id="user",
@@ -104,15 +116,8 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_bucket(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Second step: list buckets and let user select from dropdown."""
-        errors: dict[str, str] = {}
-
-        # Make sure that the bucket step is only executed after
-        # the endpoint_url is determined in the user step
-        if not hasattr(self, "_endpoint_url"):
-            return await self.async_step_user()
-
-        if user_input:
+        """Second step: list preloaded buckets and let user select from dropdown."""
+        if user_input is not None:
             # Check if the entry already exists to avoid duplicates
             self._async_abort_entries_match(
                 {
@@ -131,34 +136,11 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        # Information should be available from the previous step
-        try:
-            # List buckets using the provided credentials
-            buckets = await _list_buckets(
-                self._endpoint_url,
-                self._access_key,
-                self._secret_key,
-            )
-        except ClientError:
-            errors["base"] = "invalid_credentials"
-        except ValueError:
-            errors["base"] = "invalid_endpoint_url"
-        except ConnectionError:
-            errors["base"] = "cannot_connect"
-
-        if errors:
-            # Go back to the user step if there are errors getting buckets
-            # Prefill the access key and secret key fields with the current values
-            suggested = {
-                CONF_ACCESS_KEY_ID: self._access_key,
-                CONF_SECRET_ACCESS_KEY: self._secret_key,
-            }
+        # Make sure that the bucket step is only executed after
+        # the buckets are determined in the user step
+        if not hasattr(self, "_buckets"):
             return self.async_show_form(
-                step_id="user",
-                data_schema=self.add_suggested_values_to_schema(
-                    STEP_USER_DATA_SCHEMA, suggested
-                ),
-                errors=errors,
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
         # Show the bucket selection form with a dropdown selector
@@ -168,7 +150,7 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_BUCKET): SelectSelector(
                         config=SelectSelectorConfig(
-                            options=buckets, mode=SelectSelectorMode.DROPDOWN
+                            options=self._buckets, mode=SelectSelectorMode.DROPDOWN
                         )
                     )
                 }
