@@ -5,8 +5,9 @@ from typing import Any, Final
 import aiohttp
 from lunatone_rest_api_client import Auth, Info
 from lunatone_rest_api_client.discovery import (
+    Feature,
     LunatoneDiscoveryInfo,
-    async_discover_devices,
+    async_discover_devices_stream,
 )
 import voluptuous as vol
 
@@ -43,7 +44,12 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        self._discovered_devices = await async_discover_devices(self.hass.loop)
+        self._discovered_devices = [
+            device
+            async for device in async_discover_devices_stream(
+                self.hass.loop, filter_feature=Feature.REST_API
+            )
+        ]
         if not self._discovered_devices:
             return await self.async_step_url_input()
         return await self.async_step_select_device()
