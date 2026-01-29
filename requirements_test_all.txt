@@ -2723,6 +2723,9 @@ xknxproject==3.8.2
 # homeassistant.components.zestimate
 xmltodict==1.0.2
 
+# homeassistant.components.webex_ce
+xows==1.0.5
+
 # homeassistant.components.yale_smart_alarm
 yalesmartalarmclient==0.4.3
 

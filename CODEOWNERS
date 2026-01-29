@@ -1841,6 +1841,8 @@ build.json @home-assistant/supervisor
 /tests/components/web_rtc/ @home-assistant/core
 /homeassistant/components/webdav/ @jpbede
 /tests/components/webdav/ @jpbede
+/homeassistant/components/webex_ce/ @Simeon26
+/tests/components/webex_ce/ @Simeon26
 /homeassistant/components/webhook/ @home-assistant/core
 /tests/components/webhook/ @home-assistant/core
 /homeassistant/components/webmin/ @autinerd

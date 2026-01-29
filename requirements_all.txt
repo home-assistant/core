@@ -3244,6 +3244,9 @@ xknxproject==3.8.2
 # homeassistant.components.zestimate
 xmltodict==1.0.2
 
+# homeassistant.components.webex_ce
+xows==1.0.5
+
 # homeassistant.components.xs1
 xs1-api-client==3.0.0
 

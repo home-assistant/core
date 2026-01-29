@@ -770,6 +770,7 @@ FLOWS = {
         "weatherflow_cloud",
         "weatherkit",
         "webdav",
+        "webex_ce",
         "webmin",
         "webostv",
         "weheat",
