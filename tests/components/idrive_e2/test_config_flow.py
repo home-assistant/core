@@ -8,12 +8,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from botocore.exceptions import EndpointConnectionError
 from idrive_e2 import CannotConnect, InvalidAuth
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.idrive_e2 import ClientError
 from homeassistant.components.idrive_e2.config_flow import (
     CONF_ACCESS_KEY_ID,
     IDriveE2ConfigFlow,
-    _list_buckets,
+    SelectSelector,
 )
 from homeassistant.components.idrive_e2.const import (
     CONF_BUCKET,
@@ -104,44 +105,6 @@ async def _submit_bucket(hass: HomeAssistant, flow_id: str, bucket: str) -> dict
     )
 
 
-async def test_list_buckets_success(mock_aiobotocore_s3_client: AsyncMock) -> None:
-    """Test _list_buckets returns bucket names."""
-    mock_aiobotocore_s3_client.list_buckets.return_value = {
-        "Buckets": [{"Name": "bucket1"}, {"Name": "bucket2"}]
-    }
-
-    buckets = await _list_buckets(
-        USER_INPUT[CONF_ENDPOINT_URL],
-        USER_INPUT[CONF_ACCESS_KEY_ID],
-        USER_INPUT[CONF_SECRET_ACCESS_KEY],
-    )
-    assert buckets == ["bucket1", "bucket2"]
-
-
-async def test_list_buckets_empty(mock_aiobotocore_s3_client: AsyncMock) -> None:
-    """Test _list_buckets returns empty list if no buckets."""
-    mock_aiobotocore_s3_client.list_buckets.return_value = {"Buckets": []}
-
-    buckets = await _list_buckets(
-        USER_INPUT[CONF_ENDPOINT_URL],
-        USER_INPUT[CONF_ACCESS_KEY_ID],
-        USER_INPUT[CONF_SECRET_ACCESS_KEY],
-    )
-    assert buckets == []
-
-
-async def test_list_buckets_missing_name(mock_aiobotocore_s3_client: AsyncMock) -> None:
-    """Test _list_buckets skips buckets without Name."""
-    mock_aiobotocore_s3_client.list_buckets.return_value = {"Buckets": [{}]}
-
-    buckets = await _list_buckets(
-        USER_INPUT[CONF_ENDPOINT_URL],
-        USER_INPUT[CONF_ACCESS_KEY_ID],
-        USER_INPUT[CONF_SECRET_ACCESS_KEY],
-    )
-    assert buckets == []
-
-
 async def test_flow(
     hass: HomeAssistant,
     mock_idrive_client: AsyncMock,
@@ -181,7 +144,7 @@ async def test_flow(
         ),
     ],
 )
-async def test_flow_bucket_listing_errors(
+async def test_flow_list_buckets_errors(
     hass: HomeAssistant,
     mock_idrive_client: AsyncMock,
     mock_list_buckets: AsyncMock,
@@ -200,6 +163,60 @@ async def test_flow_bucket_listing_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == errors
+
+
+async def test_flow_no_buckets(
+    hass: HomeAssistant,
+    mock_idrive_client: AsyncMock,
+    mock_aiobotocore_s3_client: AsyncMock,
+) -> None:
+    """Test we show an error when no buckets are returned."""
+    result = await _start_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
+    mock_aiobotocore_s3_client.list_buckets.return_value = {"Buckets": []}
+
+    result = await _submit_user(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "no_buckets"}
+
+
+async def test_flow_bucket_step_options_from_s3_list_buckets(
+    hass: HomeAssistant,
+    mock_idrive_client: AsyncMock,
+    mock_aiobotocore_s3_client: AsyncMock,
+) -> None:
+    """Test bucket step shows dropdown options coming from S3 list_buckets()."""
+    # Start flow
+    result = await _start_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # User step: endpoint lookup succeeds
+    mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
+
+    # S3 list_buckets returns our parametrized payload
+    mock_aiobotocore_s3_client.list_buckets.return_value = {
+        "Buckets": [{"Name": "bucket1"}, {"Name": "bucket2"}]
+    }
+
+    # Submit credentials
+    result = await _submit_user(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bucket"
+
+    # Extract dropdown options from selector in schema
+    schema = result["data_schema"].schema
+    selector = schema[vol.Required(CONF_BUCKET)]
+    assert isinstance(selector, SelectSelector)
+
+    cfg = selector.config
+    options = cfg["options"] if isinstance(cfg, dict) else cfg.options
+
+    assert options == ["bucket1", "bucket2"]
 
 
 @pytest.mark.parametrize(

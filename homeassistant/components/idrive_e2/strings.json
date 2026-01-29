@@ -1,6 +1,28 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:component::idrive_e2::exceptions::cannot_connect::message%]",
+      "invalid_credentials": "[%key:component::idrive_e2::exceptions::invalid_credentials::message%]",
+      "invalid_endpoint_url": "[%key:component::idrive_e2::exceptions::invalid_endpoint_url::message%]"
+    },
+    "error": {
+      "bucket_not_found": "[%key:component::idrive_e2::exceptions::bucket_not_found::message%]",
+      "cannot_connect": "[%key:component::idrive_e2::exceptions::cannot_connect::message%]",
+      "invalid_credentials": "[%key:component::idrive_e2::exceptions::invalid_credentials::message%]",
+      "invalid_endpoint_url": "[%key:component::idrive_e2::exceptions::invalid_endpoint_url::message%]",
+      "no_buckets": "[%key:component::idrive_e2::exceptions::no_buckets::message%]"
+    },
     "step": {
+      "bucket": {
+        "data": {
+          "bucket": "Bucket name"
+        },
+        "data_description": {
+          "bucket": "The name of the bucket to store the Home Assistant backups in."
+        },
+        "title": "Select IDrive e2 bucket"
+      },
       "user": {
         "data": {
           "access_key_id": "Access key ID",
@@ -11,41 +33,24 @@
           "secret_access_key": "Secret access key to connect to IDrive e2 API"
         },
         "title": "Add IDrive e2"
-      },
-      "bucket": {
-        "data": {
-          "bucket": "Bucket name"
-        },
-        "data_description": {
-          "bucket": "The name of the bucket to store the Home Assistant backups in."
-        },
-        "title": "Select IDrive e2 bucket"
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:component::idrive_e2::exceptions::cannot_connect::message%]",
-      "invalid_credentials": "[%key:component::idrive_e2::exceptions::invalid_credentials::message%]",
-      "invalid_endpoint_url": "[%key:component::idrive_e2::exceptions::invalid_endpoint_url::message%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:component::idrive_e2::exceptions::cannot_connect::message%]",
-      "invalid_credentials": "[%key:component::idrive_e2::exceptions::invalid_credentials::message%]",
-      "invalid_endpoint_url": "[%key:component::idrive_e2::exceptions::invalid_endpoint_url::message%]"
     }
   },
   "exceptions": {
-    "cannot_connect": {
-      "message": "Cannot connect to endpoint"
-    },
     "bucket_not_found": {
       "message": "Bucket \"{bucket}\" does not exist. Please recreate this bucket in IDrive e2 before continuing."
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to endpoint"
     },
     "invalid_credentials": {
       "message": "Bucket cannot be accessed using provided combination of access key ID and secret access key."
     },
     "invalid_endpoint_url": {
       "message": "Invalid endpoint URL. Please make sure it's a valid IDrive e2 endpoint URL."
+    },
+    "no_buckets": {
+      "message": "No buckets were found for the provided credentials. Create a bucket in IDrive e2 first, then try again."
     }
   }
 }
