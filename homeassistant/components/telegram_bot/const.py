@@ -13,6 +13,7 @@ SUBENTRY_TYPE_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
 
+CONF_API_ENDPOINT = "api_endpoint"
 CONF_PROXY_URL = "proxy_url"
 CONF_TRUSTED_NETWORKS = "trusted_networks"
 
@@ -23,6 +24,7 @@ BOT_NAME = "telegram_bot"
 ERROR_FIELD = "error_field"
 ERROR_MESSAGE = "error_message"
 
+DEFAULT_API_ENDPOINT = "https://api.telegram.org"
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
 SERVICE_SEND_CHAT_ACTION = "send_chat_action"

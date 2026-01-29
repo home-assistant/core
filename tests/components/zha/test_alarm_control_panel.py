@@ -60,8 +60,8 @@ async def test_alarm_control_panel(
     zigpy_device = zigpy_device_mock(
         {
             1: {
-                SIG_EP_INPUT: [security.IasAce.cluster_id],
-                SIG_EP_OUTPUT: [],
+                SIG_EP_INPUT: [],
+                SIG_EP_OUTPUT: [security.IasAce.cluster_id],
                 SIG_EP_TYPE: zha.DeviceType.IAS_ANCILLARY_CONTROL,
                 SIG_EP_PROFILE: zha.PROFILE_ID,
             }
@@ -75,7 +75,7 @@ async def test_alarm_control_panel(
 
     zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
     entity_id = find_entity_id(Platform.ALARM_CONTROL_PANEL, zha_device_proxy, hass)
-    cluster = zigpy_device.endpoints[1].ias_ace
+    cluster = zigpy_device.endpoints[1].out_clusters[security.IasAce.cluster_id]
     assert entity_id is not None
 
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
