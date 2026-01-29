@@ -140,29 +140,31 @@ class ONVIFRelaySwitch(ONVIFBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
+        previous_state = self._attr_is_on
         try:
             await self.device.async_set_relay_output_state(
                 self._relay_token, "active"
             )
             self._attr_is_on = True
             self.async_write_ha_state()
-        except ONVIFError:
-            # Revert optimistic state update on error
-            self._attr_is_on = False
+        except Exception:
+            # Revert to previous state on error
+            self._attr_is_on = previous_state
             self.async_write_ha_state()
             raise
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
+        previous_state = self._attr_is_on
         try:
             await self.device.async_set_relay_output_state(
                 self._relay_token, "inactive"
             )
             self._attr_is_on = False
             self.async_write_ha_state()
-        except ONVIFError:
-            # Revert optimistic state update on error
-            self._attr_is_on = True
+        except Exception:
+            # Revert to previous state on error
+            self._attr_is_on = previous_state
             self.async_write_ha_state()
             raise
 
