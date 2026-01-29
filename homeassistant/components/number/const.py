@@ -86,6 +86,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `g/m³`, `mg/m³`
     """
 
+    AMMONIA = "ammonia"
+    """Amount of NH3.
+
+    Unit of measurement: `ppb` (parts per billion), `μg/m³`
+    """
+
     APPARENT_POWER = "apparent_power"
     """Apparent power.
 
@@ -475,6 +481,10 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.ABSOLUTE_HUMIDITY: {
         CONCENTRATION_GRAMS_PER_CUBIC_METER,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    },
+    NumberDeviceClass.AMMONIA: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     NumberDeviceClass.AQI: {None},

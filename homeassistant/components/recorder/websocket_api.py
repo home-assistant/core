@@ -18,6 +18,7 @@ from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    AmmoniaConcentrationConverter,
     ApparentPowerConverter,
     AreaConverter,
     BloodGlucoseConcentrationConverter,
@@ -72,6 +73,7 @@ UPDATE_STATISTICS_METADATA_TIME_OUT = 10
 
 UNIT_SCHEMA = vol.Schema(
     {
+        vol.Optional("ammonia"): vol.In(AmmoniaConcentrationConverter.VALID_UNITS),
         vol.Optional("apparent_power"): vol.In(ApparentPowerConverter.VALID_UNITS),
         vol.Optional("area"): vol.In(AreaConverter.VALID_UNITS),
         vol.Optional("blood_glucose_concentration"): vol.In(

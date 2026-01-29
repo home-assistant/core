@@ -6,6 +6,9 @@
     "absolute_humidity": {
       "default": "mdi:water-opacity"
     },
+    "ammonia": {
+      "default": "mdi:molecule"
+    },
     "apparent_power": {
       "default": "mdi:flash"
     },
