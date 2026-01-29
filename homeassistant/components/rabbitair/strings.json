@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_device_mismatch": "Host does not match the RabbitAir device.",
+      "reconfigure_successful": "Reconfiguration successful"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
