@@ -54,7 +54,9 @@ rules:
   dynamic-devices: todo
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: exempt
+  entity-disabled-by-default: 
+    status: exempt
+    comment: Only essential entities
   entity-translations: done
   exception-translations: todo
   icon-translations: done

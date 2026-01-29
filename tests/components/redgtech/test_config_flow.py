@@ -40,7 +40,7 @@ async def test_user_step_errors(
         DOMAIN, context={"source": "user"}, data=user_input
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
     mock_redgtech_api.login.assert_called_once_with(TEST_EMAIL, TEST_PASSWORD)
 
@@ -117,7 +117,7 @@ async def test_user_step_error_recovery(
         DOMAIN, context={"source": "user"}, data=user_input
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
     # Verify login was called at least once for the first attempt
     assert mock_redgtech_api.login.call_count >= 1
@@ -130,7 +130,7 @@ async def test_user_step_error_recovery(
         result["flow_id"], user_input=user_input
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_EMAIL
     assert result["data"] == user_input
     # Verify login was called again for the second attempt (recovery)
