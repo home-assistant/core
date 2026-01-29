@@ -50,9 +50,9 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.loop, filter_feature=Feature.REST_API
             )
         ]
-        if not self._discovered_devices:
-            return await self.async_step_url_input()
-        return await self.async_step_select_device()
+        if self._discovered_devices:
+            return await self.async_step_select_device()
+        return await self.async_step_url_input()
 
     async def async_step_select_device(
         self, user_input: dict[str, Any] | None = None
