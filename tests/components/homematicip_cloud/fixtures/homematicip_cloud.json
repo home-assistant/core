@@ -34,7 +34,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000042"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000042"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -70,7 +72,9 @@
           "deviceId": "3014F7110000RAIN_SENSOR",
           "functionalChannelType": "RAIN_DETECTION_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000043"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000043"
+          ],
           "index": 1,
           "label": "",
           "rainSensorSensitivity": 50.0,
@@ -1835,7 +1839,9 @@
           "frostProtectionTemperature": 8.0,
           "functionalChannelType": "DEVICE_BASE_FLOOR_HEATING",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000005"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000005"
+          ],
           "heatingEmergencyValue": 0.05,
           "index": 0,
           "label": "",
@@ -1970,7 +1976,9 @@
           "deviceId": "3014F7110000000000000049",
           "functionalChannelType": "DEHUMIDIFIER_DEMAND_CHANNEL",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000060"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000060"
+          ],
           "index": 14,
           "label": ""
         },
@@ -2134,7 +2142,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000039"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000039"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -2604,7 +2614,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000034"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000034"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -2694,7 +2706,9 @@
           "deviceId": "3014F7110000000000BCBB11",
           "functionalChannelType": "SWITCH_CHANNEL",
           "groupIndex": 2,
-          "groups": ["00000000-0000-0000-0000-000000000038"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000038"
+          ],
           "index": 2,
           "label": "",
           "on": false,
@@ -2728,7 +2742,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000027"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000027"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -2814,7 +2830,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_SABOTAGE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000010"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000010"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -2830,7 +2848,9 @@
           "deviceId": "3014F71100000000ABCDEF10",
           "functionalChannelType": "HEATING_THERMOSTAT_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000013"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000013"
+          ],
           "index": 1,
           "label": "",
           "setPointTemperature": 21.0,
@@ -2876,7 +2896,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000012"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000012"
+          ],
           "index": 0,
           "label": "",
           "lockJammed": null,
@@ -2928,7 +2950,9 @@
           "deviceId": "3014F7110000000000000E70",
           "functionalChannelType": "HEATING_THERMOSTAT_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000013"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000013"
+          ],
           "index": 1,
           "label": "",
           "setPointTemperature": 19.0,
@@ -3155,7 +3179,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000034"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000034"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -3173,7 +3199,9 @@
           "display": "SETPOINT",
           "functionalChannelType": "WALL_MOUNTED_THERMOSTAT_PRO_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000035"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000035"
+          ],
           "humidity": 40,
           "index": 1,
           "label": "",
@@ -3187,7 +3215,9 @@
           "frostProtectionTemperature": 8.0,
           "functionalChannelType": "INTERNAL_SWITCH_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000035"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000035"
+          ],
           "heatingValveType": "NORMALLY_CLOSE",
           "index": 2,
           "internalSwitchOutputEnabled": true,
@@ -3222,7 +3252,9 @@
           "dutyCycle": null,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000033"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000033"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -3384,7 +3416,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000007"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000007"
+          ],
           "index": 0,
           "label": "",
           "lockJammed": null,
@@ -3475,7 +3509,9 @@
           "dimLevel": 0.0,
           "functionalChannelType": "NOTIFICATION_LIGHT_CHANNEL",
           "groupIndex": 2,
-          "groups": ["00000000-0000-0000-0000-000000000021"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000021"
+          ],
           "index": 2,
           "label": "Led Unten",
           "on": false,
@@ -3493,7 +3529,9 @@
           "dimLevel": 0.25,
           "functionalChannelType": "NOTIFICATION_LIGHT_CHANNEL",
           "groupIndex": 3,
-          "groups": ["00000000-0000-0000-0000-000000000021"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000021"
+          ],
           "index": 3,
           "label": "Led Oben",
           "on": true,
@@ -3584,7 +3622,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_SABOTAGE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000053"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000053"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -3600,7 +3640,9 @@
           "deviceId": "3014F7110000000000000054",
           "functionalChannelType": "PASSAGE_DETECTOR_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000055"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000055"
+          ],
           "index": 1,
           "label": "",
           "leftCounter": 966,
@@ -3638,7 +3680,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_PERMANENT_FULL_RX",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000010"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000010"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -3689,7 +3733,7 @@
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711000000000AAAAA25",
-      "label": "Bewegungsmelder für 55er Rahmen – innen",
+      "label": "Bewegungsmelder f\u00fcr 55er Rahmen \u2013 innen",
       "lastStatusUpdate": 1546776387401,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -3751,7 +3795,7 @@
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000038",
-      "label": "Weather Sensor – plus",
+      "label": "Weather Sensor \u2013 plus",
       "lastStatusUpdate": 1546789939739,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -3778,7 +3822,9 @@
           "functionalChannelType": "DEVICE_GLOBAL_PUMP_CONTROL",
           "globalPumpControl": true,
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000007"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000007"
+          ],
           "heatingEmergencyValue": 0.25,
           "heatingLoadType": "LOAD_BALANCING",
           "heatingValveType": "NORMALLY_CLOSE",
@@ -3810,7 +3856,9 @@
           "deviceId": "3014F7110000000000BBBBB1",
           "functionalChannelType": "FLOOR_TERMINAL_BLOCK_CHANNEL",
           "groupIndex": 2,
-          "groups": ["00000000-0000-0000-0000-000000000008"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000008"
+          ],
           "index": 2,
           "label": ""
         },
@@ -3818,7 +3866,9 @@
           "deviceId": "3014F7110000000000BBBBB1",
           "functionalChannelType": "FLOOR_TERMINAL_BLOCK_CHANNEL",
           "groupIndex": 3,
-          "groups": ["00000000-0000-0000-0000-000000000009"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000009"
+          ],
           "index": 3,
           "label": ""
         },
@@ -3826,7 +3876,9 @@
           "deviceId": "3014F7110000000000BBBBB1",
           "functionalChannelType": "FLOOR_TERMINAL_BLOCK_CHANNEL",
           "groupIndex": 4,
-          "groups": ["00000000-0000-0000-0000-000000000010"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000010"
+          ],
           "index": 4,
           "label": ""
         },
@@ -3834,7 +3886,9 @@
           "deviceId": "3014F7110000000000BBBBB1",
           "functionalChannelType": "FLOOR_TERMINAL_BLOCK_CHANNEL",
           "groupIndex": 5,
-          "groups": ["00000000-0000-0000-0000-000000000011"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000011"
+          ],
           "index": 5,
           "label": ""
         },
@@ -3861,14 +3915,16 @@
           "deviceId": "3014F7110000000000BBBBB1",
           "functionalChannelType": "DEHUMIDIFIER_DEMAND_CHANNEL",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000014"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000014"
+          ],
           "index": 8,
           "label": ""
         }
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000BBBBB1",
-      "label": "Fußbodenheizungsaktor",
+      "label": "Fu\u00dfbodenheizungsaktor",
       "lastStatusUpdate": 1545746610807,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -4020,7 +4076,7 @@
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F71100000000000BBB17",
-      "label": "Außen Küche",
+      "label": "Au\u00dfen K\u00fcche",
       "lastStatusUpdate": 1546776559553,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -4044,7 +4100,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_INCORRECT_POSITIONED",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000020"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000020"
+          ],
           "incorrectPositioned": true,
           "index": 0,
           "label": "",
@@ -4063,7 +4121,9 @@
           "deviceId": "3014F7110000000000000050",
           "functionalChannelType": "WATER_SENSOR_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000023"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000023"
+          ],
           "inAppWaterAlarmTrigger": "WATER_MOISTURE_DETECTION",
           "index": 1,
           "label": "",
@@ -4130,7 +4190,7 @@
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000000",
-      "label": "Balkontüre",
+      "label": "Balkont\u00fcre",
       "lastStatusUpdate": 1524516526498,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -4349,7 +4409,7 @@
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000003",
-      "label": "Küche",
+      "label": "K\u00fcche",
       "lastStatusUpdate": 1524514836466,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -4516,7 +4576,7 @@
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000006",
-      "label": "Wohnungstüre",
+      "label": "Wohnungst\u00fcre",
       "lastStatusUpdate": 1524516489316,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -4601,7 +4661,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000009"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000009"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -4627,7 +4689,9 @@
           "energyCounter": 6.333200000000001,
           "functionalChannelType": "SWITCH_MEASURING_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000023"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000023"
+          ],
           "index": 1,
           "label": "",
           "on": false,
@@ -4667,7 +4731,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000029"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000029"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -4693,7 +4759,9 @@
           "energyCounter": 0.0011,
           "functionalChannelType": "SWITCH_MEASURING_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000030"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000030"
+          ],
           "index": 1,
           "label": "",
           "on": false,
@@ -4727,7 +4795,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000017"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000017"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -4744,7 +4814,9 @@
           "energyCounter": 35.536,
           "functionalChannelType": "SWITCH_MEASURING_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000018"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000018"
+          ],
           "index": 1,
           "label": "",
           "on": true,
@@ -4778,7 +4850,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000017"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000017"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -4795,7 +4869,9 @@
           "energyCounter": 0.4754,
           "functionalChannelType": "SWITCH_MEASURING_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000018"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000018"
+          ],
           "index": 1,
           "label": "",
           "on": false,
@@ -4829,7 +4905,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000017"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000017"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -4846,7 +4924,9 @@
           "energyCounter": 1.5343,
           "functionalChannelType": "SWITCH_MEASURING_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000018"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000018"
+          ],
           "index": 1,
           "label": "",
           "on": true,
@@ -4856,7 +4936,7 @@
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000010",
-      "label": "Büro",
+      "label": "B\u00fcro",
       "lastStatusUpdate": 1524513613922,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -4880,7 +4960,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000017"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000017"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -4895,7 +4977,9 @@
           "deviceId": "3014F7110000000000000110",
           "functionalChannelType": "SWITCH_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000018"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000018"
+          ],
           "index": 1,
           "label": "",
           "on": true,
@@ -4930,7 +5014,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000011"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000011"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -4946,7 +5032,9 @@
           "deviceId": "3014F7110000000000000011",
           "functionalChannelType": "HEATING_THERMOSTAT_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000012"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000012"
+          ],
           "index": 1,
           "label": "",
           "valveActualTemperature": 20.0,
@@ -4983,7 +5071,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000008"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000008"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -4999,7 +5089,9 @@
           "deviceId": "3014F7110000000000000012",
           "functionalChannelType": "HEATING_THERMOSTAT_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000010"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000010"
+          ],
           "index": 1,
           "label": "",
           "valveActualTemperature": 20.0,
@@ -5011,7 +5103,7 @@
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000012",
-      "label": "Heizkörperthermostat",
+      "label": "Heizk\u00f6rperthermostat",
       "lastStatusUpdate": 1524514105832,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -5036,7 +5128,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000014"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000014"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -5052,7 +5146,9 @@
           "deviceId": "3014F7110000000000000013",
           "functionalChannelType": "HEATING_THERMOSTAT_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000019"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000019"
+          ],
           "index": 1,
           "label": "",
           "valveActualTemperature": 20.0,
@@ -5064,7 +5160,7 @@
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000013",
-      "label": "Heizkörperthermostat2",
+      "label": "Heizk\u00f6rperthermostat2",
       "lastStatusUpdate": 1524514007132,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -5089,7 +5185,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000014"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000014"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -5105,7 +5203,9 @@
           "deviceId": "3014F71100000000ETRV0013",
           "functionalChannelType": "HEATING_THERMOSTAT_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0005-000000000019"],
+          "groups": [
+            "00000000-0000-0000-0005-000000000019"
+          ],
           "index": 1,
           "label": "",
           "valveActualTemperature": 20.0,
@@ -5117,7 +5217,7 @@
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F71100000000ETRV0013",
-      "label": "Heizkörperthermostat4",
+      "label": "Heizk\u00f6rperthermostat4",
       "lastStatusUpdate": 1524514007132,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -5142,7 +5242,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000004"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000004"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -5158,7 +5260,9 @@
           "deviceId": "3014F7110000000000000014",
           "functionalChannelType": "HEATING_THERMOSTAT_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000007"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000007"
+          ],
           "index": 1,
           "label": "",
           "valveActualTemperature": 20.0,
@@ -5170,7 +5274,7 @@
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000014",
-      "label": "Küche-Heizung",
+      "label": "K\u00fcche-Heizung",
       "lastStatusUpdate": 1524513898337,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -5195,7 +5299,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000004"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000004"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -5211,7 +5317,9 @@
           "deviceId": "3014F7110000000000000015",
           "functionalChannelType": "HEATING_THERMOSTAT_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000007"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000007"
+          ],
           "index": 1,
           "label": "",
           "valveActualTemperature": 20.0,
@@ -5248,7 +5356,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000020"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000020"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -5264,7 +5374,9 @@
           "deviceId": "3014F7110000000000000016",
           "functionalChannelType": "HEATING_THERMOSTAT_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000021"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000021"
+          ],
           "index": 1,
           "label": "",
           "valveActualTemperature": 20.0,
@@ -5276,7 +5388,7 @@
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000016",
-      "label": "Heizkörperthermostat3",
+      "label": "Heizk\u00f6rperthermostat3",
       "lastStatusUpdate": 1524514626157,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -5301,7 +5413,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000004"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000004"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -5317,7 +5431,9 @@
           "deviceId": "3014F7110000000000000017",
           "functionalChannelType": "HEATING_THERMOSTAT_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000007"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000007"
+          ],
           "index": 1,
           "label": "",
           "valveActualTemperature": 20.0,
@@ -5571,7 +5687,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000011"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000011"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -5589,7 +5707,9 @@
           "display": "ACTUAL_HUMIDITY",
           "functionalChannelType": "WALL_MOUNTED_THERMOSTAT_PRO_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000012"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000012"
+          ],
           "humidity": 43,
           "vaporAmount": 6.177718198711658,
           "index": 1,
@@ -5625,7 +5745,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000008"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000008"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -5643,7 +5765,9 @@
           "display": "ACTUAL_HUMIDITY",
           "functionalChannelType": "WALL_MOUNTED_THERMOSTAT_PRO_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000010"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000010"
+          ],
           "humidity": 46,
           "vaporAmount": 6.177718198711658,
           "index": 1,
@@ -5679,7 +5803,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000004"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000004"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -5697,7 +5823,9 @@
           "display": "ACTUAL",
           "functionalChannelType": "WALL_MOUNTED_THERMOSTAT_PRO_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000007"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000007"
+          ],
           "humidity": 45,
           "vaporAmount": 6.177718198711658,
           "index": 1,
@@ -5733,7 +5861,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000020"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000020"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -5751,7 +5881,9 @@
           "display": "ACTUAL_HUMIDITY",
           "functionalChannelType": "WALL_MOUNTED_THERMOSTAT_PRO_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000021"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000021"
+          ],
           "humidity": 47,
           "vaporAmount": 6.177718198711658,
           "index": 1,
@@ -5787,7 +5919,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000019"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000019"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -5803,7 +5937,9 @@
           "deviceId": "3014F7110000000000000029",
           "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000020"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000020"
+          ],
           "index": 1,
           "label": "",
           "multiModeInputMode": "KEY_BEHAVIOR",
@@ -5812,7 +5948,7 @@
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F7110000000000000029",
-      "label": "Kontakt-Schnittstelle Unterputz – 1-fach",
+      "label": "Kontakt-Schnittstelle Unterputz \u2013 1-fach",
       "lastStatusUpdate": 1547923306429,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -5836,7 +5972,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000008"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000008"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -5852,7 +5990,9 @@
           "deviceId": "3014F711AAAA000000000001",
           "functionalChannelType": "WEATHER_SENSOR_PRO_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-AAAA-0000-0000-000000000001"],
+          "groups": [
+            "00000000-AAAA-0000-0000-000000000001"
+          ],
           "humidity": 65,
           "vaporAmount": 6.177718198711658,
           "illumination": 4153.0,
@@ -5901,7 +6041,9 @@
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
           "dutyCycle": false,
-          "groups": ["00000000-0000-0000-0000-000000000008"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000008"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -5917,7 +6059,9 @@
           "deviceId": "3014F711AAAA000000000002",
           "functionalChannelType": "CLIMATE_SENSOR_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-AAAA-0000-0000-000000000001"],
+          "groups": [
+            "00000000-AAAA-0000-0000-000000000001"
+          ],
           "humidity": 70,
           "vaporAmount": 6.177718198711658,
           "index": 1,
@@ -5926,7 +6070,7 @@
       },
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "3014F711AAAA000000000002",
-      "label": "Temperatur- und Luftfeuchtigkeitssensor - außen",
+      "label": "Temperatur- und Luftfeuchtigkeitssensor - au\u00dfen",
       "lastStatusUpdate": 1524513950325,
       "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
       "manufacturerCode": 1,
@@ -5950,7 +6094,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000008"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000008"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -5966,7 +6112,9 @@
           "deviceId": "3014F711AAAA000000000003",
           "functionalChannelType": "WEATHER_SENSOR_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-AAAA-0000-0000-000000000001"],
+          "groups": [
+            "00000000-AAAA-0000-0000-000000000001"
+          ],
           "humidity": 42,
           "vaporAmount": 6.177718198711658,
           "illumination": 4890.0,
@@ -6008,7 +6156,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_SABOTAGE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000008"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000008"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -6025,7 +6175,9 @@
           "eventDelay": 0,
           "functionalChannelType": "ROTARY_HANDLE_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000009"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000009"
+          ],
           "index": 1,
           "label": "",
           "windowState": "TILTED"
@@ -6057,7 +6209,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000008"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000008"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -6073,7 +6227,9 @@
           "dimLevel": 0.0,
           "functionalChannelType": "DIMMER_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000008"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000008"
+          ],
           "index": 1,
           "label": "",
           "profileMode": "AUTOMATIC",
@@ -6353,7 +6509,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000024"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000024"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -6416,7 +6574,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000041"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000041"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -6431,7 +6591,9 @@
           "deviceId": "3014F711BBBBBBBBBBBBB18",
           "functionalChannelType": "SWITCH_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000042"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000042"
+          ],
           "index": 1,
           "label": "SW1",
           "on": false,
@@ -6456,7 +6618,9 @@
           "deviceId": "3014F711BBBBBBBBBBBBB18",
           "functionalChannelType": "SWITCH_CHANNEL",
           "groupIndex": 3,
-          "groups": ["00000000-0000-0000-0000-000000000042"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000042"
+          ],
           "index": 3,
           "label": "",
           "on": false,
@@ -6467,7 +6631,9 @@
           "deviceId": "3014F711BBBBBBBBBBBBB18",
           "functionalChannelType": "SWITCH_CHANNEL",
           "groupIndex": 4,
-          "groups": ["00000000-0000-0000-0000-000000000042"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000042"
+          ],
           "index": 4,
           "label": "",
           "on": false,
@@ -6478,7 +6644,9 @@
           "deviceId": "3014F711BBBBBBBBBBBBB18",
           "functionalChannelType": "SWITCH_CHANNEL",
           "groupIndex": 5,
-          "groups": ["00000000-0000-0000-0000-000000000042"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000042"
+          ],
           "index": 5,
           "label": "",
           "on": false,
@@ -6489,7 +6657,9 @@
           "deviceId": "3014F711BBBBBBBBBBBBB18",
           "functionalChannelType": "SWITCH_CHANNEL",
           "groupIndex": 6,
-          "groups": ["00000000-0000-0000-0000-000000000042"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000042"
+          ],
           "index": 6,
           "label": "",
           "on": false,
@@ -6500,7 +6670,9 @@
           "deviceId": "3014F711BBBBBBBBBBBBB18",
           "functionalChannelType": "SWITCH_CHANNEL",
           "groupIndex": 7,
-          "groups": ["00000000-0000-0000-0000-000000000042"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000042"
+          ],
           "index": 7,
           "label": "",
           "on": false,
@@ -6511,7 +6683,9 @@
           "deviceId": "3014F711BBBBBBBBBBBBB18",
           "functionalChannelType": "SWITCH_CHANNEL",
           "groupIndex": 8,
-          "groups": ["00000000-0000-0000-0000-000000000042"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000042"
+          ],
           "index": 8,
           "label": "",
           "on": true,
@@ -6551,7 +6725,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000004"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000004"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -6576,7 +6752,9 @@
           "doorState": "CLOSED",
           "functionalChannelType": "DOOR_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000005"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000005"
+          ],
           "index": 1,
           "label": "",
           "on": false,
@@ -6618,7 +6796,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000034"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000034"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -6655,7 +6835,9 @@
           "deviceId": "3014F7110000000000005521",
           "functionalChannelType": "MULTI_MODE_INPUT_SWITCH_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000035"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000035"
+          ],
           "index": 1,
           "label": "Poolpumpe",
           "multiModeInputMode": "KEY_BEHAVIOR",
@@ -6668,7 +6850,9 @@
           "deviceId": "3014F7110000000000005521",
           "functionalChannelType": "MULTI_MODE_INPUT_SWITCH_CHANNEL",
           "groupIndex": 2,
-          "groups": ["00000000-0000-0000-0000-000000000035"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000035"
+          ],
           "index": 2,
           "label": "Poollicht",
           "multiModeInputMode": "KEY_BEHAVIOR",
@@ -6737,7 +6921,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000026"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000026"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -6781,7 +6967,9 @@
           "favoriteSecondaryShadingPosition": 0.5,
           "functionalChannelType": "MULTI_MODE_INPUT_BLIND_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000027"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000027"
+          ],
           "index": 1,
           "label": "Badezimmer ",
           "multiModeInputMode": "KEY_BEHAVIOR",
@@ -6814,7 +7002,9 @@
           "favoriteSecondaryShadingPosition": 0.5,
           "functionalChannelType": "MULTI_MODE_INPUT_BLIND_CHANNEL",
           "groupIndex": 2,
-          "groups": ["00000000-0000-0000-0000-000000000028"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000028"
+          ],
           "index": 2,
           "label": "Schlafzimmer ",
           "multiModeInputMode": "KEY_BEHAVIOR",
@@ -6847,7 +7037,9 @@
           "favoriteSecondaryShadingPosition": 0.5,
           "functionalChannelType": "MULTI_MODE_INPUT_BLIND_CHANNEL",
           "groupIndex": 3,
-          "groups": ["00000000-0000-0000-0000-000000000029"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000029"
+          ],
           "index": 3,
           "label": "Wohnzimmer T\u00fcr",
           "multiModeInputMode": "KEY_BEHAVIOR",
@@ -6880,7 +7072,9 @@
           "favoriteSecondaryShadingPosition": 0.5,
           "functionalChannelType": "MULTI_MODE_INPUT_BLIND_CHANNEL",
           "groupIndex": 4,
-          "groups": ["00000000-0000-0000-0000-000000000029"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000029"
+          ],
           "index": 4,
           "label": "Wohnzimmer Fenster",
           "multiModeInputMode": "KEY_BEHAVIOR",
@@ -6936,7 +7130,9 @@
           "dutyCycle": null,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000043"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000043"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -7008,9 +7204,11 @@
           "deviceId": "3014F7110000000000056775",
           "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
           "groupIndex": 3,
-          "groups": ["00000000-0000-0000-0000-000000000044"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000044"
+          ],
           "index": 3,
-          "label": "Tür",
+          "label": "T\u00fcr",
           "multiModeInputMode": "KEY_BEHAVIOR",
           "supportedOptionalFeatures": {
             "IOptionalFeatureWindowState": true
@@ -7022,7 +7220,9 @@
           "deviceId": "3014F7110000000000056775",
           "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
           "groupIndex": 4,
-          "groups": ["00000000-0000-0000-0000-000000000044"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000044"
+          ],
           "index": 4,
           "label": "Licht Flur 4",
           "multiModeInputMode": "KEY_BEHAVIOR",
@@ -7036,7 +7236,9 @@
           "deviceId": "3014F7110000000000056775",
           "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
           "groupIndex": 5,
-          "groups": ["00000000-0000-0000-0000-000000000044"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000044"
+          ],
           "index": 5,
           "label": "Licht Flur 5",
           "multiModeInputMode": "KEY_BEHAVIOR",
@@ -7050,7 +7252,9 @@
           "deviceId": "3014F7110000000000056775",
           "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
           "groupIndex": 6,
-          "groups": ["00000000-0000-0000-0000-000000000044"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000044"
+          ],
           "index": 6,
           "label": "Licht Flur 6",
           "multiModeInputMode": "KEY_BEHAVIOR",
@@ -7095,7 +7299,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000024"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000024"
+          ],
           "index": 0,
           "label": "",
           "lockJammed": null,
@@ -7146,7 +7352,9 @@
           "deviceId": "3014F7110000000000STE2015",
           "functionalChannelType": "TEMPERATURE_SENSOR_2_EXTERNAL_DELTA_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000025"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000025"
+          ],
           "index": 1,
           "label": "",
           "temperatureExternalDelta": -0.9,
@@ -7189,7 +7397,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000011"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000011"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -7284,7 +7494,9 @@
           "deviceId": "HUE00000-0000-0000-0000-000000000008",
           "functionalChannelType": "EXTERNAL_BASE_CHANNEL",
           "groupIndex": 0,
-          "groups": ["HUE00000-0000-0000-0000-000000000010"],
+          "groups": [
+            "HUE00000-0000-0000-0000-000000000010"
+          ],
           "index": 0,
           "label": "",
           "unreach": false
@@ -7297,7 +7509,9 @@
           "dimLevel": 0.0,
           "functionalChannelType": "EXTERNAL_UNIVERSAL_LIGHT_CHANNEL",
           "groupIndex": 1,
-          "groups": ["HUE00000-0000-0000-0000-000000000012"],
+          "groups": [
+            "HUE00000-0000-0000-0000-000000000012"
+          ],
           "hue": null,
           "index": 1,
           "label": "",
@@ -7342,7 +7556,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["49bf77e1-a07b-4a3c-8151-e0a7aca331bb"],
+          "groups": [
+            "49bf77e1-a07b-4a3c-8151-e0a7aca331bb"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -7484,7 +7700,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_OPERATIONLOCK",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000025"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000025"
+          ],
           "index": 0,
           "label": "",
           "lowBat": false,
@@ -7554,7 +7772,9 @@
           "deviceId": "3014F7110000000000000DLD",
           "functionalChannelType": "ACCESS_AUTHORIZATION_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000033"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000033"
+          ],
           "index": 2,
           "label": ""
         },
@@ -7563,7 +7783,9 @@
           "deviceId": "3014F7110000000000000DLD",
           "functionalChannelType": "ACCESS_AUTHORIZATION_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000033"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000033"
+          ],
           "index": 3,
           "label": ""
         },
@@ -7572,7 +7794,9 @@
           "deviceId": "3014F7110000000000000DLD",
           "functionalChannelType": "ACCESS_AUTHORIZATION_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000033"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000033"
+          ],
           "index": 4,
           "label": ""
         },
@@ -7581,7 +7805,9 @@
           "deviceId": "3014F7110000000000000DLD",
           "functionalChannelType": "ACCESS_AUTHORIZATION_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000033"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000033"
+          ],
           "index": 5,
           "label": ""
         },
@@ -7590,7 +7816,9 @@
           "deviceId": "3014F7110000000000000DLD",
           "functionalChannelType": "ACCESS_AUTHORIZATION_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000033"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000033"
+          ],
           "index": 6,
           "label": ""
         },
@@ -7599,7 +7827,9 @@
           "deviceId": "3014F7110000000000000DLD",
           "functionalChannelType": "ACCESS_AUTHORIZATION_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000033"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000033"
+          ],
           "index": 7,
           "label": ""
         },
@@ -7608,7 +7838,9 @@
           "deviceId": "3014F7110000000000000DLD",
           "functionalChannelType": "ACCESS_AUTHORIZATION_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000033"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000033"
+          ],
           "index": 8,
           "label": ""
         },
@@ -7668,7 +7900,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000047"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000047"
+          ],
           "index": 0,
           "label": "",
           "lockJammed": null,
@@ -7741,7 +7975,9 @@
           "gasVolume": 1019.26,
           "gasVolumePerImpulse": 0.01,
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000077"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000077"
+          ],
           "impulsesPerKWH": 10000,
           "index": 1,
           "label": "",
@@ -7808,7 +8044,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000031"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000031"
+          ],
           "index": 0,
           "label": "",
           "lockJammed": null,
@@ -7881,7 +8119,9 @@
           "gasVolume": null,
           "gasVolumePerImpulse": 0.01,
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000051"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000051"
+          ],
           "impulsesPerKWH": 10000,
           "index": 1,
           "label": "",
@@ -7943,7 +8183,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000031"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000031"
+          ],
           "index": 0,
           "label": "",
           "lockJammed": null,
@@ -8016,7 +8258,9 @@
           "gasVolume": null,
           "gasVolumePerImpulse": 0.01,
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000051"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000051"
+          ],
           "impulsesPerKWH": 10000,
           "index": 1,
           "label": "",
@@ -8078,7 +8322,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000031"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000031"
+          ],
           "index": 0,
           "label": "",
           "lockJammed": null,
@@ -8151,7 +8397,9 @@
           "gasVolume": null,
           "gasVolumePerImpulse": 0.01,
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000057"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000057"
+          ],
           "impulsesPerKWH": 1000,
           "index": 1,
           "label": "",
@@ -8211,7 +8459,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000042"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000042"
+          ],
           "index": 0,
           "label": "",
           "lockJammed": null,
@@ -8272,7 +8522,9 @@
           "eventDelay": 0,
           "functionalChannelType": "MULTI_MODE_INPUT_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000056"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000056"
+          ],
           "index": 1,
           "label": "",
           "multiModeInputMode": "KEY_BEHAVIOR",
@@ -8481,7 +8733,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000033"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000033"
+          ],
           "index": 0,
           "invertedDisplayColors": null,
           "label": "",
@@ -8550,7 +8804,9 @@
           "deviceId": "3014F71100000000000SVCTH",
           "functionalChannelType": "CLIMATE_SENSOR_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000035"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000035"
+          ],
           "humidity": 36,
           "index": 1,
           "label": "",
@@ -8610,7 +8866,9 @@
           "frostProtectionErrorAcknowledged": null,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000056"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000056"
+          ],
           "index": 0,
           "inputLayoutMode": null,
           "invertedDisplayColors": null,
@@ -8715,7 +8973,9 @@
           "dimLevel": 0.68,
           "functionalChannelType": "UNIVERSAL_LIGHT_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000061"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000061"
+          ],
           "hardwareColorTemperatureColdWhite": 6500,
           "hardwareColorTemperatureWarmWhite": 2000,
           "hue": 120,
@@ -8979,7 +9239,9 @@
           "frostProtectionErrorAcknowledged": null,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000022"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000022"
+          ],
           "index": 0,
           "inputLayoutMode": null,
           "invertedDisplayColors": null,
@@ -9066,7 +9328,9 @@
           "deviceId": "3014F71100000000000SHWSM",
           "functionalChannelType": "WATERING_ACTUATOR_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000023"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000023"
+          ],
           "index": 1,
           "label": "",
           "profileMode": "AUTOMATIC",
@@ -9110,7 +9374,9 @@
           "dutyCycle": false,
           "functionalChannelType": "DEVICE_BASE",
           "groupIndex": 0,
-          "groups": ["00000000-0000-0000-0000-000000000041"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000041"
+          ],
           "index": 0,
           "label": "",
           "lowBat": null,
@@ -9125,7 +9391,9 @@
           "deviceId": "3014F7110000000000000SB8",
           "functionalChannelType": "SWITCH_CHANNEL",
           "groupIndex": 1,
-          "groups": ["00000000-0000-0000-0000-000000000042"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000042"
+          ],
           "index": 1,
           "label": "LED 1",
           "on": false,
@@ -9136,7 +9404,9 @@
           "deviceId": "3014F7110000000000000SB8",
           "functionalChannelType": "SWITCH_CHANNEL",
           "groupIndex": 2,
-          "groups": ["00000000-0000-0000-0000-000000000042"],
+          "groups": [
+            "00000000-0000-0000-0000-000000000042"
+          ],
           "index": 2,
           "label": "LED 2",
           "on": true,
@@ -9156,6 +9426,77 @@
       "permanentlyReachable": true,
       "serializedGlobalTradeItemNumber": "3014F7110000000000000SB8",
       "type": "STATUS_BOARD_8",
+      "updateState": "UP_TO_DATE"
+    },
+    "3014F711000000000000WRC6": {
+      "availableFirmwareVersion": "1.0.0",
+      "connectionType": "HMIP_WIRED",
+      "deviceArchetype": "HMIP",
+      "firmwareVersion": "1.0.0",
+      "firmwareVersionInteger": 65536,
+      "functionalChannels": {
+        "0": {
+          "configPending": false,
+          "deviceId": "3014F711000000000000WRC6",
+          "dutyCycle": false,
+          "functionalChannelType": "DEVICE_BASE",
+          "groupIndex": 0,
+          "groups": [],
+          "index": 0,
+          "label": "",
+          "lowBat": null,
+          "routerModuleEnabled": false,
+          "routerModuleSupported": false,
+          "rssiDeviceValue": -50,
+          "rssiPeerValue": -52,
+          "unreach": false,
+          "supportedOptionalFeatures": {}
+        },
+        "7": {
+          "deviceId": "3014F711000000000000WRC6",
+          "dimLevel": 0.5,
+          "functionalChannelType": "OPTICAL_SIGNAL_CHANNEL",
+          "groupIndex": 7,
+          "groups": [],
+          "index": 7,
+          "label": "LED 1",
+          "on": true,
+          "opticalSignalBehaviour": "ON",
+          "powerUpSwitchState": "PERMANENT_OFF",
+          "profileMode": "AUTOMATIC",
+          "simpleRGBColorState": "GREEN",
+          "supportedOptionalFeatures": {},
+          "userDesiredProfileMode": "AUTOMATIC"
+        },
+        "8": {
+          "deviceId": "3014F711000000000000WRC6",
+          "dimLevel": 0.0,
+          "functionalChannelType": "OPTICAL_SIGNAL_CHANNEL",
+          "groupIndex": 8,
+          "groups": [],
+          "index": 8,
+          "label": "LED 2",
+          "on": false,
+          "opticalSignalBehaviour": "OFF",
+          "powerUpSwitchState": "PERMANENT_OFF",
+          "profileMode": "AUTOMATIC",
+          "simpleRGBColorState": "RED",
+          "supportedOptionalFeatures": {},
+          "userDesiredProfileMode": "AUTOMATIC"
+        }
+      },
+      "homeId": "00000000-0000-0000-0000-000000000001",
+      "id": "3014F711000000000000WRC6",
+      "label": "Wired Taster 6-fach",
+      "lastStatusUpdate": 1595225686220,
+      "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+      "manufacturerCode": 1,
+      "modelId": 400,
+      "modelType": "HmIPW-WRC6",
+      "oem": "eQ-3",
+      "permanentlyReachable": true,
+      "serializedGlobalTradeItemNumber": "3014F711000000000000WRC6",
+      "type": "WIRED_PUSH_BUTTON_6",
       "updateState": "UP_TO_DATE"
     }
   },
@@ -9177,7 +9518,9 @@
       ],
       "configPending": false,
       "dutyCycle": false,
-      "groups": ["00000000-0000-0000-0000-000000000021"],
+      "groups": [
+        "00000000-0000-0000-0000-000000000021"
+      ],
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000020",
       "incorrectPositioned": null,
@@ -9357,7 +9700,9 @@
       ],
       "configPending": false,
       "dutyCycle": false,
-      "groups": ["00000000-0000-0000-0000-000000000018"],
+      "groups": [
+        "00000000-0000-0000-0000-000000000018"
+      ],
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000017",
       "incorrectPositioned": null,
@@ -9435,7 +9780,7 @@
       "humidityLimitEnabled": true,
       "humidityLimitValue": 60,
       "id": "00000000-0000-0000-0000-000000000010",
-      "label": "Büro",
+      "label": "B\u00fcro",
       "lastSetPointReachedTimestamp": 1557767559939,
       "lastSetPointUpdatedTimestamp": 1557767559939,
       "lastStatusUpdate": 1524516454116,
@@ -9552,7 +9897,7 @@
       "dutyCycle": false,
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000009",
-      "label": "Büro",
+      "label": "B\u00fcro",
       "lastStatusUpdate": 1524515854304,
       "lowBat": false,
       "metaGroupId": "00000000-0000-0000-0000-000000000008",
@@ -9918,7 +10263,7 @@
       "homeId": "00000000-0000-0000-0000-000000000001",
       "id": "00000000-0000-0000-0000-000000000008",
       "incorrectPositioned": null,
-      "label": "Büro",
+      "label": "B\u00fcro",
       "lastStatusUpdate": 1524516454116,
       "lowBat": false,
       "metaGroupId": null,
@@ -10892,7 +11237,9 @@
     "apExchangeState": "NONE",
     "availableAPVersion": null,
     "carrierSense": null,
-    "clients": ["00000000-0000-0000-0000-000000000000"],
+    "clients": [
+      "00000000-0000-0000-0000-000000000000"
+    ],
     "connected": true,
     "currentAPVersion": "1.2.4",
     "deviceUpdateStrategy": "AUTOMATICALLY_IF_POSSIBLE",
@@ -10928,7 +11275,9 @@
         "active": true,
         "extendedLinkedShutterGroups": [],
         "extendedLinkedSwitchingGroups": [],
-        "functionalGroups": ["00000000-0000-0000-0000-000000000018"],
+        "functionalGroups": [
+          "00000000-0000-0000-0000-000000000018"
+        ],
         "shutterProfileGroups": [],
         "solution": "LIGHT_AND_SHADOW",
         "switchingProfileGroups": []
@@ -10967,7 +11316,9 @@
       },
       "WEATHER_AND_ENVIRONMENT": {
         "active": true,
-        "functionalGroups": ["00000000-AAAA-0000-0000-000000000001"],
+        "functionalGroups": [
+          "00000000-AAAA-0000-0000-000000000001"
+        ],
         "solution": "WEATHER_AND_ENVIRONMENT"
       }
     },
@@ -10975,7 +11326,7 @@
     "inboxGroup": "00000000-0000-0000-0000-000000000044",
     "lastReadyForUpdateTimestamp": 1522319489138,
     "location": {
-      "city": "1010  Wien, Österreich",
+      "city": "1010  Wien, \u00d6sterreich",
       "latitude": "48.208088",
       "longitude": "16.358608"
     },
