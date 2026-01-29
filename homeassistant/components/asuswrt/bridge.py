@@ -67,7 +67,7 @@ class WrtDevice(NamedTuple):
 
     ip: str | None
     name: str | None
-    conneted_to: str | None
+    connected_to: str | None
 
 
 _LOGGER = logging.getLogger(__name__)
