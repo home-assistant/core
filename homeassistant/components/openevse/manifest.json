@@ -8,7 +8,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["openevsehttp"],
-  "quality_scale": "legacy",
+  "quality_scale": "bronze",
   "requirements": ["python-openevse-http==0.2.1"],
   "zeroconf": ["_openevse._tcp.local."]
 }
