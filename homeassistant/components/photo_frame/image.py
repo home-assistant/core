@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 from pathlib import Path
 import random
 
-from homeassistant.components.image import ImageEntity, ImageEntityDescription
+from homeassistant.components.image import ImageEntity
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
     Unresolvable,
@@ -23,13 +22,6 @@ from homeassistant.util import dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, kw_only=True)
-class PhotoFrameImageEntityDescription(ImageEntityDescription):
-    """Photo Frame image entity description."""
-
-    media_content_id: str
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -37,15 +29,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Photo Frame image entities."""
     if media := entry.data.get("media"):
-        description = PhotoFrameImageEntityDescription(
-            key="image",
-            name=entry.title,
-            media_content_id=media.get("media_content_id"),
-        )
         async_add_entities(
             [
                 PhotoFrameImageEntity(
-                    description,
+                    name=entry.title,
+                    media_content_id=media.get("media_content_id"),
                     unique_id=entry.entry_id,
                     hass=hass,
                 )
@@ -56,30 +44,26 @@ async def async_setup_entry(
 class PhotoFrameImageEntity(ImageEntity):
     """Implement the image entity for Photo Frame."""
 
-    entity_description: PhotoFrameImageEntityDescription
     path: Path | None
 
     def __init__(
         self,
-        description: PhotoFrameImageEntityDescription,
+        name: str,
+        media_content_id: str,
         unique_id: str,
         hass: HomeAssistant,
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass)
-        self.entity_description = description
         self.path = None
         self._attr_unique_id = unique_id
-        self._attr_name = (
-            description.name if isinstance(description.name, str) else None
-        )
+        self._attr_name = name
+        self.media_content_id = media_content_id
 
     async def get_next_image(self) -> None:
         """Update the image entity with the next image from the source media."""
         try:
-            media = await async_browse_media(
-                self.hass, self.entity_description.media_content_id
-            )
+            media = await async_browse_media(self.hass, self.media_content_id)
             if media.children:
                 filtered = [
                     item
@@ -100,7 +84,7 @@ class PhotoFrameImageEntity(ImageEntity):
             _LOGGER.warning(
                 "%s: No valid images in %s",
                 self.entity_id,
-                self.entity_description.media_content_id,
+                self.media_content_id,
             )
         except (BrowseError, Unresolvable) as err:
             _LOGGER.error("%s: %s", self.entity_id, str(err))
