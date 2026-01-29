@@ -90,6 +90,7 @@ class AsyncIteratorWriter:
     def __init__(self, loop: asyncio.AbstractEventLoop) -> None:
         """Initialize the wrapper."""
         self._aborted = False
+        self._exhausted = False
         self._loop = loop
         self._pos: int = 0
         self._queue: asyncio.Queue[bytes | None] = asyncio.Queue(maxsize=1)
@@ -101,8 +102,11 @@ class AsyncIteratorWriter:
 
     async def __anext__(self) -> bytes:
         """Get the next chunk from the iterator."""
+        if self._exhausted:
+            raise StopAsyncIteration
         if data := await self._queue.get():
             return data
+        self._exhausted = True
         raise StopAsyncIteration
 
     def abort(self) -> None:
