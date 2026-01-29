@@ -172,6 +172,68 @@
             }
           }
         }
+      },
+      "door_state": {
+        "name": "Door state",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "door_ajar": "Door ajar",
+              "door_closed": "Door closed",
+              "door_forced_open": "Door forced open",
+              "door_jammed": "Door jammed",
+              "door_open": "Door opened",
+              "door_unspecified_error": "Door error"
+            }
+          }
+        }
+      },
+      "lock_alarm": {
+        "name": "Lock alarm",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "door_ajar": "Door ajar",
+              "door_forced_open": "Door forced open",
+              "forced_user": "Forced user event",
+              "front_escutcheon_removed": "Front escutcheon removed",
+              "lock_factory_reset": "Factory reset",
+              "lock_jammed": "Lock jammed",
+              "lock_radio_power_cycled": "Radio power cycled",
+              "wrong_code_entry_limit": "Wrong code entry limit exceeded"
+            }
+          }
+        }
+      },
+      "lock_operation": {
+        "name": "Lock operation",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "lock_failed": "Lock failed",
+              "locked": "Locked",
+              "unlatch_failed": "Unlatch failed",
+              "unlatched": "Unlatched",
+              "unlock_failed": "Unlock failed",
+              "unlocked": "Unlocked"
+            }
+          }
+        }
+      },
+      "lock_user_change": {
+        "name": "User change",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "credential_added": "Credential added",
+              "credential_cleared": "Credential cleared",
+              "credential_modified": "Credential modified",
+              "user_added": "User added",
+              "user_cleared": "User cleared",
+              "user_modified": "User modified"
+            }
+          }
+        }
       }
     },
     "fan": {
@@ -607,6 +669,74 @@
       }
     }
   },
+  "exceptions": {
+    "device_not_found": {
+      "message": "Device {device_id} was not found."
+    },
+    "holiday_schedules_not_supported": {
+      "message": "This lock does not support holiday schedules."
+    },
+    "invalid_pin_length": {
+      "message": "PIN must be {min_length}-{max_length} digits, got {actual_length}."
+    },
+    "invalid_time_range": {
+      "message": "Invalid time range: end time must be after start time."
+    },
+    "lock_not_found": {
+      "message": "No lock endpoint found on this device."
+    },
+    "lock_usr_not_supported": {
+      "message": "This lock does not support user and credential management."
+    },
+    "matter_not_configured": {
+      "message": "Matter integration is not configured."
+    },
+    "no_available_credential_slots": {
+      "message": "No available credential slots on the lock."
+    },
+    "no_available_user_slots": {
+      "message": "No available user slots on the lock."
+    },
+    "no_lock_on_device": {
+      "message": "No lock endpoint found on this device."
+    },
+    "not_matter_device": {
+      "message": "Device {device_id} is not a Matter device."
+    },
+    "schedule_not_found": {
+      "message": "Schedule at index {schedule_index} was not found."
+    },
+    "set_credential_duplicate_code_error": {
+      "message": "Failed to set credential because this code is already in use."
+    },
+    "set_credential_failed": {
+      "message": "Failed to set credential on the lock."
+    },
+    "set_credential_general_failure": {
+      "message": "Failed to set credential due to a general failure."
+    },
+    "set_credential_memory_full": {
+      "message": "Failed to set credential because the lock memory is full."
+    },
+    "set_credential_occupied": {
+      "message": "Failed to set credential because the slot is already occupied."
+    },
+    "user_already_exists": {
+      "message": "User slot {user_index} is already occupied."
+    },
+    "user_not_found": {
+      "message": "User slot {user_index} is empty."
+    },
+    "usr_not_supported": {
+      "message": "This lock does not support user and credential management."
+    },
+    "week_day_schedules_not_supported": {
+      "message": "This lock does not support week day schedules."
+    },
+    "year_day_schedules_not_supported": {
+      "message": "This lock does not support year day schedules."
+    }
+  },
   "issues": {
     "server_version_version_too_new": {
       "description": "The version of the Matter Server you are currently running is too new for this version of Home Assistant. Please update Home Assistant or downgrade the Matter Server to an older version to fix this issue.",
@@ -618,6 +748,82 @@
     }
   },
   "services": {
+    "lock_clear_pin": {
+      "description": "Removes a PIN code or user from a Matter lock.",
+      "fields": {
+        "credential_index": {
+          "description": "The credential slot index to clear. If not provided, clears the entire user and all their credentials.",
+          "name": "Credential index"
+        },
+        "device_id": {
+          "description": "The Matter lock device.",
+          "name": "[%key:common::config_flow::data::device%]"
+        },
+        "user_index": {
+          "description": "The user index to clear or whose credential to clear.",
+          "name": "User index"
+        }
+      },
+      "name": "Clear lock PIN"
+    },
+    "lock_clear_user": {
+      "description": "Removes a user and all their credentials from a Matter lock.",
+      "fields": {
+        "device_id": {
+          "description": "The Matter lock device.",
+          "name": "[%key:common::config_flow::data::device%]"
+        },
+        "user_index": {
+          "description": "The user index to clear.",
+          "name": "User index"
+        }
+      },
+      "name": "Clear lock user"
+    },
+    "lock_set_pin": {
+      "description": "Adds a new PIN code to a Matter lock. Creates a new user and assigns the PIN to them.",
+      "fields": {
+        "device_id": {
+          "description": "The Matter lock device.",
+          "name": "[%key:common::config_flow::data::device%]"
+        },
+        "pin_code": {
+          "description": "The PIN code to set (digits only).",
+          "name": "PIN code"
+        },
+        "user_name": {
+          "description": "Optional name for the user.",
+          "name": "User name"
+        },
+        "user_type": {
+          "description": "The type of user to create.",
+          "name": "User type"
+        }
+      },
+      "name": "Set lock PIN"
+    },
+    "lock_set_user": {
+      "description": "Creates or updates a user on a Matter lock.",
+      "fields": {
+        "device_id": {
+          "description": "The Matter lock device.",
+          "name": "[%key:common::config_flow::data::device%]"
+        },
+        "user_index": {
+          "description": "The user index to update. If not provided, creates a new user in the next available slot.",
+          "name": "User index"
+        },
+        "user_name": {
+          "description": "The name for the user.",
+          "name": "User name"
+        },
+        "user_type": {
+          "description": "The type of user.",
+          "name": "User type"
+        }
+      },
+      "name": "Set lock user"
+    },
     "open_commissioning_window": {
       "description": "Allows adding one of your devices to another Matter network by opening the commissioning window for this Matter device for 60 seconds.",
       "fields": {

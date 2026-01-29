@@ -89,6 +89,8 @@ async def integration_fixture(
         "dimmable_plugin_unit",
         "door_lock",
         "door_lock_with_unbolt",
+        "door_lock_with_schedules",
+        "door_lock_with_usr",
         "eberle_ute3000",
         "ecovacs_deebot",
         "eufy_vacuum_omni_e28",
