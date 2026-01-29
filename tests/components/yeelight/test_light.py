@@ -106,7 +106,6 @@ from homeassistant.util.color import (
     color_hs_to_xy,
     color_RGB_to_hs,
     color_RGB_to_xy,
-    color_temperature_kelvin_to_mired,
 )
 
 from . import (
@@ -1251,8 +1250,6 @@ async def test_device_types(
             "supported_features": SUPPORT_YEELIGHT,
             "min_color_temp_kelvin": 1700,
             "max_color_temp_kelvin": 6500,
-            "min_mireds": color_temperature_kelvin_to_mired(6500),
-            "max_mireds": color_temperature_kelvin_to_mired(1700),
             "brightness": bg_bright,
             "hs_color": color_RGB_to_hs(*bg_rgb_color),
             "rgb_color": bg_rgb_color,
