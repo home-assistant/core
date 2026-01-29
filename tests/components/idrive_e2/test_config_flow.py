@@ -171,13 +171,18 @@ async def test_flow_no_buckets(
     mock_aiobotocore_s3_client: AsyncMock,
 ) -> None:
     """Test we show an error when no buckets are returned."""
+    # Start flow
     result = await _start_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
+    # User step: endpoint lookup succeeds
     mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
+
+    # S3 list_buckets returns no buckets
     mock_aiobotocore_s3_client.list_buckets.return_value = {"Buckets": []}
 
+    # Submit credentials
     result = await _submit_user(hass, result["flow_id"])
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -198,7 +203,7 @@ async def test_flow_bucket_step_options_from_s3_list_buckets(
     # User step: endpoint lookup succeeds
     mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
 
-    # S3 list_buckets returns our parametrized payload
+    # S3 list_buckets returns our test payload
     mock_aiobotocore_s3_client.list_buckets.return_value = {
         "Buckets": [{"Name": "bucket1"}, {"Name": "bucket2"}]
     }
