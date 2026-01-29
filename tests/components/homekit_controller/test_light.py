@@ -87,7 +87,7 @@ async def test_switch_change_light_state(
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": "light.testdevice", "brightness": 255, "color_temp": 300},
+        {"entity_id": "light.testdevice", "brightness": 255, "color_temp_kelvin": 3333},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -122,7 +122,7 @@ async def test_switch_change_light_state_color_temp(
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": "light.testdevice", "brightness": 255, "color_temp": 400},
+        {"entity_id": "light.testdevice", "brightness": 255, "color_temp_kelvin": 2500},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -330,7 +330,7 @@ async def test_switch_read_light_state_color_temp(
     )
     assert state.state == "on"
     assert state.attributes["brightness"] == 255
-    assert state.attributes["color_temp"] == 400
+    assert state.attributes["color_temp_kelvin"] == 2500
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
@@ -358,7 +358,7 @@ async def test_switch_push_light_state_color_temp(
     )
     assert state.state == "on"
     assert state.attributes["brightness"] == 255
-    assert state.attributes["color_temp"] == 400
+    assert state.attributes["color_temp_kelvin"] == 2500
 
 
 async def test_light_becomes_unavailable_but_recovers(
@@ -395,7 +395,7 @@ async def test_light_becomes_unavailable_but_recovers(
     )
     assert state.state == "on"
     assert state.attributes["brightness"] == 255
-    assert state.attributes["color_temp"] == 400
+    assert state.attributes["color_temp_kelvin"] == 2500
 
 
 async def test_light_unloaded_removed(
