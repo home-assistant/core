@@ -32,6 +32,7 @@ class LevelLockDevice:
     name: str
     is_locked: bool | None
     state: str | None = None
+    reachable: bool = True
 
 
 class _ClientAdapter:
@@ -178,12 +179,14 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
                     lock_id,
                     device_name,
                 )
+                reachable = bool(payload.get("reachable", True)) if payload else True
                 device = LevelLockDevice(
                     lock_id=lock_id,
                     uuid=lock_id,
                     name=device_name or lock_id,
                     is_locked=is_locked,
                     state=payload.get("state") if payload else None,
+                    reachable=reachable,
                 )
                 current[lock_id] = device
                 self._ws_manager.register_device_uuid(device.lock_id, device.uuid)
@@ -198,16 +201,31 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
 
         new_is_locked = device.is_locked
         new_state = device.state
+        new_reachable = device.reachable
         if is_locked is not None:
             new_is_locked = is_locked
         if payload is not None and "state" in payload:
             state = payload.get("state")
             new_state = str(state) if state is not None else None
-        if new_is_locked != device.is_locked or new_state != device.state:
+        if payload is not None and "reachable" in payload:
+            new_reachable = bool(payload.get("reachable"))
+            if new_reachable != device.reachable:
+                LOGGER.info(
+                    "Device %s reachability changed: %s -> %s",
+                    device.lock_id,
+                    device.reachable,
+                    new_reachable,
+                )
+        if (
+            new_is_locked != device.is_locked
+            or new_state != device.state
+            or new_reachable != device.reachable
+        ):
             updated_device = replace(
                 device,
                 is_locked=new_is_locked,
                 state=new_state,
+                reachable=new_reachable,
             )
             current[device.lock_id] = updated_device
             LOGGER.info(
