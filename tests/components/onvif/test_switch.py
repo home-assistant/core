@@ -202,7 +202,7 @@ async def test_relay_switch(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test states of the relay switch."""
-    _config, _camera, device = await setup_onvif_integration(
+    await setup_onvif_integration(
         hass, capabilities=Capabilities(deviceio=True, relay_outputs=2)
     )
 
@@ -227,7 +227,7 @@ async def test_relay_switch(
 
 async def test_relay_switch_no_deviceio(hass: HomeAssistant) -> None:
     """Test the relay switch does not get created if the camera does not support DeviceIO."""
-    _config, _camera, device = await setup_onvif_integration(
+    await setup_onvif_integration(
         hass, capabilities=Capabilities(deviceio=False, relay_outputs=0)
     )
 
