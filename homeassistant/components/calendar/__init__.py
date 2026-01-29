@@ -506,6 +506,8 @@ def is_offset_reached(
 class CalendarEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes calendar entities."""
 
+    initial_color: str | None = None
+
 
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
@@ -516,12 +518,16 @@ class CalendarEntity(Entity):
 
     _alarm_unsubs: list[CALLBACK_TYPE] | None = None
 
-    _attr_initial_color: str | None = None
+    _attr_initial_color: str | None
 
     @property
     def initial_color(self) -> str | None:
         """Return the initial color for the calendar entity."""
-        return self._attr_initial_color
+        if hasattr(self, "_attr_initial_color"):
+            return self._attr_initial_color
+        if hasattr(self, "entity_description"):
+            return self.entity_description.initial_color
+        return None
 
     def get_initial_entity_options(self) -> er.EntityOptionsType | None:
         """Return initial entity options."""
