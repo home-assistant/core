@@ -205,7 +205,6 @@ async def test_relay_switch(
     _config, _camera, device = await setup_onvif_integration(
         hass, capabilities=Capabilities(deviceio=True, relay_outputs=2)
     )
-    device.profiles = device.async_get_profiles()
 
     # Check first relay
     state = hass.states.get("switch.testcamera_relay_relayoutputtoken_0")
@@ -231,7 +230,6 @@ async def test_relay_switch_no_deviceio(hass: HomeAssistant) -> None:
     _config, _camera, device = await setup_onvif_integration(
         hass, capabilities=Capabilities(deviceio=False, relay_outputs=0)
     )
-    device.profiles = device.async_get_profiles()
 
     assert hass.states.get("switch.testcamera_relay_relayoutputtoken_0") is None
 
