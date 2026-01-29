@@ -78,7 +78,7 @@ def create_sensors_for_warning(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _: HomeAssistant,
     config_entry: NinaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:

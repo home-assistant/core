@@ -31,7 +31,7 @@ from .entity import NinaEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    _: HomeAssistant,
     config_entry: NinaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
