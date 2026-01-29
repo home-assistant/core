@@ -1,0 +1,109 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules:
+    status: todo
+    comment: |
+      Multiline lambdas should be wrapped in parentheses for readability (e.g. streaming_listener).
+      Use chained comparison: "if 1 < x < 100" instead of "if x > 1 and x < 100".
+  config-flow: done
+  config-flow-test-coverage:
+    status: todo
+    comment: Use mock_setup_entry fixture instead of inline patch
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  # Silver
+  action-exceptions: done
+  config-entry-unloading:
+    status: todo
+    comment: |
+      async_unload_entry must clean up: (1) close TeslemetryStream websocket via
+      stream.close(), (2) call remove_listener() for each vehicle to unsubscribe
+      from stream events, (3) consider using entry.async_on_unload() during setup
+      to register cleanup callbacks automatically.
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: |
+      Discourage snapshot testing for state verification (e.g. test_binary_sensors_connectivity);
+      use concrete assertions instead. Patch devices where they're used. Use entity_registry as
+      test fixture. Clarify _alt and _noscope fixture purposes. Test error messages in
+      test_service_validation_errors.
+  # Gold
+  devices:
+    status: todo
+    comment: |
+      Add model id to device info. VIN sensor may be redundant (already serial number in device).
+      Version sensor should be sw_version in device info instead.
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: Cloud polling integration
+  discovery-update-info:
+    status: exempt
+    comment: Cloud polling integration
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: todo
+    comment: |
+      New vehicles/energy sites added to user's Tesla account after initial setup
+      are not detected. Need to periodically poll teslemetry.products() and add
+      new TeslemetryVehicleData/TeslemetryEnergyData to runtime_data, then trigger
+      entity creation via coordinator listeners in each platform.
+  entity-category: done
+  entity-device-class:
+    status: todo
+    comment: |
+      DRIVE_INVERTER_STATES has "unavailable" as a state value which conflicts with HA's
+      unavailable state - shows duplicate in state trigger UI.
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: |
+      ConfigEntryAuthFailed and UpdateFailed exceptions can have translated messages.
+      Also one "unknown error" that cannot be translated.
+  icon-translations:
+    status: todo
+    comment: |
+      number.py:299 uses _attr_icon = icon_for_battery_level() instead of
+      range-based icons in icons.json. Affects backup_reserve_percent and
+      off_grid_vehicle_charging_reserve_percent entities. Remove the dynamic
+      icon assignment and add range-based icon entries to icons.json.
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      Reconfiguring has value even with OAuth - allows user to trigger reauth themselves
+      (e.g. after logging out of all devices).
+  repair-issues:
+    status: exempt
+    comment: No issues to repair
+  stale-devices: done
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
