@@ -730,10 +730,10 @@ class ONVIFDevice:
             if result and hasattr(result, "RelayOutput"):
                 relays = result.RelayOutput
                 return relays if isinstance(relays, list) else [relays]
-            return []
         except ONVIFError as err:
             LOGGER.error("Error trying to get relay outputs: %s", err)
-            return []
+
+        return []
 
     async def async_set_relay_output_state(
         self, relay_token: str, state: str
