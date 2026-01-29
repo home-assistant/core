@@ -116,6 +116,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Deprecated - Remove in 2026.8
     # For YAML mode, register the default panel in yaml mode (temporary until user migrates)
+    # Use legacy_lovelace so the frontend knows to load this panel differently
     if mode == MODE_YAML:
         frontend.async_register_built_in_panel(
             hass,
