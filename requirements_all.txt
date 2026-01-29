@@ -1989,7 +1989,7 @@ pydeconz==120
 pydelijn==1.1.0
 
 # homeassistant.components.dexcom
-pydexcom==0.2.3
+pydexcom==0.5.1
 
 # homeassistant.components.discovergy
 pydiscovergy==3.0.2
