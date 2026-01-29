@@ -19,12 +19,41 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .const import DEFAULT_PORT, DOMAIN, LOGGER
+
+
+async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Any:
+    """Validate the user input allows us to connect."""
+    fully = FullyKiosk(
+        async_get_clientsession(hass),
+        data[CONF_HOST],
+        DEFAULT_PORT,
+        data[CONF_PASSWORD],
+        use_ssl=data[CONF_SSL],
+        verify_ssl=data[CONF_VERIFY_SSL],
+    )
+
+    try:
+        async with asyncio.timeout(15):
+            device_info = await fully.getDeviceInfo()
+    except (
+        ClientConnectorError,
+        FullyKioskError,
+        TimeoutError,
+    ) as error:
+        LOGGER.debug(error.args, exc_info=True)
+        raise CannotConnect from error
+    except Exception as error:  # pylint: disable=broad-except
+        raise UnknownError from error
+
+    return device_info
 
 
 class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -43,58 +72,43 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
         host: str,
         user_input: dict[str, Any],
         errors: dict[str, str],
-        description_placeholders: dict[str, str] | Any = None,
     ) -> ConfigFlowResult | None:
-        fully = FullyKiosk(
-            async_get_clientsession(self.hass),
-            host,
-            DEFAULT_PORT,
-            user_input[CONF_PASSWORD],
-            use_ssl=user_input[CONF_SSL],
-            verify_ssl=user_input[CONF_VERIFY_SSL],
-        )
-
+        """Create a config entry."""
+        self._async_abort_entries_match({CONF_HOST: host})
         try:
-            async with asyncio.timeout(15):
-                device_info = await fully.getDeviceInfo()
-        except (
-            ClientConnectorError,
-            FullyKioskError,
-            TimeoutError,
-        ) as error:
-            LOGGER.debug(error.args, exc_info=True)
+            device_info = await _validate_input(
+                self.hass, {**user_input, CONF_HOST: host}
+            )
+        except CannotConnect:
             errors["base"] = "cannot_connect"
-            description_placeholders["error_detail"] = str(error.args)
             return None
-        except Exception as error:  # noqa: BLE001
-            LOGGER.exception("Unexpected exception: %s", error)
+        except UnknownError:
+            LOGGER.exception("Unexpected exception during configuration")
             errors["base"] = "unknown"
-            description_placeholders["error_detail"] = str(error.args)
             return None
-
-        await self.async_set_unique_id(device_info["deviceID"], raise_on_progress=False)
-        self._abort_if_unique_id_configured(updates=user_input)
-        return self.async_create_entry(
-            title=device_info["deviceName"],
-            data={
-                CONF_HOST: host,
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
-                CONF_MAC: format_mac(device_info["Mac"]),
-                CONF_SSL: user_input[CONF_SSL],
-                CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-            },
-        )
+        else:
+            await self.async_set_unique_id(
+                device_info["deviceID"], raise_on_progress=False
+            )
+            self._abort_if_unique_id_configured(updates=user_input)
+            return self.async_create_entry(
+                title=device_info["deviceName"],
+                data={
+                    CONF_HOST: host,
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_MAC: format_mac(device_info["Mac"]),
+                    CONF_SSL: user_input[CONF_SSL],
+                    CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                },
+            )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-        placeholders: dict[str, str] = {}
         if user_input is not None:
-            result = await self._create_entry(
-                user_input[CONF_HOST], user_input, errors, placeholders
-            )
+            result = await self._create_entry(user_input[CONF_HOST], user_input, errors)
             if result:
                 return result
 
@@ -108,7 +122,6 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
-            description_placeholders=placeholders,
             errors=errors,
         )
 
@@ -171,3 +184,67 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
         self.host = device_info["hostname4"]
         self._discovered_device_info = device_info
         return await self.async_step_discovery_confirm()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing config entry."""
+        errors: dict[str, str] = {}
+        reconf_entry = self._get_reconfigure_entry()
+        suggested_values = {
+            CONF_HOST: reconf_entry.data[CONF_HOST],
+            CONF_PASSWORD: reconf_entry.data[CONF_PASSWORD],
+            CONF_SSL: reconf_entry.data[CONF_SSL],
+            CONF_VERIFY_SSL: reconf_entry.data[CONF_VERIFY_SSL],
+        }
+
+        if user_input:
+            try:
+                device_info = await _validate_input(
+                    self.hass,
+                    data={
+                        **reconf_entry.data,
+                        **user_input,
+                    },
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except UnknownError:
+                LOGGER.exception("Unexpected exception during reconfiguration")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(
+                    device_info["deviceID"], raise_on_progress=False
+                )
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconf_entry,
+                    data_updates={
+                        **reconf_entry.data,
+                        **user_input,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): str,
+                        vol.Required(CONF_PASSWORD): str,
+                        vol.Optional(CONF_SSL, default=False): bool,
+                        vol.Optional(CONF_VERIFY_SSL, default=False): bool,
+                    }
+                ),
+                suggested_values=user_input or suggested_values,
+            ),
+            errors=errors,
+        )
+
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect to the Fully Kiosk device."""
+
+
+class UnknownError(HomeAssistantError):
+    """Error to indicate an unknown error occurred."""
