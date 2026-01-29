@@ -3604,6 +3604,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "liebherr": {
+      "name": "Liebherr",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "lifx": {
       "name": "LIFX",
       "integration_type": "device",

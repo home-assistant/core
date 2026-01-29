@@ -1,0 +1,38 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices": "No devices found for this API key"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_devices": "No devices found for this API key",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "The API key from the Liebherr SmartDevice app. Note: The API key can only be copied once from the app."
+        },
+        "description": "Enter your Liebherr HomeAPI key. You can find it in the Liebherr SmartDevice app under Settings → Become a beta tester."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "bottom_zone": {
+        "name": "Bottom zone"
+      },
+      "middle_zone": {
+        "name": "Middle zone"
+      },
+      "top_zone": {
+        "name": "Top zone"
+      }
+    }
+  }
+}
