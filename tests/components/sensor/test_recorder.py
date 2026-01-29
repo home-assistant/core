@@ -3892,6 +3892,21 @@ async def test_compile_hourly_statistics_convert_units_1(
         ),
         (None, "\u00b5g", "\u03bcg", None, "mass", 13.050847, 13.333333, -10, 30),
         (None, "\u00b5s", "\u03bcs", None, "duration", 13.050847, 13.333333, -10, 30),
+        (None, "mVAr", "mvar", None, "reactive_power", 13.050847, 13.333333, -10, 30),
+        (None, "VAr", "var", None, "reactive_power", 13.050847, 13.333333, -10, 30),
+        (None, "kVAr", "kvar", None, "reactive_power", 13.050847, 13.333333, -10, 30),
+        (None, "VArh", "varh", None, "reactive_energy", 13.050847, 13.333333, -10, 30),
+        (
+            None,
+            "kVArh",
+            "kvarh",
+            None,
+            "reactive_energy",
+            13.050847,
+            13.333333,
+            -10,
+            30,
+        ),
     ],
 )
 async def test_compile_hourly_statistics_equivalent_units_1(
@@ -4032,6 +4047,16 @@ async def test_compile_hourly_statistics_equivalent_units_1(
         (SensorDeviceClass.WEIGHT, "\u00b5g", "\u03bcg", None, 13.333333, -10, 30),
         (None, "\u00b5s", "\u03bcs", None, 13.333333, -10, 30),
         (SensorDeviceClass.DURATION, "\u00b5s", "\u03bcs", None, 13.333333, -10, 30),
+        (None, "mVAr", "mvar", None, 13.333333, -10, 30),
+        (None, "VAr", "var", None, 13.333333, -10, 30),
+        (None, "kVAr", "kvar", None, 13.333333, -10, 30),
+        (None, "VArh", "varh", None, 13.333333, -10, 30),
+        (None, "kVArh", "kvarh", None, 13.333333, -10, 30),
+        (SensorDeviceClass.REACTIVE_POWER, "mVAr", "mvar", None, 13.333333, -10, 30),
+        (SensorDeviceClass.REACTIVE_POWER, "VAr", "var", None, 13.333333, -10, 30),
+        (SensorDeviceClass.REACTIVE_POWER, "kVAr", "kvar", None, 13.333333, -10, 30),
+        (SensorDeviceClass.REACTIVE_ENERGY, "VArh", "varh", None, 13.333333, -10, 30),
+        (SensorDeviceClass.REACTIVE_ENERGY, "kVArh", "kvarh", None, 13.333333, -10, 30),
     ],
 )
 async def test_compile_hourly_statistics_equivalent_units_2(
@@ -6008,6 +6033,11 @@ async def test_validate_statistics_unit_change_no_conversion(
         (NONE_SENSOR_ATTRIBUTES, "\u00b5mol/s⋅m²", "\u03bcmol/s⋅m²"),
         (NONE_SENSOR_ATTRIBUTES, "\u00b5g", "\u03bcg"),
         (NONE_SENSOR_ATTRIBUTES, "\u00b5s", "\u03bcs"),
+        (NONE_SENSOR_ATTRIBUTES, "mVAr", "mvar"),
+        (NONE_SENSOR_ATTRIBUTES, "VAr", "var"),
+        (NONE_SENSOR_ATTRIBUTES, "kVAr", "kvar"),
+        (NONE_SENSOR_ATTRIBUTES, "VArh", "varh"),
+        (NONE_SENSOR_ATTRIBUTES, "kVArh", "kvarh"),
     ],
 )
 async def test_validate_statistics_unit_change_equivalent_units(
@@ -6105,6 +6135,11 @@ async def test_validate_statistics_unit_change_equivalent_units(
             "\u00b5s",
             "d, h, min, ms, s, w, \u03bcs",
         ),
+        (NONE_SENSOR_ATTRIBUTES, "reactive_power", "mvar", "mVAr", "kvar, mvar, var"),
+        (NONE_SENSOR_ATTRIBUTES, "reactive_power", "var", "VAr", "kvar, mvar, var"),
+        (NONE_SENSOR_ATTRIBUTES, "reactive_power", "kvar", "kVAr", "kvar, mvar, var"),
+        (NONE_SENSOR_ATTRIBUTES, "reactive_energy", "varh", "VArh", "kvarh, varh"),
+        (NONE_SENSOR_ATTRIBUTES, "reactive_energy", "kvarh", "kVArh", "kvarh, varh"),
     ],
 )
 async def test_validate_statistics_unit_change_equivalent_units_2(
