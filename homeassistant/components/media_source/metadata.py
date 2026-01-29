@@ -51,9 +51,9 @@ def read_metadata(path: Path) -> dict[str, Any] | None:
         return None
     try:
         data = json.loads(meta_path.read_text(encoding="utf-8"))
-        if isinstance(data, dict):
-            return cast(dict[str, Any], data)
-        return None
+        if not isinstance(data, dict):
+            return None
+        return cast(dict[str, Any], data)
     except OSError as err:
         LOGGER.debug("Failed reading metadata for %s: %s", path, err)
     except json.JSONDecodeError as err:
