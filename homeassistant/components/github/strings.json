@@ -4,20 +4,43 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "could_not_register": "Could not register integration with GitHub"
     },
+    "error": {
+      "invalid_access_token": "Invalid access token",
+      "unknown": "Unexpected error"
+    },
     "progress": {
       "wait_for_device": "Open {url}, and paste the following code to authorize the integration: \n```\n{code}\n```"
     },
     "step": {
+      "pat": {
+        "data": {
+          "access_token": "Unrestricted Personal Access Token",
+          "name": "Name (Optional)"
+        },
+        "description": "Please enter a GitHub Personal Access Token (PAT). For private repositories, ensure the token has 'Contents' read-only permission for the specific repositories."
+      },
       "repositories": {
         "data": {
           "repositories": "Select repositories to track."
         },
         "title": "Configure repositories"
+      },
+      "user": {
+        "menu_options": {
+          "device": "Use GitHub Account (Recommended)",
+          "pat": "Use Personal Access Token"
+        }
       }
     }
   },
   "entity": {
     "sensor": {
+      "assigned_issues_count": {
+        "name": "Assigned Issues"
+      },
+      "assigned_pull_requests_count": {
+        "name": "Assigned Pull Requests"
+      },
       "discussions_count": {
         "name": "Discussions",
         "unit_of_measurement": "discussions"
@@ -48,9 +71,15 @@
       "latest_tag": {
         "name": "Latest tag"
       },
+      "notifications_count": {
+        "name": "Notifications"
+      },
       "pulls_count": {
         "name": "Pull requests",
         "unit_of_measurement": "pull requests"
+      },
+      "review_requests_count": {
+        "name": "Review Requests"
       },
       "stargazers_count": {
         "name": "Stars",

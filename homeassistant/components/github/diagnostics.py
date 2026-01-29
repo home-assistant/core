@@ -35,7 +35,7 @@ async def async_get_config_entry_diagnostics(
     else:
         data["rate_limit"] = rate_limit_response.data.as_dict
 
-    repositories = config_entry.runtime_data
+    repositories = config_entry.runtime_data.repositories
     data["repositories"] = {}
 
     for repository, coordinator in repositories.items():

@@ -33,7 +33,8 @@ async def test_device_registry_cleanup(
         config_entry_id=mock_config_entry.entry_id,
     )
 
-    assert len(devices) == 1
+    # Expect 2 devices: 1 Repository + 1 Account
+    assert len(devices) == 2
 
     hass.config_entries.async_update_entry(
         mock_config_entry,
@@ -52,7 +53,8 @@ async def test_device_registry_cleanup(
         config_entry_id=mock_config_entry.entry_id,
     )
 
-    assert len(devices) == 0
+    # Expect 1 device: 1 Account (repository removed)
+    assert len(devices) == 1
 
 
 async def test_subscription_setup(
