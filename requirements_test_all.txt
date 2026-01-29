@@ -1696,7 +1696,7 @@ pydeako==0.6.0
 pydeconz==120
 
 # homeassistant.components.dexcom
-pydexcom==0.2.3
+pydexcom==0.5.1
 
 # homeassistant.components.discovergy
 pydiscovergy==3.0.2
