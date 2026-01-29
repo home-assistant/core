@@ -33,12 +33,20 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator, validators as template_validators
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
-from .helpers import async_setup_template_entry, async_setup_template_preview
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
@@ -48,6 +56,8 @@ from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_AVAILABILITY = "availability"
 
 CONF_HVAC_MODE = "hvac_mode"
 CONF_HVAC_ACTION = "hvac_action"
@@ -148,6 +158,24 @@ CLIMATE_CONFIG_ENTRY_SCHEMA = vol.All(
 )
 
 
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Template climate."""
+    await async_setup_template_platform(
+        hass,
+        CLIMATE_DOMAIN,
+        config,
+        StateClimateEntity,
+        TriggerClimateEntity,
+        async_add_entities,
+        discovery_info,
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -193,19 +221,12 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
 
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
+
         raw_hvac_modes = config.get(CONF_HVAC_MODES, [HVACMode.AUTO])
-        hvac_modes: list[HVACMode] = []
-        for m in raw_hvac_modes:
-            if isinstance(m, HVACMode):
-                hvac_modes.append(m)
-                continue
-            try:
-                hvac_modes.append(HVACMode(str(m).lower().strip()))
-            except ValueError:
-                continue
-        if not hvac_modes:
-            hvac_modes = [HVACMode.AUTO]
-        self._attr_hvac_modes = hvac_modes
+        self._attr_hvac_modes = [
+            m if isinstance(m, HVACMode) else HVACMode(str(m).lower().strip())
+            for m in raw_hvac_modes
+        ]
 
         self._attr_fan_modes = [str(m) for m in config.get(CONF_FAN_MODES, [])]
         self._attr_swing_modes = [str(m) for m in config.get(CONF_SWING_MODES, [])]
@@ -221,13 +242,13 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self._attr_precision = config.get(CONF_PRECISION, DEFAULT_PRECISION)
 
-        hvac_mode_to_enum = template_validators.strenum(
+        _hvac_mode_to_enum = template_validators.strenum(
             self,
             CONF_HVAC_MODE,
             HVACMode,
             none_on_unknown_unavailable=True,
         )
-        hvac_mode_in_list = template_validators.item_in_list(
+        _hvac_mode_in_list = template_validators.item_in_list(
             self,
             CONF_HVAC_MODE,
             self._attr_hvac_modes,
@@ -235,17 +256,21 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
             none_on_unknown_unavailable=True,
         )
 
-        def validate_hvac_mode(result: Any) -> HVACMode | None:
-            mode = hvac_mode_to_enum(result)
+        def _validate_hvac_mode(result: Any) -> HVACMode | None:
+            mode = _hvac_mode_to_enum(result)
             if mode is None:
                 return None
-            return hvac_mode_in_list(mode)
+            return _hvac_mode_in_list(mode)
 
-        self.setup_template(CONF_HVAC_MODE, "attr_hvac_mode", validate_hvac_mode)
+        self.setup_template(
+            CONF_HVAC_MODE,
+            "_attr_hvac_mode",
+            _validate_hvac_mode,
+        )
 
         self.setup_template(
             CONF_HVAC_ACTION,
-            "attr_hvac_action",
+            "_attr_hvac_action",
             template_validators.strenum(
                 self,
                 CONF_HVAC_ACTION,
@@ -255,7 +280,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_CURRENT_TEMPERATURE,
-            "attr_current_temperature",
+            "_attr_current_temperature",
             template_validators.number(
                 self,
                 CONF_CURRENT_TEMPERATURE,
@@ -265,7 +290,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_TARGET_TEMPERATURE,
-            "attr_target_temperature",
+            "_attr_target_temperature",
             template_validators.number(
                 self,
                 CONF_TARGET_TEMPERATURE,
@@ -275,7 +300,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_TARGET_TEMPERATURE_HIGH,
-            "attr_target_temperature_high",
+            "_attr_target_temperature_high",
             template_validators.number(
                 self,
                 CONF_TARGET_TEMPERATURE_HIGH,
@@ -285,7 +310,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_TARGET_TEMPERATURE_LOW,
-            "attr_target_temperature_low",
+            "_attr_target_temperature_low",
             template_validators.number(
                 self,
                 CONF_TARGET_TEMPERATURE_LOW,
@@ -295,7 +320,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_FAN_MODE,
-            "attr_fan_mode",
+            "_attr_fan_mode",
             template_validators.item_in_list(
                 self,
                 CONF_FAN_MODE,
@@ -306,7 +331,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_SWING_MODE,
-            "attr_swing_mode",
+            "_attr_swing_mode",
             template_validators.item_in_list(
                 self,
                 CONF_SWING_MODE,
@@ -317,7 +342,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_PRESET_MODE,
-            "attr_preset_mode",
+            "_attr_preset_mode",
             template_validators.item_in_list(
                 self,
                 CONF_PRESET_MODE,
@@ -328,7 +353,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_HUMIDITY,
-            "attr_current_humidity",
+            "_attr_current_humidity",
             template_validators.number(
                 self,
                 CONF_HUMIDITY,
@@ -338,7 +363,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         )
         self.setup_template(
             CONF_TARGET_HUMIDITY,
-            "attr_target_humidity",
+            "_attr_target_humidity",
             template_validators.number(
                 self,
                 CONF_TARGET_HUMIDITY,
@@ -470,7 +495,7 @@ class StateClimateEntity(TemplateEntity, AbstractTemplateClimate):
         self,
         hass: HomeAssistant,
         config: dict[str, Any],
-        unique_id: str | None,
+        unique_id,
     ) -> None:
         """Initialize the Template Climate."""
         TemplateEntity.__init__(self, hass, config, unique_id)
@@ -489,7 +514,7 @@ class TriggerClimateEntity(TriggerEntity, AbstractTemplateClimate):
         self,
         hass: HomeAssistant,
         coordinator: TriggerUpdateCoordinator,
-        config: dict[str, Any],
+        config: ConfigType,
     ) -> None:
         """Initialize the entity."""
         TriggerEntity.__init__(self, hass, coordinator, config)
