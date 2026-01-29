@@ -25,7 +25,7 @@ async def test_form(
     """Test the complete config flow."""
     # Start the flow
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -34,7 +34,7 @@ async def test_form(
     # Select line
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_LINE: "1"},
+        {CONF_LINE: "1"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "stop"
@@ -66,7 +66,7 @@ async def test_form_already_configured(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
