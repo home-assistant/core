@@ -783,7 +783,7 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
             "mono",
             UNIQUE_FRIENDLY_NAME,
             ENTITY_LIGHT,
-            {"power": "on"},
+            {"power": "on", "color_mode": "3"},  # HSV
             False,
             False,
             id="default",
@@ -794,7 +794,7 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
             "mono",
             UNIQUE_FRIENDLY_NAME,
             ENTITY_LIGHT,
-            {"power": "on"},
+            {"power": "on", "color_mode": "3"},  # HSV
             False,
             False,
             id="white",
@@ -882,7 +882,7 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
             "ceiling4",
             UNIQUE_FRIENDLY_NAME,
             ENTITY_LIGHT,
-            {"main_power": "on"},
+            {},
             True,
             True,
             id="whitetempmood",
@@ -893,7 +893,7 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
             "ceiling4",
             f"{UNIQUE_FRIENDLY_NAME} Ambilight",
             f"{ENTITY_LIGHT}_ambilight",
-            {"power": "on", "bg_lmode": "2"},
+            {"bg_lmode": "2"},  # CT
             False,
             False,
             id="backgroundlight_ct",
@@ -904,7 +904,7 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
             "ceiling4",
             f"{UNIQUE_FRIENDLY_NAME} Ambilight",
             f"{ENTITY_LIGHT}_ambilight",
-            {"power": "on", "bg_lmode": "3"},
+            {"bg_lmode": "3"},  # HS
             False,
             False,
             id="backgroundlight_hs",
@@ -915,7 +915,7 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
             "ceiling4",
             f"{UNIQUE_FRIENDLY_NAME} Ambilight",
             f"{ENTITY_LIGHT}_ambilight",
-            {"power": "on", "bg_lmode": "1"},
+            {"bg_lmode": "1"},  # RGB
             False,
             False,
             id="backgroundlight_rgb",
@@ -957,9 +957,9 @@ async def test_device_types(
         model: str,
         *,
         nightlight_entity_properties: bool,
-        nightlight_mode_properties: bool,
         name: str,
         entity_id: str,
+        nightlight_mode_properties: bool,
     ) -> None:
         config_entry = MockConfigEntry(
             domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
