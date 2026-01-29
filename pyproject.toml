@@ -24,6 +24,8 @@ classifiers = [
 requires-python = ">=3.14.2"
 dependencies = [
   "aiodns==4.0.0",
+  # aiogithubapi is needed by frontend
+  "aiogithubapi==24.6.0",
   # Integrations may depend on hassio integration without listing it to
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
