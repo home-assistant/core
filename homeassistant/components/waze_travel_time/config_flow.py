@@ -148,7 +148,8 @@ class WazeOptionsFlow(OptionsFlow):
 class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Waze Travel Time."""
 
-    VERSION = 3
+    VERSION = 2
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback

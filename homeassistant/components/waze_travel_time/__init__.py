@@ -203,7 +203,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry.minor_version,
         )
 
-    if config_entry.version == 2:
+    if config_entry.version == 2 and config_entry.minor_version == 1:
         _LOGGER.debug(
             "Migrating from version %s.%s",
             config_entry.version,
@@ -211,7 +211,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         )
         options = dict(config_entry.options)
         options[CONF_TIME_DELTA] = DEFAULT_TIME_DELTA
-        hass.config_entries.async_update_entry(config_entry, options=options, version=3)
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, minor_version=2
+        )
         _LOGGER.debug(
             "Migration to version %s.%s successful",
             config_entry.version,
