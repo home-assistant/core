@@ -3842,6 +3842,12 @@
       "integration_type": "virtual",
       "supported_by": "denonavr"
     },
+    "marstek": {
+      "name": "Marstek",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "martec": {
       "name": "Martec",
       "integration_type": "virtual",

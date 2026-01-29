@@ -1828,6 +1828,9 @@ py-improv-ble-client==2.0.1
 # homeassistant.components.madvr
 py-madvr2==1.6.40
 
+# homeassistant.components.marstek
+py-marstek==0.2.0
+
 # homeassistant.components.melissa
 py-melissa-climate==3.0.3
 
