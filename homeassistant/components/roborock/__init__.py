@@ -18,6 +18,7 @@ from roborock.data import UserData
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import UserParams, create_device_manager
 from roborock.map.map_parser import MapParserConfig
+from roborock.mqtt.session import MqttSessionUnauthorized
 
 from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
@@ -36,10 +37,12 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import (
+    RoborockB01Q7UpdateCoordinator,
     RoborockConfigEntry,
     RoborockCoordinators,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
+    RoborockDataUpdateCoordinatorB01,
     RoborockWashingMachineUpdateCoordinator,
     RoborockWetDryVacUpdateCoordinator,
 )
@@ -75,6 +78,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
                 show_background=entry.options.get(CONF_SHOW_BACKGROUND, False),
                 map_scale=MAP_SCALE,
             ),
+            mqtt_session_unauthorized_hook=lambda: entry.async_start_reauth(hass),
+            prefer_cache=False,
         )
     except RoborockInvalidCredentials as err:
         raise ConfigEntryAuthFailed(
@@ -91,6 +96,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="no_user_agreement",
+        ) from err
+    except MqttSessionUnauthorized as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="mqtt_unauthorized",
         ) from err
     except RoborockException as err:
         _LOGGER.debug("Failed to get Roborock home data: %s", err)
@@ -125,13 +135,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         for coord in coordinators
         if isinstance(coord, RoborockDataUpdateCoordinatorA01)
     ]
-    if len(v1_coords) + len(a01_coords) == 0:
+    b01_coords = [
+        coord
+        for coord in coordinators
+        if isinstance(coord, RoborockDataUpdateCoordinatorB01)
+    ]
+    if len(v1_coords) + len(a01_coords) + len(b01_coords) == 0:
         raise ConfigEntryNotReady(
             "No devices were able to successfully setup",
             translation_domain=DOMAIN,
             translation_key="no_coordinators",
         )
-    entry.runtime_data = RoborockCoordinators(v1_coords, a01_coords)
+    entry.runtime_data = RoborockCoordinators(v1_coords, a01_coords, b01_coords)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -202,12 +217,17 @@ def build_setup_functions(
     Coroutine[
         Any,
         Any,
-        RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01 | None,
+        RoborockDataUpdateCoordinator
+        | RoborockDataUpdateCoordinatorA01
+        | RoborockDataUpdateCoordinatorB01
+        | None,
     ]
 ]:
     """Create a list of setup functions that can later be called asynchronously."""
     coordinators: list[
-        RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01
+        RoborockDataUpdateCoordinator
+        | RoborockDataUpdateCoordinatorA01
+        | RoborockDataUpdateCoordinatorB01
     ] = []
     for device in devices:
         _LOGGER.debug("Creating device %s: %s", device.name, device)
@@ -223,6 +243,12 @@ def build_setup_functions(
             coordinators.append(
                 RoborockWashingMachineUpdateCoordinator(hass, entry, device, device.zeo)
             )
+        elif device.b01_q7_properties is not None:
+            coordinators.append(
+                RoborockB01Q7UpdateCoordinator(
+                    hass, entry, device, device.b01_q7_properties
+                )
+            )
         else:
             _LOGGER.warning(
                 "Not adding device %s because its protocol version %s or category %s is not supported",
@@ -235,8 +261,15 @@ def build_setup_functions(
 
 
 async def setup_coordinator(
-    coordinator: RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01,
-) -> RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01 | None:
+    coordinator: RoborockDataUpdateCoordinator
+    | RoborockDataUpdateCoordinatorA01
+    | RoborockDataUpdateCoordinatorB01,
+) -> (
+    RoborockDataUpdateCoordinator
+    | RoborockDataUpdateCoordinatorA01
+    | RoborockDataUpdateCoordinatorB01
+    | None
+):
     """Set up a single coordinator."""
     try:
         await coordinator.async_config_entry_first_refresh()

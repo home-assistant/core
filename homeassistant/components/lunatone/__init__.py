@@ -2,7 +2,7 @@
 
 from typing import Final
 
-from lunatone_rest_api_client import Auth, Devices, Info
+from lunatone_rest_api_client import Auth, DALIBroadcast, Devices, Info
 
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
@@ -42,19 +42,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         name=info_api.name,
         manufacturer="Lunatone",
         sw_version=info_api.version,
-        hw_version=info_api.data.device.pcb,
+        hw_version=coordinator_info.data.device.pcb,
         configuration_url=entry.data[CONF_URL],
         serial_number=str(info_api.serial_number),
         model=info_api.product_name,
         model_id=(
-            f"{info_api.data.device.article_number}{info_api.data.device.article_info}"
+            f"{coordinator_info.data.device.article_number}{coordinator_info.data.device.article_info}"
         ),
     )
 
     coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices_api)
     await coordinator_devices.async_config_entry_first_refresh()
 
-    entry.runtime_data = LunatoneData(coordinator_info, coordinator_devices)
+    dali_line_broadcasts = [
+        DALIBroadcast(auth_api, int(line)) for line in coordinator_info.data.lines
+    ]
+
+    entry.runtime_data = LunatoneData(
+        coordinator_info,
+        coordinator_devices,
+        dali_line_broadcasts,
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

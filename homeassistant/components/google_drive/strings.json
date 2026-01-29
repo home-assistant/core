@@ -14,6 +14,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -40,6 +41,25 @@
       "reauth_confirm": {
         "description": "The Google Drive integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "backups_size": {
+        "name": "Total size of backups"
+      },
+      "storage_total": {
+        "name": "Total available storage"
+      },
+      "storage_used": {
+        "name": "Used storage"
+      },
+      "storage_used_in_drive": {
+        "name": "Used storage in Drive"
+      },
+      "storage_used_in_drive_trash": {
+        "name": "Used storage in Drive Trash"
       }
     }
   }

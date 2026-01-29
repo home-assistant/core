@@ -13,6 +13,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
@@ -257,6 +258,9 @@
           "plate_step_warm": "Warming"
         }
       },
+      "power_disk_level": {
+        "name": "PowerDisk level"
+      },
       "program_id": {
         "name": "Program",
         "state": {
@@ -445,6 +449,8 @@
           "dark_mixed_grain_bread": "Dark mixed grain bread",
           "decrystallise_honey": "Decrystallize honey",
           "defrost": "Defrost",
+          "defrost_meat": "Defrost meat",
+          "defrost_vegetables": "Defrost vegetables",
           "defrosting_with_microwave": "Defrosting with microwave",
           "defrosting_with_steam": "Defrosting with steam",
           "delicates": "Delicates",
@@ -518,10 +524,13 @@
           "green_split_peas": "Green split peas",
           "green_tea": "Green tea",
           "greenage_plums": "Greenage plums",
+          "grill": "Grill",
           "halibut_fillet_2_cm": "Halibut (fillet, 2 cm)",
           "halibut_fillet_3_cm": "Halibut (fillet, 3 cm)",
           "ham_roast": "Ham roast",
+          "heating_bakes_gratins": "Heating bakes/gratins",
           "heating_damp_flannels": "Heating damp flannels",
+          "heating_vegetables": "Heating vegetables",
           "hens_eggs_size_l_hard": "Hen’s eggs (size „L“, hard)",
           "hens_eggs_size_l_medium": "Hen’s eggs (size „L“, medium)",
           "hens_eggs_size_l_soft": "Hen’s eggs (size „L“, soft)",
@@ -581,6 +590,9 @@
           "melt_chocolate": "Melt chocolate",
           "menu_cooking": "Menu cooking",
           "microwave": "Microwave",
+          "microwave_auto_roast": "Microwave + Auto roast",
+          "microwave_fan_grill": "Microwave + Fan grill",
+          "microwave_fan_plus": "Microwave + Fan plus",
           "milk_foam": "Milk foam",
           "milk_pipework_clean": "Milk pipework clean",
           "milk_pipework_rinse": "Milk pipework rinse",
@@ -952,6 +964,7 @@
           "cleaning": "Cleaning",
           "comfort_cooling": "Comfort cooling",
           "cooling_down": "Cooling down",
+          "cooling_phase": "Cooling phase",
           "dirty_sensors": "Dirty sensors",
           "disinfecting": "Disinfecting",
           "dispensing": "Dispensing",
@@ -1038,6 +1051,12 @@
       "remaining_time": {
         "name": "Remaining time"
       },
+      "rinse_aid_level": {
+        "name": "Rinse aid level"
+      },
+      "salt_level": {
+        "name": "Salt level"
+      },
       "spin_speed": {
         "name": "Spin speed"
       },
@@ -1061,6 +1080,7 @@
           "program_ended": "Program ended",
           "program_interrupted": "Program interrupted",
           "programmed": "Programmed",
+          "reserved": "Reserved",
           "rinse_hold": "Rinse hold",
           "service": "Service",
           "supercooling": "Supercooling",
@@ -1078,6 +1098,12 @@
       },
       "temperature_zone_3": {
         "name": "Temperature zone 3"
+      },
+      "twin_dos_1_level": {
+        "name": "TwinDos 1 level"
+      },
+      "twin_dos_2_level": {
+        "name": "TwinDos 2 level"
       },
       "water_consumption": {
         "name": "Water consumption"

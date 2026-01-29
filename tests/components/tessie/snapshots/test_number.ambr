@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Backup reserve',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -85,6 +86,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Off-grid reserve',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -145,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge current',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.CURRENT: 'current'>,
@@ -204,6 +207,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charge limit',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -263,6 +267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed limit',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.SPEED: 'speed'>,

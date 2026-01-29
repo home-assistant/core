@@ -13,7 +13,18 @@ import inspect
 import logging
 import re
 import sys
-from typing import TYPE_CHECKING, Any, Protocol, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    Literal,
+    Protocol,
+    TypedDict,
+    Unpack,
+    cast,
+    overload,
+    override,
+)
 
 import voluptuous as vol
 
@@ -43,7 +54,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     WEEKDAYS,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -71,6 +82,7 @@ from .automation import (
 )
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
+from .target import TargetSelection, async_extract_referenced_entity_ids
 from .template import Template, render_complex
 from .trace import (
     TraceElement,
@@ -298,8 +310,158 @@ class Condition(abc.ABC):
         self._hass = hass
 
     @abc.abstractmethod
-    async def async_get_checker(self) -> ConditionCheckerType:
+    async def async_get_checker(self) -> ConditionChecker:
         """Get the condition checker."""
+
+
+ATTR_BEHAVIOR: Final = "behavior"
+BEHAVIOR_ANY: Final = "any"
+BEHAVIOR_ALL: Final = "all"
+
+STATE_CONDITION_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
+    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+        [BEHAVIOR_ANY, BEHAVIOR_ALL]
+    ),
+}
+ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
+    {
+        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        vol.Required(CONF_OPTIONS): STATE_CONDITION_OPTIONS_SCHEMA,
+    }
+)
+
+
+class EntityConditionBase(Condition):
+    """Base class for entity conditions."""
+
+    _domain: str
+    _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
+
+    @override
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, cls._schema(config))
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize condition."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.target
+            assert config.options
+        self._target_selection = TargetSelection(config.target)
+        self._behavior = config.options[ATTR_BEHAVIOR]
+
+    def entity_filter(self, entities: set[str]) -> set[str]:
+        """Filter entities of this domain."""
+        return {
+            entity_id
+            for entity_id in entities
+            if split_entity_id(entity_id)[0] == self._domain
+        }
+
+    @abc.abstractmethod
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches the expected state(s)."""
+
+    @override
+    async def async_get_checker(self) -> ConditionChecker:
+        """Get the condition checker."""
+
+        def check_any_match_state(states: list[State]) -> bool:
+            """Test if any entity matches the state."""
+            return any(self.is_valid_state(state) for state in states)
+
+        def check_all_match_state(states: list[State]) -> bool:
+            """Test if all entities match the state."""
+            return all(self.is_valid_state(state) for state in states)
+
+        matcher: Callable[[list[State]], bool]
+        if self._behavior == BEHAVIOR_ANY:
+            matcher = check_any_match_state
+        elif self._behavior == BEHAVIOR_ALL:
+            matcher = check_all_match_state
+
+        def test_state(**kwargs: Unpack[ConditionCheckParams]) -> bool:
+            """Test state condition."""
+            targeted_entities = async_extract_referenced_entity_ids(
+                self._hass, self._target_selection, expand_group=False
+            )
+            referenced_entity_ids = targeted_entities.referenced.union(
+                targeted_entities.indirectly_referenced
+            )
+            filtered_entity_ids = self.entity_filter(referenced_entity_ids)
+            entity_states = [
+                _state
+                for entity_id in filtered_entity_ids
+                if (_state := self._hass.states.get(entity_id))
+                and _state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+            ]
+            return matcher(entity_states)
+
+        return test_state
+
+
+class EntityStateConditionBase(EntityConditionBase):
+    """State condition."""
+
+    _states: set[str]
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches the expected state(s)."""
+        return entity_state.state in self._states
+
+
+def make_entity_state_condition(
+    domain: str, states: str | set[str]
+) -> type[EntityStateConditionBase]:
+    """Create a condition for entity state changes to specific state(s)."""
+
+    if isinstance(states, str):
+        states_set = {states}
+    else:
+        states_set = states
+
+    class CustomCondition(EntityStateConditionBase):
+        """Condition for entity state."""
+
+        _domain = domain
+        _states = states_set
+
+    return CustomCondition
+
+
+class EntityStateAttributeConditionBase(EntityConditionBase):
+    """State attribute condition."""
+
+    _attribute: str
+    _attribute_states: set[str]
+
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state matches the expected state(s)."""
+        return entity_state.attributes.get(self._attribute) in self._attribute_states
+
+
+def make_entity_state_attribute_condition(
+    domain: str, attribute: str, attribute_states: str | set[str]
+) -> type[EntityStateAttributeConditionBase]:
+    """Create a condition for entity attribute matching specific state(s)."""
+
+    if isinstance(attribute_states, str):
+        attribute_states_set = {attribute_states}
+    else:
+        attribute_states_set = attribute_states
+
+    class CustomCondition(EntityStateAttributeConditionBase):
+        """Condition for entity attribute."""
+
+        _domain = domain
+        _attribute = attribute
+        _attribute_states = attribute_states_set
+
+    return CustomCondition
 
 
 class ConditionProtocol(Protocol):
@@ -319,7 +481,23 @@ class ConditionConfig:
     target: dict[str, Any] | None = None
 
 
-type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
+class ConditionCheckParams(TypedDict, total=False):
+    """Condition check params."""
+
+    variables: TemplateVarsType
+
+
+class ConditionChecker(Protocol):
+    """Protocol for condition checker callable with typed kwargs."""
+
+    def __call__(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+
+
+type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
+type ConditionCheckerTypeOptional = Callable[
+    [HomeAssistant, TemplateVarsType], bool | None
+]
 
 
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
@@ -374,7 +552,21 @@ def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement]:
             trace_stack_pop(trace_stack_cv)
 
 
-def trace_condition_function(condition: ConditionCheckerType) -> ConditionCheckerType:
+@overload
+def trace_condition_function(
+    condition: ConditionCheckerType,
+) -> ConditionCheckerType: ...
+
+
+@overload
+def trace_condition_function(
+    condition: ConditionCheckerTypeOptional,
+) -> ConditionCheckerTypeOptional: ...
+
+
+def trace_condition_function(
+    condition: ConditionCheckerType | ConditionCheckerTypeOptional,
+) -> ConditionCheckerType | ConditionCheckerTypeOptional:
     """Wrap a condition function to enable basic tracing."""
 
     @ft.wraps(condition)
@@ -420,10 +612,20 @@ async def _async_get_condition_platform(
         ) from None
 
 
+async def _async_get_checker(condition: Condition) -> ConditionCheckerType:
+    new_checker = await condition.async_get_checker()
+
+    @trace_condition_function
+    def checker(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        return new_checker(variables=variables)
+
+    return checker
+
+
 async def async_from_config(
     hass: HomeAssistant,
     config: ConfigType,
-) -> ConditionCheckerType:
+) -> ConditionCheckerTypeOptional:
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
@@ -466,7 +668,7 @@ async def async_from_config(
                 target=config.get(CONF_TARGET),
             ),
         )
-        return await condition.async_get_checker()
+        return await _async_get_checker(condition)
 
     for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
         factory = getattr(sys.modules[__name__], fmt.format(condition_key), None)
@@ -1131,7 +1333,7 @@ async def async_conditions_from_config(
     name: str,
 ) -> Callable[[TemplateVarsType], bool]:
     """AND all conditions."""
-    checks: list[ConditionCheckerType] = [
+    checks = [
         await async_from_config(hass, condition_config)
         for condition_config in condition_configs
     ]
@@ -1189,13 +1391,18 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
         if entity_ids is not None:
             referenced.update(entity_ids)
 
+        if target_entities := _get_targets_from_condition_config(
+            config, CONF_ENTITY_ID
+        ):
+            referenced.update(target_entities)
+
     return referenced
 
 
 @callback
 def async_extract_devices(config: ConfigType | Template) -> set[str]:
     """Extract devices from a condition."""
-    referenced = set()
+    referenced: set[str] = set()
     to_process = deque([config])
 
     while to_process:
@@ -1209,13 +1416,55 @@ def async_extract_devices(config: ConfigType | Template) -> set[str]:
             to_process.extend(config["conditions"])
             continue
 
-        if condition != "device":
+        if condition == "device":
+            if (device_id := config.get(CONF_DEVICE_ID)) is not None:
+                referenced.add(device_id)
             continue
 
-        if (device_id := config.get(CONF_DEVICE_ID)) is not None:
-            referenced.add(device_id)
+        if target_devices := _get_targets_from_condition_config(config, CONF_DEVICE_ID):
+            referenced.update(target_devices)
 
     return referenced
+
+
+@callback
+def async_extract_targets(
+    config: ConfigType | Template,
+    target_type: Literal["area_id", "floor_id", "label_id"],
+) -> set[str]:
+    """Extract targets from a condition."""
+    referenced: set[str] = set()
+    to_process = deque([config])
+
+    while to_process:
+        config = to_process.popleft()
+        if isinstance(config, Template):
+            continue
+
+        condition = config[CONF_CONDITION]
+
+        if condition in ("and", "not", "or"):
+            to_process.extend(config["conditions"])
+            continue
+
+        if targets := _get_targets_from_condition_config(config, target_type):
+            referenced.update(targets)
+
+    return referenced
+
+
+@callback
+def _get_targets_from_condition_config(
+    config: ConfigType,
+    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+) -> list[str]:
+    """Extract targets from a condition target config."""
+    if not (target_conf := config.get(CONF_TARGET)):
+        return []
+    if not (targets := target_conf.get(target)):
+        return []
+
+    return [targets] if isinstance(targets, str) else targets
 
 
 def _load_conditions_file(integration: Integration) -> dict[str, Any]:
@@ -1330,7 +1579,6 @@ async def async_get_all_descriptions(
             continue
 
         description = {"fields": yaml_description.get("fields", {})}
-
         if (target := yaml_description.get("target")) is not None:
             description["target"] = target
 
