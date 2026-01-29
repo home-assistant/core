@@ -62,35 +62,40 @@ class PhotoFrameImageEntity(ImageEntity):
 
     async def get_next_image(self) -> None:
         """Update the image entity with the next image from the source media."""
+
+        path: Path | None = None
+        content_type: str = ""
         try:
             media = await async_browse_media(self.hass, self.media_content_id)
-            if media.children:
-                filtered = [
+        except BrowseError as err:
+            _LOGGER.error("%s: %s", self.entity_id, str(err))
+        else:
+            if media.children and (
+                filtered := [
                     item
                     for item in media.children
                     if item.media_class == MediaClass.IMAGE
                 ]
-                if filtered:
-                    child = random.choice(filtered)
+            ):
+                child = random.choice(filtered)
+                try:
                     resolved = await async_resolve_media(
                         self.hass, child.media_content_id, self.entity_id
                     )
-                    self.path = resolved.path
-                    self._attr_content_type = resolved.mime_type
-                    self._attr_image_last_updated = dt_util.utcnow()
-                    self.async_write_ha_state()
-                    return
+                except Unresolvable as err:
+                    _LOGGER.error("%s: %s", self.entity_id, str(err))
+                else:
+                    path = resolved.path
+                    content_type = resolved.mime_type
+            else:
+                _LOGGER.warning(
+                    "%s: No valid images in %s",
+                    self.entity_id,
+                    self.media_content_id,
+                )
 
-            _LOGGER.warning(
-                "%s: No valid images in %s",
-                self.entity_id,
-                self.media_content_id,
-            )
-        except (BrowseError, Unresolvable) as err:
-            _LOGGER.error("%s: %s", self.entity_id, str(err))
-
-        self.path = None
-        self._attr_content_type = ""
+        self.path = path
+        self._attr_content_type = content_type
         self._attr_image_last_updated = dt_util.utcnow()
         self.async_write_ha_state()
 
