@@ -46,49 +46,52 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, const.DOMAIN, {})
     await hass.async_block_till_done()
 
-    # Test path not exists
-    with pytest.raises(BrowseError) as excinfo:
-        await media_source.async_browse_media(
-            hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/test/not/exist"
+    with patch(
+        "homeassistant.components.media_source.local_source._extract_and_store_metadata"
+    ):
+        # Test path not exists
+        with pytest.raises(BrowseError) as excinfo:
+            await media_source.async_browse_media(
+                hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/test/not/exist"
+            )
+        assert str(excinfo.value) == "Path does not exist."
+
+        # Test browse file
+        with pytest.raises(BrowseError) as excinfo:
+            await media_source.async_browse_media(
+                hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/test.mp3"
+            )
+        assert str(excinfo.value) == "Path is not a directory."
+
+        # Test invalid base
+        with pytest.raises(BrowseError) as excinfo:
+            await media_source.async_browse_media(
+                hass, f"{const.URI_SCHEME}{const.DOMAIN}/invalid/base"
+            )
+        assert str(excinfo.value) == "Unknown source directory."
+
+        # Test directory traversal
+        with pytest.raises(BrowseError) as excinfo:
+            await media_source.async_browse_media(
+                hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/../configuration.yaml"
+            )
+        assert str(excinfo.value) == "Invalid path."
+
+        # Test successful listing
+        media = await media_source.async_browse_media(
+            hass, f"{const.URI_SCHEME}{const.DOMAIN}"
         )
-    assert str(excinfo.value) == "Path does not exist."
+        assert media
 
-    # Test browse file
-    with pytest.raises(BrowseError) as excinfo:
-        await media_source.async_browse_media(
-            hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/test.mp3"
+        media = await media_source.async_browse_media(
+            hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/."
         )
-    assert str(excinfo.value) == "Path is not a directory."
+        assert media
 
-    # Test invalid base
-    with pytest.raises(BrowseError) as excinfo:
-        await media_source.async_browse_media(
-            hass, f"{const.URI_SCHEME}{const.DOMAIN}/invalid/base"
+        media = await media_source.async_browse_media(
+            hass, f"{const.URI_SCHEME}{const.DOMAIN}/recordings/."
         )
-    assert str(excinfo.value) == "Unknown source directory."
-
-    # Test directory traversal
-    with pytest.raises(BrowseError) as excinfo:
-        await media_source.async_browse_media(
-            hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/../configuration.yaml"
-        )
-    assert str(excinfo.value) == "Invalid path."
-
-    # Test successful listing
-    media = await media_source.async_browse_media(
-        hass, f"{const.URI_SCHEME}{const.DOMAIN}"
-    )
-    assert media
-
-    media = await media_source.async_browse_media(
-        hass, f"{const.URI_SCHEME}{const.DOMAIN}/local/."
-    )
-    assert media
-
-    media = await media_source.async_browse_media(
-        hass, f"{const.URI_SCHEME}{const.DOMAIN}/recordings/."
-    )
-    assert media
+        assert media
 
 
 async def test_media_view(
