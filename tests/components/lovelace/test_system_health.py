@@ -62,7 +62,8 @@ async def test_system_health_info_yaml(hass: HomeAssistant) -> None:
         return_value={"views": [{"cards": []}]},
     ):
         info = await get_system_health_info(hass, "lovelace")
-    assert info == {"dashboards": 1, "mode": "yaml", "resources": 0, "views": 1}
+    # 2 dashboards: default storage (None) + yaml "lovelace" dashboard
+    assert info == {"dashboards": 2, "mode": "yaml", "resources": 0, "views": 1}
 
 
 async def test_system_health_info_yaml_not_found(hass: HomeAssistant) -> None:
@@ -71,8 +72,9 @@ async def test_system_health_info_yaml_not_found(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
     await hass.async_block_till_done()
     info = await get_system_health_info(hass, "lovelace")
+    # 2 dashboards: default storage (None) + yaml "lovelace" dashboard
     assert info == {
-        "dashboards": 1,
+        "dashboards": 2,
         "mode": "yaml",
         "error": f"{hass.config.path('ui-lovelace.yaml')} not found",
         "resources": 0,
