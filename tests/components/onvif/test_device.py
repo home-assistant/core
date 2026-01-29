@@ -30,18 +30,20 @@ async def test_device_set_relay_output_state(hass: HomeAssistant) -> None:
         hass, capabilities=Capabilities(deviceio=True, relay_outputs=1)
     )
 
-    # Mock the device service
+    # Mock the devicemgmt service (not create_device_service)
     mock_service = MagicMock()
+    mock_req = MagicMock()
+    mock_service.create_type = MagicMock(return_value=mock_req)
     mock_service.SetRelayOutputState = AsyncMock(return_value=None)
-    device.device.create_device_service = AsyncMock(return_value=mock_service)
+    device.device.devicemgmt = mock_service
 
     # Test setting active state
     await device.async_set_relay_output_state("TestToken", "active")
 
-    mock_service.SetRelayOutputState.assert_called_once()
-    call_args = mock_service.SetRelayOutputState.call_args
-    assert call_args[0][0].RelayOutputToken == "TestToken"
-    assert call_args[0][0].LogicalState == "active"
+    mock_service.create_type.assert_called_once_with("SetRelayOutputState")
+    assert mock_req.RelayOutputToken == "TestToken"
+    assert mock_req.LogicalState == "active"
+    mock_service.SetRelayOutputState.assert_called_once_with(mock_req)
 
 
 async def test_device_set_relay_output_state_error(hass: HomeAssistant) -> None:
@@ -50,10 +52,12 @@ async def test_device_set_relay_output_state_error(hass: HomeAssistant) -> None:
         hass, capabilities=Capabilities(deviceio=True, relay_outputs=1)
     )
 
-    # Mock the device service to raise an error
+    # Mock the devicemgmt service to raise an error
     mock_service = MagicMock()
+    mock_req = MagicMock()
+    mock_service.create_type = MagicMock(return_value=mock_req)
     mock_service.SetRelayOutputState = AsyncMock(side_effect=ONVIFError("Test error"))
-    device.device.create_device_service = AsyncMock(return_value=mock_service)
+    device.device.devicemgmt = mock_service
 
     # Should raise the error
     with pytest.raises(ONVIFError, match="Test error"):
