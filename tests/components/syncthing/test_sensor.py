@@ -51,7 +51,12 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 @pytest.fixture
 def mock_syncthing():
     """Create a mock Syncthing client."""
-    return create_mock_syncthing_client()
+    mock_syncthing = create_mock_syncthing_client()
+    with patch(
+        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
+        return_value=mock_syncthing,
+    ):
+        yield mock_syncthing
 
 
 @pytest.fixture
@@ -75,12 +80,8 @@ async def test_sensor_platform_setup(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test sensor platform sets up folder and device sensors."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Check folder sensor
     folder_state = hass.states.get(FOLDER_ENTITY_ID)
@@ -121,12 +122,8 @@ async def test_folder_sensor_updates_on_summary_event(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test folder sensor updates when receiving FolderSummary event."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Initial state
     state = hass.states.get(FOLDER_ENTITY_ID)
@@ -151,12 +148,8 @@ async def test_folder_sensor_updates_on_state_changed_event(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test folder sensor updates when receiving StateChanged event."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Dispatch StateChanged event
     dispatcher.async_dispatcher_send(
@@ -177,12 +170,8 @@ async def test_folder_sensor_updates_on_paused_event(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test folder sensor updates when receiving FolderPaused event."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Dispatch FolderPaused event
     dispatcher.async_dispatcher_send(
@@ -203,12 +192,8 @@ async def test_folder_sensor_unavailable_on_server_unavailable(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test folder sensor becomes unavailable when server is unavailable."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Initial state should be available
     state = hass.states.get(FOLDER_ENTITY_ID)
@@ -232,12 +217,8 @@ async def test_folder_sensor_available_on_server_available(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test folder sensor becomes available when server comes back online."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Make sensor unavailable
     dispatcher.async_dispatcher_send(
@@ -267,12 +248,8 @@ async def test_folder_sensor_polls_status(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test folder sensor polls for status updates."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Update mock to return syncing status
     syncing_status = {**MOCK_FOLDER_STATUS, "state": "syncing"}
@@ -294,12 +271,8 @@ async def test_folder_sensor_error_makes_unavailable(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test folder sensor becomes unavailable on status error."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Make status raise error
     mock_syncthing.database.status = AsyncMock(side_effect=SyncthingError("Error"))
@@ -320,12 +293,8 @@ async def test_device_sensor_updates_on_connected_event(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor updates when receiving DeviceConnected event."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Initial state
     state = hass.states.get(DEVICE_ENTITY_ID)
@@ -352,12 +321,8 @@ async def test_device_sensor_updates_on_disconnected_event(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor updates when receiving DeviceDisconnected event."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # First connect the device
     dispatcher.async_dispatcher_send(
@@ -389,12 +354,8 @@ async def test_device_sensor_updates_on_paused_event(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor updates when receiving DevicePaused event."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Dispatch DevicePaused event
     dispatcher.async_dispatcher_send(
@@ -415,12 +376,8 @@ async def test_device_sensor_stays_paused_on_disconnect(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor stays paused when disconnected while paused."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Pause device first
     dispatcher.async_dispatcher_send(
@@ -449,12 +406,8 @@ async def test_device_sensor_updates_on_resumed_event(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor updates when receiving DeviceResumed event."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Pause device first
     dispatcher.async_dispatcher_send(
@@ -486,12 +439,8 @@ async def test_device_sensor_processes_initial_events(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor processes initial events on startup."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Get the syncthing client and add initial events
     syncthing = hass.data[DOMAIN][entry.entry_id]
@@ -522,12 +471,8 @@ async def test_device_sensor_unavailable_on_server_unavailable(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor becomes unavailable when server is unavailable."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Initial state should be available
     state = hass.states.get(DEVICE_ENTITY_ID)
@@ -551,12 +496,8 @@ async def test_device_sensor_available_on_server_available(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor becomes available when server comes back online."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Make sensor unavailable
     dispatcher.async_dispatcher_send(
@@ -586,12 +527,8 @@ async def test_device_sensor_polls_status(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor polls for status updates."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify initial state
     initial_call_count = mock_syncthing.config.devices.call_count
@@ -611,12 +548,8 @@ async def test_device_sensor_error_makes_unavailable(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor becomes unavailable on config error."""
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        return_value=mock_syncthing,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Make devices raise error
     mock_syncthing.config.devices = AsyncMock(side_effect=SyncthingError("Error"))
