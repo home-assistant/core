@@ -211,7 +211,6 @@ class MinMaxSensor(SensorEntity):
     _attr_icon = ICON
     _attr_should_poll = False
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_device_class = None
 
     def __init__(
         self,
@@ -353,12 +352,12 @@ class MinMaxSensor(SensorEntity):
     @callback
     def _update_device_class(self) -> None:
         """Update device_class based on source entities.
-        
+
         If all source entities have the same device_class, inherit it.
         Otherwise, leave device_class as None.
         """
         device_classes: list[SensorDeviceClass | None] = []
-        
+
         for entity_id in self._entity_ids:
             try:
                 device_class = get_device_class(self.hass, entity_id)
@@ -369,14 +368,12 @@ class MinMaxSensor(SensorEntity):
             except (HomeAssistantError, ValueError):
                 # If we can't get device class for any entity, don't set it
                 device_classes.append(None)
-        
+
         # Only inherit device_class if all entities have the same non-None device_class
         if device_classes and all(
             dc is not None and dc == device_classes[0] for dc in device_classes
         ):
             self._attr_device_class = device_classes[0]
-        else:
-            self._attr_device_class = None
 
     @callback
     def _calc_values(self) -> None:
