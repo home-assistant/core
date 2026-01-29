@@ -102,6 +102,15 @@
     "authentication_failed": {
       "message": "Authentication failed for {title} ({host})"
     },
+    "command_execution_failed": {
+      "message": "Command execution failed: {error}"
+    },
+    "command_not_found": {
+      "message": "Command with ID {command_id} not found in allowlist"
+    },
+    "command_timeout": {
+      "message": "Command execution timed out after {timeout} seconds"
+    },
     "connection_failed": {
       "message": "A connection error occurred for {title} ({host})"
     },
@@ -128,6 +137,34 @@
     }
   },
   "services": {
+    "execute_command": {
+      "description": "Executes a command on the remote system.",
+      "fields": {
+        "bridge": {
+          "description": "[%key:component::system_bridge::services::send_keypress::fields::bridge::description%]",
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]"
+        },
+        "command_id": {
+          "description": "The ID of the command to execute (from the command allowlist).",
+          "name": "Command ID"
+        },
+        "timeout": {
+          "description": "Maximum time to wait for command completion in seconds.",
+          "name": "Timeout"
+        }
+      },
+      "name": "Execute command"
+    },
+    "get_commands": {
+      "description": "Gets the list of available commands from the command allowlist.",
+      "fields": {
+        "bridge": {
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]",
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]"
+        }
+      },
+      "name": "Get commands"
+    },
     "get_process_by_id": {
       "description": "Gets a process by the ID.",
       "fields": {

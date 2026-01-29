@@ -22,6 +22,13 @@ get_processes_by_name:
       example: "chrome.exe"
       selector:
         text:
+get_commands:
+  fields:
+    bridge:
+      required: true
+      selector:
+        device:
+          integration: system_bridge
 open_path:
   fields:
     bridge:
@@ -89,3 +96,23 @@ power_command:
             - "restart"
             - "shutdown"
             - "sleep"
+execute_command:
+  fields:
+    bridge:
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    command_id:
+      required: true
+      selector:
+        text:
+    timeout:
+      required: false
+      default: 300
+      example: 300
+      selector:
+        number:
+          min: 1
+          max: 600
+          unit_of_measurement: seconds
