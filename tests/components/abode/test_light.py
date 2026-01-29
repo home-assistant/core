@@ -125,7 +125,7 @@ async def test_set_color_temp(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: DEVICE_ID, "color_temp": 309},
+            {ATTR_ENTITY_ID: DEVICE_ID, "color_temp_kelvin": 3236},
             blocking=True,
         )
         await hass.async_block_till_done()
