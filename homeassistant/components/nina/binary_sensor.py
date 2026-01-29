@@ -88,13 +88,13 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
         data = self._get_warning_data()
 
         return {
-            ATTR_HEADLINE: data.headline,  # deprecated
-            ATTR_DESCRIPTION: data.description,  # deprecated
-            ATTR_SENDER: data.sender,  # deprecated
-            ATTR_SEVERITY: data.severity,  # deprecated
-            ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,  # deprecated
-            ATTR_AFFECTED_AREAS: data.affected_areas,  # deprecated
-            ATTR_WEB: data.more_info_url,  # deprecated
+            ATTR_HEADLINE: data.headline,  # Deprecated, remove in 2026.08
+            ATTR_DESCRIPTION: data.description,  # Deprecated, remove in 2026.08
+            ATTR_SENDER: data.sender,  # Deprecated, remove in 2026.08
+            ATTR_SEVERITY: data.severity,  # Deprecated, remove in 2026.08
+            ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,  # Deprecated, remove in 2026.08
+            ATTR_AFFECTED_AREAS: data.affected_areas,  # Deprecated, remove in 2026.08
+            ATTR_WEB: data.more_info_url,  # Deprecated, remove in 2026.08
             ATTR_ID: data.id,
             ATTR_SENT: data.sent,
             ATTR_START: data.start,
