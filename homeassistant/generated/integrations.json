@@ -7405,6 +7405,12 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Victron Remote Monitoring"
+        },
+        "victronenergy": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Victron Energy"
         }
       }
     },

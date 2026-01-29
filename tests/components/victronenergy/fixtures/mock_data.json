@@ -1,0 +1,62 @@
+{
+  "device_info": {
+    "N/48e7da868f12/system/0/Serial": {
+      "value": "HQ2419ABCD",
+      "timestamp": 1698765432.0
+    },
+    "N/48e7da868f12/system/0/Ac/Grid/L1/Power": {
+      "value": 1250.5,
+      "timestamp": 1698765432.0
+    },
+    "N/48e7da868f12/system/0/Dc/Battery/Voltage": {
+      "value": 26.8,
+      "timestamp": 1698765432.0
+    },
+    "N/48e7da868f12/system/0/Dc/Battery/Current": {
+      "value": -15.2,
+      "timestamp": 1698765432.0
+    },
+    "N/48e7da868f12/system/0/Dc/Battery/Power": {
+      "value": -407.4,
+      "timestamp": 1698765432.0
+    },
+    "N/48e7da868f12/system/0/Dc/Battery/Soc": {
+      "value": 78.5,
+      "timestamp": 1698765432.0
+    },
+    "N/48e7da868f12/system/0/Ac/Grid/L1/Voltage": {
+      "value": 230.2,
+      "timestamp": 1698765432.0
+    }
+  },
+  "device_discovery": {
+    "N/48e7da868f12/device/48e7da868f12/DeviceInstance": {
+      "value": 288,
+      "timestamp": 1698765432.0
+    },
+    "N/48e7da868f12/device/48e7da868f12/ProductName": {
+      "value": "MultiPlus-II 48/3000/35-32",
+      "timestamp": 1698765432.0
+    },
+    "N/48e7da868f12/device/48e7da868f12/FirmwareVersion": {
+      "value": "2.89",
+      "timestamp": 1698765432.0
+    },
+    "N/48e7da868f12/device/48e7da868f12/Mgmt/Connection": {
+      "value": "VE.Bus",
+      "timestamp": 1698765432.0
+    }
+  },
+  "homeassistant_discovery": {
+    "homeassistant/device_tracker/N_48e7da868f12_system_0/config": {
+      "unique_id": "N_48e7da868f12_system_0",
+      "name": "Victron System",
+      "device": {
+        "identifiers": ["victron_48e7da868f12"],
+        "name": "Victron Energy GX",
+        "manufacturer": "Victron Energy",
+        "model": "MultiPlus-II 48/3000/35-32"
+      }
+    }
+  }
+}

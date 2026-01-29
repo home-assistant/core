@@ -1,0 +1,92 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "already_in_progress": "Configuration flow is already in progress, perhaps because it was already automatically detected.",
+      "cannot_connect": "Connection failed. Please check the device is online",
+      "invalid_auth": "Authentication failed. Please check your credentials.",
+      "invalid_host": "Invalid hostname or IP address: {error}",
+      "missing_unique_id": "Device does not have a unique identifier",
+      "no_discovery": "No Home Assistant discovery topics found within 30 seconds",
+      "no_discovery_support": "Device does not support Home Assistant discovery",
+      "unknown": "Unexpected error occurred",
+      "user_cancelled": "Setup cancelled by user"
+    },
+    "error": {
+      "cannot_connect": "Connection failed. Please check the device is online and accessible.",
+      "invalid_auth": "Authentication failed. Please check your credentials and try again.",
+      "unknown": "Unexpected error occurred. Please try again."
+    },
+    "step": {
+      "password": {
+        "data": {
+          "password": "Password"
+        },
+        "data_description": {
+          "password": "GX Password"
+        },
+        "description": "Please enter the GX Password for device {host}. When the Local network security profile is set to Unsecure, leave the password field empty.",
+        "title": "GX Password"
+      },
+      "ssdp_confirm": {
+        "data": {},
+        "description": "Do you want to add {name} @ {host} to Home Assistant?",
+        "title": "Add Victron Energy device"
+      },
+      "ssdp_password": {
+        "data": {
+          "password": "Password"
+        },
+        "data_description": {
+          "password": "GX Password"
+        },
+        "description": "Please enter the GX Password for {name} @ {host}. When the Local network security profile is set to Unsecure, leave the password field empty.",
+        "title": "GX Password"
+      },
+      "user": {
+        "data": {
+          "broker": "Host"
+        },
+        "data_description": {
+          "broker": "IP address or hostname of your GX device"
+        },
+        "description": "Enter the IP address or hostname of your GX device.",
+        "title": "Connect to GX device"
+      }
+    }
+  },
+  "services": {
+    "publish": {
+      "description": "Publish a message to the MQTT broker associated with a Victron Energy config entry.",
+      "fields": {
+        "config_entry": {
+          "description": "Configuration entry (hub) to select which broker to publish to.",
+          "name": "Config entry"
+        },
+        "payload": {
+          "description": "Payload to publish. If a non-string is supplied it will be JSON-encoded.",
+          "name": "Payload"
+        },
+        "qos": {
+          "description": "QoS level (0-2).",
+          "name": "QoS"
+        },
+        "retain": {
+          "description": "Retain flag for MQTT publish.",
+          "name": "Retain"
+        },
+        "topic": {
+          "description": "MQTT topic to publish to. The integration will automatically prefix the topic with 'W/..vrm_id../'.",
+          "name": "Topic"
+        }
+      },
+      "name": "Publish MQTT message",
+      "sections": {
+        "advanced_fields": {
+          "description": "Advanced options that are rarely needed",
+          "name": "Advanced options"
+        }
+      }
+    }
+  }
+}

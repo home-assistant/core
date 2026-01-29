@@ -1480,6 +1480,7 @@ ovoenergy==3.0.2
 p1monitor==3.2.0
 
 # homeassistant.components.mqtt
+# homeassistant.components.victronenergy
 paho-mqtt==2.1.0
 
 # homeassistant.components.panasonic_viera

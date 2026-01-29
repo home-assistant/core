@@ -1,0 +1,32 @@
+publish:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: victronenergy
+    topic:
+      required: true
+      selector:
+        text:
+          multiline: false
+      example: "vebus/257/Hub4/L1/AcPowerSetpoint"
+    payload:
+      required: true
+      selector:
+        text:
+          multiline: true
+      example: '{"value": -200}'
+    advanced_fields:
+      collapsed: true
+      fields:
+        qos:
+          selector:
+            number:
+              min: 0
+              max: 2
+          example: 0
+        retain:
+          selector:
+            boolean: {}
+          example: false

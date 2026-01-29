@@ -1,0 +1,7 @@
+{
+  "services": {
+    "publish": {
+      "service": "mdi:publish"
+    }
+  }
+}

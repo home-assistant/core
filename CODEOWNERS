@@ -1790,6 +1790,8 @@ build.json @home-assistant/supervisor
 /tests/components/victron_ble/ @rajlaud
 /homeassistant/components/victron_remote_monitoring/ @AndyTempel
 /tests/components/victron_remote_monitoring/ @AndyTempel
+/homeassistant/components/victronenergy/ @imval
+/tests/components/victronenergy/ @imval
 /homeassistant/components/vilfo/ @ManneW
 /tests/components/vilfo/ @ManneW
 /homeassistant/components/vivotek/ @HarlemSquirrel
