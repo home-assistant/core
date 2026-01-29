@@ -13,9 +13,10 @@ from homeassistant.core import HomeAssistant, callback
 from .const import LABS_DATA
 from .helpers import (
     async_is_preview_feature_enabled,
-    async_listen,
+    async_subscribe_preview_feature,
     async_update_preview_feature,
 )
+from .models import EventLabsUpdatedData
 
 
 @callback
@@ -133,19 +134,27 @@ def websocket_subscribe_feature(
     preview_feature = labs_data.preview_features[preview_feature_id]
 
     @callback
-    def send_event() -> None:
+    def send_event(event_data: EventLabsUpdatedData) -> None:
         """Send feature state to client."""
-        enabled = async_is_preview_feature_enabled(hass, domain, preview_feature_key)
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                preview_feature.to_dict(enabled=enabled),
+                preview_feature.to_dict(enabled=event_data["enabled"]),
             )
         )
 
-    connection.subscriptions[msg["id"]] = async_listen(
+    connection.subscriptions[msg["id"]] = async_subscribe_preview_feature(
         hass, domain, preview_feature_key, send_event
     )
 
     connection.send_result(msg["id"])
-    send_event()
+    connection.send_message(
+        websocket_api.event_message(
+            msg["id"],
+            preview_feature.to_dict(
+                enabled=async_is_preview_feature_enabled(
+                    hass, domain, preview_feature_key
+                )
+            ),
+        )
+    )

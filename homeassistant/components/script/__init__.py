@@ -13,7 +13,10 @@ import voluptuous as vol
 
 from homeassistant.components import automation, websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
-from homeassistant.components.labs import async_listen as async_labs_listen
+from homeassistant.components.labs import (
+    EventLabsUpdatedData,
+    async_subscribe_preview_feature,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -283,13 +286,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     @callback
-    def new_triggers_conditions_listener() -> None:
+    def new_triggers_conditions_listener(_event_data: EventLabsUpdatedData) -> None:
         """Handle new_triggers_conditions flag change."""
         hass.async_create_task(
             reload_service(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
         )
 
-    async_labs_listen(
+    async_subscribe_preview_feature(
         hass,
         automation.DOMAIN,
         automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,

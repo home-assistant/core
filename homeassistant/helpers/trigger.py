@@ -150,13 +150,15 @@ async def async_setup(hass: HomeAssistant) -> None:
     hass.data[TRIGGERS] = {}
 
     @callback
-    def new_triggers_conditions_listener() -> None:
+    def new_triggers_conditions_listener(
+        _event_data: labs.EventLabsUpdatedData,
+    ) -> None:
         """Handle new_triggers_conditions flag change."""
         # Invalidate the cache
         hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
         hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
 
-    labs.async_listen(
+    labs.async_subscribe_preview_feature(
         hass,
         automation.DOMAIN,
         automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
