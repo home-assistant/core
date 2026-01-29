@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -63,7 +64,7 @@ SENSOR_TYPES: tuple[NinaSensorEntityDescription, ...] = (
 
 def create_sensors_for_warning(
     coordinator: NINADataUpdateCoordinator, region: str, region_name: str, slot_id: int
-) -> Sequence["NinaSensor"]:
+) -> Sequence[NinaSensor]:
     """Create sensors for a warning."""
     return [
         NinaSensor(
@@ -104,6 +105,7 @@ class NinaSensor(NinaEntity, SensorEntity):
     """Representation of a NINA headline."""
 
     _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     entity_description: NinaSensorEntityDescription
 
