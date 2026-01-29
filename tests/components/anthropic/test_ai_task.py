@@ -190,22 +190,23 @@ async def test_generate_data_with_attachments(
     assert user_message_with_attachments is not None
     assert isinstance(user_message_with_attachments["content"], list)
     assert len(user_message_with_attachments["content"]) == 3  # Text + attachments
-    assert user_message_with_attachments["content"] == [
-        {"type": "text", "text": "Test prompt"},
-        {
-            "type": "image",
-            "source": {
-                "data": "ZmFrZV9pbWFnZV9kYXRh",
-                "media_type": "image/jpeg",
-                "type": "base64",
-            },
-        },
-        {
-            "type": "document",
-            "source": {
-                "data": "ZmFrZV9pbWFnZV9kYXRh",
-                "media_type": "application/pdf",
-                "type": "base64",
-            },
-        },
-    ]
+
+    text_block, image_block, document_block = user_message_with_attachments["content"]
+
+    # Text block
+    assert text_block["type"] == "text"
+    assert text_block["text"] == "Test prompt"
+
+    # Image attachment
+    assert image_block["type"] == "image"
+    assert image_block["source"] == {
+        "data": "ZmFrZV9pbWFnZV9kYXRh",
+        "media_type": "image/jpeg",
+        "type": "base64",
+    }
+
+    # Document attachment (ignore extra metadata like cache_control)
+    assert document_block["type"] == "document"
+    assert document_block["source"]["data"] == "ZmFrZV9pbWFnZV9kYXRh"
+    assert document_block["source"]["media_type"] == "application/pdf"
+    assert document_block["source"]["type"] == "base64"
