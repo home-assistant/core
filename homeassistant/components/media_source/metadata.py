@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import json
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import mutagen
 from mutagen.flac import FLAC
@@ -50,7 +50,10 @@ def read_metadata(path: Path) -> dict[str, Any] | None:
     if not meta_path.exists():
         return None
     try:
-        return json.loads(meta_path.read_text(encoding="utf-8"))
+        data = json.loads(meta_path.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            return cast(dict[str, Any], data)
+        return None
     except OSError as err:
         LOGGER.debug("Failed reading metadata for %s: %s", path, err)
     except json.JSONDecodeError as err:
@@ -122,7 +125,8 @@ def _extract_cover(file: mutagen.FileType) -> MediaCover | None:
     """Extract cover art from mutagen file types."""
     try:
         if isinstance(file, MP3) and isinstance(file.tags, ID3):
-            apic = next(iter(file.tags.getall("APIC")), None)
+            apic_list = cast(Any, file.tags).getall("APIC")
+            apic = apic_list[0] if apic_list else None
             if apic and apic.data and apic.mime:
                 return MediaCover(apic.data, apic.mime)
         if isinstance(file, FLAC) and file.pictures:
@@ -143,4 +147,3 @@ def _extract_cover(file: mutagen.FileType) -> MediaCover | None:
     except (AttributeError, mutagen.MutagenError) as err:
         LOGGER.debug("Failed extracting cover art: %s", err)
     return None
-

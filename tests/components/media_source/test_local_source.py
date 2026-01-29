@@ -299,7 +299,9 @@ async def test_browse_media_metadata_backfill(
     assert cover_file.exists()
 
     child_ids = {child.media_content_id for child in media.children}
-    assert f"{const.URI_SCHEME}{const.DOMAIN}/test_dir/{meta_file.name}" not in child_ids
+    assert (
+        f"{const.URI_SCHEME}{const.DOMAIN}/test_dir/{meta_file.name}" not in child_ids
+    )
     assert (
         f"{const.URI_SCHEME}{const.DOMAIN}/test_dir/{cover_file.name}" not in child_ids
     )
