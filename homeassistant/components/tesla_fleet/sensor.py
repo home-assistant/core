@@ -87,13 +87,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     TeslaFleetSensorEntityDescription(
-        key="charge_state_charge_energy_added",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        suggested_display_precision=1,
-    ),
-    TeslaFleetSensorEntityDescription(
         key="charge_state_charger_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
@@ -443,6 +436,15 @@ ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
 )
 
 
+CHARGE_ENERGY_DESCRIPTION = TeslaFleetSensorEntityDescription(
+    key="charge_state_charge_energy_added",
+    state_class=SensorStateClass.TOTAL_INCREASING,
+    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    device_class=SensorDeviceClass.ENERGY,
+    suggested_display_precision=1,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslaFleetConfigEntry,
@@ -455,6 +457,10 @@ async def async_setup_entry(
                 TeslaFleetVehicleSensorEntity(vehicle, description)
                 for vehicle in entry.runtime_data.vehicles
                 for description in VEHICLE_DESCRIPTIONS
+            ),
+            (  # Add charge energy sensor with dip filtering
+                TeslaFleetChargeEnergySensorEntity(vehicle, CHARGE_ENERGY_DESCRIPTION)
+                for vehicle in entry.runtime_data.vehicles
             ),
             (  # Add vehicles time sensors
                 TeslaFleetVehicleTimeSensorEntity(vehicle, description)
@@ -521,6 +527,53 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
             self._attr_native_value = self.entity_description.value_fn(self._value)
         else:
             self._attr_native_value = None
+
+
+class TeslaFleetChargeEnergySensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
+    """Sensor for charge energy added that filters small dips.
+
+    The Tesla API can report small decreases in charge_energy_added due to
+    recalculations. This class filters those out to maintain total_increasing
+    behavior.
+    """
+
+    entity_description: TeslaFleetSensorEntityDescription
+
+    def __init__(
+        self,
+        data: TeslaFleetVehicleData,
+        description: TeslaFleetSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        self.entity_description = description
+        super().__init__(data, description.key)
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        if self.coordinator.data.get("state") != TeslaFleetState.ONLINE:
+            if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+                self._attr_native_value = sensor_data.native_value
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor, filtering small dips."""
+        if not self.has:
+            self._attr_native_value = None
+            return
+
+        new_value = self.entity_description.value_fn(self._value)
+        current_value = self._attr_native_value
+
+        # Filter small dips: only update if new value is >= current value,
+        # or if it's a significant reset (new value < 10% of current, indicating
+        # a new charging session)
+        if (
+            not isinstance(current_value, (int, float))
+            or not isinstance(new_value, (int, float))
+            or new_value >= current_value
+            or new_value < current_value * 0.9
+        ):
+            self._attr_native_value = new_value
 
 
 class TeslaFleetVehicleTimeSensorEntity(TeslaFleetVehicleEntity, SensorEntity):
