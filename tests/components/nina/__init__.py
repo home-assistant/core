@@ -34,7 +34,7 @@ async def setup_platform(
 async def setup_single_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    platform: Platform,
+    platform: Platform | None,
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
 ) -> None:
@@ -44,7 +44,9 @@ async def setup_single_platform(
         for region in config_entry.data.get(CONF_REGIONS, {})
     }
 
-    with patch("homeassistant.components.nina.PLATFORMS", [platform]):
+    platforms = [platform] if platform else []
+
+    with patch("homeassistant.components.nina.PLATFORMS", platforms):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
