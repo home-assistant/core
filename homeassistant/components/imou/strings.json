@@ -1,0 +1,63 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "AppId is already configured"
+    },
+    "error": {
+      "Connection timeout": "Connection timeout",
+      "Invalid credentials": "Invalid credentials",
+      "appIdOrSecret_invalid": "Invalid appId or appSecret",
+      "connect_failed": "Failed to connect to Imou",
+      "request_failed": "Request failed"
+    },
+    "step": {
+      "login": {
+        "data": {
+          "api_url": "url",
+          "app_id": "AppId",
+          "app_secret": "AppSecret"
+        },
+        "data_description": {
+          "api_url": "The API URL of IMOU Cloud platform",
+          "app_id": "The App ID obtained from IMOU Cloud platform",
+          "app_secret": "The App Secret obtained from IMOU Cloud platform"
+        },
+        "title": "Login to IMOU Cloud"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "mute": {
+        "name": "Mute"
+      },
+      "ptz_down": {
+        "name": "Ptz Down"
+      },
+      "ptz_left": {
+        "name": "Ptz Left"
+      },
+      "ptz_right": {
+        "name": "Ptz Right"
+      },
+      "ptz_up": {
+        "name": "Ptz Up"
+      },
+      "restart_device": {
+        "name": "Restart Device"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "rotation_duration": "Single PTZ rotation duration (milliseconds)"
+        },
+        "data_description": {
+          "rotation_duration": "The duration in milliseconds for a single PTZ rotation"
+        }
+      }
+    }
+  }
+}

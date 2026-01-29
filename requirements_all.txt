@@ -2109,6 +2109,9 @@ pyialarm==2.2.0
 # homeassistant.components.icloud
 pyicloud==2.3.0
 
+# homeassistant.components.imou
+pyimouapi==1.2.2
+
 # homeassistant.components.insteon
 pyinsteon==1.6.4
 
@@ -2868,6 +2871,9 @@ sharp_aquos_rc==0.3.2
 
 # homeassistant.components.shodan
 shodan==1.28.0
+
+# homeassistant.components.imou
+simpleeval==1.0.3
 
 # homeassistant.components.simplefin
 simplefin4py==0.0.18
