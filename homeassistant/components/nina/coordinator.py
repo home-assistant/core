@@ -150,9 +150,6 @@ class NINADataUpdateCoordinator(
                     )
                     continue
 
-                # pylint: disable=fixme
-                # TODO Add testcase
-
                 shorted_affected_areas: str = (
                     affected_areas_string[0:250] + "..."
                     if len(affected_areas_string) > 250

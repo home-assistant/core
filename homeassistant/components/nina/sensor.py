@@ -125,7 +125,10 @@ class NinaSensor(NinaEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self._active_warning_count > self._warning_index
+        if self._active_warning_count <= self._warning_index:
+            return False
+
+        return self._get_warning_data().is_valid
 
     @property
     def native_value(self) -> str | None:
