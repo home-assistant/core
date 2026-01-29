@@ -15,8 +15,10 @@ CONF_VEHICLE_TYPE = "vehicle_type"
 CONF_AVOID_TOLL_ROADS = "avoid_toll_roads"
 CONF_AVOID_SUBSCRIPTION_ROADS = "avoid_subscription_roads"
 CONF_AVOID_FERRIES = "avoid_ferries"
+CONF_TIME_DELTA = "time_delta"
 
 DEFAULT_NAME = "Waze Travel Time"
+DEFAULT_TIME_DELTA = 0.0
 DEFAULT_REALTIME = True
 DEFAULT_VEHICLE_TYPE = "car"
 DEFAULT_AVOID_TOLL_ROADS = False
@@ -31,7 +33,7 @@ UNITS = [METRIC_UNITS, IMPERIAL_UNITS]
 REGIONS = ["us", "na", "eu", "il", "au"]
 VEHICLE_TYPES = ["car", "taxi", "motorcycle"]
 
-DEFAULT_OPTIONS: dict[str, str | bool | list[str]] = {
+DEFAULT_OPTIONS: dict[str, str | bool | list[str] | float] = {
     CONF_REALTIME: DEFAULT_REALTIME,
     CONF_VEHICLE_TYPE: DEFAULT_VEHICLE_TYPE,
     CONF_UNITS: METRIC_UNITS,
@@ -40,4 +42,5 @@ DEFAULT_OPTIONS: dict[str, str | bool | list[str]] = {
     CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
     CONF_INCL_FILTER: DEFAULT_FILTER,
     CONF_EXCL_FILTER: DEFAULT_FILTER,
+    CONF_TIME_DELTA: DEFAULT_TIME_DELTA,
 }

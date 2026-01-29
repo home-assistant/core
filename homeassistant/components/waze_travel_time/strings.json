@@ -29,6 +29,7 @@
           "excl_filter": "Exact street name which must NOT be part of the selected route",
           "incl_filter": "Exact street name which must be part of the selected route",
           "realtime": "Realtime travel time?",
+          "time_delta": "Time delta (minutes)",
           "units": "Units",
           "vehicle_type": "Vehicle type"
         },
@@ -99,6 +100,10 @@
         "region": {
           "description": "The region. Controls which Waze server is used.",
           "name": "[%key:component::waze_travel_time::config::step::user::data::region%]"
+        },
+        "time_delta": {
+          "description": "Time delta in minutes from now to calculate the route for. Positive values are in the future, negative values are in the past.",
+          "name": "Time delta"
         },
         "units": {
           "description": "Which unit system to use.",

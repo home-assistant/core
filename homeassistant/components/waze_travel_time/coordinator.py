@@ -25,6 +25,7 @@ from .const import (
     CONF_INCL_FILTER,
     CONF_ORIGIN,
     CONF_REALTIME,
+    CONF_TIME_DELTA,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
     DOMAIN,
@@ -51,6 +52,7 @@ async def async_get_travel_times(
     units: Literal["metric", "imperial"] = "metric",
     incl_filters: Collection[str] | None = None,
     excl_filters: Collection[str] | None = None,
+    time_delta: float = 0.0,
 ) -> list[CalcRoutesResponse]:
     """Get all available routes."""
 
@@ -74,6 +76,7 @@ async def async_get_travel_times(
             avoid_ferries=avoid_ferries,
             real_time=realtime,
             alternatives=3,
+            time_delta=int(time_delta),
         )
 
         if len(routes) < 1:
@@ -204,6 +207,7 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
                 CONF_AVOID_SUBSCRIPTION_ROADS
             ]
             avoid_ferries = self.config_entry.options[CONF_AVOID_FERRIES]
+            time_delta = self.config_entry.options[CONF_TIME_DELTA]
             routes = await async_get_travel_times(
                 self.client,
                 origin_coordinates,
@@ -216,6 +220,7 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
                 self.config_entry.options[CONF_UNITS],
                 incl_filter,
                 excl_filter,
+                time_delta,
             )
             if len(routes) < 1:
                 travel_data = WazeTravelTimeData(

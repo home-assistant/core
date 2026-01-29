@@ -18,6 +18,9 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.selector import (
     BooleanSelector,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -35,9 +38,11 @@ from .const import (
     CONF_INCL_FILTER,
     CONF_ORIGIN,
     CONF_REALTIME,
+    CONF_TIME_DELTA,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
     DEFAULT_FILTER,
+    DEFAULT_TIME_DELTA,
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
     METRIC_UNITS,
@@ -95,6 +100,14 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = vol.Schema(
                 multiple=True,
             ),
         ),
+        vol.Optional(CONF_TIME_DELTA, default=DEFAULT_TIME_DELTA): NumberSelector(
+            NumberSelectorConfig(
+                mode=NumberSelectorMode.BOX,
+                min=-10080,
+                max=10080,
+                unit_of_measurement="minutes",
+            )
+        ),
     }
 )
 
@@ -146,6 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             units=service.data[CONF_UNITS],
             incl_filters=service.data.get(CONF_INCL_FILTER, DEFAULT_FILTER),
             excl_filters=service.data.get(CONF_EXCL_FILTER, DEFAULT_FILTER),
+            time_delta=service.data[CONF_TIME_DELTA],
         )
         return {"routes": [vars(route) for route in response]}
 
@@ -188,4 +202,22 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry.version,
             config_entry.minor_version,
         )
+
+    if config_entry.version == 2 and config_entry.minor_version == 1:
+        _LOGGER.debug(
+            "Migrating from version %s.%s",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+        options = dict(config_entry.options)
+        options[CONF_TIME_DELTA] = DEFAULT_TIME_DELTA
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, minor_version=2
+        )
+        _LOGGER.debug(
+            "Migration to version %s.%s successful",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+
     return True
