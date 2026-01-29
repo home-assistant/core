@@ -163,7 +163,6 @@ async def test_form_singleton_prevention(
                 CONF_NAME: "Central Station",
                 "departure_type": [],
                 "direction": [],
-                "route": [],
             },
         ),
         # All optional fields provided, single values
@@ -180,7 +179,6 @@ async def test_form_singleton_prevention(
                 CONF_NAME: "Airport",
                 "departure_type": [enums.TransportClass.BUS],
                 "direction": ["North"],
-                "route": [],
             },
         ),
         # All optional fields provided, multiple values
@@ -200,7 +198,6 @@ async def test_form_singleton_prevention(
                     enums.TransportClass.TOG,
                 ],
                 "direction": ["East", "West"],
-                "route": [],
             },
         ),
         # Special characters in name and direction
@@ -217,7 +214,6 @@ async def test_form_singleton_prevention(
                 CONF_NAME: "Østerport",
                 "departure_type": [],
                 "direction": ["Syd", "Nord"],
-                "route": [],
             },
         ),
         # No optional fields provided (should default to empty lists)
@@ -232,7 +228,6 @@ async def test_form_singleton_prevention(
                 CONF_NAME: "NoOptions",
                 "departure_type": [],
                 "direction": [],
-                "route": [],
             },
         ),
     ],
@@ -261,7 +256,7 @@ async def test_stop_subentry_flow(
     LOGGER.debug("Subentry Flow Init Result: %s", result)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "stop"
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], user_input

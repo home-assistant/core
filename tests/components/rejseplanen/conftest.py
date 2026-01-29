@@ -1,7 +1,4 @@
-"""Copyright 2024 Home Assistant Community Contributors.
-
-Test configuration for Rejseplanen component.
-"""
+"""Test configuration for Rejseplanen component."""
 
 from collections.abc import AsyncGenerator, Generator
 from datetime import datetime, timedelta
@@ -19,7 +16,6 @@ from homeassistant.components.rejseplanen.const import (
     CONF_DEPARTURE_TYPE,
     CONF_DIRECTION,
     CONF_NAME,
-    CONF_ROUTE,
     CONF_STOP_ID,
     DOMAIN,
 )
@@ -106,7 +102,6 @@ def mock_subentries() -> list[ConfigSubentryDataWithId]:
             data={
                 CONF_STOP_ID: "123456",
                 CONF_NAME: "Work",
-                CONF_ROUTE: [],
                 CONF_DIRECTION: [],
                 CONF_DEPARTURE_TYPE: [],
             },
@@ -119,7 +114,6 @@ def mock_subentries() -> list[ConfigSubentryDataWithId]:
             data={
                 CONF_STOP_ID: "456789",
                 CONF_NAME: "Gym",
-                CONF_ROUTE: [],
                 CONF_DIRECTION: ["North"],
                 CONF_DEPARTURE_TYPE: [],
             },
@@ -132,7 +126,6 @@ def mock_subentries() -> list[ConfigSubentryDataWithId]:
             data={
                 CONF_STOP_ID: "123789",
                 CONF_NAME: "Home Location",
-                CONF_ROUTE: [],
                 CONF_DIRECTION: [],
                 CONF_DEPARTURE_TYPE: [TransportClass.IC, TransportClass.BUS],
             },
