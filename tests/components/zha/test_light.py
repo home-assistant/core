@@ -309,7 +309,7 @@ async def test_on_with_off_color(
         "turn_on",
         {
             "entity_id": device_1_entity_id,
-            "color_temp_kelvin": 4167,
+            "color_temp_kelvin": 4166,
         },
         blocking=True,
     )
@@ -353,7 +353,7 @@ async def test_on_with_off_color(
     light1_state = hass.states.get(device_1_entity_id)
     assert light1_state.state == STATE_ON
     assert light1_state.attributes["brightness"] == 254
-    assert light1_state.attributes["color_temp_kelvin"] == 4167
+    assert light1_state.attributes["color_temp_kelvin"] == 4166
     assert light1_state.attributes["color_mode"] == ColorMode.COLOR_TEMP
 
 
