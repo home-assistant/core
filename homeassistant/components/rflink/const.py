@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv
+import homeassistant.helpers.config_validation as cv
 
 CONF_ALIASES = "aliases"
 CONF_GROUP_ALIASES = "group_aliases"
@@ -19,6 +19,8 @@ DATA_DEVICE_REGISTER = "rflink_device_register"
 DATA_ENTITY_GROUP_LOOKUP = "rflink_entity_group_only_lookup"
 DATA_ENTITY_LOOKUP = "rflink_entity_lookup"
 DEFAULT_SIGNAL_REPETITIONS = 1
+
+DOMAIN = "rflink"
 
 EVENT_KEY_COMMAND = "command"
 EVENT_KEY_ID = "id"

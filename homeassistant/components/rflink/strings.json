@@ -14,5 +14,11 @@
       },
       "name": "Send command"
     }
+  },
+  "issues": {
+    "yaml_migration": {
+      "title": "Your {platform} RFLink configuration needs to be migrated",
+      "description": "Your current RFLink {platform} YAML configuration needs to be migrated to the new configuration format."
+    }
   }
 }
