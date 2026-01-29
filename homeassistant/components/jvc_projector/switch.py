@@ -8,14 +8,12 @@ from typing import Any, Final
 from jvcprojector import Command, command as cmd
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 from .entity import JvcProjectorEntity
-
-STATE_ON = "on"
-STATE_OFF = "off"
 
 
 @dataclass(frozen=True, kw_only=True)
