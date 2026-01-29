@@ -149,6 +149,11 @@
       "display": {
         "name": "Display"
       }
+    },
+    "time": {
+      "remaining_time": {
+        "name": "Remaining time"
+      }
     }
   },
   "services": {
