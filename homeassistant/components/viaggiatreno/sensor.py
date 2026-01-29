@@ -49,7 +49,7 @@ CONF_TRAIN_ID = "train_id"
 
 ARRIVED_STRING = "Arrived"
 CANCELLED_STRING = "Cancelled"
-NOT_DEPARTED_STRING = "Not yet departed"
+NOT_DEPARTED_STRING = "Not departed yet"
 NO_INFORMATION_STRING = "No information for this train now"
 
 SCAN_INTERVAL = timedelta(minutes=2)
