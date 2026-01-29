@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import cast
 
 import voluptuous as vol
@@ -24,7 +23,7 @@ _PASSWORD_VALIDATOR = vol.All(cv.string, cv.matches_regex(r"^\d{6,12}$"))
 
 SCHEMA_ADD_PASSWORD_SERVICE = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [str]),
+        vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Required(ATTR_PASSWORD): _PASSWORD_VALIDATOR,
     },
     extra=vol.ALLOW_EXTRA,
@@ -94,52 +93,28 @@ def _is_supported_keypad(entry: SwitchbotConfigEntry) -> bool:
 
 
 @callback
-def _async_extract_target_device_ids(call: ServiceCall) -> set[str]:
-    """Extract device ids from a service call target."""
-    device_ids = set(cv.ensure_list(call.data[ATTR_DEVICE_ID]))
-    if not device_ids:
+def _async_target(
+    hass: HomeAssistant, device_id: str
+) -> SwitchbotDataUpdateCoordinator:
+    """Return coordinator for a single target device."""
+    entry = _async_get_switchbot_entry_for_device_id(hass, device_id)
+    if not _is_supported_keypad(entry):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="missing_device_id",
+            translation_key="not_keypad_vision_device",
         )
-    return device_ids
 
-
-@callback
-def _async_targets(
-    hass: HomeAssistant, device_ids: set[str]
-) -> tuple[dict[str, SwitchbotDataUpdateCoordinator], dict[str, set[str]]]:
-    """Group targets by config entry id."""
-    coordinators_by_entry_id: dict[str, SwitchbotDataUpdateCoordinator] = {}
-    device_ids_by_entry_id: dict[str, set[str]] = {}
-
-    for device_id in device_ids:
-        entry = _async_get_switchbot_entry_for_device_id(hass, device_id)
-        if not _is_supported_keypad(entry):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="not_keypad_vision_device",
-            )
-
-        coordinators_by_entry_id.setdefault(entry.entry_id, entry.runtime_data)
-        device_ids_by_entry_id.setdefault(entry.entry_id, set()).add(device_id)
-
-    return coordinators_by_entry_id, device_ids_by_entry_id
+    return entry.runtime_data
 
 
 async def async_add_password(call: ServiceCall) -> None:
     """Add a password to a SwitchBot keypad device."""
     password: str = call.data[ATTR_PASSWORD]
-    device_ids = _async_extract_target_device_ids(call)
+    device_id = call.data[ATTR_DEVICE_ID]
 
-    coordinators_by_entry_id, _ = _async_targets(call.hass, device_ids)
+    coordinator = _async_target(call.hass, device_id)
 
-    await asyncio.gather(
-        *(
-            coordinator.device.add_password(password)
-            for coordinator in coordinators_by_entry_id.values()
-        )
-    )
+    await coordinator.device.add_password(password)
 
 
 @callback

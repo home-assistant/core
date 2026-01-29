@@ -168,22 +168,6 @@ async def test_device_entry_not_loaded(
     assert err.value.translation_placeholders == {"device_id": device_entry.id}
 
 
-async def test_missing_device_id(hass: HomeAssistant) -> None:
-    """Test service errors when device_id is missing."""
-    async_setup_services(hass)
-
-    with pytest.raises(ServiceValidationError) as err:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ADD_PASSWORD,
-            {"password": "123456", "device_id": []},
-            blocking=True,
-        )
-
-    assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "missing_device_id"
-
-
 async def test_service_unsupported_device(
     hass: HomeAssistant,
     mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],

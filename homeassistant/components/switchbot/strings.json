@@ -344,9 +344,6 @@
     "invalid_device_id": {
       "message": "The device ID {device_id} is not a valid device ID."
     },
-    "missing_device_id": {
-      "message": "You must target at least one SwitchBot device."
-    },
     "not_keypad_vision_device": {
       "message": "This service is only supported for SwitchBot Keypad Vision devices."
     },
