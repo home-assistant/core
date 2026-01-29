@@ -29,13 +29,11 @@ class NinaSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[NinaSensorEntityDescription, ...] = (
     NinaSensorEntityDescription(
         key="headline",
-        icon="mdi:text-short",
         translation_key="headline",
         value_fn=lambda data: data.headline,
     ),
     NinaSensorEntityDescription(
         key="sender",
-        icon="mdi:account-tie-voice",
         translation_key="sender",
         value_fn=lambda data: data.sender,
     ),
@@ -43,19 +41,16 @@ SENSOR_TYPES: tuple[NinaSensorEntityDescription, ...] = (
         key="severity",
         options=SEVERITY_VALUES,
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:alert",
         translation_key="severity",
         value_fn=lambda data: data.severity,
     ),
     NinaSensorEntityDescription(
         key="affected_areas",
-        icon="mdi:map-marker-radius",
         translation_key="affected_areas",
         value_fn=lambda data: data.affected_areas_shorted,
     ),
     NinaSensorEntityDescription(
         key="more_info_url",
-        icon="mdi:web",
         translation_key="more_info_url",
         value_fn=lambda data: data.more_info_url,
     ),
