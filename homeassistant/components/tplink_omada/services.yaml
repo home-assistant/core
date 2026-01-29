@@ -9,3 +9,12 @@ reconnect_client:
       example: "01-23-45-67-89-AB"
       selector:
         text:
+
+cleanup_client_trackers:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          domain: device_tracker
+          integration: tplink_omada
+          multiple: true

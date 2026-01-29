@@ -100,6 +100,16 @@
     }
   },
   "services": {
+    "cleanup_client_trackers": {
+      "description": "Removes device tracker entities for clients that are no longer known to your Omada controller. This permanently deletes the entities and their history.",
+      "fields": {
+        "entity_id": {
+          "description": "Device tracker entities to check and remove if no longer in Omada. Leave empty to check all TP-Link Omada device trackers.",
+          "name": "Device trackers"
+        }
+      },
+      "name": "Clean up client trackers"
+    },
     "reconnect_client": {
       "description": "Tries to get wireless client to reconnect to Omada network.",
       "fields": {
