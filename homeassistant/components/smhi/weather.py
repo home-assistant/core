@@ -52,10 +52,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import sun
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import slugify
 
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, ENTITY_ID_SENSOR_FORMAT
 from .coordinator import SMHIConfigEntry
-from .entity import SmhiWeatherBaseEntity
+from .entity import SmhiWeatherEntity
 
 # Used to map condition from API results
 CONDITION_CLASSES: Final[dict[str, list[int]]] = {
@@ -89,19 +90,19 @@ async def async_setup_entry(
     """Add a weather entity from map location."""
     location = config_entry.data
 
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data[0]
 
     entity = SmhiWeather(
         location[CONF_LOCATION][CONF_LATITUDE],
         location[CONF_LOCATION][CONF_LONGITUDE],
         coordinator=coordinator,
     )
-    entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(config_entry.title)
+    entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(slugify(config_entry.title))
 
     async_add_entities([entity])
 
 
-class SmhiWeather(SmhiWeatherBaseEntity, SingleCoordinatorWeatherEntity):
+class SmhiWeather(SmhiWeatherEntity, SingleCoordinatorWeatherEntity):
     """Representation of a weather entity."""
 
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS

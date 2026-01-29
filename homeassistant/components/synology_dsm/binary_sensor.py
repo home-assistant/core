@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.storage.storage import SynoStorage
@@ -68,7 +69,8 @@ async def async_setup_entry(
     data = entry.runtime_data
     api = data.api
     coordinator = data.coordinator_central
-    assert api.storage is not None
+    if TYPE_CHECKING:
+        assert api.storage is not None
 
     entities: list[SynoDSMSecurityBinarySensor | SynoDSMStorageBinarySensor] = [
         SynoDSMSecurityBinarySensor(api, coordinator, description)
@@ -121,7 +123,8 @@ class SynoDSMSecurityBinarySensor(SynoDSMBinarySensor):
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return security checks details."""
-        assert self._api.security is not None
+        if TYPE_CHECKING:
+            assert self._api.security is not None
         return self._api.security.status_by_check
 
 

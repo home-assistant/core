@@ -10,7 +10,11 @@ from coinbase.rest import RESTClient
 from coinbase.rest.rest_base import HTTPError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -162,6 +166,7 @@ class CoinbaseConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_USER_DATA_SCHEMA,
                 description_placeholders={
                     "account_name": self.reauth_entry.title,
+                    "developer_url": "https://www.coinbase.com/developer-platform",
                 },
                 errors=errors,
             )
@@ -191,6 +196,7 @@ class CoinbaseConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             description_placeholders={
                 "account_name": self.reauth_entry.title,
+                "developer_url": "https://www.coinbase.com/developer-platform",
             },
             errors=errors,
         )
@@ -204,7 +210,7 @@ class CoinbaseConfigFlow(ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler()
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow for Coinbase."""
 
     async def async_step_init(

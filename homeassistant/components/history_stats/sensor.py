@@ -241,7 +241,9 @@ class HistoryStatsSensor(HistoryStatsSensorBase):
 
     async def async_start_preview(
         self,
-        preview_callback: Callable[[Exception | None, str, Mapping[str, Any]], None],
+        preview_callback: Callable[
+            [BaseException | None, str, Mapping[str, Any]], None
+        ],
     ) -> CALLBACK_TYPE:
         """Render a preview."""
 

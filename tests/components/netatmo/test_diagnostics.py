@@ -28,7 +28,7 @@ async def test_entry_diagnostics(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
         ) as mock_auth,
         patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
             "homeassistant.components.netatmo.webhook_generate_url",

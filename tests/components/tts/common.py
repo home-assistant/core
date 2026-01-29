@@ -285,6 +285,7 @@ class MockResultStream(ResultStream):
             supports_streaming_input=True,
             language="en",
             options={},
+            hass=hass,
             _manager=hass.data[DATA_TTS_MANAGER],
         )
         hass.data[DATA_TTS_MANAGER].token_to_stream[self.token] = self

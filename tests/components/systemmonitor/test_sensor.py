@@ -18,9 +18,12 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import MockProcess
+
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.freeze_time("2024-02-24 15:00:00", tz_offset=0)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
@@ -313,19 +316,6 @@ async def test_processor_temperature(
         assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    with patch("sys.platform", "nt"):
-        mock_psutil.sensors_temperatures.return_value = None
-        mock_psutil.sensors_temperatures.side_effect = AttributeError(
-            "sensors_temperatures not exist"
-        )
-        mock_config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        temp_entity = hass.states.get("sensor.system_monitor_processor_temperature")
-        assert temp_entity.state == STATE_UNAVAILABLE
-        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
     with patch("sys.platform", "darwin"):
         mock_psutil.sensors_temperatures.return_value = {
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
@@ -433,6 +423,107 @@ async def test_cpu_percentage_is_zero_returns_unknown(
     assert cpu_sensor.state == "15"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_python3_num_fds(
+    hass: HomeAssistant,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test python3 open file descriptors sensor."""
+    mock_config_entry = MockConfigEntry(
+        title="System Monitor",
+        domain=DOMAIN,
+        data={},
+        options={
+            "binary_sensor": {"process": ["python3", "pip"]},
+            "resources": [
+                "disk_use_percent_/",
+                "disk_use_percent_/home/notexist/",
+                "memory_free_",
+                "network_out_eth0",
+                "process_num_fds_python3",
+            ],
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    num_fds_sensor = hass.states.get(
+        "sensor.system_monitor_open_file_descriptors_python3"
+    )
+    assert num_fds_sensor is not None
+    assert num_fds_sensor.state == "42"
+    assert num_fds_sensor.attributes == {
+        "state_class": "measurement",
+        "friendly_name": "System Monitor Open file descriptors python3",
+    }
+
+    _process = MockProcess("python3", num_fds=5)
+    assert _process.num_fds() == 5
+    mock_psutil.process_iter.return_value = [_process]
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    num_fds_sensor = hass.states.get(
+        "sensor.system_monitor_open_file_descriptors_python3"
+    )
+    assert num_fds_sensor is not None
+    assert num_fds_sensor.state == "5"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_python3_num_fds_os_error(
+    hass: HomeAssistant,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test python3 open file descriptors sensor handles OSError gracefully."""
+    mock_config_entry = MockConfigEntry(
+        title="System Monitor",
+        domain=DOMAIN,
+        data={},
+        options={
+            "binary_sensor": {"process": ["python3", "pip"]},
+            "resources": [
+                "process_num_fds_python3",
+            ],
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    num_fds_sensor = hass.states.get(
+        "sensor.system_monitor_open_file_descriptors_python3"
+    )
+    assert num_fds_sensor is not None
+    assert num_fds_sensor.state == "42"
+
+    _process = MockProcess("python3", raise_os_error=True)
+    mock_psutil.process_iter.return_value = [_process]
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Sensor should still exist but have no data (unavailable or previous value)
+    num_fds_sensor = hass.states.get(
+        "sensor.system_monitor_open_file_descriptors_python3"
+    )
+    assert num_fds_sensor is not None
+    assert num_fds_sensor.state == STATE_UNKNOWN
+    # Check that warning was logged
+    assert "OS error getting file descriptor count for process 1" in caplog.text
+
+
 async def test_remove_obsolete_entities(
     hass: HomeAssistant,
     mock_psutil: Mock,
@@ -453,7 +544,7 @@ async def test_remove_obsolete_entities(
                 mock_added_config_entry.entry_id
             )
         )
-        == 37
+        == 44
     )
 
     entity_registry.async_update_entity(
@@ -473,6 +564,7 @@ async def test_remove_obsolete_entities(
         has_entity_name=True,
         device_id=cpu_sensor_entity.device_id,
         translation_key="network_out",
+        suggested_object_id="systemmonitor_network_out_veth12345",
     )
     # Fake an entity which should not be removed as not supported but not disabled
     entity_registry.async_get_or_create(
@@ -484,6 +576,7 @@ async def test_remove_obsolete_entities(
         has_entity_name=True,
         device_id=cpu_sensor_entity.device_id,
         translation_key="network_out",
+        suggested_object_id="systemmonitor_network_out_veth54321",
     )
     await hass.config_entries.async_reload(mock_added_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -494,7 +587,7 @@ async def test_remove_obsolete_entities(
                 mock_added_config_entry.entry_id
             )
         )
-        == 38
+        == 45
     )
 
     assert (
@@ -544,3 +637,70 @@ async def test_no_duplicate_disk_entities(
     assert disk_sensor.state == "60.0"
 
     assert "Platform systemmonitor does not generate unique IDs." not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("psutil_attr", "exception", "entity_id"),
+    [
+        (
+            "sensors_fans",
+            AttributeError,
+            "sensor.system_monitor_cpu_fan_fan_speed",
+        ),
+        (
+            "sensors_temperatures",
+            AttributeError,
+            "sensor.system_monitor_processor_temperature",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_with_param_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_psutil: Mock,
+    psutil_attr: str,
+    exception: Exception,
+    entity_id: str,
+) -> None:
+    """Test the sensor."""
+    setattr(mock_psutil, psutil_attr, Mock(side_effect=exception))
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
+
+
+@pytest.mark.parametrize(
+    ("psutil_attr", "exception", "entity_id"),
+    [
+        (
+            "sensors_battery",
+            FileNotFoundError,
+            "sensor.system_monitor_battery",
+        ),
+        (
+            "sensors_battery",
+            AttributeError,
+            "sensor.system_monitor_battery",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_without_param_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_psutil: Mock,
+    psutil_attr: str,
+    exception: Exception,
+    entity_id: str,
+) -> None:
+    """Test the sensor."""
+    setattr(mock_psutil, psutil_attr, Mock(side_effect=exception))
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE

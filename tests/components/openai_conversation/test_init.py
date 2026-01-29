@@ -25,7 +25,12 @@ from homeassistant.components.openai_conversation.const import (
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CONVERSATION_OPTIONS,
 )
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigSubentryData
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigSubentryData,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -250,16 +255,6 @@ async def test_invalid_config_entry(
             "Connection error",
         ),
         (
-            AuthenticationError(
-                response=httpx.Response(
-                    status_code=500, request=httpx.Request(method="GET", url="test")
-                ),
-                body=None,
-                message="",
-            ),
-            "Invalid API key",
-        ),
-        (
             BadRequestError(
                 response=httpx.Response(
                     status_code=500, request=httpx.Request(method="GET", url="test")
@@ -286,6 +281,27 @@ async def test_init_error(
         assert await async_setup_component(hass, "openai_conversation", {})
         await hass.async_block_till_done()
         assert error in caplog.text
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_init_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test auth error during init errors."""
+    with patch(
+        "openai.resources.models.AsyncModels.list",
+        side_effect=AuthenticationError(
+            response=httpx.Response(
+                status_code=500, request=httpx.Request(method="GET", url="test")
+            ),
+            body=None,
+            message="",
+        ),
+    ):
+        assert await async_setup_component(hass, "openai_conversation", {})
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(
@@ -545,6 +561,56 @@ async def test_generate_content_service_error(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("service_name", "patch_path"),
+    [
+        ("generate_image", "openai.resources.images.AsyncImages.generate"),
+        ("generate_content", "openai.resources.responses.AsyncResponses.create"),
+    ],
+)
+@pytest.mark.usefixtures("mock_init_component")
+async def test_service_auth_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    service_name: str,
+    patch_path: str,
+) -> None:
+    """Test generate content service handles errors."""
+    with (
+        patch(
+            patch_path,
+            side_effect=AuthenticationError(
+                response=httpx.Response(
+                    status_code=401, request=httpx.Request(method="GET", url="")
+                ),
+                body=None,
+                message="Reason",
+            ),
+        ),
+        pytest.raises(HomeAssistantError, match="Authentication error"),
+    ):
+        await hass.services.async_call(
+            "openai_conversation",
+            service_name,
+            {
+                "config_entry": mock_config_entry.entry_id,
+                "prompt": "Image of an epic fail",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    await hass.async_block_till_done()
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth_confirm"
+    assert flow["handler"] == DOMAIN
+    assert "context" in flow
+    assert flow["context"]["source"] == SOURCE_REAUTH
+    assert flow["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 async def test_migration_from_v1(
@@ -868,6 +934,8 @@ async def test_migration_from_v1_with_same_keys(
 @pytest.mark.parametrize(
     (
         "config_entry_disabled_by",
+        "device_disabled_by",
+        "entity_disabled_by",
         "merged_config_entry_disabled_by",
         "conversation_subentry_data",
         "main_config_entry",
@@ -875,6 +943,8 @@ async def test_migration_from_v1_with_same_keys(
     [
         (
             [ConfigEntryDisabler.USER, None],
+            [DeviceEntryDisabler.CONFIG_ENTRY, None],
+            [RegistryEntryDisabler.CONFIG_ENTRY, None],
             None,
             [
                 {
@@ -894,18 +964,20 @@ async def test_migration_from_v1_with_same_keys(
         ),
         (
             [None, ConfigEntryDisabler.USER],
+            [None, DeviceEntryDisabler.CONFIG_ENTRY],
+            [None, RegistryEntryDisabler.CONFIG_ENTRY],
             None,
             [
                 {
                     "conversation_entity_id": "conversation.chatgpt",
-                    "device_disabled_by": DeviceEntryDisabler.USER,
-                    "entity_disabled_by": RegistryEntryDisabler.DEVICE,
+                    "device_disabled_by": None,
+                    "entity_disabled_by": None,
                     "device": 0,
                 },
                 {
                     "conversation_entity_id": "conversation.chatgpt_2",
-                    "device_disabled_by": None,
-                    "entity_disabled_by": None,
+                    "device_disabled_by": DeviceEntryDisabler.USER,
+                    "entity_disabled_by": RegistryEntryDisabler.DEVICE,
                     "device": 1,
                 },
             ],
@@ -913,6 +985,8 @@ async def test_migration_from_v1_with_same_keys(
         ),
         (
             [ConfigEntryDisabler.USER, ConfigEntryDisabler.USER],
+            [DeviceEntryDisabler.CONFIG_ENTRY, DeviceEntryDisabler.CONFIG_ENTRY],
+            [RegistryEntryDisabler.CONFIG_ENTRY, RegistryEntryDisabler.CONFIG_ENTRY],
             ConfigEntryDisabler.USER,
             [
                 {
@@ -923,8 +997,8 @@ async def test_migration_from_v1_with_same_keys(
                 },
                 {
                     "conversation_entity_id": "conversation.chatgpt_2",
-                    "device_disabled_by": None,
-                    "entity_disabled_by": None,
+                    "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
+                    "entity_disabled_by": RegistryEntryDisabler.CONFIG_ENTRY,
                     "device": 1,
                 },
             ],
@@ -937,6 +1011,8 @@ async def test_migration_from_v1_disabled(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry_disabled_by: list[ConfigEntryDisabler | None],
+    device_disabled_by: list[DeviceEntryDisabler | None],
+    entity_disabled_by: list[RegistryEntryDisabler | None],
     merged_config_entry_disabled_by: ConfigEntryDisabler | None,
     conversation_subentry_data: list[dict[str, Any]],
     main_config_entry: int,
@@ -976,7 +1052,7 @@ async def test_migration_from_v1_disabled(
         manufacturer="OpenAI",
         model="ChatGPT",
         entry_type=dr.DeviceEntryType.SERVICE,
-        disabled_by=DeviceEntryDisabler.CONFIG_ENTRY,
+        disabled_by=device_disabled_by[0],
     )
     entity_registry.async_get_or_create(
         "conversation",
@@ -985,7 +1061,7 @@ async def test_migration_from_v1_disabled(
         config_entry=mock_config_entry,
         device_id=device_1.id,
         suggested_object_id="chatgpt",
-        disabled_by=RegistryEntryDisabler.CONFIG_ENTRY,
+        disabled_by=entity_disabled_by[0],
     )
 
     device_2 = device_registry.async_get_or_create(
@@ -995,6 +1071,7 @@ async def test_migration_from_v1_disabled(
         manufacturer="OpenAI",
         model="ChatGPT",
         entry_type=dr.DeviceEntryType.SERVICE,
+        disabled_by=device_disabled_by[1],
     )
     entity_registry.async_get_or_create(
         "conversation",
@@ -1003,6 +1080,7 @@ async def test_migration_from_v1_disabled(
         config_entry=mock_config_entry_2,
         device_id=device_2.id,
         suggested_object_id="chatgpt_2",
+        disabled_by=entity_disabled_by[1],
     )
 
     devices = [device_1, device_2]

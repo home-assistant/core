@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Air filter operating time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electric heater power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 3,
@@ -130,6 +132,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exhaust air fan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -182,6 +185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exhaust air fan control signal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -216,7 +220,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -232,6 +238,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Exhaust air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -254,6 +261,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Device Name Exhaust air temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -269,7 +277,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -285,6 +295,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extract air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -307,6 +318,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Device Name Extract air temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -340,6 +352,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fireplace ventilation remaining duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -396,6 +409,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heat exchanger efficiency',
     'options': dict({
     }),
     'original_device_class': None,
@@ -448,6 +462,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heat exchanger speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -482,7 +497,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -498,6 +515,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -520,6 +538,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Device Name Outside air temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -553,6 +572,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Rapid ventilation remaining duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -591,7 +611,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -607,6 +629,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -629,6 +652,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Device Name Room temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -662,6 +686,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply air fan',
     'options': dict({
     }),
     'original_device_class': None,
@@ -714,6 +739,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply air fan control signal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -748,7 +774,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -764,6 +792,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Supply air temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -786,6 +815,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Device Name Supply air temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,

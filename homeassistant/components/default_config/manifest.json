@@ -9,6 +9,7 @@
     "conversation",
     "dhcp",
     "energy",
+    "file",
     "go2rtc",
     "history",
     "homeassistant_alerts",
@@ -19,6 +20,7 @@
     "ssdp",
     "stream",
     "sun",
+    "usage_prediction",
     "usb",
     "webhook",
     "zeroconf"

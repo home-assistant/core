@@ -71,6 +71,7 @@ from .const import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPE_LABEL,
     ATTR_HOME_ID,
+    ATTR_HOME_ID_HEX,
     ATTR_LABEL,
     ATTR_NODE_ID,
     ATTR_PARAMETERS,
@@ -91,6 +92,7 @@ from .const import (
     CONF_ADDON_S2_ACCESS_CONTROL_KEY,
     CONF_ADDON_S2_AUTHENTICATED_KEY,
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
+    CONF_ADDON_SOCKET,
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INSTALLER_MODE,
     CONF_INTEGRATION_CREATED_ADDON,
@@ -102,9 +104,11 @@ from .const import (
     CONF_S2_ACCESS_CONTROL_KEY,
     CONF_S2_AUTHENTICATED_KEY,
     CONF_S2_UNAUTHENTICATED_KEY,
+    CONF_SOCKET_PATH,
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DOMAIN,
+    ESPHOME_ADDON_VERSION,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     EVENT_VALUE_UPDATED,
     LIB_LOGGER,
@@ -115,15 +119,12 @@ from .const import (
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_UPDATED_EVENT,
 )
-from .discovery import (
-    ZwaveDiscoveryInfo,
-    async_discover_node_values,
-    async_discover_single_value,
-)
+from .discovery import async_discover_node_values, async_discover_single_value
 from .helpers import (
     async_disable_server_logging_if_needed,
     async_enable_server_logging_if_needed,
     async_enable_statistics,
+    format_home_id_for_display,
     get_device_id,
     get_device_id_ext,
     get_network_identifier_for_notification,
@@ -131,7 +132,7 @@ from .helpers import (
     get_valueless_base_unique_id,
 )
 from .migrate import async_migrate_discovered_value
-from .models import ZwaveJSConfigEntry, ZwaveJSData
+from .models import PlatformZwaveDiscoveryInfo, ZwaveJSConfigEntry, ZwaveJSData
 from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
@@ -776,7 +777,7 @@ class NodeEvents:
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)
 
-        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo] = {}
 
         # run discovery on all node values and create/update entities
         await asyncio.gather(
@@ -841,25 +842,32 @@ class NodeEvents:
         # After ensuring the node is set up in HA, we should check if the node's
         # device config has changed, and if so, issue a repair registry entry for a
         # possible reinterview
-        if not node.is_controller_node and await node.async_has_device_config_changed():
-            device_name = device.name_by_user or device.name or "Unnamed device"
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"device_config_file_changed.{device.id}",
-                data={"device_id": device.id, "device_name": device_name},
-                is_fixable=True,
-                is_persistent=False,
-                translation_key="device_config_file_changed",
-                translation_placeholders={"device_name": device_name},
-                severity=IssueSeverity.WARNING,
-            )
+        if not node.is_controller_node:
+            issue_id = f"device_config_file_changed.{device.id}"
+            if await node.async_has_device_config_changed():
+                device_name = device.name_by_user or device.name or "Unnamed device"
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    issue_id,
+                    data={"device_id": device.id, "device_name": device_name},
+                    is_fixable=True,
+                    is_persistent=False,
+                    translation_key="device_config_file_changed",
+                    translation_placeholders={"device_name": device_name},
+                    severity=IssueSeverity.WARNING,
+                )
+            else:
+                # Clear any existing repair issue if the device config is not considered
+                # changed. This can happen when the original issue was created by
+                # an upstream bug, or the change has been reverted.
+                async_delete_issue(self.hass, DOMAIN, issue_id)
 
     async def async_handle_discovery_info(
         self,
         device: dr.DeviceEntry,
-        disc_info: ZwaveDiscoveryInfo,
-        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
+        disc_info: PlatformZwaveDiscoveryInfo,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
     ) -> None:
         """Handle discovery info and all dependent tasks."""
         platform = disc_info.platform
@@ -901,7 +909,9 @@ class NodeEvents:
         )
 
     async def async_on_value_added(
-        self, value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
+        self,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
+        value: Value,
     ) -> None:
         """Fire value updated event."""
         # If node isn't ready or a device for this node doesn't already exist, we can
@@ -947,6 +957,7 @@ class NodeEvents:
                 ATTR_DOMAIN: DOMAIN,
                 ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: driver.controller.home_id,
+                ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
                 ATTR_ENDPOINT: notification.endpoint,
                 ATTR_DEVICE_ID: device.id,
                 ATTR_COMMAND_CLASS: notification.command_class,
@@ -984,6 +995,7 @@ class NodeEvents:
             ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: notification.node.node_id,
             ATTR_HOME_ID: driver.controller.home_id,
+            ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
             ATTR_ENDPOINT: notification.endpoint_idx,
             ATTR_DEVICE_ID: device.id,
             ATTR_COMMAND_CLASS: notification.command_class,
@@ -1036,7 +1048,9 @@ class NodeEvents:
 
     @callback
     def async_on_value_updated_fire_event(
-        self, value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
+        self,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
+        value: Value,
     ) -> None:
         """Fire value updated event."""
         # Get the discovery info for the value that was updated. If there is
@@ -1067,6 +1081,7 @@ class NodeEvents:
             {
                 ATTR_NODE_ID: value.node.node_id,
                 ATTR_HOME_ID: driver.controller.home_id,
+                ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
                 ATTR_DEVICE_ID: device.id,
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_COMMAND_CLASS: value.command_class,
@@ -1174,7 +1189,16 @@ async def async_ensure_addon_running(
     except AddonError as err:
         raise ConfigEntryNotReady(err) from err
 
-    usb_path: str = entry.data[CONF_USB_PATH]
+    addon_has_lr = (
+        addon_info.version and AwesomeVersion(addon_info.version) >= LR_ADDON_VERSION
+    )
+    addon_has_esphome = (
+        addon_info.version
+        and AwesomeVersion(addon_info.version) >= ESPHOME_ADDON_VERSION
+    )
+
+    usb_path: str | None = entry.data[CONF_USB_PATH]
+    socket_path: str | None = entry.data.get(CONF_SOCKET_PATH)
     # s0_legacy_key was saved as network_key before s2 was added.
     s0_legacy_key: str = entry.data.get(CONF_S0_LEGACY_KEY, "")
     if not s0_legacy_key:
@@ -1186,15 +1210,18 @@ async def async_ensure_addon_running(
     lr_s2_authenticated_key: str = entry.data.get(CONF_LR_S2_AUTHENTICATED_KEY, "")
     addon_state = addon_info.state
     addon_config = {
-        CONF_ADDON_DEVICE: usb_path,
         CONF_ADDON_S0_LEGACY_KEY: s0_legacy_key,
         CONF_ADDON_S2_ACCESS_CONTROL_KEY: s2_access_control_key,
         CONF_ADDON_S2_AUTHENTICATED_KEY: s2_authenticated_key,
         CONF_ADDON_S2_UNAUTHENTICATED_KEY: s2_unauthenticated_key,
     }
-    if addon_info.version and AwesomeVersion(addon_info.version) >= LR_ADDON_VERSION:
+    if usb_path is not None:
+        addon_config[CONF_ADDON_DEVICE] = usb_path
+    if addon_has_lr:
         addon_config[CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY] = lr_s2_access_control_key
         addon_config[CONF_ADDON_LR_S2_AUTHENTICATED_KEY] = lr_s2_authenticated_key
+    if addon_has_esphome and socket_path is not None:
+        addon_config[CONF_ADDON_SOCKET] = socket_path
 
     if addon_state == AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
@@ -1211,7 +1238,7 @@ async def async_ensure_addon_running(
         raise ConfigEntryNotReady
 
     addon_options = addon_info.options
-    addon_device = addon_options[CONF_ADDON_DEVICE]
+    addon_device = addon_options.get(CONF_ADDON_DEVICE)
     # s0_legacy_key was saved as network_key before s2 was added.
     addon_s0_legacy_key = addon_options.get(CONF_ADDON_S0_LEGACY_KEY, "")
     if not addon_s0_legacy_key:
@@ -1235,9 +1262,7 @@ async def async_ensure_addon_running(
     if s2_unauthenticated_key != addon_s2_unauthenticated_key:
         updates[CONF_S2_UNAUTHENTICATED_KEY] = addon_s2_unauthenticated_key
 
-    if addon_info.version and AwesomeVersion(addon_info.version) >= AwesomeVersion(
-        LR_ADDON_VERSION
-    ):
+    if addon_has_lr:
         addon_lr_s2_access_control_key = addon_options.get(
             CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, ""
         )
@@ -1248,6 +1273,11 @@ async def async_ensure_addon_running(
             updates[CONF_LR_S2_ACCESS_CONTROL_KEY] = addon_lr_s2_access_control_key
         if lr_s2_authenticated_key != addon_lr_s2_authenticated_key:
             updates[CONF_LR_S2_AUTHENTICATED_KEY] = addon_lr_s2_authenticated_key
+
+    if addon_has_esphome:
+        addon_socket = addon_options.get(CONF_ADDON_SOCKET)
+        if socket_path != addon_socket:
+            updates[CONF_SOCKET_PATH] = addon_socket
 
     if updates:
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})

@@ -166,13 +166,19 @@ async def async_forward_entry_setup_and_setup_discovery(
         from . import device_automation  # noqa: PLC0415
 
         tasks.append(
-            create_eager_task(device_automation.async_setup_entry(hass, config_entry))
+            create_eager_task(
+                device_automation.async_setup_mqtt_device_automation_entry(
+                    hass, config_entry
+                )
+            )
         )
     if "tag" in new_platforms:
         # Local import to avoid circular dependencies
         from . import tag  # noqa: PLC0415
 
-        tasks.append(create_eager_task(tag.async_setup_entry(hass, config_entry)))
+        tasks.append(
+            create_eager_task(tag.async_setup_mqtt_tag_entry(hass, config_entry))
+        )
     if new_entity_platforms := (new_platforms - {"tag", "device_automation"}):
         tasks.append(
             create_eager_task(

@@ -8,6 +8,6 @@
   "integration_type": "service",
   "iot_class": "calculated",
   "quality_scale": "internal",
-  "requirements": ["cronsim==2.6", "securetar==2025.2.1"],
+  "requirements": ["cronsim==2.7", "securetar==2025.2.1"],
   "single_config_entry": true
 }

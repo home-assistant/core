@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
-from uiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
+from uiprotect.data import AiPort, Camera as ProtectCamera, CameraChannel, StateType
 from uiprotect.exceptions import NvrError
 from uiprotect.websocket import WebsocketState
 from webrtc_models import RTCIceCandidateInit
@@ -21,8 +21,8 @@ from homeassistant.components.camera import (
     async_get_image,
     async_get_stream_source,
     async_register_webrtc_provider,
+    get_camera_from_entity_id,
 )
-from homeassistant.components.camera.helper import get_camera_from_entity_id
 from homeassistant.components.unifiprotect.const import (
     ATTR_BITRATE,
     ATTR_CHANNEL_ID,
@@ -41,9 +41,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
+from . import patch_ufp_method
 from .utils import (
     Camera,
     MockUFPFixture,
@@ -596,45 +601,96 @@ async def test_camera_ws_update_offline(
     assert state and state.state == "idle"
 
 
-async def test_camera_enable_motion(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+@pytest.mark.parametrize(
+    ("service", "expected_value"),
+    [
+        ("enable_motion_detection", True),
+        ("disable_motion_detection", False),
+    ],
+)
+async def test_camera_motion_detection(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    service: str,
+    expected_value: bool,
 ) -> None:
-    """Tests generic entity update service."""
-
+    """Test enabling/disabling motion detection on camera."""
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
-    camera.__pydantic_fields__["set_motion_detection"] = Mock(final=False, frozen=False)
-    camera.set_motion_detection = AsyncMock()
+    with patch_ufp_method(
+        camera, "set_motion_detection", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "camera",
+            service,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        "camera",
-        "enable_motion_detection",
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    camera.set_motion_detection.assert_called_once_with(True)
+        mock_method.assert_called_once_with(expected_value)
 
 
-async def test_camera_disable_motion(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+async def test_aiport_no_camera_entities(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    aiport: AiPort,
 ) -> None:
-    """Tests generic entity update service."""
+    """Test that AI Port devices do not create camera entities."""
+    await init_entry(hass, ufp, [aiport])
 
-    await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
-    entity_id = "camera.test_camera_high_resolution_channel"
+    # AI Port should not create any camera entities
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
 
-    camera.__pydantic_fields__["set_motion_detection"] = Mock(final=False, frozen=False)
-    camera.set_motion_detection = AsyncMock()
 
-    await hass.services.async_call(
-        "camera",
-        "disable_motion_detection",
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
+async def test_aiport_rtsp_issue_cleanup(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    aiport: AiPort,
+) -> None:
+    """Test that RTSP disabled issues for AI Ports are cleaned up on setup."""
+    # Set up the integration with the AI Port first
+    # (init_entry regenerates IDs, so we need to get the new ID)
+    await init_entry(hass, ufp, [aiport])
+
+    # Now get the actual AI Port ID after regeneration
+    actual_aiport_id = aiport.id
+
+    # Create an RTSP disabled issue for the AI Port
+    # (simulating an issue that might have been created by a previous buggy version)
+    issue_id = f"rtsp_disabled_{actual_aiport_id}"
+
+    # Get the issue registry and create the issue directly via internal method
+    # to avoid translation validation (as we're simulating a legacy issue)
+    issue_registry = ir.async_get(hass)
+    issue_registry.issues[(DOMAIN, issue_id)] = ir.IssueEntry(
+        active=True,
+        breaks_in_ha_version=None,
+        created=None,
+        data=None,
+        dismissed_version=None,
+        domain=DOMAIN,
+        is_fixable=True,
+        is_persistent=False,
+        issue_domain=None,
+        issue_id=issue_id,
+        learn_more_url=None,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="rtsp_disabled",
+        translation_placeholders=None,
     )
 
-    camera.set_motion_detection.assert_called_once_with(False)
+    # Verify the issue exists
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    # Reload the integration - this should clean up the issue
+    await hass.config_entries.async_reload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The issue should be cleaned up since AI Ports can't have RTSP
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+    # Verify no camera entities were created
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)

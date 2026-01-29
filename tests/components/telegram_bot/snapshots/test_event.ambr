@@ -1,0 +1,22 @@
+# serializer version: 1
+# name: test_send_message
+  ReadOnlyDict({
+    'bot': dict({
+      'first_name': 'Testbot',
+      'id': 123456,
+      'last_name': 'mock last name',
+      'username': 'mock username',
+    }),
+    'chat_id': 123456,
+    'event_type': 'telegram_sent',
+    'event_types': list([
+      'telegram_attachment',
+      'telegram_callback',
+      'telegram_command',
+      'telegram_text',
+      'telegram_sent',
+    ]),
+    'friendly_name': 'Mock Title Update event',
+    'message_id': 12345,
+  })
+# ---

@@ -10,8 +10,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import AsusWrtConfigEntry
 from .router import AsusWrtDevInfo, AsusWrtRouter
 
-ATTR_LAST_TIME_REACHABLE = "last_time_reachable"
-
 DEFAULT_DEVICE_NAME = "Unknown device"
 
 
@@ -58,8 +56,6 @@ def add_entities(
 class AsusWrtDevice(ScannerEntity):
     """Representation of a AsusWrt device."""
 
-    _unrecorded_attributes = frozenset({ATTR_LAST_TIME_REACHABLE})
-
     _attr_should_poll = False
 
     def __init__(self, router: AsusWrtRouter, device: AsusWrtDevInfo) -> None:
@@ -97,11 +93,6 @@ class AsusWrtDevice(ScannerEntity):
     def async_on_demand_update(self) -> None:
         """Update state."""
         self._device = self._router.devices[self._device.mac]
-        self._attr_extra_state_attributes = {}
-        if self._device.last_activity:
-            self._attr_extra_state_attributes[ATTR_LAST_TIME_REACHABLE] = (
-                self._device.last_activity.isoformat(timespec="seconds")
-            )
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:

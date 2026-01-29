@@ -12,7 +12,8 @@
   "homekit": {
     "models": ["tado", "AC02"]
   },
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["PyTado"],
-  "requirements": ["python-tado==0.18.15"]
+  "requirements": ["python-tado==0.18.16"]
 }

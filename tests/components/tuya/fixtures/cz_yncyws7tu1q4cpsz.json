@@ -1,0 +1,37 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Wi-Fi hub",
+  "category": "cz",
+  "product_id": "yncyws7tu1q4cpsz",
+  "product_name": "Wi-Fi hub",
+  "online": true,
+  "sub": true,
+  "time_zone": "-04:00",
+  "active_time": "2025-08-09T18:54:03+00:00",
+  "create_time": "2025-08-09T18:54:03+00:00",
+  "update_time": "2025-08-09T18:54:03+00:00",
+  "function": {
+    "relay_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["power_off", "power_on", "last"]
+      }
+    }
+  },
+  "status_range": {
+    "relay_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["power_off", "power_on", "last"]
+      }
+    }
+  },
+  "status": {
+    "relay_status": "power_on"
+  },
+  "set_up": true,
+  "support_local": true
+}

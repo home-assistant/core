@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 from aiotractive.exceptions import TractiveError
 
@@ -18,6 +18,7 @@ from .const import (
     ATTR_BUZZER,
     ATTR_LED,
     ATTR_LIVE_TRACKING,
+    ATTR_POWER_SAVING,
     TRACKER_SWITCH_STATUS_UPDATED,
 )
 from .entity import TractiveEntity
@@ -104,7 +105,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
         # We received an event, so the service is online and the switch entities should
         #  be available.
-        self._attr_available = True
+        self._attr_available = not event[ATTR_POWER_SAVING]
         self._attr_is_on = event[self.entity_description.key]
 
         self.async_write_ha_state()
@@ -135,14 +136,12 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
 
     async def async_set_buzzer(self, active: bool) -> dict[str, Any]:
         """Set the buzzer on/off."""
-        return cast(dict[str, Any], await self._tracker.set_buzzer_active(active))
+        return await self._tracker.set_buzzer_active(active)
 
     async def async_set_led(self, active: bool) -> dict[str, Any]:
         """Set the LED on/off."""
-        return cast(dict[str, Any], await self._tracker.set_led_active(active))
+        return await self._tracker.set_led_active(active)
 
     async def async_set_live_tracking(self, active: bool) -> dict[str, Any]:
         """Set the live tracking on/off."""
-        return cast(
-            dict[str, Any], await self._tracker.set_live_tracking_active(active)
-        )
+        return await self._tracker.set_live_tracking_active(active)

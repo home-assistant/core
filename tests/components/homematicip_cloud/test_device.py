@@ -280,7 +280,7 @@ async def test_hmip_multi_area_device(
         test_devices=["Wired Eingangsmodul – 32-fach"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
     assert ha_state

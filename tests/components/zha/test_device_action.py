@@ -1,9 +1,11 @@
 """The test for ZHA device automation actions."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
 from pytest_unordered import unordered
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general, security
 import zigpy.zcl.foundation as zcl_f
@@ -20,12 +22,6 @@ from homeassistant.setup import async_setup_component
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import async_get_device_automations, async_mock_service
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
 
 SHORT_PRESS = "remote_button_short_press"
 COMMAND = "command"
@@ -56,8 +52,8 @@ async def test_get_actions(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test we get the expected actions from a ZHA device."""
 
@@ -142,8 +138,8 @@ async def test_get_actions(
 async def test_action(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test for executing a ZHA device action."""
     await setup_zha()
@@ -221,7 +217,9 @@ async def test_action(
 
 
 async def test_invalid_zha_event_type(
-    hass: HomeAssistant, setup_zha, zigpy_device_mock
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test that unexpected types are not passed to `zha_send_event`."""
     await setup_zha()
@@ -261,7 +259,9 @@ async def test_invalid_zha_event_type(
 
 
 async def test_client_unique_id_suffix_stripped(
-    hass: HomeAssistant, setup_zha, zigpy_device_mock
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test that the `_CLIENT_` unique ID suffix is stripped."""
     assert await async_setup_component(

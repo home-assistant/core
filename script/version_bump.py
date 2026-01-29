@@ -2,14 +2,18 @@
 """Helper script to bump the current version."""
 
 import argparse
+from copy import replace
 from pathlib import Path
 import re
 import subprocess
 
+import packaging
 from packaging.version import Version
 
 from homeassistant import const
 from homeassistant.util import dt as dt_util
+
+_PACKAGING_VERSION_BELOW_26 = Version(packaging.__version__) < Version("26.0dev0")
 
 
 def _bump_release(release, bump_type):
@@ -23,6 +27,13 @@ def _bump_release(release, bump_type):
         patch = 0
 
     return major, minor, patch
+
+
+def _get_dev_change(dev: int) -> int | tuple[str, int]:
+    """Return the dev change based on packaging version."""
+    if _PACKAGING_VERSION_BELOW_26:
+        return ("dev", dev)
+    return dev
 
 
 def bump_version(
@@ -58,9 +69,10 @@ def bump_version(
         # Convert 0.67.3.b5 to 0.67.4.dev0
         # Convert 0.67.3.dev0 to 0.67.3.dev1
         if version.is_devrelease:
-            to_change["dev"] = ("dev", version.dev + 1)
+            to_change["dev"] = _get_dev_change(version.dev + 1)
         else:
-            to_change["pre"] = ("dev", 0)
+            to_change["dev"] = _get_dev_change(0)
+            to_change["pre"] = None
             to_change["release"] = _bump_release(version.release, "minor")
 
     elif bump_type == "beta":
@@ -99,14 +111,19 @@ def bump_version(
                 raise ValueError("Nightly version must be a dev version")
             new_dev = new_version.dev
 
-        to_change["dev"] = ("dev", new_dev)
+        if not isinstance(new_dev, int):
+            new_dev = int(new_dev)
+        to_change["dev"] = _get_dev_change(new_dev)
 
     else:
         raise ValueError(f"Unsupported type: {bump_type}")
 
-    temp = Version("0")
-    temp._version = version._version._replace(**to_change)  # noqa: SLF001
-    return Version(str(temp))
+    if _PACKAGING_VERSION_BELOW_26:
+        temp = Version("0")
+        temp._version = version._version._replace(**to_change)  # noqa: SLF001
+        return Version(str(temp))
+
+    return replace(version, **to_change)
 
 
 def write_version(version):

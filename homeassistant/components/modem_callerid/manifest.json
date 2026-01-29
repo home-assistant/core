@@ -11,8 +11,8 @@
   "requirements": ["phone-modem==0.1.1"],
   "usb": [
     {
-      "vid": "0572",
-      "pid": "1340"
+      "pid": "1340",
+      "vid": "0572"
     }
   ]
 }

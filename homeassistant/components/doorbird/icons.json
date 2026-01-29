@@ -1,11 +1,11 @@
 {
   "entity": {
     "button": {
-      "relay": {
-        "default": "mdi:dip-switch"
-      },
       "ir": {
         "default": "mdi:lightbulb"
+      },
+      "relay": {
+        "default": "mdi:dip-switch"
       }
     }
   }

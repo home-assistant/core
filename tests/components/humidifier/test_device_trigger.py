@@ -33,11 +33,6 @@ from tests.common import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 async def test_get_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -543,7 +538,14 @@ async def test_get_trigger_capabilities_on(hass: HomeAssistant) -> None:
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"name": "for", "optional": True, "type": "positive_time_period_dict"}]
+    ) == [
+        {
+            "name": "for",
+            "optional": True,
+            "required": False,
+            "type": "positive_time_period_dict",
+        }
+    ]
 
 
 async def test_get_trigger_capabilities_off(hass: HomeAssistant) -> None:
@@ -563,7 +565,14 @@ async def test_get_trigger_capabilities_off(hass: HomeAssistant) -> None:
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"name": "for", "optional": True, "type": "positive_time_period_dict"}]
+    ) == [
+        {
+            "name": "for",
+            "optional": True,
+            "required": False,
+            "type": "positive_time_period_dict",
+        }
+    ]
 
 
 async def test_get_trigger_capabilities_humidity(hass: HomeAssistant) -> None:
@@ -588,13 +597,20 @@ async def test_get_trigger_capabilities_humidity(hass: HomeAssistant) -> None:
             "description": {"suffix": "%"},
             "name": "above",
             "optional": True,
+            "required": False,
             "type": "integer",
         },
         {
             "description": {"suffix": "%"},
             "name": "below",
             "optional": True,
+            "required": False,
             "type": "integer",
         },
-        {"name": "for", "optional": True, "type": "positive_time_period_dict"},
+        {
+            "name": "for",
+            "optional": True,
+            "required": False,
+            "type": "positive_time_period_dict",
+        },
     ]

@@ -1,86 +1,86 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
-      "service": {
-        "title": "Select Services",
-        "data": {
-          "services": "Services"
-        }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Update password for {username}",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
-    },
-    "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "no_services_found": "No services were found for this account",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    }
-  },
-  "options": {
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
-      "init": {
-        "title": "[%key:component::aussie_broadband::config::step::service::title%]",
+      "reauth_confirm": {
         "data": {
-          "services": "[%key:component::aussie_broadband::config::step::service::data::services%]"
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Update password for {username}",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "service": {
+        "data": {
+          "services": "Services"
+        },
+        "title": "Select Services"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         }
       }
-    },
-    "abort": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {
     "sensor": {
+      "billing_cycle_length": {
+        "name": "Billing cycle length"
+      },
+      "billing_cycle_remaining": {
+        "name": "Billing cycle remaining"
+      },
       "data_used": {
         "name": "Data used"
       },
       "downloaded": {
         "name": "Downloaded"
       },
-      "uploaded": {
-        "name": "Uploaded"
-      },
-      "national_calls": {
-        "name": "National calls"
+      "international_calls": {
+        "name": "International calls"
       },
       "mobile_calls": {
         "name": "Mobile calls"
       },
-      "international_calls": {
-        "name": "International calls"
-      },
-      "sms_sent": {
-        "name": "SMS sent"
-      },
-      "voicemail_calls": {
-        "name": "Voicemail calls"
+      "national_calls": {
+        "name": "National calls"
       },
       "other_calls": {
         "name": "Other calls"
       },
-      "billing_cycle_length": {
-        "name": "Billing cycle length"
+      "sms_sent": {
+        "name": "SMS sent"
       },
-      "billing_cycle_remaining": {
-        "name": "Billing cycle remaining"
+      "uploaded": {
+        "name": "Uploaded"
+      },
+      "voicemail_calls": {
+        "name": "Voicemail calls"
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "services": "[%key:component::aussie_broadband::config::step::service::data::services%]"
+        },
+        "title": "[%key:component::aussie_broadband::config::step::service::title%]"
       }
     }
   }

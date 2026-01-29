@@ -10,7 +10,7 @@ import pytest
 from reolink_aio.enums import SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
+from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.components.reolink.host import (
     FIRST_ONVIF_LONG_POLL_TIMEOUT,
     FIRST_ONVIF_TIMEOUT,
@@ -28,7 +28,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.util.aiohttp import MockRequest
 
-from .conftest import TEST_NVR_NAME
+from .conftest import TEST_CAM_NAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -92,7 +92,7 @@ async def test_webhook_callback(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.BINARY_SENSOR}.{TEST_NVR_NAME}_motion"
+    entity_id = f"{Platform.BINARY_SENSOR}.{TEST_CAM_NAME}_motion"
     webhook_id = config_entry.runtime_data.host.webhook_id
     unique_id = config_entry.runtime_data.host.unique_id
 
@@ -258,7 +258,7 @@ async def test_renew(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -266,7 +266,7 @@ async def test_renew(
 
     reolink_host.renew.side_effect = SubscriptionError("Test error")
 
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -275,7 +275,7 @@ async def test_renew(
     reolink_host.subscribe.reset_mock()
     reolink_host.subscribe.side_effect = SubscriptionError("Test error")
 
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -341,7 +341,7 @@ async def test_long_poll_stop_when_push(
     webhook_id = config_entry.runtime_data.host.webhook_id
     await client.post(f"/api/webhook/{webhook_id}")
 
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

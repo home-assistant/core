@@ -76,6 +76,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ViCareConfigEntry) -> PyViCare:
     devices = [
         ViCareDevice(config=device_config, api=get_device(entry, device_config))
         for device_config in device_config_list
+        if bool(device_config.isOnline())
     ]
     return ViCareData(client=client, devices=devices)
 

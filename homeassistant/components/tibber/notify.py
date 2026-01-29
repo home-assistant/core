@@ -2,28 +2,27 @@
 
 from __future__ import annotations
 
-from tibber import Tibber
+import tibber
 
 from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     NotifyEntity,
     NotifyEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
+from .const import DOMAIN, TibberConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TibberConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tibber notification entity."""
-    async_add_entities([TibberNotificationEntity(entry.entry_id)])
+    async_add_entities([TibberNotificationEntity(entry)])
 
 
 class TibberNotificationEntity(NotifyEntity):
@@ -33,13 +32,16 @@ class TibberNotificationEntity(NotifyEntity):
     _attr_name = DOMAIN
     _attr_icon = "mdi:message-flash"
 
-    def __init__(self, unique_id: str) -> None:
+    def __init__(self, entry: TibberConfigEntry) -> None:
         """Initialize Tibber notify entity."""
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = entry.entry_id
+        self._entry = entry
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to Tibber devices."""
-        tibber_connection: Tibber = self.hass.data[DOMAIN]
+        tibber_connection: tibber.Tibber = (
+            await self._entry.runtime_data.async_get_client(self.hass)
+        )
         try:
             await tibber_connection.send_notification(
                 title or ATTR_TITLE_DEFAULT, message

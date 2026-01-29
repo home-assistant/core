@@ -27,7 +27,10 @@ select_option:
       required: true
       example: '"Item A"'
       selector:
-        text:
+        state:
+          hide_states:
+            - unavailable
+            - unknown
 
 select_previous:
   target:

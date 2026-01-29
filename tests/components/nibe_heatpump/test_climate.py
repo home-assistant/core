@@ -124,7 +124,7 @@ async def test_active_accessory(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test climate groups that can be deactivated by configuration."""
-    climate, unit = _setup_climate_group(coils, model, climate_id)
+    climate, _unit = _setup_climate_group(coils, model, climate_id)
 
     await async_add_model(hass, model)
 

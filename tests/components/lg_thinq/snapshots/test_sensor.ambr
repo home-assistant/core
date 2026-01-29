@@ -1,5 +1,176 @@
 # serializer version: 1
-# name: test_all_entities[sensor.test_air_conditioner_filter_remaining-entry]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_last_month-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_air_conditioner_energy_last_month',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy last month',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy last month',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_usage_last_month',
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_energyUsage_last_month',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_last_month-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test air conditioner Energy last month',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_air_conditioner_energy_last_month',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_this_month-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_air_conditioner_energy_this_month',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy this month',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy this month',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_usage_this_month',
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_energyUsage_this_month',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_this_month-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test air conditioner Energy this month',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_air_conditioner_energy_this_month',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_yesterday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_air_conditioner_energy_yesterday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy yesterday',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy yesterday',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_usage_yesterday',
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_energyUsage_yesterday',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_energy_yesterday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test air conditioner Energy yesterday',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_air_conditioner_energy_yesterday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_filter_remaining-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -20,6 +191,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Filter remaining',
     'options': dict({
     }),
     'original_device_class': None,
@@ -34,7 +206,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_filter_remaining-state]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_filter_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test air conditioner Filter remaining',
@@ -48,7 +220,7 @@
     'state': '540',
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_humidity-entry]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -71,6 +243,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -85,7 +258,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_humidity-state]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -101,7 +274,7 @@
     'state': '40',
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_pm1-entry]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -124,6 +297,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
@@ -135,16 +309,16 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_pm1',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_pm1-state]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm1',
       'friendly_name': 'Test air conditioner PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_pm1',
@@ -154,7 +328,7 @@
     'state': '12',
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_pm10-entry]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm10-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -177,6 +351,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM10',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
@@ -188,16 +363,16 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_pm10',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_pm10-state]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm10',
       'friendly_name': 'Test air conditioner PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_pm10',
@@ -207,7 +382,7 @@
     'state': '7',
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_pm2_5-entry]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -230,6 +405,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -241,16 +417,16 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_pm2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_pm2_5-state]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm25',
       'friendly_name': 'Test air conditioner PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_air_conditioner_pm2_5',
@@ -260,7 +436,7 @@
     'state': '24',
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_schedule_turn_off-entry]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_off-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -281,6 +457,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Schedule turn-off',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -298,7 +475,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_schedule_turn_off-state]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -313,7 +490,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_schedule_turn_on-entry]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_on-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -334,6 +511,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Schedule turn-on',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -351,7 +529,7 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_schedule_turn_on-state]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_on-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -366,7 +544,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_schedule_turn_on_2-entry]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_on_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -387,6 +565,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Schedule turn-on',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -401,7 +580,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.test_air_conditioner_schedule_turn_on_2-state]
+# name: test_sensor_entities[air_conditioner][sensor.test_air_conditioner_schedule_turn_on_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',

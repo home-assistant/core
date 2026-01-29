@@ -86,6 +86,9 @@ def add_province_and_language_to_schema(
                 SelectOptionDict(value=k, label=", ".join(v))
                 for k, v in subdiv_aliases.items()
             ]
+            for option in province_options:
+                if option["label"] == "":
+                    option["label"] = option["value"]
         else:
             province_options = provinces
         province_schema = {
@@ -152,6 +155,7 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
             subdiv=province,
             years=year,
             language=language,
+            categories=[PUBLIC, *user_input.get(CONF_CATEGORY, [])],
         )
 
     else:

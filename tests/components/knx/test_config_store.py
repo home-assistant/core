@@ -88,7 +88,7 @@ async def test_create_entity_error(
     assert res["success"], res
     assert not res["result"]["success"]
     assert res["result"]["errors"][0]["path"] == ["platform"]
-    assert res["result"]["error_base"].startswith("expected Platform or one of")
+    assert res["result"]["error_base"].startswith("expected EntityPlatforms or one of")
 
     # create entity with unsupported platform
     await client.send_json_auto_id(
@@ -456,5 +456,21 @@ async def test_migration_1_to_2(
     )
     new_data = await async_load_json_object_fixture(
         hass, "config_store_light.json", "knx"
+    )
+    assert hass_storage[KNX_CONFIG_STORAGE_KEY] == new_data
+
+
+async def test_migration_2_1_to_2_2(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test migration from schema 2.1 to schema 2.2."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_binarysensor_v2_1.json",
+        state_updater=False,
+    )
+    new_data = await async_load_json_object_fixture(
+        hass, "config_store_binarysensor.json", "knx"
     )
     assert hass_storage[KNX_CONFIG_STORAGE_KEY] == new_data

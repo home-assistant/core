@@ -30,6 +30,7 @@ The following cases will never be passed to your function:
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+import math
 from types import MappingProxyType
 from typing import Any, Protocol
 
@@ -161,7 +162,7 @@ def check_percentage_change(
         try:
             return (abs(new_state - old_state) / old_state) * 100.0
         except ZeroDivisionError:
-            return float("inf")
+            return math.inf
 
     return _check_numeric_change(old_state, new_state, change, percentage_change)
 

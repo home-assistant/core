@@ -1,0 +1,106 @@
+{
+  "ID": "7TRN:IPZB:QYBB:VPBQ:UMPP:KARE:6ZNR:XE6T:7EWV:PKF4:ZOJD:TPYS",
+  "Containers": 14,
+  "ContainersRunning": 3,
+  "ContainersPaused": 1,
+  "ContainersStopped": 10,
+  "Images": 508,
+  "Driver": "overlay2",
+  "DriverStatus": [
+    ["Backing Filesystem", "extfs"],
+    ["Supports d_type", "true"],
+    ["Native Overlay Diff", "true"]
+  ],
+  "DockerRootDir": "/var/lib/docker",
+  "Plugins": {
+    "Volume": [],
+    "Network": [],
+    "Authorization": [],
+    "Log": []
+  },
+  "MemoryLimit": true,
+  "SwapLimit": true,
+  "KernelMemoryTCP": true,
+  "CpuCfsPeriod": true,
+  "CpuCfsQuota": true,
+  "CPUShares": true,
+  "CPUSet": true,
+  "PidsLimit": true,
+  "OomKillDisable": true,
+  "IPv4Forwarding": true,
+  "BridgeNfIptables": true,
+  "BridgeNfIp6tables": true,
+  "Debug": true,
+  "NFd": 64,
+  "NGoroutines": 174,
+  "SystemTime": "2017-08-08T20:28:29.06202363Z",
+  "LoggingDriver": "json-file",
+  "CgroupDriver": "cgroupfs",
+  "CgroupVersion": "1",
+  "NEventsListener": 30,
+  "KernelVersion": "4.9.38-moby",
+  "OperatingSystem": "Alpine Linux v3.5",
+  "OSVersion": "16.04",
+  "OSType": "linux",
+  "Architecture": "x86_64",
+  "NCPU": 4,
+  "MemTotal": 2095882240,
+  "IndexServerAddress": "https://index.docker.io/v1/",
+  "RegistryConfig": {
+    "AllowNondistributableArtifactsCIDRs": [],
+    "AllowNondistributableArtifactsHostnames": [],
+    "InsecureRegistryCIDRs": [],
+    "IndexConfigs": {},
+    "Mirrors": []
+  },
+  "GenericResources": [{}, {}, {}],
+  "HttpProxy": "http://xxxxx:xxxxx@proxy.corp.example.com:8080",
+  "HttpsProxy": "https://xxxxx:xxxxx@proxy.corp.example.com:4443",
+  "NoProxy": "*.local, 169.254/16",
+  "Name": "node5.corp.example.com",
+  "Labels": ["storage=ssd", "production"],
+  "ExperimentalBuild": true,
+  "ServerVersion": "24.0.2",
+  "Runtimes": {
+    "runc": {},
+    "runc-master": {},
+    "custom": {}
+  },
+  "DefaultRuntime": "runc",
+  "Swarm": {
+    "NodeID": "k67qz4598weg5unwwffg6z1m1",
+    "NodeAddr": "10.0.0.46",
+    "LocalNodeState": "active",
+    "ControlAvailable": true,
+    "Error": "",
+    "RemoteManagers": [],
+    "Nodes": 4,
+    "Managers": 3,
+    "Cluster": {}
+  },
+  "LiveRestoreEnabled": false,
+  "Isolation": "default",
+  "InitBinary": "docker-init",
+  "ContainerdCommit": {
+    "ID": "cfb82a876ecc11b5ca0977d1733adbe58599088a",
+    "Expected": "2d41c047c83e09a6d61d464906feb2a2f3c52aa4"
+  },
+  "RuncCommit": {
+    "ID": "cfb82a876ecc11b5ca0977d1733adbe58599088a",
+    "Expected": "2d41c047c83e09a6d61d464906feb2a2f3c52aa4"
+  },
+  "InitCommit": {
+    "ID": "cfb82a876ecc11b5ca0977d1733adbe58599088a",
+    "Expected": "2d41c047c83e09a6d61d464906feb2a2f3c52aa4"
+  },
+  "SecurityOptions": [
+    "name=apparmor",
+    "name=seccomp,profile=default",
+    "name=selinux",
+    "name=userns",
+    "name=rootless"
+  ],
+  "ProductLicense": "Community Engine",
+  "DefaultAddressPools": [{}],
+  "Warnings": ["WARNING: No memory limit support"]
+}

@@ -3,8 +3,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/base:debian
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN \
-    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-    && apt-get update \
+    apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         # Additional library needed by some tests and accordingly by VScode Tests Discovery
         bluez \
@@ -14,7 +13,6 @@ RUN \
         libavcodec-dev \
         libavdevice-dev \
         libavutil-dev \
-        libgammu-dev \
         libswscale-dev \
         libswresample-dev \
         libavfilter-dev \
@@ -35,25 +33,24 @@ WORKDIR /usr/src
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-RUN uv python install 3.13.2
-
 USER vscode
-ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
-RUN uv venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-WORKDIR /tmp
+ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
+RUN --mount=type=bind,source=.python-version,target=.python-version \
+    uv python install \
+    && uv venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Setup hass-release
 RUN git clone --depth 1 https://github.com/home-assistant/hass-release ~/hass-release \
     && uv pip install -e ~/hass-release/
 
 # Install Python dependencies from requirements
-COPY requirements.txt ./
-COPY homeassistant/package_constraints.txt homeassistant/package_constraints.txt
-RUN uv pip install -r requirements.txt
-COPY requirements_test.txt requirements_test_pre_commit.txt ./
-RUN uv pip install -r requirements_test.txt
+RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
+    --mount=type=bind,source=homeassistant/package_constraints.txt,target=homeassistant/package_constraints.txt \
+    --mount=type=bind,source=requirements_test.txt,target=requirements_test.txt \
+    --mount=type=bind,source=requirements_test_pre_commit.txt,target=requirements_test_pre_commit.txt \
+    uv pip install -r requirements.txt -r requirements_test.txt
 
 WORKDIR /workspaces
 

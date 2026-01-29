@@ -36,7 +36,7 @@ async def async_setup_entry(
 
     async_add_entities(
         (
-            FreeboxAlarm(hass, router, node)
+            FreeboxAlarm(router, node)
             for node in router.home_devices.values()
             if node["category"] == FreeboxHomeCategory.ALARM
         ),
@@ -49,11 +49,9 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
 
     _attr_code_arm_required = False
 
-    def __init__(
-        self, hass: HomeAssistant, router: FreeboxRouter, node: dict[str, Any]
-    ) -> None:
+    def __init__(self, router: FreeboxRouter, node: dict[str, Any]) -> None:
         """Initialize an alarm."""
-        super().__init__(hass, router, node)
+        super().__init__(router, node)
 
         # Commands
         self._command_trigger = self.get_command_id(

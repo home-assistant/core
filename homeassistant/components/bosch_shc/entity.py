@@ -69,12 +69,7 @@ class SHCEntity(SHCBaseEntity):
             manufacturer=device.manufacturer,
             model=device.device_model,
             name=device.name,
-            via_device=(
-                DOMAIN,
-                device.parent_device_id
-                if device.parent_device_id is not None
-                else parent_id,
-            ),
+            via_device=(DOMAIN, device.root_device_id),
         )
         super().__init__(device=device, parent_id=parent_id, entry_id=entry_id)
 

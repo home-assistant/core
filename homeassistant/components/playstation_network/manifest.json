@@ -75,11 +75,20 @@
     },
     {
       "macaddress": "84E657*"
+    },
+    {
+      "hostname": "ps5-*"
+    },
+    {
+      "hostname": "ps4-*"
+    },
+    {
+      "hostname": "ps3"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/playstation_network",
-  "integration_type": "service",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["PSNAWP==3.0.0", "pyrate-limiter==3.7.0"]
+  "requirements": ["PSNAWP==3.0.1", "pyrate-limiter==3.9.0"]
 }

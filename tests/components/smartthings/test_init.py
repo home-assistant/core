@@ -9,6 +9,7 @@ from pysmartthings import (
     DeviceResponse,
     DeviceStatus,
     Lifecycle,
+    SmartThingsConnectionError,
     SmartThingsSinkError,
     Subscription,
 )
@@ -22,7 +23,7 @@ from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.smartthings import EVENT_BUTTON
+from homeassistant.components.smartthings import EVENT_BUTTON, OLD_DATA
 from homeassistant.components.smartthings.const import (
     CONF_INSTALLED_APP_ID,
     CONF_LOCATION_ID,
@@ -35,6 +36,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from . import setup_integration, trigger_update
 
@@ -730,3 +734,98 @@ async def test_entity_unique_id_migration_machine_state(
     entry = entity_registry.async_get(entry.entity_id)
 
     assert entry.unique_id == new_unique_id
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.smartthings.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_3_3_migration(
+    hass: HomeAssistant,
+    mock_migrated_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_smartthings: AsyncMock,
+) -> None:
+    """Test migration from minor version 2 to 3."""
+    mock_migrated_config_entry.add_to_hass(hass)
+
+    assert OLD_DATA in mock_migrated_config_entry.data
+
+    await hass.config_entries.async_setup(mock_migrated_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_migrated_config_entry.minor_version == 3
+
+    assert OLD_DATA not in mock_migrated_config_entry.data
+    mock_smartthings.get_installed_app.assert_called_once_with(
+        "mock-access-token",
+        "123aa123-2be1-4e40-b257-e4ef59083324",
+    )
+    mock_smartthings.delete_installed_app.assert_called_once_with(
+        "mock-access-token",
+        "123aa123-2be1-4e40-b257-e4ef59083324",
+    )
+    mock_smartthings.delete_smart_app.assert_called_once_with(
+        "mock-access-token",
+        "c6cde2b0-203e-44cf-a510-3b3ed4706996",
+    )
+
+
+async def test_3_3_migration_fail(
+    hass: HomeAssistant,
+    mock_migrated_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_smartthings: AsyncMock,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    mock_migrated_config_entry.add_to_hass(hass)
+
+    mock_smartthings.get_installed_app.side_effect = SmartThingsConnectionError("Boom")
+
+    assert OLD_DATA in mock_migrated_config_entry.data
+
+    await hass.config_entries.async_setup(mock_migrated_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_migrated_config_entry.minor_version == 3
+
+    assert OLD_DATA not in mock_migrated_config_entry.data
+    mock_smartthings.get_installed_app.assert_called_once_with(
+        "mock-access-token",
+        "123aa123-2be1-4e40-b257-e4ef59083324",
+    )
+    mock_smartthings.delete_installed_app.assert_not_called()
+    mock_smartthings.delete_smart_app.assert_not_called()
+
+
+@pytest.mark.parametrize("old_data", [({})])
+async def test_3_3_migration_no_old_data(
+    hass: HomeAssistant,
+    mock_migrated_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_smartthings: AsyncMock,
+) -> None:
+    """Test migration from minor version 2 to 3 when no old data is present."""
+    mock_migrated_config_entry.add_to_hass(hass)
+
+    assert OLD_DATA not in mock_migrated_config_entry.data
+
+    await hass.config_entries.async_setup(mock_migrated_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_migrated_config_entry.minor_version == 3
+
+    assert OLD_DATA not in mock_migrated_config_entry.data
+    mock_smartthings.get_installed_app.assert_not_called()
+    mock_smartthings.delete_installed_app.assert_not_called()
+    mock_smartthings.delete_smart_app.assert_not_called()

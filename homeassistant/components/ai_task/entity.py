@@ -18,7 +18,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_SYSTEM_PROMPT, DOMAIN, AITaskEntityFeature
-from .task import GenDataTask, GenDataTaskResult
+from .task import GenDataTask, GenDataTaskResult, GenImageTask, GenImageTaskResult
 
 
 class AITaskEntity(RestoreEntity):
@@ -57,9 +57,13 @@ class AITaskEntity(RestoreEntity):
     async def _async_get_ai_task_chat_log(
         self,
         session: ChatSession,
-        task: GenDataTask,
+        task: GenDataTask | GenImageTask,
     ) -> AsyncGenerator[ChatLog]:
         """Context manager used to manage the ChatLog used during an AI Task."""
+        user_llm_hass_api: llm.API | None = None
+        if isinstance(task, GenDataTask):
+            user_llm_hass_api = task.llm_api
+
         # pylint: disable-next=contextmanager-generator-missing-cleanup
         with (
             async_get_chat_log(
@@ -77,6 +81,7 @@ class AITaskEntity(RestoreEntity):
                     device_id=None,
                 ),
                 user_llm_prompt=DEFAULT_SYSTEM_PROMPT,
+                user_llm_hass_api=user_llm_hass_api,
             )
 
             chat_log.async_add_user_content(
@@ -103,4 +108,24 @@ class AITaskEntity(RestoreEntity):
         chat_log: ChatLog,
     ) -> GenDataTaskResult:
         """Handle a gen data task."""
+        raise NotImplementedError
+
+    @final
+    async def internal_async_generate_image(
+        self,
+        session: ChatSession,
+        task: GenImageTask,
+    ) -> GenImageTaskResult:
+        """Run a gen image task."""
+        self.__last_activity = dt_util.utcnow().isoformat()
+        self.async_write_ha_state()
+        async with self._async_get_ai_task_chat_log(session, task) as chat_log:
+            return await self._async_generate_image(task, chat_log)
+
+    async def _async_generate_image(
+        self,
+        task: GenImageTask,
+        chat_log: ChatLog,
+    ) -> GenImageTaskResult:
+        """Handle a gen image task."""
         raise NotImplementedError

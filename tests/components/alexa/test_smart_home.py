@@ -1815,7 +1815,7 @@ async def test_media_player_seek_error(hass: HomeAssistant) -> None:
 
     # Test for media_position error.
     with pytest.raises(AssertionError):
-        _, msg = await assert_request_calls_service(
+        _, _msg = await assert_request_calls_service(
             "Alexa.SeekController",
             "AdjustSeekPosition",
             "media_player#test_seek",
@@ -2374,7 +2374,7 @@ async def test_cover_position_range(
         "range": {"minimumValue": 1, "maximumValue": 100},
     } in position_state_mappings
 
-    call, msg = await assert_request_calls_service(
+    _call, msg = await assert_request_calls_service(
         "Alexa.RangeController",
         "AdjustRangeValue",
         "cover#test_range",

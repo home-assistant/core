@@ -2,9 +2,46 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from typing import Any
 
 from zeep.exceptions import Fault
+
+from .models import Event
+
+
+def build_event_entity_names(events: list[Event]) -> dict[str, str]:
+    """Build entity names for events, with index appended for duplicates.
+
+    When multiple events share the same base name, a sequential index
+    is appended to distinguish them (sorted by UID).
+
+    Args:
+        events: List of events to build entity names for.
+
+    Returns:
+        Dictionary mapping event UIDs to their entity names.
+
+    """
+    # Group events by name
+    events_by_name: dict[str, list[Event]] = defaultdict(list)
+    for event in events:
+        events_by_name[event.name].append(event)
+
+    # Build entity names, appending index when there are duplicates
+    entity_names: dict[str, str] = {}
+    for name, name_events in events_by_name.items():
+        if len(name_events) == 1:
+            # No duplicates, use name as-is
+            entity_names[name_events[0].uid] = name
+            continue
+
+        # Sort by UID and assign sequential indices
+        sorted_events = sorted(name_events, key=lambda e: e.uid)
+        for index, event in enumerate(sorted_events, start=1):
+            entity_names[event.uid] = f"{name} {index}"
+
+    return entity_names
 
 
 def extract_subcodes_as_strings(subcodes: Any) -> list[str]:

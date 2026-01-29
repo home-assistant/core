@@ -8,7 +8,8 @@ from pytest_unordered import unordered
 
 from homeassistant import config_entries
 from homeassistant.components.template import DOMAIN, async_setup_entry
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -150,6 +151,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "event",
+            {"event_type": "{{ states('event.one') }}"},
+            "2024-07-09T00:00:00.000+00:00",
+            {"one": "single", "two": "double"},
+            {},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {},
+        ),
+        (
             "fan",
             {"state": "{{ states('fan.one') }}"},
             "on",
@@ -225,8 +236,8 @@ BINARY_SENSOR_OPTIONS = {
             "on",
             {"one": "on", "two": "off"},
             {},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             {},
         ),
         (
@@ -240,6 +251,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            "off",
+            {"one": "2.0", "two": "1.0"},
+            {},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            {},
+        ),
+        (
             "vacuum",
             {"state": "{{ states('vacuum.one') }}"},
             "docked",
@@ -247,6 +268,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
             {"start": []},
             {"start": []},
+            {},
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            "sunny",
+            {"one": "sunny", "two": "cloudy"},
+            {},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
             {},
         ),
     ],
@@ -363,6 +394,12 @@ async def test_config_flow(
             {"set_cover_position": []},
         ),
         (
+            "event",
+            {"event_type": "{{ 'single' }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+        ),
+        (
             "fan",
             {"state": "{{ states('fan.one') }}"},
             {"turn_on": [], "turn_off": []},
@@ -421,14 +458,26 @@ async def test_config_flow(
         (
             "select",
             {"state": "{{ states('select.one') }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+        ),
+        (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
         ),
         (
             "vacuum",
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
         ),
     ],
 )
@@ -583,6 +632,16 @@ async def test_config_flow_device(
             "state",
         ),
         (
+            "event",
+            {"event_type": "{{ states('event.one') }}"},
+            {"event_type": "{{ states('event.two') }}"},
+            ["2024-07-09T00:00:00.000+00:00", "2024-07-09T00:00:00.000+00:00"],
+            {"one": "single", "two": "double"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            "event_type",
+        ),
+        (
             "fan",
             {"state": "{{ states('fan.one') }}"},
             {"state": "{{ states('fan.two') }}"},
@@ -675,8 +734,8 @@ async def test_config_flow_device(
             {"state": "{{ states('select.two') }}"},
             ["on", "off"],
             {"one": "on", "two": "off"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             "state",
         ),
         (
@@ -690,6 +749,16 @@ async def test_config_flow_device(
             "value_template",
         ),
         (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            {"installed_version": "{{ states('update.two') }}"},
+            ["off", "on"],
+            {"one": "2.0", "two": "1.0"},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            "installed_version",
+        ),
+        (
             "vacuum",
             {"state": "{{ states('vacuum.one') }}"},
             {"state": "{{ states('vacuum.two') }}"},
@@ -698,6 +767,16 @@ async def test_config_flow_device(
             {"start": []},
             {"start": []},
             "state",
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            {"condition": "{{ states('weather.two') }}"},
+            ["sunny", "cloudy"],
+            {"one": "sunny", "two": "cloudy"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            "condition",
         ),
     ],
 )
@@ -820,10 +899,10 @@ async def test_options(
         ),
         (
             "sensor",
-            "{{ float(states('sensor.one'), default='') + float(states('sensor.two'), default='') }}",
+            "{{ float(states('sensor.one'), 0.0) + float(states('sensor.two'), 0.0) }}",
             {},
             {"one": "30.0", "two": "20.0"},
-            ["", STATE_UNKNOWN, "50.0"],
+            ["0.0", "30.0", "50.0"],
             [{}, {}],
             [["one", "two"], ["one", "two"]],
         ),
@@ -1072,7 +1151,7 @@ async def test_config_flow_preview_bad_input(
             "sensor",
             "{{ float(states('sensor.one')) + float(states('sensor.two')) }}",
             {"one": "30.0", "two": "20.0"},
-            ["unavailable", "50.0"],
+            ["50.0"],
             [
                 (
                     "ValueError: Template error: float got invalid input 'unknown' "
@@ -1129,10 +1208,6 @@ async def test_config_flow_preview_template_startup_error(
         assert msg["type"] == "event"
         assert msg["event"] == {"error": error_event}
 
-    msg = await client.receive_json()
-    assert msg["type"] == "event"
-    assert msg["event"]["state"] == template_states[0]
-
     for input_entity in input_entities:
         hass.states.async_set(
             f"{template_type}.{input_entity}", input_states[input_entity], {}
@@ -1140,7 +1215,7 @@ async def test_config_flow_preview_template_startup_error(
 
     msg = await client.receive_json()
     assert msg["type"] == "event"
-    assert msg["event"]["state"] == template_states[1]
+    assert msg["event"]["state"] == template_states[0]
 
 
 @pytest.mark.parametrize(
@@ -1156,8 +1231,8 @@ async def test_config_flow_preview_template_startup_error(
             "sensor",
             "{{ float(states('sensor.one')) > 30 and undefined_function() }}",
             [{"one": "30.0", "two": "20.0"}, {"one": "35.0", "two": "20.0"}],
-            ["False", "unavailable"],
-            ["'undefined_function' is undefined"],
+            ["False"],
+            ["UndefinedError: 'undefined_function' is undefined"],
         ),
     ],
 )
@@ -1220,10 +1295,6 @@ async def test_config_flow_preview_template_error(
         msg = await client.receive_json()
         assert msg["type"] == "event"
         assert msg["event"] == {"error": error_event}
-
-    msg = await client.receive_json()
-    assert msg["type"] == "event"
-    assert msg["event"]["state"] == template_states[1]
 
 
 @pytest.mark.parametrize(
@@ -1470,6 +1541,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"set_cover_position": []},
         ),
         (
+            "event",
+            {"event_type": "{{ 'single' }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+        ),
+        (
             "fan",
             {"state": "{{ states('fan.one') }}"},
             {"turn_on": [], "turn_off": []},
@@ -1529,8 +1606,8 @@ async def test_option_flow_sensor_preview_config_entry_removed(
         (
             "select",
             {"state": "{{ states('select.one') }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
         ),
         (
             "switch",
@@ -1539,10 +1616,22 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {},
         ),
         (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
+        ),
+        (
             "vacuum",
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
         ),
     ],
 )
@@ -1685,3 +1774,89 @@ async def test_options_flow_change_device(
         **state_template,
         **extra_options,
     }
+
+
+@pytest.mark.parametrize(
+    ("step_id", "user_input", "expected_error"),
+    [
+        (
+            "light",
+            {
+                "name": "",
+                "state": "{{ state() }}",
+                "level": "{{ statex() }}",
+                "turn_on": [],
+                "turn_off": [],
+                "set_level": [],
+            },
+            "UndefinedError: 'statex' is undefined",
+        ),
+        (
+            "sensor",
+            {
+                "name": "",
+                "state": "{{ state() }}",
+            },
+            "UndefinedError: 'state' is undefined",
+        ),
+        (
+            "light",
+            {
+                "name": "",
+                "state": "{{ state() }}",
+                "level": "{{ states('sensor.abc') }}",
+                "turn_on": [],
+                "turn_off": [],
+                "set_level": [],
+            },
+            "UndefinedError: 'state' is undefined",
+        ),
+    ],
+)
+async def test_preview_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    step_id: str,
+    user_input: dict,
+    expected_error: str,
+) -> None:
+    """Test preview will error if any template errors."""
+    client = await hass_ws_client(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": step_id},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
+    assert result["errors"] is None
+    assert result["preview"] == "template"
+
+    await client.send_json_auto_id(
+        {
+            "type": "template/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": user_input,
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] is None
+
+    # Test expected error
+    msg = await client.receive_json()
+    assert "error" in msg["event"]
+    assert msg["event"]["error"] == expected_error
+
+    # Test No preview is created
+    with pytest.raises(TimeoutError):
+        await client.receive_json(timeout=0.01)

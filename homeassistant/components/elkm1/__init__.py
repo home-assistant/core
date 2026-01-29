@@ -278,11 +278,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
     for keypad in elk.keypads:
         keypad.add_callback(_keypad_changed)
 
+    sync_success = False
     try:
-        if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT):
-            return False
+        await ElkSyncWaiter(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT).async_wait()
+        sync_success = True
+    except LoginFailed:
+        _LOGGER.error("ElkM1 login failed for %s", conf[CONF_HOST])
+        return False
     except TimeoutError as exc:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
+    finally:
+        if not sync_success:
+            elk.disconnect()
 
     elk_temp_unit = elk.panel.temperature_units
     if elk_temp_unit == "C":
@@ -321,48 +328,75 @@ async def async_unload_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bo
     return unload_ok
 
 
-async def async_wait_for_elk_to_sync(
-    elk: Elk,
-    login_timeout: int,
-    sync_timeout: int,
-) -> bool:
-    """Wait until the elk has finished sync. Can fail login or timeout."""
+class LoginFailed(Exception):
+    """Raised when login to ElkM1 fails."""
 
-    sync_event = asyncio.Event()
-    login_event = asyncio.Event()
 
-    success = True
+class ElkSyncWaiter:
+    """Wait for ElkM1 to sync."""
 
-    def login_status(succeeded: bool) -> None:
-        nonlocal success
+    def __init__(self, elk: Elk, login_timeout: int, sync_timeout: int) -> None:
+        """Initialize the sync waiter."""
+        self._elk = elk
+        self._login_timeout = login_timeout
+        self._sync_timeout = sync_timeout
+        self._loop = asyncio.get_running_loop()
+        self._sync_future: asyncio.Future[None] = self._loop.create_future()
+        self._login_future: asyncio.Future[None] = self._loop.create_future()
 
-        success = succeeded
+    @callback
+    def _async_set_future_if_not_done(self, future: asyncio.Future[None]) -> None:
+        """Set the future result if not already done."""
+        if not future.done():
+            future.set_result(None)
+
+    @callback
+    def _async_login_status(self, succeeded: bool) -> None:
+        """Handle login status callback."""
         if succeeded:
             _LOGGER.debug("ElkM1 login succeeded")
-            login_event.set()
+            self._async_set_future_if_not_done(self._login_future)
         else:
-            elk.disconnect()
             _LOGGER.error("ElkM1 login failed; invalid username or password")
-            login_event.set()
-            sync_event.set()
+            self._async_set_exception_if_not_done(self._login_future, LoginFailed)
 
-    def sync_complete() -> None:
-        sync_event.set()
+    @callback
+    def _async_set_exception_if_not_done(
+        self, future: asyncio.Future[None], exception: type[Exception]
+    ) -> None:
+        """Set an exception on the future if not already done."""
+        if not future.done():
+            future.set_exception(exception())
 
-    elk.add_handler("login", login_status)
-    elk.add_handler("sync_complete", sync_complete)
-    for name, event, timeout in (
-        ("login", login_event, login_timeout),
-        ("sync_complete", sync_event, sync_timeout),
-    ):
-        _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
+    @callback
+    def _async_sync_complete(self) -> None:
+        """Handle sync complete callback."""
+        self._async_set_future_if_not_done(self._sync_future)
+
+    async def async_wait(self) -> None:
+        """Wait for login and sync to complete.
+
+        Raises LoginFailed if login fails.
+        Raises TimeoutError if login or sync times out.
+        """
+        self._elk.add_handler("login", self._async_login_status)
+        self._elk.add_handler("sync_complete", self._async_sync_complete)
+
         try:
-            async with asyncio.timeout(timeout):
-                await event.wait()
-        except TimeoutError:
-            _LOGGER.debug("Timed out waiting for %s event", name)
-            elk.disconnect()
-            raise
-        _LOGGER.debug("Received %s event", name)
+            for name, future, timeout in (
+                ("login", self._login_future, self._login_timeout),
+                ("sync_complete", self._sync_future, self._sync_timeout),
+            ):
+                _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
+                handle = self._loop.call_later(
+                    timeout, self._async_set_exception_if_not_done, future, TimeoutError
+                )
+                try:
+                    await future
+                finally:
+                    handle.cancel()
 
-    return success
+                _LOGGER.debug("Received %s event", name)
+        finally:
+            self._elk.remove_handler("login", self._async_login_status)
+            self._elk.remove_handler("sync_complete", self._async_sync_complete)

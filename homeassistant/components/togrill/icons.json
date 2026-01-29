@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "select": {
+      "grill_type": {
+        "default": "mdi:grill",
+        "state": {
+          "bbq_smoke": "mdi:smoke",
+          "cold_smoke": "mdi:smoke",
+          "fish": "mdi:fish",
+          "hamburger": "mdi:hamburger",
+          "hot_smoke": "mdi:smoke",
+          "sausage": "mdi:sausage",
+          "turkey": "mdi:food-turkey"
+        }
+      },
+      "taste": {
+        "default": "mdi:food-steak"
+      }
+    }
+  }
+}

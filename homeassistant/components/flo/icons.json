@@ -10,8 +10,8 @@
     }
   },
   "services": {
-    "set_sleep_mode": {
-      "service": "mdi:sleep"
+    "run_health_test": {
+      "service": "mdi:heart-flash"
     },
     "set_away_mode": {
       "service": "mdi:home-off"
@@ -19,8 +19,8 @@
     "set_home_mode": {
       "service": "mdi:home"
     },
-    "run_health_test": {
-      "service": "mdi:heart-flash"
+    "set_sleep_mode": {
+      "service": "mdi:sleep"
     }
   }
 }

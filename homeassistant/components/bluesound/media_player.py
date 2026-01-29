@@ -8,7 +8,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from pyblu import Input, Player, Preset, Status, SyncStatus
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -22,11 +21,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    issue_registry as ir,
-)
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -40,9 +35,20 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN
+from .const import (
+    ATTR_BLUESOUND_GROUP,
+    ATTR_MASTER,
+    DOMAIN,
+    SERVICE_JOIN,
+    SERVICE_UNJOIN,
+)
 from .coordinator import BluesoundCoordinator
-from .utils import dispatcher_join_signal, dispatcher_unjoin_signal, format_unique_id
+from .utils import (
+    dispatcher_join_signal,
+    dispatcher_unjoin_signal,
+    format_unique_id,
+    id_to_paired_player,
+)
 
 if TYPE_CHECKING:
     from . import BluesoundConfigEntry
@@ -53,11 +59,6 @@ SCAN_INTERVAL = timedelta(minutes=15)
 
 DATA_BLUESOUND = DOMAIN
 DEFAULT_PORT = 11000
-
-SERVICE_CLEAR_TIMER = "clear_sleep_timer"
-SERVICE_JOIN = "join"
-SERVICE_SET_TIMER = "set_sleep_timer"
-SERVICE_UNJOIN = "unjoin"
 
 POLL_TIMEOUT = 120
 
@@ -74,18 +75,6 @@ async def async_setup_entry(
         config_entry.data[CONF_PORT],
         config_entry.runtime_data.player,
     )
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_TIMER, None, "async_increase_timer"
-    )
-    platform.async_register_entity_service(
-        SERVICE_CLEAR_TIMER, None, "async_clear_timer"
-    )
-    platform.async_register_entity_service(
-        SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, "async_join"
-    )
-    platform.async_register_entity_service(SERVICE_UNJOIN, None, "async_unjoin")
 
     async_add_entities([bluesound_player], update_before_add=True)
 
@@ -120,6 +109,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         self._presets: list[Preset] = coordinator.data.presets
         self._group_name: str | None = None
         self._group_list: list[str] = []
+        self._group_members: list[str] | None = None
         self._bluesound_device_name = sync_status.name
         self._player = player
         self._last_status_update = dt_util.utcnow()
@@ -180,6 +170,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         self._last_status_update = dt_util.utcnow()
 
         self._group_list = self.rebuild_bluesound_group()
+        self._group_members = self.rebuild_group_members()
 
         self.async_write_ha_state()
 
@@ -321,8 +312,14 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         if self.available is False or (self.is_grouped and not self.is_leader):
             return None
 
-        sources = [x.text for x in self._inputs]
-        sources += [x.name for x in self._presets]
+        sources = [x.name for x in self._presets]
+
+        # ignore if both id and text are None
+        for input_ in self._inputs:
+            if input_.text is not None:
+                sources.append(input_.text)
+            elif input_.id is not None:
+                sources.append(input_.id)
 
         return sources
 
@@ -340,7 +337,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
                     input_.id == self._status.input_id
                     or input_.url == self._status.stream_url
                 ):
-                    return input_.text
+                    return input_.text if input_.text is not None else input_.id
 
         for preset in self._presets:
             if preset.url == self._status.stream_url:
@@ -359,11 +356,13 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
                 MediaPlayerEntityFeature.VOLUME_STEP
                 | MediaPlayerEntityFeature.VOLUME_SET
                 | MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.GROUPING
             )
 
         supported = (
             MediaPlayerEntityFeature.CLEAR_PLAYLIST
             | MediaPlayerEntityFeature.BROWSE_MEDIA
+            | MediaPlayerEntityFeature.GROUPING
         )
 
         if not self._status.indexing:
@@ -415,8 +414,57 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
         return shuffle
 
-    async def async_join(self, master: str) -> None:
+    @property
+    def group_members(self) -> list[str] | None:
+        """Get list of group members. Leader is always first."""
+        return self._group_members
+
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join `group_members` as a player group with the current player."""
+        if self.entity_id in group_members:
+            raise ServiceValidationError("Cannot join player to itself")
+
+        entity_ids_with_sync_status = self._entity_ids_with_sync_status()
+
+        paired_players = []
+        for group_member in group_members:
+            sync_status = entity_ids_with_sync_status.get(group_member)
+            if sync_status is None:
+                continue
+            paired_player = id_to_paired_player(sync_status.id)
+            if paired_player:
+                paired_players.append(paired_player)
+
+        if paired_players:
+            await self._player.add_followers(paired_players)
+
+    async def async_unjoin_player(self) -> None:
+        """Remove this player from any group."""
+        if self._sync_status.leader is not None:
+            leader_id = f"{self._sync_status.leader.ip}:{self._sync_status.leader.port}"
+            async_dispatcher_send(
+                self.hass, dispatcher_unjoin_signal(leader_id), self.host, self.port
+            )
+
+        if self._sync_status.followers is not None:
+            await self._player.remove_follower(self.host, self.port)
+
+    async def async_bluesound_join(self, master: str) -> None:
         """Join the player to a group."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_service_{SERVICE_JOIN}",
+            is_fixable=False,
+            breaks_in_ha_version="2026.7.0",
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_service_join",
+            translation_placeholders={
+                "name": slugify(self.sync_status.name),
+            },
+        )
+
         if master == self.entity_id:
             raise ServiceValidationError("Cannot join player to itself")
 
@@ -425,17 +473,23 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
             self.hass, dispatcher_join_signal(master), self.host, self.port
         )
 
-    async def async_unjoin(self) -> None:
+    async def async_bluesound_unjoin(self) -> None:
         """Unjoin the player from a group."""
-        if self._sync_status.leader is None:
-            return
-
-        leader_id = f"{self._sync_status.leader.ip}:{self._sync_status.leader.port}"
-
-        _LOGGER.debug("Trying to unjoin player: %s", self.id)
-        async_dispatcher_send(
-            self.hass, dispatcher_unjoin_signal(leader_id), self.host, self.port
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_service_{SERVICE_UNJOIN}",
+            is_fixable=False,
+            breaks_in_ha_version="2026.7.0",
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_service_unjoin",
+            translation_placeholders={
+                "name": slugify(self.sync_status.name),
+            },
         )
+
+        await self.async_unjoin_player()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -482,6 +536,63 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         follower_names.insert(0, leader_sync_status.name)
         return follower_names
 
+    def rebuild_group_members(self) -> list[str] | None:
+        """Get list of group members. Leader is always first."""
+        if self.sync_status.leader is None and self.sync_status.followers is None:
+            return None
+
+        entity_ids_with_sync_status = self._entity_ids_with_sync_status()
+
+        leader_entity_id = None
+        followers = None
+        if self.sync_status.followers is not None:
+            leader_entity_id = self.entity_id
+            followers = self.sync_status.followers
+        elif self.sync_status.leader is not None:
+            leader_id = f"{self.sync_status.leader.ip}:{self.sync_status.leader.port}"
+            for entity_id, sync_status in entity_ids_with_sync_status.items():
+                if sync_status.id == leader_id:
+                    leader_entity_id = entity_id
+                    followers = sync_status.followers
+                    break
+
+        if leader_entity_id is None or followers is None:
+            return None
+
+        grouped_entity_ids = [leader_entity_id]
+        for follower in followers:
+            follower_id = f"{follower.ip}:{follower.port}"
+            entity_ids = [
+                entity_id
+                for entity_id, sync_status in entity_ids_with_sync_status.items()
+                if sync_status.id == follower_id
+            ]
+            match entity_ids:
+                case [entity_id]:
+                    grouped_entity_ids.append(entity_id)
+
+        return grouped_entity_ids
+
+    def _entity_ids_with_sync_status(self) -> dict[str, SyncStatus]:
+        result = {}
+
+        entity_registry = er.async_get(self.hass)
+
+        config_entries: list[BluesoundConfigEntry] = (
+            self.hass.config_entries.async_entries(DOMAIN)
+        )
+        for config_entry in config_entries:
+            entity_entries = er.async_entries_for_config_entry(
+                entity_registry, config_entry.entry_id
+            )
+            for entity_entry in entity_entries:
+                if entity_entry.domain == "media_player":
+                    result[entity_entry.entity_id] = (
+                        config_entry.runtime_data.coordinator.data.sync_status
+                    )
+
+        return result
+
     async def async_add_follower(self, host: str, port: int) -> None:
         """Add follower to leader."""
         await self._player.add_follower(host, port)
@@ -489,42 +600,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
     async def async_remove_follower(self, host: str, port: int) -> None:
         """Remove follower to leader."""
         await self._player.remove_follower(host, port)
-
-    async def async_increase_timer(self) -> int:
-        """Increase sleep time on player."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_service_{SERVICE_SET_TIMER}",
-            is_fixable=False,
-            breaks_in_ha_version="2025.12.0",
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_service_set_sleep_timer",
-            translation_placeholders={
-                "name": slugify(self.sync_status.name),
-            },
-        )
-        return await self._player.sleep_timer()
-
-    async def async_clear_timer(self) -> None:
-        """Clear sleep timer on player."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_service_{SERVICE_CLEAR_TIMER}",
-            is_fixable=False,
-            breaks_in_ha_version="2025.12.0",
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_service_clear_sleep_timer",
-            translation_placeholders={
-                "name": slugify(self.sync_status.name),
-            },
-        )
-        sleep = 1
-        while sleep > 0:
-            sleep = await self._player.sleep_timer()
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable or disable shuffle mode."""
@@ -537,7 +612,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
         # presets and inputs might have the same name; presets have priority
         for input_ in self._inputs:
-            if input_.text == source:
+            if source in (input_.text, input_.id):
                 await self._player.play_url(input_.url)
                 return
         for preset in self._presets:

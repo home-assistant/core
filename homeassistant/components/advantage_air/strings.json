@@ -1,10 +1,10 @@
 {
   "config": {
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
       "user": {
@@ -19,14 +19,14 @@
   },
   "services": {
     "set_time_to": {
-      "name": "Set time to",
       "description": "Controls timers to turn the system on or off after a set number of minutes.",
       "fields": {
         "minutes": {
-          "name": "Minutes",
-          "description": "Minutes until action."
+          "description": "Minutes until action.",
+          "name": "Minutes"
         }
-      }
+      },
+      "name": "Set time to"
     }
   }
 }

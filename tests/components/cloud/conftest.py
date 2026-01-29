@@ -55,7 +55,10 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
         # Attributes set in the constructor without parameters.
         # We spec the mocks with the real classes
         # and set constructor attributes or mock properties as needed.
-        mock_cloud.google_report_state = MagicMock(spec=GoogleReportState)
+        mock_cloud.google_report_state = MagicMock(
+            spec=GoogleReportState,
+            request_sync=AsyncMock(),
+        )
         mock_cloud.cloudhooks = MagicMock(spec=Cloudhooks)
         mock_cloud.remote = MagicMock(
             spec=RemoteUI,
@@ -82,6 +85,7 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
                 return_value=lambda: "mock-unregister"
             ),
         )
+        mock_cloud.llm = MagicMock(async_ensure_token=AsyncMock())
 
         def set_up_mock_cloud(
             cloud_client: CloudClient, mode: str, **kwargs: Any
@@ -241,6 +245,7 @@ async def cloud_prefs(hass: HomeAssistant) -> CloudPreferences:
 async def mock_cloud_setup(hass: HomeAssistant) -> None:
     """Set up the cloud."""
     await mock_cloud(hass)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture

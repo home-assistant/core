@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
-from typing import Literal, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 
 import voluptuous as vol
 
@@ -15,6 +15,7 @@ from homeassistant.helpers import config_validation as cv, singleton, storage
 from .const import DOMAIN
 
 STORAGE_VERSION = 1
+STORAGE_MINOR_VERSION = 2
 STORAGE_KEY = DOMAIN
 
 
@@ -29,7 +30,7 @@ async def async_get_manager(hass: HomeAssistant) -> EnergyManager:
 class FlowFromGridSourceType(TypedDict):
     """Dictionary describing the 'from' stat for the grid source."""
 
-    # statistic_id of a an energy meter (kWh)
+    # statistic_id of an energy meter (kWh)
     stat_energy_from: str
 
     # statistic_id of costs ($) incurred from the energy meter
@@ -58,6 +59,39 @@ class FlowToGridSourceType(TypedDict):
     number_energy_price: float | None  # Price for energy ($/kWh)
 
 
+class PowerConfig(TypedDict, total=False):
+    """Dictionary holding power sensor configuration options.
+
+    Users can configure power sensors in three ways:
+    1. Standard: single sensor (positive=discharge/from_grid, negative=charge/to_grid)
+    2. Inverted: single sensor with opposite polarity (needs to be multiplied by -1)
+    3. Two sensors: separate positive sensors for each direction
+    """
+
+    # Standard: single sensor (positive=discharge/from_grid, negative=charge/to_grid)
+    stat_rate: str
+
+    # Inverted: single sensor with opposite polarity (needs to be multiplied by -1)
+    stat_rate_inverted: str
+
+    # Two sensors: separate positive sensors for each direction
+    # Result = stat_rate_from - stat_rate_to (positive when net outflow)
+    stat_rate_from: str  # Battery: discharge, Grid: consumption
+    stat_rate_to: str  # Battery: charge, Grid: return
+
+
+class GridPowerSourceType(TypedDict, total=False):
+    """Dictionary holding the source of grid power consumption."""
+
+    # statistic_id of a power meter (kW)
+    # negative values indicate grid return
+    # This is either the original sensor or a generated template sensor
+    stat_rate: str
+
+    # User's original power sensor configuration
+    power_config: PowerConfig
+
+
 class GridSourceType(TypedDict):
     """Dictionary holding the source of grid energy consumption."""
 
@@ -65,6 +99,7 @@ class GridSourceType(TypedDict):
 
     flow_from: list[FlowFromGridSourceType]
     flow_to: list[FlowToGridSourceType]
+    power: NotRequired[list[GridPowerSourceType]]
 
     cost_adjustment_day: float
 
@@ -75,6 +110,7 @@ class SolarSourceType(TypedDict):
     type: Literal["solar"]
 
     stat_energy_from: str
+    stat_rate: NotRequired[str]
     config_entry_solar_forecast: list[str] | None
 
 
@@ -85,6 +121,12 @@ class BatterySourceType(TypedDict):
 
     stat_energy_from: str
     stat_energy_to: str
+    # positive when discharging, negative when charging
+    # This is either the original sensor or a generated template sensor
+    stat_rate: NotRequired[str]
+
+    # User's original power sensor configuration
+    power_config: NotRequired[PowerConfig]
 
 
 class GasSourceType(TypedDict):
@@ -136,12 +178,15 @@ class DeviceConsumption(TypedDict):
     # This is an ever increasing value
     stat_consumption: str
 
+    # Instantaneous rate of flow: W, L/min or m³/h
+    stat_rate: NotRequired[str]
+
     # An optional custom name for display in energy graphs
     name: str | None
 
     # An optional statistic_id identifying a device
     # that includes this device's consumption in its total
-    included_in_stat: str | None
+    included_in_stat: NotRequired[str]
 
 
 class EnergyPreferences(TypedDict):
@@ -149,6 +194,7 @@ class EnergyPreferences(TypedDict):
 
     energy_sources: list[SourceType]
     device_consumption: list[DeviceConsumption]
+    device_consumption_water: NotRequired[list[DeviceConsumption]]
 
 
 class EnergyPreferencesUpdate(EnergyPreferences, total=False):
@@ -195,6 +241,55 @@ FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
 )
 
 
+def _validate_power_config(val: dict[str, Any]) -> dict[str, Any]:
+    """Validate power_config has exactly one configuration method."""
+    if not val:
+        raise vol.Invalid("power_config must have at least one option")
+
+    # Ensure only one configuration method is used
+    has_single = "stat_rate" in val
+    has_inverted = "stat_rate_inverted" in val
+    has_combined = "stat_rate_from" in val
+
+    methods_count = sum([has_single, has_inverted, has_combined])
+    if methods_count > 1:
+        raise vol.Invalid(
+            "power_config must use only one configuration method: "
+            "stat_rate, stat_rate_inverted, or stat_rate_from/stat_rate_to"
+        )
+
+    return val
+
+
+POWER_CONFIG_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Exclusive("stat_rate", "power_source"): str,
+            vol.Exclusive("stat_rate_inverted", "power_source"): str,
+            # stat_rate_from/stat_rate_to: two sensors for bidirectional power
+            # Battery: from=discharge (out), to=charge (in)
+            # Grid: from=consumption, to=return
+            vol.Inclusive("stat_rate_from", "two_sensors"): str,
+            vol.Inclusive("stat_rate_to", "two_sensors"): str,
+        }
+    ),
+    _validate_power_config,
+)
+
+
+GRID_POWER_SOURCE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            # stat_rate and power_config are both optional schema keys, but the validator
+            # requires that at least one is provided; power_config takes precedence
+            vol.Optional("stat_rate"): str,
+            vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
+        }
+    ),
+    cv.has_at_least_one_key("stat_rate", "power_config"),
+)
+
+
 def _generate_unique_value_validator(key: str) -> Callable[[list[dict]], list[dict]]:
     """Generate a validator that ensures a value is only used once."""
 
@@ -202,7 +297,7 @@ def _generate_unique_value_validator(key: str) -> Callable[[list[dict]], list[di
         val: list[dict],
     ) -> list[dict]:
         """Ensure that the user doesn't add duplicate values."""
-        counts = Counter(flow_from[key] for flow_from in val)
+        counts = Counter(item.get(key) for item in val if item.get(key) is not None)
 
         for value, count in counts.items():
             if count > 1:
@@ -224,6 +319,10 @@ GRID_SOURCE_SCHEMA = vol.Schema(
             [FLOW_TO_GRID_SOURCE_SCHEMA],
             _generate_unique_value_validator("stat_energy_to"),
         ),
+        vol.Optional("power"): vol.All(
+            [GRID_POWER_SOURCE_SCHEMA],
+            _generate_unique_value_validator("stat_rate"),
+        ),
         vol.Required("cost_adjustment_day"): vol.Coerce(float),
     }
 )
@@ -231,6 +330,7 @@ SOLAR_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("type"): "solar",
         vol.Required("stat_energy_from"): str,
+        vol.Optional("stat_rate"): str,
         vol.Optional("config_entry_solar_forecast"): vol.Any([str], None),
     }
 )
@@ -239,6 +339,10 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Required("type"): "battery",
         vol.Required("stat_energy_from"): str,
         vol.Required("stat_energy_to"): str,
+        # Both stat_rate and power_config are optional
+        # If power_config is provided, it takes precedence and stat_rate is overwritten
+        vol.Optional("stat_rate"): str,
+        vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
     }
 )
 GAS_SOURCE_SCHEMA = vol.Schema(
@@ -294,10 +398,28 @@ ENERGY_SOURCE_SCHEMA = vol.All(
 DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
     {
         vol.Required("stat_consumption"): str,
+        vol.Optional("stat_rate"): str,
         vol.Optional("name"): str,
         vol.Optional("included_in_stat"): str,
     }
 )
+
+
+class _EnergyPreferencesStore(storage.Store[EnergyPreferences]):
+    """Energy preferences store with migration support."""
+
+    async def _async_migrate_func(
+        self,
+        old_major_version: int,
+        old_minor_version: int,
+        old_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Migrate to the new version."""
+        data = old_data
+        if old_major_version == 1 and old_minor_version < 2:
+            # Add device_consumption_water field if it doesn't exist
+            data.setdefault("device_consumption_water", [])
+        return data
 
 
 class EnergyManager:
@@ -306,8 +428,8 @@ class EnergyManager:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize energy manager."""
         self._hass = hass
-        self._store = storage.Store[EnergyPreferences](
-            hass, STORAGE_VERSION, STORAGE_KEY
+        self._store = _EnergyPreferencesStore(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_MINOR_VERSION
         )
         self.data: EnergyPreferences | None = None
         self._update_listeners: list[Callable[[], Awaitable]] = []
@@ -322,6 +444,7 @@ class EnergyManager:
         return {
             "energy_sources": [],
             "device_consumption": [],
+            "device_consumption_water": [],
         }
 
     async def async_update(self, update: EnergyPreferencesUpdate) -> None:
@@ -334,9 +457,16 @@ class EnergyManager:
         for key in (
             "energy_sources",
             "device_consumption",
+            "device_consumption_water",
         ):
             if key in update:
                 data[key] = update[key]
+
+        # Process energy sources and set stat_rate for power configs
+        if "energy_sources" in update:
+            data["energy_sources"] = self._process_energy_sources(
+                data["energy_sources"]
+            )
 
         self.data = data
         self._store.async_delay_save(lambda: data, 60)
@@ -345,6 +475,68 @@ class EnergyManager:
             return
 
         await asyncio.gather(*(listener() for listener in self._update_listeners))
+
+    def _process_energy_sources(self, sources: list[SourceType]) -> list[SourceType]:
+        """Process energy sources and set stat_rate for power configs."""
+        from .helpers import generate_power_sensor_entity_id  # noqa: PLC0415
+
+        processed: list[SourceType] = []
+        for source in sources:
+            if source["type"] == "battery":
+                source = self._process_battery_power(
+                    source, generate_power_sensor_entity_id
+                )
+            elif source["type"] == "grid":
+                source = self._process_grid_power(
+                    source, generate_power_sensor_entity_id
+                )
+            processed.append(source)
+        return processed
+
+    def _process_battery_power(
+        self,
+        source: BatterySourceType,
+        generate_entity_id: Callable[[str, PowerConfig], str],
+    ) -> BatterySourceType:
+        """Set stat_rate for battery if power_config is specified."""
+        if "power_config" not in source:
+            return source
+
+        config = source["power_config"]
+
+        # If power_config has stat_rate (standard), just use it directly
+        if "stat_rate" in config:
+            return {**source, "stat_rate": config["stat_rate"]}
+
+        # For inverted or two-sensor config, set stat_rate to the generated entity_id
+        return {**source, "stat_rate": generate_entity_id("battery", config)}
+
+    def _process_grid_power(
+        self,
+        source: GridSourceType,
+        generate_entity_id: Callable[[str, PowerConfig], str],
+    ) -> GridSourceType:
+        """Set stat_rate for grid power sources if power_config is specified."""
+        if "power" not in source:
+            return source
+
+        processed_power: list[GridPowerSourceType] = []
+        for power in source["power"]:
+            if "power_config" in power:
+                config = power["power_config"]
+
+                # If power_config has stat_rate (standard), just use it directly
+                if "stat_rate" in config:
+                    processed_power.append({**power, "stat_rate": config["stat_rate"]})
+                else:
+                    # For inverted or two-sensor config, set stat_rate to generated entity_id
+                    processed_power.append(
+                        {**power, "stat_rate": generate_entity_id("grid", config)}
+                    )
+            else:
+                processed_power.append(power)
+
+        return {**source, "power": processed_power}
 
     @callback
     def async_listen_updates(self, update_listener: Callable[[], Awaitable]) -> None:

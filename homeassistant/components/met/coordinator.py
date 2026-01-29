@@ -83,7 +83,9 @@ class MetWeatherData:
         self.current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.get_default_time_zone()
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False, 0)
-        self.hourly_forecast = self._weather_data.get_forecast(time_zone, True)
+        self.hourly_forecast = self._weather_data.get_forecast(
+            time_zone, True, range_stop=49
+        )
         return self
 
 
@@ -114,8 +116,12 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator[MetWeatherData]):
         """Fetch data from Met."""
         try:
             return await self.weather.fetch_data()
-        except Exception as err:
-            raise UpdateFailed(f"Update failed: {err}") from err
+        except CannotConnect as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
     def track_home(self) -> None:
         """Start tracking changes to HA home setting."""

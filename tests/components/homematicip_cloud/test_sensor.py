@@ -565,7 +565,7 @@ async def test_hmip_esi_iec_current_power_consumption(
         test_devices=["esi_iec"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
@@ -583,7 +583,7 @@ async def test_hmip_esi_iec_energy_counter_usage_high_tariff(
         test_devices=["esi_iec"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
@@ -601,7 +601,7 @@ async def test_hmip_esi_iec_energy_counter_usage_low_tariff(
         test_devices=["esi_iec"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
@@ -619,7 +619,7 @@ async def test_hmip_esi_iec_energy_counter_input_single_tariff(
         test_devices=["esi_iec"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
@@ -652,7 +652,7 @@ async def test_hmip_esi_gas_current_gas_flow(
         test_devices=["esi_gas"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
@@ -670,7 +670,7 @@ async def test_hmip_esi_gas_gas_volume(
         test_devices=["esi_gas"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
@@ -688,7 +688,7 @@ async def test_hmip_esi_led_current_power_consumption(
         test_devices=["esi_led"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
@@ -706,7 +706,7 @@ async def test_hmip_esi_led_energy_counter_usage_high_tariff(
         test_devices=["esi_led"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
@@ -754,7 +754,7 @@ async def test_hmip_tilt_vibration_sensor_tilt_angle(
         test_devices=["Neigungssensor Tor"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
@@ -772,7 +772,7 @@ async def test_hmip_absolute_humidity_sensor(
         test_devices=["elvshctv"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
@@ -811,7 +811,7 @@ async def test_hmip_water_valve_current_water_flow(
         test_devices=["Bewaesserungsaktor"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
@@ -834,7 +834,7 @@ async def test_hmip_water_valve_water_volume(
         test_devices=["Bewaesserungsaktor"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
@@ -854,7 +854,7 @@ async def test_hmip_water_valve_water_volume_since_open(
         test_devices=["Bewaesserungsaktor"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 

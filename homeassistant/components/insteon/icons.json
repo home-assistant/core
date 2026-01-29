@@ -3,6 +3,9 @@
     "add_all_link": {
       "service": "mdi:link-variant"
     },
+    "add_default_links": {
+      "service": "mdi:link-variant-plus"
+    },
     "delete_all_link": {
       "service": "mdi:link-variant-remove"
     },
@@ -15,23 +18,20 @@
     "print_im_all_link_database": {
       "service": "mdi:database-export"
     },
-    "x10_all_units_off": {
-      "service": "mdi:power-off"
-    },
-    "x10_all_lights_on": {
-      "service": "mdi:lightbulb-on"
-    },
-    "x10_all_lights_off": {
-      "service": "mdi:lightbulb-off"
+    "scene_off": {
+      "service": "mdi:palette-outline"
     },
     "scene_on": {
       "service": "mdi:palette"
     },
-    "scene_off": {
-      "service": "mdi:palette-outline"
+    "x10_all_lights_off": {
+      "service": "mdi:lightbulb-off"
     },
-    "add_default_links": {
-      "service": "mdi:link-variant-plus"
+    "x10_all_lights_on": {
+      "service": "mdi:lightbulb-on"
+    },
+    "x10_all_units_off": {
+      "service": "mdi:power-off"
     }
   }
 }

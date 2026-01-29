@@ -364,23 +364,19 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    ("state_template", "expected", "trigger_expected"),
+    ("state_template", "expected"),
     [
-        ("{{ 'disarmed' }}", AlarmControlPanelState.DISARMED, None),
-        ("{{ 'armed_home' }}", AlarmControlPanelState.ARMED_HOME, None),
-        ("{{ 'armed_away' }}", AlarmControlPanelState.ARMED_AWAY, None),
-        ("{{ 'armed_night' }}", AlarmControlPanelState.ARMED_NIGHT, None),
-        ("{{ 'armed_vacation' }}", AlarmControlPanelState.ARMED_VACATION, None),
-        (
-            "{{ 'armed_custom_bypass' }}",
-            AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
-            None,
-        ),
-        ("{{ 'pending' }}", AlarmControlPanelState.PENDING, None),
-        ("{{ 'arming' }}", AlarmControlPanelState.ARMING, None),
-        ("{{ 'disarming' }}", AlarmControlPanelState.DISARMING, None),
-        ("{{ 'triggered' }}", AlarmControlPanelState.TRIGGERED, None),
-        ("{{ x - 1 }}", STATE_UNKNOWN, STATE_UNAVAILABLE),
+        ("{{ 'disarmed' }}", AlarmControlPanelState.DISARMED),
+        ("{{ 'armed_home' }}", AlarmControlPanelState.ARMED_HOME),
+        ("{{ 'armed_away' }}", AlarmControlPanelState.ARMED_AWAY),
+        ("{{ 'armed_night' }}", AlarmControlPanelState.ARMED_NIGHT),
+        ("{{ 'armed_vacation' }}", AlarmControlPanelState.ARMED_VACATION),
+        ("{{ 'armed_custom_bypass' }}", AlarmControlPanelState.ARMED_CUSTOM_BYPASS),
+        ("{{ 'pending' }}", AlarmControlPanelState.PENDING),
+        ("{{ 'arming' }}", AlarmControlPanelState.ARMING),
+        ("{{ 'disarming' }}", AlarmControlPanelState.DISARMING),
+        ("{{ 'triggered' }}", AlarmControlPanelState.TRIGGERED),
+        ("{{ x - 1 }}", STATE_UNAVAILABLE),
     ],
 )
 @pytest.mark.parametrize(
@@ -388,9 +384,7 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
     [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_panel")
-async def test_state_template_states(
-    hass: HomeAssistant, expected: str, trigger_expected: str, style: ConfigurationStyle
-) -> None:
+async def test_state_template_states(hass: HomeAssistant, expected: str) -> None:
     """Test the state template."""
 
     # Force a trigger
@@ -398,9 +392,6 @@ async def test_state_template_states(
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY_ID)
-
-    if trigger_expected and style == ConfigurationStyle.TRIGGER:
-        expected = trigger_expected
 
     assert state.state == expected
 
@@ -973,3 +964,35 @@ async def test_optimistic(hass: HomeAssistant) -> None:
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == AlarmControlPanelState.ARMED_HOME
+
+
+@pytest.mark.parametrize(
+    ("count", "panel_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ states('alarm_control_panel.test') }}",
+                **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
+                "optimistic": False,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_panel")
+async def test_not_optimistic(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option set to false."""
+    await hass.services.async_call(
+        ALARM_DOMAIN,
+        "alarm_arm_away",
+        {"entity_id": TEST_ENTITY_ID, "code": "1234"},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN

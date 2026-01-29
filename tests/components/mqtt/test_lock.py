@@ -75,6 +75,7 @@ CONFIG_WITH_STATES = {
             "state_opening": "opening",
             "state_unlocked": "unlocked",
             "state_unlocking": "unlocking",
+            "state_jammed": "jammed",
         }
     }
 }
@@ -89,6 +90,7 @@ CONFIG_WITH_STATES = {
         (CONFIG_WITH_STATES, "opening", LockState.OPENING),
         (CONFIG_WITH_STATES, "unlocked", LockState.UNLOCKED),
         (CONFIG_WITH_STATES, "unlocking", LockState.UNLOCKING),
+        (CONFIG_WITH_STATES, "jammed", LockState.JAMMED),
     ],
 )
 async def test_controlling_state_via_topic(
@@ -110,6 +112,12 @@ async def test_controlling_state_via_topic(
 
     state = hass.states.get("lock.test")
     assert state.state == lock_state
+
+    async_fire_mqtt_message(hass, "state-topic", "None")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.test")
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(

@@ -1,17 +1,22 @@
 """Config flow utilities."""
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from pyvesync import VeSync
+from pyvesync.utils.errors import VeSyncError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -25,7 +30,7 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @callback
     def _show_form(self, errors: dict[str, str] | None = None) -> ConfigFlowResult:
@@ -40,8 +45,6 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         if not user_input:
             return self._show_form()
@@ -49,10 +52,22 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
 
-        manager = VeSync(username, password)
-        login = await self.hass.async_add_executor_job(manager.login)
-        if not login:
+        time_zone = str(self.hass.config.time_zone)
+
+        manager = VeSync(
+            username,
+            password,
+            time_zone=time_zone,
+            session=async_get_clientsession(self.hass),
+        )
+        try:
+            await manager.login()
+        except VeSyncError as e:
+            _LOGGER.error("VeSync login failed: %s", str(e))
             return self._show_form(errors={"base": "invalid_auth"})
+
+        await self.async_set_unique_id(manager.account_id)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=username,
@@ -74,16 +89,36 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
 
-            manager = VeSync(username, password)
-            login = await self.hass.async_add_executor_job(manager.login)
-            if login:
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                    },
+            time_zone = str(self.hass.config.time_zone)
+
+            manager = VeSync(
+                username,
+                password,
+                time_zone=time_zone,
+                session=async_get_clientsession(self.hass),
+            )
+            try:
+                await manager.login()
+            except VeSyncError as e:
+                _LOGGER.error("VeSync login failed: %s", str(e))
+                return self.async_show_form(
+                    step_id="reauth_confirm",
+                    data_schema=DATA_SCHEMA,
+                    description_placeholders={"name": "VeSync"},
+                    errors={"base": "invalid_auth"},
                 )
+
+            await self.async_set_unique_id(manager.account_id)
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                unique_id=manager.account_id,
+                data_updates={
+                    CONF_USERNAME: username,
+                    CONF_PASSWORD: password,
+                },
+            )
 
         return self.async_show_form(
             step_id="reauth_confirm",

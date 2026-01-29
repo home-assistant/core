@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 from matter_server.common.models import EventType
 import pytest
@@ -238,11 +239,12 @@ async def test_pump(
     assert state
     assert state.state == "off"
 
-    # PumpStatus --> DeviceFault bit
+    # Initial state: kRunning bit only (no fault bits) should be off
     state = hass.states.get("binary_sensor.mock_pump_problem")
     assert state
-    assert state.state == "unknown"
+    assert state.state == "off"
 
+    # Set DeviceFault bit
     set_node_attribute(matter_node, 1, 512, 16, 1)
     await trigger_subscription_callback(hass, matter_client)
 
@@ -250,7 +252,14 @@ async def test_pump(
     assert state
     assert state.state == "on"
 
-    # PumpStatus --> SupplyFault bit
+    # Clear all bits - problem sensor should be off
+    set_node_attribute(matter_node, 1, 512, 16, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("binary_sensor.mock_pump_problem")
+    assert state
+    assert state.state == "off"
+
+    # Set SupplyFault bit
     set_node_attribute(matter_node, 1, 512, 16, 2)
     await trigger_subscription_callback(hass, matter_client)
 
@@ -269,9 +278,321 @@ async def test_dishwasher_alarm(
     state = hass.states.get("binary_sensor.dishwasher_door_alarm")
     assert state
 
+    # set DoorAlarm alarm
     set_node_attribute(matter_node, 1, 93, 2, 4)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("binary_sensor.dishwasher_door_alarm")
+    assert state
+    assert state.state == "on"
+
+    # clear DoorAlarm alarm
+    set_node_attribute(matter_node, 1, 93, 2, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.dishwasher_inflow_alarm")
+    assert state
+    assert state.state == "off"
+
+    # set InflowError alarm
+    set_node_attribute(matter_node, 1, 93, 2, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.dishwasher_inflow_alarm")
+    assert state
+    assert state.state == "on"
+
+
+@pytest.mark.parametrize("node_fixture", ["valve"])
+async def test_water_valve(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test valve alarms."""
+    # ValveFault default state
+    state = hass.states.get("binary_sensor.valve_general_fault")
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    assert state
+    assert state.state == "off"
+
+    # ValveFault general_fault test (bit 0)
+    set_node_attribute(matter_node, 1, 129, 9, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.valve_general_fault")
+    assert state
+    assert state.state == "on"
+
+    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    assert state
+    assert state.state == "off"
+
+    # ValveFault valve_blocked test (bit 1)
+    set_node_attribute(matter_node, 1, 129, 9, 2)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.valve_general_fault")
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    assert state
+    assert state.state == "on"
+
+    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    assert state
+    assert state.state == "off"
+
+    # ValveFault valve_leaking test (bit 2)
+    set_node_attribute(matter_node, 1, 129, 9, 4)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.valve_general_fault")
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    assert state
+    assert state.state == "on"
+
+    # ValveFault multiple faults test (bits 0 and 2)
+    set_node_attribute(matter_node, 1, 129, 9, 5)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.valve_general_fault")
+    assert state
+    assert state.state == "on"
+
+    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    assert state
+    assert state.state == "on"
+
+
+@pytest.mark.parametrize("node_fixture", ["longan_link_thermostat"])
+async def test_thermostat_occupancy(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test thermostat occupancy."""
+    state = hass.states.get("binary_sensor.longan_link_hvac_occupancy")
+    assert state
+    assert state.state == "on"
+
+    # Test Occupancy attribute change
+    occupancy_attribute = clusters.Thermostat.Attributes.Occupancy
+
+    set_node_attribute(
+        matter_node,
+        1,
+        occupancy_attribute.cluster_id,
+        occupancy_attribute.attribute_id,
+        0,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.longan_link_hvac_occupancy")
+    assert state
+    assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["eve_shutter"])
+async def test_shutter_problem(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test shutter problem."""
+    # Eve Shutter default state (ConfigStatus = 9)
+    state = hass.states.get(
+        "binary_sensor.eve_shutter_switch_20eci1701_configuration_status"
+    )
+    assert state
+    assert state.state == "off"
+
+    # Eve Shutter ConfigStatus Operational bit not set
+    set_node_attribute(matter_node, 1, 258, 7, 8)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(
+        "binary_sensor.eve_shutter_switch_20eci1701_configuration_status"
+    )
+    assert state
+    assert state.state == "on"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+async def test_thermostat_remote_sensing(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test thermostat remote sensing binary sensors."""
+    remote_sensing_attribute = clusters.Thermostat.Attributes.RemoteSensing
+
+    # Test initial state (RemoteSensing = 0, all bits off)
+    state = hass.states.get(
+        "binary_sensor.mock_thermostat_local_temperature_remote_sensing"
+    )
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get(
+        "binary_sensor.mock_thermostat_outdoor_temperature_remote_sensing"
+    )
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.mock_thermostat_occupancy_remote_sensing")
+    assert state
+    assert state.state == "off"
+
+    # Set LocalTemperature bit (bit 0)
+    set_node_attribute(
+        matter_node,
+        1,
+        remote_sensing_attribute.cluster_id,
+        remote_sensing_attribute.attribute_id,
+        1,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(
+        "binary_sensor.mock_thermostat_local_temperature_remote_sensing"
+    )
+    assert state
+    assert state.state == "on"
+
+    state = hass.states.get(
+        "binary_sensor.mock_thermostat_outdoor_temperature_remote_sensing"
+    )
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.mock_thermostat_occupancy_remote_sensing")
+    assert state
+    assert state.state == "off"
+
+    # Set OutdoorTemperature bit (bit 1)
+    set_node_attribute(
+        matter_node,
+        1,
+        remote_sensing_attribute.cluster_id,
+        remote_sensing_attribute.attribute_id,
+        2,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(
+        "binary_sensor.mock_thermostat_local_temperature_remote_sensing"
+    )
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get(
+        "binary_sensor.mock_thermostat_outdoor_temperature_remote_sensing"
+    )
+    assert state
+    assert state.state == "on"
+
+    state = hass.states.get("binary_sensor.mock_thermostat_occupancy_remote_sensing")
+    assert state
+    assert state.state == "off"
+
+    # Set Occupancy bit (bit 2)
+    set_node_attribute(
+        matter_node,
+        1,
+        remote_sensing_attribute.cluster_id,
+        remote_sensing_attribute.attribute_id,
+        4,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(
+        "binary_sensor.mock_thermostat_local_temperature_remote_sensing"
+    )
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get(
+        "binary_sensor.mock_thermostat_outdoor_temperature_remote_sensing"
+    )
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.mock_thermostat_occupancy_remote_sensing")
+    assert state
+    assert state.state == "on"
+
+    # Set multiple bits (bits 0 and 2 = value 5)
+    set_node_attribute(
+        matter_node,
+        1,
+        remote_sensing_attribute.cluster_id,
+        remote_sensing_attribute.attribute_id,
+        5,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(
+        "binary_sensor.mock_thermostat_local_temperature_remote_sensing"
+    )
+    assert state
+    assert state.state == "on"
+
+    state = hass.states.get(
+        "binary_sensor.mock_thermostat_outdoor_temperature_remote_sensing"
+    )
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.mock_thermostat_occupancy_remote_sensing")
+    assert state
+    assert state.state == "on"
+
+    # Set all bits (value 7)
+    set_node_attribute(
+        matter_node,
+        1,
+        remote_sensing_attribute.cluster_id,
+        remote_sensing_attribute.attribute_id,
+        7,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(
+        "binary_sensor.mock_thermostat_local_temperature_remote_sensing"
+    )
+    assert state
+    assert state.state == "on"
+
+    state = hass.states.get(
+        "binary_sensor.mock_thermostat_outdoor_temperature_remote_sensing"
+    )
+    assert state
+    assert state.state == "on"
+
+    state = hass.states.get("binary_sensor.mock_thermostat_occupancy_remote_sensing")
     assert state
     assert state.state == "on"

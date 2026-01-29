@@ -3,63 +3,79 @@
     "description": "Navigate to [\"Get involved\" at Miele developer site]({register_url}) to request credentials then enter them below."
   },
   "config": {
+    "abort": {
+      "account_mismatch": "The used account does not match the original account",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
     "step": {
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       },
+      "oauth_discovery": {
+        "description": "Home Assistant has found a Miele device on your network. Press **Submit** to continue setting up Miele."
+      },
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
         "data": {
           "implementation": "[%key:common::config_flow::data::implementation%]"
         },
         "data_description": {
           "implementation": "[%key:common::config_flow::description::implementation%]"
-        }
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Miele integration needs to re-authenticate your account"
-      },
-      "oauth_discovery": {
-        "description": "Home Assistant has found a Miele device on your network. Press **Submit** to continue setting up Miele."
+        "description": "The Miele integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
-      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "account_mismatch": "The used account does not match the original account",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
-    },
-    "create_entry": {
-      "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
   "device": {
     "coffee_system": {
       "name": "Coffee system"
     },
+    "dialog_oven": {
+      "name": "Dialog oven"
+    },
     "dishwasher": {
       "name": "Dishwasher"
     },
-    "tumble_dryer": {
-      "name": "Tumble dryer"
+    "freezer": {
+      "name": "Freezer"
     },
     "fridge_freezer": {
       "name": "Fridge freezer"
     },
+    "hob_extraction": {
+      "name": "Hob with extraction"
+    },
+    "hob_highlight": {
+      "name": "Hob highlight"
+    },
+    "hood": {
+      "name": "Hood"
+    },
     "induction_hob": {
       "name": "Induction hob"
+    },
+    "microwave": {
+      "name": "Microwave"
     },
     "oven": {
       "name": "Oven"
@@ -67,59 +83,44 @@
     "oven_microwave": {
       "name": "Oven microwave"
     },
-    "hob_highlight": {
-      "name": "Hob highlight"
-    },
-    "steam_oven": {
-      "name": "Steam oven"
-    },
-    "microwave": {
-      "name": "Microwave"
-    },
-    "hood": {
-      "name": "Hood"
-    },
-    "warming_drawer": {
-      "name": "Warming drawer"
-    },
-    "steam_oven_combi": {
-      "name": "Steam oven combi"
-    },
-    "wine_cabinet": {
-      "name": "Wine cabinet"
-    },
-    "wine_conditioning_unit": {
-      "name": "Wine conditioning unit"
-    },
-    "wine_unit": {
-      "name": "Wine unit"
-    },
     "refrigerator": {
       "name": "Refrigerator"
-    },
-    "freezer": {
-      "name": "Freezer"
     },
     "robot_vacuum_cleaner": {
       "name": "Robot vacuum cleaner"
     },
+    "steam_oven": {
+      "name": "Steam oven"
+    },
+    "steam_oven_combi": {
+      "name": "Steam oven combi"
+    },
     "steam_oven_micro": {
       "name": "Steam oven micro"
     },
-    "dialog_oven": {
-      "name": "Dialog oven"
+    "tumble_dryer": {
+      "name": "Tumble dryer"
     },
-    "wine_cabinet_freezer": {
-      "name": "Wine cabinet freezer"
-    },
-    "hob_extraction": {
-      "name": "Hob with extraction"
+    "warming_drawer": {
+      "name": "Warming drawer"
     },
     "washer_dryer": {
       "name": "Washer dryer"
     },
     "washing_machine": {
       "name": "Washing machine"
+    },
+    "wine_cabinet": {
+      "name": "Wine cabinet"
+    },
+    "wine_cabinet_freezer": {
+      "name": "Wine cabinet freezer"
+    },
+    "wine_conditioning_unit": {
+      "name": "Wine conditioning unit"
+    },
+    "wine_unit": {
+      "name": "Wine unit"
     }
   },
   "entity": {
@@ -130,11 +131,11 @@
       "info": {
         "name": "Info"
       },
-      "notification_active": {
-        "name": "Notification active"
-      },
       "mobile_start": {
         "name": "Mobile start"
+      },
+      "notification_active": {
+        "name": "Notification active"
       },
       "remote_control": {
         "name": "Remote control"
@@ -144,27 +145,14 @@
       }
     },
     "button": {
+      "pause": {
+        "name": "[%key:common::action::pause%]"
+      },
       "start": {
         "name": "[%key:common::action::start%]"
       },
       "stop": {
         "name": "[%key:common::action::stop%]"
-      },
-      "pause": {
-        "name": "[%key:common::action::pause%]"
-      }
-    },
-    "fan": {
-      "fan": {
-        "name": "[%key:component::fan::title%]"
-      }
-    },
-    "light": {
-      "ambient_light": {
-        "name": "Ambient light"
-      },
-      "light": {
-        "name": "[%key:component::light::title%]"
       }
     },
     "climate": {
@@ -187,33 +175,67 @@
         "name": "Zone 3"
       }
     },
+    "fan": {
+      "fan": {
+        "name": "[%key:component::fan::title%]"
+      }
+    },
+    "light": {
+      "ambient_light": {
+        "name": "Ambient light"
+      },
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "select": {
+      "fridge_freezer_mode": {
+        "name": "Mode",
+        "state": {
+          "holiday": "Holiday",
+          "normal": "Normal",
+          "party": "Party",
+          "sabbath": "Sabbath"
+        }
+      }
+    },
     "sensor": {
+      "core_target_temperature": {
+        "name": "Core target temperature"
+      },
+      "core_temperature": {
+        "name": "Core temperature"
+      },
+      "drying_step": {
+        "name": "Drying step",
+        "state": {
+          "extra_dry": "Extra dry",
+          "hand_iron_1": "Hand iron 1",
+          "hand_iron_2": "Hand iron 2",
+          "machine_iron": "Machine iron",
+          "normal": "Normal",
+          "normal_plus": "Normal plus",
+          "slightly_dry": "Slightly dry",
+          "smoothing": "Smoothing"
+        }
+      },
       "elapsed_time": {
         "name": "Elapsed time"
       },
-      "remaining_time": {
-        "name": "Remaining time"
-      },
-      "start_time": {
-        "name": "Start in"
-      },
       "energy_consumption": {
         "name": "Energy consumption"
+      },
+      "energy_forecast": {
+        "name": "Energy forecast"
+      },
+      "finish": {
+        "name": "Finish"
       },
       "plate": {
         "name": "Plate {plate_no}",
         "state": {
           "plate_step_0": "0",
-          "plate_step_warm": "Warming",
           "plate_step_1": "1",
-          "plate_step_2": "1\u2022",
-          "plate_step_3": "2",
-          "plate_step_4": "2\u2022",
-          "plate_step_5": "3",
-          "plate_step_6": "3\u2022",
-          "plate_step_7": "4",
-          "plate_step_8": "4\u2022",
-          "plate_step_9": "5",
           "plate_step_10": "5\u2022",
           "plate_step_11": "6",
           "plate_step_12": "6\u2022",
@@ -223,122 +245,28 @@
           "plate_step_16": "8\u2022",
           "plate_step_17": "9",
           "plate_step_18": "9\u2022",
-          "plate_step_boost": "Boost"
+          "plate_step_2": "1\u2022",
+          "plate_step_3": "2",
+          "plate_step_4": "2\u2022",
+          "plate_step_5": "3",
+          "plate_step_6": "3\u2022",
+          "plate_step_7": "4",
+          "plate_step_8": "4\u2022",
+          "plate_step_9": "5",
+          "plate_step_boost": "Boost",
+          "plate_step_boost_2": "Boost 2",
+          "plate_step_warm": "Warming"
         }
       },
-      "drying_step": {
-        "name": "Drying step",
-        "state": {
-          "extra_dry": "Extra dry",
-          "hand_iron_1": "Hand iron 1",
-          "hand_iron_2": "Hand iron 2",
-          "machine_iron": "Machine iron",
-          "normal_plus": "Normal plus",
-          "normal": "Normal",
-          "slightly_dry": "Slightly dry",
-          "smoothing": "Smoothing"
-        }
-      },
-      "program_phase": {
-        "name": "Program phase",
-        "state": {
-          "2nd_espresso": "2nd espresso coffee",
-          "2nd_grinding": "2nd grinding",
-          "2nd_pre_brewing": "2nd pre-brewing",
-          "anti_crease": "Anti-crease",
-          "blocked_brushes": "Brushes blocked",
-          "blocked_drive_wheels": "Drive wheels blocked",
-          "blocked_front_wheel": "Front wheel blocked",
-          "cleaning": "Cleaning",
-          "comfort_cooling": "Comfort cooling",
-          "cooling_down": "Cooling down",
-          "dirty_sensors": "Dirty sensors",
-          "disinfecting": "Disinfecting",
-          "dispensing": "Dispensing",
-          "docked": "Docked",
-          "door_open": "Door open",
-          "drain": "Drain",
-          "drying": "Drying",
-          "dust_box_missing": "Missing dust box",
-          "energy_save": "Energy save",
-          "espresso": "Espresso coffee",
-          "extra_dry": "Extra dry",
-          "final_rinse": "Final rinse",
-          "finished": "Finished",
-          "freshen_up_and_moisten": "Freshen up & moisten",
-          "going_to_target_area": "Going to target area",
-          "grinding": "Grinding",
-          "hand_iron": "Hand iron",
-          "hand_iron_1": "Hand iron 1",
-          "hand_iron_2": "Hand iron 2",
-          "heating": "Heating",
-          "heating_up": "Heating up",
-          "heating_up_phase": "Heating up phase",
-          "hot_milk": "Hot milk",
-          "hygiene": "Hygiene",
-          "interim_rinse": "Interim rinse",
-          "keep_warm": "Keep warm",
-          "keeping_warm": "Keeping warm",
-          "machine_iron": "Machine iron",
-          "main_dishwash": "Cleaning",
-          "main_wash": "Main wash",
-          "milk_foam": "Milk foam",
-          "moisten": "Moisten",
-          "motor_overload": "Check dust box and filter",
-          "normal": "Normal",
-          "normal_plus": "Normal plus",
-          "not_running": "Not running",
-          "pre_brewing": "Pre-brewing",
-          "pre_dishwash": "Pre-cleaning",
-          "pre_wash": "Pre-wash",
-          "process_finished": "Process finished",
-          "process_running": "Process running",
-          "program_running": "Program running",
-          "reactivating": "Reactivating",
-          "remote_controlled": "Remote controlled",
-          "returning": "Returning",
-          "rinse": "Rinse",
-          "rinse_hold": "Rinse hold",
-          "rinse_out_lint": "Rinse out lint",
-          "rinses": "Rinses",
-          "safety_cooling": "Safety cooling",
-          "slightly_dry": "Slightly dry",
-          "slow_roasting": "Slow roasting",
-          "smoothing": "Smoothing",
-          "soak": "Soak",
-          "spin": "Spin",
-          "starch_stop": "Starch stop",
-          "steam_reduction": "Steam reduction",
-          "steam_smoothing": "Steam smoothing",
-          "thermo_spin": "Thermo spin",
-          "timed_drying": "Timed drying",
-          "vacuum_cleaning": "Cleaning",
-          "vacuum_cleaning_paused": "Cleaning paused",
-          "vacuum_internal_fault": "Internal fault - reboot",
-          "venting": "Venting",
-          "waiting_for_start": "Waiting for start",
-          "warm_air": "Warm air",
-          "warm_cups_glasses": "Warm cups/glasses",
-          "warm_dishes_plates": "Warm dishes/plates",
-          "wheel_lifted": "Wheel lifted"
-        }
-      },
-      "program_type": {
-        "name": "Program type",
-        "state": {
-          "automatic_program": "Automatic program",
-          "cleaning_care_program": "Cleaning/care program",
-          "maintenance_program": "Maintenance program",
-          "normal_operation_mode": "Normal operation mode",
-          "own_program": "Own program"
-        }
+      "power_disk_level": {
+        "name": "PowerDisk level"
       },
       "program_id": {
         "name": "Program",
         "state": {
-          "amaranth": "Amaranth",
           "almond_macaroons_1_tray": "Almond macaroons (1 tray)",
           "almond_macaroons_2_trays": "Almond macaroons (2 trays)",
+          "amaranth": "Amaranth",
           "apple_pie": "Apple pie",
           "apple_sponge": "Apple sponge",
           "apples_diced": "Apples (diced)",
@@ -352,8 +280,6 @@
           "apricots_halved_steam_cooking": "Apricots (halved, steam cooking)",
           "apricots_quartered": "Apricots (quartered)",
           "apricots_wedges": "Apricots (wedges)",
-          "savoury_flan_puff_pastry": "Savoury flan, puff pastry",
-          "savoury_flan_short_crust_pastry": "Savoury flan, short crust pastry",
           "artichokes_large": "Artichokes large",
           "artichokes_medium": "Artichokes medium",
           "artichokes_small": "Artichokes small",
@@ -388,6 +314,8 @@
           "beetroot_whole_small": "Beetroot (whole, small)",
           "belgian_sponge_cake": "Belgian sponge cake",
           "beluga_lentils": "Beluga lentils",
+          "biscuits_short_crust_pastry_1_tray": "Biscuits, short crust pastry (1 tray)",
+          "biscuits_short_crust_pastry_2_trays": "Biscuits, short crust pastry (2 trays)",
           "black_beans": "Black beans",
           "black_salsify_medium": "Black salsify (medium)",
           "black_salsify_thick": "Black salsify (thick)",
@@ -478,17 +406,16 @@
           "codfish_piece": "Codfish (piece)",
           "coffee": "Coffee",
           "coffee_pot": "Coffee pot",
+          "comfort_wash": "Comfort wash",
+          "comfort_wash_plus": "Comfort wash plus",
           "common_beans": "Common beans",
           "common_sole_fillet_1_cm": "Common sole (fillet, 1 cm)",
           "common_sole_fillet_2_cm": "Common sole (fillet, 2 cm)",
           "conventional_heat": "Conventional heat",
           "cook_bacon": "Cook bacon",
-          "biscuits_short_crust_pastry_1_tray": "Biscuits, short crust pastry (1 tray)",
-          "biscuits_short_crust_pastry_2_trays": "Biscuits, short crust pastry (2 trays)",
-          "comfort_wash": "Comfort wash",
-          "comfort_wash_plus": "Comfort wash plus",
           "cool_air": "Cool air",
           "corn_on_the_cob": "Corn on the cob",
+          "cottonrepair": "CottonRepair",
           "cottons": "Cottons",
           "cottons_eco": "Cottons ECO",
           "cottons_hygiene": "Cottons hygiene",
@@ -498,14 +425,6 @@
           "crevettes": "Crevettes",
           "curtains": "Curtains",
           "custom_program_1": "Custom program 1",
-          "custom_program_2": "Custom program 2",
-          "custom_program_3": "Custom program 3",
-          "custom_program_4": "Custom program 4",
-          "custom_program_5": "Custom program 5",
-          "custom_program_6": "Custom program 6",
-          "custom_program_7": "Custom program 7",
-          "custom_program_8": "Custom program 8",
-          "custom_program_9": "Custom program 9",
           "custom_program_10": "Custom program 10",
           "custom_program_11": "Custom program 11",
           "custom_program_12": "Custom program 12",
@@ -516,13 +435,22 @@
           "custom_program_17": "Custom program 17",
           "custom_program_18": "Custom program 18",
           "custom_program_19": "Custom program 19",
+          "custom_program_2": "Custom program 2",
           "custom_program_20": "Custom program 20",
-          "drop_cookies_1_tray": "Drop cookies (1 tray)",
-          "drop_cookies_2_trays": "Drop cookies (2 trays)",
+          "custom_program_3": "Custom program 3",
+          "custom_program_4": "Custom program 4",
+          "custom_program_5": "Custom program 5",
+          "custom_program_6": "Custom program 6",
+          "custom_program_7": "Custom program 7",
+          "custom_program_8": "Custom program 8",
+          "custom_program_9": "Custom program 9",
           "dark_garments": "Dark garments",
+          "dark_jeans": "Dark/jeans",
           "dark_mixed_grain_bread": "Dark mixed grain bread",
-          "decrystallise_honey": "Decrystallise honey",
+          "decrystallise_honey": "Decrystallize honey",
           "defrost": "Defrost",
+          "defrost_meat": "Defrost meat",
+          "defrost_vegetables": "Defrost vegetables",
           "defrosting_with_microwave": "Defrosting with microwave",
           "defrosting_with_steam": "Defrosting with steam",
           "delicates": "Delicates",
@@ -533,8 +461,11 @@
           "down_duvets": "Down duvets",
           "down_filled_items": "Down-filled items",
           "drain_spin": "Drain/spin",
+          "drop_cookies_1_tray": "Drop cookies (1 tray)",
+          "drop_cookies_2_trays": "Drop cookies (2 trays)",
           "duck": "Duck",
           "dutch_hash": "Dutch hash",
+          "easy_care": "Easy care",
           "eco": "ECO",
           "eco_40_60": "ECO 40-60",
           "eco_fan_heat": "ECO fan heat",
@@ -560,11 +491,12 @@
           "flat_bread": "Flat bread",
           "flat_white": "Flat white",
           "freshen_up": "Freshen up",
-          "fruit_streusel_cake": "Fruit streusel cake",
           "fruit_flan_puff_pastry": "Fruit flan, puff pastry",
           "fruit_flan_short_crust_pastry": "Fruit flan, short crust pastry",
+          "fruit_streusel_cake": "Fruit streusel cake",
           "fruit_tea": "Fruit tea",
           "full_grill": "Full grill",
+          "game_pieces": "Game pieces",
           "gentle": "Gentle",
           "gentle_denim": "Gentle denim",
           "gentle_minimum_iron": "Gentle minimum iron",
@@ -592,10 +524,13 @@
           "green_split_peas": "Green split peas",
           "green_tea": "Green tea",
           "greenage_plums": "Greenage plums",
+          "grill": "Grill",
           "halibut_fillet_2_cm": "Halibut (fillet, 2 cm)",
           "halibut_fillet_3_cm": "Halibut (fillet, 3 cm)",
           "ham_roast": "Ham roast",
+          "heating_bakes_gratins": "Heating bakes/gratins",
           "heating_damp_flannels": "Heating damp flannels",
+          "heating_vegetables": "Heating vegetables",
           "hens_eggs_size_l_hard": "Hen’s eggs (size „L“, hard)",
           "hens_eggs_size_l_medium": "Hen’s eggs (size „L“, medium)",
           "hens_eggs_size_l_soft": "Hen’s eggs (size „L“, soft)",
@@ -642,8 +577,8 @@
           "long_grain_rice_general_rapid_steam_cooking": "Long grain rice (general, rapid steam cooking)",
           "long_grain_rice_general_steam_cooking": "Long grain rice (general, steam cooking)",
           "low_temperature_cooking": "Low temperature cooking",
-          "maintenance": "Maintenance program",
           "madeira_cake": "Madeira cake",
+          "maintenance": "Maintenance program",
           "make_yoghurt": "Make yoghurt",
           "mangel_cut": "Mangel (cut)",
           "marble_cake": "Marble cake",
@@ -655,6 +590,9 @@
           "melt_chocolate": "Melt chocolate",
           "menu_cooking": "Menu cooking",
           "microwave": "Microwave",
+          "microwave_auto_roast": "Microwave + Auto roast",
+          "microwave_fan_grill": "Microwave + Fan grill",
+          "microwave_fan_plus": "Microwave + Fan plus",
           "milk_foam": "Milk foam",
           "milk_pipework_clean": "Milk pipework clean",
           "milk_pipework_rinse": "Milk pipework rinse",
@@ -685,6 +623,7 @@
           "oats_cracked": "Oats (cracked)",
           "oats_whole": "Oats (whole)",
           "osso_buco": "Osso buco",
+          "outdoor_garments": "Outdoor garments",
           "outerwear": "Outerwear",
           "oyster_mushroom_diced": "Oyster mushroom (diced)",
           "oyster_mushroom_strips": "Oyster mushroom (strips)",
@@ -791,8 +730,10 @@
           "potatoes_waxy_whole_small": "Potatoes (waxy, whole, small)",
           "poularde_breast": "Poularde breast",
           "poularde_whole": "Poularde (whole)",
+          "power_fresh": "PowerFresh",
           "power_wash": "PowerWash",
           "prawns": "Prawns",
+          "pre_ironing": "Pre-ironing",
           "proofing": "Proofing",
           "prove_15_min": "Prove for 15 min",
           "prove_30_min": "Prove for 30 min",
@@ -863,6 +804,8 @@
           "salmon_steak_3_cm": "Salmon (steak, 3 cm)",
           "salmon_trout": "Salmon trout",
           "saucisson": "Saucisson",
+          "savoury_flan_puff_pastry": "Savoury flan, puff pastry",
+          "savoury_flan_short_crust_pastry": "Savoury flan, short crust pastry",
           "savoy_cabbage_cut": "Savoy cabbage (cut)",
           "scallops": "Scallops",
           "schupfnudeln_potato_noodels": "Schupfnudeln (potato noodels)",
@@ -883,6 +826,7 @@
           "simiao_rapid_steam_cooking": "Simiao (rapid steam cooking)",
           "simiao_steam_cooking": "Simiao (steam cooking)",
           "small_shrimps": "Small shrimps",
+          "smartmatic": "SmartMatic",
           "smoothing": "Smoothing",
           "snow_pea": "Snow pea",
           "soak": "Soak",
@@ -909,6 +853,7 @@
           "sterilize_crockery": "Sterilize crockery",
           "stollen": "Stollen",
           "stuffed_cabbage": "Stuffed cabbage",
+          "stuffed_toys": "Stuffed toys",
           "sweat_onions": "Sweat onions",
           "swede_cut_into_batons": "Swede (cut into batons)",
           "swede_diced": "Swede (diced)",
@@ -931,6 +876,7 @@
           "top_heat": "Top heat",
           "tortellini_fresh": "Tortellini (fresh)",
           "trainers": "Trainers",
+          "trainers_refresh": "Trainers refresh",
           "treacle_sponge_pudding_one_large": "Treacle sponge pudding (one large)",
           "treacle_sponge_pudding_several_small": "Treacle sponge pudding (several small)",
           "trout": "Trout",
@@ -990,10 +936,135 @@
           "yom_tov": "Yom tov",
           "yorkshire_pudding": "Yorkshire pudding",
           "zander_fillet": "Zander (fillet)"
+        },
+        "state_attributes": {
+          "profile": {
+            "name": "Profile",
+            "state": {
+              "profile_1": "Profile 1",
+              "profile_2": "Profile 2",
+              "profile_3": "Profile 3",
+              "profile_4": "Profile 4",
+              "profile_5": "Profile 5"
+            }
+          }
         }
+      },
+      "program_phase": {
+        "name": "Program phase",
+        "state": {
+          "2nd_espresso": "2nd espresso coffee",
+          "2nd_grinding": "2nd grinding",
+          "2nd_pre_brewing": "2nd pre-brewing",
+          "anti_crease": "Anti-crease",
+          "automatic_start": "Automatic start",
+          "blocked_brushes": "Brushes blocked",
+          "blocked_drive_wheels": "Drive wheels blocked",
+          "blocked_front_wheel": "Front wheel blocked",
+          "cleaning": "Cleaning",
+          "comfort_cooling": "Comfort cooling",
+          "cooling_down": "Cooling down",
+          "cooling_phase": "Cooling phase",
+          "dirty_sensors": "Dirty sensors",
+          "disinfecting": "Disinfecting",
+          "dispensing": "Dispensing",
+          "docked": "Docked",
+          "door_open": "Door open",
+          "drain": "Drain",
+          "drying": "Drying",
+          "dust_box_missing": "Missing dust box",
+          "energy_save": "Energy save",
+          "espresso": "Espresso coffee",
+          "extra_dry": "Extra dry",
+          "final_rinse": "Final rinse",
+          "finished": "Finished",
+          "flex_load_active": "FlexLoad active",
+          "freshen_up_and_moisten": "Freshen up & moisten",
+          "going_to_target_area": "Going to target area",
+          "grinding": "Grinding",
+          "hand_iron": "Hand iron",
+          "hand_iron_1": "Hand iron 1",
+          "hand_iron_2": "Hand iron 2",
+          "heating": "Heating",
+          "heating_up": "Heating up",
+          "heating_up_phase": "Heating up phase",
+          "hot_milk": "Hot milk",
+          "hygiene": "Hygiene",
+          "interim_rinse": "Interim rinse",
+          "keep_warm": "Keep warm",
+          "keeping_warm": "Keeping warm",
+          "machine_iron": "Machine iron",
+          "main_dishwash": "Cleaning",
+          "main_wash": "Main wash",
+          "milk_foam": "Milk foam",
+          "moisten": "Moisten",
+          "motor_overload": "Check dust box and filter",
+          "normal": "Normal",
+          "normal_plus": "Normal plus",
+          "not_running": "Not running",
+          "pre_brewing": "Pre-brewing",
+          "pre_dishwash": "Pre-cleaning",
+          "pre_heating": "Pre-heating",
+          "pre_wash": "Pre-wash",
+          "process_finished": "Process finished",
+          "process_running": "Process running",
+          "program_running": "Program running",
+          "reactivating": "Reactivating",
+          "remote_controlled": "Remote controlled",
+          "returning": "Returning",
+          "rinse": "Rinse",
+          "rinse_hold": "Rinse hold",
+          "rinse_out_lint": "Rinse out lint",
+          "rinses": "Rinses",
+          "safety_cooling": "Safety cooling",
+          "slightly_dry": "Slightly dry",
+          "slow_roasting": "Slow roasting",
+          "smoothing": "Smoothing",
+          "soak": "Soak",
+          "spin": "Spin",
+          "starch_stop": "Starch stop",
+          "steam_reduction": "Steam reduction",
+          "steam_smoothing": "Steam smoothing",
+          "thermo_spin": "Thermo spin",
+          "timed_drying": "Timed drying",
+          "vacuum_cleaning": "Cleaning",
+          "vacuum_cleaning_paused": "Cleaning paused",
+          "vacuum_internal_fault": "Internal fault - reboot",
+          "venting": "Venting",
+          "waiting_for_start": "Waiting for start",
+          "warm_air": "Warm air",
+          "warm_cups_glasses": "Warm cups/glasses",
+          "warm_dishes_plates": "Warm dishes/plates",
+          "wheel_lifted": "Wheel lifted"
+        }
+      },
+      "program_type": {
+        "name": "Program type",
+        "state": {
+          "automatic_program": "Automatic program",
+          "cleaning_care_program": "Cleaning/care program",
+          "maintenance_program": "Maintenance program",
+          "normal_operation_mode": "Normal operation mode",
+          "own_program": "Program"
+        }
+      },
+      "remaining_time": {
+        "name": "Remaining time"
+      },
+      "rinse_aid_level": {
+        "name": "Rinse aid level"
+      },
+      "salt_level": {
+        "name": "Salt level"
       },
       "spin_speed": {
         "name": "Spin speed"
+      },
+      "start": {
+        "name": "Start"
+      },
+      "start_time": {
+        "name": "Start in"
       },
       "status": {
         "name": "Status",
@@ -1001,6 +1072,7 @@
           "autocleaning": "Automatic cleaning",
           "failure": "Failure",
           "idle": "[%key:common::state::idle%]",
+          "in_use": "In use",
           "not_connected": "Not connected",
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
@@ -1008,8 +1080,8 @@
           "program_ended": "Program ended",
           "program_interrupted": "Program interrupted",
           "programmed": "Programmed",
+          "reserved": "Reserved",
           "rinse_hold": "Rinse hold",
-          "in_use": "In use",
           "service": "Service",
           "supercooling": "Supercooling",
           "supercooling_superfreezing": "Supercooling/superfreezing",
@@ -1018,26 +1090,23 @@
           "waiting_to_start": "Waiting to start"
         }
       },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
       "temperature_zone_2": {
         "name": "Temperature zone 2"
       },
       "temperature_zone_3": {
         "name": "Temperature zone 3"
       },
+      "twin_dos_1_level": {
+        "name": "TwinDos 1 level"
+      },
+      "twin_dos_2_level": {
+        "name": "TwinDos 2 level"
+      },
       "water_consumption": {
         "name": "Water consumption"
-      },
-      "core_temperature": {
-        "name": "Core temperature"
-      },
-      "target_temperature": {
-        "name": "Target temperature"
-      },
-      "core_target_temperature": {
-        "name": "Core target temperature"
-      },
-      "energy_forecast": {
-        "name": "Energy forecast"
       },
       "water_forecast": {
         "name": "Water forecast"
@@ -1062,11 +1131,17 @@
     "config_entry_not_ready": {
       "message": "Error while loading the integration."
     },
+    "get_programs_error": {
+      "message": "'Get programs' action failed: {status} / {message}"
+    },
+    "invalid_option": {
+      "message": "Invalid option: \"{option}\" on {entity}."
+    },
     "invalid_target": {
       "message": "Invalid device targeted."
     },
-    "get_programs_error": {
-      "message": "'Get programs' action failed: {status} / {message}"
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "set_program_error": {
       "message": "'Set program' action failed: {status} / {message}"
@@ -1080,17 +1155,16 @@
   },
   "services": {
     "get_programs": {
-      "name": "Get programs",
       "description": "Returns a list of available programs.",
       "fields": {
         "device_id": {
           "description": "[%key:component::miele::services::set_program::fields::device_id::description%]",
           "name": "[%key:component::miele::services::set_program::fields::device_id::name%]"
         }
-      }
+      },
+      "name": "Get programs"
     },
     "set_program": {
-      "name": "Set program",
       "description": "Sets and starts a program on the appliance.",
       "fields": {
         "device_id": {
@@ -1101,15 +1175,19 @@
           "description": "The ID of the program to set.",
           "name": "Program ID"
         }
-      }
+      },
+      "name": "Set program"
     },
     "set_program_oven": {
-      "name": "Set program on oven",
       "description": "[%key:component::miele::services::set_program::description%]",
       "fields": {
         "device_id": {
           "description": "[%key:component::miele::services::set_program::fields::device_id::description%]",
           "name": "[%key:component::miele::services::set_program::fields::device_id::name%]"
+        },
+        "duration": {
+          "description": "The duration for the oven program.",
+          "name": "[%key:component::sensor::entity_component::duration::name%]"
         },
         "program_id": {
           "description": "[%key:component::miele::services::set_program::fields::program_id::description%]",
@@ -1118,12 +1196,9 @@
         "temperature": {
           "description": "The target temperature for the oven program.",
           "name": "[%key:component::sensor::entity_component::temperature::name%]"
-        },
-        "duration": {
-          "description": "The duration for the oven program.",
-          "name": "[%key:component::sensor::entity_component::duration::name%]"
         }
-      }
+      },
+      "name": "Set program on oven"
     }
   }
 }

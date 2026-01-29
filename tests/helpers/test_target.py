@@ -245,6 +245,13 @@ def registries_mock(hass: HomeAssistant) -> None:
         labels={"my-label"},
         entity_category=EntityCategory.CONFIG,
     )
+    diag_entity_with_my_label = RegistryEntryWithDefaults(
+        entity_id="light.diag_with_my_label",
+        unique_id="diag_with_my_label",
+        platform="test",
+        labels={"my-label"},
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
     entity_with_label1_from_device = RegistryEntryWithDefaults(
         entity_id="light.with_label1_from_device",
         unique_id="with_label1_from_device",
@@ -289,6 +296,7 @@ def registries_mock(hass: HomeAssistant) -> None:
             entity_in_area_a.entity_id: entity_in_area_a,
             entity_in_area_b.entity_id: entity_in_area_b,
             config_entity_with_my_label.entity_id: config_entity_with_my_label,
+            diag_entity_with_my_label.entity_id: diag_entity_with_my_label,
             entity_with_label1_and_label2_from_device.entity_id: entity_with_label1_and_label2_from_device,
             entity_with_label1_from_device.entity_id: entity_with_label1_from_device,
             entity_with_label1_from_device_and_different_area.entity_id: entity_with_label1_from_device_and_different_area,
@@ -407,7 +415,11 @@ def registries_mock(hass: HomeAssistant) -> None:
             {ATTR_LABEL_ID: "my-label"},
             False,
             target.SelectedEntities(
-                indirectly_referenced={"light.with_my_label"},
+                indirectly_referenced={
+                    "light.with_my_label",
+                    "light.config_with_my_label",
+                    "light.diag_with_my_label",
+                },
                 missing_labels={"my-label"},
             ),
         ),
@@ -449,12 +461,16 @@ def registries_mock(hass: HomeAssistant) -> None:
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "selection_class", [target.TargetSelection, target.TargetSelectorData]
+)
 @pytest.mark.usefixtures("registries_mock")
 async def test_extract_referenced_entity_ids(
     hass: HomeAssistant,
     selector_config: ConfigType,
     expand_group: bool,
     expected_selected: target.SelectedEntities,
+    selection_class,
 ) -> None:
     """Test extract_entity_ids method."""
     hass.states.async_set("light.Bowl", STATE_ON)
@@ -474,10 +490,10 @@ async def test_extract_referenced_entity_ids(
         order=None,
     )
 
-    target_data = target.TargetSelectorData(selector_config)
+    target_selection = selection_class(selector_config)
     assert (
         target.async_extract_referenced_entity_ids(
-            hass, target_data, expand_group=expand_group
+            hass, target_selection, expand_group=expand_group
         )
         == expected_selected
     )

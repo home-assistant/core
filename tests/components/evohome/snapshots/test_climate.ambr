@@ -39,6 +39,16 @@
     ),
   ])
 # ---
+# name: test_ctl_set_hvac_mode[h157546]
+  list([
+    tuple(
+      <SystemMode.HEATING_OFF: 'HeatingOff'>,
+    ),
+    tuple(
+      <SystemMode.AUTO: 'Auto'>,
+    ),
+  ])
+# ---
 # name: test_ctl_set_hvac_mode[minimal]
   list([
     tuple(
@@ -87,6 +97,13 @@
     ),
   ])
 # ---
+# name: test_ctl_turn_off[h157546]
+  list([
+    tuple(
+      <SystemMode.HEATING_OFF: 'HeatingOff'>,
+    ),
+  ])
+# ---
 # name: test_ctl_turn_off[minimal]
   list([
     tuple(
@@ -123,6 +140,13 @@
   ])
 # ---
 # name: test_ctl_turn_on[h139906]
+  list([
+    tuple(
+      <SystemMode.AUTO: 'Auto'>,
+    ),
+  ])
+# ---
+# name: test_ctl_turn_on[h157546]
   list([
     tuple(
       <SystemMode.AUTO: 'Auto'>,
@@ -1272,6 +1296,280 @@
     'state': 'heat',
   })
 # ---
+# name: test_setup_platform[h157546][climate.ba-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 15.5,
+      'friendly_name': 'Ba******',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'activeFaults': tuple(
+        ),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 5.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+          'next_sp_temp': 18.6,
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 15.5,
+        }),
+        'zone_id': '10090505',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 5.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.ba',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_setup_platform[h157546][climate.ka-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 16.0,
+      'friendly_name': 'Ka*********',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'activeFaults': tuple(
+        ),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 15.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+          'next_sp_temp': 18.6,
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 16.0,
+        }),
+        'zone_id': '10090507',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 15.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.ka',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[h157546][climate.ka_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 17.0,
+      'friendly_name': 'Ka*****',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'activeFaults': tuple(
+        ),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 15.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+          'next_sp_temp': 18.6,
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 17.0,
+        }),
+        'zone_id': '10090508',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 15.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.ka_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[h157546][climate.kl-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 17.1,
+      'friendly_name': 'Kl********',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'icon': 'mdi:thermostat',
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': None,
+      'preset_modes': list([
+        'eco',
+        'Reset',
+        'away',
+        'home',
+        'Custom',
+      ]),
+      'status': dict({
+        'activeSystemFaults': tuple(
+        ),
+        'system_id': '10090510',
+        'system_mode_status': dict({
+          'is_permanent': True,
+          'mode': 'Auto',
+        }),
+      }),
+      'supported_features': <ClimateEntityFeature: 400>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.kl',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[h157546][climate.sl-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 18.0,
+      'friendly_name': 'Sl********',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'activeFaults': tuple(
+        ),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 18.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+          'next_sp_temp': 18.6,
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 18.0,
+        }),
+        'zone_id': '10090506',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 18.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.sl',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[h157546][climate.wo-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.0,
+      'friendly_name': 'Wo*******',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'activeFaults': tuple(
+        ),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 19.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+          'next_sp_temp': 18.6,
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 19.0,
+        }),
+        'zone_id': '10090509',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 19.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.wo',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
 # name: test_setup_platform[minimal][climate.main_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -1473,6 +1771,13 @@
     ),
   ])
 # ---
+# name: test_zone_set_hvac_mode[h157546]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
 # name: test_zone_set_hvac_mode[minimal]
   list([
     tuple(
@@ -1539,6 +1844,19 @@
     }),
   ])
 # ---
+# name: test_zone_set_preset_mode[h157546]
+  list([
+    tuple(
+      5.0,
+    ),
+    tuple(
+      5.0,
+    ),
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
 # name: test_zone_set_preset_mode[minimal]
   list([
     tuple(
@@ -1593,6 +1911,13 @@
     }),
   ])
 # ---
+# name: test_zone_set_temperature[h157546]
+  list([
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
 # name: test_zone_set_temperature[minimal]
   list([
     dict({
@@ -1629,6 +1954,13 @@
   ])
 # ---
 # name: test_zone_turn_off[h139906]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_turn_off[h157546]
   list([
     tuple(
       5.0,

@@ -33,6 +33,7 @@ async def test_event(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     values: dict[str, MowerAttributes],
+    automower_ws_ready: list[Callable[[], None]],
 ) -> None:
     """Test that a new message arriving over the websocket creates and updates the sensor."""
     callbacks: list[Callable[[SingleMessageData], None]] = []
@@ -46,9 +47,15 @@ async def test_event(
     mock_automower_client.register_single_message_callback.side_effect = (
         fake_register_websocket_response
     )
+    mock_automower_client.send_empty_message.return_value = True
 
     # Set up integration
     await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    # Start the watchdog and let it run once to set websocket_alive=True
+    for cb in automower_ws_ready:
+        cb()
     await hass.async_block_till_done()
 
     # Ensure callback was registered for the test mower
@@ -76,6 +83,7 @@ async def test_event(
     for cb in callbacks:
         cb(message)
     await hass.async_block_till_done()
+
     state = hass.states.get("event.test_mower_1_message")
     assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
@@ -84,6 +92,12 @@ async def test_event(
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Start the new watchdog and let it run
+    for cb in automower_ws_ready:
+        cb()
+    await hass.async_block_till_done()
+
     state = hass.states.get("event.test_mower_1_message")
     assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
@@ -129,6 +143,7 @@ async def test_event(
     for cb in callbacks:
         cb(message)
     await hass.async_block_till_done()
+
     entry = entity_registry.async_get("event.test_mower_1_message")
     assert entry is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
@@ -154,9 +169,9 @@ async def test_event_snapshot(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    automower_ws_ready: list[Callable[[], None]],
 ) -> None:
     """Test that a new message arriving over the websocket updates the sensor."""
     with patch(
@@ -177,6 +192,11 @@ async def test_event_snapshot(
 
         # Set up integration
         await setup_integration(hass, mock_config_entry)
+        await hass.async_block_till_done()
+
+        # Start the watchdog and let it run once
+        for cb in automower_ws_ready:
+            cb()
         await hass.async_block_till_done()
 
         # Ensure callback was registered for the test mower

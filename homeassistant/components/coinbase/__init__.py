@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import entity_registry as er
 from homeassistant.util import Throttle
 
 from .const import (
@@ -30,9 +29,7 @@ from .const import (
     API_RESOURCE_TYPE,
     API_V3_ACCOUNT_ID,
     API_V3_TYPE_VAULT,
-    CONF_CURRENCIES,
     CONF_EXCHANGE_BASE,
-    CONF_EXCHANGE_RATES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,9 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CoinbaseConfigEntry) -> 
     """Set up Coinbase from a config entry."""
 
     instance = await hass.async_add_executor_job(create_and_update_instance, entry)
-
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     entry.runtime_data = instance
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -81,29 +75,6 @@ def create_and_update_instance(entry: CoinbaseConfigEntry) -> CoinbaseData:
     instance = CoinbaseData(client, base_rate)
     instance.update()
     return instance
-
-
-async def update_listener(
-    hass: HomeAssistant, config_entry: CoinbaseConfigEntry
-) -> None:
-    """Handle options update."""
-
-    await hass.config_entries.async_reload(config_entry.entry_id)
-
-    registry = er.async_get(hass)
-    entities = er.async_entries_for_config_entry(registry, config_entry.entry_id)
-
-    # Remove orphaned entities
-    for entity in entities:
-        currency = entity.unique_id.split("-")[-1]
-        if (
-            "xe" in entity.unique_id
-            and currency not in config_entry.options.get(CONF_EXCHANGE_RATES, [])
-        ) or (
-            "wallet" in entity.unique_id
-            and currency not in config_entry.options.get(CONF_CURRENCIES, [])
-        ):
-            registry.async_remove(entity.entity_id)
 
 
 def get_accounts(client):

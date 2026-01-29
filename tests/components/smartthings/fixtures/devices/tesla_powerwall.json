@@ -1,0 +1,103 @@
+{
+  "items": [
+    {
+      "deviceId": "d2595c45-df6e-41ac-a7af-8e275071c19b",
+      "name": "UDHN-TESLA-ENERGY-BATTERY",
+      "label": "Powerwall",
+      "manufacturerName": "0AHI",
+      "presentationId": "STES-1-PV-TESLA-ENERGY-BATTERY",
+      "locationId": "d22d6401-6070-4928-8e7b-b724e2dbf425",
+      "ownerId": "35445a41-3ae2-4bc0-6f51-31705de6b96f",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "healthCheck",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "rivertalent14263.adaptiveEnergyUsageState",
+              "version": 1
+            },
+            {
+              "id": "battery",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Battery",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "discharge",
+          "label": "discharge",
+          "capabilities": [
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "powerMeter",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "charge",
+          "label": "charge",
+          "capabilities": [
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            },
+            {
+              "id": "powerMeter",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2024-07-16T12:40:18.632Z",
+      "profile": {
+        "id": "4f9998dc-e672-4baf-8521-5e9b853fc978"
+      },
+      "app": {
+        "installedAppId": "e798c0a6-3e3b-4299-8463-438fc3f1e6b3",
+        "externalId": "TESLABATTERY_1689188152863574",
+        "profile": {
+          "id": "4f9998dc-e672-4baf-8521-5e9b853fc978"
+        }
+      },
+      "type": "ENDPOINT_APP",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

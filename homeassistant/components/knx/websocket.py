@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from contextlib import ExitStack
 from functools import wraps
 import inspect
 from typing import TYPE_CHECKING, Any, Final, overload
@@ -14,14 +15,15 @@ from xknxproject.exceptions import XknxProjectException
 
 from homeassistant.components import panel_custom, websocket_api
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM
+from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.ulid import ulid_now
 
-from .const import DOMAIN, KNX_MODULE_KEY
+from .const import DOMAIN, KNX_MODULE_KEY, SUPPORTED_PLATFORMS_UI
+from .dpt import get_supported_dpts
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
 from .storage.entity_store_schema import (
@@ -33,7 +35,12 @@ from .storage.entity_store_validation import (
     EntityStoreValidationSuccess,
     validate_entity_data,
 )
-from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict
+from .storage.serialize import get_serialized_schema
+from .telegrams import (
+    SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
+    SIGNAL_KNX_TELEGRAM,
+    TelegramDict,
+)
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
@@ -43,7 +50,7 @@ URL_BASE: Final = "/knx_static"
 
 async def register_panel(hass: HomeAssistant) -> None:
     """Register the KNX Panel and Websocket API."""
-    websocket_api.async_register_command(hass, ws_info)
+    websocket_api.async_register_command(hass, ws_get_base_data)
     websocket_api.async_register_command(hass, ws_project_file_process)
     websocket_api.async_register_command(hass, ws_project_file_remove)
     websocket_api.async_register_command(hass, ws_group_monitor_info)
@@ -57,6 +64,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_entity_config)
     websocket_api.async_register_command(hass, ws_get_entity_entries)
     websocket_api.async_register_command(hass, ws_create_device)
+    websocket_api.async_register_command(hass, ws_get_schema)
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
         await hass.http.async_register_static_paths(
@@ -72,8 +80,6 @@ async def register_panel(hass: HomeAssistant) -> None:
             hass=hass,
             frontend_url_path=DOMAIN,
             webcomponent_name=knx_panel.webcomponent_name,
-            sidebar_title=DOMAIN.upper(),
-            sidebar_icon="mdi:bus-electric",
             module_url=f"{URL_BASE}/{knx_panel.entrypoint_js}",
             embed_iframe=True,
             require_admin=True,
@@ -154,12 +160,12 @@ def provide_knx(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/info",
+        vol.Required("type"): "knx/get_base_data",
     }
 )
 @provide_knx
 @callback
-def ws_info(
+def ws_get_base_data(
     hass: HomeAssistant,
     knx: KNXModule,
     connection: websocket_api.ActiveConnection,
@@ -174,14 +180,19 @@ def ws_info(
             "tool_version": project_info["tool_version"],
             "xknxproject_version": project_info["xknxproject_version"],
         }
+    connection_info = {
+        "version": knx.xknx.version,
+        "connected": knx.xknx.connection_manager.connected.is_set(),
+        "current_address": str(knx.xknx.current_address),
+    }
 
     connection.send_result(
         msg["id"],
         {
-            "version": knx.xknx.version,
-            "connected": knx.xknx.connection_manager.connected.is_set(),
-            "current_address": str(knx.xknx.current_address),
-            "project": _project_info,
+            "connection_info": connection_info,
+            "dpt_metadata": get_supported_dpts(),
+            "project_info": _project_info,
+            "supported_platforms": sorted(SUPPORTED_PLATFORMS_UI),
         },
     )
 
@@ -204,10 +215,7 @@ async def ws_get_knx_project(
     knxproject = await knx.project.get_knxproject()
     connection.send_result(
         msg["id"],
-        {
-            "project_loaded": knx.project.loaded,
-            "knxproject": knxproject,
-        },
+        knxproject,
     )
 
 
@@ -331,11 +339,23 @@ def ws_subscribe_telegram(
             telegram_dict,
         )
 
-    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
-        hass,
-        signal=SIGNAL_KNX_TELEGRAM,
-        target=forward_telegram,
+    stack = ExitStack()
+    stack.callback(
+        async_dispatcher_connect(
+            hass,
+            signal=SIGNAL_KNX_TELEGRAM,
+            target=forward_telegram,
+        )
     )
+    stack.callback(
+        async_dispatcher_connect(
+            hass,
+            signal=SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
+            target=forward_telegram,
+        )
+    )
+
+    connection.subscriptions[msg["id"]] = stack.close
     connection.send_result(msg["id"])
 
 
@@ -360,6 +380,28 @@ def ws_validate_entity(
         return
     connection.send_result(
         msg["id"], EntityStoreValidationSuccess(success=True, entity_id=None)
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/get_schema",
+        vol.Required(CONF_PLATFORM): vol.Coerce(Platform),
+    }
+)
+@websocket_api.async_response
+async def ws_get_schema(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Provide serialized schema for platform."""
+    if schema := get_serialized_schema(msg[CONF_PLATFORM]):
+        connection.send_result(msg["id"], schema)
+        return
+    connection.send_error(
+        msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, "Unknown platform"
     )
 
 

@@ -4,7 +4,8 @@
   "codeowners": ["@bieniu"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/imgw_pib",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver",
-  "requirements": ["imgw_pib==1.5.3"]
+  "quality_scale": "platinum",
+  "requirements": ["imgw_pib==2.0.1"]
 }

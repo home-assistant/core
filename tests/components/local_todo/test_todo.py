@@ -1,9 +1,11 @@
 """Tests for todo platform of local_todo."""
 
 from collections.abc import Awaitable, Callable
+from datetime import datetime
 import textwrap
 from typing import Any
 
+from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -19,6 +21,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_ENTITY
 
@@ -239,7 +242,11 @@ EXPECTED_UPDATE_ITEM = {
     [
         (
             {ATTR_STATUS: "completed"},
-            {**EXPECTED_UPDATE_ITEM, "status": "completed"},
+            {
+                **EXPECTED_UPDATE_ITEM,
+                "status": "completed",
+                "completed": "2023-11-18T08:00:00+00:00",
+            },
             "0",
         ),
         (
@@ -291,13 +298,15 @@ async def test_update_item(
     assert state.state == "1"
 
     # Update item
-    await hass.services.async_call(
-        TODO_DOMAIN,
-        TodoServices.UPDATE_ITEM,
-        {ATTR_ITEM: item["uid"], **item_data},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
-        blocking=True,
-    )
+    update_time = datetime(2023, 11, 18, 8, 0, 0, tzinfo=dt_util.UTC)
+    with freeze_time(update_time):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: item["uid"], **item_data},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
 
     # Verify item is updated
     items = await ws_get_items()
@@ -323,6 +332,7 @@ async def test_update_item(
                 "status": "completed",
                 "description": "Additional detail",
                 "due": "2024-01-01",
+                "completed": "2023-11-18T08:00:00+00:00",
             },
         ),
         (
@@ -414,13 +424,15 @@ async def test_update_existing_field(
     assert item["status"] == "needs_action"
 
     # Perform update
-    await hass.services.async_call(
-        TODO_DOMAIN,
-        TodoServices.UPDATE_ITEM,
-        {ATTR_ITEM: item["uid"], **item_data},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
-        blocking=True,
-    )
+    update_time = datetime(2023, 11, 18, 8, 0, 0, tzinfo=dt_util.UTC)
+    with freeze_time(update_time):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: item["uid"], **item_data},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
 
     # Verify item is updated
     items = await ws_get_items()
@@ -618,6 +630,7 @@ async def test_move_item_previous_unknown(
                     UID:077cb7f2-6c89-11ee-b2a9-0242ac110002
                     CREATED:20231017T010348
                     LAST-MODIFIED:20231024T014011
+                    COMPLETED:20231025T014011Z
                     SEQUENCE:1
                     STATUS:COMPLETED
                     SUMMARY:Complete Task

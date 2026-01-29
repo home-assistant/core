@@ -297,6 +297,7 @@ async def test_diagnostics_macos(
         assert diag == {
             "adapters": {
                 "Core Bluetooth": {
+                    "adapter_type": None,
                     "address": "00:00:00:00:00:00",
                     "manufacturer": "Apple",
                     "passive_scan": False,
@@ -317,6 +318,7 @@ async def test_diagnostics_macos(
                 },
                 "adapters": {
                     "Core Bluetooth": {
+                        "adapter_type": None,
                         "address": "00:00:00:00:00:00",
                         "manufacturer": "Apple",
                         "passive_scan": False,

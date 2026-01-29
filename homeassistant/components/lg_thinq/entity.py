@@ -34,6 +34,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         coordinator: DeviceDataUpdateCoordinator,
         entity_description: EntityDescription,
         property_id: str,
+        postfix_id: str | None = None,
     ) -> None:
         """Initialize an entity."""
         super().__init__(coordinator)
@@ -48,7 +49,11 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             model=f"{coordinator.api.device.model_name} ({self.coordinator.api.device.device_type})",
             name=coordinator.device_name,
         )
-        self._attr_unique_id = f"{coordinator.unique_id}_{self.property_id}"
+        self._attr_unique_id = (
+            f"{coordinator.unique_id}_{self.property_id}"
+            if postfix_id is None
+            else f"{coordinator.unique_id}_{self.property_id}_{postfix_id}"
+        )
         if self.location is not None and self.location not in (
             Location.MAIN,
             Location.OVEN,

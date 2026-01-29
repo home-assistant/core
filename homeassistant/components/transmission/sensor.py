@@ -7,8 +7,6 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import Any
 
-from transmission_rpc.torrent import Torrent
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -16,13 +14,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import STATE_IDLE, UnitOfDataRate
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    DOMAIN,
+    FILTER_MODES,
     STATE_ATTR_TORRENT_INFO,
     STATE_DOWNLOADING,
     STATE_SEEDING,
@@ -30,17 +26,10 @@ from .const import (
     SUPPORTED_ORDER_MODES,
 )
 from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
+from .entity import TransmissionEntity
+from .helpers import filter_torrents
 
-MODES: dict[str, list[str] | None] = {
-    "started_torrents": ["downloading"],
-    "completed_torrents": ["seeding"],
-    "paused_torrents": ["stopped"],
-    "active_torrents": [
-        "seeding",
-        "downloading",
-    ],
-    "total_torrents": None,
-}
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -84,7 +73,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         translation_key="active_torrents",
         val_func=lambda coordinator: coordinator.data.active_torrent_count,
         extra_state_attr_func=lambda coordinator: _torrents_info_attr(
-            coordinator=coordinator, key="active_torrents"
+            coordinator=coordinator, key="active"
         ),
     ),
     TransmissionSensorEntityDescription(
@@ -92,7 +81,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         translation_key="paused_torrents",
         val_func=lambda coordinator: coordinator.data.paused_torrent_count,
         extra_state_attr_func=lambda coordinator: _torrents_info_attr(
-            coordinator=coordinator, key="paused_torrents"
+            coordinator=coordinator, key="paused"
         ),
     ),
     TransmissionSensorEntityDescription(
@@ -100,27 +89,27 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         translation_key="total_torrents",
         val_func=lambda coordinator: coordinator.data.torrent_count,
         extra_state_attr_func=lambda coordinator: _torrents_info_attr(
-            coordinator=coordinator, key="total_torrents"
+            coordinator=coordinator, key="total"
         ),
     ),
     TransmissionSensorEntityDescription(
         key="completed_torrents",
         translation_key="completed_torrents",
         val_func=lambda coordinator: len(
-            _filter_torrents(coordinator.torrents, MODES["completed_torrents"])
+            filter_torrents(coordinator.torrents, FILTER_MODES["completed"])
         ),
         extra_state_attr_func=lambda coordinator: _torrents_info_attr(
-            coordinator=coordinator, key="completed_torrents"
+            coordinator=coordinator, key="completed"
         ),
     ),
     TransmissionSensorEntityDescription(
         key="started_torrents",
         translation_key="started_torrents",
         val_func=lambda coordinator: len(
-            _filter_torrents(coordinator.torrents, MODES["started_torrents"])
+            filter_torrents(coordinator.torrents, FILTER_MODES["started"])
         ),
         extra_state_attr_func=lambda coordinator: _torrents_info_attr(
-            coordinator=coordinator, key="started_torrents"
+            coordinator=coordinator, key="started"
         ),
     ),
 )
@@ -140,30 +129,10 @@ async def async_setup_entry(
     )
 
 
-class TransmissionSensor(
-    CoordinatorEntity[TransmissionDataUpdateCoordinator], SensorEntity
-):
+class TransmissionSensor(TransmissionEntity, SensorEntity):
     """A base class for all Transmission sensors."""
 
     entity_description: TransmissionSensorEntityDescription
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: TransmissionDataUpdateCoordinator,
-        entity_description: TransmissionSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = entity_description
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}-{entity_description.key}"
-        )
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            manufacturer="Transmission",
-        )
 
     @property
     def native_value(self) -> StateType:
@@ -189,21 +158,11 @@ def get_state(upload: int, download: int) -> str:
     return STATE_IDLE
 
 
-def _filter_torrents(
-    torrents: list[Torrent], statuses: list[str] | None = None
-) -> list[Torrent]:
-    return [
-        torrent
-        for torrent in torrents
-        if statuses is None or torrent.status in statuses
-    ]
-
-
 def _torrents_info_attr(
     coordinator: TransmissionDataUpdateCoordinator, key: str
 ) -> dict[str, Any]:
     infos = {}
-    torrents = _filter_torrents(coordinator.torrents, MODES[key])
+    torrents = filter_torrents(coordinator.torrents, FILTER_MODES.get(key))
     torrents = SUPPORTED_ORDER_MODES[coordinator.order](torrents)
     for torrent in torrents[: coordinator.limit]:
         info = infos[torrent.name] = {

@@ -8,12 +8,8 @@ import pytest
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
+from tests.common import async_capture_events
 from tests.typing import ClientSessionGenerator
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture(autouse=True)
@@ -333,3 +329,90 @@ async def test_webhook_reload(
 
     assert len(events) == 2
     assert events[1].data["hello"] == "yo2 world"
+
+
+async def test_webhook_template(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test triggering with a template webhook."""
+    # Set up fake cloud
+    hass.config.components.add("cloud")
+
+    events = []
+
+    @callback
+    def store_event(event):
+        """Help store events."""
+        events.append(event)
+
+    hass.bus.async_listen("test_success", store_event)
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "webhook",
+                    "webhook_id": "webhook-{{ sqrt(9)|round }}",
+                    "local_only": True,
+                },
+                "action": {
+                    "event": "test_success",
+                    "event_data_template": {"hello": "yo {{ trigger.data.hello }}"},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    await client.post("/api/webhook/webhook-3", data={"hello": "world"})
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["hello"] == "yo world"
+
+
+async def test_webhook_query_json_header_no_payload(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test requests with application/json header but no payload."""
+    events = async_capture_events(hass, "test_success")
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "webhook",
+                    "webhook_id": "no_payload_webhook",
+                    "local_only": True,
+                    "allowed_methods": ["GET", "POST"],
+                },
+                "action": {
+                    "event": "test_success",
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    client = await hass_client_no_auth()
+
+    # GET
+    response = await client.get(
+        "/api/webhook/no_payload_webhook", headers={"Content-Type": "application/json"}
+    )
+    await hass.async_block_till_done()
+    assert response.status == 200
+
+    # POST
+    response = await client.post(
+        "/api/webhook/no_payload_webhook", headers={"Content-Type": "application/json"}
+    )
+    await hass.async_block_till_done()
+    assert response.status == 200
+
+    assert len(events) == 2

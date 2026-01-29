@@ -1,0 +1,6 @@
+{
+  "domain": "konnected_esphome",
+  "name": "Konnected",
+  "integration_type": "virtual",
+  "supported_by": "esphome"
+}

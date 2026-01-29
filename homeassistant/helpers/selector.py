@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
+from copy import deepcopy
 from enum import StrEnum
 from functools import cache
 import importlib
@@ -22,8 +23,8 @@ from . import config_validation as cv
 SELECTORS: decorator.Registry[str, type[Selector]] = decorator.Registry()
 
 
-def _get_selector_class(config: Any) -> type[Selector]:
-    """Get selector class type."""
+def _get_selector_type_and_class(config: Any) -> tuple[str, type[Selector]]:
+    """Get selector type and class."""
     if not isinstance(config, dict):
         raise vol.Invalid("Expected a dictionary")
 
@@ -35,29 +36,19 @@ def _get_selector_class(config: Any) -> type[Selector]:
     if (selector_class := SELECTORS.get(selector_type)) is None:
         raise vol.Invalid(f"Unknown selector type {selector_type} found")
 
-    return selector_class
+    return selector_type, selector_class
 
 
 def selector(config: Any) -> Selector:
     """Instantiate a selector."""
-    selector_class = _get_selector_class(config)
-    selector_type = list(config)[0]
-
+    selector_type, selector_class = _get_selector_type_and_class(config)
     return selector_class(config[selector_type])
 
 
 def validate_selector(config: Any) -> dict:
     """Validate a selector."""
-    selector_class = _get_selector_class(config)
-    selector_type = list(config)[0]
-
-    # Selectors can be empty
-    if config[selector_type] is None:
-        return {selector_type: {}}
-
-    return {
-        selector_type: cast(dict, selector_class.CONFIG_SCHEMA(config[selector_type]))
-    }
+    selector_type, selector_class = _get_selector_type_and_class(config)
+    return {selector_type: selector_class.CONFIG_SCHEMA(config[selector_type])}
 
 
 class Selector[_T: Mapping[str, Any]]:
@@ -66,13 +57,13 @@ class Selector[_T: Mapping[str, Any]]:
     CONFIG_SCHEMA: Callable
     config: _T
     selector_type: str
+    # Context keys that are allowed to be used in the selector, with list of allowed selector types.
+    # Selectors can use the value of other fields in the same schema as context for filtering for example.
+    # The selector defines which context keys it supports and what selector types are allowed for each key.
+    allowed_context_keys: dict[str, set[str]] = {}
 
     def __init__(self, config: Mapping[str, Any] | None = None) -> None:
         """Instantiate a selector."""
-        # Selectors can be empty
-        if config is None:
-            config = {}
-
         self.config = self.CONFIG_SCHEMA(config)
 
     def __eq__(self, other: object) -> bool:
@@ -128,11 +119,25 @@ def _validate_supported_features(supported_features: list[str]) -> int:
     return feature_mask
 
 
-BASE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Optional("read_only"): bool,
-    }
-)
+def make_selector_config_schema(schema_dict: dict | None = None) -> vol.Schema:
+    """Make selector config schema."""
+    if schema_dict is None:
+        schema_dict = {}
+
+    def none_to_empty_dict(value: Any) -> Any:
+        if value is None:
+            return {}
+        return value
+
+    return vol.Schema(
+        vol.All(
+            none_to_empty_dict,
+            {
+                vol.Optional("read_only"): bool,
+                **schema_dict,
+            },
+        )
+    )
 
 
 class BaseSelectorConfig(TypedDict, total=False):
@@ -161,16 +166,14 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 # is provided for backwards compatibility and remains feature frozen.
 # New filtering features should be added under the `filter` key instead.
 # https://github.com/home-assistant/frontend/pull/15302
-LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA = vol.Schema(
-    {
-        # Integration that provided the entity
-        vol.Optional("integration"): str,
-        # Domain the entity belongs to
-        vol.Optional("domain"): vol.All(cv.ensure_list, [str]),
-        # Device class of the entity
-        vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
-    }
-)
+_LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA_DICT = {
+    # Integration that provided the entity
+    vol.Optional("integration"): str,
+    # Domain the entity belongs to
+    vol.Optional("domain"): vol.All(cv.ensure_list, [str]),
+    # Device class of the entity
+    vol.Optional("device_class"): vol.All(cv.ensure_list, [str]),
+}
 
 
 class EntityFilterSelectorConfig(TypedDict, total=False):
@@ -200,16 +203,14 @@ DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
 # is provided for backwards compatibility and remains feature frozen.
 # New filtering features should be added under the `filter` key instead.
 # https://github.com/home-assistant/frontend/pull/15302
-LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
-    {
-        # Integration linked to it with a config entry
-        vol.Optional("integration"): str,
-        # Manufacturer of device
-        vol.Optional("manufacturer"): str,
-        # Model of device
-        vol.Optional("model"): str,
-    }
-)
+_LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA_DICT = {
+    # Integration linked to it with a config entry
+    vol.Optional("integration"): str,
+    # Manufacturer of device
+    vol.Optional("manufacturer"): str,
+    # Model of device
+    vol.Optional("model"): str,
+}
 
 
 class DeviceFilterSelectorConfig(TypedDict, total=False):
@@ -231,7 +232,7 @@ class ActionSelector(Selector[ActionSelectorConfig]):
 
     selector_type = "action"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = make_selector_config_schema()
 
     def __init__(self, config: ActionSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -242,25 +243,47 @@ class ActionSelector(Selector[ActionSelectorConfig]):
         return data
 
 
-class AddonSelectorConfig(BaseSelectorConfig, total=False):
-    """Class to represent an addon selector config."""
+class AppSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent an app selector config."""
 
     name: str
     slug: str
 
 
-@SELECTORS.register("addon")
-class AddonSelector(Selector[AddonSelectorConfig]):
-    """Selector of a add-on."""
+@SELECTORS.register("app")
+class AppSelector(Selector[AppSelectorConfig]):
+    """Selector of an app."""
 
-    selector_type = "addon"
+    selector_type = "app"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("name"): str,
             vol.Optional("slug"): str,
         }
     )
+
+    def __init__(self, config: AppSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        app: str = vol.Schema(str)(data)
+        return app
+
+
+# AddonSelectorConfig as an alias of AppSelectorConfig
+AddonSelectorConfig = AppSelectorConfig
+
+
+@SELECTORS.register("addon")
+class AddonSelector(Selector[AddonSelectorConfig]):
+    """Selector of an add-on, kept for backward compatibility after add-ons -> apps rename."""
+
+    selector_type = "addon"
+
+    CONFIG_SCHEMA = AppSelector.CONFIG_SCHEMA
 
     def __init__(self, config: AddonSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -286,7 +309,7 @@ class AreaSelector(Selector[AreaSelectorConfig]):
 
     selector_type = "area"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("entity"): vol.All(
                 cv.ensure_list,
@@ -324,7 +347,7 @@ class AssistPipelineSelector(Selector[AssistPipelineSelectorConfig]):
 
     selector_type = "assist_pipeline"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = make_selector_config_schema()
 
     def __init__(self, config: AssistPipelineSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -349,7 +372,12 @@ class AttributeSelector(Selector[AttributeSelectorConfig]):
 
     selector_type = "attribute"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    allowed_context_keys = {
+        # Filters the available attributes based on the selected entity
+        "filter_entity": {"entity"}
+    }
+
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Required("entity_id"): cv.entity_id,
             # hide_attributes is used to hide attributes in the frontend.
@@ -378,7 +406,7 @@ class BackupLocationSelector(Selector[BackupLocationSelectorConfig]):
 
     selector_type = "backup_location"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = make_selector_config_schema()
 
     def __init__(self, config: BackupLocationSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -400,7 +428,7 @@ class BooleanSelector(Selector[BooleanSelectorConfig]):
 
     selector_type = "boolean"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = make_selector_config_schema()
 
     def __init__(self, config: BooleanSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -410,6 +438,88 @@ class BooleanSelector(Selector[BooleanSelectorConfig]):
         """Validate the passed selection."""
         value: bool = vol.Coerce(bool)(data)
         return value
+
+
+def reject_nested_choose_selector(config: dict[str, Any]) -> dict[str, Any]:
+    """Reject nested choose selectors."""
+    for choice in config.get("choices", {}).values():
+        if isinstance(choice["selector"], dict):
+            selector_type, _ = _get_selector_type_and_class(choice["selector"])
+            if selector_type == "choose":
+                raise vol.Invalid("Nested choose selectors are not allowed")
+    return config
+
+
+class ChooseSelectorChoiceConfig(TypedDict, total=False):
+    """Class to represent a choose selector choice config."""
+
+    selector: Required[Selector | dict[str, Any]]
+
+
+class ChooseSelectorConfig(BaseSelectorConfig):
+    """Class to represent a choose selector config."""
+
+    choices: Required[dict[str, ChooseSelectorChoiceConfig]]
+    translation_key: str
+
+
+@SELECTORS.register("choose")
+class ChooseSelector(Selector[ChooseSelectorConfig]):
+    """Selector allowing to choose one of several selectors."""
+
+    selector_type = "choose"
+
+    CONFIG_SCHEMA = vol.All(
+        make_selector_config_schema(
+            {
+                vol.Required("choices"): {
+                    str: {
+                        vol.Required("selector"): vol.Any(Selector, validate_selector),
+                    }
+                },
+                vol.Optional("translation_key"): cv.string,
+            },
+        ),
+        reject_nested_choose_selector,
+    )
+
+    def __init__(self, config: ChooseSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def serialize(self) -> dict[str, dict[str, ChooseSelectorConfig]]:
+        """Serialize ChooseSelectorConfig for voluptuous_serialize."""
+        _config = deepcopy(self.config)
+        if "choices" in _config:
+            for choice in _config["choices"].values():
+                if isinstance(choice["selector"], Selector):
+                    choice["selector"] = choice["selector"].serialize()["selector"]
+        return {"selector": {self.selector_type: _config}}
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        if not isinstance(data, dict):
+            for choice in self.config["choices"].values():
+                try:
+                    validated = selector(choice["selector"])(data)  # type: ignore[operator]
+                except (vol.Invalid, vol.MultipleInvalid):
+                    continue
+                else:
+                    return validated
+
+            raise vol.Invalid("Value does not match any choice selector")
+
+        if "active_choice" not in data:
+            raise vol.Invalid("Missing active_choice key")
+        if data["active_choice"] not in data:
+            raise vol.Invalid("Missing value for active choice")
+
+        choices = self.config.get("choices", {})
+        if data["active_choice"] not in choices:
+            raise vol.Invalid("Invalid active_choice key")
+        return selector(choices[data["active_choice"]]["selector"])(  # type: ignore[operator]
+            data[data["active_choice"]]
+        )
 
 
 class ColorRGBSelectorConfig(BaseSelectorConfig):
@@ -422,7 +532,7 @@ class ColorRGBSelector(Selector[ColorRGBSelectorConfig]):
 
     selector_type = "color_rgb"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = make_selector_config_schema()
 
     def __init__(self, config: ColorRGBSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -457,7 +567,7 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
 
     selector_type = "color_temp"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("unit", default=ColorTempSelectorUnit.MIRED): vol.All(
                 vol.Coerce(ColorTempSelectorUnit), lambda val: val.value
@@ -504,7 +614,7 @@ class ConditionSelector(Selector[ConditionSelectorConfig]):
 
     selector_type = "condition"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = make_selector_config_schema()
 
     def __init__(self, config: ConditionSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -527,7 +637,7 @@ class ConfigEntrySelector(Selector[ConfigEntrySelectorConfig]):
 
     selector_type = "config_entry"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("integration"): str,
         }
@@ -557,7 +667,7 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
 
     selector_type = "constant"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("label"): str,
             vol.Optional("translation_key"): cv.string,
@@ -587,7 +697,7 @@ class ConversationAgentSelector(Selector[ConversationAgentSelectorConfig]):
 
     selector_type = "conversation_agent"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("language"): str,
         }
@@ -616,7 +726,7 @@ class CountrySelector(Selector[CountrySelectorConfig]):
 
     selector_type = "country"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("countries"): [str],
             vol.Optional("no_sort", default=False): cv.boolean,
@@ -647,7 +757,7 @@ class DateSelector(Selector[DateSelectorConfig]):
 
     selector_type = "date"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = make_selector_config_schema()
 
     def __init__(self, config: DateSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -669,7 +779,7 @@ class DateTimeSelector(Selector[DateTimeSelectorConfig]):
 
     selector_type = "datetime"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = make_selector_config_schema()
 
     def __init__(self, config: DateTimeSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -695,10 +805,9 @@ class DeviceSelector(Selector[DeviceSelectorConfig]):
 
     selector_type = "device"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
-        LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA.schema
-    ).extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
+            **_LEGACY_DEVICE_SELECTOR_CONFIG_SCHEMA_DICT,
             # Device has to contain entities matching this selector
             vol.Optional("entity"): vol.All(
                 cv.ensure_list, [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA]
@@ -739,7 +848,7 @@ class DurationSelector(Selector[DurationSelectorConfig]):
 
     selector_type = "duration"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             # Enable day field in frontend. A selection with `days` set is allowed
             # even if `enable_day` is not set
@@ -780,10 +889,9 @@ class EntitySelector(Selector[EntitySelectorConfig]):
 
     selector_type = "entity"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
-        LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA.schema
-    ).extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
+            **_LEGACY_ENTITY_SELECTOR_CONFIG_SCHEMA_DICT,
             vol.Optional("exclude_entities"): [str],
             vol.Optional("include_entities"): [str],
             vol.Optional("multiple", default=False): cv.boolean,
@@ -841,7 +949,7 @@ class FileSelector(Selector[FileSelectorConfig]):
 
     selector_type = "file"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             # https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#accept
             vol.Required("accept"): str,
@@ -876,7 +984,7 @@ class FloorSelector(Selector[FloorSelectorConfig]):
 
     selector_type = "floor"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("entity"): vol.All(
                 cv.ensure_list,
@@ -916,7 +1024,7 @@ class IconSelector(Selector[IconSelectorConfig]):
 
     selector_type = "icon"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {vol.Optional("placeholder"): str}
         # Frontend also has a fallbackPath option, this is not used by core
     )
@@ -943,7 +1051,7 @@ class LabelSelector(Selector[LabelSelectorConfig]):
 
     selector_type = "label"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("multiple", default=False): cv.boolean,
         }
@@ -977,7 +1085,7 @@ class LanguageSelector(Selector[LanguageSelectorConfig]):
 
     selector_type = "language"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("languages"): [str],
             vol.Optional("native_name", default=False): cv.boolean,
@@ -1010,7 +1118,7 @@ class LocationSelector(Selector[LocationSelectorConfig]):
 
     selector_type = "location"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {vol.Optional("radius"): bool, vol.Optional("icon"): str}
     )
     DATA_SCHEMA = vol.Schema(
@@ -1035,6 +1143,7 @@ class MediaSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a media selector config."""
 
     accept: list[str]
+    multiple: bool
 
 
 @SELECTORS.register("media")
@@ -1043,9 +1152,15 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
     selector_type = "media"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    allowed_context_keys = {
+        # Filters the available media based on the selected entity
+        "filter_entity": {EntitySelector.selector_type}
+    }
+
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("accept"): [str],
+            vol.Optional("multiple", default=False): cv.boolean,
         }
     )
     DATA_SCHEMA = vol.Schema(
@@ -1064,9 +1179,9 @@ class MediaSelector(Selector[MediaSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> dict[str, str]:
+    def __call__(self, data: Any) -> dict[str, str] | list[dict[str, str]]:
         """Validate the passed selection."""
-        schema = {
+        item_schema_dict = {
             key: value
             for key, value in self.DATA_SCHEMA.schema.items()
             if key != "entity_id"
@@ -1074,10 +1189,19 @@ class MediaSelector(Selector[MediaSelectorConfig]):
 
         if "accept" not in self.config:
             # If accept is not set, the entity_id field is required
-            schema[vol.Required("entity_id")] = cv.entity_id_or_uuid
+            item_schema_dict[vol.Required("entity_id")] = cv.entity_id_or_uuid
 
-        media: dict[str, str] = vol.Schema(schema)(data)
-        return media
+        item_schema = vol.Schema(item_schema_dict)
+
+        if not self.config["multiple"]:
+            media: dict[str, str] = item_schema(data)
+            return media
+
+        # Backwards compatibility for places that now accept multiple items
+        if not isinstance(data, list):
+            data = [data]
+
+        return [item_schema(item) for item in data]
 
 
 class NumberSelectorConfig(BaseSelectorConfig, total=False):
@@ -1118,7 +1242,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
     selector_type = "number"
 
     CONFIG_SCHEMA = vol.All(
-        BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        make_selector_config_schema(
             {
                 vol.Optional("min"): vol.Coerce(float),
                 vol.Optional("max"): vol.Coerce(float),
@@ -1154,21 +1278,21 @@ class NumberSelector(Selector[NumberSelectorConfig]):
         return value
 
 
-class ObjectSelectorField(TypedDict):
+class ObjectSelectorField(TypedDict, total=False):
     """Class to represent an object selector fields dict."""
 
     label: str
     required: bool
-    selector: dict[str, Any]
+    selector: Required[Selector | dict[str, Any]]
 
 
-class ObjectSelectorConfig(BaseSelectorConfig):
+class ObjectSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an object selector config."""
 
     fields: dict[str, ObjectSelectorField]
     multiple: bool
     label_field: str
-    description_field: bool
+    description_field: str
     translation_key: str
 
 
@@ -1178,11 +1302,11 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
 
     selector_type = "object"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("fields"): {
                 str: {
-                    vol.Required("selector"): dict,
+                    vol.Required("selector"): vol.Any(Selector, validate_selector),
                     vol.Optional("required"): bool,
                     vol.Optional("label"): str,
                 }
@@ -1198,8 +1322,41 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
+    def serialize(self) -> dict[str, dict[str, ObjectSelectorConfig]]:
+        """Serialize ObjectSelector for voluptuous_serialize."""
+        _config = deepcopy(self.config)
+        if "fields" in _config:
+            for field_items in _config["fields"].values():
+                if isinstance(field_items["selector"], Selector):
+                    field_items["selector"] = field_items["selector"].serialize()[
+                        "selector"
+                    ]
+        return {"selector": {self.selector_type: _config}}
+
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
+        if "fields" not in self.config:
+            # Return data if no fields are defined
+            return data
+
+        if not isinstance(data, (list, dict)):
+            raise vol.Invalid("Value should be a dict or a list of dicts")
+        if isinstance(data, list) and not self.config["multiple"]:
+            raise vol.Invalid("Value should not be a list")
+
+        test_data = data if isinstance(data, list) else [data]
+
+        for _config in test_data:
+            for field, field_data in self.config["fields"].items():
+                if field_data.get("required") and field not in _config:
+                    raise vol.Invalid(f"Field {field} is required")
+                if field in _config:
+                    selector(field_data["selector"])(_config[field])  # type: ignore[operator]
+
+            for key in _config:
+                if key not in self.config["fields"]:
+                    raise vol.Invalid(f"Field {key} is not allowed")
+
         return data
 
 
@@ -1226,7 +1383,7 @@ class QrCodeSelector(Selector[QrCodeSelectorConfig]):
 
     selector_type = "qr_code"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Required("data"): str,
             vol.Optional("scale"): int,
@@ -1288,7 +1445,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
 
     selector_type = "select"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Required("options"): vol.All(vol.Any([str], [select_option])),
             vol.Optional("multiple", default=False): cv.boolean,
@@ -1342,7 +1499,16 @@ class StateSelector(Selector[StateSelectorConfig]):
 
     selector_type = "state"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    allowed_context_keys = {
+        # Filters the available states based on the selected entity
+        "filter_entity": {EntitySelector.selector_type},
+        # Filters the available states based on the selected target
+        "filter_target": {"target"},
+        # Only show the attribute values of a specific attribute
+        "filter_attribute": {AttributeSelector.selector_type},
+    }
+
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("entity_id"): cv.entity_id,
             vol.Optional("hide_states"): [str],
@@ -1381,7 +1547,7 @@ class StatisticSelector(Selector[StatisticSelectorConfig]):
 
     selector_type = "statistic"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("multiple", default=False): cv.boolean,
         }
@@ -1418,7 +1584,7 @@ class TargetSelector(Selector[TargetSelectorConfig]):
 
     selector_type = "target"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("entity"): vol.All(
                 cv.ensure_list,
@@ -1431,7 +1597,8 @@ class TargetSelector(Selector[TargetSelectorConfig]):
         }
     )
 
-    TARGET_SELECTION_SCHEMA = vol.Schema(cv.TARGET_SERVICE_FIELDS)
+    # We want to transition to not including templates in the target selector.
+    TARGET_SELECTION_SCHEMA = vol.Schema(cv._TARGET_SERVICE_FIELDS_TEMPLATED)  # noqa: SLF001
 
     def __init__(self, config: TargetSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -1453,7 +1620,7 @@ class TemplateSelector(Selector[TemplateSelectorConfig]):
 
     selector_type = "template"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = make_selector_config_schema()
 
     def __init__(self, config: TemplateSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -1500,7 +1667,7 @@ class TextSelector(Selector[TextSelectorConfig]):
 
     selector_type = "text"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("multiline", default=False): bool,
             vol.Optional("prefix"): str,
@@ -1539,7 +1706,7 @@ class ThemeSelector(Selector[ThemeSelectorConfig]):
 
     selector_type = "theme"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("include_default", default=False): cv.boolean,
         }
@@ -1565,7 +1732,7 @@ class TimeSelector(Selector[TimeSelectorConfig]):
 
     selector_type = "time"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = make_selector_config_schema()
 
     def __init__(self, config: TimeSelectorConfig | None = None) -> None:
         """Instantiate a selector."""
@@ -1587,7 +1754,7 @@ class TriggerSelector(Selector[TriggerSelectorConfig]):
 
     selector_type = "trigger"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA
+    CONFIG_SCHEMA = make_selector_config_schema()
 
     def __init__(self, config: TriggerSelectorConfig | None = None) -> None:
         """Instantiate a selector."""

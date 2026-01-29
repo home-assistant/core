@@ -146,6 +146,8 @@ async def test_diagnostics_with_bluetooth(
                 "legacy_voice_assistant_version": 0,
                 "voice_assistant_feature_flags": 0,
                 "webserver_port": 0,
+                "zwave_home_id": 0,
+                "zwave_proxy_feature_flags": 0,
             },
             "services": [],
         },

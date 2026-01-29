@@ -27,13 +27,47 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
 # ---
 # name: test_sensor_state[Air Purifier 131s][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.air_purifier_131s_air_quality',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Air quality',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Air quality',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'air_quality',
+      'unique_id': 'air-purifier-air-quality',
+      'unit_of_measurement': None,
+    }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -56,6 +90,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Filter lifetime',
       'options': dict({
       }),
       'original_device_class': None,
@@ -68,39 +103,6 @@
       'translation_key': 'filter_life',
       'unique_id': 'air-purifier-filter-life',
       'unit_of_measurement': '%',
-    }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'sensor',
-      'entity_category': None,
-      'entity_id': 'sensor.air_purifier_131s_air_quality',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': 'Air quality',
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'suggested_object_id': None,
-      'supported_features': 0,
-      'translation_key': 'air_quality',
-      'unique_id': 'air-purifier-air-quality',
-      'unit_of_measurement': None,
     }),
   ])
 # ---
@@ -160,7 +162,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -189,6 +191,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Filter lifetime',
       'options': dict({
       }),
       'original_device_class': None,
@@ -247,48 +250,13 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
 # ---
 # name: test_sensor_state[Air Purifier 400s][entities]
   list([
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': dict({
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      }),
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'sensor',
-      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-      'entity_id': 'sensor.air_purifier_400s_filter_lifetime',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': 'Filter lifetime',
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'suggested_object_id': None,
-      'supported_features': 0,
-      'translation_key': 'filter_life',
-      'unique_id': '400s-purifier-filter-life',
-      'unit_of_measurement': '%',
-    }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -309,6 +277,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Air quality',
       'options': dict({
       }),
       'original_device_class': None,
@@ -344,6 +313,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'PM2.5',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -355,7 +325,43 @@
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '400s-purifier-pm25',
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'sensor.air_purifier_400s_filter_lifetime',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Filter lifetime',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Filter lifetime',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'filter_life',
+      'unique_id': '400s-purifier-filter-life',
+      'unit_of_measurement': '%',
     }),
   ])
 # ---
@@ -369,7 +375,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': 'excellent',
   })
 # ---
 # name: test_sensor_state[Air Purifier 400s][sensor.air_purifier_400s_filter_lifetime]
@@ -393,14 +399,14 @@
       'device_class': 'pm25',
       'friendly_name': 'Air Purifier 400s PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_400s_pm2_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '5',
   })
 # ---
 # name: test_sensor_state[Air Purifier 600s][devices]
@@ -431,48 +437,13 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
 # ---
 # name: test_sensor_state[Air Purifier 600s][entities]
   list([
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': dict({
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      }),
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'sensor',
-      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-      'entity_id': 'sensor.air_purifier_600s_filter_lifetime',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': 'Filter lifetime',
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'suggested_object_id': None,
-      'supported_features': 0,
-      'translation_key': 'filter_life',
-      'unique_id': '600s-purifier-filter-life',
-      'unit_of_measurement': '%',
-    }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -493,6 +464,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Air quality',
       'options': dict({
       }),
       'original_device_class': None,
@@ -528,6 +500,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'PM2.5',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -539,7 +512,43 @@
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '600s-purifier-pm25',
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'sensor.air_purifier_600s_filter_lifetime',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Filter lifetime',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Filter lifetime',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'filter_life',
+      'unique_id': '600s-purifier-filter-life',
+      'unit_of_measurement': '%',
     }),
   ])
 # ---
@@ -553,7 +562,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': 'excellent',
   })
 # ---
 # name: test_sensor_state[Air Purifier 600s][sensor.air_purifier_600s_filter_lifetime]
@@ -577,14 +586,646 @@
       'device_class': 'pm25',
       'friendly_name': 'Air Purifier 600s PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_600s_pm2_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '5',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Cooking',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Cooking',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_current_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Current temperature',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 1,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Current temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'current_temp',
+      'unique_id': 'CS158Cooking-current_temp',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_set_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Cooking set temperature',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 1,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Cooking set temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_set_temp',
+      'unique_id': 'CS158Cooking-cook_set_temp',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_set_time',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Cooking set time',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Cooking set time',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_set_time',
+      'unique_id': 'CS158Cooking-cook_set_time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_preheating_set_time',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Preheating set time',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Preheating set time',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'preheat_set_time',
+      'unique_id': 'CS158Cooking-preheat_set_time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'options': list([
+          'cooking_end',
+          'cooking',
+          'cooking_stop',
+          'heating',
+          'preheat_end',
+          'preheat_stop',
+          'pull_out',
+          'standby',
+        ]),
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_status',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Cooking status',
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+      'original_icon': None,
+      'original_name': 'Cooking status',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_status',
+      'unique_id': 'CS158Cooking-cook_status',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cooking_set_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Cooking set temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_set_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '180',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cooking_set_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Cooking set time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_set_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cooking_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Cooking status',
+      'options': list([
+        'cooking_end',
+        'cooking',
+        'cooking_stop',
+        'heating',
+        'preheat_end',
+        'preheat_stop',
+        'pull_out',
+        'standby',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cooking_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cooking',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_current_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Current temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_current_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_preheating_set_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Preheating set time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_preheating_set_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Standby',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Standby',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_current_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Current temperature',
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Current temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'current_temp',
+      'unique_id': 'CS158Standby-current_temp',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_set_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Cooking set temperature',
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Cooking set temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_set_temp',
+      'unique_id': 'CS158Standby-cook_set_temp',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_set_time',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Cooking set time',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Cooking set time',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_set_time',
+      'unique_id': 'CS158Standby-cook_set_time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_preheating_set_time',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Preheating set time',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Preheating set time',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'preheat_set_time',
+      'unique_id': 'CS158Standby-preheat_set_time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'options': list([
+          'cooking_end',
+          'cooking',
+          'cooking_stop',
+          'heating',
+          'preheat_end',
+          'preheat_stop',
+          'pull_out',
+          'standby',
+        ]),
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_status',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Cooking status',
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+      'original_icon': None,
+      'original_name': 'Cooking status',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_status',
+      'unique_id': 'CS158Standby-cook_status',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cooking_set_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'CS158-AF Air Fryer Standby Cooking set temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_set_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cooking_set_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'CS158-AF Air Fryer Standby Cooking set time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_set_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cooking_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'CS158-AF Air Fryer Standby Cooking status',
+      'options': list([
+        'cooking_end',
+        'cooking',
+        'cooking_stop',
+        'heating',
+        'preheat_end',
+        'preheat_stop',
+        'pull_out',
+        'standby',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_cooking_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standby',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_current_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'CS158-AF Air Fryer Standby Current temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_current_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_preheating_set_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'CS158-AF Air Fryer Standby Preheating set time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_preheating_set_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_state[Dimmable Light][devices]
@@ -615,7 +1256,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -652,7 +1293,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -689,7 +1330,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -718,6 +1359,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Humidity',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -749,6 +1391,201 @@
     'state': '35',
   })
 # ---
+# name: test_sensor_state[Humidifier 6000s][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '6000s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LEH-S601S-WUS',
+      'model_id': None,
+      'name': 'Humidifier 6000s',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[Humidifier 6000s][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.humidifier_6000s_humidity',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Humidity',
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+      'original_icon': None,
+      'original_name': 'Humidity',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': '6000s-humidity',
+      'unit_of_measurement': '%',
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.humidifier_6000s_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Temperature',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 1,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': '6000s-temperature',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'sensor.humidifier_6000s_filter_lifetime',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Filter lifetime',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Filter lifetime',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'filter_life',
+      'unique_id': '6000s-filter-life',
+      'unit_of_measurement': '%',
+    }),
+  ])
+# ---
+# name: test_sensor_state[Humidifier 6000s][sensor.humidifier_6000s_filter_lifetime]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humidifier 6000s Filter lifetime',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_6000s_filter_lifetime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '77',
+  })
+# ---
+# name: test_sensor_state[Humidifier 6000s][sensor.humidifier_6000s_humidity]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Humidifier 6000s Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_6000s_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '36',
+  })
+# ---
+# name: test_sensor_state[Humidifier 6000s][sensor.humidifier_6000s_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Humidifier 6000s Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_6000s_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17.7777777777778',
+  })
+# ---
 # name: test_sensor_state[Humidifier 600S][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -777,7 +1614,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -806,6 +1643,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Humidity',
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
@@ -865,51 +1703,13 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
 # ---
 # name: test_sensor_state[Outlet][entities]
   list([
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': dict({
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      }),
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'sensor',
-      'entity_category': None,
-      'entity_id': 'sensor.outlet_current_power',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 0,
-        }),
-      }),
-      'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-      'original_icon': None,
-      'original_name': 'Current power',
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'suggested_object_id': None,
-      'supported_features': 0,
-      'translation_key': 'current_power',
-      'unique_id': 'outlet-power',
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
       }),
@@ -932,6 +1732,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Energy use today',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -970,6 +1771,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Energy use weekly',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -1008,6 +1810,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Energy use monthly',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -1046,6 +1849,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Energy use yearly',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 2,
@@ -1084,6 +1888,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Current voltage',
       'options': dict({
         'sensor': dict({
           'suggested_display_precision': 0,
@@ -1099,6 +1904,45 @@
       'translation_key': 'current_voltage',
       'unique_id': 'outlet-voltage',
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.outlet_current_power',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Current power',
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 0,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+      'original_icon': None,
+      'original_name': 'Current power',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'current_power',
+      'unique_id': 'outlet-power',
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
   ])
 # ---
@@ -1147,7 +1991,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensor_state[Outlet][sensor.outlet_energy_use_today]
@@ -1163,7 +2007,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '100.0',
   })
 # ---
 # name: test_sensor_state[Outlet][sensor.outlet_energy_use_weekly]
@@ -1179,7 +2023,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensor_state[Outlet][sensor.outlet_energy_use_yearly]
@@ -1195,7 +2039,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensor_state[SmartTowerFan][devices]
@@ -1226,7 +2070,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -1263,7 +2107,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])
@@ -1300,7 +2144,7 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'sw_version': None,
+      'sw_version': '1.0.0',
       'via_device_id': None,
     }),
   ])

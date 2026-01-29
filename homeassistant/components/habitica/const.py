@@ -3,6 +3,7 @@
 from homeassistant.const import APPLICATION_NAME, __version__
 
 CONF_API_USER = "api_user"
+CONF_PARTY_MEMBER = "party_member"
 
 DEFAULT_URL = "https://habitica.com"
 ASSETS_URL = "https://habitica-assets.s3.amazonaws.com/mobileApp/images/"
@@ -39,6 +40,7 @@ ATTR_ADD_CHECKLIST_ITEM = "add_checklist_item"
 ATTR_REMOVE_CHECKLIST_ITEM = "remove_checklist_item"
 ATTR_SCORE_CHECKLIST_ITEM = "score_checklist_item"
 ATTR_UNSCORE_CHECKLIST_ITEM = "unscore_checklist_item"
+ATTR_COLLAPSE_CHECKLIST = "collapse_checklist"
 ATTR_REMINDER = "reminder"
 ATTR_REMOVE_REMINDER = "remove_reminder"
 ATTR_CLEAR_REMINDER = "clear_reminder"

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from .common import TEST_DEVICE_DATA, TEST_DEVICE_INFO
+from .common import TEST_BRIGHTNESS, TEST_DEVICE_DATA, TEST_DEVICE_INFO
 
 
 @pytest.fixture
@@ -38,4 +38,5 @@ def mock_airq():
         # Pre-configure default mock values for setup
         airq.fetch_device_info = AsyncMock(return_value=TEST_DEVICE_INFO)
         airq.get_latest_data = AsyncMock(return_value=TEST_DEVICE_DATA)
+        airq.get_current_brightness = AsyncMock(return_value=TEST_BRIGHTNESS)
         yield airq

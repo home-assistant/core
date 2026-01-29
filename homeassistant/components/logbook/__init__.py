@@ -115,7 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_log_entry(hass, name, message, domain, entity_id, service.context)
 
     frontend.async_register_built_in_panel(
-        hass, "logbook", "logbook", "hass:format-list-bulleted-type"
+        hass, "logbook", "logbook", "mdi:format-list-bulleted-type"
     )
 
     recorder_conf = config.get(RECORDER_DOMAIN, {})

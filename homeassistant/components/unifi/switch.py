@@ -27,7 +27,10 @@ from aiounifi.interfaces.traffic_rules import TrafficRules
 from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client, ClientBlockRequest
-from aiounifi.models.device import DeviceSetOutletRelayRequest
+from aiounifi.models.device import (
+    DeviceSetOutletRelayRequest,
+    DeviceSetPortEnabledRequest,
+)
 from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
 from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
@@ -156,6 +159,14 @@ def async_outlet_switching_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     return outlet.has_relay or outlet.caps in (1, 3)
 
 
+@callback
+def async_port_control_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Determine if a port supports switching."""
+    port = hub.api.ports[obj_id]
+    # Only allow switching for physical ports that exist
+    return port.port_idx is not None
+
+
 async def async_outlet_control_fn(hub: UnifiHub, obj_id: str, target: bool) -> None:
     """Control outlet relay."""
     mac, _, index = obj_id.partition("_")
@@ -172,6 +183,15 @@ async def async_poe_port_control_fn(hub: UnifiHub, obj_id: str, target: bool) ->
     on_state = "auto" if port.raw["poe_caps"] != 8 else "passthrough"
     state = on_state if target else "off"
     hub.queue_poe_port_command(mac, int(index), state)
+
+
+async def async_port_control_fn(hub: UnifiHub, obj_id: str, target: bool) -> None:
+    """Control port enabled state."""
+    mac, _, index = obj_id.partition("_")
+    device = hub.api.devices[mac]
+    await hub.api.request(
+        DeviceSetPortEnabledRequest.create(device, int(index), target)
+    )
 
 
 async def async_port_forward_control_fn(
@@ -337,6 +357,22 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         object_fn=lambda api, obj_id: api.ports[obj_id],
         supported_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
         unique_id_fn=lambda hub, obj_id: f"poe-{obj_id}",
+    ),
+    UnifiSwitchEntityDescription[Ports, Port](
+        key="Port control",
+        translation_key="port_control",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        api_handler_fn=lambda api: api.ports,
+        available_fn=async_device_available_fn,
+        control_fn=async_port_control_fn,
+        device_info_fn=async_device_device_info_fn,
+        is_on_fn=lambda hub, port: bool(port.enabled),
+        name_fn=lambda port: port.name,
+        object_fn=lambda api, obj_id: api.ports[obj_id],
+        supported_fn=async_port_control_supported_fn,
+        unique_id_fn=lambda hub, obj_id: f"port-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Wlans, Wlan](
         key="WLAN control",

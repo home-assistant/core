@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from volvocarsapi.api import VolvoCarsApi
@@ -13,6 +13,9 @@ from homeassistant.components.volvo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from . import configure_mock
 from .const import MOCK_ACCESS_TOKEN, SERVER_TOKEN_RESPONSE
@@ -21,6 +24,7 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures("mock_api")
 async def test_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -38,6 +42,7 @@ async def test_setup(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures("mock_api")
 async def test_token_refresh_success(
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
@@ -61,7 +66,6 @@ async def test_token_refresh_success(
 @pytest.mark.parametrize(
     ("token_response"),
     [
-        (HTTPStatus.FORBIDDEN),
         (HTTPStatus.INTERNAL_SERVER_ERROR),
         (HTTPStatus.NOT_FOUND),
     ],
@@ -80,15 +84,23 @@ async def test_token_refresh_fail(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    ("token_response"),
+    [
+        (HTTPStatus.BAD_REQUEST),
+        (HTTPStatus.FORBIDDEN),
+    ],
+)
 async def test_token_refresh_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     setup_integration: Callable[[], Awaitable[bool]],
+    token_response: HTTPStatus,
 ) -> None:
     """Test where token refresh indicates unauthorized."""
 
-    aioclient_mock.post(TOKEN_URL, status=HTTPStatus.UNAUTHORIZED)
+    aioclient_mock.post(TOKEN_URL, status=token_response)
 
     assert not await setup_integration()
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
@@ -123,3 +135,20 @@ async def test_vehicle_auth_failure(
     configure_mock(mock_method, return_value=None, side_effect=VolvoAuthException())
     assert not await setup_integration()
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.volvo.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

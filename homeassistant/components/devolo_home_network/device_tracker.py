@@ -80,8 +80,7 @@ async def async_setup_entry(
     )
 
 
-# The pylint disable is needed because of https://github.com/pylint-dev/pylint/issues/9138
-class DevoloScannerEntity(  # pylint: disable=hass-enforce-class-module
+class DevoloScannerEntity(
     CoordinatorEntity[DevoloDataUpdateCoordinator[dict[str, ConnectedStationInfo]]],
     ScannerEntity,
 ):

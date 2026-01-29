@@ -32,12 +32,12 @@ from .helpers import (
     async_setup_template_platform,
     async_setup_template_preview,
 )
-from .template_entity import (
+from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    TemplateEntity,
     make_template_entity_common_modern_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,15 +49,15 @@ DEFAULT_NAME = "Template Select"
 
 SELECT_COMMON_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_OPTIONS): cv.template,
-        vol.Optional(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
+        vol.Required(ATTR_OPTIONS): cv.template,
+        vol.Required(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_STATE): cv.template,
     }
 )
 
 SELECT_YAML_SCHEMA = SELECT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
-).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+).extend(make_template_entity_common_modern_schema(SELECT_DOMAIN, DEFAULT_NAME).schema)
 
 SELECT_CONFIG_ENTRY_SCHEMA = SELECT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
@@ -209,7 +209,6 @@ class TriggerSelectEntity(TriggerEntity, AbstractTemplateSelect):
         self._process_data()
 
         if not self.available:
-            self.async_write_ha_state()
             return
 
         write_ha_state = False

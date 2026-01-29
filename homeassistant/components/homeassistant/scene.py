@@ -272,7 +272,7 @@ async def async_setup_platform(
 
     async def delete_service(call: ServiceCall) -> None:
         """Delete a dynamically created scene."""
-        entity_ids = await async_extract_entity_ids(hass, call)
+        entity_ids = await async_extract_entity_ids(call)
 
         for entity_id in entity_ids:
             scene = platform.entities.get(entity_id)

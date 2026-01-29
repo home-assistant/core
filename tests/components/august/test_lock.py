@@ -374,7 +374,7 @@ async def test_lock_update_via_pubnub(hass: HomeAssistant) -> None:
     pubnub = AugustPubNub()
 
     activities = await _mock_activities_from_fixture(hass, "get_activity.lock.json")
-    config_entry = await _create_august_with_devices(
+    config_entry, _ = await _create_august_with_devices(
         hass, [lock_one], activities=activities, pubnub=pubnub
     )
     pubnub.connected = True

@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import timeout
-from dataclasses import asdict as dataclass_asdict, dataclass
+from collections.abc import Awaitable, Callable, Iterable, Mapping
+from dataclasses import asdict as dataclass_asdict, dataclass, field
 from datetime import datetime
-from typing import Any
+import random
+import time
+from typing import Any, Protocol
 import uuid
 
 import aiohttp
@@ -19,29 +22,44 @@ from homeassistant.components.energy import (
     DOMAIN as ENERGY_DOMAIN,
     is_configured as energy_is_configured,
 )
+from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.components.recorder import (
     DOMAIN as RECORDER_DOMAIN,
     get_instance as get_recorder_instance,
 )
 from homeassistant.config_entries import SOURCE_IGNORE
-from homeassistant.const import ATTR_DOMAIN, BASE_PLATFORMS, __version__ as HA_VERSION
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_DOMAIN,
+    BASE_PLATFORMS,
+    __version__ as HA_VERSION,
+)
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HassJob,
+    HomeAssistant,
+    ReleaseChannel,
+    callback,
+    get_release_channel,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.hassio import is_hassio
+from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
+    async_get_integration,
     async_get_integrations,
 )
 from homeassistant.setup import async_get_loaded_integrations
 
 from .const import (
-    ANALYTICS_ENDPOINT_URL,
-    ANALYTICS_ENDPOINT_URL_DEV,
     ATTR_ADDON_COUNT,
     ATTR_ADDONS,
     ATTR_ARCH,
@@ -62,6 +80,7 @@ from .const import (
     ATTR_PROTECTED,
     ATTR_RECORDER,
     ATTR_SLUG,
+    ATTR_SNAPSHOTS,
     ATTR_STATE_COUNT,
     ATTR_STATISTICS,
     ATTR_SUPERVISOR,
@@ -70,16 +89,128 @@ from .const import (
     ATTR_USER_COUNT,
     ATTR_UUID,
     ATTR_VERSION,
+    BASIC_ENDPOINT_URL,
+    BASIC_ENDPOINT_URL_DEV,
+    DOMAIN,
+    INTERVAL,
     LOGGER,
     PREFERENCE_SCHEMA,
+    SNAPSHOT_DEFAULT_URL,
+    SNAPSHOT_URL_PATH,
+    SNAPSHOT_VERSION,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+
+DATA_ANALYTICS_MODIFIERS = "analytics_modifiers"
+
+type AnalyticsModifier = Callable[
+    [HomeAssistant, AnalyticsInput], Awaitable[AnalyticsModifications]
+]
+
+
+@singleton(DATA_ANALYTICS_MODIFIERS)
+def _async_get_modifiers(
+    hass: HomeAssistant,
+) -> dict[str, AnalyticsModifier | None]:
+    """Return the analytics modifiers."""
+    return {}
+
+
+@dataclass
+class AnalyticsInput:
+    """Analytics input for a single integration.
+
+    This is sent to integrations that implement the platform.
+    """
+
+    device_ids: Iterable[str] = field(default_factory=list)
+    entity_ids: Iterable[str] = field(default_factory=list)
+
+
+@dataclass
+class AnalyticsModifications:
+    """Analytics config for a single integration.
+
+    This is used by integrations that implement the platform.
+    """
+
+    remove: bool = False
+    devices: Mapping[str, DeviceAnalyticsModifications] | None = None
+    entities: Mapping[str, EntityAnalyticsModifications] | None = None
+
+
+@dataclass
+class DeviceAnalyticsModifications:
+    """Analytics config for a single device.
+
+    This is used by integrations that implement the platform.
+    """
+
+    remove: bool = False
+
+
+@dataclass
+class EntityAnalyticsModifications:
+    """Analytics config for a single entity.
+
+    This is used by integrations that implement the platform.
+    """
+
+    remove: bool = False
+
+
+class AnalyticsPlatformProtocol(Protocol):
+    """Define the format of analytics platforms."""
+
+    async def async_modify_analytics(
+        self,
+        hass: HomeAssistant,
+        analytics_input: AnalyticsInput,
+    ) -> AnalyticsModifications:
+        """Modify the analytics."""
+
+
+async def _async_get_analytics_platform(
+    hass: HomeAssistant, domain: str
+) -> AnalyticsPlatformProtocol | None:
+    """Get analytics platform."""
+    try:
+        integration = await async_get_integration(hass, domain)
+    except IntegrationNotFound:
+        return None
+    try:
+        return await integration.async_get_platform(DOMAIN)
+    except ImportError:
+        return None
+
+
+async def _async_get_modifier(
+    hass: HomeAssistant, domain: str
+) -> AnalyticsModifier | None:
+    """Get analytics modifier."""
+    modifiers = _async_get_modifiers(hass)
+    modifier = modifiers.get(domain, UNDEFINED)
+
+    if modifier is not UNDEFINED:
+        return modifier
+
+    platform = await _async_get_analytics_platform(hass, domain)
+    if platform is None:
+        modifiers[domain] = None
+        return None
+
+    modifier = getattr(platform, "async_modify_analytics", None)
+    modifiers[domain] = modifier
+    return modifier
 
 
 def gen_uuid() -> str:
     """Generate a new UUID."""
     return uuid.uuid4().hex
+
+
+RELEASE_CHANNEL = get_release_channel()
 
 
 @dataclass
@@ -88,7 +219,9 @@ class AnalyticsData:
 
     onboarded: bool
     preferences: dict[str, bool]
-    uuid: str | None
+    uuid: str | None = None
+    submission_identifier: str | None = None
+    snapshot_submission_time: float | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> AnalyticsData:
@@ -97,18 +230,28 @@ class AnalyticsData:
             data["onboarded"],
             data["preferences"],
             data["uuid"],
+            data.get("submission_identifier"),
+            data.get("snapshot_submission_time"),
         )
 
 
 class Analytics:
     """Analytics helper class for the analytics integration."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        snapshots_url: str | None = None,
+    ) -> None:
         """Initialize the Analytics class."""
-        self.hass: HomeAssistant = hass
-        self.session = async_get_clientsession(hass)
-        self._data = AnalyticsData(False, {}, None)
+        self._hass: HomeAssistant = hass
+        self._snapshots_url = snapshots_url
+
+        self._session = async_get_clientsession(hass)
+        self._data = AnalyticsData(False, {})
         self._store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
+        self._basic_scheduled: CALLBACK_TYPE | None = None
+        self._snapshot_scheduled: CALLBACK_TYPE | None = None
 
     @property
     def preferences(self) -> dict:
@@ -119,6 +262,7 @@ class Analytics:
             ATTR_DIAGNOSTICS: preferences.get(ATTR_DIAGNOSTICS, False),
             ATTR_USAGE: preferences.get(ATTR_USAGE, False),
             ATTR_STATISTICS: preferences.get(ATTR_STATISTICS, False),
+            ATTR_SNAPSHOTS: preferences.get(ATTR_SNAPSHOTS, False),
         }
 
     @property
@@ -132,17 +276,22 @@ class Analytics:
         return self._data.uuid
 
     @property
-    def endpoint(self) -> str:
+    def endpoint_basic(self) -> str:
         """Return the endpoint that will receive the payload."""
-        if HA_VERSION.endswith("0.dev0"):
+        if RELEASE_CHANNEL is ReleaseChannel.DEV:
             # dev installations will contact the dev analytics environment
-            return ANALYTICS_ENDPOINT_URL_DEV
-        return ANALYTICS_ENDPOINT_URL
+            return BASIC_ENDPOINT_URL_DEV
+        return BASIC_ENDPOINT_URL
 
     @property
     def supervisor(self) -> bool:
         """Return bool if a supervisor is present."""
-        return is_hassio(self.hass)
+        return is_hassio(self._hass)
+
+    @property
+    def _snapshots_enabled(self) -> bool:
+        """Check if snapshots feature is enabled via labs."""
+        return async_is_preview_feature_enabled(self._hass, DOMAIN, "snapshots")
 
     async def load(self) -> None:
         """Load preferences."""
@@ -152,7 +301,7 @@ class Analytics:
 
         if (
             self.supervisor
-            and (supervisor_info := hassio.get_supervisor_info(self.hass)) is not None
+            and (supervisor_info := hassio.get_supervisor_info(self._hass)) is not None
         ):
             if not self.onboarded:
                 # User have not configured analytics, get this setting from the supervisor
@@ -165,32 +314,35 @@ class Analytics:
                 ):
                     self._data.preferences[ATTR_DIAGNOSTICS] = False
 
+    async def _save(self) -> None:
+        """Save data."""
+        await self._store.async_save(dataclass_asdict(self._data))
+
     async def save_preferences(self, preferences: dict) -> None:
         """Save preferences."""
         preferences = PREFERENCE_SCHEMA(preferences)
         self._data.preferences.update(preferences)
         self._data.onboarded = True
 
-        await self._store.async_save(dataclass_asdict(self._data))
+        await self._save()
 
         if self.supervisor:
             await hassio.async_update_diagnostics(
-                self.hass, self.preferences.get(ATTR_DIAGNOSTICS, False)
+                self._hass, self.preferences.get(ATTR_DIAGNOSTICS, False)
             )
 
     async def send_analytics(self, _: datetime | None = None) -> None:
         """Send analytics."""
-        hass = self.hass
+        if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
+            return
+
+        hass = self._hass
         supervisor_info = None
         operating_system_info: dict[str, Any] = {}
 
-        if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
-            LOGGER.debug("Nothing to submit")
-            return
-
         if self._data.uuid is None:
             self._data.uuid = gen_uuid()
-            await self._store.async_save(dataclass_asdict(self._data))
+            await self._save()
 
         if self.supervisor:
             supervisor_info = hassio.get_supervisor_info(hass)
@@ -324,7 +476,7 @@ class Analytics:
 
         try:
             async with timeout(30):
-                response = await self.session.post(self.endpoint, json=payload)
+                response = await self._session.post(self.endpoint_basic, json=payload)
                 if response.status == 200:
                     LOGGER.info(
                         (
@@ -337,14 +489,12 @@ class Analytics:
                     LOGGER.warning(
                         "Sending analytics failed with statuscode %s from %s",
                         response.status,
-                        self.endpoint,
+                        self.endpoint_basic,
                     )
         except TimeoutError:
-            LOGGER.error("Timeout sending analytics to %s", ANALYTICS_ENDPOINT_URL)
+            LOGGER.error("Timeout sending analytics to %s", BASIC_ENDPOINT_URL)
         except aiohttp.ClientError as err:
-            LOGGER.error(
-                "Error sending analytics to %s: %r", ANALYTICS_ENDPOINT_URL, err
-            )
+            LOGGER.error("Error sending analytics to %s: %r", BASIC_ENDPOINT_URL, err)
 
     @callback
     def _async_should_report_integration(
@@ -368,13 +518,196 @@ class Analytics:
         if not integration.config_flow:
             return False
 
-        entries = self.hass.config_entries.async_entries(integration.domain)
+        entries = self._hass.config_entries.async_entries(integration.domain)
 
         # Filter out ignored and disabled entries
         return any(
             entry
             for entry in entries
             if entry.source != SOURCE_IGNORE and entry.disabled_by is None
+        )
+
+    async def send_snapshot(self, _: datetime | None = None) -> None:
+        """Send a snapshot."""
+        if not self.onboarded or not self.preferences.get(ATTR_SNAPSHOTS, False):
+            return
+
+        payload = await _async_snapshot_payload(self._hass)
+
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": f"home-assistant/{HA_VERSION}",
+        }
+        if self._data.submission_identifier is not None:
+            headers["X-Device-Database-Submission-Identifier"] = (
+                self._data.submission_identifier
+            )
+
+        url = (
+            self._snapshots_url
+            if self._snapshots_url is not None
+            else SNAPSHOT_DEFAULT_URL
+        )
+        url += SNAPSHOT_URL_PATH
+
+        try:
+            async with timeout(30):
+                response = await self._session.post(url, json=payload, headers=headers)
+
+                if response.status == 200:  # OK
+                    response_data = await response.json()
+                    new_identifier = response_data.get("submission_identifier")
+
+                    if (
+                        new_identifier is not None
+                        and new_identifier != self._data.submission_identifier
+                    ):
+                        self._data.submission_identifier = new_identifier
+                        await self._save()
+
+                    LOGGER.info(
+                        "Submitted snapshot analytics to Home Assistant servers"
+                    )
+
+                elif response.status == 400:  # Bad Request
+                    response_data = await response.json()
+                    error_kind = response_data.get("kind", "unknown")
+                    error_message = response_data.get("message", "Unknown error")
+
+                    if error_kind == "invalid-submission-identifier":
+                        # Clear the invalid identifier and retry on next cycle
+                        LOGGER.warning(
+                            "Invalid submission identifier to %s, clearing: %s",
+                            url,
+                            error_message,
+                        )
+                        self._data.submission_identifier = None
+                        await self._save()
+                    else:
+                        LOGGER.warning(
+                            "Malformed snapshot analytics submission (%s) to %s: %s",
+                            error_kind,
+                            url,
+                            error_message,
+                        )
+
+                elif response.status == 503:  # Service Unavailable
+                    response_text = await response.text()
+                    LOGGER.warning(
+                        "Snapshot analytics service %s unavailable: %s",
+                        url,
+                        response_text,
+                    )
+
+                else:
+                    LOGGER.warning(
+                        "Unexpected status code %s when submitting snapshot analytics to %s",
+                        response.status,
+                        url,
+                    )
+
+        except TimeoutError:
+            LOGGER.error(
+                "Timeout sending snapshot analytics to %s",
+                url,
+            )
+        except aiohttp.ClientError as err:
+            LOGGER.error(
+                "Error sending snapshot analytics to %s: %r",
+                url,
+                err,
+            )
+
+    async def async_schedule(self) -> None:
+        """Schedule analytics."""
+        if not self.onboarded:
+            LOGGER.debug("Analytics not scheduled")
+            if self._basic_scheduled is not None:
+                self._basic_scheduled()
+                self._basic_scheduled = None
+            if self._snapshot_scheduled:
+                self._snapshot_scheduled()
+                self._snapshot_scheduled = None
+            return
+
+        if not self.preferences.get(ATTR_BASE, False):
+            LOGGER.debug("Basic analytics not scheduled")
+            if self._basic_scheduled is not None:
+                self._basic_scheduled()
+                self._basic_scheduled = None
+        elif self._basic_scheduled is None:
+            # Wait 15 min after started for basic analytics
+            self._basic_scheduled = async_call_later(
+                self._hass,
+                900,
+                HassJob(
+                    self._async_schedule_basic,
+                    name="basic analytics schedule",
+                    cancel_on_shutdown=True,
+                ),
+            )
+
+        if (
+            not self.preferences.get(ATTR_SNAPSHOTS, False)
+            or not self._snapshots_enabled
+        ):
+            LOGGER.debug("Snapshot analytics not scheduled")
+            if self._snapshot_scheduled:
+                self._snapshot_scheduled()
+                self._snapshot_scheduled = None
+        elif self._snapshot_scheduled is None:
+            snapshot_submission_time = self._data.snapshot_submission_time
+
+            interval_seconds = INTERVAL.total_seconds()
+
+            if snapshot_submission_time is None:
+                # Randomize the submission time within the 24 hours
+                snapshot_submission_time = random.uniform(0, interval_seconds)
+                self._data.snapshot_submission_time = snapshot_submission_time
+                await self._save()
+                LOGGER.debug(
+                    "Initialized snapshot submission time to %s",
+                    snapshot_submission_time,
+                )
+
+            # Calculate delay until next submission
+            current_time = time.time()
+            delay = (snapshot_submission_time - current_time) % interval_seconds
+
+            self._snapshot_scheduled = async_call_later(
+                self._hass,
+                delay,
+                HassJob(
+                    self._async_schedule_snapshots,
+                    name="snapshot analytics schedule",
+                    cancel_on_shutdown=True,
+                ),
+            )
+
+    async def _async_schedule_basic(self, _: datetime | None = None) -> None:
+        """Schedule basic analytics."""
+        await self.send_analytics()
+
+        # Send basic analytics every day
+        self._basic_scheduled = async_track_time_interval(
+            self._hass,
+            self.send_analytics,
+            INTERVAL,
+            name="basic analytics daily",
+            cancel_on_shutdown=True,
+        )
+
+    async def _async_schedule_snapshots(self, _: datetime | None = None) -> None:
+        """Schedule snapshot analytics."""
+        await self.send_snapshot()
+
+        # Send snapshot analytics every day
+        self._snapshot_scheduled = async_track_time_interval(
+            self._hass,
+            self.send_snapshot,
+            INTERVAL,
+            name="snapshot analytics daily",
+            cancel_on_shutdown=True,
         )
 
 
@@ -388,80 +721,224 @@ def _domains_from_yaml_config(yaml_configuration: dict[str, Any]) -> set[str]:
     return domains
 
 
-async def async_devices_payload(hass: HomeAssistant) -> dict:
-    """Return the devices payload."""
-    integrations_without_model_id: set[str] = set()
-    devices: list[dict[str, Any]] = []
+DEFAULT_ANALYTICS_CONFIG = AnalyticsModifications()
+DEFAULT_DEVICE_ANALYTICS_CONFIG = DeviceAnalyticsModifications()
+DEFAULT_ENTITY_ANALYTICS_CONFIG = EntityAnalyticsModifications()
+
+
+async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
+    """Return detailed information about entities and devices for a snapshot."""
     dev_reg = dr.async_get(hass)
-    # Devices that need via device info set
-    new_indexes: dict[str, int] = {}
-    via_devices: dict[str, str] = {}
+    ent_reg = er.async_get(hass)
 
-    seen_integrations = set()
+    integration_inputs: dict[str, tuple[list[str], list[str]]] = {}
+    integration_configs: dict[str, AnalyticsModifications] = {}
 
-    for device in dev_reg.devices.values():
-        # Ignore services
-        if device.entry_type:
+    removed_devices: set[str] = set()
+
+    # Get device list
+    for device_entry in dev_reg.devices.values():
+        if not device_entry.primary_config_entry:
             continue
 
-        if not device.primary_config_entry:
-            continue
-
-        config_entry = hass.config_entries.async_get_entry(device.primary_config_entry)
+        config_entry = hass.config_entries.async_get_entry(
+            device_entry.primary_config_entry
+        )
 
         if config_entry is None:
             continue
 
-        seen_integrations.add(config_entry.domain)
-
-        if not device.model_id:
-            integrations_without_model_id.add(config_entry.domain)
+        if device_entry.entry_type is dr.DeviceEntryType.SERVICE:
+            removed_devices.add(device_entry.id)
             continue
 
-        if not device.manufacturer:
-            continue
+        integration_domain = config_entry.domain
 
-        new_indexes[device.id] = len(devices)
-        devices.append(
-            {
-                "integration": config_entry.domain,
-                "manufacturer": device.manufacturer,
-                "model_id": device.model_id,
-                "model": device.model,
-                "sw_version": device.sw_version,
-                "hw_version": device.hw_version,
-                "has_configuration_url": device.configuration_url is not None,
-                "via_device": None,
-            }
-        )
-        if device.via_device_id:
-            via_devices[device.id] = device.via_device_id
+        integration_input = integration_inputs.setdefault(integration_domain, ([], []))
+        integration_input[0].append(device_entry.id)
 
-    for from_device, via_device in via_devices.items():
-        if via_device not in new_indexes:
-            continue
-        devices[new_indexes[from_device]]["via_device"] = new_indexes[via_device]
+    # Get entity list
+    for entity_entry in ent_reg.entities.values():
+        integration_domain = entity_entry.platform
+
+        integration_input = integration_inputs.setdefault(integration_domain, ([], []))
+        integration_input[1].append(entity_entry.entity_id)
 
     integrations = {
         domain: integration
         for domain, integration in (
-            await async_get_integrations(hass, seen_integrations)
+            await async_get_integrations(hass, integration_inputs.keys())
         ).items()
         if isinstance(integration, Integration)
     }
 
-    for device_info in devices:
-        if integration := integrations.get(device_info["integration"]):
-            device_info["is_custom_integration"] = not integration.is_built_in
+    # Filter out custom integrations and integrations that are not device or hub type
+    integration_inputs = {
+        domain: integration_info
+        for domain, integration_info in integration_inputs.items()
+        if (integration := integrations.get(domain)) is not None
+        and integration.is_built_in
+        and integration.manifest.get("integration_type") in ("device", "hub")
+    }
 
+    # Call integrations that implement the analytics platform
+    for integration_domain, integration_input in integration_inputs.items():
+        if (
+            modifier := await _async_get_modifier(hass, integration_domain)
+        ) is not None:
+            try:
+                integration_config = await modifier(
+                    hass, AnalyticsInput(*integration_input)
+                )
+            except Exception as err:  # noqa: BLE001
+                LOGGER.exception(
+                    "Calling async_modify_analytics for integration '%s' failed: %s",
+                    integration_domain,
+                    err,
+                )
+                integration_configs[integration_domain] = AnalyticsModifications(
+                    remove=True
+                )
+                continue
+
+            if not isinstance(integration_config, AnalyticsModifications):
+                LOGGER.error(  # type: ignore[unreachable]
+                    "Calling async_modify_analytics for integration '%s' did not return an AnalyticsConfig",
+                    integration_domain,
+                )
+                integration_configs[integration_domain] = AnalyticsModifications(
+                    remove=True
+                )
+                continue
+
+            integration_configs[integration_domain] = integration_config
+
+    integrations_info: dict[str, dict[str, Any]] = {}
+
+    # We need to refer to other devices, for example in `via_device` field.
+    # We don't however send the original device ids outside of Home Assistant,
+    # instead we refer to devices by (integration_domain, index_in_integration_device_list).
+    device_id_mapping: dict[str, tuple[str, int]] = {}
+
+    # Fill out information about devices
+    for integration_domain, integration_input in integration_inputs.items():
+        integration_config = integration_configs.get(
+            integration_domain, DEFAULT_ANALYTICS_CONFIG
+        )
+
+        if integration_config.remove:
+            continue
+
+        integration_info = integrations_info.setdefault(
+            integration_domain, {"devices": [], "entities": []}
+        )
+
+        devices_info = integration_info["devices"]
+
+        for device_id in integration_input[0]:
+            device_config = DEFAULT_DEVICE_ANALYTICS_CONFIG
+            if integration_config.devices is not None:
+                device_config = integration_config.devices.get(device_id, device_config)
+
+            if device_config.remove:
+                removed_devices.add(device_id)
+                continue
+
+            device_entry = dev_reg.devices[device_id]
+
+            device_id_mapping[device_id] = (integration_domain, len(devices_info))
+
+            devices_info.append(
+                {
+                    "entry_type": device_entry.entry_type,
+                    "has_configuration_url": device_entry.configuration_url is not None,
+                    "hw_version": device_entry.hw_version,
+                    "manufacturer": device_entry.manufacturer,
+                    "model": device_entry.model,
+                    "model_id": device_entry.model_id,
+                    "sw_version": device_entry.sw_version,
+                    "via_device": device_entry.via_device_id,
+                    "entities": [],
+                }
+            )
+
+    # Fill out via_device with new device ids
+    for integration_info in integrations_info.values():
+        for device_info in integration_info["devices"]:
+            if device_info["via_device"] is None:
+                continue
+            device_info["via_device"] = device_id_mapping.get(device_info["via_device"])
+
+    # Fill out information about entities
+    for integration_domain, integration_input in integration_inputs.items():
+        integration_config = integration_configs.get(
+            integration_domain, DEFAULT_ANALYTICS_CONFIG
+        )
+
+        if integration_config.remove:
+            continue
+
+        integration_info = integrations_info.setdefault(
+            integration_domain, {"devices": [], "entities": []}
+        )
+
+        devices_info = integration_info["devices"]
+        entities_info = integration_info["entities"]
+
+        for entity_id in integration_input[1]:
+            entity_config = DEFAULT_ENTITY_ANALYTICS_CONFIG
+            if integration_config.entities is not None:
+                entity_config = integration_config.entities.get(
+                    entity_id, entity_config
+                )
+
+            if entity_config.remove:
+                continue
+
+            entity_entry = ent_reg.entities[entity_id]
+
+            entity_state = hass.states.get(entity_id)
+
+            entity_info = {
+                # LIMITATION: `assumed_state` can be overridden by users;
+                # we should replace it with the original value in the future.
+                # It is also not present, if entity is not in the state machine,
+                # which can happen for disabled entities.
+                "assumed_state": (
+                    entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
+                    if entity_state is not None
+                    else None
+                ),
+                "domain": entity_entry.domain,
+                "entity_category": entity_entry.entity_category,
+                "has_entity_name": entity_entry.has_entity_name,
+                "original_device_class": entity_entry.original_device_class,
+                # LIMITATION: `unit_of_measurement` can be overridden by users;
+                # we should replace it with the original value in the future.
+                "unit_of_measurement": entity_entry.unit_of_measurement,
+            }
+
+            if (device_id_ := entity_entry.device_id) is not None:
+                if device_id_ in removed_devices:
+                    # The device was removed, so we remove the entity too
+                    continue
+
+                if (
+                    new_device_id := device_id_mapping.get(device_id_)
+                ) is not None and (new_device_id[0] == integration_domain):
+                    device_info = devices_info[new_device_id[1]]
+                    device_info["entities"].append(entity_info)
+                    continue
+
+            entities_info.append(entity_info)
+
+    return integrations_info
+
+
+async def async_devices_payload(hass: HomeAssistant) -> dict:
+    """Return detailed information about entities and devices for a direct download."""
     return {
-        "version": "home-assistant:1",
-        "no_model_id": sorted(
-            [
-                domain
-                for domain in integrations_without_model_id
-                if domain in integrations and integrations[domain].is_built_in
-            ]
-        ),
-        "devices": devices,
+        "version": f"home-assistant:{SNAPSHOT_VERSION}",
+        "home_assistant": HA_VERSION,
+        "integrations": await _async_snapshot_payload(hass),
     }

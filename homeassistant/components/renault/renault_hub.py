@@ -39,6 +39,23 @@ from .renault_vehicle import COORDINATORS, RenaultVehicleProxy
 LOGGER = logging.getLogger(__name__)
 
 
+async def _get_filtered_vehicles(account: RenaultAccount) -> list[KamereonVehiclesLink]:
+    """Filter out vehicles with missing details.
+
+    May be due to new purchases, or issue with the Renault servers.
+    """
+    vehicles = await account.get_vehicles()
+    if not vehicles.vehicleLinks:
+        return []
+    result: list[KamereonVehiclesLink] = []
+    for link in vehicles.vehicleLinks:
+        if link.vehicleDetails is None:
+            LOGGER.warning("Ignoring vehicle with missing details: %s", link.vin)
+            continue
+        result.append(link)
+    return result
+
+
 class RenaultHub:
     """Handle account communication with Renault servers."""
 
@@ -84,49 +101,48 @@ class RenaultHub:
         account_id: str = config_entry.data[CONF_KAMEREON_ACCOUNT_ID]
 
         self._account = await self._client.get_api_account(account_id)
-        vehicles = await self._account.get_vehicles()
-        if vehicles.vehicleLinks:
-            if any(
-                vehicle_link.vehicleDetails is None
-                for vehicle_link in vehicles.vehicleLinks
-            ):
-                raise ConfigEntryNotReady(
-                    "Failed to retrieve vehicle details from Renault servers"
-                )
-
-            num_call_per_scan = len(COORDINATORS) * len(vehicles.vehicleLinks)
-            scan_interval = timedelta(
-                seconds=(3600 * num_call_per_scan) / MAX_CALLS_PER_HOURS
+        vehicle_links = await _get_filtered_vehicles(self._account)
+        if not vehicle_links:
+            LOGGER.debug(
+                "No valid vehicle details found for account_id: %s", account_id
+            )
+            raise ConfigEntryNotReady(
+                "Failed to retrieve vehicle details from Renault servers"
             )
 
-            device_registry = dr.async_get(self._hass)
-            await asyncio.gather(
-                *(
-                    self.async_initialise_vehicle(
-                        vehicle_link,
-                        self._account,
-                        scan_interval,
-                        config_entry,
-                        device_registry,
-                    )
-                    for vehicle_link in vehicles.vehicleLinks
-                )
-            )
+        num_call_per_scan = len(COORDINATORS) * len(vehicle_links)
+        scan_interval = timedelta(
+            seconds=(3600 * num_call_per_scan) / MAX_CALLS_PER_HOURS
+        )
 
-            # all vehicles have been initiated with the right number of active coordinators
-            num_call_per_scan = 0
-            for vehicle_link in vehicles.vehicleLinks:
+        device_registry = dr.async_get(self._hass)
+        await asyncio.gather(
+            *(
+                self.async_initialise_vehicle(
+                    vehicle_link,
+                    self._account,
+                    scan_interval,
+                    config_entry,
+                    device_registry,
+                )
+                for vehicle_link in vehicle_links
+            )
+        )
+
+        # all vehicles have been initiated with the right number of active coordinators
+        num_call_per_scan = 0
+        for vehicle_link in vehicle_links:
+            vehicle = self._vehicles[str(vehicle_link.vin)]
+            num_call_per_scan += len(vehicle.coordinators)
+
+        new_scan_interval = timedelta(
+            seconds=(3600 * num_call_per_scan) / MAX_CALLS_PER_HOURS
+        )
+        if new_scan_interval != scan_interval:
+            # we need to change the vehicles with the right scan interval
+            for vehicle_link in vehicle_links:
                 vehicle = self._vehicles[str(vehicle_link.vin)]
-                num_call_per_scan += len(vehicle.coordinators)
-
-            new_scan_interval = timedelta(
-                seconds=(3600 * num_call_per_scan) / MAX_CALLS_PER_HOURS
-            )
-            if new_scan_interval != scan_interval:
-                # we need to change the vehicles with the right scan interval
-                for vehicle_link in vehicles.vehicleLinks:
-                    vehicle = self._vehicles[str(vehicle_link.vin)]
-                    vehicle.update_scan_interval(new_scan_interval)
+                vehicle.update_scan_interval(new_scan_interval)
 
     async def async_initialise_vehicle(
         self,
@@ -156,6 +172,7 @@ class RenaultHub:
             name=vehicle.device_info[ATTR_NAME],
             model=vehicle.device_info[ATTR_MODEL],
             model_id=vehicle.device_info[ATTR_MODEL_ID],
+            sw_version=None,  # cleanup from PR #125399
         )
         self._vehicles[vehicle_link.vin] = vehicle
 
@@ -163,10 +180,10 @@ class RenaultHub:
         """Get Kamereon account ids."""
         accounts = []
         for account in await self._client.get_api_accounts():
-            vehicles = await account.get_vehicles()
+            vehicle_links = await _get_filtered_vehicles(account)
 
             # Only add the account if it has linked vehicles.
-            if vehicles.vehicleLinks:
+            if vehicle_links:
                 accounts.append(account.account_id)
         return accounts
 

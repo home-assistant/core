@@ -82,6 +82,11 @@ async def test_cover_update(
             "cover.markise",
         ),
         (
+            "mock_hub_configuration_prod_awning_valance",
+            "mock_hub_status_prod_valance",
+            "cover.markise_2",
+        ),
+        (
             "mock_hub_configuration_prod_roller_shutter",
             "mock_hub_status_prod_roller_shutter",
             "cover.wohnebene_alle",
@@ -160,6 +165,11 @@ async def test_cover_open_and_close(
             "cover.markise",
         ),
         (
+            "mock_hub_configuration_prod_awning_valance",
+            "mock_hub_status_prod_valance",
+            "cover.markise_2",
+        ),
+        (
             "mock_hub_configuration_prod_roller_shutter",
             "mock_hub_status_prod_roller_shutter",
             "cover.wohnebene_alle",
@@ -217,6 +227,11 @@ async def test_cover_open_to_pos(
             "mock_hub_configuration_prod_awning_dimmer",
             "mock_hub_status_prod_awning",
             "cover.markise",
+        ),
+        (
+            "mock_hub_configuration_prod_awning_valance",
+            "mock_hub_status_prod_valance",
+            "cover.markise_2",
         ),
         (
             "mock_hub_configuration_prod_roller_shutter",

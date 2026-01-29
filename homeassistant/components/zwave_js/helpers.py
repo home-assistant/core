@@ -61,16 +61,6 @@ SERVER_VERSION_TIMEOUT = 10
 
 
 @dataclass
-class ZwaveValueID:
-    """Class to represent a value ID."""
-
-    property_: str | int
-    command_class: int
-    endpoint: int | None = None
-    property_key: str | int | None = None
-
-
-@dataclass
 class ZwaveValueMatcher:
     """Class to allow matching a Z-Wave Value."""
 
@@ -192,6 +182,13 @@ async def async_disable_server_logging_if_needed(
         entry.runtime_data.old_server_log_level = None
     driver.client.disable_server_logging()
     LOGGER.info("Zwave-js-server logging is enabled")
+
+
+def format_home_id_for_display(home_id: int | None) -> str:
+    """Format home ID as hexadecimal string for display."""
+    if home_id is None:
+        return "Unknown"
+    return f"0x{home_id:08x}"
 
 
 def get_valueless_base_unique_id(driver: Driver, node: ZwaveNode) -> str:
@@ -565,9 +562,9 @@ def get_network_identifier_for_notification(
     hass: HomeAssistant, config_entry: ZwaveJSConfigEntry, controller: Controller
 ) -> str:
     """Return the network identifier string for persistent notifications."""
-    home_id = str(controller.home_id)
+    home_id = format_home_id_for_display(controller.home_id)
     if len(hass.config_entries.async_entries(DOMAIN)) > 1:
-        if str(home_id) != config_entry.title:
+        if home_id != config_entry.title:
             return f"`{config_entry.title}`, with the home ID `{home_id}`,"
         return f"with the home ID `{home_id}`"
     return ""

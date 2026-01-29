@@ -16,7 +16,7 @@ from .coordinator import (
     AOSmithStatusCoordinator,
 )
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WATER_HEATER]
+PLATFORMS: list[Platform] = [Platform.SELECT, Platform.SENSOR, Platform.WATER_HEATER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> bool:

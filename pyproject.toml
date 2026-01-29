@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2025.9.0.dev0"
+version = "2026.3.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -18,36 +18,36 @@ classifiers = [
   "Intended Audience :: End Users/Desktop",
   "Intended Audience :: Developers",
   "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Home Automation",
 ]
-requires-python = ">=3.13.2"
+requires-python = ">=3.14.2"
 dependencies = [
-  "aiodns==3.5.0",
+  "aiodns==4.0.0",
   # Integrations may depend on hassio integration without listing it to
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
-  "aiohasupervisor==0.3.1",
-  "aiohttp==3.12.15",
+  "aiohasupervisor==0.3.3",
+  "aiohttp==3.13.3",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.1.1",
   "aiozoneinfo==0.2.3",
-  "annotatedyaml==0.4.5",
+  "annotatedyaml==1.0.2",
   "astral==2.2",
   "async-interrupt==1.2.2",
-  "attrs==25.3.0",
+  "attrs==25.4.0",
   "atomicwrites-homeassistant==1.4.1",
   "audioop-lts==0.2.1",
-  "awesomeversion==25.5.0",
-  "bcrypt==4.3.0",
+  "awesomeversion==25.8.0",
+  "bcrypt==5.0.0",
   "certifi>=2021.5.30",
-  "ciso8601==2.3.2",
-  "cronsim==2.6",
-  "fnv-hash-fast==1.5.0",
+  "ciso8601==2.3.3",
+  "cronsim==2.7",
+  "fnv-hash-fast==1.6.0",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==0.111.2",
+  "hass-nabucasa==1.12.0",
   # When bumping httpx, please check the version pins of
   # httpcore, anyio, and h11 in gen_requirements_all
   "httpx==0.28.1",
@@ -57,30 +57,30 @@ dependencies = [
   "lru-dict==1.3.0",
   "PyJWT==2.10.1",
   # PyJWT has loose dependency. We want the latest one.
-  "cryptography==45.0.3",
-  "Pillow==11.3.0",
-  "propcache==0.3.2",
-  "pyOpenSSL==25.1.0",
-  "orjson==3.11.1",
+  "cryptography==46.0.2",
+  "Pillow==12.0.0",
+  "propcache==0.4.1",
+  "pyOpenSSL==25.3.0",
+  "orjson==3.11.5",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==8.0.4",
-  "PyYAML==6.0.2",
-  "requests==2.32.4",
+  "PyYAML==6.0.3",
+  "requests==2.32.5",
   "securetar==2025.2.1",
   "SQLAlchemy==2.0.41",
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
-  "typing-extensions>=4.14.0,<5.0",
-  "ulid-transform==1.4.0",
+  "typing-extensions>=4.15.0,<5.0",
+  "ulid-transform==1.5.2",
   "urllib3>=2.0",
-  "uv==0.7.1",
+  "uv==0.9.26",
   "voluptuous==0.15.2",
-  "voluptuous-serialize==2.6.0",
-  "voluptuous-openapi==0.1.0",
-  "yarl==1.20.1",
+  "voluptuous-serialize==2.7.0",
+  "voluptuous-openapi==0.2.0",
+  "yarl==1.22.0",
   "webrtc-models==0.3.0",
-  "zeroconf==0.147.0",
+  "zeroconf==0.148.0",
 ]
 
 [project.urls]
@@ -101,7 +101,7 @@ include-package-data = true
 include = ["homeassistant*"]
 
 [tool.pylint.MAIN]
-py-version = "3.13"
+py-version = "3.14"
 # Use a conservative default here; 2 should speed up most setups and not hurt
 # any too bad. Override on command line as appropriate.
 jobs = 2
@@ -121,6 +121,7 @@ load-plugins = [
   "hass_async_load_fixtures",
   "hass_decorator",
   "hass_enforce_class_module",
+  "hass_enforce_greek_micro_char",
   "hass_enforce_sorted_platforms",
   "hass_enforce_super_call",
   "hass_enforce_type_hints",
@@ -447,6 +448,7 @@ testpaths = ["tests"]
 norecursedirs = [".git", "testing_config"]
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
+asyncio_debug = true
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 filterwarnings = [
@@ -467,7 +469,7 @@ filterwarnings = [
   "ignore:Unknown pytest.mark.dataset:pytest.PytestUnknownMarkWarning:tests.components.screenlogic",
 
   # -- DeprecationWarning already fixed in our codebase
-  # https://github.com/kurtmckee/feedparser/pull/389 - 6.0.11
+  # https://github.com/kurtmckee/feedparser/ - 6.0.12
   "ignore:.*a temporary mapping .* from `updated_parsed` to `published_parsed` if `updated_parsed` doesn't exist:DeprecationWarning:feedparser.util",
 
   # -- design choice 3rd party
@@ -477,27 +479,27 @@ filterwarnings = [
   "ignore:ssl.TLSVersion.SSLv3 is deprecated:DeprecationWarning:regenmaschine.client",
 
   # -- Setuptools DeprecationWarnings
-  # https://github.com/googleapis/google-cloud-python/issues/11184
-  # https://github.com/zopefoundation/meta/issues/194
   # https://github.com/Azure/azure-sdk-for-python
-  "ignore:Deprecated call to `pkg_resources.declare_namespace\\(('azure'|'google.*'|'pywinusb'|'repoze'|'xbox'|'zope')\\)`:DeprecationWarning:pkg_resources",
+  "ignore:Deprecated call to `pkg_resources.declare_namespace\\('azure'\\)`:DeprecationWarning:pkg_resources",
 
   # -- tracked upstream / open PRs
+  # https://github.com/kbr/fritzconnection/pull/244 - v1.15.0 - 2025-05-17
+  "ignore:.*invalid escape sequence:SyntaxWarning:.*fritzconnection.core.soaper",
   # https://github.com/hacf-fr/meteofrance-api/pull/688 - v1.4.0 - 2025-03-26
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:meteofrance_api.model.forecast",
 
   # -- fixed, waiting for release / update
   # https://github.com/httplib2/httplib2/pull/226 - >=0.21.0
   "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:httplib2",
-  # https://github.com/ReactiveX/RxPY/pull/716 - >4.0.4
-  "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:reactivex.internal.constants",
+  # https://github.com/BerriAI/litellm/pull/17657 - >1.80.9
+  "ignore:Support for class-based `config` is deprecated, use ConfigDict instead:DeprecationWarning:litellm.types.llms.anthropic",
+  # https://github.com/allenporter/python-google-nest-sdm/pull/1229 - >9.1.2
+  "ignore:datetime.*utcnow\\(\\) is deprecated:DeprecationWarning:google_nest_sdm.device",
   # https://github.com/rytilahti/python-miio/pull/1809 - >=0.6.0.dev0
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.protocol",
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.miioprotocol",
   # https://github.com/rytilahti/python-miio/pull/1993 - >0.6.0.dev0
   "ignore:functools.partial will be a method descriptor in future Python versions; wrap it in enum.member\\(\\) if you want to preserve the old behavior:FutureWarning:miio.miot_device",
-  # https://github.com/okunishinishi/python-stringcase/commit/6a5c5bbd3fe5337862abc7fd0853a0f36e18b2e1 - >1.2.0
-  "ignore:.*invalid escape sequence:SyntaxWarning:.*stringcase",
   # https://github.com/xchwarze/samsung-tv-ws-api/pull/151 - >2.7.2 - 2024-12-06  # wrong stacklevel in aiohttp
   "ignore:verify_ssl is deprecated, use ssl=False instead:DeprecationWarning:aiohttp.client",
 
@@ -515,13 +517,15 @@ filterwarnings = [
   # https://pypi.org/project/emulated-roku/ - v0.3.0 - 2023-12-19
   # https://github.com/martonperei/emulated_roku
   "ignore:loop argument is deprecated:DeprecationWarning:emulated_roku",
+  # https://github.com/EnergieID/energyid-webhooks-py/ - v0.0.14 - 2025-05-06
+  "ignore:The V1 WebhookClient is deprecated:DeprecationWarning:energyid_webhooks",
   # https://pypi.org/project/foobot_async/ - v1.0.1 - 2024-08-16
   "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:foobot_async",
   # https://pypi.org/project/motionblindsble/ - v0.1.3 - 2024-11-12
   # https://github.com/LennP/motionblindsble/blob/0.1.3/motionblindsble/device.py#L390
   "ignore:Passing additional arguments for BLEDevice is deprecated and has no effect:DeprecationWarning:motionblindsble.device",
-  # https://pypi.org/project/pyeconet/ - v0.1.28 - 2025-02-15
-  # https://github.com/w1ll1am23/pyeconet/blob/v0.1.28/src/pyeconet/api.py#L38
+  # https://pypi.org/project/pyeconet/ - v0.2.0 - 2025-10-05
+  # https://github.com/w1ll1am23/pyeconet/blob/v0.2.0/src/pyeconet/api.py#L39
   "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:pyeconet.api",
   # https://github.com/thecynic/pylutron - v0.2.18 - 2025-04-15
   "ignore:setDaemon\\(\\) is deprecated, set the daemon attribute instead:DeprecationWarning:pylutron",
@@ -541,7 +545,7 @@ filterwarnings = [
   "ignore:.*invalid escape sequence:SyntaxWarning:.*aprslib.parsing.common",
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aprslib.parsing.common",
   # https://pypi.org/project/panasonic-viera/ - v0.4.2 - 2024-04-24
-  # https://github.com/florianholzapfel/panasonic-viera/blob/0.4.2/panasonic_viera/__init__.py#L789
+  # https://github.com/florianholzapfel/panasonic-viera/blob/0.4.4/panasonic_viera/remote_control.py#L665
   "ignore:.*invalid escape sequence:SyntaxWarning:.*panasonic_viera",
   # https://pypi.org/project/pyblackbird/ - v0.6 - 2023-03-15
   # https://github.com/koolsb/pyblackbird/pull/9 -> closed
@@ -556,27 +560,59 @@ filterwarnings = [
   # - pkg_resources
   # https://pypi.org/project/aiomusiccast/ - v0.14.8 - 2023-03-20
   "ignore:pkg_resources is deprecated as an API:UserWarning:aiomusiccast",
-  # https://github.com/eavanvalkenburg/pysiaalarm/blob/v3.1.1/src/pysiaalarm/data/data.py#L7 - v3.1.1 - 2023-04-17
-  "ignore:pkg_resources is deprecated as an API:UserWarning:pysiaalarm.data.data",
   # https://pypi.org/project/pybotvac/ - v0.0.28 - 2025-06-11
   "ignore:pkg_resources is deprecated as an API:UserWarning:pybotvac.version",
   # - SyntaxWarning - is with literal
   # https://github.com/majuss/lupupy/pull/15 - >0.3.2
+  "ignore:\"is.*\" with '.*' literal:SyntaxWarning:.*lupupy.devices.alarm",
   # https://pypi.org/project/opuslib/ - v3.0.1 - 2018-01-16
-  # https://pypi.org/project/plumlightpad/ - v0.0.11 - 2018-10-16
+  "ignore:\"is.*\" with '.*' literal:SyntaxWarning:.*opuslib.api.decoder",
   # https://pypi.org/project/pyiss/ - v1.0.1 - 2016-12-19
-  "ignore:\"is.*\" with '.*' literal:SyntaxWarning:importlib._bootstrap",
+  "ignore:\"is.*\" with '.*' literal:SyntaxWarning:.*pyiss",
+  # - SyntaxWarning - return in finally
+  # https://github.com/nextcord/nextcord/pull/1268 - >3.1.1 - 2025-08-16
+  "ignore:'return' in a 'finally' block:SyntaxWarning:.*nextcord.(gateway|player)",
+  # https://pypi.org/project/sleekxmppfs/ - v1.4.1 - 2022-08-18
+  "ignore:'return' in a 'finally' block:SyntaxWarning:.*sleekxmppfs.(roster.single|xmlstream.xmlstream)",
+  # https://github.com/cereal2nd/velbus-aio/pull/153 - >2025.11.0
+  "ignore:'return' in a 'finally' block:SyntaxWarning:.*velbusaio.vlp_reader",
 
   # -- New in Python 3.13
-  # https://github.com/kurtmckee/feedparser/pull/389 - >6.0.11
-  # https://github.com/kurtmckee/feedparser/issues/481
-  "ignore:'count' is passed as positional argument:DeprecationWarning:feedparser.html",
   # https://github.com/youknowone/python-deadlib - Backports for aifc, telnetlib
   "ignore:aifc was removed in Python 3.13.*'standard-aifc':DeprecationWarning:speech_recognition",
   "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:homeassistant.components.hddtemp.sensor",
   "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:ndms2_client.connection",
-  "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:plumlightpad.lightpad",
   "ignore:telnetlib was removed in Python 3.13.*'standard-telnetlib':DeprecationWarning:pyws66i",
+
+  # -- Pydantic V1 models
+  # https://github.com/madpilot/amberelectric.py - v2.0.12 - 2024-11-19
+  "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:amberelectric.api.amber_api",
+  # https://github.com/elevenlabs/elevenlabs-python - v2.18.0 - 2024-10-14
+  "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:elevenlabs.core.pydantic_utilities",
+  # https://github.com/Lektrico/lektricowifi - v0.1 - 2025-05-19
+  "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:lektricowifi.models",
+  # https://github.com/bang-olufsen/mozart-open-api - v4.1.1.116.4 - 2025-01-22
+  "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:mozart_api.api.beolink_api",
+  # https://github.com/sstallion/sensorpush-api - v2.1.3 - 2025-06-10
+  "ignore:Core Pydantic V1 functionality isn't compatible with Python 3.14 or greater:UserWarning:sensorpush_api.api.api_api",
+
+  # -- New in Python 3.14
+  # https://github.com/litl/backoff/pull/220 - v2.2.1 - 2022-10-05 (archived)
+  "ignore:'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16:DeprecationWarning:(backoff._decorator|backoff._async)",
+  # https://github.com/albertogeniola/elmax-api - v0.0.6.3 - 2024-11-30
+  "ignore:'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16:DeprecationWarning:elmax_api.http",
+  # https://github.com/BerriAI/litellm - v1.80.9 - 2025-12-08
+  "ignore:'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16:DeprecationWarning:litellm.litellm_core_utils.logging_utils",
+  # https://github.com/nextcord/nextcord/pull/1269 - >3.1.1 - 2025-08-16
+  "ignore:'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16:DeprecationWarning:nextcord.member",
+  # https://github.com/SteveEasley/pykaleidescape/pull/7 - v2022.2.6 - 2022-03-07
+  "ignore:'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16:DeprecationWarning:kaleidescape.dispatcher",
+  # https://github.com/svinota/pyroute2
+  "ignore:Due to '_pack_', the '.*' Structure will use memory layout compatible with MSVC:DeprecationWarning:pyroute2.ethtool.ioctl",
+  # https://github.com/googleapis/python-genai
+  "ignore:'_UnionGenericAlias' is deprecated and slated for removal in Python 3.17:DeprecationWarning:google.genai.types",
+  # https://github.com/pyusb/pyusb/issues/535
+  "ignore:Due to '_pack_', the '.*' Structure will use memory layout compatible with MSVC:DeprecationWarning:usb.backend.libusb0",
 
   # -- Websockets 14.1
   # https://websockets.readthedocs.io/en/stable/howto/upgrade.html
@@ -606,8 +642,6 @@ filterwarnings = [
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:oauth2client.client",
   # https://pypi.org/project/pilight/ - v0.1.1 - 2016-10-19
   "ignore:pkg_resources is deprecated as an API:UserWarning:pilight",
-  # https://pypi.org/project/plumlightpad/ - v0.0.11 - 2018-10-16
-  "ignore:.*invalid escape sequence:SyntaxWarning:.*plumlightpad.plumdiscovery",
   # https://pypi.org/project/pure-python-adb/ - v0.3.0.dev0 - 2020-08-05
   "ignore:.*invalid escape sequence:SyntaxWarning:.*ppadb",
   # https://pypi.org/project/pydub/ - v0.25.1 - 2021-03-10
@@ -639,7 +673,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.12.1"
+required-version = ">=0.14.13"
 
 [tool.ruff.lint]
 select = [
@@ -709,6 +743,7 @@ select = [
   "RUF032", # Decimal() called with float literal argument
   "RUF033", # __post_init__ method with argument defaults
   "RUF034", # Useless if-else condition
+  "RUF059", # unused-unpacked-variable
   "RUF100", # Unused `noqa` directive
   "RUF101", # noqa directives that use redirected rule codes
   "RUF200", # Failed to parse pyproject.toml: {message}
@@ -751,6 +786,7 @@ ignore = [
   "D213",     # Multi-line docstring summary should start at the second line
   "D406",     # Section name should end with a newline
   "D407",     # Section name underlining
+  "D417",     # Missing argument descriptions in docstring - to allow documenting only non-obvious parameters
   "E501",     # line too long
 
   "PLC1901", # {existing} can be simplified to {replacement} as an empty string is falsey; too many false positives
@@ -781,8 +817,7 @@ ignore = [
 
   "TRY003", # Avoid specifying long messages outside the exception class
   "TRY400", # Use `logging.exception` instead of `logging.error`
-  # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
-  "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
+
   "UP046", # Non PEP 695 generic class
   "UP047", # Non PEP 696 generic function
   "UP049", # Avoid private type parameter names
@@ -800,6 +835,8 @@ ignore = [
 
   # Disabled because ruff does not understand type of __all__ generated by a function
   "PLE0605",
+
+  "FURB116",
 ]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]

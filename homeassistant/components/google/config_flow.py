@@ -11,7 +11,11 @@ from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException, ApiForbiddenException
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -237,12 +241,12 @@ class OAuth2FlowHandler(
     @callback
     def async_get_options_flow(
         config_entry: GoogleConfigEntry,
-    ) -> OptionsFlow:
+    ) -> OptionsFlowHandler:
         """Create an options flow."""
         return OptionsFlowHandler()
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Google Calendar options flow."""
 
     async def async_step_init(

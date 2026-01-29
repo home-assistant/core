@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 DOMAIN = "lovelace"
 LOVELACE_DATA: HassKey[LovelaceData] = HassKey(DOMAIN)
 
-DEFAULT_ICON = "hass:view-dashboard"
+DEFAULT_ICON = "mdi:view-dashboard"
 
 MODE_YAML = "yaml"
 MODE_STORAGE = "storage"

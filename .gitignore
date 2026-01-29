@@ -79,7 +79,6 @@ junit.xml
 .project
 .pydevproject
 
-.python-version
 .tool-versions
 
 # emacs auto backups
@@ -93,6 +92,7 @@ pip-selfcheck.json
 venv
 .venv
 Pipfile*
+uv.lock
 share/*
 /Scripts/
 
@@ -112,6 +112,7 @@ virtualization/vagrant/config
 !.vscode/cSpell.json
 !.vscode/extensions.json
 !.vscode/tasks.json
+!.vscode/settings.default.jsonc
 .env
 
 # Windows Explorer
@@ -140,5 +141,6 @@ tmp_cache
 pytest_buckets.txt
 
 # AI tooling
-.claude
+.claude/settings.local.json
+.serena/
 

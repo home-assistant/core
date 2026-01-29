@@ -14,6 +14,7 @@ tests
 
 # Other virtualization methods
 venv
+.venv
 .vagrant
 
 # Temporary files

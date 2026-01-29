@@ -5,9 +5,8 @@ from __future__ import annotations
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
-from tuya_sharing import CustomerDevice
+from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.tuya import ManagerCompat
 from homeassistant.components.tuya.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -25,7 +24,7 @@ from tests.typing import ClientSessionGenerator
 @pytest.mark.parametrize("mock_device_code", ["rqbj_4iqe2hsfyd86kwwc"])
 async def test_entry_diagnostics(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
     hass_client: ClientSessionGenerator,
@@ -43,10 +42,17 @@ async def test_entry_diagnostics(
     )
 
 
-@pytest.mark.parametrize("mock_device_code", ["rqbj_4iqe2hsfyd86kwwc"])
+@pytest.mark.parametrize(
+    "mock_device_code",
+    [
+        "rqbj_4iqe2hsfyd86kwwc",
+        "mal_gyitctrjj1kefxp2",  # with redacted dpcodes
+        "tdq_9htyiowaf5rtdhrv",  # with bad enum warnings
+    ],
+)
 async def test_device_diagnostics(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
     hass_client: ClientSessionGenerator,

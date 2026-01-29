@@ -1,11 +1,15 @@
 # serializer version: 1
 # name: test_setup
   DeviceRegistryEntrySnapshot({
-    'area_id': None,
+    'area_id': 'garden',
     'config_entries': <ANY>,
     'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
+      tuple(
+        'bluetooth',
+        '00000000-0000-0000-0000-000000000003',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from pyHomee.const import AttributeChangedBy, AttributeType
-from pyHomee.model import HomeeAttribute
+from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN, HomeeConfigEntry
 from .entity import HomeeEntity
-from .helpers import get_name_for_enum
+from .helpers import get_name_for_enum, setup_homee_platform
 
 PARALLEL_UPDATES = 0
 
@@ -60,18 +60,29 @@ def get_supported_features(
     return supported_features
 
 
+async def add_alarm_control_panel_entities(
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
+) -> None:
+    """Add homee alarm control panel entities."""
+    async_add_entities(
+        HomeeAlarmPanel(attribute, config_entry, ALARM_DESCRIPTIONS[attribute.type])
+        for node in nodes
+        for attribute in node.attributes
+        if attribute.type in ALARM_DESCRIPTIONS and attribute.editable
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the alarm control panel component."""
+    """Add the homee platform for the alarm control panel component."""
 
-    async_add_entities(
-        HomeeAlarmPanel(attribute, config_entry, ALARM_DESCRIPTIONS[attribute.type])
-        for node in config_entry.runtime_data.nodes
-        for attribute in node.attributes
-        if attribute.type in ALARM_DESCRIPTIONS and attribute.editable
+    await setup_homee_platform(
+        add_alarm_control_panel_entities, async_add_entities, config_entry
     )
 
 

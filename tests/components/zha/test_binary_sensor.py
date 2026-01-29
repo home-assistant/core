@@ -1,8 +1,10 @@
 """Test ZHA binary sensor."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 
@@ -39,8 +41,8 @@ def binary_sensor_platform_only():
 async def test_binary_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test ZHA binary_sensor platform."""
     await setup_zha()

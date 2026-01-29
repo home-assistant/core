@@ -268,6 +268,7 @@ TEST_JOB_NOT_DONE = supervisor_jobs.Job(
     errors=[],
     created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
+    extra=None,
 )
 TEST_JOB_DONE = supervisor_jobs.Job(
     name="backup_manager_partial_backup",
@@ -279,6 +280,7 @@ TEST_JOB_DONE = supervisor_jobs.Job(
     errors=[],
     created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
+    extra=None,
 )
 TEST_RESTORE_JOB_DONE_WITH_ERROR = supervisor_jobs.Job(
     name="backup_manager_partial_restore",
@@ -294,10 +296,12 @@ TEST_RESTORE_JOB_DONE_WITH_ERROR = supervisor_jobs.Job(
                 "Backup was made on supervisor version 2025.02.2.dev3105, "
                 "can't restore on 2025.01.2.dev3105"
             ),
+            stage=None,
         )
     ],
     created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
+    extra=None,
 )
 
 

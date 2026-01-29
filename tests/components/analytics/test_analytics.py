@@ -1,6 +1,7 @@
 """The tests for the analytics ."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -13,26 +14,45 @@ from syrupy.matchers import path_type
 
 from homeassistant.components.analytics.analytics import (
     Analytics,
+    AnalyticsInput,
+    AnalyticsModifications,
+    DeviceAnalyticsModifications,
+    EntityAnalyticsModifications,
     async_devices_payload,
 )
 from homeassistant.components.analytics.const import (
-    ANALYTICS_ENDPOINT_URL,
-    ANALYTICS_ENDPOINT_URL_DEV,
     ATTR_BASE,
     ATTR_DIAGNOSTICS,
+    ATTR_SNAPSHOTS,
     ATTR_STATISTICS,
     ATTR_USAGE,
+    BASIC_ENDPOINT_URL,
+    BASIC_ENDPOINT_URL_DEV,
+    SNAPSHOT_DEFAULT_URL,
+    SNAPSHOT_URL_PATH,
 )
+from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ASSUMED_STATE, EntityCategory
+from homeassistant.core import HomeAssistant, ReleaseChannel
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    async_fire_time_changed,
+    mock_integration,
+    mock_platform,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
+
+SNAPSHOT_ENDPOINT_URL = SNAPSHOT_DEFAULT_URL + SNAPSHOT_URL_PATH
 
 MOCK_UUID = "abcdefg"
 MOCK_VERSION = "1970.1.0"
@@ -52,9 +72,31 @@ def uuid_mock() -> Generator[None]:
 @pytest.fixture(autouse=True)
 def ha_version_mock() -> Generator[None]:
     """Mock the core version."""
-    with patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION",
-        MOCK_VERSION,
+    with (
+        patch(
+            "homeassistant.components.analytics.analytics.HA_VERSION",
+            MOCK_VERSION,
+        ),
+        patch(
+            "homeassistant.components.analytics.analytics.RELEASE_CHANNEL",
+            ReleaseChannel.STABLE,
+        ),
+    ):
+        yield
+
+
+@pytest.fixture
+def ha_dev_version_mock() -> Generator[None]:
+    """Mock the core version as a dev version."""
+    with (
+        patch(
+            "homeassistant.components.analytics.analytics.HA_VERSION",
+            MOCK_VERSION_DEV,
+        ),
+        patch(
+            "homeassistant.components.analytics.analytics.RELEASE_CHANNEL",
+            ReleaseChannel.DEV,
+        ),
     ):
         yield
 
@@ -65,6 +107,16 @@ def installation_type_mock() -> Generator[None]:
     with patch(
         "homeassistant.components.analytics.analytics.async_get_system_info",
         return_value={"installation_type": "Home Assistant Tests"},
+    ):
+        yield
+
+
+@pytest.fixture
+def labs_snapshots_enabled() -> Generator[None]:
+    """Mock the labs feature to enable snapshots."""
+    with patch(
+        "homeassistant.components.analytics.analytics.async_is_preview_feature_enabled",
+        return_value=True,
     ):
         yield
 
@@ -90,7 +142,6 @@ async def test_no_send(
 
         await analytics.send_analytics()
 
-    assert "Nothing to submit" in caplog.text
     assert len(aioclient_mock.mock_calls) == 0
 
 
@@ -141,14 +192,14 @@ async def test_failed_to_send(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test failed to send payload."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=400)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=400)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True})
     assert analytics.preferences[ATTR_BASE]
 
     await analytics.send_analytics()
     assert (
-        f"Sending analytics failed with statuscode 400 from {ANALYTICS_ENDPOINT_URL}"
+        f"Sending analytics failed with statuscode 400 from {BASIC_ENDPOINT_URL}"
         in caplog.text
     )
 
@@ -160,7 +211,7 @@ async def test_failed_to_send_raises(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test raises when failed to send payload."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, exc=aiohttp.ClientError())
+    aioclient_mock.post(BASIC_ENDPOINT_URL, exc=aiohttp.ClientError())
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True})
     assert analytics.preferences[ATTR_BASE]
@@ -177,7 +228,7 @@ async def test_send_base(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test send base preferences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
 
     await analytics.save_preferences({ATTR_BASE: True})
@@ -200,7 +251,7 @@ async def test_send_base_with_supervisor(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test send base preferences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
 
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True})
@@ -253,7 +304,7 @@ async def test_send_usage(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test send usage preferences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     hass.http = Mock(ssl_certificate=None)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
@@ -289,7 +340,7 @@ async def test_send_usage_with_supervisor(
     supervisor_client: AsyncMock,
 ) -> None:
     """Test send usage with supervisor preferences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     hass.http = Mock(ssl_certificate=None)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
@@ -350,7 +401,7 @@ async def test_send_statistics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test send statistics preferences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
     assert analytics.preferences[ATTR_BASE]
@@ -376,7 +427,7 @@ async def test_send_statistics_one_integration_fails(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test send statistics preferences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
     assert analytics.preferences[ATTR_BASE]
@@ -404,7 +455,7 @@ async def test_send_statistics_disabled_integration(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test send statistics with disabled integration."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
     assert analytics.preferences[ATTR_BASE]
@@ -443,7 +494,7 @@ async def test_send_statistics_ignored_integration(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test send statistics with ignored integration."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
     assert analytics.preferences[ATTR_BASE]
@@ -484,7 +535,7 @@ async def test_send_statistics_async_get_integration_unknown_exception(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test send statistics preferences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
     assert analytics.preferences[ATTR_BASE]
@@ -510,7 +561,7 @@ async def test_send_statistics_with_supervisor(
     supervisor_client: AsyncMock,
 ) -> None:
     """Test send statistics preferences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
     assert analytics.preferences[ATTR_BASE]
@@ -567,7 +618,7 @@ async def test_reusing_uuid(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test reusing the stored UUID."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     analytics._data.uuid = "NOT_MOCK_UUID"
 
@@ -589,7 +640,7 @@ async def test_custom_integrations(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test sending custom integrations."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     hass.http = Mock(ssl_certificate=None)
     assert await async_setup_component(hass, "test_package", {"test_package": {}})
@@ -608,46 +659,39 @@ async def test_custom_integrations(
     assert snapshot == submitted_data
 
 
-@pytest.mark.usefixtures("supervisor_client")
+@pytest.mark.usefixtures("ha_dev_version_mock", "supervisor_client")
 async def test_dev_url(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test sending payload to dev url."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL_DEV, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True})
 
-    with patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_DEV
-    ):
-        await analytics.send_analytics()
+    await analytics.send_analytics()
 
     payload = aioclient_mock.mock_calls[0]
-    assert str(payload[1]) == ANALYTICS_ENDPOINT_URL_DEV
+    assert str(payload[1]) == BASIC_ENDPOINT_URL_DEV
 
 
-@pytest.mark.usefixtures("supervisor_client")
+@pytest.mark.usefixtures("ha_dev_version_mock", "supervisor_client")
 async def test_dev_url_error(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sending payload to dev url that returns error."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, status=400)
+    aioclient_mock.post(BASIC_ENDPOINT_URL_DEV, status=400)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True})
 
-    with patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_DEV
-    ):
-        await analytics.send_analytics()
+    await analytics.send_analytics()
 
     payload = aioclient_mock.mock_calls[0]
-    assert str(payload[1]) == ANALYTICS_ENDPOINT_URL_DEV
+    assert str(payload[1]) == BASIC_ENDPOINT_URL_DEV
     assert (
-        "Sending analytics failed with statuscode 400 from"
-        f" {ANALYTICS_ENDPOINT_URL_DEV}"
+        f"Sending analytics failed with statuscode 400 from {BASIC_ENDPOINT_URL_DEV}"
     ) in caplog.text
 
 
@@ -657,7 +701,7 @@ async def test_nightly_endpoint(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test sending payload to production url when running nightly."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     await analytics.save_preferences({ATTR_BASE: True})
 
@@ -667,7 +711,7 @@ async def test_nightly_endpoint(
         await analytics.send_analytics()
 
     payload = aioclient_mock.mock_calls[0]
-    assert str(payload[1]) == ANALYTICS_ENDPOINT_URL
+    assert str(payload[1]) == BASIC_ENDPOINT_URL
 
 
 @pytest.mark.usefixtures(
@@ -680,7 +724,7 @@ async def test_send_with_no_energy(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test send base preferences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     hass.http = Mock(ssl_certificate=None)
 
@@ -718,7 +762,7 @@ async def test_send_with_no_energy_config(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test send base preferences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
 
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
@@ -751,7 +795,7 @@ async def test_send_with_energy_config(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test send base preferences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
 
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
@@ -784,7 +828,7 @@ async def test_send_usage_with_certificate(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test send usage preferences with certificate."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     hass.http = Mock(ssl_certificate="/some/path/to/cert.pem")
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
@@ -810,7 +854,7 @@ async def test_send_with_recorder(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test recorder information."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     hass.http = Mock(ssl_certificate="/some/path/to/cert.pem")
 
@@ -853,7 +897,7 @@ async def test_send_with_problems_loading_yaml(
     assert len(aioclient_mock.mock_calls) == 0
 
 
-@pytest.mark.usefixtures("mock_hass_config", "supervisor_client")
+@pytest.mark.usefixtures("ha_dev_version_mock", "mock_hass_config", "supervisor_client")
 async def test_timeout_while_sending(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -861,13 +905,10 @@ async def test_timeout_while_sending(
 ) -> None:
     """Test timeout error while sending analytics."""
     analytics = Analytics(hass)
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, exc=TimeoutError())
+    aioclient_mock.post(BASIC_ENDPOINT_URL_DEV, exc=TimeoutError())
 
     await analytics.save_preferences({ATTR_BASE: True})
-    with patch(
-        "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION_DEV
-    ):
-        await analytics.send_analytics()
+    await analytics.send_analytics()
 
     assert "Timeout sending analytics" in caplog.text
 
@@ -880,7 +921,7 @@ async def test_not_check_config_entries_if_yaml(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test skip config entry check if defined in yaml."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
     hass.http = Mock(ssl_certificate="/some/path/to/cert.pem")
 
@@ -938,7 +979,7 @@ async def test_submitting_legacy_integrations(
 ) -> None:
     """Test submitting legacy integrations."""
     hass.http = Mock(ssl_certificate=None)
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
 
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
@@ -975,23 +1016,24 @@ async def test_submitting_legacy_integrations(
     assert snapshot == submitted_data
 
 
-async def test_devices_payload(
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_devices_payload_no_entities(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test devices payload."""
+    """Test devices payload with no entities."""
     assert await async_setup_component(hass, "analytics", {})
     assert await async_devices_payload(hass) == {
         "version": "home-assistant:1",
-        "no_model_id": [],
-        "devices": [],
+        "home_assistant": MOCK_VERSION,
+        "integrations": {},
     }
 
     mock_config_entry = MockConfigEntry(domain="hue")
     mock_config_entry.add_to_hass(hass)
 
-    # Normal entry
+    # Normal device with all fields
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("device", "1")},
@@ -1005,7 +1047,7 @@ async def test_devices_payload(
         configuration_url="http://example.com/config",
     )
 
-    # Ignored because service type
+    # Service type device
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("device", "2")},
@@ -1014,23 +1056,21 @@ async def test_devices_payload(
         entry_type=dr.DeviceEntryType.SERVICE,
     )
 
-    # Ignored because no model id
-    no_model_id_config_entry = MockConfigEntry(domain="no_model_id")
-    no_model_id_config_entry.add_to_hass(hass)
+    # Device without model_id
     device_registry.async_get_or_create(
-        config_entry_id=no_model_id_config_entry.entry_id,
+        config_entry_id=mock_config_entry.entry_id,
         identifiers={("device", "4")},
         manufacturer="test-manufacturer",
     )
 
-    # Ignored because no manufacturer
+    # Device without manufacturer
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("device", "5")},
         model_id="test-model-id",
     )
 
-    # Entry with via device
+    # Device with via_device reference
     device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("device", "6")},
@@ -1039,36 +1079,731 @@ async def test_devices_payload(
         via_device=("device", "1"),
     )
 
-    assert await async_devices_payload(hass) == {
-        "version": "home-assistant:1",
-        "no_model_id": [],
-        "devices": [
-            {
-                "manufacturer": "test-manufacturer",
-                "model_id": "test-model-id",
-                "model": "test-model",
-                "sw_version": "test-sw-version",
-                "hw_version": "test-hw-version",
-                "integration": "hue",
-                "is_custom_integration": False,
-                "has_configuration_url": True,
-                "via_device": None,
-            },
-            {
-                "manufacturer": "test-manufacturer6",
-                "model_id": "test-model-id6",
-                "model": None,
-                "sw_version": None,
-                "hw_version": None,
-                "integration": "hue",
-                "is_custom_integration": False,
-                "has_configuration_url": False,
-                "via_device": 0,
-            },
-        ],
-    }
+    # Device from custom integration
+    mock_custom_config_entry = MockConfigEntry(domain="test")
+    mock_custom_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_custom_config_entry.entry_id,
+        identifiers={("device", "7")},
+        manufacturer="test-manufacturer7",
+        model_id="test-model-id7",
+    )
+
+    # Device from an integration with a service type
+    mock_service_config_entry = MockConfigEntry(domain="uptime")
+    mock_service_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_service_config_entry.entry_id,
+        identifiers={("device", "8")},
+        manufacturer="test-manufacturer8",
+        model_id="test-model-id8",
+    )
 
     client = await hass_client()
     response = await client.get("/api/analytics/devices")
     assert response.status == HTTPStatus.OK
-    assert await response.json() == await async_devices_payload(hass)
+    assert await response.json() == {
+        "version": "home-assistant:1",
+        "home_assistant": MOCK_VERSION,
+        "integrations": {
+            "hue": {
+                "devices": [
+                    {
+                        "entry_type": None,
+                        "has_configuration_url": True,
+                        "hw_version": "test-hw-version",
+                        "manufacturer": "test-manufacturer",
+                        "model": "test-model",
+                        "model_id": "test-model-id",
+                        "sw_version": "test-sw-version",
+                        "via_device": None,
+                        "entities": [],
+                    },
+                    {
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer",
+                        "model": None,
+                        "model_id": None,
+                        "sw_version": None,
+                        "via_device": None,
+                        "entities": [],
+                    },
+                    {
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": None,
+                        "model": None,
+                        "model_id": "test-model-id",
+                        "sw_version": None,
+                        "via_device": None,
+                        "entities": [],
+                    },
+                    {
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer6",
+                        "model": None,
+                        "model_id": "test-model-id6",
+                        "sw_version": None,
+                        "via_device": ["hue", 0],
+                        "entities": [],
+                    },
+                ],
+                "entities": [],
+            },
+        },
+    }
+
+
+async def test_devices_payload_with_entities(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test devices payload with entities."""
+    assert await async_setup_component(hass, "analytics", {})
+
+    mock_config_entry = MockConfigEntry(domain="hue")
+    mock_config_entry.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "1")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id",
+    )
+    device_entry_2 = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "2")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id",
+    )
+    device_entry_3 = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "3")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
+    # First device
+
+    # Entity with capabilities
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="1",
+        capabilities={"min_color_temp_kelvin": 2000, "max_color_temp_kelvin": 6535},
+        device_id=device_entry.id,
+        has_entity_name=True,
+    )
+    # Entity with category and device class
+    entity_registry.async_get_or_create(
+        domain="number",
+        platform="hue",
+        unique_id="1",
+        device_id=device_entry.id,
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
+        original_device_class=NumberDeviceClass.TEMPERATURE,
+        suggested_object_id="hue_1",
+    )
+    hass.states.async_set("number.hue_1", "2")
+    # Entity with assumed state
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="2",
+        device_id=device_entry.id,
+        has_entity_name=True,
+        suggested_object_id="hue_2",
+    )
+    hass.states.async_set("light.hue_2", "on", {ATTR_ASSUMED_STATE: True})
+    # Entity from a different integration
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="shelly",
+        unique_id="1",
+        device_id=device_entry.id,
+        has_entity_name=True,
+    )
+
+    # Second device
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="3",
+        device_id=device_entry_2.id,
+    )
+
+    # Third device (service type)
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="4",
+        device_id=device_entry_3.id,
+    )
+
+    # Entity without device with unit of measurement and state class
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="hue",
+        unique_id="1",
+        capabilities={"state_class": "measurement"},
+        original_device_class=SensorDeviceClass.TEMPERATURE,
+        unit_of_measurement="°C",
+    )
+
+    client = await hass_client()
+    response = await client.get("/api/analytics/devices")
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == {
+        "version": "home-assistant:1",
+        "home_assistant": MOCK_VERSION,
+        "integrations": {
+            "hue": {
+                "devices": [
+                    {
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer",
+                        "model": None,
+                        "model_id": "test-model-id",
+                        "sw_version": None,
+                        "via_device": None,
+                        "entities": [
+                            {
+                                "assumed_state": None,
+                                "domain": "light",
+                                "entity_category": None,
+                                "has_entity_name": True,
+                                "original_device_class": None,
+                                "unit_of_measurement": None,
+                            },
+                            {
+                                "assumed_state": False,
+                                "domain": "number",
+                                "entity_category": "config",
+                                "has_entity_name": True,
+                                "original_device_class": "temperature",
+                                "unit_of_measurement": None,
+                            },
+                            {
+                                "assumed_state": True,
+                                "domain": "light",
+                                "entity_category": None,
+                                "has_entity_name": True,
+                                "original_device_class": None,
+                                "unit_of_measurement": None,
+                            },
+                        ],
+                    },
+                    {
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer",
+                        "model": None,
+                        "model_id": "test-model-id",
+                        "sw_version": None,
+                        "via_device": None,
+                        "entities": [
+                            {
+                                "assumed_state": None,
+                                "domain": "light",
+                                "entity_category": None,
+                                "has_entity_name": False,
+                                "original_device_class": None,
+                                "unit_of_measurement": None,
+                            },
+                        ],
+                    },
+                ],
+                "entities": [
+                    {
+                        "assumed_state": None,
+                        "domain": "sensor",
+                        "entity_category": None,
+                        "has_entity_name": False,
+                        "original_device_class": "temperature",
+                        "unit_of_measurement": "°C",
+                    },
+                ],
+            },
+            "shelly": {
+                "devices": [],
+                "entities": [
+                    {
+                        "assumed_state": None,
+                        "domain": "light",
+                        "entity_category": None,
+                        "has_entity_name": True,
+                        "original_device_class": None,
+                        "unit_of_measurement": None,
+                    },
+                ],
+            },
+        },
+    }
+
+
+async def test_analytics_platforms(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test analytics platforms."""
+    assert await async_setup_component(hass, "analytics", {})
+
+    mock_config_entry = MockConfigEntry(domain="test")
+    mock_config_entry.add_to_hass(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "1")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id",
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "2")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id-2",
+    )
+
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="test",
+        unique_id="1",
+        capabilities={"options": ["secret1", "secret2"]},
+    )
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="test",
+        unique_id="2",
+        capabilities={"options": ["secret1", "secret2"]},
+    )
+
+    async def async_modify_analytics(
+        hass: HomeAssistant,
+        analytics_input: AnalyticsInput,
+    ) -> AnalyticsModifications:
+        first = True
+        devices_configs = {}
+        for device_id in analytics_input.device_ids:
+            device_config = DeviceAnalyticsModifications()
+            devices_configs[device_id] = device_config
+            if first:
+                first = False
+            else:
+                device_config.remove = True
+
+        first = True
+        entities_configs = {}
+        for entity_id in analytics_input.entity_ids:
+            entity_entry = entity_registry.async_get(entity_id)
+            entity_config = EntityAnalyticsModifications()
+            entities_configs[entity_id] = entity_config
+            if first:
+                first = False
+                entity_config.capabilities = dict(entity_entry.capabilities)
+                entity_config.capabilities["options"] = len(
+                    entity_config.capabilities["options"]
+                )
+            else:
+                entity_config.remove = True
+
+        return AnalyticsModifications(
+            devices=devices_configs,
+            entities=entities_configs,
+        )
+
+    platform_mock = Mock(async_modify_analytics=async_modify_analytics)
+    mock_platform(hass, "test.analytics", platform_mock)
+
+    client = await hass_client()
+    response = await client.get("/api/analytics/devices")
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == {
+        "version": "home-assistant:1",
+        "home_assistant": MOCK_VERSION,
+        "integrations": {
+            "test": {
+                "devices": [
+                    {
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer",
+                        "model": None,
+                        "model_id": "test-model-id",
+                        "sw_version": None,
+                        "via_device": None,
+                        "entities": [],
+                    },
+                ],
+                "entities": [
+                    {
+                        "assumed_state": None,
+                        "domain": "sensor",
+                        "entity_category": None,
+                        "has_entity_name": False,
+                        "original_device_class": None,
+                        "unit_of_measurement": None,
+                    },
+                ],
+            },
+        },
+    }
+
+
+@pytest.mark.usefixtures("labs_snapshots_enabled")
+async def test_send_snapshot_disabled(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test no snapshots are sent."""
+    analytics = Analytics(hass)
+
+    await analytics.send_snapshot()
+
+    await analytics.save_preferences({ATTR_SNAPSHOTS: False})
+    await analytics.send_snapshot()
+
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.usefixtures("labs_snapshots_enabled")
+async def test_send_snapshot_success(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test successful snapshot submission."""
+    aioclient_mock.post(
+        SNAPSHOT_ENDPOINT_URL,
+        status=200,
+        json={"submission_identifier": "test-identifier-123"},
+    )
+
+    analytics = Analytics(hass)
+
+    await analytics.save_preferences({ATTR_SNAPSHOTS: True})
+    await analytics.send_snapshot()
+
+    assert len(aioclient_mock.mock_calls) == 1
+
+    preferences = await analytics._store.async_load()
+    assert preferences["submission_identifier"] == "test-identifier-123"
+    assert "Submitted snapshot analytics to Home Assistant servers" in caplog.text
+
+
+@pytest.mark.usefixtures("labs_snapshots_enabled")
+async def test_send_snapshot_with_existing_identifier(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test snapshot submission with existing identifier."""
+    aioclient_mock.post(
+        SNAPSHOT_ENDPOINT_URL,
+        status=200,
+        json={"submission_identifier": "test-identifier-123"},
+    )
+
+    analytics = Analytics(hass)
+    with patch(
+        "homeassistant.helpers.storage.Store.async_load",
+        return_value={
+            "onboarded": True,
+            "preferences": {ATTR_BASE: True, ATTR_SNAPSHOTS: True},
+            "uuid": "12345",
+            "submission_identifier": "old-identifier",
+        },
+    ):
+        await analytics.load()
+
+    await analytics.send_snapshot()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call_headers = aioclient_mock.mock_calls[0][3]
+    assert call_headers["X-Device-Database-Submission-Identifier"] == "old-identifier"
+
+    preferences = await analytics._store.async_load()
+    assert preferences["submission_identifier"] == "test-identifier-123"
+    assert "Submitted snapshot analytics to Home Assistant servers" in caplog.text
+
+
+@pytest.mark.usefixtures("labs_snapshots_enabled")
+async def test_send_snapshot_invalid_identifier(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test snapshot submission with invalid identifier."""
+    aioclient_mock.post(
+        SNAPSHOT_ENDPOINT_URL,
+        status=400,
+        json={
+            "kind": "invalid-submission-identifier",
+            "message": "The identifier is invalid",
+        },
+    )
+
+    analytics = Analytics(hass)
+    with patch(
+        "homeassistant.helpers.storage.Store.async_load",
+        return_value={
+            "onboarded": True,
+            "preferences": {ATTR_BASE: True, ATTR_SNAPSHOTS: True},
+            "uuid": "12345",
+            "submission_identifier": "invalid-identifier",
+        },
+    ):
+        await analytics.load()
+
+    await analytics.send_snapshot()
+
+    assert len(aioclient_mock.mock_calls) == 1
+
+    preferences = await analytics._store.async_load()
+    assert preferences.get("submission_identifier") is None
+    assert "Invalid submission identifier" in caplog.text
+
+
+@pytest.mark.usefixtures("labs_snapshots_enabled")
+@pytest.mark.parametrize(
+    ("post_kwargs", "expected_log"),
+    [
+        (
+            {
+                "status": 400,
+                "json": {
+                    "kind": "malformed-payload",
+                    "message": "Invalid payload format",
+                },
+            },
+            "Malformed snapshot analytics submission",
+        ),
+        (
+            {"status": 503, "text": "Service Unavailable"},
+            f"Snapshot analytics service {SNAPSHOT_ENDPOINT_URL} unavailable",
+        ),
+        (
+            {"status": 500},
+            "Unexpected status code 500 when submitting snapshot analytics",
+        ),
+        (
+            {"exc": TimeoutError()},
+            "Timeout sending snapshot analytics",
+        ),
+        (
+            {"exc": aiohttp.ClientError()},
+            "Error sending snapshot analytics",
+        ),
+    ],
+    ids=[
+        "bad_request",
+        "service_unavailable",
+        "unexpected_status",
+        "timeout",
+        "client_error",
+    ],
+)
+async def test_send_snapshot_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+    post_kwargs: dict[str, Any],
+    expected_log: str,
+) -> None:
+    """Test snapshot submission error."""
+    aioclient_mock.post(SNAPSHOT_ENDPOINT_URL, **post_kwargs)
+
+    analytics = Analytics(hass)
+    with patch(
+        "homeassistant.helpers.storage.Store.async_load",
+        return_value={
+            "onboarded": True,
+            "preferences": {ATTR_BASE: True, ATTR_SNAPSHOTS: True},
+            "uuid": "12345",
+        },
+    ):
+        await analytics.load()
+
+    await analytics.send_snapshot()
+
+    assert expected_log in caplog.text
+
+
+@pytest.mark.usefixtures("labs_snapshots_enabled")
+async def test_async_schedule(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test scheduling."""
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
+    aioclient_mock.post(SNAPSHOT_ENDPOINT_URL, status=200, json={})
+
+    analytics = Analytics(hass)
+
+    # Schedule when not onboarded
+    await analytics.async_schedule()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=25))
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 0
+
+    # Onboard and enable both
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_SNAPSHOTS: True})
+
+    await analytics.async_schedule()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=25))
+    await hass.async_block_till_done()
+
+    assert any(str(call[1]) == BASIC_ENDPOINT_URL for call in aioclient_mock.mock_calls)
+    assert any(
+        str(call[1]) == SNAPSHOT_ENDPOINT_URL for call in aioclient_mock.mock_calls
+    )
+
+    preferences = await analytics._store.async_load()
+    assert preferences["snapshot_submission_time"] is not None
+    assert 0 <= preferences["snapshot_submission_time"] <= 86400
+
+
+@pytest.mark.usefixtures("labs_snapshots_enabled")
+async def test_async_schedule_disabled(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test scheduling when disabled."""
+    analytics = Analytics(hass)
+    with patch(
+        "homeassistant.helpers.storage.Store.async_load",
+        return_value={
+            "onboarded": True,
+            "preferences": {ATTR_BASE: False, ATTR_SNAPSHOTS: False},
+            "uuid": "12345",
+        },
+    ):
+        await analytics.load()
+
+    await analytics.async_schedule()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=25))
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.usefixtures("labs_snapshots_enabled")
+async def test_async_schedule_already_scheduled(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test not rescheduled if already scheduled."""
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
+    aioclient_mock.post(SNAPSHOT_ENDPOINT_URL, status=200, json={})
+
+    analytics = Analytics(hass)
+    with patch(
+        "homeassistant.helpers.storage.Store.async_load",
+        return_value={
+            "onboarded": True,
+            "preferences": {ATTR_BASE: True, ATTR_SNAPSHOTS: True},
+            "uuid": "12345",
+        },
+    ):
+        await analytics.load()
+
+    await analytics.async_schedule()
+    await analytics.async_schedule()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=25))
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 2
+
+    assert any(str(call[1]) == BASIC_ENDPOINT_URL for call in aioclient_mock.mock_calls)
+    assert any(
+        str(call[1]) == SNAPSHOT_ENDPOINT_URL for call in aioclient_mock.mock_calls
+    )
+
+
+@pytest.mark.usefixtures("labs_snapshots_enabled")
+@pytest.mark.parametrize(("onboarded"), [True, False])
+async def test_async_schedule_cancel_when_disabled(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    onboarded: bool,
+) -> None:
+    """Test that scheduled tasks are cancelled when disabled."""
+    analytics = Analytics(hass)
+    with patch(
+        "homeassistant.helpers.storage.Store.async_load",
+        return_value={
+            "onboarded": True,
+            "preferences": {ATTR_BASE: True, ATTR_SNAPSHOTS: True},
+            "uuid": "12345",
+        },
+    ):
+        await analytics.load()
+
+    await analytics.async_schedule()
+
+    with patch(
+        "homeassistant.helpers.storage.Store.async_load",
+        return_value={
+            "onboarded": onboarded,
+            "preferences": {ATTR_BASE: False, ATTR_SNAPSHOTS: False},
+            "uuid": "12345",
+        },
+    ):
+        await analytics.load()
+
+    await analytics.async_schedule()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=25))
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 0
+
+
+@pytest.mark.usefixtures("labs_snapshots_enabled")
+async def test_async_schedule_snapshots_url(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that snapshots use provided url."""
+    url = "https://custom-snapshot-url.example.com"
+    endpoint = f"{url}{SNAPSHOT_URL_PATH}"
+
+    aioclient_mock.post(endpoint, status=200, json={})
+
+    analytics = Analytics(hass, url)
+    with patch(
+        "homeassistant.helpers.storage.Store.async_load",
+        return_value={
+            "onboarded": True,
+            "preferences": {ATTR_BASE: False, ATTR_SNAPSHOTS: True},
+            "uuid": "12345",
+        },
+    ):
+        await analytics.load()
+
+    await analytics.async_schedule()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=25))
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert str(aioclient_mock.mock_calls[0][1]) == endpoint

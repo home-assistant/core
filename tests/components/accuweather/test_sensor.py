@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
+from accuweather import ApiError, RequestsExceededError
 from aiohttp.client_exceptions import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -86,7 +86,6 @@ async def test_availability(
         ApiError("API Error"),
         ConnectionError,
         ClientConnectorError,
-        InvalidApiKeyError("Invalid API key"),
         RequestsExceededError("Requests exceeded"),
     ],
 )

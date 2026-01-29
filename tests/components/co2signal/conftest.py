@@ -30,8 +30,7 @@ def mock_electricity_maps() -> Generator[MagicMock]:
         ),
     ):
         client = electricity_maps.return_value
-        client.latest_carbon_intensity_by_coordinates.return_value = VALID_RESPONSE
-        client.latest_carbon_intensity_by_country_code.return_value = VALID_RESPONSE
+        client.carbon_intensity_for_home_assistant.return_value = VALID_RESPONSE
 
         yield client
 

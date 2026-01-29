@@ -6,24 +6,26 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import rgetattr
-from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
-from .coordinator import VeSyncDataCoordinator
+from .const import VS_DEVICES, VS_DISCOVERY
+from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -31,54 +33,65 @@ class VeSyncBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A class that describes custom binary sensor entities."""
 
     is_on: Callable[[VeSyncBaseDevice], bool]
+    exists_fn: Callable[[VeSyncBaseDevice], bool] = lambda _: True
 
 
 SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
     VeSyncBinarySensorEntityDescription(
         key="water_lacks",
         translation_key="water_lacks",
-        is_on=lambda device: device.water_lacks,
+        is_on=lambda device: device.state.water_lacks,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        exists_fn=lambda device: rgetattr(device, "state.water_lacks") is not None,
     ),
     VeSyncBinarySensorEntityDescription(
         key="details.water_tank_lifted",
         translation_key="water_tank_lifted",
-        is_on=lambda device: device.details["water_tank_lifted"],
+        is_on=lambda device: device.state.water_tank_lifted,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        exists_fn=(
+            lambda device: rgetattr(device, "state.water_tank_lifted") is not None
+        ),
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VesyncConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary_sensor platform."""
 
-    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+    coordinator = config_entry.runtime_data
 
     @callback
-    def discover(devices):
+    def discover(devices: list[VeSyncBaseDevice]) -> None:
         """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
+    _setup_entities(
+        config_entry.runtime_data.manager.devices, async_add_entities, coordinator
+    )
 
 
 @callback
-def _setup_entities(devices, async_add_entities, coordinator):
+def _setup_entities(
+    devices: DeviceContainer | list[VeSyncBaseDevice],
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    coordinator: VeSyncDataCoordinator,
+) -> None:
     """Add entity."""
     async_add_entities(
         (
             VeSyncBinarySensor(dev, description, coordinator)
             for dev in devices
             for description in SENSOR_DESCRIPTIONS
-            if rgetattr(dev, description.key) is not None
+            if description.exists_fn(dev)
         ),
     )
 

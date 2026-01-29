@@ -17,6 +17,7 @@ ALL_MATCH_REGEX: str = ".*"
 
 CONF_REGIONS: str = "regions"
 CONF_MESSAGE_SLOTS: str = "slots"
+CONF_FILTERS: str = "filters"
 CONF_FILTER_CORONA: str = "corona_filter"  # deprecated
 CONF_HEADLINE_FILTER: str = "headline_filter"
 CONF_AREA_FILTER: str = "area_filter"

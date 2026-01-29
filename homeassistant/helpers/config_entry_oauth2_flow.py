@@ -29,6 +29,7 @@ from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_application_credentials
 from homeassistant.util.hass_dict import HassKey
 
@@ -59,6 +60,10 @@ CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 
 OAUTH_AUTHORIZE_URL_TIMEOUT_SEC = 30
 OAUTH_TOKEN_TIMEOUT_SEC = 30
+
+
+class ImplementationUnavailableError(HomeAssistantError):
+    """Raised when an underlying implementation is unavailable."""
 
 
 @callback
@@ -375,7 +380,14 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         self, user_input: dict | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow start."""
-        implementations = await async_get_implementations(self.hass, self.DOMAIN)
+        try:
+            implementations = await async_get_implementations(self.hass, self.DOMAIN)
+        except ImplementationUnavailableError as err:
+            self.logger.error(
+                "No OAuth2 implementations available: %s",
+                ", ".join(str(e) for e in err.args),
+            )
+            return self.async_abort(reason="oauth_implementation_unavailable")
 
         if user_input is not None:
             self.flow_impl = implementations[user_input["implementation"]]
@@ -563,9 +575,16 @@ async def async_get_implementations(
         return registered
 
     registered = dict(registered)
+    exceptions = []
     for get_impl in list(hass.data[DATA_PROVIDERS].values()):
-        for impl in await get_impl(hass, domain):
-            registered[impl.domain] = impl
+        try:
+            for impl in await get_impl(hass, domain):
+                registered[impl.domain] = impl
+        except ImplementationUnavailableError as err:
+            exceptions.append(err)
+
+    if not registered and exceptions:
+        raise ImplementationUnavailableError(*exceptions)
 
     return registered
 

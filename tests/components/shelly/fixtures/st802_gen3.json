@@ -1,0 +1,373 @@
+{
+  "config": {
+    "ble": {
+      "enable": true,
+      "rpc": {
+        "enable": true
+      }
+    },
+    "boolean:200": {
+      "access": "crw",
+      "default_value": false,
+      "id": 200,
+      "meta": {
+        "cloud": ["log"],
+        "ui": {
+          "titles": ["Off", "On"],
+          "view": "toggle"
+        }
+      },
+      "name": "Anti-Freeze",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "anti_freeze"
+    },
+    "boolean:201": {
+      "access": "crw",
+      "default_value": false,
+      "id": 201,
+      "meta": {
+        "cloud": ["log"],
+        "ui": {
+          "titles": ["Disabled", "Enabled"],
+          "view": "toggle"
+        }
+      },
+      "name": "Enable thermostat",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "enable"
+    },
+    "bthome": {},
+    "cloud": {
+      "enable": false,
+      "server": "wss://repo.shelly.cloud:6022/jrpc"
+    },
+    "enum:200": {
+      "access": "crw",
+      "default_value": "auto",
+      "id": 200,
+      "meta": {
+        "cloud": ["log"],
+        "ui": {
+          "titles": {
+            "auto": "Auto",
+            "high": "High",
+            "low": "Low",
+            "medium": "Medium",
+            "strong": "Strong",
+            "whisper": "Whisper"
+          },
+          "view": "select"
+        }
+      },
+      "name": "Fan speed",
+      "options": ["auto", "low", "medium", "high"],
+      "owner": "service:0",
+      "persisted": false,
+      "role": "fan_speed"
+    },
+    "enum:201": {
+      "access": "crw",
+      "default_value": "cool",
+      "id": 201,
+      "meta": {
+        "ui": {
+          "titles": {
+            "boost": "Boost",
+            "cool": "Cool",
+            "dry": "Dry",
+            "floor_heating": "Floor heating",
+            "heat": "Heat",
+            "ventilation": "Ventilation"
+          },
+          "view": "select"
+        }
+      },
+      "name": "Working mode",
+      "options": ["cool", "dry", "heat", "ventilation"],
+      "owner": "service:0",
+      "persisted": false,
+      "role": "working_mode"
+    },
+    "mqtt": {
+      "client_id": "st-802-aabbccddeeff",
+      "enable": false,
+      "enable_control": true,
+      "enable_rpc": true,
+      "rpc_ntf": true,
+      "server": "mqtt.test.server",
+      "ssl_ca": null,
+      "status_ntf": false,
+      "topic_prefix": "st-802-aabbccddeeff",
+      "use_client_cert": false,
+      "user": null
+    },
+    "number:200": {
+      "access": "crw",
+      "default_value": 0,
+      "id": 200,
+      "max": 100,
+      "meta": {
+        "cloud": ["measurement", "log"],
+        "ui": {
+          "unit": "%",
+          "view": "label"
+        }
+      },
+      "min": 0,
+      "name": "Current humidity",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "current_humidity"
+    },
+    "number:201": {
+      "access": "crw",
+      "default_value": 20,
+      "id": 201,
+      "max": 35,
+      "meta": {
+        "cloud": ["measurement", "log"],
+        "ui": {
+          "step": 0.5,
+          "unit": "°C",
+          "view": "label"
+        }
+      },
+      "min": 5,
+      "name": "Current temperature",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "current_temperature"
+    },
+    "number:202": {
+      "access": "crw",
+      "default_value": 45,
+      "id": 202,
+      "max": 75,
+      "meta": {
+        "cloud": ["log"],
+        "ui": {
+          "unit": "%",
+          "view": "slider"
+        }
+      },
+      "min": 40,
+      "name": "Target humidity",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "target_humidity"
+    },
+    "number:203": {
+      "access": "crw",
+      "default_value": 20,
+      "id": 203,
+      "max": 35,
+      "meta": {
+        "cloud": ["log"],
+        "ui": {
+          "step": 0.5,
+          "unit": "°C",
+          "view": "slider"
+        }
+      },
+      "min": 5,
+      "name": "Target temperature",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "target_temperature"
+    },
+    "service:0": {
+      "id": 0,
+      "temp_unit": "C",
+      "thermostat_mode": "auto"
+    },
+    "sys": {
+      "cfg_rev": 70,
+      "debug": {
+        "file_level": null,
+        "level": 2,
+        "mqtt": {
+          "enable": false
+        },
+        "udp": {
+          "addr": null
+        },
+        "websocket": {
+          "enable": false
+        }
+      },
+      "device": {
+        "discoverable": true,
+        "eco_mode": false,
+        "fw_id": "20241121-103618/1.4.99-xt-prod1-gc6448fb",
+        "mac": "AABBCCDDEEFF",
+        "name": "Test Name"
+      },
+      "location": {
+        "lat": 32.1033,
+        "lon": 34.8879,
+        "tz": "Asia/Jerusalem"
+      },
+      "rpc_udp": {
+        "dst_addr": null,
+        "listen_port": null
+      },
+      "sntp": {
+        "server": "sntp.test.server"
+      },
+      "ui_data": {}
+    },
+    "wifi": {
+      "ap": {
+        "enable": true,
+        "is_open": true,
+        "range_extender": {
+          "enable": false
+        },
+        "ssid": "ST-802-AABBCCDDEEFF"
+      },
+      "roam": {
+        "interval": 60,
+        "rssi_thr": -80
+      },
+      "sta": {
+        "enable": true,
+        "gw": null,
+        "ip": null,
+        "ipv4mode": "dhcp",
+        "is_open": false,
+        "nameserver": null,
+        "netmask": null,
+        "ssid": "Wifi-Network-Name"
+      },
+      "sta1": {
+        "enable": false,
+        "gw": null,
+        "ip": null,
+        "ipv4mode": "dhcp",
+        "is_open": true,
+        "nameserver": null,
+        "netmask": null,
+        "ssid": null
+      }
+    },
+    "ws": {
+      "enable": false,
+      "server": null,
+      "ssl_ca": "ca.pem"
+    }
+  },
+  "shelly": {
+    "app": "XT1",
+    "auth_domain": null,
+    "auth_en": false,
+    "fw_id": "20241121-103618/1.4.99-xt-prod1-gc6448fb",
+    "gen": 3,
+    "id": "st-802-aabbccddeeff",
+    "jti": "00023E000006",
+    "jwt": {
+      "aud": "XT1",
+      "f": 1,
+      "iat": 1732626411,
+      "jti": "00023E000006",
+      "n": "Youth Smart Thermostat ST802",
+      "p": "ST-802",
+      "url": "https://www.linkedgo-e.com/",
+      "v": 1,
+      "xt1": {
+        "svc0": {
+          "type": "linkedgo-st-802-hvac"
+        }
+      }
+    },
+    "mac": "AABBCCDDEEFF",
+    "model": "S3XT-0S",
+    "name": "Test Name",
+    "slot": 0,
+    "svc0": {
+      "build_id": "20241126-134710/490e7db",
+      "type": "linkedgo-st-802-hvac",
+      "ver": "0.5.2-st802-prod0"
+    },
+    "ver": "1.4.99-xt-prod1"
+  },
+  "status": {
+    "ble": {},
+    "boolean:200": {
+      "value": false
+    },
+    "boolean:201": {
+      "value": true
+    },
+    "bthome": {},
+    "cloud": {
+      "connected": false
+    },
+    "enum:200": {
+      "value": "auto"
+    },
+    "enum:201": {
+      "value": "heat"
+    },
+    "mqtt": {
+      "connected": false
+    },
+    "number:200": {
+      "value": 58
+    },
+    "number:201": {
+      "value": 25.1
+    },
+    "number:202": {
+      "value": 60
+    },
+    "number:203": {
+      "value": 20.5
+    },
+    "service:0": {
+      "etag": "49da4f1517e4f8a548cb3b1491d14597",
+      "state": "running",
+      "stats": {
+        "mem": 655,
+        "mem_peak": 786
+      }
+    },
+    "sys": {
+      "available_updates": {
+        "stable": {
+          "svc0": {
+            "ver": "0.7.0"
+          },
+          "version": "1.5.1"
+        }
+      },
+      "btrelay_rev": 0,
+      "cfg_rev": 70,
+      "fs_free": 589824,
+      "fs_size": 1048576,
+      "kvs_rev": 0,
+      "last_sync_ts": 1759408492,
+      "mac": "AABBCCDDEEFF",
+      "ram_free": 46756,
+      "ram_min_free": 24900,
+      "ram_size": 252388,
+      "reset_reason": 1,
+      "restart_required": false,
+      "schedule_rev": 0,
+      "time": "15:51",
+      "unixtime": 1759409476,
+      "uptime": 18989,
+      "webhook_rev": 1
+    },
+    "wifi": {
+      "rssi": -46,
+      "ssid": "Wifi-Network-Name",
+      "sta_ip": "192.168.2.24",
+      "status": "got ip"
+    },
+    "ws": {
+      "connected": false
+    }
+  }
+}

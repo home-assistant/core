@@ -1,9 +1,11 @@
 """Test ZHA light."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
 from zha.application.platforms.light.const import FLASH_EFFECTS
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import general, lighting
@@ -114,8 +116,8 @@ def light_platform_only():
 )
 async def test_light(
     hass: HomeAssistant,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
     device,
     reporting,
 ) -> None:
@@ -193,7 +195,9 @@ async def test_light(
     new=AsyncMock(return_value=[sentinel.data, zcl_f.Status.SUCCESS]),
 )
 async def test_on_with_off_color(
-    hass: HomeAssistant, setup_zha, zigpy_device_mock
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test turning on the light and sending color commands before on/level commands for supporting lights."""
 
@@ -272,7 +276,6 @@ async def test_on_with_off_color(
         dev1_cluster_on_off.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     assert dev1_cluster_color.request.call_args == call(
         False,
@@ -282,7 +285,6 @@ async def test_on_with_off_color(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
     light1_state = hass.states.get(device_1_entity_id)
@@ -328,7 +330,6 @@ async def test_on_with_off_color(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     assert dev1_cluster_color.request.call_args == call(
         False,
@@ -338,7 +339,6 @@ async def test_on_with_off_color(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     assert dev1_cluster_level.request.call_args_list[1] == call(
         False,
@@ -348,7 +348,6 @@ async def test_on_with_off_color(
         transition_time=0,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
     light1_state = hass.states.get(device_1_entity_id)
@@ -400,7 +399,6 @@ async def async_test_on_off_from_hass(
         cluster.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
     await async_test_off_from_hass(hass, cluster, entity_id)
@@ -424,7 +422,6 @@ async def async_test_off_from_hass(
         cluster.commands_by_name["off"].schema,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
 
@@ -455,7 +452,6 @@ async def async_test_level_on_off_from_hass(
         on_off_cluster.commands_by_name["on"].schema,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -480,7 +476,6 @@ async def async_test_level_on_off_from_hass(
         transition_time=100,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -504,7 +499,6 @@ async def async_test_level_on_off_from_hass(
         transition_time=int(expected_default_transition),
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
     on_off_cluster.request.reset_mock()
     level_cluster.request.reset_mock()
@@ -554,7 +548,6 @@ async def async_test_flash_from_hass(
         effect_variant=general.Identify.EffectVariant.Default,
         expect_reply=True,
         manufacturer=None,
-        tsn=None,
     )
 
 
@@ -576,8 +569,8 @@ async def async_test_flash_from_hass(
 )
 async def test_light_exception_on_creation(
     hass: HomeAssistant,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test ZHA light entity creation exception."""

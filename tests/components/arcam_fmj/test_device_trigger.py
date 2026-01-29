@@ -1,7 +1,5 @@
 """The tests for Arcam FMJ Receiver control device triggers."""
 
-import pytest
-
 from homeassistant.components import automation
 from homeassistant.components.arcam_fmj.const import DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -10,11 +8,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_get_device_automations
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 async def test_get_triggers(

@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC input voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -134,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hall effect strength',
     'options': dict({
     }),
     'original_device_class': None,
@@ -185,6 +188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Handle temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -241,6 +245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last movement time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -295,6 +300,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max tip temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -366,6 +372,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Operating mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -434,6 +441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -495,6 +503,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power source',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -552,6 +561,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Raw tip voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -566,7 +576,7 @@
     'supported_features': 0,
     'translation_key': <PinecilSensor.TIP_VOLTAGE: 'tip_voltage'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_tip_voltage',
-    'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'µV'>,
+    'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'μV'>,
   })
 # ---
 # name: test_sensors[sensor.pinecil_raw_tip_voltage-state]
@@ -575,7 +585,7 @@
       'device_class': 'voltage',
       'friendly_name': 'Pinecil Raw tip voltage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'µV'>,
+      'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'μV'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.pinecil_raw_tip_voltage',
@@ -608,6 +618,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tip resistance',
     'options': dict({
     }),
     'original_device_class': None,
@@ -660,6 +671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Tip temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -716,6 +728,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

@@ -1,15 +1,15 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "description": "Select a location to get to store downloads. The setup will check if the directory exists."
-      }
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
       "directory_does_not_exist": "The directory could not be reached. Please check your settings."
     },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    "step": {
+      "user": {
+        "description": "Select a location to get to store downloads. The setup will check if the directory exists."
+      }
     }
   },
   "exceptions": {
@@ -22,26 +22,26 @@
   },
   "services": {
     "download_file": {
-      "name": "Download file",
       "description": "Downloads a file to the download location.",
       "fields": {
-        "url": {
-          "name": "[%key:common::config_flow::data::url%]",
-          "description": "The URL of the file to download."
-        },
-        "subdir": {
-          "name": "Subdirectory",
-          "description": "Relative download path."
-        },
         "filename": {
-          "name": "Filename",
-          "description": "Custom name for the downloaded file."
+          "description": "Custom name for the downloaded file.",
+          "name": "Filename"
         },
         "overwrite": {
-          "name": "Overwrite",
-          "description": "Overwrite file if it exists."
+          "description": "Overwrite file if it exists.",
+          "name": "Overwrite"
+        },
+        "subdir": {
+          "description": "Relative download path.",
+          "name": "Subdirectory"
+        },
+        "url": {
+          "description": "The URL of the file to download.",
+          "name": "[%key:common::config_flow::data::url%]"
         }
-      }
+      },
+      "name": "Download file"
     }
   }
 }

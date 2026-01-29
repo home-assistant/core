@@ -15,9 +15,13 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+UPNP_ISSUE_ID = "upnp_disabled"
+UPNP_DOCUMENTATION_URL = "https://www.home-assistant.io/integrations/sonos/#403-error-when-setting-up-the-integration"
 
 SUB_FAIL_ISSUE_ID = "subscriptions_failed"
 SUB_FAIL_URL = "https://www.home-assistant.io/integrations/sonos/#network-requirements"
@@ -33,6 +37,7 @@ SONOS_RADIO = "radio"
 SONOS_SHARE = "share"
 SONOS_OTHER_ITEM = "other items"
 SONOS_AUDIO_BOOK = "audio book"
+SONOS_PODCAST = "podcast"
 
 MEDIA_TYPE_DIRECTORY = MediaClass.DIRECTORY
 
@@ -62,6 +67,7 @@ SONOS_TO_MEDIA_CLASSES = {
     SONOS_COMPOSER: MediaClass.COMPOSER,
     SONOS_GENRE: MediaClass.GENRE,
     SONOS_PLAYLISTS: MediaClass.PLAYLIST,
+    SONOS_PODCAST: MediaClass.PODCAST,
     SONOS_TRACKS: MediaClass.TRACK,
     SONOS_SHARE: MediaClass.DIRECTORY,
     "object.container": MediaClass.DIRECTORY,
@@ -71,6 +77,7 @@ SONOS_TO_MEDIA_CLASSES = {
     "object.container.person.musicArtist": MediaClass.ARTIST,
     "object.container.playlistContainer.sameArtist": MediaClass.ARTIST,
     "object.container.playlistContainer": MediaClass.PLAYLIST,
+    "object.container.podcast": MediaClass.PODCAST,
     "object.item": MediaClass.TRACK,
     "object.item.audioItem.musicTrack": MediaClass.TRACK,
     "object.item.audioItem.audioBroadcast": MediaClass.GENRE,
@@ -84,6 +91,7 @@ SONOS_TO_MEDIA_TYPES = {
     SONOS_COMPOSER: MediaType.COMPOSER,
     SONOS_GENRE: MediaType.GENRE,
     SONOS_PLAYLISTS: MediaType.PLAYLIST,
+    SONOS_PODCAST: MediaType.PODCAST,
     SONOS_TRACKS: MediaType.TRACK,
     "object.container": MEDIA_TYPE_DIRECTORY,
     "object.container.album.musicAlbum": MediaType.ALBUM,
@@ -92,6 +100,7 @@ SONOS_TO_MEDIA_TYPES = {
     "object.container.person.musicArtist": MediaType.ARTIST,
     "object.container.playlistContainer.sameArtist": MediaType.ARTIST,
     "object.container.playlistContainer": MediaType.PLAYLIST,
+    "object.container.podcast": MediaType.PODCAST,
     "object.item.audioItem.musicTrack": MediaType.TRACK,
     "object.item.audioItem.audioBook": MediaType.TRACK,
 }
@@ -121,6 +130,7 @@ SONOS_TYPES_MAPPING = {
     "object.container.person.musicArtist": SONOS_ALBUM_ARTIST,
     "object.container.playlistContainer.sameArtist": SONOS_ARTIST,
     "object.container.playlistContainer": SONOS_PLAYLISTS,
+    "object.container.podcast": SONOS_PODCAST,
     "object.item": SONOS_OTHER_ITEM,
     "object.item.audioItem.musicTrack": SONOS_TRACKS,
     "object.item.audioItem.audioBroadcast": SONOS_RADIO,
@@ -145,6 +155,7 @@ PLAYABLE_MEDIA_TYPES = [
     MediaType.CONTRIBUTING_ARTIST,
     MediaType.GENRE,
     MediaType.PLAYLIST,
+    MediaType.PODCAST,
     MediaType.TRACK,
 ]
 
@@ -154,6 +165,7 @@ SONOS_CREATE_AUDIO_FORMAT_SENSOR = "sonos_create_audio_format_sensor"
 SONOS_CREATE_BATTERY = "sonos_create_battery"
 SONOS_CREATE_FAVORITES_SENSOR = "sonos_create_favorites_sensor"
 SONOS_CREATE_MIC_SENSOR = "sonos_create_mic_sensor"
+SONOS_CREATE_SELECTS = "sonos_create_selects"
 SONOS_CREATE_SWITCHES = "sonos_create_switches"
 SONOS_CREATE_LEVELS = "sonos_create_levels"
 SONOS_CREATE_MEDIA_PLAYER = "sonos_create_media_player"
@@ -189,6 +201,10 @@ MODELS_LINEIN_AND_TV = ("AMP",)
 MODEL_SONOS_ARC_ULTRA = "SONOS ARC ULTRA"
 
 ATTR_SPEECH_ENHANCEMENT_ENABLED = "speech_enhance_enabled"
+SPEECH_DIALOG_LEVEL = "speech_dialog_level"
+ATTR_DIALOG_LEVEL = "dialog_level"
+ATTR_DIALOG_LEVEL_ENUM = "dialog_level_enum"
+ATTR_QUEUE_POSITION = "queue_position"
 
 AVAILABILITY_CHECK_INTERVAL = datetime.timedelta(minutes=1)
 AVAILABILITY_TIMEOUT = AVAILABILITY_CHECK_INTERVAL.total_seconds() * 4.5
@@ -196,3 +212,4 @@ BATTERY_SCAN_INTERVAL = datetime.timedelta(minutes=15)
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
 SUBSCRIPTION_TIMEOUT = 1200
+LONG_SERVICE_TIMEOUT = 30.0

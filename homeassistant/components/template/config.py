@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from contextlib import suppress
+import itertools
 import logging
 from typing import Any
 
@@ -17,6 +18,7 @@ from homeassistant.components.blueprint import (
 )
 from homeassistant.components.button import DOMAIN as DOMAIN_BUTTON
 from homeassistant.components.cover import DOMAIN as DOMAIN_COVER
+from homeassistant.components.event import DOMAIN as DOMAIN_EVENT
 from homeassistant.components.fan import DOMAIN as DOMAIN_FAN
 from homeassistant.components.image import DOMAIN as DOMAIN_IMAGE
 from homeassistant.components.light import DOMAIN as DOMAIN_LIGHT
@@ -25,6 +27,7 @@ from homeassistant.components.number import DOMAIN as DOMAIN_NUMBER
 from homeassistant.components.select import DOMAIN as DOMAIN_SELECT
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
+from homeassistant.components.update import DOMAIN as DOMAIN_UPDATE
 from homeassistant.components.vacuum import DOMAIN as DOMAIN_VACUUM
 from homeassistant.components.weather import DOMAIN as DOMAIN_WEATHER
 from homeassistant.config import async_log_schema_error, config_without_domain
@@ -42,17 +45,21 @@ from homeassistant.const import (
     CONF_VARIABLES,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.condition import async_validate_conditions_config
+from homeassistant.helpers.issue_registry import IssueSeverity
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_notify_setup_error
+from homeassistant.util import yaml as yaml_util
 
 from . import (
     alarm_control_panel as alarm_control_panel_platform,
     binary_sensor as binary_sensor_platform,
     button as button_platform,
     cover as cover_platform,
+    event as event_platform,
     fan as fan_platform,
     image as image_platform,
     light as light_platform,
@@ -61,13 +68,49 @@ from . import (
     select as select_platform,
     sensor as sensor_platform,
     switch as switch_platform,
+    update as update_platform,
     vacuum as vacuum_platform,
     weather as weather_platform,
 )
-from .const import DOMAIN, PLATFORMS, TemplateConfig
-from .helpers import async_get_blueprints, rewrite_legacy_to_modern_configs
+from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS, TemplateConfig
+from .helpers import (
+    async_get_blueprints,
+    create_legacy_template_issue,
+    rewrite_legacy_to_modern_configs,
+)
+
+_LOGGER = logging.getLogger(__name__)
 
 PACKAGE_MERGE_HINT = "list"
+
+
+def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
+    """Validate that binary sensors with auto_off have triggers."""
+    if CONF_TRIGGERS not in obj and DOMAIN_BINARY_SENSOR in obj:
+        binary_sensors: list[ConfigType] = obj[DOMAIN_BINARY_SENSOR]
+        for binary_sensor in binary_sensors:
+            if binary_sensor_platform.CONF_AUTO_OFF not in binary_sensor:
+                continue
+
+            identifier = f"{CONF_NAME}: {binary_sensor_platform.DEFAULT_NAME}"
+            if (
+                (name := binary_sensor.get(CONF_NAME))
+                and isinstance(name, Template)
+                and name.template != binary_sensor_platform.DEFAULT_NAME
+            ):
+                identifier = f"{CONF_NAME}: {name.template}"
+            elif default_entity_id := binary_sensor.get(CONF_DEFAULT_ENTITY_ID):
+                identifier = f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
+            elif unique_id := binary_sensor.get(CONF_UNIQUE_ID):
+                identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
+
+            raise vol.Invalid(
+                f"The auto_off option for template binary sensor: {identifier} "
+                "requires a trigger, remove the auto_off option or rewrite "
+                "configuration to use a trigger"
+            )
+
+    return obj
 
 
 def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict], dict]:
@@ -86,6 +129,44 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
         return obj
 
     return validate
+
+
+def create_trigger_format_issue(
+    hass: HomeAssistant, config: ConfigType, option: str
+) -> None:
+    """Create a warning when a rogue trigger or action is found."""
+    issue_id = hex(hash(frozenset(config)))
+    yaml_config = yaml_util.dump(config)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key=f"config_format_{option}",
+        translation_placeholders={"config": yaml_config},
+    )
+
+
+def validate_trigger_format(
+    hass: HomeAssistant, config_section: ConfigType, raw_config: ConfigType
+) -> None:
+    """Validate the config section."""
+    options = set(config_section.keys())
+
+    if CONF_TRIGGERS in options and not options.intersection(
+        [CONF_SENSORS, CONF_BINARY_SENSORS, *PLATFORMS]
+    ):
+        _LOGGER.warning(
+            "Invalid template configuration found, trigger option is missing matching domain"
+        )
+        create_trigger_format_issue(hass, raw_config, CONF_TRIGGERS)
+
+    elif CONF_ACTIONS in options and CONF_TRIGGERS not in options:
+        _LOGGER.warning(
+            "Invalid template configuration found, action option requires a trigger"
+        )
+        create_trigger_format_issue(hass, raw_config, CONF_ACTIONS)
 
 
 def _backward_compat_schema(value: Any | None) -> Any:
@@ -124,6 +205,9 @@ CONFIG_SECTION_SCHEMA = vol.All(
             vol.Optional(DOMAIN_COVER): vol.All(
                 cv.ensure_list, [cover_platform.COVER_YAML_SCHEMA]
             ),
+            vol.Optional(DOMAIN_EVENT): vol.All(
+                cv.ensure_list, [event_platform.EVENT_YAML_SCHEMA]
+            ),
             vol.Optional(DOMAIN_FAN): vol.All(
                 cv.ensure_list, [fan_platform.FAN_YAML_SCHEMA]
             ),
@@ -148,17 +232,27 @@ CONFIG_SECTION_SCHEMA = vol.All(
             vol.Optional(DOMAIN_SWITCH): vol.All(
                 cv.ensure_list, [switch_platform.SWITCH_YAML_SCHEMA]
             ),
+            vol.Optional(DOMAIN_UPDATE): vol.All(
+                cv.ensure_list, [update_platform.UPDATE_YAML_SCHEMA]
+            ),
             vol.Optional(DOMAIN_VACUUM): vol.All(
                 cv.ensure_list, [vacuum_platform.VACUUM_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_WEATHER): vol.All(
-                cv.ensure_list, [weather_platform.WEATHER_YAML_SCHEMA]
+                cv.ensure_list,
+                [
+                    vol.Any(
+                        weather_platform.WEATHER_YAML_SCHEMA,
+                        weather_platform.WEATHER_MODERN_YAML_SCHEMA,
+                    )
+                ],
             ),
         },
     ),
     ensure_domains_do_not_have_trigger_or_action(
         DOMAIN_BUTTON,
     ),
+    validate_binary_sensor_auto_off_has_trigger,
 )
 
 TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
@@ -166,7 +260,15 @@ TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
 )
 
 
-async def _async_resolve_blueprints(
+def _merge_section_variables(config: ConfigType, section_variables: ConfigType) -> None:
+    """Merges a template entity configuration's variables with the section variables."""
+    if (variables := config.pop(CONF_VARIABLES, None)) and isinstance(variables, dict):
+        config[CONF_VARIABLES] = {**section_variables, **variables}
+    else:
+        config[CONF_VARIABLES] = section_variables
+
+
+async def _async_resolve_template_config(
     hass: HomeAssistant,
     config: ConfigType,
 ) -> TemplateConfig:
@@ -177,12 +279,12 @@ async def _async_resolve_blueprints(
     with suppress(ValueError):  # Invalid config
         raw_config = dict(config)
 
+    original_config = config
+    config = _backward_compat_schema(config)
     if is_blueprint_instance_config(config):
         blueprints = async_get_blueprints(hass)
 
-        blueprint_inputs = await blueprints.async_inputs_from_config(
-            _backward_compat_schema(config)
-        )
+        blueprint_inputs = await blueprints.async_inputs_from_config(config)
         raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
         config = blueprint_inputs.async_substitute()
@@ -195,14 +297,33 @@ async def _async_resolve_blueprints(
             for prop in (CONF_NAME, CONF_UNIQUE_ID):
                 if prop in config:
                     config[platform][prop] = config.pop(prop)
-            # For regular template entities, CONF_VARIABLES should be removed because they just
-            # house input results for template entities.  For Trigger based template entities
-            # CONF_VARIABLES should not be removed because the variables are always
-            # executed between the trigger and action.
+            # State based template entities remove CONF_VARIABLES because they pass
+            # blueprint inputs to the template entities. Trigger based template entities
+            # retain CONF_VARIABLES because the variables are always executed between
+            # the trigger and action.
             if CONF_TRIGGERS not in config and CONF_VARIABLES in config:
-                config[platform][CONF_VARIABLES] = config.pop(CONF_VARIABLES)
+                _merge_section_variables(config[platform], config.pop(CONF_VARIABLES))
+
         raw_config = dict(config)
 
+    # Trigger based template entities retain CONF_VARIABLES because the variables are
+    # always executed between the trigger and action.
+    elif CONF_TRIGGERS not in config and CONF_VARIABLES in config:
+        # State based template entities have 2 layers of variables.  Variables at the section level
+        # and variables at the entity level should be merged together at the entity level.
+        section_variables = config.pop(CONF_VARIABLES)
+        platform_config: list[ConfigType] | ConfigType
+        platforms = [platform for platform in PLATFORMS if platform in config]
+        for platform in platforms:
+            platform_config = config[platform]
+            if platform in PLATFORMS:
+                if isinstance(platform_config, dict):
+                    platform_config = [platform_config]
+
+                for entity_config in platform_config:
+                    _merge_section_variables(entity_config, section_variables)
+
+    validate_trigger_format(hass, config, original_config)
     template_config = TemplateConfig(CONFIG_SECTION_SCHEMA(config))
     template_config.raw_blueprint_inputs = raw_blueprint_inputs
     template_config.raw_config = raw_config
@@ -215,7 +336,7 @@ async def async_validate_config_section(
 ) -> TemplateConfig:
     """Validate an entire config section for the template integration."""
 
-    validated_config = await _async_resolve_blueprints(hass, config)
+    validated_config = await _async_resolve_template_config(hass, config)
 
     if CONF_TRIGGERS in validated_config:
         validated_config[CONF_TRIGGERS] = await async_validate_trigger_config(
@@ -232,12 +353,21 @@ async def async_validate_config_section(
 
 async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
     """Validate config."""
-    if DOMAIN not in config:
+
+    configs = []
+    for key in config:
+        if DOMAIN not in key:
+            continue
+
+        if key == DOMAIN or (key.startswith(DOMAIN) and len(key.split()) > 1):
+            configs.append(cv.ensure_list(config[key]))
+
+    if not configs:
         return config
 
     config_sections = []
 
-    for cfg in cv.ensure_list(config[DOMAIN]):
+    for cfg in itertools.chain(*configs):
         try:
             template_config: TemplateConfig = await async_validate_config_section(
                 hass, cfg
@@ -266,7 +396,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
 
             if not legacy_warn_printed:
                 legacy_warn_printed = True
-                logging.getLogger(__name__).warning(
+                _LOGGER.warning(
                     "The entity definition format under template: differs from the"
                     " platform "
                     "configuration format. See "
@@ -276,11 +406,11 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             definitions = (
                 list(template_config[new_key]) if new_key in template_config else []
             )
-            definitions.extend(
-                rewrite_legacy_to_modern_configs(
-                    hass, template_config[old_key], legacy_fields
-                )
-            )
+            for definition in rewrite_legacy_to_modern_configs(
+                hass, new_key, template_config[old_key], legacy_fields
+            ):
+                create_legacy_template_issue(hass, definition, new_key)
+                definitions.append(definition)
             template_config = TemplateConfig({**template_config, new_key: definitions})
 
         config_sections.append(template_config)

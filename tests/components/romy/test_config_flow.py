@@ -1,8 +1,10 @@
 """Test the ROMY config flow."""
 
+from collections.abc import Generator
 from ipaddress import ip_address
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
+import pytest
 from romy import RomyRobot
 
 from homeassistant import config_entries
@@ -42,6 +44,15 @@ CONFIG = {CONF_HOST: "1.2.3.4", CONF_PASSWORD: "12345678"}
 INPUT_CONFIG_HOST = {
     CONF_HOST: CONFIG[CONF_HOST],
 }
+
+
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.romy.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 async def test_show_user_form_robot_is_offline_and_locked(hass: HomeAssistant) -> None:

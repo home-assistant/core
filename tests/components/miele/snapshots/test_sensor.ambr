@@ -1,4 +1,658 @@
 # serializer version: 1
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'autocleaning',
+        'failure',
+        'idle',
+        'in_use',
+        'not_connected',
+        'off',
+        'on',
+        'pause',
+        'program_ended',
+        'program_interrupted',
+        'programmed',
+        'reserved',
+        'rinse_hold',
+        'service',
+        'supercooling',
+        'supercooling_superfreezing',
+        'superfreezing',
+        'superheating',
+        'waiting_to_start',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffee_system',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:coffee-maker',
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status',
+    'unique_id': 'DummyAppliance_CoffeeSystem-state_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Coffee system',
+      'icon': 'mdi:coffee-maker',
+      'options': list([
+        'autocleaning',
+        'failure',
+        'idle',
+        'in_use',
+        'not_connected',
+        'off',
+        'on',
+        'pause',
+        'program_ended',
+        'program_interrupted',
+        'programmed',
+        'reserved',
+        'rinse_hold',
+        'service',
+        'supercooling',
+        'supercooling_superfreezing',
+        'superfreezing',
+        'superheating',
+        'waiting_to_start',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffee_system',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'in_use',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'appliance_rinse',
+        'appliance_settings',
+        'barista_assistant',
+        'black_tea',
+        'brewing_unit_degrease',
+        'cafe_au_lait',
+        'caffe_latte',
+        'cappuccino',
+        'cappuccino_italiano',
+        'check_appliance',
+        'coffee',
+        'coffee_pot',
+        'descaling',
+        'espresso',
+        'espresso_macchiato',
+        'flat_white',
+        'fruit_tea',
+        'green_tea',
+        'herbal_tea',
+        'hot_milk',
+        'hot_water',
+        'japanese_tea',
+        'latte_macchiato',
+        'long_coffee',
+        'milk_foam',
+        'milk_pipework_clean',
+        'milk_pipework_rinse',
+        'no_program',
+        'ristretto',
+        'very_hot_water',
+        'white_tea',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffee_system_program',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_id',
+    'unique_id': 'DummyAppliance_CoffeeSystem-state_program_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Coffee system Program',
+      'options': list([
+        'appliance_rinse',
+        'appliance_settings',
+        'barista_assistant',
+        'black_tea',
+        'brewing_unit_degrease',
+        'cafe_au_lait',
+        'caffe_latte',
+        'cappuccino',
+        'cappuccino_italiano',
+        'check_appliance',
+        'coffee',
+        'coffee_pot',
+        'descaling',
+        'espresso',
+        'espresso_macchiato',
+        'flat_white',
+        'fruit_tea',
+        'green_tea',
+        'herbal_tea',
+        'hot_milk',
+        'hot_water',
+        'japanese_tea',
+        'latte_macchiato',
+        'long_coffee',
+        'milk_foam',
+        'milk_pipework_clean',
+        'milk_pipework_rinse',
+        'no_program',
+        'ristretto',
+        'very_hot_water',
+        'white_tea',
+      ]),
+      'profile': 'profile_1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffee_system_program',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'espresso',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program_phase-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '2nd_espresso',
+        '2nd_grinding',
+        '2nd_pre_brewing',
+        'dispensing',
+        'espresso',
+        'grinding',
+        'heating_up',
+        'hot_milk',
+        'milk_foam',
+        'not_running',
+        'pre_brewing',
+        'rinse',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.coffee_system_program_phase',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program phase',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program phase',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_phase',
+    'unique_id': 'DummyAppliance_CoffeeSystem-state_program_phase',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program_phase-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Coffee system Program phase',
+      'options': list([
+        '2nd_espresso',
+        '2nd_grinding',
+        '2nd_pre_brewing',
+        'dispensing',
+        'espresso',
+        'grinding',
+        'heating_up',
+        'hot_milk',
+        'milk_foam',
+        'not_running',
+        'pre_brewing',
+        'rinse',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffee_system_program_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'espresso',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'automatic_program',
+        'maintenance_program',
+        'normal_operation_mode',
+        'own_program',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.coffee_system_program_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Program type',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Program type',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'program_type',
+    'unique_id': 'DummyAppliance_CoffeeSystem-state_program_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Coffee system Program type',
+      'options': list([
+        'automatic_program',
+        'maintenance_program',
+        'normal_operation_mode',
+        'own_program',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffee_system_program_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'own_program',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.rinse_aid_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rinse_aid_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rinse aid level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rinse aid level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rinse_aid_level',
+    'unique_id': 'Dummy_Appliance_5-rinse_aid_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.rinse_aid_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rinse aid level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rinse_aid_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.salt_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.salt_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Salt level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Salt level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_level',
+    'unique_id': 'Dummy_Appliance_5-salt_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.salt_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Salt level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.salt_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '75',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_1_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 1 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_1_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_1_level_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 1 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'DummyWasher-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_1_level_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_1_level_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_2_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 2 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_2_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_2_level_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 2 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'DummyWasher-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.twindos_2_level_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_2_level_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.hob_with_extraction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -17,6 +671,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -41,6 +696,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -73,6 +729,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -108,6 +765,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -132,6 +790,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -164,6 +823,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -208,6 +868,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -226,6 +887,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -266,6 +928,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -304,6 +967,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -322,6 +986,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -362,6 +1027,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -400,6 +1066,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -418,6 +1085,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -458,6 +1126,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -496,6 +1165,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -514,6 +1184,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -554,6 +1225,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -592,6 +1264,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -610,6 +1283,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -650,6 +1324,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -688,6 +1363,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -706,6 +1382,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -746,6 +1423,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -784,6 +1462,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -802,6 +1481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 4',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -842,6 +1522,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -880,6 +1561,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -898,6 +1580,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 4',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -938,6 +1621,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -976,6 +1660,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -994,6 +1679,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1034,6 +1720,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -1063,6 +1750,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -1087,6 +1775,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1119,6 +1808,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -1134,6 +1824,306 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.rinse_aid_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rinse_aid_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rinse aid level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rinse aid level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rinse_aid_level',
+    'unique_id': 'Dummy_Appliance_5-rinse_aid_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.rinse_aid_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rinse aid level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rinse_aid_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.salt_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.salt_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Salt level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Salt level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_level',
+    'unique_id': 'Dummy_Appliance_5-salt_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.salt_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Salt level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.salt_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '75',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_1_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 1 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_1_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_1_level_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 1 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'DummyWasher-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_1_level_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_1_level_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_2_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 2 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_2_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_2_level_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 2 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'DummyWasher-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.twindos_2_level_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_2_level_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
   })
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer-entry]
@@ -1154,6 +2144,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -1178,6 +2169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1210,6 +2202,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -1225,6 +2218,100 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'in_use',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'autocleaning',
+        'failure',
+        'idle',
+        'in_use',
+        'not_connected',
+        'off',
+        'on',
+        'pause',
+        'program_ended',
+        'program_interrupted',
+        'programmed',
+        'reserved',
+        'rinse_hold',
+        'service',
+        'supercooling',
+        'supercooling_superfreezing',
+        'superfreezing',
+        'superheating',
+        'waiting_to_start',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fridge_freezer_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:fridge-outline',
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status',
+    'unique_id': 'DummyAppliance_Fridge_Freezer_Offline-state_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Fridge freezer',
+      'icon': 'mdi:fridge-outline',
+      'options': list([
+        'autocleaning',
+        'failure',
+        'idle',
+        'in_use',
+        'not_connected',
+        'off',
+        'on',
+        'pause',
+        'program_ended',
+        'program_interrupted',
+        'programmed',
+        'reserved',
+        'rinse_hold',
+        'service',
+        'supercooling',
+        'supercooling_superfreezing',
+        'superfreezing',
+        'superheating',
+        'waiting_to_start',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fridge_freezer_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_connected',
   })
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature-entry]
@@ -1250,6 +2337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1283,6 +2371,63 @@
     'state': '4.0',
   })
 # ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.fridge_freezer_temperature_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'DummyAppliance_Fridge_Freezer_Offline-state_temperature_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Fridge freezer Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fridge_freezer_temperature_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.fridge_freezer_temperature_zone_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1306,6 +2451,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature zone 2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1339,7 +2485,307 @@
     'state': '-18.0',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction-entry]
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.rinse_aid_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rinse_aid_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rinse aid level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rinse aid level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rinse_aid_level',
+    'unique_id': 'Dummy_Appliance_5-rinse_aid_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.rinse_aid_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rinse aid level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rinse_aid_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.salt_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.salt_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Salt level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Salt level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_level',
+    'unique_id': 'Dummy_Appliance_5-salt_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.salt_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Salt level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.salt_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '75',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_1_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 1 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_1_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_1_level_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 1 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'DummyWasher-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_1_level_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_1_level_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_2_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 2 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_2_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_2_level_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 2 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'DummyWasher-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.twindos_2_level_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_2_level_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1357,6 +2803,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -1373,7 +2820,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction',
+    'entity_id': 'sensor.kdma7774_app2_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1381,6 +2828,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1395,11 +2843,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction',
+      'friendly_name': 'KDMA7774 | APP2-2',
       'icon': 'mdi:pot-steam-outline',
       'options': list([
         'autocleaning',
@@ -1413,6 +2861,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -1423,14 +2872,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction',
+    'entity_id': 'sensor.kdma7774_app2_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'in_use',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_1-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1457,6 +2906,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -1467,7 +2917,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_1',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1475,6 +2925,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1489,11 +2940,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_1-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 1',
+      'friendly_name': 'KDMA7774 | APP2-2 Plate 1',
       'options': list([
         'plate_step_0',
         'plate_step_1',
@@ -1515,18 +2966,19 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_1',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'plate_step_0',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_2-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1553,6 +3005,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -1563,7 +3016,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_2',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1571,6 +3024,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 2',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1585,11 +3039,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_2-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 2',
+      'friendly_name': 'KDMA7774 | APP2-2 Plate 2',
       'options': list([
         'plate_step_0',
         'plate_step_1',
@@ -1611,18 +3065,19 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_2',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'plate_step_warming',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_3-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1649,6 +3104,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -1659,7 +3115,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_3',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1667,6 +3123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 3',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1681,11 +3138,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_3-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 3',
+      'friendly_name': 'KDMA7774 | APP2-2 Plate 3',
       'options': list([
         'plate_step_0',
         'plate_step_1',
@@ -1707,18 +3164,19 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_3',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'plate_step_8',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_4-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1745,6 +3203,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -1755,7 +3214,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_4',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1763,6 +3222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 4',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1777,11 +3237,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_4-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 4',
+      'friendly_name': 'KDMA7774 | APP2-2 Plate 4',
       'options': list([
         'plate_step_0',
         'plate_step_1',
@@ -1803,18 +3263,19 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_4',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'plate_step_15',
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_5-entry]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1841,6 +3302,7 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
@@ -1851,7 +3313,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hob_with_extraction_plate_5',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1859,6 +3321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plate 5',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1873,11 +3336,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_hob_sensor_states[platforms0-hob.json][sensor.hob_with_extraction_plate_5-state]
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.kdma7774_app2_2_plate_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Hob with extraction Plate 5',
+      'friendly_name': 'KDMA7774 | APP2-2 Plate 5',
       'options': list([
         'plate_step_0',
         'plate_step_1',
@@ -1899,15 +3362,316 @@
         'plate_step_8',
         'plate_step_9',
         'plate_step_boost',
+        'plate_step_boost_2',
         'plate_step_warming',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hob_with_extraction_plate_5',
+    'entity_id': 'sensor.kdma7774_app2_2_plate_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'plate_step_boost',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.rinse_aid_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rinse_aid_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rinse aid level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rinse aid level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rinse_aid_level',
+    'unique_id': 'Dummy_Appliance_5-rinse_aid_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.rinse_aid_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rinse aid level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rinse_aid_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.salt_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.salt_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Salt level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Salt level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_level',
+    'unique_id': 'Dummy_Appliance_5-salt_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.salt_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Salt level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.salt_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '75',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_1_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 1 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_1_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_1_level_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 1 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'DummyWasher-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_1_level_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_1_level_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_2_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 2 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_2_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_2_level_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 2 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'DummyWasher-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.twindos_2_level_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_2_level_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.freezer-entry]
@@ -1928,6 +3692,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -1952,6 +3717,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1984,6 +3750,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -2024,6 +3791,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2075,6 +3843,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -2099,6 +3868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2131,6 +3901,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -2166,6 +3937,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -2190,6 +3962,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2222,6 +3995,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -2262,6 +4036,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Core temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2316,6 +4091,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2345,7 +4121,57 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.oven_finish-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.oven_finish',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Finish',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Finish',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'finish',
+    'unique_id': 'DummyAppliance_12-state_finish_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.oven_finish-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Oven Finish',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_finish',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_program-entry]
@@ -2405,6 +4231,8 @@
         'custom_program_9',
         'dark_mixed_grain_bread',
         'defrost',
+        'defrost_meat',
+        'defrost_vegetables',
         'descale',
         'drop_cookies_1_tray',
         'drop_cookies_2_trays',
@@ -2423,8 +4251,11 @@
         'ginger_loaf',
         'goose_stuffed',
         'goose_unstuffed',
+        'grill',
         'ham_roast',
         'heat_crockery',
+        'heating_bakes_gratins',
+        'heating_vegetables',
         'intensive_bake',
         'keeping_warm',
         'leg_of_lamb',
@@ -2436,6 +4267,10 @@
         'marble_cake',
         'meat_loaf',
         'microwave',
+        'microwave_auto_roast',
+        'microwave_fan_grill',
+        'microwave_fan_plus',
+        'microwave_grill',
         'mixed_rye_bread',
         'moisture_plus_auto_roast',
         'moisture_plus_conventional_heat',
@@ -2451,6 +4286,7 @@
         'pizza_yeast_dough_round_baking_tine',
         'plaited_loaf',
         'plaited_swiss_loaf',
+        'popcorn',
         'pork_belly',
         'pork_fillet_low_temperature_cooking',
         'pork_fillet_roast',
@@ -2462,8 +4298,10 @@
         'prove_15_min',
         'prove_30_min',
         'prove_45_min',
+        'prove_dough',
         'pyrolytic',
         'quiche_lorraine',
+        'quick_microwave',
         'rabbit',
         'rack_of_lamb_with_vegetables',
         'roast_beef_low_temperature_cooking',
@@ -2528,6 +4366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2598,6 +4437,8 @@
         'custom_program_9',
         'dark_mixed_grain_bread',
         'defrost',
+        'defrost_meat',
+        'defrost_vegetables',
         'descale',
         'drop_cookies_1_tray',
         'drop_cookies_2_trays',
@@ -2616,8 +4457,11 @@
         'ginger_loaf',
         'goose_stuffed',
         'goose_unstuffed',
+        'grill',
         'ham_roast',
         'heat_crockery',
+        'heating_bakes_gratins',
+        'heating_vegetables',
         'intensive_bake',
         'keeping_warm',
         'leg_of_lamb',
@@ -2629,6 +4473,10 @@
         'marble_cake',
         'meat_loaf',
         'microwave',
+        'microwave_auto_roast',
+        'microwave_fan_grill',
+        'microwave_fan_plus',
+        'microwave_grill',
         'mixed_rye_bread',
         'moisture_plus_auto_roast',
         'moisture_plus_conventional_heat',
@@ -2644,6 +4492,7 @@
         'pizza_yeast_dough_round_baking_tine',
         'plaited_loaf',
         'plaited_swiss_loaf',
+        'popcorn',
         'pork_belly',
         'pork_fillet_low_temperature_cooking',
         'pork_fillet_roast',
@@ -2655,8 +4504,10 @@
         'prove_15_min',
         'prove_30_min',
         'prove_45_min',
+        'prove_dough',
         'pyrolytic',
         'quiche_lorraine',
+        'quick_microwave',
         'rabbit',
         'rack_of_lamb_with_vegetables',
         'roast_beef_low_temperature_cooking',
@@ -2724,6 +4575,7 @@
         'energy_save',
         'heating_up',
         'not_running',
+        'pre_heating',
         'process_finished',
         'process_running',
       ]),
@@ -2743,6 +4595,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program phase',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2766,6 +4619,7 @@
         'energy_save',
         'heating_up',
         'not_running',
+        'pre_heating',
         'process_finished',
         'process_running',
       ]),
@@ -2786,7 +4640,6 @@
     'capabilities': dict({
       'options': list([
         'automatic_program',
-        'cleaning_care_program',
         'maintenance_program',
         'normal_operation_mode',
         'own_program',
@@ -2807,6 +4660,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2828,7 +4682,6 @@
       'friendly_name': 'Oven Program type',
       'options': list([
         'automatic_program',
-        'cleaning_care_program',
         'maintenance_program',
         'normal_operation_mode',
         'own_program',
@@ -2863,6 +4716,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2892,7 +4746,57 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.oven_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.oven_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'DummyAppliance_12-state_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.oven_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Oven Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_start_in-entry]
@@ -2916,6 +4820,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start in',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2948,7 +4853,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_target_temperature-entry]
@@ -2974,6 +4879,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3030,6 +4936,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3081,6 +4988,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -3105,6 +5013,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3137,6 +5046,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -3177,6 +5087,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3210,6 +5121,206 @@
     'state': '4.0',
   })
 # ---
+# name: test_sensor_states[platforms0][sensor.rinse_aid_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rinse_aid_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rinse aid level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rinse aid level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rinse_aid_level',
+    'unique_id': 'Dummy_Appliance_5-rinse_aid_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.rinse_aid_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rinse aid level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rinse_aid_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.salt_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.salt_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Salt level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Salt level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_level',
+    'unique_id': 'Dummy_Appliance_5-salt_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.salt_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Salt level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.salt_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '75',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.twindos_1_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_1_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 1 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'DummyWasher-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.twindos_1_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_1_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.twindos_2_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_2_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 2 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'DummyWasher-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.twindos_2_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_2_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
 # name: test_sensor_states[platforms0][sensor.washing_machine-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3228,6 +5339,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -3252,6 +5364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3284,6 +5397,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -3322,6 +5436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3351,7 +5466,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_energy_consumption-entry]
@@ -3377,9 +5492,10 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumption',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -3407,7 +5523,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_energy_forecast-entry]
@@ -3431,6 +5547,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy forecast',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3459,6 +5576,56 @@
     'state': '10.0',
   })
 # ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_finish-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_finish',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Finish',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Finish',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'finish',
+    'unique_id': 'Dummy_Appliance_3-state_finish_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_finish-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Washing machine Finish',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_finish',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_program-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3467,26 +5634,34 @@
     'capabilities': dict({
       'options': list([
         'automatic_plus',
+        'bed_linen',
         'clean_machine',
         'cool_air',
+        'cottonrepair',
         'cottons',
         'cottons_eco',
         'cottons_hygiene',
         'curtains',
         'dark_garments',
+        'dark_jeans',
         'delicates',
         'denim',
         'down_duvets',
         'down_filled_items',
         'drain_spin',
+        'easy_care',
         'eco_40_60',
         'express_20',
         'first_wash',
         'freshen_up',
+        'game_pieces',
         'minimum_iron',
         'no_program',
+        'outdoor_garments',
         'outerwear',
         'pillows',
+        'powerfresh',
+        'pre_ironing',
         'proofing',
         'quick_power_wash',
         'rinse',
@@ -3494,10 +5669,13 @@
         'separate_rinse_starch',
         'shirts',
         'silks',
+        'smartmatic',
         'sportswear',
         'starch',
         'steam_care',
+        'stuffed_toys',
         'trainers',
+        'trainers_refresh',
         'warm_air',
         'woollens',
       ]),
@@ -3517,6 +5695,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3538,26 +5717,34 @@
       'friendly_name': 'Washing machine Program',
       'options': list([
         'automatic_plus',
+        'bed_linen',
         'clean_machine',
         'cool_air',
+        'cottonrepair',
         'cottons',
         'cottons_eco',
         'cottons_hygiene',
         'curtains',
         'dark_garments',
+        'dark_jeans',
         'delicates',
         'denim',
         'down_duvets',
         'down_filled_items',
         'drain_spin',
+        'easy_care',
         'eco_40_60',
         'express_20',
         'first_wash',
         'freshen_up',
+        'game_pieces',
         'minimum_iron',
         'no_program',
+        'outdoor_garments',
         'outerwear',
         'pillows',
+        'powerfresh',
+        'pre_ironing',
         'proofing',
         'quick_power_wash',
         'rinse',
@@ -3565,10 +5752,13 @@
         'separate_rinse_starch',
         'shirts',
         'silks',
+        'smartmatic',
         'sportswear',
         'starch',
         'steam_care',
+        'stuffed_toys',
         'trainers',
+        'trainers_refresh',
         'warm_air',
         'woollens',
       ]),
@@ -3589,12 +5779,14 @@
     'capabilities': dict({
       'options': list([
         'anti_crease',
+        'automatic_start',
         'cleaning',
         'cooling_down',
         'disinfecting',
         'drain',
         'drying',
         'finished',
+        'flex_load_active',
         'freshen_up_and_moisten',
         'hygiene',
         'main_wash',
@@ -3624,6 +5816,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program phase',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3645,12 +5838,14 @@
       'friendly_name': 'Washing machine Program phase',
       'options': list([
         'anti_crease',
+        'automatic_start',
         'cleaning',
         'cooling_down',
         'disinfecting',
         'drain',
         'drying',
         'finished',
+        'flex_load_active',
         'freshen_up_and_moisten',
         'hygiene',
         'main_wash',
@@ -3681,7 +5876,6 @@
     'capabilities': dict({
       'options': list([
         'automatic_program',
-        'cleaning_care_program',
         'maintenance_program',
         'normal_operation_mode',
         'own_program',
@@ -3702,6 +5896,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3723,7 +5918,6 @@
       'friendly_name': 'Washing machine Program type',
       'options': list([
         'automatic_program',
-        'cleaning_care_program',
         'maintenance_program',
         'normal_operation_mode',
         'own_program',
@@ -3758,6 +5952,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3787,7 +5982,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_spin_speed-entry]
@@ -3811,6 +6006,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Spin speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3839,6 +6035,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'Dummy_Appliance_3-state_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Washing machine Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_start_in-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3860,6 +6106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start in',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3892,7 +6139,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_target_temperature-entry]
@@ -3918,6 +6165,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3951,6 +6199,106 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_twindos_1_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_twindos_1_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 1 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_twindos_1_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing machine TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_twindos_1_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_twindos_2_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_twindos_2_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 2 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.washing_machine_twindos_2_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing machine TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_twindos_2_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_water_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3974,9 +6322,10 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water consumption',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
@@ -4004,7 +6353,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_water_forecast-entry]
@@ -4028,6 +6377,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water forecast',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4074,6 +6424,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -4098,6 +6449,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4130,6 +6482,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -4170,6 +6523,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4221,6 +6575,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -4245,6 +6600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4277,6 +6633,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -4312,6 +6669,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -4336,6 +6694,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4368,6 +6727,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -4408,6 +6768,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Core temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4462,6 +6823,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4492,6 +6854,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.oven_finish-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.oven_finish',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Finish',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Finish',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'finish',
+    'unique_id': 'DummyAppliance_12-state_finish_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.oven_finish-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Oven Finish',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_finish',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-05-31T12:35:00+00:00',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_program-entry]
@@ -4551,6 +6963,8 @@
         'custom_program_9',
         'dark_mixed_grain_bread',
         'defrost',
+        'defrost_meat',
+        'defrost_vegetables',
         'descale',
         'drop_cookies_1_tray',
         'drop_cookies_2_trays',
@@ -4569,8 +6983,11 @@
         'ginger_loaf',
         'goose_stuffed',
         'goose_unstuffed',
+        'grill',
         'ham_roast',
         'heat_crockery',
+        'heating_bakes_gratins',
+        'heating_vegetables',
         'intensive_bake',
         'keeping_warm',
         'leg_of_lamb',
@@ -4582,6 +6999,10 @@
         'marble_cake',
         'meat_loaf',
         'microwave',
+        'microwave_auto_roast',
+        'microwave_fan_grill',
+        'microwave_fan_plus',
+        'microwave_grill',
         'mixed_rye_bread',
         'moisture_plus_auto_roast',
         'moisture_plus_conventional_heat',
@@ -4597,6 +7018,7 @@
         'pizza_yeast_dough_round_baking_tine',
         'plaited_loaf',
         'plaited_swiss_loaf',
+        'popcorn',
         'pork_belly',
         'pork_fillet_low_temperature_cooking',
         'pork_fillet_roast',
@@ -4608,8 +7030,10 @@
         'prove_15_min',
         'prove_30_min',
         'prove_45_min',
+        'prove_dough',
         'pyrolytic',
         'quiche_lorraine',
+        'quick_microwave',
         'rabbit',
         'rack_of_lamb_with_vegetables',
         'roast_beef_low_temperature_cooking',
@@ -4674,6 +7098,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4744,6 +7169,8 @@
         'custom_program_9',
         'dark_mixed_grain_bread',
         'defrost',
+        'defrost_meat',
+        'defrost_vegetables',
         'descale',
         'drop_cookies_1_tray',
         'drop_cookies_2_trays',
@@ -4762,8 +7189,11 @@
         'ginger_loaf',
         'goose_stuffed',
         'goose_unstuffed',
+        'grill',
         'ham_roast',
         'heat_crockery',
+        'heating_bakes_gratins',
+        'heating_vegetables',
         'intensive_bake',
         'keeping_warm',
         'leg_of_lamb',
@@ -4775,6 +7205,10 @@
         'marble_cake',
         'meat_loaf',
         'microwave',
+        'microwave_auto_roast',
+        'microwave_fan_grill',
+        'microwave_fan_plus',
+        'microwave_grill',
         'mixed_rye_bread',
         'moisture_plus_auto_roast',
         'moisture_plus_conventional_heat',
@@ -4790,6 +7224,7 @@
         'pizza_yeast_dough_round_baking_tine',
         'plaited_loaf',
         'plaited_swiss_loaf',
+        'popcorn',
         'pork_belly',
         'pork_fillet_low_temperature_cooking',
         'pork_fillet_roast',
@@ -4801,8 +7236,10 @@
         'prove_15_min',
         'prove_30_min',
         'prove_45_min',
+        'prove_dough',
         'pyrolytic',
         'quiche_lorraine',
+        'quick_microwave',
         'rabbit',
         'rack_of_lamb_with_vegetables',
         'roast_beef_low_temperature_cooking',
@@ -4870,6 +7307,7 @@
         'energy_save',
         'heating_up',
         'not_running',
+        'pre_heating',
         'process_finished',
         'process_running',
       ]),
@@ -4889,6 +7327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program phase',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4912,6 +7351,7 @@
         'energy_save',
         'heating_up',
         'not_running',
+        'pre_heating',
         'process_finished',
         'process_running',
       ]),
@@ -4932,7 +7372,6 @@
     'capabilities': dict({
       'options': list([
         'automatic_program',
-        'cleaning_care_program',
         'maintenance_program',
         'normal_operation_mode',
         'own_program',
@@ -4953,6 +7392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4974,7 +7414,6 @@
       'friendly_name': 'Oven Program type',
       'options': list([
         'automatic_program',
-        'cleaning_care_program',
         'maintenance_program',
         'normal_operation_mode',
         'own_program',
@@ -5009,6 +7448,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5041,6 +7481,56 @@
     'state': '5',
   })
 # ---
+# name: test_sensor_states_api_push[platforms0][sensor.oven_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.oven_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'DummyAppliance_12-state_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.oven_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Oven Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.oven_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven_start_in-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5062,6 +7552,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start in',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5120,6 +7611,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5176,6 +7668,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5227,6 +7720,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -5251,6 +7745,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5283,6 +7778,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -5323,6 +7819,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5356,6 +7853,206 @@
     'state': '4.0',
   })
 # ---
+# name: test_sensor_states_api_push[platforms0][sensor.rinse_aid_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rinse_aid_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rinse aid level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rinse aid level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rinse_aid_level',
+    'unique_id': 'Dummy_Appliance_5-rinse_aid_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.rinse_aid_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rinse aid level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rinse_aid_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.salt_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.salt_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Salt level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Salt level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_level',
+    'unique_id': 'Dummy_Appliance_5-salt_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.salt_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Salt level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.salt_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '75',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.twindos_1_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_1_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 1 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'DummyWasher-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.twindos_1_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_1_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.twindos_2_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_2_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 2 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'DummyWasher-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.twindos_2_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_2_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5374,6 +8071,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -5398,6 +8096,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5430,6 +8129,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -5468,6 +8168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5497,7 +8198,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_energy_consumption-entry]
@@ -5523,9 +8224,10 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy consumption',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -5553,7 +8255,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_energy_forecast-entry]
@@ -5577,6 +8279,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy forecast',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5605,6 +8308,56 @@
     'state': '10.0',
   })
 # ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_finish-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_finish',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Finish',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Finish',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'finish',
+    'unique_id': 'Dummy_Appliance_3-state_finish_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_finish-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Washing machine Finish',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_finish',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_program-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5613,26 +8366,34 @@
     'capabilities': dict({
       'options': list([
         'automatic_plus',
+        'bed_linen',
         'clean_machine',
         'cool_air',
+        'cottonrepair',
         'cottons',
         'cottons_eco',
         'cottons_hygiene',
         'curtains',
         'dark_garments',
+        'dark_jeans',
         'delicates',
         'denim',
         'down_duvets',
         'down_filled_items',
         'drain_spin',
+        'easy_care',
         'eco_40_60',
         'express_20',
         'first_wash',
         'freshen_up',
+        'game_pieces',
         'minimum_iron',
         'no_program',
+        'outdoor_garments',
         'outerwear',
         'pillows',
+        'powerfresh',
+        'pre_ironing',
         'proofing',
         'quick_power_wash',
         'rinse',
@@ -5640,10 +8401,13 @@
         'separate_rinse_starch',
         'shirts',
         'silks',
+        'smartmatic',
         'sportswear',
         'starch',
         'steam_care',
+        'stuffed_toys',
         'trainers',
+        'trainers_refresh',
         'warm_air',
         'woollens',
       ]),
@@ -5663,6 +8427,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5684,26 +8449,34 @@
       'friendly_name': 'Washing machine Program',
       'options': list([
         'automatic_plus',
+        'bed_linen',
         'clean_machine',
         'cool_air',
+        'cottonrepair',
         'cottons',
         'cottons_eco',
         'cottons_hygiene',
         'curtains',
         'dark_garments',
+        'dark_jeans',
         'delicates',
         'denim',
         'down_duvets',
         'down_filled_items',
         'drain_spin',
+        'easy_care',
         'eco_40_60',
         'express_20',
         'first_wash',
         'freshen_up',
+        'game_pieces',
         'minimum_iron',
         'no_program',
+        'outdoor_garments',
         'outerwear',
         'pillows',
+        'powerfresh',
+        'pre_ironing',
         'proofing',
         'quick_power_wash',
         'rinse',
@@ -5711,10 +8484,13 @@
         'separate_rinse_starch',
         'shirts',
         'silks',
+        'smartmatic',
         'sportswear',
         'starch',
         'steam_care',
+        'stuffed_toys',
         'trainers',
+        'trainers_refresh',
         'warm_air',
         'woollens',
       ]),
@@ -5735,12 +8511,14 @@
     'capabilities': dict({
       'options': list([
         'anti_crease',
+        'automatic_start',
         'cleaning',
         'cooling_down',
         'disinfecting',
         'drain',
         'drying',
         'finished',
+        'flex_load_active',
         'freshen_up_and_moisten',
         'hygiene',
         'main_wash',
@@ -5770,6 +8548,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program phase',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5791,12 +8570,14 @@
       'friendly_name': 'Washing machine Program phase',
       'options': list([
         'anti_crease',
+        'automatic_start',
         'cleaning',
         'cooling_down',
         'disinfecting',
         'drain',
         'drying',
         'finished',
+        'flex_load_active',
         'freshen_up_and_moisten',
         'hygiene',
         'main_wash',
@@ -5827,7 +8608,6 @@
     'capabilities': dict({
       'options': list([
         'automatic_program',
-        'cleaning_care_program',
         'maintenance_program',
         'normal_operation_mode',
         'own_program',
@@ -5848,6 +8628,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5869,7 +8650,6 @@
       'friendly_name': 'Washing machine Program type',
       'options': list([
         'automatic_program',
-        'cleaning_care_program',
         'maintenance_program',
         'normal_operation_mode',
         'own_program',
@@ -5904,6 +8684,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5933,7 +8714,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_spin_speed-entry]
@@ -5957,6 +8738,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Spin speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -5985,6 +8767,56 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'Dummy_Appliance_3-state_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Washing machine Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_start_in-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6006,6 +8838,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Start in',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6038,7 +8871,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_target_temperature-entry]
@@ -6064,6 +8897,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -6097,6 +8931,106 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_twindos_1_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_twindos_1_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 1 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_twindos_1_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing machine TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_twindos_1_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_twindos_2_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.washing_machine_twindos_2_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 2 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.washing_machine_twindos_2_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Washing machine TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.washing_machine_twindos_2_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_water_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6120,9 +9054,10 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water consumption',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
@@ -6150,7 +9085,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_water_forecast-entry]
@@ -6174,6 +9109,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water forecast',
     'options': dict({
     }),
     'original_device_class': None,
@@ -6202,6 +9138,56 @@
     'state': '0.0',
   })
 # ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.rinse_aid_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rinse_aid_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rinse aid level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rinse aid level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rinse_aid_level',
+    'unique_id': 'Dummy_Appliance_5-rinse_aid_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.rinse_aid_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rinse aid level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rinse_aid_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6220,6 +9206,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -6244,6 +9231,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6276,6 +9264,7 @@
         'program_ended',
         'program_interrupted',
         'programmed',
+        'reserved',
         'rinse_hold',
         'service',
         'supercooling',
@@ -6314,6 +9303,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -6364,6 +9354,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elapsed time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6393,7 +9384,57 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_finish-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.robot_vacuum_cleaner_finish',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Finish',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Finish',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'finish',
+    'unique_id': 'Dummy_Vacuum_1-state_finish_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_finish-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Robot vacuum cleaner Finish',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.robot_vacuum_cleaner_finish',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_program-entry]
@@ -6425,6 +9466,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6468,7 +9510,6 @@
     'capabilities': dict({
       'options': list([
         'automatic_program',
-        'cleaning_care_program',
         'maintenance_program',
         'normal_operation_mode',
         'own_program',
@@ -6489,6 +9530,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Program type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -6510,7 +9552,6 @@
       'friendly_name': 'Robot vacuum cleaner Program type',
       'options': list([
         'automatic_program',
-        'cleaning_care_program',
         'maintenance_program',
         'normal_operation_mode',
         'own_program',
@@ -6545,6 +9586,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -6574,6 +9616,306 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.robot_vacuum_cleaner_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Start',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'Dummy_Vacuum_1-state_start_timestamp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.robot_vacuum_cleaner_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Robot vacuum cleaner Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.robot_vacuum_cleaner_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.salt_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.salt_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Salt level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Salt level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'salt_level',
+    'unique_id': 'Dummy_Appliance_5-salt_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.salt_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Salt level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.salt_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '75',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_1_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 1 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_1_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_1_level_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 1 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 1 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_1_level',
+    'unique_id': 'DummyWasher-twin_dos_1_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_1_level_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 1 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_1_level_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_2_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 2 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'Dummy_Appliance_3-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_2_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.twindos_2_level_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TwinDos 2 level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'TwinDos 2 level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'twin_dos_2_level',
+    'unique_id': 'DummyWasher-twin_dos_2_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.twindos_2_level_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TwinDos 2 level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.twindos_2_level_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
   })
 # ---

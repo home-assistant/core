@@ -34,23 +34,21 @@ def mock_tractive_client() -> Generator[AsyncMock]:
             }
         entry.runtime_data.client._send_hardware_update(event)
 
-    def send_wellness_event(
+    def send_health_overview_event(
         entry: MockConfigEntry, event: dict[str, Any] | None = None
     ):
-        """Send wellness event."""
+        """Send health overview event."""
         if event is None:
             event = {
-                "pet_id": "pet_id_123",
-                "sleep": {"minutes_day_sleep": 100, "minutes_night_sleep": 300},
-                "wellness": {"activity_label": "ok", "sleep_label": "good"},
-                "activity": {
-                    "calories": 999,
-                    "minutes_goal": 200,
-                    "minutes_active": 150,
-                    "minutes_rest": 122,
+                "petId": "pet_id_123",
+                "sleep": {
+                    "minutesDaySleep": 100,
+                    "minutesNightSleep": 300,
+                    "minutesCalm": 122,
                 },
+                "activity": {"minutesGoal": 200, "minutesActive": 150},
             }
-        entry.runtime_data.client._send_wellness_update(event)
+        entry.runtime_data.client.send_health_overview_update(event)
 
     def send_position_event(
         entry: MockConfigEntry, event: dict[str, Any] | None = None
@@ -112,8 +110,23 @@ def mock_tractive_client() -> Generator[AsyncMock]:
             set_led_active=AsyncMock(return_value={"pending": True}),
         )
 
+        client.trackable_object.return_value = Mock(
+            spec=TrackableObject,
+            health_overview=AsyncMock(
+                return_value={
+                    "petId": "pet_id_123",
+                    "sleep": {
+                        "minutesDaySleep": 100,
+                        "minutesNightSleep": 300,
+                        "minutesCalm": 122,
+                    },
+                    "activity": {"minutesGoal": 200, "minutesActive": 150},
+                }
+            ),
+        )
+
         client.send_hardware_event = send_hardware_event
-        client.send_wellness_event = send_wellness_event
+        client.send_health_overview_event = send_health_overview_event
         client.send_position_event = send_position_event
         client.send_switch_event = send_switch_event
         client.send_server_unavailable_event = send_server_unavailable_event

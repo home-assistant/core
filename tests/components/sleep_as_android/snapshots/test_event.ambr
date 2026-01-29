@@ -29,6 +29,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm clock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -65,6 +66,65 @@
     'state': 'unknown',
   })
 # ---
+# name: test_setup[event.sleep_as_android_jet_lag_prevention-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'jet_lag_start',
+        'jet_lag_stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_jet_lag_prevention',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Jet lag prevention',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Jet lag prevention',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.JET_LAG_PREVENTION: 'jet_lag_prevention'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_jet_lag_prevention',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_jet_lag_prevention-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'jet_lag_start',
+        'jet_lag_stop',
+      ]),
+      'friendly_name': 'Sleep as Android Jet lag prevention',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_jet_lag_prevention',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_setup[event.sleep_as_android_lullaby-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -92,6 +152,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lullaby',
     'options': dict({
     }),
     'original_device_class': None,
@@ -151,6 +212,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep health',
     'options': dict({
     }),
     'original_device_class': None,
@@ -212,6 +274,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep phase',
     'options': dict({
     }),
     'original_device_class': None,
@@ -275,6 +338,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep tracking',
     'options': dict({
     }),
     'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
@@ -336,6 +400,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart wake-up',
     'options': dict({
     }),
     'original_device_class': None,
@@ -397,6 +462,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound recognition',
     'options': dict({
     }),
     'original_device_class': None,
@@ -459,6 +525,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'User notification',
     'options': dict({
     }),
     'original_device_class': None,

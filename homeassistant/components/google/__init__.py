@@ -134,8 +134,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
     return True
 
 
@@ -149,12 +147,6 @@ def async_entry_has_scopes(entry: GoogleConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:
-    """Reload config entry if the access options change."""
-    if not async_entry_has_scopes(entry):
-        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> None:

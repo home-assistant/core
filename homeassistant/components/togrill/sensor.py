@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ToGrillConfigEntry
-from .const import CONF_PROBE_COUNT, MAX_PROBE_COUNT
+from .const import CONF_HAS_AMBIENT, CONF_PROBE_COUNT, MAX_PROBE_COUNT
 from .coordinator import ToGrillCoordinator
 from .entity import ToGrillEntity
 
@@ -34,6 +34,7 @@ class ToGrillSensorEntityDescription(SensorEntityDescription):
     packet_type: int
     packet_extract: Callable[[Packet], StateType]
     entity_supported: Callable[[Mapping[str, Any]], bool] = lambda _: True
+    probe_number: int | None = None
 
 
 def _get_temperature_description(probe_number: int):
@@ -51,8 +52,6 @@ def _get_temperature_description(probe_number: int):
 
     return ToGrillSensorEntityDescription(
         key=f"temperature_{probe_number}",
-        translation_key="temperature",
-        translation_placeholders={"probe_number": f"{probe_number}"},
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -60,7 +59,29 @@ def _get_temperature_description(probe_number: int):
         packet_type=PacketA1Notify.type,
         packet_extract=_get,
         entity_supported=_supported,
+        probe_number=probe_number,
     )
+
+
+def _get_ambient_temperature(packet: Packet) -> StateType:
+    """Extract ambient temperature from packet.
+
+    The ambient temperature is the last value in the temperatures list
+    when the device has an ambient sensor.
+    """
+    assert isinstance(packet, PacketA1Notify)
+    if not packet.temperatures:
+        return None
+    # Ambient is always the last temperature value
+    temperature = packet.temperatures[-1]
+    if temperature is None:
+        return None
+    return temperature
+
+
+def _ambient_supported(config: Mapping[str, Any]) -> bool:
+    """Check if ambient sensor is supported."""
+    return config.get(CONF_HAS_AMBIENT, False)
 
 
 ENTITY_DESCRIPTIONS = (
@@ -78,6 +99,17 @@ ENTITY_DESCRIPTIONS = (
         _get_temperature_description(probe_number)
         for probe_number in range(1, MAX_PROBE_COUNT + 1)
     ],
+    ToGrillSensorEntityDescription(
+        key="ambient_temperature",
+        translation_key="ambient_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        packet_type=PacketA1Notify.type,
+        packet_extract=_get_ambient_temperature,
+        entity_supported=_ambient_supported,
+    ),
 )
 
 
@@ -109,9 +141,8 @@ class ToGrillSensor(ToGrillEntity, SensorEntity):
     ) -> None:
         """Initialize sensor."""
 
-        super().__init__(coordinator)
+        super().__init__(coordinator, entity_description.probe_number)
         self.entity_description = entity_description
-        self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.address}_{entity_description.key}"
 
     @property
@@ -122,6 +153,8 @@ class ToGrillSensor(ToGrillEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Get current value."""
-        if packet := self.coordinator.data.get(self.entity_description.packet_type):
+        if packet := self.coordinator.data.get(
+            (self.entity_description.packet_type, None)
+        ):
             return self.entity_description.packet_extract(packet)
         return None

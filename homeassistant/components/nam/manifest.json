@@ -10,14 +10,14 @@
   "requirements": ["nettigo-air-monitor==5.0.0"],
   "zeroconf": [
     {
-      "type": "_http._tcp.local.",
-      "name": "nam-*"
+      "name": "nam-*",
+      "type": "_http._tcp.local."
     },
     {
-      "type": "_http._tcp.local.",
       "properties": {
         "manufacturer": "nettigo"
-      }
+      },
+      "type": "_http._tcp.local."
     }
   ]
 }

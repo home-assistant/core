@@ -184,7 +184,8 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
                             CONF_HOST: self.host,
                             CONF_PORT: self.port,
                             CONF_API_KEY: self.api_key,
-                        }
+                        },
+                        reload_on_update=False,
                     )
 
             except TimeoutError:
@@ -231,7 +232,8 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             updates={
                 CONF_HOST: self.host,
                 CONF_PORT: self.port,
-            }
+            },
+            reload_on_update=False,
         )
 
         self.context.update(
@@ -265,7 +267,8 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self.host,
                 CONF_PORT: self.port,
                 CONF_API_KEY: self.api_key,
-            }
+            },
+            reload_on_update=False,
         )
 
         self.context["configuration_url"] = HASSIO_CONFIGURATION_URL

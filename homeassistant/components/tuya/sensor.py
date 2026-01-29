@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from tuya_sharing import CustomerDevice, Manager
-from tuya_sharing.device import DeviceStatusRange
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
@@ -35,20 +34,150 @@ from .const import (
     DOMAIN,
     LOGGER,
     TUYA_DISCOVERY_NEW,
+    DeviceCategory,
     DPCode,
-    DPType,
-    UnitOfMeasurement,
 )
 from .entity import TuyaEntity
-from .models import ComplexTypeData, ElectricityTypeData, EnumTypeData, IntegerTypeData
+from .models import (
+    DeviceWrapper,
+    DPCodeDeltaIntegerWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+    DPCodeJsonWrapper,
+    DPCodeRawWrapper,
+    DPCodeTypeInformationWrapper,
+    DPCodeWrapper,
+)
+from .raw_data_models import ElectricityData
+from .type_information import EnumTypeInformation, IntegerTypeInformation
+
+
+class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
+    """Custom DPCode Wrapper for converting enum to wind direction."""
+
+    _DPTYPE = EnumTypeInformation
+
+    _WIND_DIRECTIONS = {
+        "north": 0.0,
+        "north_north_east": 22.5,
+        "north_east": 45.0,
+        "east_north_east": 67.5,
+        "east": 90.0,
+        "east_south_east": 112.5,
+        "south_east": 135.0,
+        "south_south_east": 157.5,
+        "south": 180.0,
+        "south_south_west": 202.5,
+        "south_west": 225.0,
+        "west_south_west": 247.5,
+        "west": 270.0,
+        "west_north_west": 292.5,
+        "north_west": 315.0,
+        "north_north_west": 337.5,
+    }
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := device.status.get(self.dpcode)) in self.type_information.range:
+            return self._WIND_DIRECTIONS.get(raw_value)
+        return None
+
+
+class _JsonElectricityCurrentWrapper(DPCodeJsonWrapper):
+    """Custom DPCode Wrapper for extracting electricity current from JSON."""
+
+    native_unit = UnitOfElectricCurrent.AMPERE
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read the device value for the dpcode."""
+        if (status := super().read_device_status(device)) is None:
+            return None
+        return status.get("electricCurrent")
+
+
+class _JsonElectricityPowerWrapper(DPCodeJsonWrapper):
+    """Custom DPCode Wrapper for extracting electricity power from JSON."""
+
+    native_unit = UnitOfPower.KILO_WATT
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read the device value for the dpcode."""
+        if (status := super().read_device_status(device)) is None:
+            return None
+        return status.get("power")
+
+
+class _JsonElectricityVoltageWrapper(DPCodeJsonWrapper):
+    """Custom DPCode Wrapper for extracting electricity voltage from JSON."""
+
+    native_unit = UnitOfElectricPotential.VOLT
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read the device value for the dpcode."""
+        if (status := super().read_device_status(device)) is None:
+            return None
+        return status.get("voltage")
+
+
+class _RawElectricityDataWrapper(DPCodeRawWrapper):
+    """Custom DPCode Wrapper for extracting ElectricityData from base64."""
+
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from T."""
+        raise NotImplementedError
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := super().read_device_status(device)) is None or (
+            value := ElectricityData.from_bytes(raw_value)
+        ) is None:
+            return None
+        return self._convert(value)
+
+
+class _RawElectricityCurrentWrapper(_RawElectricityDataWrapper):
+    """Custom DPCode Wrapper for extracting electricity current from base64."""
+
+    native_unit = UnitOfElectricCurrent.MILLIAMPERE
+    suggested_unit = UnitOfElectricCurrent.AMPERE
+
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from ElectricityData."""
+        return value.current
+
+
+class _RawElectricityPowerWrapper(_RawElectricityDataWrapper):
+    """Custom DPCode Wrapper for extracting electricity power from base64."""
+
+    native_unit = UnitOfPower.WATT
+    suggested_unit = UnitOfPower.KILO_WATT
+
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from ElectricityData."""
+        return value.power
+
+
+class _RawElectricityVoltageWrapper(_RawElectricityDataWrapper):
+    """Custom DPCode Wrapper for extracting electricity voltage from base64."""
+
+    native_unit = UnitOfElectricPotential.VOLT
+
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from ElectricityData."""
+        return value.voltage
+
+
+CURRENT_WRAPPER = (_RawElectricityCurrentWrapper, _JsonElectricityCurrentWrapper)
+POWER_WRAPPER = (_RawElectricityPowerWrapper, _JsonElectricityPowerWrapper)
+VOLTAGE_WRAPPER = (_RawElectricityVoltageWrapper, _JsonElectricityVoltageWrapper)
 
 
 @dataclass(frozen=True)
 class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
-    complex_type: type[ComplexTypeData] | None = None
-    subkey: str | None = None
+    dpcode: DPCode | None = None
+    wrapper_class: tuple[type[DPCodeTypeInformationWrapper], ...] | None = None
 
 
 # Commonly used battery sensors, that are reused in the sensors down below.
@@ -93,11 +222,8 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
 # All descriptions can be found here. Mostly the Integer data types in the
 # default status set of each category (that don't have a set instruction)
 # end up being a sensor.
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
-    # Single Phase power meter
-    # Note: Undocumented
-    "aqcz": (
+SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
+    DeviceCategory.AQCZ: (
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
             translation_key="current",
@@ -122,9 +248,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
         ),
     ),
-    # Smart Kettle
-    # https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
-    "bh": (
+    DeviceCategory.BH: (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
             translation_key="current_temperature",
@@ -142,18 +266,14 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="status",
         ),
     ),
-    # Curtain
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48qy7wkre
-    "cl": (
+    DeviceCategory.CL: (
         TuyaSensorEntityDescription(
             key=DPCode.TIME_TOTAL,
             translation_key="last_operation_duration",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
-    # CO2 Detector
-    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
-    "co2bj": (
+    DeviceCategory.CO2BJ: (
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_VALUE,
             translation_key="humidity",
@@ -191,11 +311,15 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PM10,
+            translation_key="pm10",
+            device_class=SensorDeviceClass.PM10,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
         *BATTERY_SENSORS,
     ),
-    # CO Detector
-    # https://developer.tuya.com/en/docs/iot/categorycobj?id=Kaiuz3u1j6q1v
-    "cobj": (
+    DeviceCategory.COBJ: (
         TuyaSensorEntityDescription(
             key=DPCode.CO_VALUE,
             translation_key="carbon_monoxide",
@@ -205,9 +329,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
-    # Dehumidifier
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r6jke8e
-    "cs": (
+    DeviceCategory.CS: (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_INDOOR,
             translation_key="temperature",
@@ -221,27 +343,22 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
-    # Smart Odor Eliminator-Pro
-    # Undocumented, see https://github.com/orgs/home-assistant/discussions/79
-    "cwjwq": (
+    DeviceCategory.CWJWQ: (
         TuyaSensorEntityDescription(
             key=DPCode.WORK_STATE_E,
             translation_key="odor_elimination_status",
         ),
         *BATTERY_SENSORS,
     ),
-    # Smart Pet Feeder
-    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
-    "cwwsq": (
+    DeviceCategory.CWWSQ: (
+        *BATTERY_SENSORS,
         TuyaSensorEntityDescription(
             key=DPCode.FEED_REPORT,
             translation_key="last_amount",
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
-    # Pet Fountain
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r0as4ln
-    "cwysj": (
+    DeviceCategory.CWYSJ: (
         TuyaSensorEntityDescription(
             key=DPCode.UV_RUNTIME,
             translation_key="uv_runtime",
@@ -272,9 +389,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.WATER_LEVEL, translation_key="water_level_state"
         ),
     ),
-    # Multi-functional Sensor
-    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
-    "dgnbj": (
+    DeviceCategory.DGNBJ: (
         TuyaSensorEntityDescription(
             key=DPCode.GAS_SENSOR_VALUE,
             translation_key="gas",
@@ -348,9 +463,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
-    # Circuit Breaker
-    # https://developer.tuya.com/en/docs/iot/dlq?id=Kb0kidk9enyh8
-    "dlq": (
+    DeviceCategory.DLQ: (
         TuyaSensorEntityDescription(
             key=DPCode.TOTAL_FORWARD_ENERGY,
             translation_key="total_energy",
@@ -358,91 +471,101 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.CUR_NEUTRAL,
+            key=DPCode.ADD_ELE,
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FORWARD_ENERGY_TOTAL,
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.REVERSE_ENERGY_TOTAL,
             translation_key="total_production",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_A,
-            translation_key="phase_a_current",
-            device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            key=DPCode.SUPPLY_FREQUENCY,
+            translation_key="supply_frequency",
+            device_class=SensorDeviceClass.FREQUENCY,
+            entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
-            complex_type=ElectricityTypeData,
-            subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_A,
+            key=f"{DPCode.PHASE_A}electriccurrent",
+            dpcode=DPCode.PHASE_A,
+            translation_key="phase_a_current",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=CURRENT_WRAPPER,
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{DPCode.PHASE_A}power",
+            dpcode=DPCode.PHASE_A,
             translation_key="phase_a_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            complex_type=ElectricityTypeData,
-            subkey="power",
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_A,
+            key=f"{DPCode.PHASE_A}voltage",
+            dpcode=DPCode.PHASE_A,
             translation_key="phase_a_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            complex_type=ElectricityTypeData,
-            subkey="voltage",
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_B,
+            key=f"{DPCode.PHASE_B}electriccurrent",
+            dpcode=DPCode.PHASE_B,
             translation_key="phase_b_current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
-            complex_type=ElectricityTypeData,
-            subkey="electriccurrent",
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_B,
+            key=f"{DPCode.PHASE_B}power",
+            dpcode=DPCode.PHASE_B,
             translation_key="phase_b_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            complex_type=ElectricityTypeData,
-            subkey="power",
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_B,
+            key=f"{DPCode.PHASE_B}voltage",
+            dpcode=DPCode.PHASE_B,
             translation_key="phase_b_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            complex_type=ElectricityTypeData,
-            subkey="voltage",
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_C,
+            key=f"{DPCode.PHASE_C}electriccurrent",
+            dpcode=DPCode.PHASE_C,
             translation_key="phase_c_current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
-            complex_type=ElectricityTypeData,
-            subkey="electriccurrent",
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_C,
+            key=f"{DPCode.PHASE_C}power",
+            dpcode=DPCode.PHASE_C,
             translation_key="phase_c_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            complex_type=ElectricityTypeData,
-            subkey="power",
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_C,
+            key=f"{DPCode.PHASE_C}voltage",
+            dpcode=DPCode.PHASE_C,
             translation_key="phase_c_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            complex_type=ElectricityTypeData,
-            subkey="voltage",
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
@@ -468,9 +591,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
         ),
     ),
-    # Fan
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48quojr54
-    "fs": (
+    DeviceCategory.FS: (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
             translation_key="temperature",
@@ -478,12 +599,8 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
-    # Irrigator
-    # https://developer.tuya.com/en/docs/iot/categoryggq?id=Kaiuz1qib7z0k
-    "ggq": BATTERY_SENSORS,
-    # Air Quality Monitor
-    # https://developer.tuya.com/en/docs/iot/hjjcy?id=Kbeoad8y1nnlv
-    "hjjcy": (
+    DeviceCategory.GGQ: BATTERY_SENSORS,
+    DeviceCategory.HJJCY: (
         TuyaSensorEntityDescription(
             key=DPCode.AIR_QUALITY_INDEX,
             translation_key="air_quality_index",
@@ -534,9 +651,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
-    # Formaldehyde Detector
-    # Note: Not documented
-    "jqbj": (
+    DeviceCategory.JQBJ: (
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
             translation_key="carbon_dioxide",
@@ -576,9 +691,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
-    # Humidifier
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48qwjz0i3
-    "jsq": (
+    DeviceCategory.JSQ: (
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_CURRENT,
             translation_key="humidity",
@@ -603,9 +716,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
-    # Methane Detector
-    # https://developer.tuya.com/en/docs/iot/categoryjwbj?id=Kaiuz40u98lkm
-    "jwbj": (
+    DeviceCategory.JWBJ: (
         TuyaSensorEntityDescription(
             key=DPCode.CH4_SENSOR_VALUE,
             translation_key="methane",
@@ -613,9 +724,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
-    # Switch
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
-    "kg": (
+    DeviceCategory.KG: (
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
             translation_key="current",
@@ -639,10 +748,20 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
             entity_registry_enabled_default=False,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ADD_ELE,
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PRO_ADD_ELE,
+            translation_key="total_production",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
     ),
-    # Air Purifier
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r41mn81
-    "kj": (
+    DeviceCategory.KJ: (
         TuyaSensorEntityDescription(
             key=DPCode.FILTER,
             translation_key="filter_utilization",
@@ -697,9 +816,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="air_quality",
         ),
     ),
-    # Luminance Sensor
-    # https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
-    "ldcg": (
+    DeviceCategory.LDCG: (
         TuyaSensorEntityDescription(
             key=DPCode.BRIGHT_STATE,
             translation_key="luminosity",
@@ -731,15 +848,31 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
-    # Door and Window Controller
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r5zjsy9
-    "mc": BATTERY_SENSORS,
-    # Door Window Sensor
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
-    "mcs": BATTERY_SENSORS,
-    # Sous Vide Cooker
-    # https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
-    "mzj": (
+    DeviceCategory.MC: BATTERY_SENSORS,
+    DeviceCategory.MCS: BATTERY_SENSORS,
+    DeviceCategory.MSP: (
+        TuyaSensorEntityDescription(
+            key=DPCode.CAT_WEIGHT,
+            translation_key="cat_weight",
+            device_class=SensorDeviceClass.WEIGHT,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.EXCRETION_TIME_DAY,
+            translation_key="excretion_time_day",
+            device_class=SensorDeviceClass.DURATION,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.EXCRETION_TIMES_DAY,
+            translation_key="excretion_times_day",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.STATUS,
+            translation_key="cat_litter_box_status",
+        ),
+    ),
+    DeviceCategory.MZJ: (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
             translation_key="current_temperature",
@@ -756,12 +889,8 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfTime.MINUTES,
         ),
     ),
-    # PIR Detector
-    # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
-    "pir": BATTERY_SENSORS,
-    # PM2.5 Sensor
-    # https://developer.tuya.com/en/docs/iot/categorypm25?id=Kaiuz3qof3yfu
-    "pm2.5": (
+    DeviceCategory.PIR: BATTERY_SENSORS,
+    DeviceCategory.PM2_5: (
         TuyaSensorEntityDescription(
             key=DPCode.PM25_VALUE,
             translation_key="pm25",
@@ -815,9 +944,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
-    # Heater
-    # https://developer.tuya.com/en/docs/iot/categoryqn?id=Kaiuz18kih0sm
-    "qn": (
+    DeviceCategory.QN: (
         TuyaSensorEntityDescription(
             key=DPCode.WORK_POWER,
             translation_key="power",
@@ -825,9 +952,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
-    # Temperature and Humidity Sensor with External Probe
-    # New undocumented category qxj, see https://github.com/home-assistant/core/issues/136472
-    "qxj": (
+    DeviceCategory.QXJ: (
         TuyaSensorEntityDescription(
             key=DPCode.VA_TEMPERATURE,
             translation_key="temperature",
@@ -920,15 +1045,60 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.WINDSPEED_AVG,
-            translation_key="wind_speed",
             device_class=SensorDeviceClass.WIND_SPEED,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.RAIN_24H,
+            translation_key="precipitation_today",
+            device_class=SensorDeviceClass.PRECIPITATION,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.RAIN_RATE,
+            translation_key="precipitation_intensity",
+            device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.UV_INDEX,
+            translation_key="uv_index",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WIND_DIRECT,
+            translation_key="wind_direction",
+            device_class=SensorDeviceClass.WIND_DIRECTION,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(_WindDirectionWrapper,),
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.DEW_POINT_TEMP,
+            translation_key="dew_point_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FEELLIKE_TEMP,
+            translation_key="feels_like_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.HEAT_INDEX,
+            translation_key="heat_index_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WINDCHILL_INDEX,
+            translation_key="wind_chill_index_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
     ),
-    # Gas Detector
-    # https://developer.tuya.com/en/docs/iot/categoryrqbj?id=Kaiuz3d162ubw
-    "rqbj": (
+    DeviceCategory.RQBJ: (
         TuyaSensorEntityDescription(
             key=DPCode.GAS_SENSOR_VALUE,
             name=None,
@@ -937,9 +1107,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
-    # Robot Vacuum
-    # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
-    "sd": (
+    DeviceCategory.SD: (
         TuyaSensorEntityDescription(
             key=DPCode.CLEAN_AREA,
             translation_key="cleaning_area",
@@ -993,8 +1161,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
-    # Smart Water Timer
-    "sfkzq": (
+    DeviceCategory.SFKZQ: (
         # Total seconds of irrigation. Read-write value; the device appears to ignore the write action (maybe firmware bug)
         TuyaSensorEntityDescription(
             key=DPCode.TIME_USE,
@@ -1004,15 +1171,10 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
-    # Water Detector
-    # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
-    "sj": BATTERY_SENSORS,
-    # Emergency Button
-    # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
-    "sos": BATTERY_SENSORS,
-    # Smart Camera
-    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
-    "sp": (
+    DeviceCategory.SGBJ: BATTERY_SENSORS,
+    DeviceCategory.SJ: BATTERY_SENSORS,
+    DeviceCategory.SOS: BATTERY_SENSORS,
+    DeviceCategory.SP: (
         TuyaSensorEntityDescription(
             key=DPCode.SENSOR_TEMPERATURE,
             translation_key="temperature",
@@ -1033,9 +1195,23 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
-    # Smart Gardening system
-    # https://developer.tuya.com/en/docs/iot/categorysz?id=Kaiuz4e6h7up0
-    "sz": (
+    DeviceCategory.SWTZ: (
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT_2,
+            translation_key="indexed_temperature",
+            translation_placeholders={"index": "2"},
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
+    DeviceCategory.SZ: (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
             translation_key="temperature",
@@ -1049,11 +1225,22 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
-    # Fingerbot
-    "szjqr": BATTERY_SENSORS,
-    # IoT Switch
-    # Note: Undocumented
-    "tdq": (
+    DeviceCategory.SZJCY: (
+        TuyaSensorEntityDescription(
+            key=DPCode.TDS_IN,
+            translation_key="total_dissolved_solids",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
+    DeviceCategory.SZJQR: BATTERY_SENSORS,
+    DeviceCategory.TDQ: (
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
             translation_key="current",
@@ -1076,6 +1263,12 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
             suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
             entity_registry_enabled_default=False,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ADD_ELE,
+            translation_key="total_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VA_TEMPERATURE,
@@ -1109,12 +1302,8 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
-    # Solar Light
-    # https://developer.tuya.com/en/docs/iot/tynd?id=Kaof8j02e1t98
-    "tyndj": BATTERY_SENSORS,
-    # Volatile Organic Compound Sensor
-    # Note: Undocumented in cloud API docs, based on test device
-    "voc": (
+    DeviceCategory.TYNDJ: BATTERY_SENSORS,
+    DeviceCategory.VOC: (
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
             translation_key="carbon_dioxide",
@@ -1154,13 +1343,8 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
-    # Thermostat
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
-    "wk": (*BATTERY_SENSORS,),
-    # Two-way temperature and humidity switch
-    # "MOES Temperature and Humidity Smart Switch Module MS-103"
-    # Documentation not found
-    "wkcz": (
+    DeviceCategory.WK: (*BATTERY_SENSORS,),
+    DeviceCategory.WKCZ: (
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_VALUE,
             translation_key="humidity",
@@ -1197,12 +1381,8 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
         ),
     ),
-    # Thermostatic Radiator Valve
-    # Not documented
-    "wkf": BATTERY_SENSORS,
-    # eMylo Smart WiFi IR Remote
-    # Air Conditioner Mate (Smart IR Socket)
-    "wnykq": (
+    DeviceCategory.WKF: BATTERY_SENSORS,
+    DeviceCategory.WNYKQ: (
         TuyaSensorEntityDescription(
             key=DPCode.VA_TEMPERATURE,
             translation_key="temperature",
@@ -1242,9 +1422,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
         ),
     ),
-    # Temperature and Humidity Sensor
-    # https://developer.tuya.com/en/docs/iot/categorywsdcg?id=Kaiuz3hinij34
-    "wsdcg": (
+    DeviceCategory.WSDCG: (
         TuyaSensorEntityDescription(
             key=DPCode.VA_TEMPERATURE,
             translation_key="temperature",
@@ -1277,11 +1455,79 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
-    # Wireless Switch
-    # https://developer.tuya.com/en/docs/iot/s?id=Kbeoa9fkv6brp
-    "wxkg": BATTERY_SENSORS,  # Pressure Sensor
-    # https://developer.tuya.com/en/docs/iot/categoryylcg?id=Kaiuz3kc2e4gm
-    "ylcg": (
+    DeviceCategory.WXKG: BATTERY_SENSORS,
+    DeviceCategory.XNYJCN: (
+        TuyaSensorEntityDescription(
+            key=DPCode.CURRENT_SOC,
+            translation_key="battery_soc",
+            device_class=SensorDeviceClass.BATTERY,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PV_POWER_TOTAL,
+            translation_key="total_pv_power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PV_POWER_CHANNEL_1,
+            translation_key="pv_channel_power",
+            translation_placeholders={"index": "1"},
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PV_POWER_CHANNEL_2,
+            translation_key="pv_channel_power",
+            translation_placeholders={"index": "2"},
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.BATTERY_POWER,
+            translation_key="battery_power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.INVERTER_OUTPUT_POWER,
+            translation_key="inverter_output_power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUMULATIVE_ENERGY_GENERATED_PV,
+            translation_key="lifetime_pv_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUMULATIVE_ENERGY_OUTPUT_INV,
+            translation_key="lifetime_inverter_output_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUMULATIVE_ENERGY_DISCHARGED,
+            translation_key="lifetime_battery_discharge_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUMULATIVE_ENERGY_CHARGED,
+            translation_key="lifetime_battery_charge_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUML_E_EXPORT_OFFGRID1,
+            translation_key="lifetime_offgrid_port_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+    ),
+    DeviceCategory.YLCG: (
         TuyaSensorEntityDescription(
             key=DPCode.PRESSURE_VALUE,
             name=None,
@@ -1290,9 +1536,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
-    # Smoke Detector
-    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
-    "ywbj": (
+    DeviceCategory.YWBJ: (
         TuyaSensorEntityDescription(
             key=DPCode.SMOKE_SENSOR_VALUE,
             translation_key="smoke_amount",
@@ -1301,9 +1545,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
-    # Tank Level Sensor
-    # Note: Undocumented
-    "ywcgq": (
+    DeviceCategory.YWCGQ: (
         TuyaSensorEntityDescription(
             key=DPCode.LIQUID_STATE,
             translation_key="liquid_state",
@@ -1320,12 +1562,8 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
-    # Vibration Sensor
-    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
-    "zd": BATTERY_SENSORS,
-    # Smart Electricity Meter
-    # https://developer.tuya.com/en/docs/iot/smart-meter?id=Kaiuz4gv6ack7
-    "zndb": (
+    DeviceCategory.ZD: BATTERY_SENSORS,
+    DeviceCategory.ZNDB: (
         TuyaSensorEntityDescription(
             key=DPCode.FORWARD_ENERGY_TOTAL,
             translation_key="total_energy",
@@ -1339,97 +1577,99 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.TOTAL_POWER,
+            key=DPCode.POWER_TOTAL,
             translation_key="total_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            complex_type=ElectricityTypeData,
-            subkey="power",
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_A,
+            key=f"{DPCode.TOTAL_POWER}power",
+            dpcode=DPCode.TOTAL_POWER,
+            translation_key="total_power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SUPPLY_FREQUENCY,
+            translation_key="supply_frequency",
+            device_class=SensorDeviceClass.FREQUENCY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{DPCode.PHASE_A}electriccurrent",
+            dpcode=DPCode.PHASE_A,
             translation_key="phase_a_current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
-            complex_type=ElectricityTypeData,
-            subkey="electriccurrent",
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_A,
+            key=f"{DPCode.PHASE_A}power",
+            dpcode=DPCode.PHASE_A,
             translation_key="phase_a_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            complex_type=ElectricityTypeData,
-            subkey="power",
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_A,
+            key=f"{DPCode.PHASE_A}voltage",
+            dpcode=DPCode.PHASE_A,
             translation_key="phase_a_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            complex_type=ElectricityTypeData,
-            subkey="voltage",
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_B,
+            key=f"{DPCode.PHASE_B}electriccurrent",
+            dpcode=DPCode.PHASE_B,
             translation_key="phase_b_current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
-            complex_type=ElectricityTypeData,
-            subkey="electriccurrent",
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_B,
+            key=f"{DPCode.PHASE_B}power",
+            dpcode=DPCode.PHASE_B,
             translation_key="phase_b_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            complex_type=ElectricityTypeData,
-            subkey="power",
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_B,
+            key=f"{DPCode.PHASE_B}voltage",
+            dpcode=DPCode.PHASE_B,
             translation_key="phase_b_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            complex_type=ElectricityTypeData,
-            subkey="voltage",
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_C,
+            key=f"{DPCode.PHASE_C}electriccurrent",
+            dpcode=DPCode.PHASE_C,
             translation_key="phase_c_current",
             device_class=SensorDeviceClass.CURRENT,
-            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
-            complex_type=ElectricityTypeData,
-            subkey="electriccurrent",
+            wrapper_class=CURRENT_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_C,
+            key=f"{DPCode.PHASE_C}power",
+            dpcode=DPCode.PHASE_C,
             translation_key="phase_c_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-            complex_type=ElectricityTypeData,
-            subkey="power",
+            wrapper_class=POWER_WRAPPER,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.PHASE_C,
+            key=f"{DPCode.PHASE_C}voltage",
+            dpcode=DPCode.PHASE_C,
             translation_key="phase_c_voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            complex_type=ElectricityTypeData,
-            subkey="voltage",
+            wrapper_class=VOLTAGE_WRAPPER,
         ),
     ),
-    # VESKA-micro inverter
-    "znnbq": (
+    DeviceCategory.ZNNBQ: (
         TuyaSensorEntityDescription(
             key=DPCode.REVERSE_ENERGY_TOTAL,
             translation_key="total_energy",
@@ -1445,9 +1685,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             suggested_display_precision=0,
             suggested_unit_of_measurement=UnitOfPower.WATT,
         ),
-    ),
-    # Pool HeatPump
-    "znrb": (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
             translation_key="temperature",
@@ -1455,8 +1692,15 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
-    # Soil sensor (Plant monitor)
-    "zwjcy": (
+    DeviceCategory.ZNRB: (
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
+    DeviceCategory.ZWJCY: (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
             translation_key="temperature",
@@ -1474,16 +1718,36 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
 }
 
 # Socket (duplicate of `kg`)
-# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
-SENSORS["cz"] = SENSORS["kg"]
+SENSORS[DeviceCategory.CZ] = SENSORS[DeviceCategory.KG]
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
-# Undocumented, see https://github.com/home-assistant/core/issues/132844
-SENSORS["dghsxj"] = SENSORS["sp"]
+SENSORS[DeviceCategory.DGHSXJ] = SENSORS[DeviceCategory.SP]
 
 # Power Socket (duplicate of `kg`)
-# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
-SENSORS["pc"] = SENSORS["kg"]
+SENSORS[DeviceCategory.PC] = SENSORS[DeviceCategory.KG]
+
+
+def _get_dpcode_wrapper(
+    device: CustomerDevice,
+    description: TuyaSensorEntityDescription,
+) -> DPCodeWrapper | None:
+    """Get DPCode wrapper for an entity description."""
+    dpcode = description.dpcode or description.key
+    wrapper: DPCodeWrapper | None
+
+    if description.wrapper_class:
+        for cls in description.wrapper_class:
+            if wrapper := cls.find_dpcode(device, dpcode):
+                return wrapper
+        return None
+
+    # Check for integer type first, using delta wrapper only for sum report_type
+    if type_information := IntegerTypeInformation.find_dpcode(device, dpcode):
+        if type_information.report_type == "sum":
+            return DPCodeDeltaIntegerWrapper(type_information.dpcode, type_information)
+        return DPCodeIntegerWrapper(type_information.dpcode, type_information)
+
+    return DPCodeEnumWrapper.find_dpcode(device, dpcode)
 
 
 async def async_setup_entry(
@@ -1492,24 +1756,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya sensor dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya sensor."""
         entities: list[TuyaSensorEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
                 entities.extend(
-                    TuyaSensorEntity(device, hass_data.manager, description)
+                    TuyaSensorEntity(device, manager, description, dpcode_wrapper)
                     for description in descriptions
-                    if description.key in device.status
+                    if (dpcode_wrapper := _get_dpcode_wrapper(device, description))
                 )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -1521,43 +1785,37 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
     entity_description: TuyaSensorEntityDescription
 
-    _status_range: DeviceStatusRange | None = None
-    _type: DPType | None = None
-    _type_data: IntegerTypeData | EnumTypeData | ComplexTypeData | None = None
-    _uom: UnitOfMeasurement | None = None
-
     def __init__(
         self,
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaSensorEntityDescription,
+        dpcode_wrapper: DeviceWrapper[StateType],
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{super().unique_id}{description.key}{description.subkey or ''}"
-        )
+        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._dpcode_wrapper = dpcode_wrapper
 
-        if int_type := self.find_dpcode(description.key, dptype=DPType.INTEGER):
-            self._type_data = int_type
-            self._type = DPType.INTEGER
-            if description.native_unit_of_measurement is None:
-                self._attr_native_unit_of_measurement = int_type.unit
-        elif enum_type := self.find_dpcode(
-            description.key, dptype=DPType.ENUM, prefer_function=True
-        ):
-            self._type_data = enum_type
-            self._type = DPType.ENUM
-        else:
-            self._type = self.get_dptype(DPCode(description.key))
+        if description.native_unit_of_measurement is None:
+            self._attr_native_unit_of_measurement = dpcode_wrapper.native_unit
+        if description.suggested_unit_of_measurement is None:
+            self._attr_suggested_unit_of_measurement = dpcode_wrapper.suggested_unit
+        if description.state_class is None:
+            self._attr_state_class = dpcode_wrapper.state_class
+
+        self._validate_device_class_unit()
+
+    def _validate_device_class_unit(self) -> None:
+        """Validate device class unit compatibility."""
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
         if (
             self.device_class is not None
             and not self.device_class.startswith(DOMAIN)
-            and description.native_unit_of_measurement is None
+            and self.entity_description.native_unit_of_measurement is None
             # we do not need to check mappings if the API UOM is allowed
             and self.native_unit_of_measurement
             not in SENSOR_DEVICE_CLASS_UNITS[self.device_class]
@@ -1596,51 +1854,16 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        # Only continue if data type is known
-        if self._type not in (
-            DPType.INTEGER,
-            DPType.STRING,
-            DPType.ENUM,
-            DPType.JSON,
-            DPType.RAW,
+        return self._read_wrapper(self._dpcode_wrapper)
+
+    async def _handle_state_update(
+        self,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict[str, int] | None,
+    ) -> None:
+        """Handle state update, only if this entity's dpcode was actually updated."""
+        if self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
         ):
-            return None
-
-        # Raw value
-        value = self.device.status.get(self.entity_description.key)
-        if value is None:
-            return None
-
-        # Scale integer/float value
-        if isinstance(self._type_data, IntegerTypeData):
-            return self._type_data.scale_value(value)
-
-        # Unexpected enum value
-        if (
-            isinstance(self._type_data, EnumTypeData)
-            and value not in self._type_data.range
-        ):
-            return None
-
-        # Get subkey value from Json string.
-        if self._type is DPType.JSON:
-            if (
-                self.entity_description.complex_type is None
-                or self.entity_description.subkey is None
-            ):
-                return None
-            values = self.entity_description.complex_type.from_json(value)
-            return getattr(values, self.entity_description.subkey)
-
-        if self._type is DPType.RAW:
-            if (
-                self.entity_description.complex_type is None
-                or self.entity_description.subkey is None
-                or (raw_values := self.entity_description.complex_type.from_raw(value))
-                is None
-            ):
-                return None
-            return getattr(raw_values, self.entity_description.subkey)
-
-        # Valid string or enum value
-        return value
+            return
+        self.async_write_ha_state()

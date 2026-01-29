@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BH1750 illuminance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -78,6 +79,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BME280 humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -134,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BME280 pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -190,6 +193,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BME280 temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -246,6 +250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BMP180 pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -302,6 +307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BMP180 temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -358,6 +364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BMP280 pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -414,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'BMP280 temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -470,6 +478,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHT22 humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -526,6 +535,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHT22 temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -582,6 +592,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DS18B20 temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -638,6 +649,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HECA humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -694,6 +706,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HECA temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -748,6 +761,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last restart',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -799,6 +813,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'MH-Z14A carbon dioxide',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -853,6 +868,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PMSx003 common air quality index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -909,6 +925,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PMSx003 common air quality index level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -967,6 +984,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PMSx003 PM1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -981,7 +999,7 @@
     'supported_features': 0,
     'translation_key': 'pmsx003_pm1',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_p0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_pmsx003_pm1-state]
@@ -990,7 +1008,7 @@
       'device_class': 'pm1',
       'friendly_name': 'Nettigo Air Monitor PMSx003 PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_pmsx003_pm1',
@@ -1023,6 +1041,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PMSx003 PM10',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1037,7 +1056,7 @@
     'supported_features': 0,
     'translation_key': 'pmsx003_pm10',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_p1',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_pmsx003_pm10-state]
@@ -1046,7 +1065,7 @@
       'device_class': 'pm10',
       'friendly_name': 'Nettigo Air Monitor PMSx003 PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_pmsx003_pm10',
@@ -1079,6 +1098,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PMSx003 PM2.5',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1093,7 +1113,7 @@
     'supported_features': 0,
     'translation_key': 'pmsx003_pm25',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_p2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_pmsx003_pm2_5-state]
@@ -1102,7 +1122,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Nettigo Air Monitor PMSx003 PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_pmsx003_pm2_5',
@@ -1133,6 +1153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SDS011 common air quality index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1189,6 +1210,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SDS011 common air quality index level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1247,6 +1269,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SDS011 PM10',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1261,7 +1284,7 @@
     'supported_features': 0,
     'translation_key': 'sds011_pm10',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sds011_p1',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sds011_pm10-state]
@@ -1270,7 +1293,7 @@
       'device_class': 'pm10',
       'friendly_name': 'Nettigo Air Monitor SDS011 PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sds011_pm10',
@@ -1303,6 +1326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SDS011 PM2.5',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1317,7 +1341,7 @@
     'supported_features': 0,
     'translation_key': 'sds011_pm25',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sds011_p2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sds011_pm2_5-state]
@@ -1326,7 +1350,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Nettigo Air Monitor SDS011 PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sds011_pm2_5',
@@ -1359,6 +1383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SHT3X humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1415,6 +1440,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SHT3X temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1471,6 +1497,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal strength',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1525,6 +1552,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SPS30 common air quality index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1581,6 +1609,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SPS30 common air quality index level',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1639,6 +1668,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SPS30 PM1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1653,7 +1683,7 @@
     'supported_features': 0,
     'translation_key': 'sps30_pm1',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm1-state]
@@ -1662,7 +1692,7 @@
       'device_class': 'pm1',
       'friendly_name': 'Nettigo Air Monitor SPS30 PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sps30_pm1',
@@ -1695,6 +1725,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SPS30 PM10',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1709,7 +1740,7 @@
     'supported_features': 0,
     'translation_key': 'sps30_pm10',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p1',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm10-state]
@@ -1718,7 +1749,7 @@
       'device_class': 'pm10',
       'friendly_name': 'Nettigo Air Monitor SPS30 PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sps30_pm10',
@@ -1751,6 +1782,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SPS30 PM2.5',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1765,7 +1797,7 @@
     'supported_features': 0,
     'translation_key': 'sps30_pm25',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm2_5-state]
@@ -1774,7 +1806,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Nettigo Air Monitor SPS30 PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sps30_pm2_5',
@@ -1807,12 +1839,13 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SPS30 PM4',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PM4: 'pm4'>,
     'original_icon': None,
     'original_name': 'SPS30 PM4',
     'platform': 'nam',
@@ -1821,15 +1854,16 @@
     'supported_features': 0,
     'translation_key': 'sps30_pm4',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p4',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'pm4',
       'friendly_name': 'Nettigo Air Monitor SPS30 PM4',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sps30_pm4',

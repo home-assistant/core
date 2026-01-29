@@ -1,52 +1,22 @@
 {
   "config": {
-    "flow_title": "{name}",
-    "step": {
-      "user": {
-        "description": "Before setup, battery-powered devices must be woken up, you can now wake the device up using a button on it.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of the Shelly device to connect to.",
-          "port": "The TCP port of the Shelly device to connect to (Gen2+)."
-        }
-      },
-      "credentials": {
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "username": "Username for the device's web panel.",
-          "password": "Password for the device's web panel."
-        }
-      },
-      "reauth_confirm": {
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "username": "[%key:component::shelly::config::step::credentials::data_description::username%]",
-          "password": "[%key:component::shelly::config::step::credentials::data_description::password%]"
-        }
-      },
-      "confirm_discovery": {
-        "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password-protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password-protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
-      },
-      "reconfigure": {
-        "description": "Update configuration for {device_name}.\n\nBefore setup, battery-powered devices must be woken up, you can now wake the device up using a button on it.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
-        },
-        "data_description": {
-          "host": "[%key:component::shelly::config::step::user::data_description::host%]",
-          "port": "[%key:component::shelly::config::step::user::data_description::port%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_on_wifi": "Device is already connected to WiFi and was discovered via the network.",
+      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
+      "ble_not_permitted": "Device is bound to a Shelly cloud account and cannot be provisioned via Bluetooth. Please use the Shelly app to provision WiFi credentials, then add the device when it appears on your network.",
+      "cannot_connect": "Failed to connect to the device. Ensure the device is powered on and within range.",
+      "custom_port_not_supported": "[%key:component::shelly::config::error::custom_port_not_supported%]",
+      "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
+      "invalid_discovery_info": "Invalid Bluetooth discovery information.",
+      "ipv6_not_supported": "IPv6 is not supported.",
+      "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]",
+      "no_wifi_networks": "No WiFi networks found during scan.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wifi_provisioned": "WiFi credentials for {ssid} have been provisioned to {name}. The device is connecting to WiFi and will complete setup automatically."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -56,15 +26,94 @@
       "mac_address_mismatch": "The MAC address of the device does not match the one in the configuration, please reboot the device and try again.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
-      "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
-      "ipv6_not_supported": "IPv6 is not supported.",
-      "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    "flow_title": "{name}",
+    "progress": {
+      "provisioning": "Provisioning WiFi credentials and waiting for device to connect"
+    },
+    "step": {
+      "bluetooth_confirm": {
+        "data": {
+          "disable_ap": "Disable WiFi access point after provisioning",
+          "disable_ble_rpc": "Disable Bluetooth RPC after provisioning"
+        },
+        "data_description": {
+          "disable_ap": "For improved security, disable the WiFi access point after successfully connecting to your network.",
+          "disable_ble_rpc": "For improved security, disable Bluetooth RPC access after WiFi is configured. Bluetooth will remain enabled for BLE sensors and buttons."
+        },
+        "description": "The Shelly device {name} has been discovered via Bluetooth but is not connected to WiFi.\n\nDo you want to provision WiFi credentials to this device?",
+        "title": "Provision WiFi via Bluetooth"
+      },
+      "confirm_discovery": {
+        "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password-protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password-protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
+      },
+      "credentials": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for the device's web panel.",
+          "username": "Username for the device's web panel."
+        }
+      },
+      "provision_failed": {
+        "description": "The device did not connect to {ssid}. This may be due to an incorrect password or the network being out of range. Would you like to try again?"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::shelly::config::step::credentials::data_description::password%]",
+          "username": "[%key:component::shelly::config::step::credentials::data_description::username%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::shelly::config::step::user_manual::data_description::host%]",
+          "port": "[%key:component::shelly::config::step::user_manual::data_description::port%]"
+        },
+        "description": "Update configuration for {device_name}.\n\nBefore setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
+      },
+      "user": {
+        "data": {
+          "device": "Device"
+        },
+        "data_description": {
+          "device": "Select a discovered device or enter an address manually."
+        },
+        "description": "Select a Shelly device from the list or enter an address manually.\n\nBefore setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
+      },
+      "user_manual": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Shelly device to connect to.",
+          "port": "The TCP port of the Shelly device to connect to (Gen2+)."
+        },
+        "description": "Before setup, battery-powered devices must be woken up, you can now wake the device up using a button on it."
+      },
+      "wifi_scan": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "ssid": "WiFi network"
+        },
+        "data_description": {
+          "password": "Password for the WiFi network.",
+          "ssid": "Select a WiFi network from the list or enter a custom SSID for hidden networks."
+        },
+        "description": "Select a WiFi network and enter the password to provision the device."
+      },
+      "wifi_scan_failed": {
+        "description": "Failed to scan for WiFi networks via Bluetooth. The device may be out of range or Bluetooth connection failed. Would you like to try again?"
+      }
     }
   },
   "device_automation": {
@@ -73,60 +122,131 @@
       "button1": "First button",
       "button2": "Second button",
       "button3": "Third button",
-      "button4": "Fourth button"
+      "button4": "Fourth button",
+      "button5": "Fifth button"
     },
     "trigger_type": {
-      "single": "{subtype} single clicked",
-      "double": "{subtype} double clicked",
-      "triple": "{subtype} triple clicked",
-      "long": "{subtype} long clicked",
-      "single_long": "{subtype} single clicked and then long clicked",
-      "long_single": "{subtype} long clicked and then single clicked",
       "btn_down": "{subtype} button down",
       "btn_up": "{subtype} button up",
-      "single_push": "{subtype} single push",
+      "double": "{subtype} double clicked",
       "double_push": "{subtype} double push",
-      "triple_push": "{subtype} triple push",
-      "long_push": "{subtype} long push"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "description": "Bluetooth scanning can be active or passive. With active, the Shelly requests data from nearby devices; with passive, the Shelly receives unsolicited data from nearby devices.",
-        "data": {
-          "ble_scanner_mode": "Bluetooth scanner mode"
-        },
-        "data_description": {
-          "ble_scanner_mode": "The scanner mode to use for Bluetooth scanning."
-        }
-      }
-    },
-    "abort": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner.",
-      "zigbee_firmware": "A device with Zigbee firmware cannot be used as a Bluetooth scanner. Please switch to Matter firmware to use the device as a Bluetooth scanner."
-    }
-  },
-  "selector": {
-    "ble_scanner_mode": {
-      "options": {
-        "disabled": "[%key:common::state::disabled%]",
-        "active": "[%key:common::state::active%]",
-        "passive": "Passive"
-      }
+      "long": "{subtype} long clicked",
+      "long_push": "{subtype} long push",
+      "long_single": "{subtype} long clicked and then single clicked",
+      "single": "{subtype} single clicked",
+      "single_long": "{subtype} single clicked and then long clicked",
+      "single_push": "{subtype} single push",
+      "triple": "{subtype} triple clicked",
+      "triple_push": "{subtype} triple push"
     }
   },
   "entity": {
     "binary_sensor": {
-      "gas": {
+      "cable_unplugged": {
+        "name": "Cable unplugged"
+      },
+      "cable_unplugged_with_channel_name": {
+        "name": "{channel_name} cable unplugged"
+      },
+      "calibration": {
+        "name": "Calibration"
+      },
+      "cloud": {
+        "name": "Cloud"
+      },
+      "door": {
+        "name": "Door"
+      },
+      "external_input": {
+        "name": "External input"
+      },
+      "external_power": {
+        "name": "External power"
+      },
+      "flood": {
+        "name": "Flood"
+      },
+      "flood_with_channel_name": {
+        "name": "{channel_name} flood"
+      },
+      "input": {
+        "name": "Input"
+      },
+      "input_with_number": {
+        "name": "Input {input_number}"
+      },
+      "mute": {
+        "name": "Mute"
+      },
+      "mute_with_channel_name": {
+        "name": "{channel_name} mute"
+      },
+      "occupancy_with_channel_name": {
+        "name": "{channel_name} occupancy"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "overcurrent_with_channel_name": {
+        "name": "{channel_name} overcurrent"
+      },
+      "overheating": {
+        "name": "Overheating"
+      },
+      "overheating_with_channel_name": {
+        "name": "{channel_name} overheating"
+      },
+      "overpowering": {
+        "name": "Overpowering"
+      },
+      "overpowering_with_channel_name": {
+        "name": "{channel_name} overpowering"
+      },
+      "overvoltage": {
+        "name": "Overvoltage"
+      },
+      "overvoltage_with_channel_name": {
+        "name": "{channel_name} overvoltage"
+      },
+      "restart_required": {
+        "name": "Restart required"
+      },
+      "smoke_with_channel_name": {
+        "name": "{channel_name} smoke"
+      }
+    },
+    "button": {
+      "calibrate": {
+        "name": "Calibrate"
+      },
+      "close": {
+        "name": "Close"
+      },
+      "mute_alarm": {
+        "name": "Mute alarm"
+      },
+      "open": {
+        "name": "Open"
+      },
+      "self_test": {
+        "name": "Self-test"
+      },
+      "turn_off_the_screen": {
+        "name": "Turn off the screen"
+      },
+      "turn_on_the_screen": {
+        "name": "Turn on the screen"
+      },
+      "unmute_alarm": {
+        "name": "Unmute alarm"
+      }
+    },
+    "climate": {
+      "thermostat": {
         "state_attributes": {
-          "detected": {
+          "preset_mode": {
             "state": {
-              "none": "None",
-              "mild": "Mild",
-              "heavy": "Heavy",
-              "test": "Test"
+              "frost_protection": "Frost protection"
             }
           }
         }
@@ -134,81 +254,268 @@
     },
     "event": {
       "input": {
+        "name": "Input {input_number}",
         "state_attributes": {
           "event_type": {
             "state": {
               "btn_down": "Button down",
               "btn_up": "Button up",
+              "double": "[%key:component::shelly::entity::event::input::state_attributes::event_type::state::double_push%]",
               "double_push": "Double push",
-              "double": "Double push",
+              "long": "[%key:component::shelly::entity::event::input::state_attributes::event_type::state::long_push%]",
               "long_push": "Long push",
               "long_single": "Long push and then short push",
-              "long": "Long push",
+              "single": "[%key:component::shelly::entity::event::input::state_attributes::event_type::state::single_push%]",
               "single_long": "Short push and then long push",
               "single_push": "Single push",
-              "single": "Single push",
-              "triple_push": "Triple push",
-              "triple": "Triple push"
+              "triple": "[%key:component::shelly::entity::event::input::state_attributes::event_type::state::triple_push%]",
+              "triple_push": "Triple push"
             }
           }
         }
       }
     },
-    "sensor": {
-      "gas_detected": {
+    "number": {
+      "current_limit": {
+        "name": "Current limit"
+      },
+      "external_temperature": {
+        "name": "External temperature"
+      },
+      "left_slot_intensity": {
+        "name": "Left slot intensity"
+      },
+      "right_slot_intensity": {
+        "name": "Right slot intensity"
+      },
+      "target_humidity": {
+        "name": "Target humidity"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      }
+    },
+    "select": {
+      "cury_mode": {
+        "name": "Mode",
         "state": {
+          "bedroom": "Bedroom",
+          "hall": "Hall",
+          "lavatory_room": "Lavatory room",
+          "living_room": "Living room",
           "none": "None",
-          "mild": "Mild",
+          "reception": "Reception",
+          "workplace": "Workplace"
+        }
+      }
+    },
+    "sensor": {
+      "adc": {
+        "name": "ADC"
+      },
+      "analog": {
+        "name": "Analog"
+      },
+      "analog_value": {
+        "name": "Analog value"
+      },
+      "analog_value_with_channel_name": {
+        "name": "{channel_name} analog value"
+      },
+      "analog_with_channel_name": {
+        "name": "{channel_name} analog"
+      },
+      "apparent_power_with_channel_name": {
+        "name": "{channel_name} apparent power"
+      },
+      "average_temperature": {
+        "name": "Average temperature"
+      },
+      "charger_state": {
+        "name": "Charger state",
+        "state": {
+          "charger_charging": "[%key:common::state::charging%]",
+          "charger_end": "Charge completed",
+          "charger_fault": "Error while charging",
+          "charger_free": "[%key:component::binary_sensor::entity_component::plug::state::off%]",
+          "charger_free_fault": "Can not release plug",
+          "charger_insert": "[%key:component::binary_sensor::entity_component::plug::state::on%]",
+          "charger_pause": "Charging paused by charger",
+          "charger_wait": "Charging paused by vehicle"
+        }
+      },
+      "current_with_channel_name": {
+        "name": "{channel_name} current"
+      },
+      "current_with_phase_name": {
+        "name": "Phase {phase_name} current"
+      },
+      "detected_objects": {
+        "name": "Detected objects",
+        "unit_of_measurement": "objects"
+      },
+      "detected_objects_with_channel_name": {
+        "name": "{channel_name} detected objects",
+        "unit_of_measurement": "[%key:component::shelly::entity::sensor::detected_objects::unit_of_measurement%]"
+      },
+      "device_temperature": {
+        "name": "Device temperature"
+      },
+      "energy_consumed": {
+        "name": "Energy consumed"
+      },
+      "energy_consumed_with_channel_name": {
+        "name": "{channel_name} energy consumed"
+      },
+      "energy_returned": {
+        "name": "Energy returned"
+      },
+      "energy_returned_with_channel_name": {
+        "name": "{channel_name} energy returned"
+      },
+      "energy_with_channel_name": {
+        "name": "{channel_name} energy"
+      },
+      "frequency_with_channel_name": {
+        "name": "{channel_name} frequency"
+      },
+      "gas_concentration": {
+        "name": "Gas concentration"
+      },
+      "gas_detected": {
+        "name": "Gas detected",
+        "state": {
           "heavy": "Heavy",
+          "mild": "Mild",
+          "none": "None",
           "test": "Test"
         },
         "state_attributes": {
           "options": {
             "state": {
-              "none": "[%key:component::shelly::entity::sensor::gas_detected::state::none%]",
-              "mild": "[%key:component::shelly::entity::sensor::gas_detected::state::mild%]",
               "heavy": "[%key:component::shelly::entity::sensor::gas_detected::state::heavy%]",
+              "mild": "[%key:component::shelly::entity::sensor::gas_detected::state::mild%]",
+              "none": "[%key:component::shelly::entity::sensor::gas_detected::state::none%]",
               "test": "[%key:component::shelly::entity::sensor::gas_detected::state::test%]"
             }
           }
         }
       },
-      "operation": {
+      "humidity_with_channel_name": {
+        "name": "{channel_name} humidity"
+      },
+      "illuminance_level": {
+        "name": "Illuminance level",
         "state": {
-          "warmup": "Warm-up",
-          "normal": "[%key:common::state::normal%]",
-          "fault": "[%key:common::state::fault%]"
-        },
-        "state_attributes": {
-          "self_test": {
-            "state": {
-              "not_completed": "[%key:component::shelly::entity::sensor::self_test::state::not_completed%]",
-              "completed": "[%key:component::shelly::entity::sensor::self_test::state::completed%]",
-              "running": "[%key:component::shelly::entity::sensor::self_test::state::running%]",
-              "pending": "[%key:component::shelly::entity::sensor::self_test::state::pending%]"
-            }
-          }
+          "bright": "Bright",
+          "dark": "Dark",
+          "twilight": "Twilight"
         }
       },
-      "self_test": {
+      "lamp_life": {
+        "name": "Lamp life"
+      },
+      "last_restart": {
+        "name": "Last restart"
+      },
+      "left_slot_level": {
+        "name": "Left slot level"
+      },
+      "left_slot_vial": {
+        "name": "Left slot vial"
+      },
+      "neutral_current": {
+        "name": "Neutral current"
+      },
+      "operation": {
+        "name": "Operation",
         "state": {
-          "not_completed": "Not completed",
+          "fault": "[%key:common::state::fault%]",
+          "normal": "[%key:common::state::normal%]",
+          "warmup": "Warm-up"
+        }
+      },
+      "power_factor_with_channel_name": {
+        "name": "{channel_name} power factor"
+      },
+      "power_with_channel_name": {
+        "name": "{channel_name} power"
+      },
+      "power_with_phase_name": {
+        "name": "Phase {phase_name} power"
+      },
+      "pulse_counter": {
+        "name": "Pulse counter"
+      },
+      "pulse_counter_frequency": {
+        "name": "Pulse counter frequency"
+      },
+      "pulse_counter_frequency_value": {
+        "name": "Pulse counter frequency value"
+      },
+      "pulse_counter_frequency_value_with_channel_name": {
+        "name": "{channel_name} pulse counter frequency value"
+      },
+      "pulse_counter_frequency_with_channel_name": {
+        "name": "{channel_name} pulse counter frequency"
+      },
+      "pulse_counter_value": {
+        "name": "Pulse counter value"
+      },
+      "pulse_counter_value_with_channel_name": {
+        "name": "{channel_name} pulse counter value"
+      },
+      "pulse_counter_with_channel_name": {
+        "name": "{channel_name} pulse counter"
+      },
+      "rainfall": {
+        "name": "Rainfall"
+      },
+      "right_slot_level": {
+        "name": "Right slot level"
+      },
+      "right_slot_vial": {
+        "name": "Right slot vial"
+      },
+      "self_test": {
+        "name": "Self-test",
+        "state": {
           "completed": "Completed",
-          "running": "Running",
-          "pending": "Pending"
+          "not_completed": "Not completed",
+          "pending": "Pending",
+          "running": "Running"
         },
         "state_attributes": {
           "options": {
             "state": {
-              "not_completed": "[%key:component::shelly::entity::sensor::self_test::state::not_completed%]",
               "completed": "[%key:component::shelly::entity::sensor::self_test::state::completed%]",
-              "running": "[%key:component::shelly::entity::sensor::self_test::state::running%]",
-              "pending": "[%key:component::shelly::entity::sensor::self_test::state::pending%]"
+              "not_completed": "[%key:component::shelly::entity::sensor::self_test::state::not_completed%]",
+              "pending": "[%key:component::shelly::entity::sensor::self_test::state::pending%]",
+              "running": "[%key:component::shelly::entity::sensor::self_test::state::running%]"
             }
           }
         }
       },
+      "session_duration": {
+        "name": "Session duration"
+      },
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "temperature_with_channel_name": {
+        "name": "{channel_name} temperature"
+      },
+      "tilt": {
+        "name": "Tilt"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      },
       "valve_status": {
+        "name": "Valve status",
         "state": {
           "checking": "Checking",
           "closed": "[%key:common::state::closed%]",
@@ -217,6 +524,84 @@
           "opened": "Opened",
           "opening": "[%key:common::state::opening%]"
         }
+      },
+      "voltage_with_channel_name": {
+        "name": "{channel_name} voltage"
+      },
+      "voltage_with_phase_name": {
+        "name": "Phase {phase_name} voltage"
+      },
+      "voltmeter": {
+        "name": "Voltmeter"
+      },
+      "voltmeter_value": {
+        "name": "Voltmeter value"
+      },
+      "voltmeter_value_with_channel_name": {
+        "name": "{channel_name} voltmeter value"
+      },
+      "voltmeter_with_channel_name": {
+        "name": "{channel_name} voltmeter"
+      },
+      "water_consumption": {
+        "name": "Water consumption"
+      },
+      "water_flow_rate": {
+        "name": "Water flow rate"
+      },
+      "water_pressure": {
+        "name": "Water pressure"
+      },
+      "water_temperature": {
+        "name": "Water temperature"
+      }
+    },
+    "switch": {
+      "charging": {
+        "name": "Charging"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "cury_away_mode": {
+        "name": "Away mode"
+      },
+      "frost_protection": {
+        "name": "[%key:component::shelly::entity::climate::thermostat::state_attributes::preset_mode::state::frost_protection%]"
+      },
+      "left_slot": {
+        "name": "Left slot"
+      },
+      "left_slot_boost": {
+        "name": "Left slot boost"
+      },
+      "motion_detection": {
+        "name": "Motion detection"
+      },
+      "right_slot": {
+        "name": "Right slot"
+      },
+      "right_slot_boost": {
+        "name": "Right slot boost"
+      },
+      "thermostat_enabled": {
+        "name": "Thermostat enabled"
+      },
+      "valve_opened": {
+        "name": "Valve opened"
+      },
+      "zone_with_number": {
+        "name": "Zone {zone_number}"
+      }
+    },
+    "update": {
+      "beta_firmware": {
+        "name": "Beta firmware"
+      }
+    },
+    "valve": {
+      "gas_valve": {
+        "name": "Valve"
       }
     }
   },
@@ -224,20 +609,35 @@
     "auth_error": {
       "message": "Authentication failed for {device}, please update your credentials"
     },
-    "device_communication_error": {
-      "message": "Device communication error occurred for {device}"
+    "config_entry_not_found": {
+      "message": "Config entry for device ID {device_id} not found"
     },
     "device_communication_action_error": {
       "message": "Device communication error occurred while calling action for {entity} of {device}"
     },
+    "device_communication_error": {
+      "message": "Device communication error occurred for {device}"
+    },
     "device_not_found": {
       "message": "{device} not found while configuring device automation triggers"
+    },
+    "device_not_initialized": {
+      "message": "{device} not initialized"
+    },
+    "entry_not_loaded": {
+      "message": "Config entry not loaded for {device}"
     },
     "firmware_unsupported": {
       "message": "{device} is running an unsupported firmware, please update the firmware"
     },
+    "invalid_device_id": {
+      "message": "Invalid device ID specified: {device_id}"
+    },
     "invalid_trigger": {
       "message": "Invalid device automation trigger (type, subtype): {trigger}"
+    },
+    "kvs_not_supported": {
+      "message": "{device} does not support KVS"
     },
     "ota_update_connection_error": {
       "message": "Device communication error occurred while triggering OTA update for {device}"
@@ -247,6 +647,9 @@
     },
     "rpc_call_action_error": {
       "message": "RPC call error occurred while calling action for {entity} of {device}"
+    },
+    "rpc_call_error": {
+      "message": "RPC call error occurred for {device}"
     },
     "update_error": {
       "message": "An error occurred while retrieving data from {device}"
@@ -263,45 +666,165 @@
   },
   "issues": {
     "ble_scanner_firmware_unsupported": {
-      "title": "{device_name} is running unsupported firmware",
       "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "{device_name} is running unsupported firmware",
-            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware} and acts as BLE scanner with active mode. This firmware version is not supported for BLE scanner active mode.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version."
-          }
-        },
         "abort": {
           "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
           "update_not_available": "Device does not offer firmware update. Check internet connectivity (gateway, DNS, time) and restart the device."
-        }
-      }
-    },
-    "device_not_calibrated": {
-      "title": "Shelly device {device_name} is not calibrated",
-      "description": "Shelly device {device_name} with IP address {ip_address} requires calibration. To calibrate the device, it must be rebooted after proper installation on the valve. You can reboot the device in its web panel, go to 'Settings' > 'Device Reboot'."
-    },
-    "push_update_failure": {
-      "title": "Shelly device {device_name} push update failure",
-      "description": "Home Assistant is not receiving push updates from the Shelly device {device_name} with IP address {ip_address}. Check the CoIoT configuration in the web panel of the device and your network configuration."
-    },
-    "unsupported_firmware": {
-      "title": "Unsupported firmware for device {device_name}",
-      "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Please update the firmware.\n\nIf the device does not offer an update, check internet connectivity (gateway, DNS, time) and restart the device."
-    },
-    "outbound_websocket_incorrectly_enabled": {
-      "title": "Outbound WebSocket is enabled for {device_name}",
-      "fix_flow": {
+        },
         "step": {
           "confirm": {
-            "title": "Outbound WebSocket is enabled for {device_name}",
-            "description": "Your Shelly device {device_name} with IP address {ip_address} is a non-sleeping device and Outbound WebSocket should be disabled in its configuration.\n\nSelect **Submit** button to disable Outbound WebSocket."
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware} and acts as BLE scanner with active mode. This firmware version is not supported for BLE scanner active mode.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version.",
+            "title": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::title%]"
           }
+        }
+      },
+      "title": "{device_name} is running unsupported firmware"
+    },
+    "coiot_unconfigured": {
+      "fix_flow": {
+        "abort": {
+          "cannot_configure": "Failed to configure CoIoT on the device. Ensure the device is powered on and reachable.",
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "issue_ignored": "Issue ignored"
         },
+        "step": {
+          "init": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} has CoIoT disabled or wrongly configured. To enable push updates, CoIoT must be enabled with Home Assistant's IP address and CoIoT port.",
+            "menu_options": {
+              "confirm": "Configure CoIoT",
+              "ignore": "Ignore"
+            },
+            "title": "[%key:component::shelly::issues::coiot_unconfigured::title%]"
+          }
+        }
+      },
+      "title": "CoIoT is disabled or wrongly configured on {device_name}"
+    },
+    "deprecated_firmware": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "update_not_available": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::fix_flow::abort::update_not_available%]"
+        },
+        "step": {
+          "confirm": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware}. This firmware version will not be supported by Shelly integration starting from Home Assistant {ha_version}.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version.",
+            "title": "[%key:component::shelly::issues::deprecated_firmware::title%]"
+          }
+        }
+      },
+      "title": "{device_name} is running outdated firmware"
+    },
+    "device_not_calibrated": {
+      "description": "Shelly device {device_name} with IP address {ip_address} requires calibration. To calibrate the device, it must be rebooted after proper installation on the valve. You can reboot the device in its web panel, go to 'Settings' > 'Device Reboot'.",
+      "title": "Shelly device {device_name} is not calibrated"
+    },
+    "open_wifi_ap": {
+      "fix_flow": {
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "issue_ignored": "Issue ignored"
+        },
+        "step": {
+          "init": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} has an open WiFi access point enabled without a password. This is a security risk as anyone nearby can connect to the device.\n\nNote: If you disable the access point, the device may need to restart.",
+            "menu_options": {
+              "confirm": "Disable WiFi access point",
+              "ignore": "Ignore"
+            },
+            "title": "[%key:component::shelly::issues::open_wifi_ap::title%]"
+          }
+        }
+      },
+      "title": "Open WiFi access point on {device_name}"
+    },
+    "outbound_websocket_incorrectly_enabled": {
+      "fix_flow": {
         "abort": {
           "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+        },
+        "step": {
+          "confirm": {
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is a non-sleeping device and Outbound WebSocket should be disabled in its configuration.\n\nSelect **Submit** button to disable Outbound WebSocket.",
+            "title": "[%key:component::shelly::issues::outbound_websocket_incorrectly_enabled::title%]"
+          }
         }
+      },
+      "title": "Outbound WebSocket is enabled for {device_name}"
+    },
+    "push_update_failure": {
+      "description": "Home Assistant is not receiving push updates from the Shelly device {device_name} with IP address {ip_address}. Check the CoIoT configuration in the web panel of the device and your network configuration.",
+      "title": "Shelly device {device_name} push update failure"
+    },
+    "unsupported_firmware": {
+      "description": "Your Shelly device {device_name} with IP address {ip_address} is running an unsupported firmware. Please update the firmware.\n\nIf the device does not offer an update, check internet connectivity (gateway, DNS, time) and restart the device.",
+      "title": "Unsupported firmware for device {device_name}"
+    }
+  },
+  "options": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner.",
+      "zigbee_firmware": "A device with Zigbee firmware cannot be used as a Bluetooth scanner. Please switch to Matter firmware to use the device as a Bluetooth scanner."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "ble_scanner_mode": "Bluetooth scanner mode"
+        },
+        "data_description": {
+          "ble_scanner_mode": "The scanner mode to use for Bluetooth scanning."
+        },
+        "description": "Bluetooth scanning can be active or passive. With active, the Shelly requests data from nearby devices; with passive, the Shelly receives unsolicited data from nearby devices."
       }
+    }
+  },
+  "selector": {
+    "ble_scanner_mode": {
+      "options": {
+        "active": "[%key:common::state::active%]",
+        "disabled": "[%key:common::state::disabled%]",
+        "passive": "Passive"
+      }
+    },
+    "device": {
+      "options": {
+        "manual": "Enter address manually"
+      }
+    }
+  },
+  "services": {
+    "get_kvs_value": {
+      "description": "Get a value from the device's Key-Value Storage.",
+      "fields": {
+        "device_id": {
+          "description": "The ID of the Shelly device to get the KVS value from.",
+          "name": "Device"
+        },
+        "key": {
+          "description": "The name of the key for which the KVS value will be retrieved.",
+          "name": "Key"
+        }
+      },
+      "name": "Get KVS value"
+    },
+    "set_kvs_value": {
+      "description": "Set a value in the device's Key-Value Storage.",
+      "fields": {
+        "device_id": {
+          "description": "The ID of the Shelly device to set the KVS value.",
+          "name": "Device"
+        },
+        "key": {
+          "description": "The name of the key under which the KVS value will be stored.",
+          "name": "Key"
+        },
+        "value": {
+          "description": "Value to set.",
+          "name": "Value"
+        }
+      },
+      "name": "Set KVS value"
     }
   }
 }

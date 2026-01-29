@@ -1,54 +1,10 @@
 {
   "config": {
-    "flow_title": "{name} ({host})",
-    "step": {
-      "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of your Synology NAS."
-        }
-      },
-      "2sa": {
-        "title": "Synology DSM: two-step authentication",
-        "data": {
-          "otp_code": "Code"
-        }
-      },
-      "backup_share": {
-        "title": "Synology DSM: Backup location",
-        "data": {
-          "backup_share": "Shared folder",
-          "backup_path": "Path"
-        },
-        "data_description": {
-          "backup_share": "Select the shared folder where the automatic Home Assistant backup should be stored.",
-          "backup_path": "Define the path on the selected shared folder (will automatically be created, if not exist)."
-        }
-      },
-      "link": {
-        "description": "Do you want to set up {name} ({host})?",
-        "data": {
-          "ssl": "[%key:common::config_flow::data::ssl%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]"
-        }
-      },
-      "reauth_confirm": {
-        "title": "Reauthenticate Synology DSM",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_mac_address": "The MAC address is missing from the Zeroconf record",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -57,24 +13,53 @@
       "otp_failed": "Two-step authentication failed, retry with a new passcode",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "no_mac_address": "The MAC address is missing from the Zeroconf record",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
-    }
-  },
-  "options": {
+    "flow_title": "{name} ({host})",
     "step": {
-      "init": {
+      "2sa": {
         "data": {
-          "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)",
-          "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data::backup_share%]",
-          "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data::backup_path%]"
+          "otp_code": "Code"
+        },
+        "title": "Synology DSM: two-step authentication"
+      },
+      "backup_share": {
+        "data": {
+          "backup_path": "Path",
+          "backup_share": "Shared folder"
         },
         "data_description": {
-          "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_share%]",
-          "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_path%]"
+          "backup_path": "Define the path on the selected shared folder (will automatically be created, if not exist).",
+          "backup_share": "Select the shared folder where the automatic Home Assistant backup should be stored."
+        },
+        "title": "Synology DSM: Backup location"
+      },
+      "link": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "description": "Do you want to set up {name} ({host})?"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "title": "Reauthenticate Synology DSM"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Synology NAS."
         }
       }
     }
@@ -202,55 +187,70 @@
   },
   "issues": {
     "missing_backup_setup": {
-      "title": "Backup location not configured for {title}",
       "fix_flow": {
+        "abort": {
+          "ignored": "The backup location has not been configured.\nYou can still set it up later via the integration options.",
+          "no_shares": "There are no shared folders available for the user.\nPlease check the documentation."
+        },
         "step": {
+          "confirm": {
+            "data": {
+              "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data::backup_path%]",
+              "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data::backup_share%]"
+            },
+            "data_description": {
+              "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_path%]",
+              "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_share%]"
+            },
+            "title": "[%key:component::synology_dsm::config::step::backup_share::title%]"
+          },
           "init": {
             "description": "The backup location for {title} is not configured. Do you want to set it up now? Details can be found in the integration documentation under [Backup Location]({docs_url})",
             "menu_options": {
               "confirm": "Set up the backup location now",
               "ignore": "Don't set it up now"
             }
-          },
-          "confirm": {
-            "title": "[%key:component::synology_dsm::config::step::backup_share::title%]",
-            "data": {
-              "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data::backup_share%]",
-              "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data::backup_path%]"
-            },
-            "data_description": {
-              "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_share%]",
-              "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_path%]"
-            }
           }
+        }
+      },
+      "title": "Backup location not configured for {title}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data::backup_path%]",
+          "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data::backup_share%]",
+          "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)"
         },
-        "abort": {
-          "no_shares": "There are no shared folders available for the user.\nPlease check the documentation.",
-          "ignored": "The backup location has not been configured.\nYou can still set it up later via the integration options."
+        "data_description": {
+          "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_path%]",
+          "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_share%]"
         }
       }
     }
   },
   "services": {
     "reboot": {
-      "name": "Reboot",
       "description": "Reboots the NAS. This action is deprecated and will be removed in future release. Please use the corresponding button entity.",
       "fields": {
         "serial": {
-          "name": "Serial",
-          "description": "Serial of the NAS to reboot; required when multiple NAS are configured."
+          "description": "Serial of the NAS to reboot; required when multiple NAS are configured.",
+          "name": "Serial"
         }
-      }
+      },
+      "name": "Reboot"
     },
     "shutdown": {
-      "name": "Shutdown",
       "description": "Shutdowns the NAS. This action is deprecated and will be removed in future release. Please use the corresponding button entity.",
       "fields": {
         "serial": {
-          "name": "[%key:component::synology_dsm::services::reboot::fields::serial::name%]",
-          "description": "Serial of the NAS to shutdown; required when multiple NAS are configured."
+          "description": "Serial of the NAS to shutdown; required when multiple NAS are configured.",
+          "name": "[%key:component::synology_dsm::services::reboot::fields::serial::name%]"
         }
-      }
+      },
+      "name": "Shutdown"
     }
   }
 }

@@ -100,6 +100,7 @@ class MoldIndicatorConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
 
     VERSION = 1
     MINOR_VERSION = 2

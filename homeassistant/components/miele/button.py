@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Final
 
-import aiohttp
+from aiohttp import ClientResponseError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -112,7 +112,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the button platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
     added_devices: set[str] = set()
 
     def _async_add_new_devices() -> None:
@@ -153,11 +153,12 @@ class MieleButton(MieleEntity, ButtonEntity):
                 self._device_id,
                 {PROCESS_ACTION: self.entity_description.press_data},
             )
-        except aiohttp.ClientResponseError as ex:
+        except ClientResponseError as err:
+            _LOGGER.debug("Error setting button state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
                 },
-            ) from ex
+            ) from err

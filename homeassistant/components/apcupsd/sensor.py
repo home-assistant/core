@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import logging
 
+import dateutil
+
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -22,11 +26,13 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+import homeassistant.helpers.issue_registry as ir
 
-from .const import LAST_S_TEST
+from .const import AVAILABLE_VIA_DEVICE_ATTR, DEPRECATED_SENSORS, DOMAIN, LAST_S_TEST
 from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator
+from .entity import APCUPSdEntity
 
 PARALLEL_UPDATES = 0
 
@@ -175,6 +181,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     LAST_S_TEST: SensorEntityDescription(
         key=LAST_S_TEST,
         translation_key="last_self_test",
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
     "lastxfer": SensorEntityDescription(
         key="lastxfer",
@@ -228,6 +235,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "masterupd": SensorEntityDescription(
         key="masterupd",
         translation_key="master_update",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "maxlinev": SensorEntityDescription(
@@ -361,6 +369,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "starttime": SensorEntityDescription(
         key="starttime",
         translation_key="startup_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "statflag": SensorEntityDescription(
@@ -395,6 +404,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "upsmode": SensorEntityDescription(
         key="upsmode",
         translation_key="ups_mode",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "upsname": SensorEntityDescription(
         key="upsname",
@@ -411,16 +421,19 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "xoffbat": SensorEntityDescription(
         key="xoffbat",
         translation_key="transfer_from_battery",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "xoffbatt": SensorEntityDescription(
         key="xoffbatt",
         translation_key="transfer_from_battery",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "xonbatt": SensorEntityDescription(
         key="xonbatt",
         translation_key="transfer_to_battery",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
@@ -466,7 +479,10 @@ async def async_setup_entry(
     # periodical (or manual) self test since last daemon restart. It might not be available
     # when we set up the integration, and we do not know if it would ever be available. Here we
     # add it anyway and mark it as unknown initially.
-    for resource in available_resources | {LAST_S_TEST}:
+    #
+    # We also sort the resources to ensure the order of entities created is deterministic since
+    # "APCMODEL" and "MODEL" resources map to the same "Model" name.
+    for resource in sorted(available_resources | {LAST_S_TEST}):
         if resource not in SENSORS:
             _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
             continue
@@ -490,10 +506,8 @@ def infer_unit(value: str) -> tuple[str, str | None]:
     return value, None
 
 
-class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
+class APCUPSdSensor(APCUPSdEntity, SensorEntity):
     """Representation of a sensor entity for APCUPSd status values."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -501,11 +515,7 @@ class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator=coordinator, context=description.key.upper())
-
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.unique_device_id}_{description.key}"
-        self._attr_device_info = coordinator.device_info
+        super().__init__(coordinator, description)
 
         # Initial update of attributes.
         self._update_attrs()
@@ -527,6 +537,71 @@ class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
             self._attr_native_value = None
             return
 
-        self._attr_native_value, inferred_unit = infer_unit(self.coordinator.data[key])
+        data = self.coordinator.data[key]
+
+        if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
+            self._attr_native_value = dateutil.parser.parse(data)
+            return
+
+        self._attr_native_value, inferred_unit = infer_unit(data)
         if not self.native_unit_of_measurement:
             self._attr_native_unit_of_measurement = inferred_unit
+
+    async def async_added_to_hass(self) -> None:
+        """Handle when entity is added to Home Assistant.
+
+        If this is a deprecated sensor entity, create a repair issue to guide
+        the user to disable it.
+        """
+        await super().async_added_to_hass()
+
+        if not self.enabled:
+            return
+
+        reason = DEPRECATED_SENSORS.get(self.entity_description.key)
+        if not reason:
+            return
+
+        automations = automations_with_entity(self.hass, self.entity_id)
+        scripts = scripts_with_entity(self.hass, self.entity_id)
+        if not automations and not scripts:
+            return
+
+        entity_registry = er.async_get(self.hass)
+        items = [
+            f"- [{entry.name or entry.original_name or entity_id}]"
+            f"(/config/{integration}/edit/{entry.unique_id or entity_id.split('.', 1)[-1]})"
+            for integration, entities in (
+                ("automation", automations),
+                ("script", scripts),
+            )
+            for entity_id in entities
+            if (entry := entity_registry.async_get(entity_id))
+        ]
+        placeholders = {
+            "entity_name": str(self.name or self.entity_id),
+            "entity_id": self.entity_id,
+            "items": "\n".join(items),
+        }
+        if via_attr := AVAILABLE_VIA_DEVICE_ATTR.get(self.entity_description.key):
+            placeholders["available_via_device_attr"] = via_attr
+        if device_entry := self.device_entry:
+            placeholders["device_id"] = device_entry.id
+
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"{reason}_{self.entity_id}",
+            breaks_in_ha_version="2026.6.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=reason,
+            translation_placeholders=placeholders,
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle when entity will be removed from Home Assistant."""
+        await super().async_will_remove_from_hass()
+
+        if issue_key := DEPRECATED_SENSORS.get(self.entity_description.key):
+            ir.async_delete_issue(self.hass, DOMAIN, f"{issue_key}_{self.entity_id}")

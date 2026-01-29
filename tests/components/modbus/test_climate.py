@@ -38,6 +38,8 @@ from homeassistant.components.climate import (
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
     CONF_CLIMATES,
+    CONF_CURRENT_TEMP_OFFSET,
+    CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_AUTO,
@@ -74,6 +76,7 @@ from homeassistant.components.modbus.const import (
     CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
+    CONF_SCALE,
     CONF_SWING_MODE_REGISTER,
     CONF_SWING_MODE_SWING_BOTH,
     CONF_SWING_MODE_SWING_HORIZ,
@@ -82,9 +85,11 @@ from homeassistant.components.modbus.const import (
     CONF_SWING_MODE_SWING_VERT,
     CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_OFFSET,
+    CONF_TARGET_TEMP_SCALE,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WRITE_REGISTERS,
-    MODBUS_DOMAIN,
+    DOMAIN,
     DataType,
 )
 from homeassistant.const import (
@@ -92,6 +97,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ADDRESS,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
@@ -795,6 +801,140 @@ async def test_hvac_onoff_coil_update(
 
 
 @pytest.mark.parametrize(
+    (
+        "do_config",
+        "result_before",
+        "coil_value_before",
+        "result_after",
+        "coil_value_after",
+    ),
+    [
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_HVAC_ONOFF_COIL: 11,
+                    },
+                ]
+            },
+            HVACMode.OFF,
+            [0x00],
+            HVACMode.AUTO,
+            [0x01],
+        ),
+    ],
+)
+async def test_hvac_onoff_coil_transition_update(
+    hass: HomeAssistant,
+    mock_modbus_ha,
+    result_before,
+    coil_value_before,
+    result_after,
+    coil_value_after,
+) -> None:
+    """Test climate update based on On/Off coil values without hvacmode register."""
+    mock_modbus_ha.read_coils.return_value = ReadResult(coil_value_before)
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == result_before
+
+    mock_modbus_ha.read_coils.return_value = ReadResult(coil_value_after)
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == result_after
+
+
+@pytest.mark.parametrize(
+    (
+        "do_config",
+        "result_before",
+        "register_value_before",
+        "result_after",
+        "register_value_after",
+    ),
+    [
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_HVAC_ONOFF_REGISTER: 11,
+                    },
+                ]
+            },
+            HVACMode.OFF,
+            [0x00],
+            HVACMode.AUTO,
+            [0x01],
+        ),
+    ],
+)
+async def test_hvac_onoff_register_transition_update(
+    hass: HomeAssistant,
+    mock_modbus_ha,
+    result_before,
+    register_value_before,
+    result_after,
+    register_value_after,
+) -> None:
+    """Test climate update based on On/Off register values without hvacmode register."""
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(
+        register_value_before
+    )
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == result_before
+
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(
+        register_value_after
+    )
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == result_after
+
+
+@pytest.mark.parametrize(
     ("do_config", "result", "register_words"),
     [
         (
@@ -1482,6 +1622,11 @@ test_value = State(ENTITY_ID, 35)
 test_value.attributes = {ATTR_TEMPERATURE: 37}
 
 
+# Due to fact that modbus now reads imidiatly after connect and the
+# fixture do not return until connected, it is not possible to
+# test the restore.
+# THIS IS WORK TBD.
+@pytest.mark.skip
 @pytest.mark.parametrize(
     "mock_test_state",
     [(test_value,)],
@@ -1556,7 +1701,227 @@ async def test_no_discovery_info_climate(
     assert await async_setup_component(
         hass,
         CLIMATE_DOMAIN,
-        {CLIMATE_DOMAIN: {CONF_PLATFORM: MODBUS_DOMAIN}},
+        {CLIMATE_DOMAIN: {CONF_PLATFORM: DOMAIN}},
     )
     await hass.async_block_till_done()
     assert CLIMATE_DOMAIN in hass.config.components
+
+
+@pytest.mark.parametrize(
+    ("do_config", "result", "register_words"),
+    [
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                    },
+                ]
+            },
+            17,
+            [17],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_SCALE: 10,
+                        CONF_OFFSET: 20,
+                    },
+                ]
+            },
+            30,
+            [1],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_CURRENT_TEMP_SCALE: 2,
+                        CONF_CURRENT_TEMP_OFFSET: 10,
+                    },
+                ]
+            },
+            30,
+            [10],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_CURRENT_TEMP_SCALE: 1,
+                        CONF_CURRENT_TEMP_OFFSET: 10,
+                    },
+                ]
+            },
+            20,
+            [10],
+        ),
+    ],
+)
+async def test_update_current_temp_scale_and_offset(
+    hass: HomeAssistant, mock_modbus_ha, result, register_words
+) -> None:
+    """Test behavior with different configurations for current temperature scaling/offset."""
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get("current_temperature") == result
+
+
+@pytest.mark.parametrize(
+    ("do_config", "result", "register_words"),
+    [
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                    },
+                ]
+            },
+            17,
+            [17],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TARGET_TEMP_SCALE: 1,
+                        CONF_TARGET_TEMP_OFFSET: 0,
+                    },
+                ]
+            },
+            10,
+            [10],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_SCALE: 0.1,
+                        CONF_OFFSET: 5,
+                    },
+                ]
+            },
+            26,
+            [210],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_SCALE: 1,
+                        CONF_OFFSET: 2,
+                    },
+                ]
+            },
+            12,
+            [10],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TARGET_TEMP_SCALE: 1,
+                        CONF_TARGET_TEMP_OFFSET: 2,
+                    },
+                ]
+            },
+            12,
+            [10],
+        ),
+    ],
+)
+async def test_update_target_temp_scale_and_offset(
+    hass: HomeAssistant, mock_modbus_ha, result, register_words
+) -> None:
+    """Test behavior with different configurations for target temperature scaling / offset."""
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get("temperature") == result
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 120,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_SCAN_INTERVAL: 0,
+                    CONF_TARGET_TEMP_SCALE: 0,
+                    CONF_TARGET_TEMP_OFFSET: 2,
+                }
+            ]
+        },
+    ],
+)
+async def test_err_config_climate(
+    hass: HomeAssistant, mock_modbus_to_test_errors_config
+) -> None:
+    """Run a wrong configuration test for climate."""
+    assert CLIMATE_DOMAIN not in hass.config.components

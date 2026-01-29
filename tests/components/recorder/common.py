@@ -11,10 +11,12 @@ from functools import partial
 import importlib
 import sys
 import time
+from types import ModuleType
 from typing import Any, Literal, cast
 from unittest.mock import MagicMock, patch, sentinel
 
 from freezegun import freeze_time
+import pytest
 from sqlalchemy import create_engine, event as sqlalchemy_event
 from sqlalchemy.orm.session import Session
 
@@ -28,11 +30,17 @@ from homeassistant.components.recorder import (
     statistics,
 )
 from homeassistant.components.recorder.db_schema import (
+    EventData,
     Events,
     EventTypes,
     RecorderRuns,
+    StateAttributes,
     States,
     StatesMeta,
+)
+from homeassistant.components.recorder.models import (
+    bytes_to_ulid_or_none,
+    bytes_to_uuid_hex_or_none,
 )
 from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -40,6 +48,7 @@ from homeassistant.const import DEGREE, UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads, json_loads_object
 
 from . import db_schema_0
 
@@ -452,6 +461,13 @@ def get_schema_module_path(schema_version_postfix: str) -> str:
     return f"tests.components.recorder.db_schema_{schema_version_postfix}"
 
 
+def get_patched_live_version(old_db_schema: ModuleType) -> int:
+    """Return the patched live migration version."""
+    return min(
+        migration.LIVE_MIGRATION_MIN_SCHEMA_VERSION, old_db_schema.SCHEMA_VERSION
+    )
+
+
 @contextmanager
 def old_db_schema(hass: HomeAssistant, schema_version_postfix: str) -> Iterator[None]:
     """Fixture to initialize the db with the old schema."""
@@ -462,6 +478,11 @@ def old_db_schema(hass: HomeAssistant, schema_version_postfix: str) -> Iterator[
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration, "non_live_data_migration_needed", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
@@ -492,3 +513,97 @@ async def async_attach_db_engine(hass: HomeAssistant) -> None:
             )
 
     await instance.async_add_executor_job(_mock_setup_recorder_connection)
+
+
+EVENT_ORIGIN_ORDER = [ha.EventOrigin.local, ha.EventOrigin.remote]
+
+
+def db_event_to_native(event: Events, validate_entity_id: bool = True) -> Event | None:
+    """Convert to a native HA Event."""
+    context = ha.Context(
+        id=bytes_to_ulid_or_none(event.context_id_bin),
+        user_id=bytes_to_uuid_hex_or_none(event.context_user_id_bin),
+        parent_id=bytes_to_ulid_or_none(event.context_parent_id_bin),
+    )
+    return Event(
+        event.event_type or "",
+        json_loads_object(event.event_data) if event.event_data else {},
+        ha.EventOrigin(event.origin)
+        if event.origin
+        else EVENT_ORIGIN_ORDER[event.origin_idx or 0],
+        event.time_fired_ts or 0,
+        context=context,
+    )
+
+
+def db_event_data_to_native(event_data: EventData) -> dict[str, Any]:
+    """Convert to an event data dictionary."""
+    shared_data = event_data.shared_data
+    if shared_data is None:
+        return {}
+    return cast(dict[str, Any], json_loads(shared_data))
+
+
+def db_state_to_native(state: States, validate_entity_id: bool = True) -> State | None:
+    """Convert to an HA state object."""
+    context = ha.Context(
+        id=bytes_to_ulid_or_none(state.context_id_bin),
+        user_id=bytes_to_uuid_hex_or_none(state.context_user_id_bin),
+        parent_id=bytes_to_ulid_or_none(state.context_parent_id_bin),
+    )
+    attrs = json_loads_object(state.attributes) if state.attributes else {}
+    last_updated = dt_util.utc_from_timestamp(state.last_updated_ts or 0)
+    if state.last_changed_ts is None or state.last_changed_ts == state.last_updated_ts:
+        last_changed = dt_util.utc_from_timestamp(state.last_updated_ts or 0)
+    else:
+        last_changed = dt_util.utc_from_timestamp(state.last_changed_ts or 0)
+    if (
+        state.last_reported_ts is None
+        or state.last_reported_ts == state.last_updated_ts
+    ):
+        last_reported = dt_util.utc_from_timestamp(state.last_updated_ts or 0)
+    else:
+        last_reported = dt_util.utc_from_timestamp(state.last_reported_ts or 0)
+    return State(
+        state.entity_id or "",
+        state.state,  # type: ignore[arg-type]
+        # Join the state_attributes table on attributes_id to get the attributes
+        # for newer states
+        attrs,
+        last_changed=last_changed,
+        last_reported=last_reported,
+        last_updated=last_updated,
+        context=context,
+        validate_entity_id=validate_entity_id,
+    )
+
+
+def db_state_attributes_to_native(state_attrs: StateAttributes) -> dict[str, Any]:
+    """Convert to a state attributes dictionary."""
+    shared_attrs = state_attrs.shared_attrs
+    if shared_attrs is None:
+        return {}
+    return cast(dict[str, Any], json_loads(shared_attrs))
+
+
+async def async_drop_index(
+    recorder: Recorder, table: str, index: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Drop an index from the database.
+
+    migration._drop_index does not return or raise, so we verify the result
+    by checking the log for success or failure messages.
+    """
+
+    finish_msg = f"Finished dropping index `{index}` from table `{table}`"
+    fail_msg = f"Failed to drop index `{index}` from table `{table}`"
+
+    count_finish = caplog.text.count(finish_msg)
+    count_fail = caplog.text.count(fail_msg)
+
+    await recorder.async_add_executor_job(
+        migration._drop_index, recorder.get_session, table, index
+    )
+
+    assert caplog.text.count(finish_msg) == count_finish + 1
+    assert caplog.text.count(fail_msg) == count_fail

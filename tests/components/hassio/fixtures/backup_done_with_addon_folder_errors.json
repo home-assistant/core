@@ -19,7 +19,8 @@
         "done": true,
         "errors": [],
         "created": "2025-05-14T08:56:22.807078+00:00",
-        "child_jobs": []
+        "child_jobs": [],
+        "extra": null
       },
       {
         "name": "backup_store_addons",
@@ -57,7 +58,8 @@
               }
             ],
             "created": "2025-05-14T08:56:22.844160+00:00",
-            "child_jobs": []
+            "child_jobs": [],
+            "extra": null
           },
           {
             "name": "backup_addon_save",
@@ -74,9 +76,11 @@
               }
             ],
             "created": "2025-05-14T08:56:22.850376+00:00",
-            "child_jobs": []
+            "child_jobs": [],
+            "extra": null
           }
-        ]
+        ],
+        "extra": null
       },
       {
         "name": "backup_store_folders",
@@ -119,7 +123,8 @@
               }
             ],
             "created": "2025-05-14T08:56:22.858385+00:00",
-            "child_jobs": []
+            "child_jobs": [],
+            "extra": null
           },
           {
             "name": "backup_folder_save",
@@ -136,7 +141,8 @@
               }
             ],
             "created": "2025-05-14T08:56:22.859973+00:00",
-            "child_jobs": []
+            "child_jobs": [],
+            "extra": null
           },
           {
             "name": "backup_folder_save",
@@ -153,10 +159,13 @@
               }
             ],
             "created": "2025-05-14T08:56:22.860792+00:00",
-            "child_jobs": []
+            "child_jobs": [],
+            "extra": null
           }
-        ]
+        ],
+        "extra": null
       }
-    ]
+    ],
+    "extra": null
   }
 }
