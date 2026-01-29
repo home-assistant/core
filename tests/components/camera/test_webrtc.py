@@ -707,13 +707,43 @@ async def test_webrtc_provider_optional_interface(hass: HomeAssistant) -> None:
         ) -> None:
             """Handle the WebRTC candidate."""
 
+    camera = Mock()
     provider = OnlyRequiredInterfaceProvider()
     # Call all interface methods
     assert provider.async_is_supported("stream_source") is True
     await provider.async_handle_async_webrtc_offer(
-        Mock(), "offer_sdp", "session_id", Mock()
+        camera, "offer_sdp", "session_id", Mock()
     )
     await provider.async_on_webrtc_candidate(
         "session_id", RTCIceCandidateInit("candidate")
     )
     provider.async_close_session("session_id")
+    await provider.async_register_camera(camera)
+    await provider.async_unregister_camera(camera)
+    await provider.async_on_camera_prefs_update(camera)
+
+
+@pytest.mark.usefixtures("mock_camera", "mock_stream_source")
+async def test_camera_unregisters_from_webrtc_provider_on_removal(
+    hass: HomeAssistant,
+    register_test_provider: SomeTestProvider,
+) -> None:
+    """Test camera unregisters from WebRTC provider when removed from hass."""
+    camera = get_camera_from_entity_id(hass, "camera.demo_camera")
+
+    # Verify the provider is registered
+    assert camera._webrtc_provider is not None
+    assert camera._webrtc_provider == register_test_provider
+
+    # Mock the async_unregister_camera method
+    with patch.object(
+        register_test_provider, "async_unregister_camera", autospec=True
+    ) as mock_unregister:
+        # Call async_internal_will_remove_from_hass directly to test the cleanup logic
+        await camera.async_internal_will_remove_from_hass()
+
+        # Verify async_unregister_camera was called with the camera
+        mock_unregister.assert_called_once_with(camera)
+
+        # Verify the provider reference was cleared
+        assert camera._webrtc_provider is None

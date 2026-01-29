@@ -37,7 +37,7 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, mock_turbo_jpeg
+from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, SomeTestProvider, mock_turbo_jpeg
 
 from tests.common import async_fire_time_changed
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -1027,3 +1027,101 @@ async def test_snapshot_service_webrtc_provider(
         )
         stream_mock.async_get_image.assert_called_once()
         webrtc_get_image_mock.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_camera", "mock_stream_source")
+async def test_provider_change_register_unregister_called(
+    hass: HomeAssistant,
+) -> None:
+    """Test that register and unregister are called when provider support changes."""
+    await async_setup_component(hass, "camera", {})
+    await hass.async_block_till_done()
+
+    # Register provider
+    provider = SomeTestProvider()
+    async_register_webrtc_provider(hass, provider)
+    await hass.async_block_till_done()
+
+    camera_obj = get_camera_from_entity_id(hass, "camera.demo_camera")
+    assert camera_obj._webrtc_provider is provider
+
+    with (
+        patch.object(
+            provider, "async_unregister_camera", AsyncMock()
+        ) as mock_unregister,
+        patch.object(provider, "async_register_camera", AsyncMock()) as mock_register,
+    ):
+        # Make provider unsupported
+        provider._is_supported = False
+        await camera_obj.async_refresh_providers()
+        assert camera_obj._webrtc_provider is None
+
+        # Verify unregister was called
+        mock_unregister.assert_called_once_with(camera_obj)
+        mock_register.assert_not_called()
+
+        # Make provider supported again
+        mock_unregister.reset_mock()
+        provider._is_supported = True
+        await camera_obj.async_refresh_providers()
+        assert camera_obj._webrtc_provider is provider
+
+        # Verify register was called
+        mock_register.assert_called_once_with(camera_obj)
+        mock_unregister.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_camera", "mock_stream_source")
+async def test_camera_prefs_update_calls_provider_callback(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that async_on_camera_prefs_update is called when prefs are updated."""
+    await async_setup_component(hass, "camera", {})
+    await hass.async_block_till_done()
+
+    # Register test provider
+    await _register_test_webrtc_provider(hass)
+    camera_obj = get_camera_from_entity_id(hass, "camera.demo_camera")
+    assert camera_obj._webrtc_provider
+
+    # Patch the callback method
+    with patch.object(
+        camera_obj._webrtc_provider,
+        "async_on_camera_prefs_update",
+        AsyncMock(),
+    ) as mock_prefs_update:
+        # Update camera preferences through WebSocket
+        client = await hass_ws_client(hass)
+        await client.send_json_auto_id(
+            {
+                "type": "camera/update_prefs",
+                "entity_id": "camera.demo_camera",
+                "preload_stream": True,
+            }
+        )
+        msg = await client.receive_json()
+
+        # Assert preference was updated
+        assert msg["success"]
+        assert msg["result"][PREF_PRELOAD_STREAM] is True
+
+        # Verify callback was called
+        mock_prefs_update.assert_called_once_with(camera_obj)
+
+        # Update another preference
+        mock_prefs_update.reset_mock()
+        await client.send_json_auto_id(
+            {
+                "type": "camera/update_prefs",
+                "entity_id": "camera.demo_camera",
+                "preload_stream": False,
+            }
+        )
+        msg = await client.receive_json()
+
+        assert msg["success"]
+        assert msg["result"][PREF_PRELOAD_STREAM] is False
+
+        # Verify callback was called again
+        mock_prefs_update.assert_called_once_with(camera_obj)

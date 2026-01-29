@@ -234,7 +234,7 @@ async def _async_get_stream_image(
     height: int | None = None,
     wait_for_next_keyframe: bool = False,
 ) -> bytes | None:
-    if (provider := camera._webrtc_provider) and (  # noqa: SLF001
+    if (provider := camera.webrtc_provider) and (
         image := await provider.async_get_image(camera, width=width, height=height)
     ) is not None:
         return image
@@ -515,6 +515,12 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return False
         return super().available
 
+    @final
+    @property
+    def webrtc_provider(self) -> CameraWebRTCProvider | None:
+        """Return the WebRTC provider."""
+        return self._webrtc_provider
+
     async def async_create_stream(self) -> Stream | None:
         """Create a Stream for stream_source."""
         # There is at most one stream (a decode worker) per camera
@@ -674,6 +680,13 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.__supports_stream = self.supported_features & CameraEntityFeature.STREAM
         await self.async_refresh_providers(write_state=False)
 
+    async def async_internal_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self._webrtc_provider:
+            await self._webrtc_provider.async_unregister_camera(self)
+            self._webrtc_provider = None
+        await super().async_internal_will_remove_from_hass()
+
     async def async_refresh_providers(self, *, write_state: bool = True) -> None:
         """Determine if any of the registered providers are suitable for this entity.
 
@@ -690,11 +703,19 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 async_get_supported_provider
             )
 
-        if old_provider != new_provider:
-            self._webrtc_provider = new_provider
-            self._invalidate_camera_capabilities_cache()
-            if write_state:
-                self.async_write_ha_state()
+        if old_provider == new_provider:
+            return
+
+        if old_provider:
+            await old_provider.async_unregister_camera(self)
+
+        if new_provider:
+            await new_provider.async_register_camera(self)
+
+        self._webrtc_provider = new_provider
+        self._invalidate_camera_capabilities_cache()
+        if write_state:
+            self.async_write_ha_state()
 
     async def _async_get_supported_webrtc_provider[_T](
         self, fn: Callable[[HomeAssistant, Camera], Coroutine[None, None, _T | None]]
@@ -947,6 +968,10 @@ async def websocket_update_prefs(
         _LOGGER.error("Error setting camera preferences: %s", ex)
         connection.send_error(msg["id"], "update_failed", str(ex))
     else:
+        if (camera := hass.data[DATA_COMPONENT].get_entity(entity_id)) and (
+            provider := camera.webrtc_provider
+        ):
+            await provider.async_on_camera_prefs_update(camera)
         connection.send_result(msg["id"], entity_prefs)
 
 
