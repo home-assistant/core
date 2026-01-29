@@ -440,6 +440,8 @@ build.json @home-assistant/supervisor
 /tests/components/elkm1/ @gwww @bdraco
 /homeassistant/components/elmax/ @albertogeniola
 /tests/components/elmax/ @albertogeniola
+/homeassistant/components/eltako_series14/ @jtjart
+/tests/components/eltako_series14/ @jtjart
 /homeassistant/components/elv/ @majuss
 /homeassistant/components/elvia/ @ludeeus
 /tests/components/elvia/ @ludeeus

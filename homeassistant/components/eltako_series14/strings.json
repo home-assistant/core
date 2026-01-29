@@ -1,0 +1,78 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "The gateway on this port has already been configured.",
+      "no_serial_ports": "No serial ports found. Please connect your gateway and try again.",
+      "reconfigure_successful": "Gateway has been reconfigured successfully."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the device at this port",
+      "invalid_gateway_path": "Invalid gateway path",
+      "invalid_id": "The ID must be in the format XX-XX-XX-XX where X is a hexadecimal digit (0-9, A-F)",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "auto_reconnect": "Automatic reconnection",
+          "fast_status_change": "Fast status change",
+          "id": "Base ID",
+          "message_delay": "Message delay (ms)",
+          "model": "Model",
+          "name": "Name",
+          "serial_port": "USB device path"
+        },
+        "data_description": {
+          "auto_reconnect": "If selected the gateway automatically tries to reconnect after the connection is lost.",
+          "fast_status_change": "It takes some time for the Eltako actuators to send a confirmation once a command has been send. Therefore this option will directly change the state in the UI, to create a more responsive expereince.",
+          "id": "This is the base ID of the gateway. The sending IDs will be based on it.\nThis is not the device's ID inside the Eltako BUS.\nFor wired devices it is recommended to use (00-00-B0-00)\nFor wireless devices like the USB300 you need to add its own base ID (FF-XX-XX-XX).",
+          "message_delay": "The delay between two sending messages to prevent buffer overflow on the gateway.",
+          "model": "The gateway's device model.",
+          "name": "The name of the gateway visible in the GUI.",
+          "serial_port": "The USB port, where the gateway is connected."
+        },
+        "title": "Set up the Eltako gateway"
+      }
+    }
+  },
+  "config_subentries": {
+    "device": {
+      "abort": {
+        "model_not_found": "Reconfiguration failed. The device model was not found.",
+        "reconfigure_successful": "Device has been reconfigured successfully."
+      },
+      "entry_type": "Device that is connected via the gateway.",
+      "error": {
+        "already_configured": "A device with this ID is already configured for this gateway.",
+        "invalid_cover_time": "You need to fill either no or both cover times (open and close).",
+        "invalid_id": "The ID must be in the format XX-XX-XX-XX where X is a hexadecimal digit (0-9, A-F)"
+      },
+      "initiate_flow": {
+        "reconfigure": "Reconfigure device",
+        "user": "Add device"
+      },
+      "step": {
+        "switch": {
+          "data": {
+            "id": "Device ID",
+            "model": "Device model",
+            "name": "Name",
+            "sender_id": "Sender ID"
+          },
+          "title": "Add a switch device"
+        },
+        "user": {
+          "menu_options": {
+            "switch": "Switch"
+          },
+          "title": "Select the device to add"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "gateway_setup_failed": {
+      "message": "Gateway setup failed"
+    }
+  }
+}
