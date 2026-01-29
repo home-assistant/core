@@ -9,6 +9,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_account_mismatch": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account and pick the right location.",
@@ -17,6 +18,9 @@
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "initiate_flow": {
+      "user": "[%key:common::config_flow::initiate_flow::account%]"
     },
     "step": {
       "pick_implementation": {
@@ -74,6 +78,9 @@
       }
     },
     "button": {
+      "reset_hood_filter": {
+        "name": "Reset filter"
+      },
       "reset_water_filter": {
         "name": "Reset water filter"
       },
@@ -135,6 +142,17 @@
         }
       }
     },
+    "fan": {
+      "hood": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "smart": "Smart"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "cool_select_plus_temperature": {
         "name": "CoolSelect+ temperature"
@@ -147,6 +165,9 @@
       },
       "hood_fan_speed": {
         "name": "Fan speed"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
       },
       "washer_rinse_cycles": {
         "name": "Rinse cycles",
@@ -411,6 +432,9 @@
           "simmer": "Simmer"
         }
       },
+      "hood_filter_usage": {
+        "name": "Filter usage"
+      },
       "infrared_level": {
         "name": "Infrared level"
       },
@@ -531,6 +555,39 @@
       },
       "oven_setpoint": {
         "name": "Setpoint"
+      },
+      "pm10_health_concern": {
+        "name": "PM10 health concern",
+        "state": {
+          "good": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::good%]",
+          "hazardous": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::hazardous%]",
+          "moderate": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::moderate%]",
+          "slightly_unhealthy": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::slightly_unhealthy%]",
+          "unhealthy": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::unhealthy%]",
+          "very_unhealthy": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::very_unhealthy%]"
+        }
+      },
+      "pm1_health_concern": {
+        "name": "PM1 health concern",
+        "state": {
+          "good": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::good%]",
+          "hazardous": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::hazardous%]",
+          "moderate": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::moderate%]",
+          "slightly_unhealthy": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::slightly_unhealthy%]",
+          "unhealthy": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::unhealthy%]",
+          "very_unhealthy": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::very_unhealthy%]"
+        }
+      },
+      "pm25_health_concern": {
+        "name": "PM2.5 health concern",
+        "state": {
+          "good": "Good",
+          "hazardous": "Hazardous",
+          "moderate": "Moderate",
+          "slightly_unhealthy": "Slightly unhealthy",
+          "unhealthy": "Unhealthy",
+          "very_unhealthy": "Very unhealthy"
+        }
       },
       "power_energy": {
         "name": "Power energy"

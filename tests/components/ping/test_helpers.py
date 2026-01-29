@@ -22,7 +22,7 @@ class MockAsyncSubprocess:
         """Fails immediately with a timeout."""
         raise TimeoutError
 
-    async def kill(self) -> None:
+    def kill(self) -> None:
         """Raise preset exception when called."""
         raise self.killsig
 

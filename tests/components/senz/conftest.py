@@ -5,7 +5,7 @@ import time
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
-from aiosenz import Account, Thermostat
+from pysenz import Account, Thermostat
 import pytest
 
 from homeassistant.components.application_credentials import (

@@ -3384,10 +3384,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         last_step: bool | None = None,
         preview: str | None = None,
     ) -> ConfigFlowResult:
-        """Return the definition of a form to gather user input.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Return the definition of a form to gather user input."""
         if self.source == SOURCE_REAUTH and "entry_id" in self.context:
             # If the integration does not provide a name for the reauth title,
             # we append it to the description placeholders.

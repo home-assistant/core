@@ -2306,7 +2306,7 @@ async def test_reconfigure_preserves_existing_config_entry_fields(
 
     result = await config_entry.start_reconfigure_flow(hass)
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
     mocked_elk = mock_elk(invalid_auth=False, sync_complete=True)

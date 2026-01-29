@@ -8,7 +8,6 @@ from matter_server.common.helpers.util import create_attribute_path_from_attribu
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.matter.select import DOOR_LOCK_OPERATING_MODE_MAP
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -314,22 +313,30 @@ async def test_door_lock_operating_mode_select(
     """Test Door Lock Operating Mode select entity discovery and interaction.
 
     Verifies:
-    - Options match mapping in DOOR_LOCK_OPERATING_MODE_MAP
+    - Options are filtered based on SupportedOperatingModes bitmap
     - Attribute updates reflect current option
     - Selecting an option writes correct enum value
     """
     entity_id = "select.secuyou_smart_lock_operating_mode"
     state = hass.states.get(entity_id)
     assert state, "Missing operating mode select entity"
-    assert state.attributes["options"] == list(DOOR_LOCK_OPERATING_MODE_MAP.values())
-    # Initial state should be one of the allowed options
+    # According to the spec, bit=0 means supported and bit=1 means not supported.
+    # The fixture bitmap clears bits 0, 2, and 3, so the supported modes are
+    # Normal, Privacy, and NoRemoteLockUnlock; the other bits are set (not
+    # supported).
+    assert set(state.attributes["options"]) == {
+        "normal",
+        "privacy",
+        "no_remote_lock_unlock",
+    }
+    # Verify that the initial state is part of the allowed options
     assert state.state in state.attributes["options"]
 
     # Dynamically obtain ids instead of hardcoding
     door_lock_cluster_id = clusters.DoorLock.Attributes.OperatingMode.cluster_id
     operating_mode_attr_id = clusters.DoorLock.Attributes.OperatingMode.attribute_id
 
-    # Change OperatingMode attribute on the node to 'privacy'
+    # Change OperatingMode attribute on the node to a supported mode ('privacy')
     set_node_attribute(
         matter_node,
         1,
@@ -341,12 +348,12 @@ async def test_door_lock_operating_mode_select(
     state = hass.states.get(entity_id)
     assert state.state == "privacy"
 
-    # Select another option (vacation) via service to validate mapping
+    # Select another supported option (NoRemoteLockUnlock) via service to validate mapping
     matter_client.write_attribute.reset_mock()
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": entity_id, "option": "vacation"},
+        {"entity_id": entity_id, "option": "no_remote_lock_unlock"},
         blocking=True,
     )
     assert matter_client.write_attribute.call_count == 1
@@ -356,5 +363,5 @@ async def test_door_lock_operating_mode_select(
             endpoint_id=1,
             attribute=clusters.DoorLock.Attributes.OperatingMode,
         ),
-        value=clusters.DoorLock.Enums.OperatingModeEnum.kVacation,
+        value=clusters.DoorLock.Enums.OperatingModeEnum.kNoRemoteLockUnlock,
     )

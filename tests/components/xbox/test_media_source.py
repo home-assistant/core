@@ -87,12 +87,29 @@ async def test_browse_media(
 
 async def test_browse_media_accounts(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
     xbox_live_client: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test browsing media we get account view if more than 1 account is configured."""
-
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="GSR Ae",
+        data={
+            "auth_implementation": "cloud",
+            "token": {
+                "access_token": "1234567890",
+                "expires_at": 1760697327.7298331,
+                "expires_in": 3600,
+                "refresh_token": "0987654321",
+                "scope": "XboxLive.signin XboxLive.offline_access",
+                "service": "xbox",
+                "token_type": "bearer",
+                "user_id": "AAAAAAAAAAAAAAAAAAAAA",
+            },
+        },
+        unique_id="271958441785640",
+        minor_version=3,
+    )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -120,7 +137,7 @@ async def test_browse_media_accounts(
             },
         },
         unique_id="277923030577271",
-        minor_version=2,
+        minor_version=3,
     )
     config_entry2.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry2.entry_id)
@@ -213,7 +230,7 @@ async def test_browse_media_not_configured_exception(
         },
         unique_id="2533274838782903",
         disabled_by=ConfigEntryDisabler.USER,
-        minor_version=2,
+        minor_version=3,
     )
 
     config_entry.add_to_hass(hass)
@@ -258,7 +275,7 @@ async def test_browse_media_account_not_configured_exception(
         ),
         (
             "/271958441785640/1297287135/game_media/0",
-            "http://store-images.s-microsoft.com/image/apps.35725.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.c4bf34f8-ad40-4af3-914e-a85e75a76bed",
+            "https://store-images.s-microsoft.com/image/apps.35725.65457035095819016.56f55216-1bb9-40aa-8796-068cf3075fc1.c4bf34f8-ad40-4af3-914e-a85e75a76bed",
             "image/png",
         ),
     ],

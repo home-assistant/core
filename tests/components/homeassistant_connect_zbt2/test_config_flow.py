@@ -50,23 +50,8 @@ def setup_entry_fixture() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-@pytest.mark.parametrize(
-    ("country", "expected_tx_power"),
-    [
-        ("US", 8),
-        ("NL", 10),
-        ("JP", 8),
-        ("DE", 10),
-    ],
-)
-async def test_config_flow_zigbee(
-    hass: HomeAssistant,
-    country: str,
-    expected_tx_power: int,
-) -> None:
+async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
     """Test Zigbee config flow for Connect ZBT-2."""
-    hass.config.country = country
-
     fw_type = ApplicationType.EZSP
     fw_version = "7.4.4.0 build 0"
     model = "Home Assistant Connect ZBT-2"
@@ -160,7 +145,6 @@ async def test_config_flow_zigbee(
             "flow_control": "hardware",
         },
         "radio_type": fw_type.value,
-        "tx_power": expected_tx_power,
     }
 
 
@@ -400,7 +384,6 @@ async def test_options_flow(
             "flow_control": "hardware",
         },
         "radio_type": "ezsp",
-        "tx_power": 8,
     }
 
 

@@ -1,0 +1,26 @@
+{
+  "data": [
+    {
+      "id": "2025-03-04",
+      "title": "2025-03-04",
+      "recipes": [
+        {
+          "id": "r1",
+          "name": "Waffles",
+          "total_time": 1500
+        }
+      ]
+    },
+    {
+      "id": "2025-03-05",
+      "title": "2025-03-05",
+      "recipes": [
+        {
+          "id": "r2",
+          "name": "Mint Tea",
+          "total_time": 1500
+        }
+      ]
+    }
+  ]
+}

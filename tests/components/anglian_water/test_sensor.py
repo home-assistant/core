@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -14,6 +15,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_sensor(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_anglian_water_client: AsyncMock,
