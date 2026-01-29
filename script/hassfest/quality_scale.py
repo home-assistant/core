@@ -802,6 +802,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "recswitch",
     "reddit",
     "refoss",
+    "rejseplanen",
     "remember_the_milk",
     "remote_rpi_gpio",
     "renson",
