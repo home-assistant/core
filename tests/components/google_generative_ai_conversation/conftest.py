@@ -74,48 +74,47 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 @pytest.fixture
 async def mock_config_entry_with_assist(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_genai_client: AsyncMock,
 ) -> MockConfigEntry:
     """Mock a config entry with assist."""
-    with patch("google.genai.models.AsyncModels.get"):
-        hass.config_entries.async_update_subentry(
-            mock_config_entry,
-            next(iter(mock_config_entry.subentries.values())),
-            data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
-        )
-        await hass.async_block_till_done()
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+    )
+    await hass.async_block_till_done()
     return mock_config_entry
 
 
 @pytest.fixture
 async def mock_config_entry_with_google_search(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_genai_client: AsyncMock,
 ) -> MockConfigEntry:
     """Mock a config entry with assist."""
-    with patch("google.genai.models.AsyncModels.get"):
-        hass.config_entries.async_update_subentry(
-            mock_config_entry,
-            next(iter(mock_config_entry.subentries.values())),
-            data={
-                CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
-                CONF_USE_GOOGLE_SEARCH_TOOL: True,
-            },
-        )
-        await hass.async_block_till_done()
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        next(iter(mock_config_entry.subentries.values())),
+        data={
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+            CONF_USE_GOOGLE_SEARCH_TOOL: True,
+        },
+    )
+    await hass.async_block_till_done()
     return mock_config_entry
 
 
 @pytest.fixture
 async def mock_init_component(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry
+    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_genai_client: AsyncMock
 ) -> AsyncGenerator[None]:
     """Initialize integration."""
-    with patch("google.genai.models.AsyncModels.get"):
-        assert await async_setup_component(
-            hass, "google_generative_ai_conversation", {}
-        )
-        await hass.async_block_till_done()
-        yield
+    assert await async_setup_component(hass, "google_generative_ai_conversation", {})
+    await hass.async_block_till_done()
+    yield
 
 
 @pytest.fixture(autouse=True)
@@ -125,35 +124,13 @@ async def setup_ha(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_chat_create() -> Generator[AsyncMock]:
-    """Mock stream response."""
-
-    async def mock_generator(stream):
-        for value in stream:
-            yield value
-
-    mock_send_message_stream = AsyncMock()
-    mock_send_message_stream.side_effect = lambda **kwargs: mock_generator(
-        mock_send_message_stream.return_value.pop(0)
-    )
-
+def mock_genai_client() -> Generator[AsyncMock]:
+    """Mock the client."""
     with patch(
-        "google.genai.chats.AsyncChats.create",
-        return_value=AsyncMock(send_message_stream=mock_send_message_stream),
-    ) as mock_create:
-        yield mock_create
-
-
-@pytest.fixture
-def mock_send_message_stream(mock_chat_create) -> Generator[AsyncMock]:
-    """Mock stream response."""
-    return mock_chat_create.return_value.send_message_stream
-
-
-@pytest.fixture
-def mock_generate_content() -> Generator[AsyncMock]:
-    """Mock generate_content response."""
-    with patch(
-        "google.genai.models.AsyncModels.generate_content",
-    ) as mock:
-        yield mock
+        "homeassistant.components.google_generative_ai_conversation.Client",
+        autospec=True,
+    ) as mock_client:
+        mock_client.return_value.aio.models.generate_content_stream = AsyncMock()
+        mock_client.return_value.aio.models.generate_content = AsyncMock()
+        mock_client.return_value.aio.models.get = AsyncMock()
+        yield mock_client.return_value
