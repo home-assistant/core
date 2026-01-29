@@ -24,9 +24,7 @@ from homeassistant.helpers.selector import (
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
-    ALL_LANGUAGES,
     ARRIVAL_TIME,
-    AVOID_OPTIONS,
     CONF_ARRIVAL_TIME,
     CONF_AVOID,
     CONF_DEPARTURE_TIME,
@@ -41,12 +39,7 @@ from .const import (
     DEFAULT_NAME,
     DEPARTURE_TIME,
     DOMAIN,
-    TIME_TYPES,
-    TRAFFIC_MODELS,
-    TRANSIT_PREFS,
-    TRANSPORT_TYPES,
     TRAVEL_MODES,
-    UNITS,
     UNITS_IMPERIAL,
     UNITS_METRIC,
 )
@@ -55,6 +48,15 @@ from .helpers import (
     PermissionDeniedException,
     UnknownException,
     validate_config_entry,
+)
+from .schemas import (
+    AVOID_SELECTOR,
+    LANGUAGE_SELECTOR,
+    TIME_TYPE_SELECTOR,
+    TRAFFIC_MODEL_SELECTOR,
+    TRANSIT_MODE_SELECTOR,
+    TRANSIT_ROUTING_PREFERENCE_SELECTOR,
+    UNITS_SELECTOR,
 )
 
 RECONFIGURE_SCHEMA = vol.Schema(
@@ -73,6 +75,13 @@ CONFIG_SCHEMA = RECONFIGURE_SCHEMA.extend(
 
 OPTIONS_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_LANGUAGE): LANGUAGE_SELECTOR,
+        vol.Optional(CONF_AVOID): AVOID_SELECTOR,
+        vol.Optional(CONF_TRAFFIC_MODEL): TRAFFIC_MODEL_SELECTOR,
+        vol.Optional(CONF_TRANSIT_MODE): TRANSIT_MODE_SELECTOR,
+        vol.Optional(
+            CONF_TRANSIT_ROUTING_PREFERENCE
+        ): TRANSIT_ROUTING_PREFERENCE_SELECTOR,
         vol.Required(CONF_MODE): SelectSelector(
             SelectSelectorConfig(
                 options=TRAVEL_MODES,
@@ -81,62 +90,9 @@ OPTIONS_SCHEMA = vol.Schema(
                 translation_key=CONF_MODE,
             )
         ),
-        vol.Optional(CONF_LANGUAGE): SelectSelector(
-            SelectSelectorConfig(
-                options=sorted(ALL_LANGUAGES),
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_LANGUAGE,
-            )
-        ),
-        vol.Optional(CONF_AVOID): SelectSelector(
-            SelectSelectorConfig(
-                options=AVOID_OPTIONS,
-                sort=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_AVOID,
-            )
-        ),
-        vol.Required(CONF_UNITS): SelectSelector(
-            SelectSelectorConfig(
-                options=UNITS,
-                sort=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_UNITS,
-            )
-        ),
-        vol.Required(CONF_TIME_TYPE): SelectSelector(
-            SelectSelectorConfig(
-                options=TIME_TYPES,
-                sort=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_TIME_TYPE,
-            )
-        ),
+        vol.Required(CONF_UNITS): UNITS_SELECTOR,
+        vol.Required(CONF_TIME_TYPE): TIME_TYPE_SELECTOR,
         vol.Optional(CONF_TIME): TimeSelector(),
-        vol.Optional(CONF_TRAFFIC_MODEL): SelectSelector(
-            SelectSelectorConfig(
-                options=TRAFFIC_MODELS,
-                sort=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_TRAFFIC_MODEL,
-            )
-        ),
-        vol.Optional(CONF_TRANSIT_MODE): SelectSelector(
-            SelectSelectorConfig(
-                options=TRANSPORT_TYPES,
-                sort=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_TRANSIT_MODE,
-            )
-        ),
-        vol.Optional(CONF_TRANSIT_ROUTING_PREFERENCE): SelectSelector(
-            SelectSelectorConfig(
-                options=TRANSIT_PREFS,
-                sort=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key=CONF_TRANSIT_ROUTING_PREFERENCE,
-            )
-        ),
     }
 )
 
