@@ -269,6 +269,10 @@
       "description": "Removes all items from the playlist.",
       "name": "Clear playlist"
     },
+    "get_groupable_players": {
+      "description": "Gets a list of media players that can be grouped together for synchronous playback. Only works on supported multiroom audio systems.",
+      "name": "Get groupable players"
+    },
     "join": {
       "description": "Groups media players together for synchronous playback. Only works on supported multiroom audio systems.",
       "fields": {

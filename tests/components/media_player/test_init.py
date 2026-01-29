@@ -1,6 +1,7 @@
 """Test the base functions of the media player."""
 
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -21,11 +22,13 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import (
     SERVICE_BROWSE_MEDIA,
+    SERVICE_GET_GROUPABLE_PLAYERS,
     SERVICE_SEARCH_MEDIA,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockEntityPlatform
@@ -634,3 +637,194 @@ async def test_play_media_via_selector(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
+
+
+async def test_get_groupable_players_service(hass: HomeAssistant) -> None:
+    """Test get_groupable_players service returns correct response structure."""
+    # Simple test to verify service exists and returns the expected structure.
+    # The filtering logic (platform matching, feature support) is tested
+    # in test_get_groupable_players_same_platform_only and
+    # test_get_groupable_players_multiplatform_override below.
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    result = await hass.services.async_call(
+        "media_player",
+        SERVICE_GET_GROUPABLE_PLAYERS,
+        {ATTR_ENTITY_ID: "media_player.walkman"},
+        blocking=True,
+        return_response=True,
+    )
+
+    # Verify the service returns proper response structure
+    assert result is not None
+    assert "media_player.walkman" in result
+    assert isinstance(result["media_player.walkman"], dict)
+    assert "result" in result["media_player.walkman"]
+    assert isinstance(result["media_player.walkman"]["result"], list)
+
+
+async def test_get_groupable_players_entity_without_feature(
+    hass: HomeAssistant,
+) -> None:
+    """Test that get_groupable_players only works for entities with grouping support."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    # Try to call service on an entity without grouping support (YouTube player)
+    with pytest.raises(
+        ServiceNotSupported
+    ):  # Should raise since bedroom doesn't support grouping
+        await hass.services.async_call(
+            "media_player",
+            SERVICE_GET_GROUPABLE_PLAYERS,
+            {ATTR_ENTITY_ID: "media_player.bedroom"},
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_get_groupable_players_same_platform_only(hass: HomeAssistant) -> None:
+    """Test that get_groupable_players returns only entities from the same platform.
+
+    The default implementation returns only entities from the same platform
+    as the calling entity.
+    """
+
+    class TestMediaPlayer(MediaPlayerEntity):
+        """Test media player with grouping support."""
+
+        _attr_supported_features = media_player.MediaPlayerEntityFeature.GROUPING
+        _attr_has_entity_name = True
+
+        def __init__(self, unique_id: str, name: str) -> None:
+            """Initialize the test entity."""
+            self._attr_unique_id = unique_id
+            self._attr_name = name
+
+    # Setup media_player component first
+    await async_setup_component(hass, "media_player", {})
+    await hass.async_block_till_done()
+
+    # Create test entities on the same platform
+    player1 = TestMediaPlayer("test_player_1", "Player 1")
+    player1.hass = hass
+    player1.entity_id = "media_player.player_1"
+
+    player2 = TestMediaPlayer("test_player_2", "Player 2")
+    player2.hass = hass
+    player2.entity_id = "media_player.player_2"
+
+    player3 = TestMediaPlayer("test_player_3", "Player 3")
+    player3.hass = hass
+    player3.entity_id = "media_player.player_3"
+
+    other_player = TestMediaPlayer("test_player_4", "Player 4")
+    other_player.hass = hass
+    other_player.entity_id = "media_player.player_4"
+
+    # Add entities via explicit platforms to preserve platform_name
+    platform = MockEntityPlatform(
+        hass, domain="media_player", platform_name="test_platform"
+    )
+    other_platform = MockEntityPlatform(
+        hass, domain="media_player", platform_name="other_platform"
+    )
+
+    await platform.async_add_entities([player1, player2, player3])
+    await other_platform.async_add_entities([other_player])
+    await hass.async_block_till_done()
+
+    # Get groupable players for player1
+    result = await hass.services.async_call(
+        "media_player",
+        SERVICE_GET_GROUPABLE_PLAYERS,
+        {ATTR_ENTITY_ID: "media_player.player_1"},
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result is not None
+    assert isinstance(result["media_player.player_1"], dict)
+    groupable = result["media_player.player_1"]["result"]
+    assert isinstance(groupable, list)
+
+    # The calling entity should not appear in its own groupable list
+    assert "media_player.player_1" not in groupable
+
+    # Should return the other two players from the same platform
+    assert "media_player.player_2" in groupable
+    assert "media_player.player_3" in groupable
+    assert "media_player.player_4" not in groupable
+    assert len(groupable) == 2
+
+
+async def test_get_groupable_players_multiplatform_override(
+    hass: HomeAssistant,
+) -> None:
+    """Test that integrations can override async_get_groupable_players for multi-platform support.
+
+    This demonstrates how an integration can override the default implementation
+    to return entities from multiple platforms that it can group together.
+    """
+
+    class MultiPlatformMediaPlayer(MediaPlayerEntity):
+        """Test media player that supports grouping across platforms."""
+
+        _attr_supported_features = media_player.MediaPlayerEntityFeature.GROUPING
+
+        def __init__(self, entity_id: str, name: str) -> None:
+            """Initialize the test entity."""
+            self.entity_id = entity_id
+            self._attr_name = name
+
+        async def async_get_groupable_players(self) -> dict[str, Any]:
+            """Override to return multi-platform groupable players."""
+            # Integration-specific logic that can determine which players
+            # from different platforms can be grouped together
+            return {
+                "result": [
+                    "media_player.spotify_player",
+                    "media_player.sonos_living_room",
+                    "media_player.chromecast_kitchen",
+                ]
+            }
+
+    # Setup media_player component first
+    await async_setup_component(hass, "media_player", {})
+    await hass.async_block_till_done()
+
+    # Create and register the custom entity
+    entity = MultiPlatformMediaPlayer("media_player.test_player", "Test Player")
+    entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
+
+    # Manually add entity to the entity component
+    component = hass.data.get("entity_components", {}).get("media_player")
+
+    assert component is not None
+    await component.async_add_entities([entity])
+
+    # Call the service
+    result = await hass.services.async_call(
+        "media_player",
+        SERVICE_GET_GROUPABLE_PLAYERS,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+        return_response=True,
+    )
+
+    # Verify the overridden implementation's results are returned
+    assert result is not None
+    assert "media_player.test_player" in result
+    assert isinstance(result["media_player.test_player"], dict)
+    groupable_players = result["media_player.test_player"]["result"]
+    assert isinstance(groupable_players, list)
+    assert len(groupable_players) == 3
+    assert "media_player.spotify_player" in groupable_players
+    assert "media_player.sonos_living_room" in groupable_players
+    assert "media_player.chromecast_kitchen" in groupable_players

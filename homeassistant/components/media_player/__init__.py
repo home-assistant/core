@@ -108,6 +108,7 @@ from .const import (  # noqa: F401
     REPEAT_MODES,
     SERVICE_BROWSE_MEDIA,
     SERVICE_CLEAR_PLAYLIST,
+    SERVICE_GET_GROUPABLE_PLAYERS,
     SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SEARCH_MEDIA,
@@ -466,12 +467,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_UNJOIN, None, "async_unjoin_player", [MediaPlayerEntityFeature.GROUPING]
     )
-
     component.async_register_entity_service(
         SERVICE_REPEAT_SET,
         {vol.Required(ATTR_MEDIA_REPEAT): vol.Coerce(RepeatMode)},
         "async_set_repeat",
         [MediaPlayerEntityFeature.REPEAT_SET],
+    )
+    component.async_register_entity_service(
+        SERVICE_GET_GROUPABLE_PLAYERS,
+        None,
+        "async_get_groupable_players",
+        [MediaPlayerEntityFeature.GROUPING],
+        supports_response=SupportsResponse.ONLY,
     )
 
     return True
@@ -1192,6 +1199,28 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
         await self.hass.async_add_executor_job(self.unjoin_player)
+
+    async def async_get_groupable_players(self) -> dict[str, Any]:
+        """Return a dictionary with a list of players that can be grouped with this player."""
+
+        component = self.hass.data.get(DATA_COMPONENT)
+        if component is None:
+            return {"result": []}
+
+        current_platform = self.platform
+
+        # Return only players that support grouping on the same platform, excluding this entity
+        current_platform_name = current_platform.platform_name
+        result = [
+            entity.entity_id
+            for entity in component.entities
+            if entity is not self
+            and entity.platform is not None
+            and entity.platform.platform_name == current_platform_name
+            and MediaPlayerEntityFeature.GROUPING in entity.supported_features
+        ]
+
+        return {"result": result}
 
     async def _async_fetch_image_from_cache(
         self, url: str
