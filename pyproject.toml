@@ -484,8 +484,6 @@ filterwarnings = [
   "ignore:Deprecated call to `pkg_resources.declare_namespace\\('azure'\\)`:DeprecationWarning:pkg_resources",
 
   # -- tracked upstream / open PRs
-  # https://github.com/kbr/fritzconnection/pull/244 - v1.15.0 - 2025-05-17
-  "ignore:.*invalid escape sequence:SyntaxWarning:.*fritzconnection.core.soaper",
   # https://github.com/hacf-fr/meteofrance-api/pull/688 - v1.4.0 - 2025-03-26
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:meteofrance_api.model.forecast",
 
