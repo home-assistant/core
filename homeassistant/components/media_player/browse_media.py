@@ -123,7 +123,8 @@ class BrowseMedia:
         self.children = children
         self.children_media_class = children_media_class
         self.thumbnail = thumbnail
-        self.media_metadata = media_metadata
+        if media_metadata is not None:
+            self.media_metadata = media_metadata
         self.not_shown = not_shown
         self.can_search = can_search
 
@@ -143,8 +144,9 @@ class BrowseMedia:
             "can_search": self.can_search,
             "thumbnail": self.thumbnail,
         }
-        if self.media_metadata is not None:
-            response["media_metadata"] = self.media_metadata
+        media_metadata = getattr(self, "media_metadata", None)
+        if media_metadata is not None:
+            response["media_metadata"] = media_metadata
 
         if not parent:
             return response
