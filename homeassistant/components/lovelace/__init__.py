@@ -85,6 +85,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(DOMAIN, default={}): vol.Schema(
             {
+                # Deprecated - Remove in 2026.8
                 vol.Optional(CONF_MODE, default=MODE_STORAGE): vol.All(
                     vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])
                 ),
@@ -119,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     yaml_resources = config[DOMAIN].get(CONF_RESOURCES)
 
     # resource_mode controls how resources are loaded (yaml vs storage)
-    # Falls back to mode for backward compatibility
+    # Deprecated - Remove mode fallback in 2026.8
     resource_mode = config[DOMAIN].get(CONF_RESOURCE_MODE, mode)
 
     async def reload_resources_service_handler(service_call: ServiceCall) -> None:
@@ -197,6 +198,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     yaml_dashboards = config[DOMAIN].get(CONF_DASHBOARDS, {})
 
+    # Deprecated - Remove in 2026.8
     # For YAML mode, add the default "lovelace" dashboard if not already defined
     # This migrates the legacy yaml mode to a proper yaml dashboard entry
     if mode == MODE_YAML and DOMAIN not in yaml_dashboards:
