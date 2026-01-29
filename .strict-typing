@@ -536,6 +536,7 @@ homeassistant.components.timer.*
 homeassistant.components.tod.*
 homeassistant.components.todo.*
 homeassistant.components.tolo.*
+homeassistant.components.tonewinner.*
 homeassistant.components.tplink.*
 homeassistant.components.tplink_omada.*
 homeassistant.components.trace.*
