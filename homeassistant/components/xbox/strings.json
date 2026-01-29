@@ -141,10 +141,12 @@
           },
           "genres": { "name": "Genres" },
           "min_age": { "name": "Minimum age" },
+          "platform": { "name": "Platform" },
           "progress": { "name": "Progress" },
           "publisher": { "name": "Publisher" },
           "release_date": { "name": "Release date" },
-          "short_description": { "name": "Short description" }
+          "short_description": { "name": "Short description" },
+          "title_id": { "name": "Title ID" }
         }
       },
       "status": {

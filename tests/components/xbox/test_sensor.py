@@ -42,6 +42,11 @@ async def test_sensors(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
+    state = hass.states.get("sensor.gsr_ae_now_playing")
+    assert state is not None
+
+    assert state.attributes.get("platform") == "Xbox 360"
+
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
