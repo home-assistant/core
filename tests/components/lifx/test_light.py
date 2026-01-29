@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
-from homeassistant.components.lifx.const import _ATTR_COLOR_TEMP, ATTR_POWER
+from homeassistant.components.lifx.const import ATTR_POWER
 from homeassistant.components.lifx.light import ATTR_INFRARED, ATTR_ZONES
 from homeassistant.components.lifx.manager import (
     ATTR_CLOUD_SATURATION_MAX,
@@ -1898,15 +1898,6 @@ async def test_lifx_set_state_kelvin(hass: HomeAssistant) -> None:
         blocking=True,
     )
     assert bulb.set_color.calls[0][0][0] == [32000, 0, 25700, 2700]
-    bulb.set_color.reset_mock()
-
-    await hass.services.async_call(
-        DOMAIN,
-        "set_state",
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 255, _ATTR_COLOR_TEMP: 400},
-        blocking=True,
-    )
-    assert bulb.set_color.calls[0][0][0] == [32000, 0, 65535, 2500]
     bulb.set_color.reset_mock()
 
 
