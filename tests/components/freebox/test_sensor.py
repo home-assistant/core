@@ -3,6 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
+from freebox_api.exceptions import HttpRequestError
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.freebox import SCAN_INTERVAL
@@ -11,6 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
 from .const import (
+    DATA_CONNECTION_GET_FTTH,
     DATA_CONNECTION_GET_STATUS,
     DATA_HOME_GET_NODES,
     DATA_STORAGE_GET_DISKS,
@@ -40,6 +42,57 @@ async def test_network_speed(
     await hass.async_block_till_done()
     assert hass.states.get("sensor.freebox_download_speed").state == "123.4"
     assert hass.states.get("sensor.freebox_upload_speed").state == "432.1"
+
+
+async def test_ftth_power(hass: HomeAssistant, router: Mock) -> None:
+    """Test FTTH optical power sensors."""
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    state_rx = hass.states.get("sensor.freebox_sfp_rx_power")
+    state_tx = hass.states.get("sensor.freebox_sfp_tx_power")
+
+    assert state_rx.state == "-22.25"
+    assert state_tx.state == "-3.66"
+    assert state_rx.attributes["unit_of_measurement"] == "dBm"
+    assert state_tx.attributes["unit_of_measurement"] == "dBm"
+
+
+async def test_ftth_api_error(hass: HomeAssistant, router: Mock) -> None:
+    """Test FTTH sensors when API call fails."""
+    router().connection.get_ftth.side_effect = HttpRequestError("Connection failed")
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    # FTTH sensors should not be created when API fails
+    assert hass.states.get("sensor.freebox_sfp_rx_power") is None
+    assert hass.states.get("sensor.freebox_sfp_tx_power") is None
+
+
+async def test_ftth_power_conversion(hass: HomeAssistant, router: Mock) -> None:
+    """Test FTTH optical power conversion from centidBm to dBm."""
+    # Mock API response with different power values (in centidBm)
+    ftth_data = deepcopy(DATA_CONNECTION_GET_FTTH)
+    ftth_data["sfp_pwr_rx"] = -1500  # -15.00 dBm
+    ftth_data["sfp_pwr_tx"] = -250  # -2.50 dBm
+    router().connection.get_ftth.return_value = ftth_data
+
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    state_rx = hass.states.get("sensor.freebox_sfp_rx_power")
+    state_tx = hass.states.get("sensor.freebox_sfp_tx_power")
+
+    assert state_rx.state == "-15.0"  # Converted from -1500 centidBm
+    assert state_tx.state == "-2.5"  # Converted from -250 centidBm
+
+
+async def test_no_ftth_media(hass: HomeAssistant, router: Mock) -> None:
+    """Test that FTTH sensors are not created when media is not FTTH."""
+    data_connection_get_status = deepcopy(DATA_CONNECTION_GET_STATUS)
+    data_connection_get_status["media"] = "dsl"
+    router().connection.get_status.return_value = data_connection_get_status
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    assert hass.states.get("sensor.freebox_sfp_rx_power") is None
+    assert hass.states.get("sensor.freebox_sfp_tx_power") is None
 
 
 async def test_call(

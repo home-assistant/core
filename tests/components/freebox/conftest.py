@@ -11,6 +11,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import (
     DATA_CALL_GET_CALLS_LOG,
+    DATA_CONNECTION_GET_FTTH,
     DATA_CONNECTION_GET_STATUS,
     DATA_HOME_GET_NODES,
     DATA_HOME_PIR_GET_VALUE,
@@ -83,6 +84,7 @@ def mock_router(mock_device_registry_devices):
         instance.connection.get_status = AsyncMock(
             return_value=DATA_CONNECTION_GET_STATUS
         )
+        instance.connection.get_ftth = AsyncMock(return_value=DATA_CONNECTION_GET_FTTH)
         # switch
         instance.wifi.get_global_config = AsyncMock(
             return_value=DATA_WIFI_GET_GLOBAL_CONFIG

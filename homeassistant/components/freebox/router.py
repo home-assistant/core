@@ -128,6 +128,7 @@ class FreeboxRouter:
         self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
+        self.sensors_ftth: dict[str, Any] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
@@ -179,6 +180,10 @@ class FreeboxRouter:
     async def update_sensors(self) -> None:
         """Update Freebox sensors."""
 
+        # Reset FTTH information
+        self.sensors_connection.pop("sfp_pwr_rx", None)
+        self.sensors_connection.pop("sfp_pwr_tx", None)
+
         # System sensors
         syst_datas: dict[str, Any] = await self._api.system.get_config()
 
@@ -191,6 +196,30 @@ class FreeboxRouter:
         connection_datas: dict[str, Any] = await self._api.connection.get_status()
         for sensor_key in CONNECTION_SENSORS_KEYS:
             self.sensors_connection[sensor_key] = connection_datas[sensor_key]
+
+        # FTTH sensors (if available)
+        if connection_datas.get("media") == "ftth":
+            try:
+                ftth_datas: dict[str, Any] = await self._api.connection.get_ftth()
+            except HttpRequestError as err:
+                _LOGGER.debug("Could not fetch FTTH status: %s", err)
+                self.ftth_info = {}
+                return
+
+            # Convert power from centidBm to dBm and store in connection sensors
+            if (sfp_pwr_rx := ftth_datas.get("sfp_pwr_rx")) is not None:
+                if isinstance(sfp_pwr_rx, (int, float)):
+                    self.sensors_connection["sfp_pwr_rx"] = sfp_pwr_rx / 100
+                else:
+                    _LOGGER.warning("Unexpected type for sfp_pwr_rx: %r", sfp_pwr_rx)
+            if (sfp_pwr_tx := ftth_datas.get("sfp_pwr_tx")) is not None:
+                if isinstance(sfp_pwr_tx, (int, float)):
+                    self.sensors_connection["sfp_pwr_tx"] = sfp_pwr_tx / 100
+                else:
+                    _LOGGER.warning("Unexpected type for sfp_pwr_tx: %r", sfp_pwr_tx)
+        else:
+            self.sensors_connection.pop("sfp_pwr_rx", None)
+            self.sensors_connection.pop("sfp_pwr_tx", None)
 
         self._attrs = {
             "IPv4": connection_datas.get("ipv4"),
