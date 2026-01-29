@@ -107,9 +107,14 @@ class Pet(SurePetcareBinarySensor):
         except (KeyError, TypeError):
             self._attr_is_on = False
         if state:
+            position = surepy_entity._data.get("position", {})  # noqa: SLF001
+            device_id = position.get("device_id")
+            user_id = position.get("user_id")
             self._attr_extra_state_attributes = {
                 "since": state.since,
                 "where": state.where,
+                "device_id": str(device_id) if device_id is not None else None,
+                "user_id": str(user_id) if user_id is not None else None,
             }
         else:
             self._attr_extra_state_attributes = {}
