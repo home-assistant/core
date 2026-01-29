@@ -114,3 +114,10 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
             return None
 
         return self._get_warning_data().affected_areas
+
+    def get_recommended_actions(self) -> str | None:
+        """Return the recommended actions."""
+        if not self.is_on:
+            return None
+
+        return self._get_warning_data().recommended_actions
