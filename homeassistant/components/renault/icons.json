@@ -17,6 +17,12 @@
       },
       "stop_charge": {
         "default": "mdi:ev-station"
+      },
+      "start_horn": {
+        "default": "mdi:bugle"
+      },
+      "start_lights": {
+        "default": "mdi:lightbulb-on"
       }
     },
     "device_tracker": {

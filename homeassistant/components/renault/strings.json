@@ -81,6 +81,12 @@
       },
       "stop_charge": {
         "name": "Stop charge"
+      },
+      "start_horn": {
+        "name": "Start horn"
+      },
+      "start_lights": {
+        "name": "Start lights"
       }
     },
     "device_tracker": {
