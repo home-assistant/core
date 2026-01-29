@@ -120,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         frontend.async_register_built_in_panel(
             hass,
             DOMAIN,
-            config={"mode": mode},
+            config={"mode": mode, "legacy_lovelace": True},
             sidebar_title="overview",
             sidebar_icon="mdi:view-dashboard",
             sidebar_default_visible=False,
