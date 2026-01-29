@@ -13,7 +13,7 @@ from aiohomeconnect.model import (
     HomeAppliance,
 )
 from aiohomeconnect.model.command import Command
-from aiohomeconnect.model.error import HomeConnectApiError
+from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
 from aiohomeconnect.model.event import ArrayOfEvents, EventType
 import pytest
 
@@ -263,14 +263,14 @@ async def test_button_functionality(
 
 async def test_command_button_exception(
     hass: HomeAssistant,
-    client_with_exception: MagicMock,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
     """Test if button entities availability are based on the appliance connection state."""
     entity_id = "button.washer_pause_program"
 
-    client_with_exception.get_available_commands = AsyncMock(
+    client.get_available_commands = AsyncMock(
         return_value=ArrayOfCommands(
             [
                 Command(
@@ -280,7 +280,10 @@ async def test_command_button_exception(
             ]
         )
     )
-    assert await integration_setup(client_with_exception)
+    client.put_command = AsyncMock(
+        side_effect=HomeConnectApiError("SDK.Error.Command.Execution.Failed")
+    )
+    assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity = hass.states.get(entity_id)
@@ -298,14 +301,16 @@ async def test_command_button_exception(
 
 async def test_stop_program_button_exception(
     hass: HomeAssistant,
-    client_with_exception: MagicMock,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
     """Test if button entities availability are based on the appliance connection state."""
     entity_id = "button.washer_stop_program"
 
-    assert await integration_setup(client_with_exception)
+    client.stop_program = AsyncMock(side_effect=HomeConnectError("error.key"))
+
+    assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity = hass.states.get(entity_id)

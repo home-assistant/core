@@ -2,9 +2,10 @@
 
 from collections.abc import Awaitable, Callable
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import HomeAppliance, SettingKey
+from aiohomeconnect.model.error import HomeConnectError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -158,9 +159,15 @@ async def test_set_program_and_options(
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 @pytest.mark.parametrize(
-    ("service_call", "error_regex"),
+    ("service_call", "mock_attr", "error_regex"),
     zip(
         SERVICES_SET_PROGRAM_AND_OPTIONS,
+        [
+            "set_selected_program",
+            "start_program",
+            "set_active_program_options",
+            "set_selected_program_options",
+        ],
         [
             r"Error.*selecting.*program.*",
             r"Error.*starting.*program.*",
@@ -173,15 +180,18 @@ async def test_set_program_and_options(
 async def test_set_program_and_options_exceptions(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    client_with_exception: MagicMock,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
     service_call: dict[str, Any],
+    mock_attr: str,
     error_regex: str,
 ) -> None:
     """Test recognized options."""
-    assert await integration_setup(client_with_exception)
+    getattr(client, mock_attr).side_effect = HomeConnectError("error.key")
+
+    assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
     device_entry = device_registry.async_get_or_create(
@@ -191,35 +201,6 @@ async def test_set_program_and_options_exceptions(
 
     service_call["service_data"]["device_id"] = device_entry.id
     with pytest.raises(HomeAssistantError, match=error_regex):
-        await hass.services.async_call(**service_call)
-
-
-@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
-@pytest.mark.parametrize(
-    "service_call",
-    SERVICE_KV_CALL_PARAMS,
-)
-async def test_services_exception_device_id(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    client_with_exception: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    appliance: HomeAppliance,
-    service_call: dict[str, Any],
-) -> None:
-    """Raise a HomeAssistantError when there is an API error."""
-    assert await integration_setup(client_with_exception)
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    device_entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, appliance.ha_id)},
-    )
-
-    service_call["service_data"]["device_id"] = device_entry.id
-
-    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(**service_call)
 
 
@@ -272,14 +253,16 @@ async def test_services_appliance_not_found(
 async def test_services_exception(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    client_with_exception: MagicMock,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
     service_call: dict[str, Any],
 ) -> None:
     """Raise a ValueError when device id does not match."""
-    assert await integration_setup(client_with_exception)
+    client.set_setting = AsyncMock(side_effect=HomeConnectError("error.key"))
+
+    assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
     device_entry = device_registry.async_get_or_create(
