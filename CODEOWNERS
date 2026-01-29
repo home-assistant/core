@@ -1859,6 +1859,8 @@ build.json @home-assistant/supervisor
 /tests/components/whois/ @frenck
 /homeassistant/components/wiffi/ @mampfes
 /tests/components/wiffi/ @mampfes
+/homeassistant/components/wiim/ @Linkplay
+/tests/components/wiim/ @Linkplay
 /homeassistant/components/wilight/ @leofig-rj
 /tests/components/wilight/ @leofig-rj
 /homeassistant/components/wirelesstag/ @sergeymaysak

@@ -693,6 +693,9 @@ ZEROCONF = {
         {
             "domain": "linkplay",
         },
+        {
+            "domain": "wiim",
+        },
     ],
     "_lookin._tcp.local.": [
         {

@@ -1,0 +1,40 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_device": "The new host leads to a different WiiM device.",
+      "not_supported": "Device is not a supported WiiM device."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up {name}?"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "description": "Reconfigure the host for {name}."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the WiiM device."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_grouping_entity": {
+      "message": "Entity with ID {entity_id} can't be added to the WiiM multiroom. Is the entity a WiiM media player?"
+    }
+  }
+}

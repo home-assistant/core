@@ -7608,6 +7608,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "wiim": {
+      "name": "WiiM",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "wilight": {
       "name": "WiLight",
       "integration_type": "hub",
