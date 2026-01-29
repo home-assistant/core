@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_device_types[backgroundlight_ct][backgroundlight_ct]
+# name: test_device_types[backgroundlight_ct]
   ReadOnlyDict({
     'brightness': 204,
     'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -61,7 +61,7 @@
     ),
   })
 # ---
-# name: test_device_types[backgroundlight_hs][backgroundlight_hs]
+# name: test_device_types[backgroundlight_hs]
   ReadOnlyDict({
     'brightness': 204,
     'color_mode': <ColorMode.HS: 'hs'>,
@@ -123,7 +123,7 @@
     ),
   })
 # ---
-# name: test_device_types[backgroundlight_rgb][backgroundlight_rgb]
+# name: test_device_types[backgroundlight_rgb]
   ReadOnlyDict({
     'brightness': 204,
     'color_mode': <ColorMode.RGB: 'rgb'>,
@@ -185,7 +185,7 @@
     ),
   })
 # ---
-# name: test_device_types[color_ct][color_ct]
+# name: test_device_types[color_ct]
   ReadOnlyDict({
     'brightness': 128,
     'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -322,7 +322,7 @@
     ),
   })
 # ---
-# name: test_device_types[color_hsv][color_hsv]
+# name: test_device_types[color_hsv]
   ReadOnlyDict({
     'brightness': 128,
     'color_mode': <ColorMode.HS: 'hs'>,
@@ -397,7 +397,7 @@
     'supported_features': <LightEntityFeature: 0>,
   })
 # ---
-# name: test_device_types[color_hsv_no_hue][color_hsv_no_hue]
+# name: test_device_types[color_hsv_no_hue]
   ReadOnlyDict({
     'brightness': 128,
     'color_mode': <ColorMode.HS: 'hs'>,
@@ -462,7 +462,7 @@
     'supported_features': <LightEntityFeature: 0>,
   })
 # ---
-# name: test_device_types[color_rgb][color_rgb]
+# name: test_device_types[color_rgb]
   ReadOnlyDict({
     'brightness': 128,
     'color_mode': <ColorMode.RGB: 'rgb'>,
@@ -537,7 +537,7 @@
     'supported_features': <LightEntityFeature: 0>,
   })
 # ---
-# name: test_device_types[color_rgb_no_color][color_rgb_no_color]
+# name: test_device_types[color_rgb_no_color]
   ReadOnlyDict({
     'brightness': 128,
     'color_mode': <ColorMode.RGB: 'rgb'>,
@@ -602,7 +602,7 @@
     'supported_features': <LightEntityFeature: 0>,
   })
 # ---
-# name: test_device_types[color_unsupported][color_unsupported]
+# name: test_device_types[color_unsupported]
   ReadOnlyDict({
     'brightness': None,
     'color_mode': <ColorMode.UNKNOWN: 'unknown'>,
@@ -667,7 +667,7 @@
     'supported_features': <LightEntityFeature: 0>,
   })
 # ---
-# name: test_device_types[default][default]
+# name: test_device_types[default]
   ReadOnlyDict({
     'brightness': 128,
     'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -696,7 +696,7 @@
     'supported_features': <LightEntityFeature: 44>,
   })
 # ---
-# name: test_device_types[white][white]
+# name: test_device_types[white]
   ReadOnlyDict({
     'brightness': 128,
     'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -725,7 +725,7 @@
     'supported_features': <LightEntityFeature: 44>,
   })
 # ---
-# name: test_device_types[whitetemp][whitetemp]
+# name: test_device_types[whitetemp]
   ReadOnlyDict({
     'brightness': 128,
     'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -809,7 +809,7 @@
     ),
   })
 # ---
-# name: test_device_types[whitetempmood][whitetempmood]
+# name: test_device_types[whitetempmood]
   ReadOnlyDict({
     'brightness': 128,
     'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
