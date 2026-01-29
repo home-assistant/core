@@ -1925,6 +1925,9 @@ pyatv==0.17.0
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.1.5
 
+# homeassistant.components.myneomitis
+pyaxencoapi==1.0.5
+
 # homeassistant.components.balboa
 pybalboa==1.1.3
 

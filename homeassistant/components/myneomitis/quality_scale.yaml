@@ -1,0 +1,76 @@
+rules:
+  # Bronze tier rules
+  action-setup:
+    status: exempt
+    comment: Integration does not register service actions.
+  appropriate-polling:
+    status: exempt
+    comment: Integration uses WebSocket push updates, not polling.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not provide service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver tier rules
+  action-exceptions:
+    status: exempt
+    comment: Integration does not provide service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration has no configuration parameters beyond initial setup.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: exempt
+    comment: Integration uses coordinator-based updates via WebSocket push.
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold tier rules
+  devices: todo
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: Integration is cloud-based and does not use local discovery.
+  discovery:
+    status: exempt
+    comment: Integration requires manual authentication via cloud service.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum tier rules
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
