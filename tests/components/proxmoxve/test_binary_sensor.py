@@ -15,7 +15,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 
@@ -46,7 +45,7 @@ async def test_all_entities(
 
 
 @pytest.mark.parametrize(
-    ("exception", "reason"),
+    ("exception"),
     [
         (
             AuthenticationError("Invalid credentials"),
@@ -83,7 +82,6 @@ async def test_refresh_exceptions(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
-    reason: str,
 ) -> None:
     """Test entities go unavailable after coordinator refresh failures."""
     await setup_integration(hass, mock_config_entry)
@@ -92,7 +90,7 @@ async def test_refresh_exceptions(
     mock_proxmox_client.nodes.get.side_effect = exception
 
     freezer.tick(DEFAULT_UPDATE_INTERVAL)
-    async_fire_time_changed(hass, dt_util.utcnow())
+    async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("binary_sensor.ct_nginx_status")
