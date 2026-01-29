@@ -1,7 +1,7 @@
 {
   "entity": {
     "binary_sensor": {
-      "jvc_power": {
+      "power": {
         "default": "mdi:projector-off",
         "state": {
           "on": "mdi:projector"
@@ -9,17 +9,47 @@
       }
     },
     "select": {
+      "anamorphic": {
+        "default": "mdi:fit-to-screen-outline"
+      },
+      "clear_motion_drive": {
+        "default": "mdi:blur"
+      },
+      "dynamic_control": {
+        "default": "mdi:lightbulb-on-outline"
+      },
       "input": {
         "default": "mdi:hdmi-port"
+      },
+      "installation_mode": {
+        "default": "mdi:aspect-ratio"
+      },
+      "light_power": {
+        "default": "mdi:lightbulb-on-outline"
       }
     },
     "sensor": {
-      "jvc_power_status": {
-        "default": "mdi:power-plug-off",
+      "color_depth": {
+        "default": "mdi:palette-outline"
+      },
+      "color_space": {
+        "default": "mdi:palette-outline"
+      },
+      "hdr": {
+        "default": "mdi:image-filter-hdr-outline"
+      },
+      "hdr_processing": {
+        "default": "mdi:image-filter-hdr-outline"
+      },
+      "picture_mode": {
+        "default": "mdi:movie-roll"
+      },
+      "power": {
+        "default": "mdi:power",
         "state": {
           "cooling": "mdi:snowflake",
           "error": "mdi:alert-circle",
-          "on": "mdi:power-plug",
+          "on": "mdi:power",
           "warming": "mdi:heat-wave"
         }
       }

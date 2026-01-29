@@ -36,20 +36,134 @@
   "entity": {
     "binary_sensor": {
       "power": {
-        "name": "[%key:component::binary_sensor::entity_component::power::name%]"
+        "name": "Power"
       }
     },
     "select": {
+      "anamorphic": {
+        "name": "Anamorphic",
+        "state": {
+          "a": "A",
+          "b": "B",
+          "c": "C",
+          "d": "D",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "clear_motion_drive": {
+        "name": "Clear Motion Drive",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "inverse-telecine": "Inverse Telecine",
+          "low": "[%key:common::state::low%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "dynamic_control": {
+        "name": "Dynamic Control",
+        "state": {
+          "balanced": "Balanced",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "mode-1": "Mode 1",
+          "mode-2": "Mode 2",
+          "mode-3": "Mode 3",
+          "off": "[%key:common::state::off%]"
+        }
+      },
       "input": {
         "name": "Input",
         "state": {
           "hdmi1": "HDMI 1",
           "hdmi2": "HDMI 2"
         }
+      },
+      "installation_mode": {
+        "name": "Installation Mode",
+        "state": {
+          "memory-1": "Memory 1",
+          "memory-10": "Memory 10",
+          "memory-2": "Memory 2",
+          "memory-3": "Memory 3",
+          "memory-4": "Memory 4",
+          "memory-5": "Memory 5",
+          "memory-6": "Memory 6",
+          "memory-7": "Memory 7",
+          "memory-8": "Memory 8",
+          "memory-9": "Memory 9"
+        }
+      },
+      "light_power": {
+        "name": "Light Power",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "mid": "[%key:common::state::medium%]",
+          "normal": "[%key:common::state::normal%]"
+        }
       }
     },
     "sensor": {
-      "jvc_power_status": {
+      "color_depth": {
+        "name": "Color Depth",
+        "state": {
+          "8-bit": "8-bit",
+          "10-bit": "10-bit",
+          "12-bit": "12-bit"
+        }
+      },
+      "color_space": {
+        "name": "Color Space",
+        "state": {
+          "rgb": "RGB",
+          "xv-color": "XV Color",
+          "ycbcr-420": "YCbCr 4:2:0",
+          "ycbcr-422": "YCbCr 4:2:2",
+          "ycbcr-444": "YCbCr 4:4:4",
+          "yuv": "YUV"
+        }
+      },
+      "hdr": {
+        "name": "HDR",
+        "state": {
+          "hdr": "HDR",
+          "hdr10p": "HDR10+",
+          "hybrid-log": "Hybrid Log",
+          "none": "None",
+          "sdr": "SDR",
+          "smpte-st-2084": "SMPTE ST 2084"
+        }
+      },
+      "hdr_processing": {
+        "name": "HDR Processing",
+        "state": {
+          "frame-by-frame": "Frame-by-Frame",
+          "hdr10p": "HDR10+",
+          "scene-by-scene": "Scene-by-Scene",
+          "static": "Static"
+        }
+      },
+      "light_time": {
+        "name": "Light Time"
+      },
+      "picture_mode": {
+        "name": "Picture Mode",
+        "state": {
+          "frame-adapt-hdr": "Frame Adapt HDR",
+          "frame-adapt-hdr2": "Frame Adapt HDR2",
+          "frame-adapt-hdr3": "Frame Adapt HDR3",
+          "hdr1": "HDR1",
+          "hdr10": "HDR10",
+          "hdr10-ll": "HDR10 LL",
+          "hdr2": "HDR2",
+          "last-setting": "Last Setting",
+          "pana-pq": "Pana PQ",
+          "user-4": "User 4",
+          "user-5": "User 5",
+          "user-6": "User 6"
+        }
+      },
+      "power": {
         "name": "Status",
         "state": {
           "cooling": "Cooling",
