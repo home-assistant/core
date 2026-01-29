@@ -1,0 +1,45 @@
+get_available_dp_codes:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: tuya
+
+get_data:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: tuya
+    dp_code:
+      example: "meal_plan"
+      required: true
+      selector:
+        select:
+          options:
+            - meal_plan
+            - schedule
+          custom_value: true
+
+set_data:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: tuya
+    dp_code:
+      example: "manual_feed"
+      required: true
+      selector:
+        select:
+          options:
+            - meal_plan
+            - schedule
+          custom_value: true
+    data:
+      required: true
+      selector:
+        text:
