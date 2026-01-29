@@ -12,8 +12,10 @@ from homeassistant.components.openai_conversation.config_flow import (
     RECOMMENDED_CONVERSATION_OPTIONS,
 )
 from homeassistant.components.openai_conversation.const import (
+    CONF_API_BASE,
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_DEFAULT_QUERY,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
@@ -97,6 +99,162 @@ async def test_form(hass: HomeAssistant) -> None:
         },
     ]
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_with_azure_openai(hass: HomeAssistant) -> None:
+    """Test config flow with Azure OpenAI endpoint settings."""
+    hass.config.components.add("openai_conversation")
+    MockConfigEntry(
+        domain=DOMAIN,
+        state=config_entries.ConfigEntryState.LOADED,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+        ),
+        patch(
+            "homeassistant.components.openai_conversation.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "azure-key",
+                CONF_API_BASE: "https://my-resource.openai.azure.com/openai/deployments/gpt-4",
+                CONF_DEFAULT_QUERY: "api-version=2024-06-01",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {
+        CONF_API_KEY: "azure-key",
+        CONF_API_BASE: "https://my-resource.openai.azure.com/openai/deployments/gpt-4",
+        CONF_DEFAULT_QUERY: "api-version=2024-06-01",
+    }
+    assert result2["options"] == {}
+    assert result2["subentries"] == [
+        {
+            "subentry_type": "conversation",
+            "data": RECOMMENDED_CONVERSATION_OPTIONS,
+            "title": DEFAULT_CONVERSATION_NAME,
+            "unique_id": None,
+        },
+        {
+            "subentry_type": "ai_task_data",
+            "data": RECOMMENDED_AI_TASK_OPTIONS,
+            "title": DEFAULT_AI_TASK_NAME,
+            "unique_id": None,
+        },
+    ]
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_with_custom_endpoint_only(hass: HomeAssistant) -> None:
+    """Test config flow with only custom API endpoint (no query params)."""
+    hass.config.components.add("openai_conversation")
+    MockConfigEntry(
+        domain=DOMAIN,
+        state=config_entries.ConfigEntryState.LOADED,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+        ),
+        patch(
+            "homeassistant.components.openai_conversation.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "custom-key",
+                CONF_API_BASE: "https://custom-api.example.com/v1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {
+        CONF_API_KEY: "custom-key",
+        CONF_API_BASE: "https://custom-api.example.com/v1",
+    }
+    assert result2["options"] == {}
+    assert result2["subentries"] == [
+        {
+            "subentry_type": "conversation",
+            "data": RECOMMENDED_CONVERSATION_OPTIONS,
+            "title": DEFAULT_CONVERSATION_NAME,
+            "unique_id": None,
+        },
+        {
+            "subentry_type": "ai_task_data",
+            "data": RECOMMENDED_AI_TASK_OPTIONS,
+            "title": DEFAULT_AI_TASK_NAME,
+            "unique_id": None,
+        },
+    ]
+
+
+async def test_form_invalid_url(hass: HomeAssistant) -> None:
+    """Test config flow with invalid URL format shows error."""
+    hass.config.components.add("openai_conversation")
+    MockConfigEntry(
+        domain=DOMAIN,
+        state=config_entries.ConfigEntryState.LOADED,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    # Test with invalid URL (missing protocol)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "test-key",
+            CONF_API_BASE: "not-a-valid-url",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_API_BASE: "invalid_url"}
+
+    # Now provide a valid URL and it should work
+    with (
+        patch(
+            "homeassistant.components.openai_conversation.config_flow.openai.resources.models.AsyncModels.list",
+        ),
+        patch(
+            "homeassistant.components.openai_conversation.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_API_KEY: "test-key",
+                CONF_API_BASE: "https://valid-url.example.com",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_duplicate_entry(hass: HomeAssistant) -> None:

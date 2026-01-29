@@ -8,6 +8,9 @@ from homeassistant.helpers import llm
 DOMAIN = "openai_conversation"
 LOGGER: logging.Logger = logging.getLogger(__package__)
 
+CONF_API_BASE = "api_base"
+CONF_DEFAULT_QUERY = "default_query"
+
 DEFAULT_CONVERSATION_NAME = "OpenAI Conversation"
 DEFAULT_AI_TASK_NAME = "OpenAI AI Task"
 DEFAULT_NAME = "OpenAI Conversation"

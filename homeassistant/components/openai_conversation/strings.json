@@ -7,26 +7,35 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_url": "Invalid URL format. Please enter a valid URL.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "reauth_confirm": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_base": "[%key:component::openai_conversation::config::step::user::data::api_base%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "default_query": "[%key:component::openai_conversation::config::step::user::data::default_query%]"
         },
         "data_description": {
-          "api_key": "[%key:component::openai_conversation::config::step::user::data_description::api_key%]"
+          "api_base": "[%key:component::openai_conversation::config::step::user::data_description::api_base%]",
+          "api_key": "[%key:component::openai_conversation::config::step::user::data_description::api_key%]",
+          "default_query": "[%key:component::openai_conversation::config::step::user::data_description::default_query%]"
         },
         "description": "Reauthentication required. Please enter your updated API key."
       },
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_base": "Custom API endpoint",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "default_query": "Default query parameters"
         },
         "data_description": {
-          "api_key": "Your OpenAI API key."
+          "api_base": "Optional. Leave empty to use the standard OpenAI endpoint. To use a custom or OpenAI-compatible endpoint (for example Azure OpenAI or a proxy), enter the full base URL.",
+          "api_key": "Your OpenAI API key.",
+          "default_query": "Optional query string that is appended to every request, in the form `key=value&other_key=other_value` (without a leading `?`). For Azure OpenAI you typically must include `api-version`, for example `api-version=preview`. Separate multiple parameters with `&`."
         },
-        "description": "Set up OpenAI Conversation integration by providing your OpenAI API key. Instructions to obtain an API key can be found [here]({instructions_url})."
+        "description": "Set up the OpenAI Conversation integration by providing your OpenAI API key and, optionally, a custom API endpoint and default query parameters. Instructions to obtain an API key can be found [here]({instructions_url})."
       }
     }
   },
