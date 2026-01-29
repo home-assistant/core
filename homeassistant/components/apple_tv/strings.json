@@ -78,5 +78,36 @@
         "description": "Configure general device settings"
       }
     }
+  },
+  "services": {
+    "set_keyboard_text": {
+      "name": "Set keyboard text",
+      "description": "Sets the keyboard text on the Apple TV.",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "The text to set for search."
+        }
+      }
+    },
+    "append_keyboard_text": {
+      "name": "Append keyboard text",
+      "description": "Appends text to the current keyboard text on the Apple TV.",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "The text to append."
+        }
+      }
+    },
+    "clear_keyboard_text": {
+      "name": "Clear keyboard text",
+      "description": "Clears the current keyboard text on the Apple TV."
+    }
+  },
+  "exceptions": {
+    "keyboard_not_supported": {
+      "message": "Keyboard is not supported on your Apple TV."
+    }
   }
 }

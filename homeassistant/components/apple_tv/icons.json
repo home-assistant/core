@@ -8,5 +8,16 @@
         }
       }
     }
+  },
+  "services": {
+    "append_keyboard_text": {
+      "service": "mdi:keyboard"
+    },
+    "clear_keyboard_text": {
+      "service": "mdi:keyboard"
+    },
+    "set_keyboard_text": {
+      "service": "mdi:keyboard"
+    }
   }
 }
