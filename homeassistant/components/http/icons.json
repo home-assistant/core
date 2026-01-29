@@ -1,0 +1,7 @@
+{
+  "services": {
+    "unban": {
+      "service": "mdi:cancel"
+    }
+  }
+}
