@@ -2,15 +2,19 @@
 
 from unittest.mock import AsyncMock, Mock, patch
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.myneomitis.select import SELECT_TYPES, MyNeoSelect
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_myneo_relay_select_basic_behavior(hass: HomeAssistant) -> None:
-    """Test initialization and behavior of MyNeoSelect with relais mode."""
+async def test_myneo_relay_select_basic_behavior(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyaxenco_client: Mock
+) -> None:
+    """Test integration-level behavior of MyNeoSelect with relais mode."""
     device = {
         "_id": "dev1",
         "name": "Relais Salon",
@@ -22,34 +26,41 @@ async def test_myneo_relay_select_basic_behavior(hass: HomeAssistant) -> None:
         },
     }
 
-    mock_api = Mock()
-    mock_api.sio.connected = True
-    mock_api.set_device_mode = AsyncMock()
+    api = mock_pyaxenco_client
+    api.sio = Mock()
+    api.sio.connected = True
+    api.set_device_mode = AsyncMock()
+    api.login = AsyncMock()
+    api.connect_websocket = AsyncMock()
+    api.get_devices = AsyncMock(return_value=[device])
+    api.disconnect_websocket = AsyncMock()
 
-    description = SELECT_TYPES["relais"]
-    select = MyNeoSelect(mock_api, device, description)
+    mock_config_entry.add_to_hass(hass)
 
-    assert select.has_entity_name is True
-    assert select._attr_device_info["name"] == "Relais Salon"
-    assert select.entity_description.options == ["on", "off", "auto"]
-    assert select.current_option == "off"
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    select.hass = hass
-    select.entity_id = "select.myneo_relais_salon"
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    select_entries = [e for e in entries if e.entity_id.startswith("select.")]
+    assert select_entries, "No select entity created"
 
-    await select.async_added_to_hass()
+    entity_id = select_entries[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert "options" in state.attributes
+    assert state.state == "off"
 
-    with patch.object(select, "async_write_ha_state"):
-        await select.async_select_option("on")
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "on"},
+        blocking=True,
+    )
 
-    assert select.current_option == "on"
-    mock_api.set_device_mode.assert_called_once_with("dev1", 1)
-
-    ws_state = {"targetMode": 2}
-    with patch.object(select, "async_write_ha_state"):
-        select.handle_ws_update(ws_state)
-
-    assert select.current_option == "off"
+    api.set_device_mode.assert_awaited_once_with("dev1", 1)
 
 
 async def test_myneo_select_preset_modes(hass: HomeAssistant) -> None:
@@ -161,7 +172,12 @@ async def test_ufh_handle_ws_update_and_sub_device(hass: HomeAssistant) -> None:
         assert select.available is True
 
 
-async def test_setup_entry_filters_unsupported_devices(hass: HomeAssistant) -> None:
+async def test_setup_entry_filters_unsupported_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: Mock,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test that async_setup_entry filters out unsupported device models."""
     devices = [
         {
@@ -182,26 +198,21 @@ async def test_setup_entry_filters_unsupported_devices(hass: HomeAssistant) -> N
         },
     ]
 
-    with patch("pyaxencoapi.PyAxencoAPI") as api_cls:
-        api = api_cls.return_value
-        api.login = AsyncMock()
-        api.connect_websocket = AsyncMock()
-        api.get_devices = AsyncMock(return_value=devices)
-        api.disconnect_websocket = AsyncMock()
+    api = mock_pyaxenco_client
+    api.login = AsyncMock()
+    api.connect_websocket = AsyncMock()
+    api.get_devices = AsyncMock(return_value=devices)
+    api.disconnect_websocket = AsyncMock()
 
-        entry = MockConfigEntry(
-            domain="myneomitis", data={"email": "test@test.com", "password": "secret"}
-        )
-        entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
 
-    assert len(entries) == 1
-    assert entries[0].unique_id == "supported1"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_handle_ws_update_empty_state(hass: HomeAssistant) -> None:
@@ -256,7 +267,12 @@ async def test_handle_ws_update_with_program_update(hass: HomeAssistant) -> None
     assert select._program["TUE"] == [1, 2, 3]
 
 
-async def test_create_entity_with_pilote_device(hass: HomeAssistant) -> None:
+async def test_create_entity_with_pilote_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: Mock,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test that EWS device without relayMode creates pilote entity."""
     device = {
         "_id": "pilote1",
@@ -267,33 +283,27 @@ async def test_create_entity_with_pilote_device(hass: HomeAssistant) -> None:
         "program": {"data": {}},
     }
 
-    with patch("pyaxencoapi.PyAxencoAPI") as api_cls:
-        api = api_cls.return_value
-        api.login = AsyncMock()
-        api.connect_websocket = AsyncMock()
-        api.get_devices = AsyncMock(return_value=[device])
-        api.disconnect_websocket = AsyncMock()
+    api = mock_pyaxenco_client
+    api.login = AsyncMock()
+    api.connect_websocket = AsyncMock()
+    api.get_devices = AsyncMock(return_value=[device])
+    api.disconnect_websocket = AsyncMock()
 
-        entry = MockConfigEntry(
-            domain="myneomitis", data={"email": "test@test.com", "password": "secret"}
-        )
-        entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    assert len(entries) == 1
-    state = hass.states.get(entries[0].entity_id)
-    assert state is not None
-    assert "options" in state.attributes
-    assert "comfort" in state.attributes[
-        "options"
-    ] or "comfort" in state.attributes.get("options", [])
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_create_entity_with_ufh_device(hass: HomeAssistant) -> None:
+async def test_create_entity_with_ufh_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: Mock,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test that UFH device creates UFH entity."""
     device = {
         "_id": "ufh1",
@@ -304,33 +314,27 @@ async def test_create_entity_with_ufh_device(hass: HomeAssistant) -> None:
         "program": {"data": {}},
     }
 
-    with patch("pyaxencoapi.PyAxencoAPI") as api_cls:
-        api = api_cls.return_value
-        api.login = AsyncMock()
-        api.connect_websocket = AsyncMock()
-        api.get_devices = AsyncMock(return_value=[device])
-        api.disconnect_websocket = AsyncMock()
+    api = mock_pyaxenco_client
+    api.login = AsyncMock()
+    api.connect_websocket = AsyncMock()
+    api.get_devices = AsyncMock(return_value=[device])
+    api.disconnect_websocket = AsyncMock()
 
-        entry = MockConfigEntry(
-            domain="myneomitis", data={"email": "test@test.com", "password": "secret"}
-        )
-        entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    assert len(entries) == 1
-    state = hass.states.get(entries[0].entity_id)
-    assert state is not None
-    assert "options" in state.attributes
-    assert "heating" in state.attributes[
-        "options"
-    ] or "heating" in state.attributes.get("options", [])
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_create_entity_with_relais_device(hass: HomeAssistant) -> None:
+async def test_create_entity_with_relais_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: Mock,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test that EWS device with relayMode creates relais entity."""
     device = {
         "_id": "relais1",
@@ -341,25 +345,16 @@ async def test_create_entity_with_relais_device(hass: HomeAssistant) -> None:
         "program": {"data": {}},
     }
 
-    with patch("pyaxencoapi.PyAxencoAPI") as api_cls:
-        api = api_cls.return_value
-        api.login = AsyncMock()
-        api.connect_websocket = AsyncMock()
-        api.get_devices = AsyncMock(return_value=[device])
-        api.disconnect_websocket = AsyncMock()
+    api = mock_pyaxenco_client
+    api.login = AsyncMock()
+    api.connect_websocket = AsyncMock()
+    api.get_devices = AsyncMock(return_value=[device])
+    api.disconnect_websocket = AsyncMock()
 
-        entry = MockConfigEntry(
-            domain="myneomitis", data={"email": "test@test.com", "password": "secret"}
-        )
-        entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    assert len(entries) == 1
-    state = hass.states.get(entries[0].entity_id)
-    assert state is not None
-    assert "options" in state.attributes
-    assert any(opt in state.attributes["options"] for opt in ("on", "off", "auto"))
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

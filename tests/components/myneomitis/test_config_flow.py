@@ -42,10 +42,6 @@ def make_client_response_error(status: int) -> ClientResponseError:
 async def test_user_flow_success(hass: HomeAssistant, mock_pyaxenco_client) -> None:
     """Test successful user flow for MyNeoMitis integration."""
     instance = mock_pyaxenco_client
-    instance.login = AsyncMock()
-    instance.user_id = "user-123"
-    instance.token = "tok"
-    instance.refresh_token = "rtok"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -83,8 +79,7 @@ async def test_flow_errors(
     hass: HomeAssistant, mock_pyaxenco_client, side_effect, expected_error
 ) -> None:
     """Test flow errors and recovery to CREATE_ENTRY."""
-    instance = mock_pyaxenco_client
-    instance.login = AsyncMock(side_effect=side_effect)
+    mock_pyaxenco_client.login.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -100,10 +95,7 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
 
-    instance.login = AsyncMock()
-    instance.user_id = "user-123"
-    instance.token = "tok"
-    instance.refresh_token = "rtok"
+    mock_pyaxenco_client.login.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -132,91 +124,3 @@ async def test_abort_if_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_auth_failed(hass: HomeAssistant, mock_pyaxenco_client) -> None:
-    """Test that an authentication error during login shows an error in the form."""
-    instance = mock_pyaxenco_client
-
-    async def raise_auth(*args, **kwargs):
-        raise make_client_response_error(401)
-
-    instance.login = AsyncMock(side_effect=raise_auth)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "invalid_auth"
-
-
-async def test_http_error(hass: HomeAssistant, mock_pyaxenco_client) -> None:
-    """Test that an HTTP error during login shows an error in the form."""
-    instance = mock_pyaxenco_client
-
-    async def raise_http(*args, **kwargs):
-        raise make_client_response_error(500)
-
-    instance.login = AsyncMock(side_effect=raise_http)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "cannot_connect"
-
-
-async def test_connection_error(hass: HomeAssistant, mock_pyaxenco_client) -> None:
-    """Test that a connection error during login shows an error in the form."""
-    instance = mock_pyaxenco_client
-    instance.login = AsyncMock(side_effect=ClientConnectionError())
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "cannot_connect"
-
-
-async def test_generic_client_error(hass: HomeAssistant, mock_pyaxenco_client) -> None:
-    """Test that a generic client error during login shows an error in the form."""
-    instance = mock_pyaxenco_client
-    instance.login = AsyncMock(side_effect=ClientError("oops"))
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "unknown"
-
-
-async def test_runtime_error(hass: HomeAssistant, mock_pyaxenco_client) -> None:
-    """Test that a runtime error during login shows an error in the form."""
-    instance = mock_pyaxenco_client
-    instance.login = AsyncMock(side_effect=RuntimeError("boom"))
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "unknown"
