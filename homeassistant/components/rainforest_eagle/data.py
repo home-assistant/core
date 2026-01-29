@@ -49,12 +49,7 @@ async def async_get_type(hass, cloud_id, install_code, host):
         meters = None
 
     if meters is not None:
-        if meters:
-            hardware_address = meters[0].hardware_address
-        else:
-            hardware_address = None
-
-        return TYPE_EAGLE_200, hardware_address
+        return TYPE_EAGLE_200, meters
 
     reader = Eagle100Reader(cloud_id, install_code, host)
 

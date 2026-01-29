@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from aioeagle import ElectricMeter
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -35,6 +36,8 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rainforest Eagle."""
 
     VERSION = 1
+    _meters: list[ElectricMeter] | None = None
+    _user_input: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -49,7 +52,7 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            eagle_type, hardware_address = await async_get_type(
+            eagle_type, meters = await async_get_type(
                 self.hass,
                 user_input[CONF_CLOUD_ID],
                 user_input[CONF_INSTALL_CODE],
@@ -64,11 +67,53 @@ class RainforestEagleConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             user_input[CONF_TYPE] = eagle_type
-            user_input[CONF_HARDWARE_ADDRESS] = hardware_address
+
+            # If multiple meters are available, let the user choose
+            if meters and len(meters) > 1:
+                self._meters = meters
+                self._user_input = user_input
+                return await self.async_step_meter_select()
+
+            if meters:
+                # For single meter, set it automatically
+                user_input[CONF_HARDWARE_ADDRESS] = meters[0].hardware_address
+            else:
+                # For no meters, set to None
+                user_input[CONF_HARDWARE_ADDRESS] = None
+
             return self.async_create_entry(
                 title=user_input[CONF_CLOUD_ID], data=user_input
             )
 
         return self.async_show_form(
             step_id="user", data_schema=create_schema(user_input), errors=errors
+        )
+
+    async def async_step_meter_select(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle meter selection step."""
+        if user_input is None:
+            # Create a list of meter choices
+            assert self._meters is not None
+            meter_choices = {
+                meter.hardware_address: f"Meter #{i + 1}: ({meter.connection_status}) hardware address {meter.hardware_address}"
+                for i, meter in enumerate(self._meters)
+            }
+
+            return self.async_show_form(
+                step_id="meter_select",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_HARDWARE_ADDRESS): vol.In(meter_choices),
+                    }
+                ),
+                description_placeholders={"meter_count": str(len(self._meters))},
+            )
+
+        # Add the selected meter to the stored user input
+        assert self._user_input is not None
+        self._user_input[CONF_HARDWARE_ADDRESS] = user_input[CONF_HARDWARE_ADDRESS]
+        return self.async_create_entry(
+            title=self._user_input[CONF_CLOUD_ID], data=self._user_input
         )
