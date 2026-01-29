@@ -78,8 +78,8 @@ async def test_generic_switch_multi_node(
     assert state_button_1.name == "Mock Generic Switch Button (1)"
     # check event_types from featuremap 30 (0b11110) and MultiPressMax unset (default 2)
     assert state_button_1.attributes[ATTR_EVENT_TYPES] == [
-        "multi_press_1",
-        "multi_press_2",
+        "multi_press_ongoing",
+        "multi_press_complete",
         "long_press",
         "long_release",
     ]
@@ -91,13 +91,32 @@ async def test_generic_switch_multi_node(
     assert state_button_2.name == "Mock Generic Switch Button (2)"
     # check event_types from featuremap 30 (0b11110) and MultiPressMax 4
     assert state_button_2.attributes[ATTR_EVENT_TYPES] == [
-        "multi_press_1",
-        "multi_press_2",
-        "multi_press_3",
-        "multi_press_4",
+        "multi_press_ongoing",
+        "multi_press_complete",
         "long_press",
         "long_release",
     ]
+
+    # trigger firing a multi press event
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            cluster_id=59,
+            event_id=6,
+            event_number=0,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data={"totalNumberOfPressesCounted": 1},
+        ),
+    )
+    state = hass.states.get("event.mock_generic_switch_button_1")
+    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_complete"
+    assert state.attributes["event_type_extra"] == "single"
 
     # trigger firing a multi press event
     await trigger_subscription_callback(
@@ -117,4 +136,46 @@ async def test_generic_switch_multi_node(
         ),
     )
     state = hass.states.get("event.mock_generic_switch_button_1")
-    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_2"
+    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_complete"
+    assert state.attributes["event_type_extra"] == "double"
+
+    # trigger firing a multi press event
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            cluster_id=59,
+            event_id=6,
+            event_number=0,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data={"totalNumberOfPressesCounted": 3},
+        ),
+    )
+    state = hass.states.get("event.mock_generic_switch_button_1")
+    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_complete"
+    assert state.attributes["event_type_extra"] == "triple"
+
+    # trigger firing a multi press event
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.NODE_EVENT,
+        MatterNodeEvent(
+            node_id=matter_node.node_id,
+            endpoint_id=1,
+            cluster_id=59,
+            event_id=5,
+            event_number=0,
+            priority=1,
+            timestamp=0,
+            timestamp_type=0,
+            data={"totalNumberOfPressesCounted": 3},
+        ),
+    )
+    state = hass.states.get("event.mock_generic_switch_button_1")
+    assert state.attributes[ATTR_EVENT_TYPE] == "multi_press_ongoing"
