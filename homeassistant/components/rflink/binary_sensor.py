@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
+    DOMAIN as PLATFORM_DOMAIN,
     PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -20,35 +21,41 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, event as evt
+from homeassistant.helpers import (
+    config_validation as cv,
+    event as evt,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ALIASES
+from .const import CONF_ALIASES, DOMAIN
 from .entity import RflinkDevice
 
 CONF_OFF_DELAY = "off_delay"
 DEFAULT_FORCE_UPDATE = False
 
+RFLINK_PLATFORM = {
+    vol.Optional(CONF_DEVICES, default={}): {
+        cv.string: vol.Schema(
+            {
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+                vol.Optional(
+                    CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE
+                ): cv.boolean,
+                vol.Optional(CONF_OFF_DELAY): cv.positive_int,
+                vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+            }
+        )
+    }
+}
+
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICES, default={}): {
-            cv.string: vol.Schema(
-                {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                    vol.Optional(
-                        CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE
-                    ): cv.boolean,
-                    vol.Optional(CONF_OFF_DELAY): cv.positive_int,
-                    vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                }
-            )
-        }
-    },
+    RFLINK_PLATFORM,
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -70,7 +77,24 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Rflink platform."""
-    async_add_entities(devices_from_config(config))
+    if not discovery_info:
+        ir.async_create_issue(
+            hass=hass,
+            domain=DOMAIN,
+            issue_id=f"{PLATFORM_DOMAIN}_yaml_migration",
+            breaks_in_ha_version="2026.8.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            learn_more_url="https://www.home-assistant.io/integrations/rflink/#configuration",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="yaml_migration",
+            translation_placeholders={
+                "platform": PLATFORM_DOMAIN,
+            },
+        )
+        async_add_entities(devices_from_config(config))
+    else:
+        async_add_entities(devices_from_config(discovery_info))
 
 
 class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):

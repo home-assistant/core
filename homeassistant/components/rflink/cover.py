@@ -8,13 +8,14 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.cover import (
+    DOMAIN as PLATFORM_DOMAIN,
     PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverState,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -28,6 +29,7 @@ from .const import (
     CONF_NOGROUP_ALIASES,
     CONF_SIGNAL_REPETITIONS,
     DEVICE_DEFAULTS_SCHEMA,
+    DOMAIN,
 )
 from .entity import RflinkCommand
 
@@ -38,32 +40,35 @@ PARALLEL_UPDATES = 0
 TYPE_STANDARD = "standard"
 TYPE_INVERTED = "inverted"
 
-PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(
-            CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
-        ): DEVICE_DEFAULTS_SCHEMA,
-        vol.Optional(CONF_DEVICES, default={}): vol.Schema(
-            {
-                cv.string: {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_TYPE): vol.Any(TYPE_STANDARD, TYPE_INVERTED),
-                    vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-                    vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-                    vol.Optional(CONF_GROUP, default=True): cv.boolean,
-                }
+RFLINK_PLATFORM = {
+    vol.Optional(
+        CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
+    ): DEVICE_DEFAULTS_SCHEMA,
+    vol.Optional(CONF_DEVICES, default={}): vol.Schema(
+        {
+            cv.string: {
+                vol.Optional(CONF_NAME): cv.string,
+                vol.Optional(CONF_TYPE): vol.Any(TYPE_STANDARD, TYPE_INVERTED),
+                vol.Optional(CONF_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+                vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
+                vol.Optional(CONF_GROUP, default=True): cv.boolean,
             }
-        ),
-    }
+        }
+    ),
+}
+
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
+    RFLINK_PLATFORM,
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -124,7 +129,24 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Rflink cover platform."""
-    async_add_entities(devices_from_config(config))
+    if not discovery_info:
+        ir.async_create_issue(
+            hass=hass,
+            domain=DOMAIN,
+            issue_id=f"{PLATFORM_DOMAIN}_yaml_migration",
+            breaks_in_ha_version="2026.8.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            learn_more_url="https://www.home-assistant.io/integrations/rflink/#configuration",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="yaml_migration",
+            translation_placeholders={
+                "platform": PLATFORM_DOMAIN,
+            },
+        )
+        async_add_entities(devices_from_config(config))
+    else:
+        async_add_entities(devices_from_config(discovery_info))
 
 
 class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):

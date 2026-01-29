@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGGING_CHANGED,
+    Platform,
 )
 from homeassistant.core import (
     CoreState,
@@ -27,6 +28,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -34,10 +36,12 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
+from .binary_sensor import RFLINK_PLATFORM as BINARY_SENSOR_PLATFORM
 from .const import (
     DATA_DEVICE_REGISTER,
     DATA_ENTITY_GROUP_LOOKUP,
     DATA_ENTITY_LOOKUP,
+    DOMAIN,
     EVENT_KEY_COMMAND,
     EVENT_KEY_ID,
     EVENT_KEY_SENSOR,
@@ -45,7 +49,11 @@ from .const import (
     SIGNAL_HANDLE_EVENT,
     TMP_ENTITY,
 )
+from .cover import RFLINK_PLATFORM as COVER_PLATFORM
 from .entity import RflinkCommand
+from .light import RFLINK_PLATFORM as LIGHT_PLATFORM
+from .sensor import RFLINK_PLATFORM as SENSOR_PLATFORM
+from .switch import RFLINK_PLATFORM as SWITCH_PLATFORM
 from .utils import identify_event_type
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,12 +70,34 @@ CONNECTION_TIMEOUT = 10
 
 RFLINK_GROUP_COMMANDS = ["allon", "alloff"]
 
-DOMAIN = "rflink"
-
 SERVICE_SEND_COMMAND = "send_command"
 
 SIGNAL_EVENT = "rflink_event"
 
+BINARY_SENSOR_PS = vol.Schema(
+    BINARY_SENSOR_PLATFORM,
+    extra=vol.ALLOW_EXTRA,
+)
+
+COVER_PS = vol.Schema(
+    COVER_PLATFORM,
+    extra=vol.ALLOW_EXTRA,
+)
+
+LIGHT_PS = vol.Schema(
+    LIGHT_PLATFORM,
+    extra=vol.ALLOW_EXTRA,
+)
+
+SENSOR_PS = vol.Schema(
+    SENSOR_PLATFORM,
+    extra=vol.ALLOW_EXTRA,
+)
+
+SWITCH_PS = vol.Schema(
+    SWITCH_PLATFORM,
+    extra=vol.ALLOW_EXTRA,
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -85,6 +115,11 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_IGNORE_DEVICES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
+                vol.Optional(Platform.BINARY_SENSOR.value): BINARY_SENSOR_PS,
+                vol.Optional(Platform.COVER.value): COVER_PS,
+                vol.Optional(Platform.LIGHT.value): LIGHT_PS,
+                vol.Optional(Platform.SENSOR.value): SENSOR_PS,
+                vol.Optional(Platform.SWITCH.value): SWITCH_PS,
             }
         )
     },
@@ -95,6 +130,13 @@ SEND_COMMAND_SCHEMA = vol.Schema(
     {vol.Required(CONF_DEVICE_ID): cv.string, vol.Required(CONF_COMMAND): cv.string}
 )
 
+ALLOWED_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Rflink component."""
@@ -298,5 +340,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Listen to EVENT_LOGGING_CHANGED to manage the RFDEBUG
     hass.bus.async_listen(EVENT_LOGGING_CHANGED, handle_logging_changed)
+
+    # Load RFLink platforms definitions
+    for pltfrm in ALLOWED_PLATFORMS:
+        if pltfrm in config[DOMAIN]:
+            hass.async_create_task(
+                async_load_platform(hass, pltfrm, DOMAIN, config[DOMAIN][pltfrm], config),
+                eager_start=False,
+            )
 
     return True

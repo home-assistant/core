@@ -39,6 +39,7 @@ async def mock_rflink(
     monkeypatch: pytest.MonkeyPatch,
     failures=None,
     failcommand=False,
+    old_yaml=False,
 ):
     """Create mock RFLink asyncio protocol, test component setup."""
     transport, protocol = (Mock(), Mock())
@@ -72,7 +73,10 @@ async def mock_rflink(
     )
 
     await async_setup_component(hass, "rflink", config)
-    await async_setup_component(hass, domain, config)
+
+    if old_yaml:
+        await async_setup_component(hass, domain, config)
+
     await hass.async_block_till_done()
 
     # hook into mock config for injecting events
@@ -84,7 +88,9 @@ async def mock_rflink(
     return event_callback, mock_create, protocol, disconnect_callback
 
 
-async def test_version_banner(
+## OLD YAML TESTS ##
+
+async def test_version_banner_old(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test sending unknown commands doesn't cause issues."""
@@ -95,6 +101,296 @@ async def test_version_banner(
         domain: {
             "platform": "rflink",
             "devices": {"test": {"name": "test", "sensor_type": "temperature"}},
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = await mock_rflink(hass, config, domain, monkeypatch, old_yaml=True)
+
+    event_callback(
+        {
+            "hardware": "Nodo RadioFrequencyLink",
+            "firmware": "RFLink Gateway",
+            "version": "1.1",
+            "revision": "45",
+        }
+    )
+
+
+async def test_send_no_wait_old(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test command sending without ack."""
+    domain = "switch"
+    config = {
+        "rflink": {"port": "/dev/ttyABC0", "wait_for_ack": False},
+        domain: {
+            "platform": "rflink",
+            "devices": {
+                "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch, old_yaml=True)
+
+    await hass.services.async_call(
+        domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.test"}
+    )
+    await hass.async_block_till_done()
+    assert protocol.send_command.call_args_list[0][0][0] == "protocol_0_0"
+    assert protocol.send_command.call_args_list[0][0][1] == "off"
+
+
+async def test_cover_send_no_wait_old(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test command sending to a cover device without ack."""
+    domain = "cover"
+    config = {
+        "rflink": {"port": "/dev/ttyABC0", "wait_for_ack": False},
+        domain: {
+            "platform": "rflink",
+            "devices": {
+                "RTS_0100F2_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch, old_yaml=True)
+
+    await hass.services.async_call(
+        domain, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: "cover.test"}
+    )
+    await hass.async_block_till_done()
+    assert protocol.send_command.call_args_list[0][0][0] == "RTS_0100F2_0"
+    assert protocol.send_command.call_args_list[0][0][1] == "STOP"
+
+
+async def test_send_command_event_propagation_old(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test event propagation for send_command service."""
+    domain = "light"
+    config = {
+        "rflink": {"port": "/dev/ttyABC0"},
+        domain: {
+            "platform": "rflink",
+            "devices": {
+                "protocol_0_1": {"name": "test1"},
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch, old_yaml=True)
+
+    # default value = 'off'
+    assert hass.states.get(f"{domain}.test1").state == "off"
+
+    await hass.services.async_call(
+        "rflink",
+        SERVICE_SEND_COMMAND,
+        {"device_id": "protocol_0_1", "command": "on"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert protocol.send_command_ack.call_args_list[0][0][0] == "protocol_0_1"
+    assert protocol.send_command_ack.call_args_list[0][0][1] == "on"
+    assert hass.states.get(f"{domain}.test1").state == "on"
+
+    await hass.services.async_call(
+        "rflink",
+        SERVICE_SEND_COMMAND,
+        {"device_id": "protocol_0_1", "command": "alloff"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert protocol.send_command_ack.call_args_list[1][0][0] == "protocol_0_1"
+    assert protocol.send_command_ack.call_args_list[1][0][1] == "alloff"
+    assert hass.states.get(f"{domain}.test1").state == "off"
+
+
+async def test_reconnecting_after_disconnect_old(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An unexpected disconnect should cause a reconnect."""
+    domain = "sensor"
+    config = {
+        "rflink": {"port": "/dev/ttyABC0", CONF_RECONNECT_INTERVAL: 0},
+        domain: {"platform": "rflink"},
+    }
+
+    # setup mocking rflink module
+    _, mock_create, _, disconnect_callback = await mock_rflink(
+        hass, config, domain, monkeypatch, old_yaml=True
+    )
+
+    assert disconnect_callback, "disconnect callback not passed to rflink"
+
+    # rflink initiated disconnect
+    disconnect_callback(None)
+
+    await hass.async_block_till_done()
+
+    # we expect 2 call, the initial and reconnect
+    assert mock_create.call_count == 2
+
+
+async def test_reconnecting_after_failure_old(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A failure to reconnect should be retried."""
+    domain = "sensor"
+    config = {
+        "rflink": {"port": "/dev/ttyABC0", CONF_RECONNECT_INTERVAL: 0},
+        domain: {"platform": "rflink"},
+    }
+
+    # success first time but fail second
+    failures = [False, True, False]
+
+    # setup mocking rflink module
+    _, mock_create, _, disconnect_callback = await mock_rflink(
+        hass, config, domain, monkeypatch, failures=failures, old_yaml=True
+    )
+
+    # rflink initiated disconnect
+    disconnect_callback(None)
+
+    # wait for reconnects to have happened
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # we expect 3 calls, the initial and 2 reconnects
+    assert mock_create.call_count == 3
+
+
+async def test_error_when_not_connected_old(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Sending command should error when not connected."""
+    domain = "switch"
+    config = {
+        "rflink": {"port": "/dev/ttyABC0", CONF_RECONNECT_INTERVAL: 0},
+        domain: {
+            "platform": "rflink",
+            "devices": {
+                "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+            },
+        },
+    }
+
+    # success first time but fail second
+    failures = [False, True, False]
+
+    # setup mocking rflink module
+    _, _, _, disconnect_callback = await mock_rflink(
+        hass, config, domain, monkeypatch, failures=failures, old_yaml=True
+    )
+
+    # rflink initiated disconnect
+    disconnect_callback(None)
+
+    success = await hass.services.async_call(
+        domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.test"}
+    )
+    assert not success, "changing state should not succeed when disconnected"
+
+
+async def test_race_condition_old(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test race condition for unknown components."""
+    domain = "light"
+    config = {"rflink": {"port": "/dev/ttyABC0"}, domain: {"platform": "rflink"}}
+    tmp_entity = TMP_ENTITY.format("test3")
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = await mock_rflink(hass, config, domain, monkeypatch, old_yaml=True)
+
+    # test event for new unconfigured sensor
+    event_callback({"id": "test3", "command": "off"})
+    event_callback({"id": "test3", "command": "on"})
+
+    # tmp_entity added to EVENT_KEY_COMMAND
+    assert tmp_entity in hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND]["test3"]
+    # tmp_entity must no be added to EVENT_KEY_SENSOR
+    assert tmp_entity not in hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR]["test3"]
+
+    await hass.async_block_till_done()
+
+    # test  state of new sensor
+    new_sensor = hass.states.get(f"{domain}.test3")
+    assert new_sensor
+    assert new_sensor.state == "off"
+
+    event_callback({"id": "test3", "command": "on"})
+    await hass.async_block_till_done()
+    # tmp_entity must be deleted from EVENT_KEY_COMMAND
+    assert tmp_entity not in hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND]["test3"]
+
+    # test  state of new sensor
+    new_sensor = hass.states.get(f"{domain}.test3")
+    assert new_sensor
+    assert new_sensor.state == "on"
+
+
+async def test_unique_id_old(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Validate the device unique_id."""
+
+    DOMAIN = "sensor"
+    config = {
+        "rflink": {"port": "/dev/ttyABC0"},
+        DOMAIN: {
+            "platform": "rflink",
+            "devices": {
+                "my_humidity_device_unique_id": {
+                    "name": "humidity_device",
+                    "sensor_type": "humidity",
+                    "aliases": ["test_alias_02_0"],
+                },
+                "my_temperature_device_unique_id": {
+                    "name": "temperature_device",
+                    "sensor_type": "temperature",
+                    "aliases": ["test_alias_02_0"],
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    _event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+
+    humidity_entry = entity_registry.async_get("sensor.humidity_device")
+    assert humidity_entry
+    assert humidity_entry.unique_id == "my_humidity_device_unique_id"
+
+    temperature_entry = entity_registry.async_get("sensor.temperature_device")
+    assert temperature_entry
+    assert temperature_entry.unique_id == "my_temperature_device_unique_id"
+
+
+## NEW YAML TESTS ##
+
+async def test_version_banner(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test sending unknown commands doesn't cause issues."""
+    # use sensor domain during testing main platform
+    domain = "sensor"
+    config = {
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            domain: {
+                "devices": {"test": {"name": "test", "sensor_type": "temperature"}},
+            },
         },
     }
 
@@ -117,11 +413,13 @@ async def test_send_no_wait(
     """Test command sending without ack."""
     domain = "switch"
     config = {
-        "rflink": {"port": "/dev/ttyABC0", "wait_for_ack": False},
-        domain: {
-            "platform": "rflink",
-            "devices": {
-                "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            "wait_for_ack": False,
+            domain: {
+                "devices": {
+                    "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+                },
             },
         },
     }
@@ -143,11 +441,13 @@ async def test_cover_send_no_wait(
     """Test command sending to a cover device without ack."""
     domain = "cover"
     config = {
-        "rflink": {"port": "/dev/ttyABC0", "wait_for_ack": False},
-        domain: {
-            "platform": "rflink",
-            "devices": {
-                "RTS_0100F2_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            "wait_for_ack": False,
+            domain: {
+                "devices": {
+                    "RTS_0100F2_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+                },
             },
         },
     }
@@ -224,11 +524,12 @@ async def test_send_command_event_propagation(
     """Test event propagation for send_command service."""
     domain = "light"
     config = {
-        "rflink": {"port": "/dev/ttyABC0"},
-        domain: {
-            "platform": "rflink",
-            "devices": {
-                "protocol_0_1": {"name": "test1"},
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            domain: {
+                "devices": {
+                    "protocol_0_1": {"name": "test1"},
+                },
             },
         },
     }
@@ -268,8 +569,11 @@ async def test_reconnecting_after_disconnect(
     """An unexpected disconnect should cause a reconnect."""
     domain = "sensor"
     config = {
-        "rflink": {"port": "/dev/ttyABC0", CONF_RECONNECT_INTERVAL: 0},
-        domain: {"platform": "rflink"},
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            CONF_RECONNECT_INTERVAL: 0,
+            domain: {},
+        },
     }
 
     # setup mocking rflink module
@@ -294,8 +598,11 @@ async def test_reconnecting_after_failure(
     """A failure to reconnect should be retried."""
     domain = "sensor"
     config = {
-        "rflink": {"port": "/dev/ttyABC0", CONF_RECONNECT_INTERVAL: 0},
-        domain: {"platform": "rflink"},
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            CONF_RECONNECT_INTERVAL: 0,
+            domain: {},
+        },
     }
 
     # success first time but fail second
@@ -323,11 +630,13 @@ async def test_error_when_not_connected(
     """Sending command should error when not connected."""
     domain = "switch"
     config = {
-        "rflink": {"port": "/dev/ttyABC0", CONF_RECONNECT_INTERVAL: 0},
-        domain: {
-            "platform": "rflink",
-            "devices": {
-                "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            CONF_RECONNECT_INTERVAL: 0,
+            domain: {
+                "devices": {
+                    "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+                },
             },
         },
     }
@@ -377,7 +686,7 @@ async def test_race_condition(
 ) -> None:
     """Test race condition for unknown components."""
     domain = "light"
-    config = {"rflink": {"port": "/dev/ttyABC0"}, domain: {"platform": "rflink"}}
+    config = {"rflink": {"port": "/dev/ttyABC0", domain: {}}}
     tmp_entity = TMP_ENTITY.format("test3")
 
     # setup mocking rflink module
@@ -528,19 +837,20 @@ async def test_unique_id(
 
     DOMAIN = "sensor"
     config = {
-        "rflink": {"port": "/dev/ttyABC0"},
-        DOMAIN: {
-            "platform": "rflink",
-            "devices": {
-                "my_humidity_device_unique_id": {
-                    "name": "humidity_device",
-                    "sensor_type": "humidity",
-                    "aliases": ["test_alias_02_0"],
-                },
-                "my_temperature_device_unique_id": {
-                    "name": "temperature_device",
-                    "sensor_type": "temperature",
-                    "aliases": ["test_alias_02_0"],
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "devices": {
+                    "my_humidity_device_unique_id": {
+                        "name": "humidity_device",
+                        "sensor_type": "humidity",
+                        "aliases": ["test_alias_02_0"],
+                    },
+                    "my_temperature_device_unique_id": {
+                        "name": "temperature_device",
+                        "sensor_type": "temperature",
+                        "aliases": ["test_alias_02_0"],
+                    },
                 },
             },
         },
