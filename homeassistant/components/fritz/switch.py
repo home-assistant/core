@@ -488,6 +488,9 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseCoordinatorSwitch):
     async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle deflection switch."""
         await self.coordinator.async_set_deflection_enable(self.deflection_id, turn_on)
+        deflection = self.coordinator.data["call_deflections"][self.deflection_id]
+        deflection["Enable"] = "1" if turn_on else "0"
+        self.async_write_ha_state()
 
 
 class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
