@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from pydexcom import AccountError, SessionError
+from pydexcom.errors import AccountError, SessionError
 
 from homeassistant import config_entries
 from homeassistant.components.dexcom.const import DOMAIN
@@ -23,10 +23,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with (
-        patch(
-            "homeassistant.components.dexcom.config_flow.Dexcom.create_session",
-            return_value="test_session_id",
-        ),
+        patch("homeassistant.components.dexcom.config_flow.Dexcom"),
         patch(
             "homeassistant.components.dexcom.async_setup_entry",
             return_value=True,
