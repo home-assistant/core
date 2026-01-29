@@ -190,6 +190,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             RESOURCE_UPDATE_FIELDS,
         ).async_setup(hass)
 
+    websocket_api.async_register_command(hass, websocket.websocket_lovelace_info)
     websocket_api.async_register_command(hass, websocket.websocket_lovelace_config)
     websocket_api.async_register_command(hass, websocket.websocket_lovelace_save_config)
     websocket_api.async_register_command(
