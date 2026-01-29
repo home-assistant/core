@@ -54,7 +54,7 @@ rules:
     status: exempt
     comment: |
       This integration does not use devices.
-  docs-supported-functions: todo
+  docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: done
