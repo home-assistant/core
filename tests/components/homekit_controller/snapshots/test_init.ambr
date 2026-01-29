@@ -2044,9 +2044,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
@@ -2085,14 +2083,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Aqara Hub-1563 Lightbulb-1563',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -2514,9 +2509,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
@@ -2555,14 +2548,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'ArloBabyA0 Nightlight',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -14817,9 +14807,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
@@ -14858,14 +14846,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Laundry Smoke ED78',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -15234,9 +15219,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
@@ -15274,14 +15257,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -15381,9 +15361,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
@@ -15421,14 +15399,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -15528,9 +15503,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
@@ -15568,14 +15541,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -15675,9 +15645,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
@@ -15715,14 +15683,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Hue ambiance candle',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -15822,9 +15787,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
@@ -15862,7 +15825,6 @@
             'attributes': dict({
               'brightness': 255.0,
               'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-              'color_temp': 366,
               'color_temp_kelvin': 2732,
               'friendly_name': 'Hue ambiance spot',
               'hs_color': tuple(
@@ -15870,9 +15832,7 @@
                 64.71,
               ),
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'rgb_color': tuple(
                 255,
                 168,
@@ -15979,9 +15939,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
@@ -16019,7 +15977,6 @@
             'attributes': dict({
               'brightness': 255.0,
               'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-              'color_temp': 366,
               'color_temp_kelvin': 2732,
               'friendly_name': 'Hue ambiance spot',
               'hs_color': tuple(
@@ -16027,9 +15984,7 @@
                 64.71,
               ),
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 454,
               'min_color_temp_kelvin': 2202,
-              'min_mireds': 153,
               'rgb_color': tuple(
                 255,
                 168,
@@ -17497,9 +17452,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
@@ -17538,14 +17491,11 @@
             'attributes': dict({
               'brightness': None,
               'color_mode': None,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Koogeek-LS1-20833F Light Strip',
               'hs_color': None,
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'rgb_color': None,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -19558,9 +19508,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 470,
               'min_color_temp_kelvin': 2127,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
@@ -19599,7 +19547,6 @@
             'attributes': dict({
               'brightness': 255.0,
               'color_mode': <ColorMode.HS: 'hs'>,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'Nanoleaf Strip 3B32 Nanoleaf Light Strip',
               'hs_color': tuple(
@@ -19607,9 +19554,7 @@
                 89.0,
               ),
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 470,
               'min_color_temp_kelvin': 2127,
-              'min_mireds': 153,
               'rgb_color': tuple(
                 255,
                 142,
@@ -24202,9 +24147,7 @@
             'area_id': None,
             'capabilities': dict({
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'supported_color_modes': list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
@@ -24243,7 +24186,6 @@
             'attributes': dict({
               'brightness': 127.5,
               'color_mode': <ColorMode.HS: 'hs'>,
-              'color_temp': None,
               'color_temp_kelvin': None,
               'friendly_name': 'VOCOlinc-Flowerbud-0d324b Mood Light',
               'hs_color': tuple(
@@ -24251,9 +24193,7 @@
                 100.0,
               ),
               'max_color_temp_kelvin': 6535,
-              'max_mireds': 500,
               'min_color_temp_kelvin': 2000,
-              'min_mireds': 153,
               'rgb_color': tuple(
                 0,
                 255,
