@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any
 
 from aiohttp import ClientConnectorCertificateError, ClientError
 from pyoverkiz.client import OverkizClient
@@ -35,13 +35,14 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from . import _get_gateway_id_from_unique_id
 from .const import CONF_API_TYPE, CONF_HUB, DEFAULT_SERVER, DOMAIN, LOGGER
 
 
 class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Overkiz (by Somfy)."""
 
-    VERSION = 1
+    VERSION = 2
 
     _verify_ssl: bool = True
     _api_type: APIType = APIType.CLOUD
@@ -77,11 +78,14 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await client.login(register_event_listener=False)
 
-        # Set main gateway id as unique id
+        # Set main gateway id with API type as unique id
+        # This allows both local and cloud entries for the same gateway
         if gateways := await client.get_gateways():
             for gateway in gateways:
                 if is_overkiz_gateway(gateway.id):
-                    await self.async_set_unique_id(gateway.id, raise_on_progress=False)
+                    # _api_type can be APIType enum or string, f-string handles both
+                    unique_id = f"{gateway.id}-{self._api_type}"
+                    await self.async_set_unique_id(unique_id, raise_on_progress=False)
                     break
 
         return user_input
@@ -330,8 +334,11 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _process_discovery(self, gateway_id: str) -> ConfigFlowResult:
         """Handle discovery of a gateway."""
-        await self.async_set_unique_id(gateway_id)
-        self._abort_if_unique_id_configured()
+        # Abort if gateway is already configured (either local or cloud)
+        for entry in self._async_current_entries():
+            if entry.unique_id in (f"{gateway_id}-local", f"{gateway_id}-cloud"):
+                return self.async_abort(reason="already_configured")
+
         self.context["title_placeholders"] = {"gateway_id": gateway_id}
 
         return await self.async_step_user()
@@ -340,8 +347,9 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth."""
-        # Overkiz entries always have unique IDs
-        self.context["title_placeholders"] = {"gateway_id": cast(str, self.unique_id)}
+        if not (gateway_id := _get_gateway_id_from_unique_id(self.unique_id)):
+            raise ValueError("Reauth flow requires a valid unique_id")
+        self.context["title_placeholders"] = {"gateway_id": gateway_id}
         self._api_type = entry_data.get(CONF_API_TYPE, APIType.CLOUD)
         self._server = entry_data[CONF_HUB]
 
