@@ -102,13 +102,13 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.CLIMATE_PANEL: SupportedModels.CLIMATE_PANEL,
     SwitchbotModel.SMART_THERMOSTAT_RADIATOR: SupportedModels.SMART_THERMOSTAT_RADIATOR,
     SwitchbotModel.ART_FRAME: SupportedModels.ART_FRAME,
+    SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.METER: SupportedModels.HYGROMETER,
     SwitchbotModel.IO_METER: SupportedModels.HYGROMETER,
     SwitchbotModel.METER_PRO: SupportedModels.HYGROMETER,
-    SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
     SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
     SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
     SwitchbotModel.PRESENCE_SENSOR: SupportedModels.PRESENCE_SENSOR,
@@ -174,9 +174,15 @@ HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
 # Config Defaults
 DEFAULT_RETRY_COUNT = 3
 DEFAULT_LOCK_NIGHTLATCH = False
+DEFAULT_DATETIME_SYNC = False
 
 # Config Options
 CONF_RETRY_COUNT = "retry_count"
 CONF_KEY_ID = "key_id"
 CONF_ENCRYPTION_KEY = "encryption_key"
 CONF_LOCK_NIGHTLATCH = "lock_force_nightlatch"
+CONF_DATETIME_SYNC = "datetime_sync"
+
+# Datetime Sync Settings
+# Sync at 3:00 AM daily to accommodate DST changes (which typically occur at 2:00 AM)
+DATETIME_SYNC_HOUR = 3

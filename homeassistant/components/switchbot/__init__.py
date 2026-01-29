@@ -1,8 +1,10 @@
 """Support for Switchbot devices."""
 
+from datetime import datetime
 import logging
 
 import switchbot
+from switchbot.devices.device import SwitchbotOperationError
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
@@ -17,12 +19,17 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.event import async_track_time_change
+from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_DATETIME_SYNC,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    DATETIME_SYNC_HOUR,
+    DEFAULT_DATETIME_SYNC,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
     ENCRYPTED_MODELS,
@@ -43,7 +50,11 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
     ],
     SupportedModels.HYGROMETER.value: [Platform.SENSOR],
-    SupportedModels.HYGROMETER_CO2.value: [Platform.SENSOR],
+    SupportedModels.HYGROMETER_CO2.value: [
+        Platform.BUTTON,
+        Platform.SELECT,
+        Platform.SENSOR,
+    ],
     SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.PRESENCE_SENSOR.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
@@ -150,10 +161,46 @@ CLASS_BY_DEVICE = {
     SupportedModels.GARAGE_DOOR_OPENER.value: switchbot.SwitchbotGarageDoorOpener,
     SupportedModels.SMART_THERMOSTAT_RADIATOR.value: switchbot.SwitchbotSmartThermostatRadiator,
     SupportedModels.ART_FRAME.value: switchbot.SwitchbotArtFrame,
+    SupportedModels.HYGROMETER_CO2.value: switchbot.SwitchbotMeterProCO2,
 }
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_datetime_sync(
+    hass: HomeAssistant,
+    entry: SwitchbotConfigEntry,
+    device: switchbot.SwitchbotMeterProCO2,
+) -> None:
+    """Set up automatic datetime sync for Meter Pro CO2."""
+
+    async def sync_datetime(now: datetime) -> None:
+        """Sync device datetime with Home Assistant."""
+        ha_now = dt_util.now()
+        utc_offset = ha_now.utcoffset()
+        utc_offset_hours, utc_offset_minutes = 0, 0
+        if utc_offset is not None:
+            total_seconds = int(utc_offset.total_seconds())
+            utc_offset_hours = total_seconds // 3600
+            utc_offset_minutes = abs(total_seconds % 3600) // 60
+
+        try:
+            await device.set_datetime(
+                timestamp=int(ha_now.timestamp()),
+                utc_offset_hours=utc_offset_hours,
+                utc_offset_minutes=utc_offset_minutes,
+            )
+            _LOGGER.debug("Successfully synced device datetime")
+        except SwitchbotOperationError:
+            _LOGGER.debug("Failed to sync device datetime")
+
+    # Schedule daily sync at 3:00 AM to accommodate DST changes
+    entry.async_on_unload(
+        async_track_time_change(
+            hass, sync_datetime, hour=DATETIME_SYNC_HOUR, minute=0, second=0
+        )
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> bool:
@@ -239,6 +286,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
     await hass.config_entries.async_forward_entry_setups(
         entry, PLATFORMS_BY_TYPE[sensor_type]
     )
+
+    # Set up automatic datetime sync for Meter Pro CO2
+    if isinstance(
+        coordinator.device, switchbot.SwitchbotMeterProCO2
+    ) and entry.options.get(CONF_DATETIME_SYNC, DEFAULT_DATETIME_SYNC):
+        await async_setup_datetime_sync(hass, entry, coordinator.device)
 
     return True
 

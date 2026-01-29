@@ -37,11 +37,13 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CONF_DATETIME_SYNC,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_LOCK_NIGHTLATCH,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    DEFAULT_DATETIME_SYNC,
     DEFAULT_LOCK_NIGHTLATCH,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
@@ -451,6 +453,21 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                         CONF_LOCK_NIGHTLATCH,
                         default=self.config_entry.options.get(
                             CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH
+                        ),
+                    ): bool
+                }
+            )
+        if (
+            CONF_SENSOR_TYPE in self.config_entry.data
+            and self.config_entry.data[CONF_SENSOR_TYPE]
+            == SupportedModels.HYGROMETER_CO2
+        ):
+            options.update(
+                {
+                    vol.Optional(
+                        CONF_DATETIME_SYNC,
+                        default=self.config_entry.options.get(
+                            CONF_DATETIME_SYNC, DEFAULT_DATETIME_SYNC
                         ),
                     ): bool
                 }
