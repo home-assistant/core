@@ -293,7 +293,7 @@ async def test_switch_no_profile_entities_list(
 ) -> None:
     """Test Fritz!Tools switches with no profile entities."""
 
-    entity_id = "sswitch.printer_internet_access"
+    entity_id = "switch.printer_internet_access"
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
@@ -362,6 +362,11 @@ async def test_switch_device_no_wan_access(
         (
             "switch.printer_internet_access",
             "async_set_allow_wan_access",
+            STATE_ON,
+        ),
+        (
+            "switch.mock_title_call_deflection_0",
+            "async_set_deflection_enable",
             STATE_ON,
         ),
     ],
