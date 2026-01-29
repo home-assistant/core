@@ -6278,6 +6278,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "smn_argentina": {
+      "name": "Servicio Meteorol\u00f3gico Nacional de Argentina (SMN)",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "smtp": {
       "name": "SMTP",
       "integration_type": "hub",

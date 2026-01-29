@@ -1529,6 +1529,8 @@ build.json @home-assistant/supervisor
 /tests/components/smhi/ @gjohansson-ST
 /homeassistant/components/smlight/ @tl-sl
 /tests/components/smlight/ @tl-sl
+/homeassistant/components/smn_argentina/ @catastrophicode
+/tests/components/smn_argentina/ @catastrophicode
 /homeassistant/components/snapcast/ @luar123
 /tests/components/snapcast/ @luar123
 /homeassistant/components/snmp/ @nmaggioni
