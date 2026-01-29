@@ -1,0 +1,18 @@
+# Services for Portainer
+
+prune_images:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: portainer
+          model: Endpoint
+    until:
+      required: false
+      selector:
+        duration:
+    dangling:
+      required: false
+      selector:
+        boolean: {}
