@@ -830,6 +830,14 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.MMHG, 1.181102, UnitOfPressure.INHG),
         (30, UnitOfPressure.MMHG, 16.0572051431838, UnitOfPressure.INH2O),
         (5, UnitOfPressure.BAR, 72.51887, UnitOfPressure.PSI),
+        (1, UnitOfPressure.MPA, 1000000, UnitOfPressure.PA),
+        (1, UnitOfPressure.MPA, 10000, UnitOfPressure.HPA),
+        (1, UnitOfPressure.MPA, 1000, UnitOfPressure.KPA),
+        (1, UnitOfPressure.MPA, 10, UnitOfPressure.BAR),
+        (1, UnitOfPressure.MPA, 145.037743897, UnitOfPressure.PSI),
+        (10, UnitOfPressure.PA, 0.00001, UnitOfPressure.MPA),
+        (100, UnitOfPressure.KPA, 0.1, UnitOfPressure.MPA),
+        (5, UnitOfPressure.BAR, 0.5, UnitOfPressure.MPA),
     ],
     ReactiveEnergyConverter: [
         (
