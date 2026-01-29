@@ -5,8 +5,14 @@ from functools import wraps
 from typing import Any, Concatenate
 
 from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
+from aioamazondevices.const.schedules import (
+    NOTIFICATION_ALARM,
+    NOTIFICATION_REMINDER,
+    NOTIFICATION_TIMER,
+)
 from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -81,3 +87,27 @@ async def async_remove_dnd_from_virtual_group(
         if entity_id and is_group:
             entity_registry.async_remove(entity_id)
             _LOGGER.debug("Removed DND switch from virtual group %s", entity_id)
+
+
+async def async_remove_unsupported_notification_sensors(
+    hass: HomeAssistant,
+    coordinator: AmazonDevicesCoordinator,
+) -> None:
+    """Remove notification sensors from unsupported devices."""
+    entity_registry = er.async_get(hass)
+
+    for serial_num in coordinator.data:
+        for notification_key in (
+            NOTIFICATION_ALARM,
+            NOTIFICATION_REMINDER,
+            NOTIFICATION_TIMER,
+        ):
+            unique_id = f"{serial_num}-{notification_key}"
+            entity_id = entity_registry.async_get_entity_id(
+                DOMAIN, SENSOR_DOMAIN, unique_id
+            )
+            is_unsupported = not coordinator.data[serial_num].notifications_supported
+
+            if entity_id and is_unsupported:
+                entity_registry.async_remove(entity_id)
+                _LOGGER.debug("Removed unsupported notification sensor %s", entity_id)
