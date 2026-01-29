@@ -343,10 +343,12 @@
     "step": {
       "init": {
         "data": {
+          "curtain_speed": "Curtain movement speed",
           "lock_force_nightlatch": "Force Nightlatch operation mode",
           "retry_count": "Retry count"
         },
         "data_description": {
+          "curtain_speed": "Speed for curtain open and close operations (1-255, where 1 is slowest and 255 is fastest)",
           "lock_force_nightlatch": "Force Nightlatch operation mode even if Nightlatch is not detected",
           "retry_count": "How many times to retry sending commands to your SwitchBot devices"
         }
