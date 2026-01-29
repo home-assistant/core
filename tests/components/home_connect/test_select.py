@@ -407,7 +407,12 @@ async def test_select_program_functionality(
         ]
     )
     await hass.async_block_till_done()
-    assert hass.states.is_state(entity_id, STATE_UNKNOWN)
+
+    # For unknown programs or None, the state should be unknown
+    # raw_value should always be in attributes (None if no program)
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("raw_value") == program_value
 
 
 @pytest.mark.parametrize(
