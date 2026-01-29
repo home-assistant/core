@@ -25,6 +25,9 @@
       "select_device": {
         "data": {
           "device": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "device": "The selected Lunatone device."
         }
       },
       "url_input": {
