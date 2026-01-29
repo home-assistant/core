@@ -130,6 +130,10 @@
     "get_description": {
       "description": "Get the description of a warning.",
       "name": "Get description"
+    },
+    "get_recommended_actions": {
+      "description": "Get the recommended actions of a warning.",
+      "name": "Get recommended actions"
     }
   }
 }

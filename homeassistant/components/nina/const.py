@@ -19,6 +19,7 @@ SEVERITY_VALUES: list[str] = ["extreme", "severe", "moderate", "minor", "unknown
 
 SERVICE_GET_DESCRIPTION: str = "get_description"
 SERVICE_GET_AFFECTED_AREAS: str = "get_affected_areas"
+SERVICE_GET_RECOMMENDED_ACTIONS: str = "get_recommended_actions"
 
 CONF_REGIONS: str = "regions"
 CONF_MESSAGE_SLOTS: str = "slots"
