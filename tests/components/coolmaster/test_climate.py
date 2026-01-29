@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 
 
 async def test_climate_state(
@@ -131,13 +132,19 @@ async def test_climate_hvac_modes(
 async def test_climate_fan_mode(
     hass: HomeAssistant,
     load_int: ConfigEntry,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the Coolmaster climate fan mode."""
     assert hass.states.get("climate.l1_100").attributes[ATTR_FAN_MODE] == FAN_LOW
     assert hass.states.get("climate.l1_101").attributes[ATTR_FAN_MODE] == FAN_HIGH
     assert hass.states.get("climate.l1_102").attributes[ATTR_FAN_MODE] == "vlow"
     assert hass.states.get("climate.l1_103").attributes[ATTR_FAN_MODE] == FAN_MEDIUM
-    assert hass.states.get("climate.l1_104").attributes[ATTR_FAN_MODE] == "ULTRA"
+    assert hass.states.get("climate.l1_104").attributes[ATTR_FAN_MODE] == "ultra"
+
+    # TODO(2026.7.0): When support for unknown fan speeds is removed, delete this check.
+    assert set(issue_registry.issues) == {
+        ("coolmaster", "unknown_fan_speed"),
+    }
 
 
 async def test_climate_fan_modes(
