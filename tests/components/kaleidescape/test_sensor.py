@@ -39,7 +39,7 @@ async def test_sensors(
     assert entry.unique_id == f"{MOCK_SERIAL}-play_status"
 
     mock_device.movie.play_status = kaleidescape_const.PLAY_STATUS_PLAYING
-    mock_device.dispatcher.send(kaleidescape_const.PLAY_STATUS)
+    mock_device.dispatcher.send(kaleidescape_const.PLAY_STATUS, [])
     await hass.async_block_till_done()
     entity = hass.states.get(f"{ENTITY_ID}_play_status")
     assert entity is not None

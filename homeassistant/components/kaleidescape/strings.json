@@ -23,6 +23,39 @@
     }
   },
   "entity": {
+    "event": {
+      "user_defined": {
+        "name": "User defined event",
+        "state_attributes": {
+          "command": {
+            "name": "Command"
+          },
+          "params": {
+            "name": "Params"
+          }
+        }
+      },
+      "volume_down": {
+        "name": "Volume down pressed"
+      },
+      "volume_mute": {
+        "name": "Volume mute toggled"
+      },
+      "volume_query": {
+        "name": "Volume state queried"
+      },
+      "volume_set": {
+        "name": "Volume level set",
+        "state_attributes": {
+          "volume_level": {
+            "name": "Volume level"
+          }
+        }
+      },
+      "volume_up": {
+        "name": "Volume up pressed"
+      }
+    },
     "sensor": {
       "cinemascape_mask": {
         "name": "Cinemascape mask"
@@ -72,6 +105,28 @@
       "video_mode": {
         "name": "Video mode"
       }
+    }
+  },
+  "services": {
+    "volume_mute": {
+      "description": "Updates the displayed mute state in listening Kaleidescape apps.",
+      "fields": {
+        "is_volume_muted": {
+          "description": "[%key:component::media_player::services::volume_mute::fields::is_volume_muted::description%]",
+          "name": "[%key:component::media_player::services::volume_mute::fields::is_volume_muted::name%]"
+        }
+      },
+      "name": "[%key:component::media_player::services::volume_mute::name%]"
+    },
+    "volume_set": {
+      "description": "Updates the displayed volume level in listening Kaleidescape apps.",
+      "fields": {
+        "volume_level": {
+          "description": "[%key:component::media_player::services::volume_set::fields::volume_level::description%]",
+          "name": "[%key:component::media_player::services::volume_set::fields::volume_level::name%]"
+        }
+      },
+      "name": "[%key:component::media_player::services::volume_set::name%]"
     }
   }
 }
