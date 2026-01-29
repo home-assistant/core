@@ -103,11 +103,6 @@ async def test_freebox_client_partial_data_response(
     # RX sensor should have the correct value
     assert state_rx.state == "-22.25"
 
-    # Attributes might be None or missing
-    assert state_rx.attributes.get("sfp_model") is None
-    assert state_rx.attributes.get("sfp_vendor") is None
-
-
 async def test_freebox_client_invalid_data_types(
     hass: HomeAssistant, router: Mock
 ) -> None:
@@ -116,8 +111,6 @@ async def test_freebox_client_invalid_data_types(
     invalid_ftth_data = {
         "sfp_pwr_rx": "invalid_string",  # Should be int
         "sfp_pwr_tx": None,  # Should be int
-        "sfp_model": 123,  # Should be string
-        "sfp_vendor": True,  # Should be string
     }
     router().connection.get_ftth.return_value = invalid_ftth_data
 

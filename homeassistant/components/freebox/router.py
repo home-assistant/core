@@ -133,7 +133,6 @@ class FreeboxRouter:
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
         self.listeners: list[Callable[[], None]] = []
-        self.ftth_info: dict[str, Any] = {}
 
     async def update_all(self, now: datetime | None = None) -> None:
         """Update all Freebox platforms."""
@@ -182,7 +181,6 @@ class FreeboxRouter:
         """Update Freebox sensors."""
 
         # Reset FTTH information
-        self.ftth_info = {}
         self.sensors_connection.pop("sfp_pwr_rx", None)
         self.sensors_connection.pop("sfp_pwr_tx", None)
 
@@ -208,10 +206,6 @@ class FreeboxRouter:
                 self.ftth_info = {}
                 return
 
-            self.ftth_info = {
-                "sfp_model": ftth_datas.get("sfp_model"),
-                "sfp_vendor": ftth_datas.get("sfp_vendor"),
-            }
             # Convert power from centidBm to dBm and store in connection sensors
             if (sfp_pwr_rx := ftth_datas.get("sfp_pwr_rx")) is not None:
                 if isinstance(sfp_pwr_rx, (int, float)):
@@ -224,7 +218,8 @@ class FreeboxRouter:
                 else:
                     _LOGGER.warning("Unexpected type for sfp_pwr_tx: %r", sfp_pwr_tx)
         else:
-            self.ftth_info = {}
+            self.sensors_connection.pop("sfp_pwr_rx", None)
+            self.sensors_connection.pop("sfp_pwr_tx", None)
 
         self._attrs = {
             "IPv4": connection_datas.get("ipv4"),

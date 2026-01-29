@@ -4,9 +4,6 @@
   "sfp_has_power_report": true,
   "sfp_has_signal": true,
   "link": true,
-  "sfp_serial": "ABC123",
-  "sfp_model": "GPON SFP",
-  "sfp_vendor": "Freebox",
   "sfp_pwr_tx": -366,
   "sfp_pwr_rx": -2225
 }

@@ -120,11 +120,6 @@ async def async_setup_entry(
         [FreeboxSensor(router, description) for description in CONNECTION_SENSORS]
     )
     entities.extend(
-        FreeboxFtthSensor(router, description)
-        for description in FTTH_SENSORS
-        if description.key in router.sensors_connection
-    )
-    entities.extend(
         [FreeboxCallSensor(router, description) for description in CALL_SENSORS]
     )
 
@@ -188,15 +183,6 @@ class FreeboxSensor(SensorEntity):
                 self.async_on_demand_update,
             )
         )
-
-
-class FreeboxFtthSensor(FreeboxSensor):
-    """Representation of a Freebox FTTH sensor."""
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return FTTH attributes."""
-        return self._router.ftth_info
 
 
 class FreeboxCallSensor(FreeboxSensor):

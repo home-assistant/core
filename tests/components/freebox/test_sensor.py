@@ -56,12 +56,6 @@ async def test_ftth_power(hass: HomeAssistant, router: Mock) -> None:
     assert state_rx.attributes["unit_of_measurement"] == "dBm"
     assert state_tx.attributes["unit_of_measurement"] == "dBm"
 
-    # Test FTTH specific attributes
-    assert state_rx.attributes["sfp_model"] == "GPON SFP"
-    assert state_rx.attributes["sfp_vendor"] == "Freebox"
-    assert state_tx.attributes["sfp_model"] == "GPON SFP"
-    assert state_tx.attributes["sfp_vendor"] == "Freebox"
-
 
 async def test_ftth_api_error(hass: HomeAssistant, router: Mock) -> None:
     """Test FTTH sensors when API call fails."""
