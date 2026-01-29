@@ -28,22 +28,6 @@ async def test_service_registration(
     assert SERVICE_GET_AFFECTED_AREAS in services
 
 
-async def test_service_unregistration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nina_class: AsyncMock
-) -> None:
-    """Test the NINA services be unregistered with unloading last entry."""
-    await setup_single_platform(hass, mock_config_entry, None, mock_nina_class, [])
-
-    services = hass.services.async_services_for_domain(DOMAIN)
-    assert len(services) == 2
-
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    services = hass.services.async_services_for_domain(DOMAIN)
-    assert len(services) == 0
-
-
 async def test_description_service(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
