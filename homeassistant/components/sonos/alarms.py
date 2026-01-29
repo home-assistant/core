@@ -6,7 +6,7 @@ from collections.abc import Iterator
 import logging
 from typing import TYPE_CHECKING, Any
 
-from soco import SoCo
+from soco import SoCo, SoCoException
 from soco.alarms import Alarm, Alarms
 from soco.events_base import Event as SonosEvent
 
@@ -78,7 +78,20 @@ class SonosAlarms(SonosHouseholdCoordinator):
     @soco_error()
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known alarms and return if cache has changed."""
-        self.alarms.update(soco)
+        try:
+            self.alarms.update(soco)
+        except SoCoException as err:
+            if "Alarm list UID" in str(err):
+                _LOGGER.warning(
+                    "Sonos alarms for %s cannot be updated due to a household mismatch. "
+                    "This is a known limitation in setups with multiple households. "
+                    "You can safely ignore this warning, or to silence it, remove the "
+                    "affected household from your Sonos system. Error: %s",
+                    soco.player_name,
+                    str(err),
+                )
+                return False
+            raise
 
         if update_id and self.alarms.last_id < update_id:
             # Skip updates if latest query result is outdated or lagging
