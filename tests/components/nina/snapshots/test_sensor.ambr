@@ -24,7 +24,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:map-marker-radius',
+    'original_icon': None,
     'original_name': 'Affected Areas: Aach 1',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -39,7 +39,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Affected Areas: Aach 1',
-      'icon': 'mdi:map-marker-radius',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_affected_areas_aach_1',
@@ -74,7 +73,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:map-marker-radius',
+    'original_icon': None,
     'original_name': 'Affected Areas: Aach 2',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -89,7 +88,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Affected Areas: Aach 2',
-      'icon': 'mdi:map-marker-radius',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_affected_areas_aach_2',
@@ -124,7 +122,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:map-marker-radius',
+    'original_icon': None,
     'original_name': 'Affected Areas: Aach 3',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -139,7 +137,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Affected Areas: Aach 3',
-      'icon': 'mdi:map-marker-radius',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_affected_areas_aach_3',
@@ -174,7 +171,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:map-marker-radius',
+    'original_icon': None,
     'original_name': 'Affected Areas: Aach 4',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -189,7 +186,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Affected Areas: Aach 4',
-      'icon': 'mdi:map-marker-radius',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_affected_areas_aach_4',
@@ -224,7 +220,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:map-marker-radius',
+    'original_icon': None,
     'original_name': 'Affected Areas: Aach 5',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -239,7 +235,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Affected Areas: Aach 5',
-      'icon': 'mdi:map-marker-radius',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_affected_areas_aach_5',
@@ -274,7 +269,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:text-short',
+    'original_icon': None,
     'original_name': 'Headline: Aach 1',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -289,7 +284,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Headline: Aach 1',
-      'icon': 'mdi:text-short',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_headline_aach_1',
@@ -324,7 +318,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:text-short',
+    'original_icon': None,
     'original_name': 'Headline: Aach 2',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -339,7 +333,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Headline: Aach 2',
-      'icon': 'mdi:text-short',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_headline_aach_2',
@@ -374,7 +367,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:text-short',
+    'original_icon': None,
     'original_name': 'Headline: Aach 3',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -389,7 +382,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Headline: Aach 3',
-      'icon': 'mdi:text-short',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_headline_aach_3',
@@ -424,7 +416,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:text-short',
+    'original_icon': None,
     'original_name': 'Headline: Aach 4',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -439,7 +431,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Headline: Aach 4',
-      'icon': 'mdi:text-short',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_headline_aach_4',
@@ -474,7 +465,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:text-short',
+    'original_icon': None,
     'original_name': 'Headline: Aach 5',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -489,7 +480,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Headline: Aach 5',
-      'icon': 'mdi:text-short',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_headline_aach_5',
@@ -524,7 +514,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:web',
+    'original_icon': None,
     'original_name': 'More Information URL: Aach 1',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -539,7 +529,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA More Information URL: Aach 1',
-      'icon': 'mdi:web',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_more_information_url_aach_1',
@@ -574,7 +563,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:web',
+    'original_icon': None,
     'original_name': 'More Information URL: Aach 2',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -589,7 +578,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA More Information URL: Aach 2',
-      'icon': 'mdi:web',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_more_information_url_aach_2',
@@ -624,7 +612,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:web',
+    'original_icon': None,
     'original_name': 'More Information URL: Aach 3',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -639,7 +627,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA More Information URL: Aach 3',
-      'icon': 'mdi:web',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_more_information_url_aach_3',
@@ -674,7 +661,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:web',
+    'original_icon': None,
     'original_name': 'More Information URL: Aach 4',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -689,7 +676,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA More Information URL: Aach 4',
-      'icon': 'mdi:web',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_more_information_url_aach_4',
@@ -724,7 +710,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:web',
+    'original_icon': None,
     'original_name': 'More Information URL: Aach 5',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -739,7 +725,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA More Information URL: Aach 5',
-      'icon': 'mdi:web',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_more_information_url_aach_5',
@@ -774,7 +759,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account-tie-voice',
+    'original_icon': None,
     'original_name': 'Sender: Aach 1',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -789,7 +774,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Sender: Aach 1',
-      'icon': 'mdi:account-tie-voice',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_sender_aach_1',
@@ -824,7 +808,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account-tie-voice',
+    'original_icon': None,
     'original_name': 'Sender: Aach 2',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -839,7 +823,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Sender: Aach 2',
-      'icon': 'mdi:account-tie-voice',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_sender_aach_2',
@@ -874,7 +857,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account-tie-voice',
+    'original_icon': None,
     'original_name': 'Sender: Aach 3',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -889,7 +872,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Sender: Aach 3',
-      'icon': 'mdi:account-tie-voice',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_sender_aach_3',
@@ -924,7 +906,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account-tie-voice',
+    'original_icon': None,
     'original_name': 'Sender: Aach 4',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -939,7 +921,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Sender: Aach 4',
-      'icon': 'mdi:account-tie-voice',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_sender_aach_4',
@@ -974,7 +955,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account-tie-voice',
+    'original_icon': None,
     'original_name': 'Sender: Aach 5',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -989,7 +970,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NINA Sender: Aach 5',
-      'icon': 'mdi:account-tie-voice',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nina_sender_aach_5',
@@ -1032,7 +1012,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Severity: Aach 1',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -1048,7 +1028,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'NINA Severity: Aach 1',
-      'icon': 'mdi:alert',
       'options': list([
         'extreme',
         'severe',
@@ -1098,7 +1077,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Severity: Aach 2',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -1114,7 +1093,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'NINA Severity: Aach 2',
-      'icon': 'mdi:alert',
       'options': list([
         'extreme',
         'severe',
@@ -1164,7 +1142,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Severity: Aach 3',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -1180,7 +1158,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'NINA Severity: Aach 3',
-      'icon': 'mdi:alert',
       'options': list([
         'extreme',
         'severe',
@@ -1230,7 +1207,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Severity: Aach 4',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -1246,7 +1223,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'NINA Severity: Aach 4',
-      'icon': 'mdi:alert',
       'options': list([
         'extreme',
         'severe',
@@ -1296,7 +1272,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:alert',
+    'original_icon': None,
     'original_name': 'Severity: Aach 5',
     'platform': 'nina',
     'previous_unique_id': None,
@@ -1312,7 +1288,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'NINA Severity: Aach 5',
-      'icon': 'mdi:alert',
       'options': list([
         'extreme',
         'severe',
