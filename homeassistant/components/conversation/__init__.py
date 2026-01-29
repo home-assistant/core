@@ -236,7 +236,9 @@ async def async_prepare_agent(
 
 
 async def async_handle_sentence_triggers(
-    hass: HomeAssistant, user_input: ConversationInput
+    hass: HomeAssistant,
+    user_input: ConversationInput,
+    chat_log: ChatLog,
 ) -> str | None:
     """Try to match input against sentence triggers and return response text.
 
@@ -245,12 +247,13 @@ async def async_handle_sentence_triggers(
     agent = get_agent_manager(hass).default_agent
     assert agent is not None
 
-    return await agent.async_handle_sentence_triggers(user_input)
+    return await agent.async_handle_sentence_triggers(user_input, chat_log)
 
 
 async def async_handle_intents(
     hass: HomeAssistant,
     user_input: ConversationInput,
+    chat_log: ChatLog,
     *,
     intent_filter: Callable[[RecognizeResult], bool] | None = None,
 ) -> intent.IntentResponse | None:
@@ -261,7 +264,9 @@ async def async_handle_intents(
     agent = get_agent_manager(hass).default_agent
     assert agent is not None
 
-    return await agent.async_handle_intents(user_input, intent_filter=intent_filter)
+    return await agent.async_handle_intents(
+        user_input, chat_log, intent_filter=intent_filter
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

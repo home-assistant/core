@@ -11,6 +11,7 @@ from homeassistant.components import conversation
 from homeassistant.components.conversation import (
     ConversationInput,
     async_get_agent,
+    async_get_chat_log,
     async_handle_intents,
     async_handle_sentence_triggers,
     default_agent,
@@ -19,7 +20,7 @@ from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import intent
+from homeassistant.helpers import chat_session, intent
 from homeassistant.setup import async_setup_component
 
 from . import MockAgent
@@ -288,18 +289,22 @@ async def test_async_handle_sentence_triggers(
 
     # Device id will be available in response template
     device_id = "1234"
-    actual_response = await async_handle_sentence_triggers(
-        hass,
-        ConversationInput(
-            text="my trigger",
-            context=Context(),
-            conversation_id=None,
-            agent_id=conversation.HOME_ASSISTANT_AGENT,
-            device_id=device_id,
-            satellite_id=None,
-            language=hass.config.language,
-        ),
+    user_input = ConversationInput(
+        text="my trigger",
+        context=Context(),
+        conversation_id=None,
+        agent_id=conversation.HOME_ASSISTANT_AGENT,
+        device_id=device_id,
+        satellite_id=None,
+        language=hass.config.language,
     )
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, user_input) as chat_log,
+    ):
+        actual_response = await async_handle_sentence_triggers(
+            hass, user_input, chat_log
+        )
     assert actual_response == expected_response
 
 
@@ -326,34 +331,38 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
     intent.async_register(hass, handler)
 
     # Registered intent will be handled
-    result = await async_handle_intents(
-        hass,
-        ConversationInput(
-            text="I'd like to order a stout",
-            context=Context(),
-            agent_id=conversation.HOME_ASSISTANT_AGENT,
-            conversation_id=None,
-            device_id=None,
-            satellite_id=None,
-            language=hass.config.language,
-        ),
+    user_input = ConversationInput(
+        text="I'd like to order a stout",
+        context=Context(),
+        agent_id=conversation.HOME_ASSISTANT_AGENT,
+        conversation_id=None,
+        device_id=None,
+        satellite_id=None,
+        language=hass.config.language,
     )
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, user_input) as chat_log,
+    ):
+        result = await async_handle_intents(hass, user_input, chat_log)
     assert result is not None
     assert result.intent is not None
     assert result.intent.intent_type == handler.intent_type
     assert handler.was_handled
 
     # No error messages, just None as a result
-    result = await async_handle_intents(
-        hass,
-        ConversationInput(
-            text="this sentence does not exist",
-            agent_id=conversation.HOME_ASSISTANT_AGENT,
-            context=Context(),
-            conversation_id=None,
-            device_id=None,
-            satellite_id=None,
-            language=hass.config.language,
-        ),
+    user_input2 = ConversationInput(
+        text="this sentence does not exist",
+        agent_id=conversation.HOME_ASSISTANT_AGENT,
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        satellite_id=None,
+        language=hass.config.language,
     )
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, user_input2) as chat_log,
+    ):
+        result = await async_handle_intents(hass, user_input2, chat_log)
     assert result is None

@@ -85,7 +85,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         return color_util.color_temperature_mired_to_kelvin(mired_temperature)
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.coordinator.data.state.hue is not None:
             return ColorMode.HS

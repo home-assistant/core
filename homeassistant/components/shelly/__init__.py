@@ -59,10 +59,12 @@ from .coordinator import (
 )
 from .repairs import (
     async_manage_ble_scanner_firmware_unsupported_issue,
+    async_manage_coiot_unconfigured_issue,
     async_manage_deprecated_firmware_issue,
     async_manage_open_wifi_ap_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
 )
+from .services import async_setup_services
 from .utils import (
     async_create_issue_unsupported_firmware,
     async_migrate_rpc_virtual_components_unique_ids,
@@ -116,6 +118,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Shelly component."""
     if (conf := config.get(DOMAIN)) is not None:
         hass.data[DOMAIN] = {CONF_COAP_PORT: conf[CONF_COAP_PORT]}
+
+    async_setup_services(hass)
 
     return True
 
@@ -229,6 +233,7 @@ async def _async_setup_block_entry(
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
+        async_manage_coiot_unconfigured_issue(hass, entry)
         remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None

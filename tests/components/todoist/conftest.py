@@ -1,7 +1,8 @@
 """Common fixtures for the todoist tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from http import HTTPStatus
+from typing import TypeVar
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -13,15 +14,55 @@ from homeassistant.components.todoist import DOMAIN
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
+
+T = TypeVar("T")
 
 PROJECT_ID = "project-id-1"
 SECTION_ID = "section-id-1"
 SUMMARY = "A task"
 TOKEN = "some-token"
-TODAY = dt_util.now().strftime("%Y-%m-%d")
+
+
+async def _async_generator(items: list[T]) -> AsyncGenerator[list[T]]:
+    """Create an async generator that yields items as a single page."""
+    yield items
+
+
+def make_api_response(items: list[T]) -> Callable[[], AsyncGenerator[list[T]]]:
+    """Create a callable that returns a fresh async generator each time.
+
+    This is needed because async generators can only be iterated once,
+    but mocks may be called multiple times.
+    """
+
+    async def _generator(*args, **kwargs) -> AsyncGenerator[list[T]]:
+        async for page in _async_generator(items):
+            yield page
+
+    return _generator
+
+
+def make_api_due(
+    date: str,
+    is_recurring: bool = False,
+    string: str = "",
+    timezone: str | None = None,
+) -> Due:
+    """Create a Due object using from_dict to match API deserialization behavior.
+
+    This ensures the date field is properly converted to date/datetime objects
+    just like the real API response deserialization does.
+    """
+    data: dict = {
+        "date": date,
+        "is_recurring": is_recurring,
+        "string": string,
+    }
+    if timezone is not None:
+        data["timezone"] = timezone
+    return Due.from_dict(data)
 
 
 @pytest.fixture
@@ -35,16 +76,18 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture(name="due")
 def mock_due() -> Due:
-    """Mock a todoist Task Due date/time."""
-    return Due(
-        is_recurring=False, date=dt_util.now().strftime("%Y-%m-%d"), string="today"
-    )
+    """Mock a todoist Task Due date/time.
+
+    Uses a fixed date matching the frozen test time in test_calendar.py
+    and test_todo.py (2024-05-24 12:00:00).
+    """
+    return make_api_due(date="2024-05-24", string="today")
 
 
 def make_api_task(
     id: str | None = None,
     content: str | None = None,
-    is_completed: bool = False,
+    completed_at: str | None = None,
     due: Due | None = None,
     project_id: str | None = None,
     description: str | None = None,
@@ -54,12 +97,11 @@ def make_api_task(
     return Task(
         assignee_id="1",
         assigner_id="1",
-        comment_count=0,
-        is_completed=is_completed,
+        completed_at=completed_at,
         content=content or SUMMARY,
         created_at="2021-10-01T00:00:00",
         creator_id="1",
-        description=description,
+        description=description or "",
         due=due,
         id=id or "1",
         labels=["Label1"],
@@ -68,9 +110,10 @@ def make_api_task(
         priority=1,
         project_id=project_id or PROJECT_ID,
         section_id=None,
-        url="https://todoist.com",
-        sync_id=None,
         duration=None,
+        deadline=None,
+        is_collapsed=False,
+        updated_at="2021-10-01T00:00:00",
     )
 
 
@@ -84,38 +127,45 @@ def mock_tasks(due: Due) -> list[Task]:
 def mock_api(tasks: list[Task]) -> AsyncMock:
     """Mock the api state."""
     api = AsyncMock()
-    api.get_projects.return_value = [
-        Project(
-            id=PROJECT_ID,
-            color="blue",
-            comment_count=0,
-            is_favorite=False,
-            name="Name",
-            is_shared=False,
-            url="",
-            is_inbox_project=False,
-            is_team_inbox=False,
-            can_assign_tasks=False,
-            order=1,
-            parent_id=None,
-            view_style="list",
-        )
-    ]
-    api.get_sections.return_value = [
-        Section(
-            id=SECTION_ID,
-            project_id=PROJECT_ID,
-            name="Section Name",
-            order=1,
-        )
-    ]
-    api.get_labels.return_value = [
-        Label(id="1", name="Label1", color="1", order=1, is_favorite=False)
-    ]
-    api.get_collaborators.return_value = [
-        Collaborator(email="user@gmail.com", id="1", name="user")
-    ]
-    api.get_tasks.return_value = tasks
+    api.get_projects.side_effect = make_api_response(
+        [
+            Project(
+                id=PROJECT_ID,
+                color="blue",
+                is_favorite=False,
+                name="Name",
+                is_shared=False,
+                is_archived=False,
+                is_collapsed=False,
+                is_inbox_project=False,
+                can_assign_tasks=False,
+                order=1,
+                parent_id=None,
+                view_style="list",
+                description="",
+                created_at="2021-01-01",
+                updated_at="2021-01-01",
+            )
+        ]
+    )
+    api.get_sections.side_effect = make_api_response(
+        [
+            Section(
+                id=SECTION_ID,
+                project_id=PROJECT_ID,
+                name="Section Name",
+                order=1,
+                is_collapsed=False,
+            )
+        ]
+    )
+    api.get_labels.side_effect = make_api_response(
+        [Label(id="1", name="Label1", color="1", order=1, is_favorite=False)]
+    )
+    api.get_collaborators.side_effect = make_api_response(
+        [Collaborator(email="user@gmail.com", id="1", name="user")]
+    )
+    api.get_tasks.side_effect = make_api_response(tasks)
     return api
 
 

@@ -70,6 +70,20 @@ LAST_FRAME_MARKER = bytes(f"\r\n--{FRAME_BOUNDARY}--\r\n", "utf-8")
 
 IMAGE_SERVICE_SNAPSHOT: VolDictType = {vol.Required(ATTR_FILENAME): cv.string}
 
+MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE = {
+    b"\x89PNG": "image/png",
+    b"GIF8": "image/gif",
+    b"RIFF": "image/webp",
+    b"\x49\x49\x2a\x00": "image/tiff",
+    b"\x4d\x4d\x00\x2a": "image/tiff",
+    b"\xff\xd8\xff\xdb": "image/jpeg",
+    b"\xff\xd8\xff\xe0": "image/jpeg",
+    b"\xff\xd8\xff\xed": "image/jpeg",
+    b"\xff\xd8\xff\xee": "image/jpeg",
+    b"\xff\xd8\xff\xe1": "image/jpeg",
+    b"\xff\xd8\xff\xe2": "image/jpeg",
+}
+
 
 class ImageEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes image entities."""
@@ -92,6 +106,11 @@ def valid_image_content_type(content_type: str | None) -> str:
     if content_type is None or content_type.split("/", 1)[0].lower() != "image":
         raise ImageContentTypeError
     return content_type
+
+
+def infer_image_type(content: bytes) -> str | None:
+    """Infer image type from first 4 bytes (magic number)."""
+    return MAP_MAGIC_NUMBERS_TO_CONTENT_TYPE.get(content[:4])
 
 
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
@@ -242,7 +261,9 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""
         if response := await self._fetch_url(url):
-            content_type = response.headers.get("content-type")
+            content_type = response.headers.get("content-type") or infer_image_type(
+                response.content
+            )
             try:
                 return Image(
                     content=response.content,
