@@ -50,7 +50,7 @@ class MTADataUpdateCoordinator(DataUpdateCoordinator[MTAData]):
         self.stop_id = config_entry.data[CONF_STOP_ID]
 
         self.feed_id = SubwayFeed.get_feed_id_for_route(self.line)
-        session = aiohttp_client.async_get_clientsession(hass)
+        session = async_get_clientsession(hass)
         self.subway_feed = SubwayFeed(feed_id=self.feed_id, session=session)
 
         super().__init__(
