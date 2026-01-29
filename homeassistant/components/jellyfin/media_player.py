@@ -238,8 +238,12 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
+        command = "PlayNow"
+        shuffle = kwargs.get("extra", {}).get("shuffle", False)
+        if bool(shuffle):
+            command = "PlayShuffle"
         self.coordinator.api_client.jellyfin.remote_play_media(
-            self.session_id, [media_id]
+            self.session_id, [media_id], command
         )
 
     def set_volume_level(self, volume: float) -> None:
