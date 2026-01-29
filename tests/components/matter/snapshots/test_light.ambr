@@ -6,9 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
@@ -48,7 +46,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 128,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': 284,
       'color_temp_kelvin': 3521,
       'friendly_name': 'Mock Color Temperature Light',
       'hs_color': tuple(
@@ -56,9 +53,7 @@
         44.32,
       ),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         193,
@@ -206,9 +201,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -250,7 +243,6 @@
     'attributes': ReadOnlyDict({
       'brightness': 128,
       'color_mode': <ColorMode.HS: 'hs'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Mock Extended Color Light',
       'hs_color': tuple(
@@ -258,9 +250,7 @@
         20.079,
       ),
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': tuple(
         255,
         247,
@@ -292,9 +282,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 1000000,
-      'max_mireds': 66666,
       'min_color_temp_kelvin': 15,
-      'min_mireds': 1,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -336,14 +324,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'White Series OnOff Switch Light (RGB Indicator)',
       'hs_color': None,
       'max_color_temp_kelvin': 1000000,
-      'max_mireds': 66666,
       'min_color_temp_kelvin': 15,
-      'min_mireds': 1,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -484,9 +469,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -528,14 +511,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': None,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Inovelli Light (6)',
       'hs_color': None,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -618,9 +598,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -662,14 +640,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Mock OnOff Light',
       'hs_color': None,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -694,9 +669,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
@@ -738,14 +711,11 @@
     'attributes': ReadOnlyDict({
       'brightness': None,
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp': None,
       'color_temp_kelvin': None,
       'friendly_name': 'Mock Light',
       'hs_color': None,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 500,
       'min_color_temp_kelvin': 2000,
-      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
