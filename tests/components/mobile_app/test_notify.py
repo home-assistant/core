@@ -1,5 +1,6 @@
 """Notify platform tests for mobile_app."""
 
+import asyncio
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
@@ -436,3 +437,155 @@ async def test_local_push_only(
 
     msg = await client.receive_json()
     assert msg == {"id": 5, "type": "event", "event": {"message": "Hello world 1"}}
+
+
+@pytest.mark.parametrize(
+    "target", [["webhook_id_2", "mock-webhook_id", "websocket-push-webhook-id"], None]
+)
+async def test_notify_multiple_targets(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_push_receiver,
+    setup_websocket_channel_only_push,
+    target: list[str] | None,
+) -> None:
+    """Test notify to multiple targets."""
+    aioclient_mock.post(
+        "https://mobile-push.home-assistant.dev/push2",
+        json={
+            "rateLimits": {
+                "attempts": 1,
+                "successful": 1,
+                "errors": 0,
+                "total": 1,
+                "maximum": 150,
+                "remaining": 149,
+                "resetsAt": (datetime.now() + timedelta(hours=24)).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                ),
+            }
+        },
+    )
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+        }
+    )
+
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "websocket-push-webhook-id",
+        }
+    )
+
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
+    await hass.services.async_call(
+        "notify",
+        "notify",
+        {
+            "message": "Hello world",
+            "target": target,
+        },
+        blocking=True,
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+
+    call_json = call[0][2]
+
+    assert call_json["push_token"] == "PUSH_TOKEN2"
+    assert call_json["message"] == "Hello world"
+    assert call_json["registration_info"]["app_id"] == "io.homeassistant.mobile_app"
+    assert call_json["registration_info"]["app_version"] == "1.0"
+    assert call_json["registration_info"]["webhook_id"] == "webhook_id_2"
+
+    for i in range(5, 7):
+        msg_result = await client.receive_json()
+        assert msg_result["event"] == {"message": "Hello world"}
+        assert msg_result["id"] == i
+
+
+@pytest.mark.parametrize(
+    "target", [["webhook_id_2", "mock-webhook_id", "websocket-push-webhook-id"], None]
+)
+async def test_notify_multiple_targets_if_any_disconnected(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_push_receiver,
+    setup_websocket_channel_only_push,
+    target: list[str] | None,
+) -> None:
+    """Test that although one target is disconnected, notify still works to other targets."""
+    aioclient_mock.post(
+        "https://mobile-push.home-assistant.dev/push2",
+        json={
+            "rateLimits": {
+                "attempts": 1,
+                "successful": 1,
+                "errors": 0,
+                "total": 1,
+                "maximum": 150,
+                "remaining": 149,
+                "resetsAt": (datetime.now() + timedelta(hours=24)).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                ),
+            }
+        },
+    )
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+        }
+    )
+
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
+    await hass.services.async_call(
+        "notify",
+        "notify",
+        {
+            "message": "Hello world",
+            "target": target,
+        },
+        blocking=True,
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    call = aioclient_mock.mock_calls
+
+    call_json = call[0][2]
+
+    assert call_json["push_token"] == "PUSH_TOKEN2"
+    assert call_json["message"] == "Hello world"
+    assert call_json["registration_info"]["app_id"] == "io.homeassistant.mobile_app"
+    assert call_json["registration_info"]["app_version"] == "1.0"
+    assert call_json["registration_info"]["webhook_id"] == "webhook_id_2"
+
+    msg_result = await client.receive_json()
+    assert msg_result["event"] == {"message": "Hello world"}
+    assert msg_result["id"] == 5
+
+    # Check that there are no more messages to receive (timeout expected)
+    with pytest.raises(asyncio.TimeoutError):
+        await asyncio.wait_for(client.receive_json(), timeout=0.1)
