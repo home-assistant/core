@@ -682,6 +682,7 @@ bosch-alarm-mode2==0.4.10
 boschshcpy==0.2.107
 
 # homeassistant.components.amazon_polly
+# homeassistant.components.aws_bedrock
 # homeassistant.components.route53
 boto3==1.37.1
 

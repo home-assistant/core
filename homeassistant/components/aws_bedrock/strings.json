@@ -1,0 +1,81 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "entry_not_loaded": "The entry must be loaded before you can configure it"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "access_key_id": "AWS Access Key ID",
+          "region": "AWS Region",
+          "secret_access_key": "AWS Secret Access Key"
+        },
+        "data_description": {
+          "access_key_id": "Your AWS Access Key ID from the IAM console",
+          "region": "AWS Region where you want to use Bedrock",
+          "secret_access_key": "Your AWS Secret Access Key from the IAM console"
+        },
+        "description": "Set up AWS Bedrock to integrate with Home Assistant. You need AWS credentials with access to Bedrock."
+      }
+    }
+  },
+  "config_subentries": {
+    "ai_task_data": {
+      "abort": {
+        "entry_not_loaded": "Cannot add things while the configuration is disabled.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "AI task",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure AI task",
+        "user": "Add AI task"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "chat_model": "[%key:common::generic::model%]",
+            "max_tokens": "Maximum tokens to return in response",
+            "name": "[%key:common::config_flow::data::name%]",
+            "temperature": "Temperature"
+          },
+          "data_description": {
+            "chat_model": "Select from available AWS Bedrock foundation models (includes Anthropic, Amazon, Meta, and other providers)"
+          },
+          "title": "Configure AI task"
+        }
+      }
+    },
+    "conversation": {
+      "abort": {
+        "entry_not_loaded": "[%key:component::aws_bedrock::config::abort::entry_not_loaded%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Conversation agent",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure conversation agent",
+        "user": "Add conversation agent"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "chat_model": "[%key:common::generic::model%]",
+            "max_tokens": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data::max_tokens%]",
+            "name": "[%key:common::config_flow::data::name%]",
+            "prompt": "Prompt template",
+            "temperature": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data::temperature%]"
+          },
+          "data_description": {
+            "chat_model": "[%key:component::aws_bedrock::config_subentries::ai_task_data::step::init::data_description::chat_model%]"
+          },
+          "title": "Configure conversation agent"
+        }
+      }
+    }
+  }
+}
