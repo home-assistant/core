@@ -354,8 +354,8 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         *BATTERY_SENSORS,
         TuyaSensorEntityDescription(
             key=DPCode.FEED_REPORT,
-            translation_key="last_amount",
-            state_class=SensorStateClass.MEASUREMENT,
+            translation_key="feed_report",
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
     ),
     DeviceCategory.CWYSJ: (
