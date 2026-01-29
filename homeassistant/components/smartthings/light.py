@@ -30,7 +30,17 @@ CAPABILITIES = (
     Capability.SWITCH_LEVEL,
     Capability.COLOR_CONTROL,
     Capability.COLOR_TEMPERATURE,
+    Capability.SAMSUNG_CE_LAMP,
 )
+
+# Components that should be exposed as light entities, in addition to the main component.
+# This whitelist pattern is consistent with other platforms (e.g., binary_sensor, switch)
+# to prevent unexpected entity creation from components not intended for separate exposure.
+LIGHT_COMPONENTS = {
+    "lamp",
+    "cookinglight",
+    "edgelight",
+}
 
 
 async def async_setup_entry(
@@ -41,10 +51,12 @@ async def async_setup_entry(
     """Add lights for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsLight(entry_data.client, device)
+        SmartThingsLight(entry_data.client, device, component)
         for device in entry_data.devices.values()
-        if Capability.SWITCH in device.status[MAIN]
-        and any(capability in device.status[MAIN] for capability in CAPABILITIES)
+        for component in device.status
+        if Capability.SWITCH in device.status[component]
+        and any(capability in device.status[component] for capability in CAPABILITIES)
+        and (component == MAIN or component in LIGHT_COMPONENTS)
     )
 
 
@@ -71,7 +83,9 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
     # highest kelvin found supported across 20+ handlers.
     _attr_max_color_temp_kelvin = 9000  # 111 mireds
 
-    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+    def __init__(
+        self, client: SmartThings, device: FullDevice, component: str = MAIN
+    ) -> None:
         """Initialize a SmartThingsLight."""
         super().__init__(
             client,
@@ -82,6 +96,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity, RestoreEntity):
                 Capability.SWITCH_LEVEL,
                 Capability.SWITCH,
             },
+            component=component,
         )
         color_modes = set()
         if self.supports_capability(Capability.COLOR_TEMPERATURE):
