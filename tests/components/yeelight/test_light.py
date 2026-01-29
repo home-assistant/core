@@ -977,7 +977,7 @@ async def test_device_types(
         state = hass.states.get(entity_id)
 
         assert state.state == "on"
-        assert state.attributes == snapshot(name=request.node.callspec.id)
+        assert state.attributes == snapshot
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.config_entries.async_remove(config_entry.entry_id)
         entity_registry.async_clear_config_entry(config_entry.entry_id)
