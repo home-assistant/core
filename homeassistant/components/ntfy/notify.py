@@ -15,6 +15,8 @@ from aiontfy.exceptions import (
 import voluptuous as vol
 from yarl import URL
 
+from homeassistant.components import camera, image
+from homeassistant.components.media_source import async_resolve_media
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TITLE,
@@ -26,6 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.selector import MediaSelector
 
 from .const import DOMAIN
 from .coordinator import NtfyConfigEntry
@@ -49,25 +52,48 @@ ATTR_MARKDOWN = "markdown"
 ATTR_PRIORITY = "priority"
 ATTR_TAGS = "tags"
 ATTR_SEQUENCE_ID = "sequence_id"
+ATTR_ATTACH_FILE = "attach_file"
+ATTR_FILENAME = "filename"
+GRP_ATTACHMENT = "attachment"
+MSG_ATTACHMENT = "Only one attachment source is allowed: URL or local file"
 
-SERVICE_PUBLISH_SCHEMA = cv.make_entity_service_schema(
-    {
-        vol.Optional(ATTR_TITLE): cv.string,
-        vol.Optional(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_MARKDOWN): cv.boolean,
-        vol.Optional(ATTR_TAGS): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_PRIORITY): vol.All(vol.Coerce(int), vol.Range(1, 5)),
-        vol.Optional(ATTR_CLICK): vol.All(vol.Url(), vol.Coerce(URL)),
-        vol.Optional(ATTR_DELAY): vol.All(
-            cv.time_period,
-            vol.Range(min=timedelta(seconds=10), max=timedelta(days=3)),
-        ),
-        vol.Optional(ATTR_ATTACH): vol.All(vol.Url(), vol.Coerce(URL)),
-        vol.Optional(ATTR_EMAIL): vol.Email(),
-        vol.Optional(ATTR_CALL): cv.string,
-        vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
-        vol.Optional(ATTR_SEQUENCE_ID): cv.string,
-    }
+
+def validate_filename(params: dict[str, Any]) -> dict[str, Any]:
+    """Validate filename."""
+    if ATTR_FILENAME in params and not (
+        ATTR_ATTACH_FILE in params or ATTR_ATTACH in params
+    ):
+        raise vol.Invalid("Filename only allowed when attachment is provided")
+    return params
+
+
+SERVICE_PUBLISH_SCHEMA = vol.All(
+    cv.make_entity_service_schema(
+        {
+            vol.Optional(ATTR_TITLE): cv.string,
+            vol.Optional(ATTR_MESSAGE): cv.string,
+            vol.Optional(ATTR_MARKDOWN): cv.boolean,
+            vol.Optional(ATTR_TAGS): vol.All(cv.ensure_list, [str]),
+            vol.Optional(ATTR_PRIORITY): vol.All(vol.Coerce(int), vol.Range(1, 5)),
+            vol.Optional(ATTR_CLICK): vol.All(vol.Url(), vol.Coerce(URL)),
+            vol.Optional(ATTR_DELAY): vol.All(
+                cv.time_period,
+                vol.Range(min=timedelta(seconds=10), max=timedelta(days=3)),
+            ),
+            vol.Optional(ATTR_EMAIL): vol.Email(),
+            vol.Optional(ATTR_CALL): cv.string,
+            vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
+            vol.Optional(ATTR_SEQUENCE_ID): cv.string,
+            vol.Exclusive(ATTR_ATTACH, GRP_ATTACHMENT, MSG_ATTACHMENT): vol.All(
+                vol.Url(), vol.Coerce(URL)
+            ),
+            vol.Exclusive(
+                ATTR_ATTACH_FILE, GRP_ATTACHMENT, MSG_ATTACHMENT
+            ): MediaSelector({"accept": ["*/*"]}),
+            vol.Optional(ATTR_FILENAME): cv.string,
+        }
+    ),
+    validate_filename,
 )
 
 SERVICE_CLEAR_DELETE_SCHEMA = cv.make_entity_service_schema(
@@ -129,7 +155,7 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
 
     async def publish(self, **kwargs: Any) -> None:
         """Publish a message to a topic."""
-
+        attachment = None
         params: dict[str, Any] = kwargs
         delay: timedelta | None = params.get("delay")
         if delay:
@@ -144,10 +170,36 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                     translation_domain=DOMAIN,
                     translation_key="delay_no_call",
                 )
+        if file := params.pop(ATTR_ATTACH_FILE, None):
+            media_content_id: str = file["media_content_id"]
+            if media_content_id.startswith("media-source://camera/"):
+                entity_id = media_content_id.removeprefix("media-source://camera/")
+                attachment = (
+                    await camera.async_get_image(self.hass, entity_id)
+                ).content
+            elif media_content_id.startswith("media-source://image/"):
+                entity_id = media_content_id.removeprefix("media-source://image/")
+                attachment = (await image.async_get_image(self.hass, entity_id)).content
+            else:
+                media = await async_resolve_media(
+                    self.hass, file["media_content_id"], None
+                )
+
+                if media.path is None:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="media_source_not_supported",
+                    )
+
+                attachment = await self.hass.async_add_executor_job(
+                    media.path.read_bytes
+                )
+
+                params.setdefault(ATTR_FILENAME, media.path.name)
 
         msg = Message(topic=self.topic, **params)
         try:
-            await self.ntfy.publish(msg)
+            await self.ntfy.publish(msg, attachment)
         except NtfyUnauthorizedAuthenticationError as e:
             self.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
