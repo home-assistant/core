@@ -60,15 +60,13 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the device selection."""
         if user_input is not None:
             selected_host = user_input[CONF_DEVICE]
-            if selected_host == "__manual__":
-                return await self.async_step_url_input()
-
             device = next(
                 (d for d in self._discovered_devices if d.host == selected_host),
                 None,
             )
-            if device:
-                return await self.async_step_url_input({"url": f"http://{device.host}"})
+            return await self.async_step_url_input(
+                {"url": f"http://{device.host}"} if device else None
+            )
 
         device_options = {
             d.host: f"{d.name} ({d.host})" for d in self._discovered_devices
