@@ -36,9 +36,10 @@ def make_mock_departures(stop_id: int) -> list[DepartureType]:
     if stop_id == 123456:
         # Example: 2 departures for "Work"
         departures = []
-        for i, name in enumerate(["C", "E"]):
+        for i, (name, line) in enumerate([("Bus 207", "207"), ("Bus 216", "216")]):
             mock_departure = MagicMock(spec=DepartureType)
             mock_departure.name = name
+            mock_departure.line = line
             mock_departure.type = TransportClass.BUS
             mock_departure.cls_id = 1
             mock_departure.direction = "End Point St."
@@ -50,6 +51,7 @@ def make_mock_departures(stop_id: int) -> list[DepartureType]:
             )
             mock_departure.date = base_time.date()
             mock_departure.track = f"{i + 1}A"
+            mock_departure.rtTrack = f"{i + 1}A"
             mock_departure.final_stop = "End Station"
             mock_departure.messages = ["On time"]
             mock_departure.rtTime = (
@@ -191,13 +193,19 @@ async def mock_setup_integration(
 
 @pytest.fixture
 def patch_sensor_now():
-    """Patch datetime.now() in the sensor module to return a fixed datetime."""
+    """Patch datetime.now() and dt_util.now() in the sensor module to return a fixed datetime."""
     fixed_now = datetime(
         2024, 1, 1, 12, 0, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Copenhagen")
     )
-    # Patch datetime in the sensor module, but preserve all classmethods except now
-    with patch(
-        "homeassistant.components.rejseplanen.sensor.datetime", wraps=datetime
-    ) as mock_dt:
+    # Patch both datetime.now and dt_util.now in the sensor module
+    with (
+        patch(
+            "homeassistant.components.rejseplanen.sensor.datetime", wraps=datetime
+        ) as mock_dt,
+        patch(
+            "homeassistant.components.rejseplanen.sensor.dt_util.now",
+            return_value=fixed_now,
+        ),
+    ):
         mock_dt.now.return_value = fixed_now
         yield
