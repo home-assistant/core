@@ -91,7 +91,13 @@ class EltakoFlowHandler(ConfigFlow, domain=DOMAIN):
         """Configure an Eltako Gateway."""
         errors: dict[str, str] = {}
 
-        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        try:
+            ports = await self.hass.async_add_executor_job(
+                serial.tools.list_ports.comports
+            )
+        except OSError:
+            _LOGGER.exception("Failed listing serial ports")
+            return self.async_abort(reason="cannot_list_serial_ports")
         serial_ports = {p.device: f"{p.description} ({p.device})" for p in ports}
         if not serial_ports:
             return self.async_abort(reason="no_serial_ports")
@@ -111,7 +117,7 @@ class EltakoFlowHandler(ConfigFlow, domain=DOMAIN):
             except RuntimeError:
                 errors[CONF_SERIAL_PORT] = "cannot_connect"
             except Exception:
-                _LOGGER.exception("Unexpected exception: %s")
+                _LOGGER.exception("Unexpected exception during gateway validation")
                 errors["base"] = "unknown"
             else:
                 if self.source == SOURCE_RECONFIGURE:

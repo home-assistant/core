@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "The gateway on this port has already been configured.",
+      "cannot_list_serial_ports": "Failed to list serial ports.",
       "no_serial_ports": "No serial ports found. Please connect your gateway and try again.",
       "reconfigure_successful": "Gateway has been reconfigured successfully."
     },

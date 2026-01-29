@@ -91,6 +91,21 @@ class TestEltakoFlowHandler:
         assert result["reason"] == "no_serial_ports"
         assert len(mock_setup_entry.mock_calls) == 0
 
+    async def test_form_error_listing_usb_ports(
+        self, hass: HomeAssistant, mock_setup_entry: AsyncMock
+    ) -> None:
+        """Test we handle when an error occurs listing usb ports."""
+        with patch(
+            "homeassistant.components.eltako_series14.config_flow.serial.tools.list_ports.comports",
+            side_effect=OSError,
+        ):
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_USER}
+            )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "cannot_list_serial_ports"
+        assert len(mock_setup_entry.mock_calls) == 0
+
     async def test_form_invalid_usb_port(
         self, hass: HomeAssistant, mock_setup_entry: AsyncMock
     ) -> None:
