@@ -1,6 +1,6 @@
 """Define tests for the Lunatone config flow."""
 
-from collections.abc import Generator
+from collections.abc import AsyncIterator, Generator
 from typing import Final
 from unittest.mock import AsyncMock, patch
 
@@ -34,13 +34,21 @@ DISCOVERED_DEVICES: Final[list[LunatoneDiscoveryInfo]] = [
 ]
 
 
+async def _async_iterator_from_list(
+    items: list[LunatoneDiscoveryInfo],
+) -> AsyncIterator[LunatoneDiscoveryInfo]:
+    """Create an async generator from a list."""
+    for item in items:
+        yield item
+
+
 @pytest.fixture
-def mock_discover_devices() -> Generator[AsyncMock]:
-    """Mock the async_discover_devices function."""
+def mock_discover_devices_stream() -> Generator[AsyncMock]:
+    """Mock the async_discover_devices_stream function."""
     with patch(
-        "homeassistant.components.lunatone.config_flow.async_discover_devices"
+        "homeassistant.components.lunatone.config_flow.async_discover_devices_stream"
     ) as mock_discover:
-        mock_discover.return_value = []
+        mock_discover.return_value = _async_iterator_from_list([])
         yield mock_discover
 
 
@@ -48,7 +56,7 @@ async def test_full_flow(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_setup_entry: AsyncMock,
-    mock_discover_devices: AsyncMock,
+    mock_discover_devices_stream: AsyncMock,
 ) -> None:
     """Test full user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -71,10 +79,12 @@ async def test_full_flow_with_discovered_devices(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_setup_entry: AsyncMock,
-    mock_discover_devices: AsyncMock,
+    mock_discover_devices_stream: AsyncMock,
 ) -> None:
     """Test full user flow with discovered devices."""
-    mock_discover_devices.return_value = DISCOVERED_DEVICES
+    mock_discover_devices_stream.return_value = _async_iterator_from_list(
+        DISCOVERED_DEVICES
+    )
     selected_host = "10.0.0.2"
 
     result = await hass.config_entries.flow.async_init(
@@ -95,10 +105,12 @@ async def test_full_flow_with_discovered_devices_and_manual_url(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_setup_entry: AsyncMock,
-    mock_discover_devices: AsyncMock,
+    mock_discover_devices_stream: AsyncMock,
 ) -> None:
     """Test full user flow with discovered devices."""
-    mock_discover_devices.return_value = DISCOVERED_DEVICES
+    mock_discover_devices_stream.return_value = _async_iterator_from_list(
+        DISCOVERED_DEVICES
+    )
     selected_host = "10.0.0.2"
 
     result = await hass.config_entries.flow.async_init(
@@ -124,7 +136,7 @@ async def test_full_flow_with_discovered_devices_and_manual_url(
 async def test_full_flow_fail_because_of_missing_device_infos(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
-    mock_discover_devices: AsyncMock,
+    mock_discover_devices_stream: AsyncMock,
 ) -> None:
     """Test full flow."""
     mock_lunatone_info.data = None
@@ -147,7 +159,7 @@ async def test_full_flow_fail_because_of_missing_device_infos(
 async def test_device_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_discover_devices: AsyncMock,
+    mock_discover_devices_stream: AsyncMock,
 ) -> None:
     """Test that the flow is aborted when the device is already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -178,7 +190,7 @@ async def test_device_already_configured(
 async def test_user_step_fail_with_error(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
-    mock_discover_devices: AsyncMock,
+    mock_discover_devices_stream: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -214,7 +226,7 @@ async def test_reconfigure(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_discover_devices: AsyncMock,
+    mock_discover_devices_stream: AsyncMock,
 ) -> None:
     """Test reconfigure flow."""
     url = "http://10.0.0.100"
@@ -244,7 +256,7 @@ async def test_reconfigure_fail_with_error(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_discover_devices: AsyncMock,
+    mock_discover_devices_stream: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
