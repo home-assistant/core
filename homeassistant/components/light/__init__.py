@@ -832,8 +832,11 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_effect_list: list[str] | None = None
     _attr_effect: str | None = None
     _attr_hs_color: tuple[float, float] | None = None
-    _attr_max_color_temp_kelvin: int = DEFAULT_MAX_KELVIN
-    _attr_min_color_temp_kelvin: int = DEFAULT_MIN_KELVIN
+    # We cannot set defaults without causing breaking changes until mireds
+    # are fully removed. Until then, developers can explicitly
+    # use DEFAULT_MIN_KELVIN and DEFAULT_MAX_KELVIN
+    _attr_max_color_temp_kelvin: int | None = None
+    _attr_min_color_temp_kelvin: int | None = None
     _attr_rgb_color: tuple[int, int, int] | None = None
     _attr_rgbw_color: tuple[int, int, int, int] | None = None
     _attr_rgbww_color: tuple[int, int, int, int, int] | None = None
@@ -924,11 +927,17 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
+        if self._attr_min_color_temp_kelvin is None:
+            # Compatibility fallback from mired deprecation
+            return DEFAULT_MIN_KELVIN
         return self._attr_min_color_temp_kelvin
 
     @property
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
+        if self._attr_max_color_temp_kelvin is None:
+            # Compatibility fallback from mired deprecation
+            return DEFAULT_MAX_KELVIN
         return self._attr_max_color_temp_kelvin
 
     @cached_property
