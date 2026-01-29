@@ -43,3 +43,18 @@ activate_scene:
         number:
           min: 1
           max: 255
+
+# Capture the currently active Hue scene (regular or smart) for grouped Hue lights
+capture_group_scene:
+  target:
+    entity:
+      domain: light
+      integration: hue
+
+# Restore a previously captured Hue group scene snapshot
+restore_group_scene:
+  fields:
+    groups:
+      example: '{"light.living_room": {"scene_entity_id": "scene.living_room_relax", "scene_mode": "static"}}'
+      selector:
+        object:
