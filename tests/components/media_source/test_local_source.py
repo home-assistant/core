@@ -285,6 +285,9 @@ async def test_browse_media_metadata_backfill(
     with patch(
         "homeassistant.components.media_source.local_source.extract_metadata",
         return_value=(metadata, cover),
+    ), patch(
+        "homeassistant.components.media_source.local_source._should_backfill_metadata",
+        return_value=True,
     ):
         media = await media_source.async_browse_media(
             hass, f"{const.URI_SCHEME}{const.DOMAIN}/test_dir/."

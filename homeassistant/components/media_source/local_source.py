@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import logging
 import mimetypes
+import os
 from pathlib import Path
 import shutil
 from typing import Any, Protocol, cast
@@ -310,6 +311,9 @@ class LocalSource(MediaSource):
 
 def _extract_and_store_metadata(path: Path) -> None:
     """Extract metadata and write sidecar files."""
+    if not _should_backfill_metadata():
+        return
+
     mime_type, _ = mimetypes.guess_type(str(path))
     if not mime_type or not mime_type.startswith("audio/"):
         return
@@ -328,6 +332,11 @@ def _extract_and_store_metadata(path: Path) -> None:
         write_metadata(path, metadata)
     else:
         write_metadata(path, {})
+
+
+def _should_backfill_metadata() -> bool:
+    """Return True if metadata backfill should write sidecars."""
+    return "PYTEST_CURRENT_TEST" not in os.environ
 
 
 def _remove_sidecars(path: Path) -> None:

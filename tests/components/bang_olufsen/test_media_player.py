@@ -1291,15 +1291,18 @@ async def test_async_browse_media(
     """Test async_browse_media with audio and video source."""
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
-    client = await hass_ws_client()
-    await client.send_json_auto_id(
-        {
-            "type": "media_player/browse_media",
-            "entity_id": TEST_MEDIA_PLAYER_ENTITY_ID,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
+    with patch(
+        "homeassistant.components.media_source.local_source._extract_and_store_metadata"
+    ):
+        client = await hass_ws_client()
+        await client.send_json_auto_id(
+            {
+                "type": "media_player/browse_media",
+                "entity_id": TEST_MEDIA_PLAYER_ENTITY_ID,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
 
     assert (child in response["result"]["children"]) is present
 

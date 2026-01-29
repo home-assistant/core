@@ -1039,16 +1039,19 @@ async def test_browse_media(
     # DMR can play all media types
     dmr_device_mock.sink_protocol_info = ["*"]
 
-    client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "media_player/browse_media",
-            "entity_id": mock_entity_id,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
+    with patch(
+        "homeassistant.components.media_source.local_source._extract_and_store_metadata"
+    ):
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": mock_entity_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
     expected_child_video = {
         "title": "Epic Sax Guy 10 Hours.mp4",
         "media_class": "video",
@@ -1082,16 +1085,19 @@ async def test_browse_media(
         "http-get:*:audio/mpeg:*",
         "http-get:*:audio/vorbis:*",
     ]
-    client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "media_player/browse_media",
-            "entity_id": mock_entity_id,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
+    with patch(
+        "homeassistant.components.media_source.local_source._extract_and_store_metadata"
+    ):
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": mock_entity_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
     # Video file should not be shown
     assert expected_child_video not in response["result"]["children"]
     # Audio file should appear
@@ -1102,16 +1108,19 @@ async def test_browse_media(
     dmr_device_mock.sink_protocol_info = [
         "http-get:*:audio/X-MPEG;codecs=mp3:*",
     ]
-    client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "media_player/browse_media",
-            "entity_id": mock_entity_id,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
+    with patch(
+        "homeassistant.components.media_source.local_source._extract_and_store_metadata"
+    ):
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": mock_entity_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
     # Video file should not be shown
     assert expected_child_video not in response["result"]["children"]
     # Audio file should appear
@@ -1119,16 +1128,19 @@ async def test_browse_media(
 
     # Device does not specify what it can play
     dmr_device_mock.sink_protocol_info = []
-    client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "media_player/browse_media",
-            "entity_id": mock_entity_id,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
+    with patch(
+        "homeassistant.components.media_source.local_source._extract_and_store_metadata"
+    ):
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": mock_entity_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
     # All files should be returned
     assert expected_child_video in response["result"]["children"]
     assert expected_child_audio in response["result"]["children"]
@@ -1180,16 +1192,19 @@ async def test_browse_media_unfiltered(
     # Filtering turned on by default
     assert CONF_BROWSE_UNFILTERED not in config_entry_mock.options
 
-    client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "media_player/browse_media",
-            "entity_id": mock_entity_id,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
+    with patch(
+        "homeassistant.components.media_source.local_source._extract_and_store_metadata"
+    ):
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": mock_entity_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
     # Video file should not be shown
     assert expected_child_video not in response["result"]["children"]
     # Audio file should appear
@@ -1204,16 +1219,19 @@ async def test_browse_media_unfiltered(
     )
     await hass.async_block_till_done()
 
-    client = await hass_ws_client()
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "media_player/browse_media",
-            "entity_id": mock_entity_id,
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
+    with patch(
+        "homeassistant.components.media_source.local_source._extract_and_store_metadata"
+    ):
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": mock_entity_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
     # All files should be returned
     assert expected_child_video in response["result"]["children"]
     assert expected_child_audio in response["result"]["children"]
