@@ -14,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_fragment
 
-from .const import CONF_URL_PATH, LOVELACE_DATA, ConfigNotFound
+from .const import CONF_URL_PATH, DOMAIN, LOVELACE_DATA, ConfigNotFound
 from .dashboard import LovelaceConfig
 
 if TYPE_CHECKING:
@@ -38,7 +38,15 @@ def _handle_errors[_R](
         msg: dict[str, Any],
     ) -> None:
         url_path = msg.get(CONF_URL_PATH)
-        config = hass.data[LOVELACE_DATA].dashboards.get(url_path)
+
+        # When url_path is None, prefer "lovelace" dashboard if it exists (for YAML mode)
+        # Otherwise fall back to dashboards[None] (storage mode default)
+        if url_path is None:
+            config = hass.data[LOVELACE_DATA].dashboards.get(DOMAIN) or hass.data[
+                LOVELACE_DATA
+            ].dashboards.get(None)
+        else:
+            config = hass.data[LOVELACE_DATA].dashboards.get(url_path)
 
         if config is None:
             connection.send_error(

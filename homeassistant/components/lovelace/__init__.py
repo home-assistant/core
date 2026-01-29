@@ -33,6 +33,7 @@ from .const import (  # noqa: F401
     CONF_ALLOW_SINGLE_WORD,
     CONF_ICON,
     CONF_REQUIRE_ADMIN,
+    CONF_RESOURCE_MODE,
     CONF_SHOW_IN_SIDEBAR,
     CONF_TITLE,
     CONF_URL_PATH,
@@ -87,6 +88,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_MODE, default=MODE_STORAGE): vol.All(
                     vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])
                 ),
+                vol.Optional(CONF_RESOURCE_MODE): vol.All(
+                    vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])
+                ),
                 vol.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
                     YAML_DASHBOARD_SCHEMA,
                     slug_validator=_validate_url_slug,
@@ -103,7 +107,8 @@ CONFIG_SCHEMA = vol.Schema(
 class LovelaceData:
     """Dataclass to store information in hass.data."""
 
-    mode: str
+    mode: str  # Kept for backward compatibility
+    resource_mode: str  # The actual mode used for resources (yaml or storage)
     dashboards: dict[str | None, dashboard.LovelaceConfig]
     resources: resources.ResourceYAMLCollection | resources.ResourceStorageCollection
     yaml_dashboards: dict[str | None, ConfigType]
@@ -114,19 +119,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     mode = config[DOMAIN][CONF_MODE]
     yaml_resources = config[DOMAIN].get(CONF_RESOURCES)
 
-    # Deprecated - Remove in 2026.8
-    # For YAML mode, register the default panel in yaml mode (temporary until user migrates)
-    # Use legacy_lovelace so the frontend knows to load this panel differently
-    if mode == MODE_YAML:
-        frontend.async_register_built_in_panel(
-            hass,
-            DOMAIN,
-            config={"mode": mode, "legacy_lovelace": True},
-            sidebar_title="overview",
-            sidebar_icon="mdi:view-dashboard",
-            sidebar_default_visible=False,
-        )
-        _async_create_yaml_mode_repair(hass)
+    # resource_mode controls how resources are loaded (yaml vs storage)
+    # Falls back to mode for backward compatibility
+    resource_mode = config[DOMAIN].get(CONF_RESOURCE_MODE, mode)
 
     async def reload_resources_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml resources."""
@@ -150,12 +145,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         hass.data[LOVELACE_DATA].resources = resource_collection
 
-    default_config: dashboard.LovelaceConfig
     resource_collection: (
         resources.ResourceYAMLCollection | resources.ResourceStorageCollection
     )
-    if mode == MODE_YAML:
-        default_config = dashboard.LovelaceYAML(hass, None, None)
+    default_config = dashboard.LovelaceStorage(hass, None)
+
+    # Load resources based on resource_mode
+    if resource_mode == MODE_YAML:
         resource_collection = await create_yaml_resource_col(hass, yaml_resources)
 
         async_register_admin_service(
@@ -178,8 +174,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     else:
-        default_config = dashboard.LovelaceStorage(hass, None)
-
         if yaml_resources is not None:
             _LOGGER.warning(
                 "Lovelace is running in storage mode. Define resources via user"
@@ -202,12 +196,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, websocket.websocket_lovelace_delete_config
     )
 
+    yaml_dashboards = config[DOMAIN].get(CONF_DASHBOARDS, {})
+
+    # For YAML mode, add the default "lovelace" dashboard if not already defined
+    # This migrates the legacy yaml mode to a proper yaml dashboard entry
+    if mode == MODE_YAML and DOMAIN not in yaml_dashboards:
+        yaml_dashboards = {
+            DOMAIN: {
+                CONF_TITLE: "Home",
+                CONF_ICON: DEFAULT_ICON,
+                CONF_SHOW_IN_SIDEBAR: True,
+                CONF_REQUIRE_ADMIN: False,
+                CONF_MODE: MODE_YAML,
+                CONF_FILENAME: LOVELACE_CONFIG_FILE,
+            },
+            **yaml_dashboards,
+        }
+        _async_create_yaml_mode_repair(hass)
+
     hass.data[LOVELACE_DATA] = LovelaceData(
-        mode=mode,
+        mode=MODE_STORAGE,  # Kept for backward compatibility
+        resource_mode=resource_mode,  # The actual mode used for resources
         # We store a dictionary mapping url_path: config. None is the default.
         dashboards={None: default_config},
         resources=resource_collection,
-        yaml_dashboards=config[DOMAIN].get(CONF_DASHBOARDS, {}),
+        yaml_dashboards=yaml_dashboards,
     )
 
     if hass.config.recovery_mode:
@@ -451,7 +464,7 @@ async def _async_migrate_default_config(
 # Deprecated - Remove in 2026.8
 @callback
 def _async_create_yaml_mode_repair(hass: HomeAssistant) -> None:
-    """Create repair issue for YAML mode migration."""
+    """Create repair issue for YAML mode deprecation."""
     ir.async_create_issue(
         hass,
         DOMAIN,
