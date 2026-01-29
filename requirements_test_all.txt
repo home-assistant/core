@@ -337,6 +337,9 @@ aiooui==0.1.9
 # homeassistant.components.pegel_online
 aiopegelonline==0.1.1
 
+# homeassistant.components.ptdevices
+aioptdevices==2026.01.1
+
 # homeassistant.components.acmeda
 aiopulse==0.4.6
 

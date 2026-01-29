@@ -1,0 +1,36 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_voltage": {
+        "default": "mdi:battery"
+      },
+      "inch_level": {
+        "default": "mdi:water"
+      },
+      "percent_level": {
+        "default": "mdi:water-percent"
+      },
+      "probe_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "reported": {
+        "default": "mdi:calendar-clock"
+      },
+      "status": {
+        "default": "mdi:information-outline"
+      },
+      "tx_reported": {
+        "default": "mdi:calendar-clock"
+      },
+      "tx_signal": {
+        "default": "mdi:wifi"
+      },
+      "volume_level": {
+        "default": "mdi:water"
+      },
+      "wifi_signal": {
+        "default": "mdi:wifi"
+      }
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "malformed_response": "A malformed response was received from PTDevices.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "API Token for your PTDevices account."
+        },
+        "description": "Enter your Token API key from PTDevices"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "battery_status": {
+        "name": "Battery status"
+      }
+    },
+    "sensor": {
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "inch_level": {
+        "name": "Level depth"
+      },
+      "percent_level": {
+        "name": "Level percent"
+      },
+      "probe_temperature": {
+        "name": "Probe temperature"
+      },
+      "reported": {
+        "name": "Last RX report"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "not_connected": "Not Connected",
+          "not_connected_yet": "Not Connected Yet",
+          "power_internet_out_or_receiver_not_working": "Power/Internet Out or Receiver Not Working",
+          "press_transmitter_connect_button": "Press Transmitter Connect Button",
+          "transmitter_not_reporting": "Transmitter Not Reporting",
+          "unknown": "Unknown",
+          "working": "Working"
+        }
+      },
+      "tx_reported": {
+        "name": "Last TX report"
+      },
+      "tx_signal": {
+        "name": "LoRa signal strength"
+      },
+      "volume_level": {
+        "name": "Level volume"
+      },
+      "wifi_signal": {
+        "name": "WiFi signal strength"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "invalid_access_token": {
+      "message": "[%key:common::config_flow::error::invalid_access_token%]"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "malformed_response_missing_key": {
+      "message": "The response from PTDevices was missing the key(s) `{missing_keys}`"
+    }
+  }
+}
