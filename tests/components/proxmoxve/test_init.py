@@ -77,20 +77,20 @@ async def test_config_import(
     [
         (
             AuthenticationError("Invalid credentials"),
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.SETUP_ERROR,
         ),
         (
             SSLError("SSL handshake failed"),
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.SETUP_ERROR,
         ),
         (ConnectTimeout("Connection timed out"), ConfigEntryState.SETUP_RETRY),
         (
-            ResourceException,
-            ConfigEntryState.SETUP_RETRY,
+            ResourceException(500, "Internal Server Error", ""),
+            ConfigEntryState.SETUP_ERROR,
         ),
         (
-            requests.exceptions.ConnectionError,
-            ConfigEntryState.SETUP_RETRY,
+            requests.exceptions.ConnectionError("Connection refused"),
+            ConfigEntryState.SETUP_ERROR,
         ),
     ],
     ids=[
