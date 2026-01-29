@@ -51,18 +51,15 @@ async def _list_buckets(
     ) as client:
         result = await cast(Any, client).list_buckets()
 
-    return [b["Name"] for b in result.get("Buckets", []) if "Name" in b]
+    return [bucket["Name"] for bucket in result.get("Buckets", []) if "Name" in bucket]
 
 
 class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for IDrive e2."""
 
-    def __init__(self) -> None:
-        """Initialize the IDriveE2ConfigFlow with default values."""
-        super().__init__()
-        self._access_key: str | None = None
-        self._secret_key: str | None = None
-        self._endpoint_url: str | None = None
+    _access_key: str
+    _secret_key: str
+    _endpoint_url: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -110,7 +107,12 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Second step: list buckets and let user select from dropdown."""
         errors: dict[str, str] = {}
 
-        if user_input is not None and user_input != {}:
+        # Make sure that the bucket step is only executed after
+        # the endpoint_url is determined in the user step
+        if not hasattr(self, "_endpoint_url"):
+            return await self.async_step_user()
+
+        if user_input:
             # Check if the entry already exists to avoid duplicates
             self._async_abort_entries_match(
                 {
@@ -130,9 +132,6 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         # Information should be available from the previous step
-        assert self._endpoint_url is not None
-        assert self._access_key is not None
-        assert self._secret_key is not None
         try:
             # List buckets using the provided credentials
             buckets = await _list_buckets(
@@ -150,11 +149,10 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors:
             # Go back to the user step if there are errors getting buckets
             # Prefill the access key and secret key fields with the current values
-            suggested = {}
-            if self._access_key is not None:
-                suggested[CONF_ACCESS_KEY_ID] = self._access_key
-            if self._secret_key is not None:
-                suggested[CONF_SECRET_ACCESS_KEY] = self._secret_key
+            suggested = {
+                CONF_ACCESS_KEY_ID: self._access_key,
+                CONF_SECRET_ACCESS_KEY: self._secret_key,
+            }
             return self.async_show_form(
                 step_id="user",
                 data_schema=self.add_suggested_values_to_schema(
