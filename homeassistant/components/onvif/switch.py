@@ -141,9 +141,7 @@ class ONVIFRelaySwitch(ONVIFBaseEntity, SwitchEntity):
         """Turn on relay."""
         previous_state = self._attr_is_on
         try:
-            await self.device.async_set_relay_output_state(
-                self._relay_token, "active"
-            )
+            await self.device.async_set_relay_output_state(self._relay_token, "active")
             self._attr_is_on = True
             self.async_write_ha_state()
         except Exception:
