@@ -46,6 +46,7 @@ from tests.common import MockEntity
 
 UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.ABSOLUTE_HUMIDITY: CONCENTRATION_GRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.AMMONIA: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     SensorDeviceClass.APPARENT_POWER: UnitOfApparentPower.VOLT_AMPERE,
     SensorDeviceClass.AQI: None,
     SensorDeviceClass.AREA: UnitOfArea.SQUARE_METERS,

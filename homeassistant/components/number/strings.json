@@ -33,6 +33,9 @@
     "absolute_humidity": {
       "name": "[%key:component::sensor::entity_component::absolute_humidity::name%]"
     },
+    "ammonia": {
+      "name": "[%key:component::sensor::entity_component::ammonia::name%]"
+    },
     "apparent_power": {
       "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
     },

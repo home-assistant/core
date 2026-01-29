@@ -47,6 +47,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.util.unit_conversion import (
+    AmmoniaConcentrationConverter,
     ApparentPowerConverter,
     AreaConverter,
     BaseUnitConverter,
@@ -121,6 +122,12 @@ class SensorDeviceClass(StrEnum):
     """Absolute humidity.
 
     Unit of measurement: `g/m³`, `mg/m³`
+    """
+
+    AMMONIA = "ammonia"
+    """Amount of NH3.
+
+    Unit of measurement: `ppb` (parts per billion), `μg/m³`
     """
 
     APPARENT_POWER = "apparent_power"
@@ -552,6 +559,7 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.APPARENT_POWER: ApparentPowerConverter,
     SensorDeviceClass.ABSOLUTE_HUMIDITY: MassVolumeConcentrationConverter,
+    SensorDeviceClass.AMMONIA: AmmoniaConcentrationConverter,
     SensorDeviceClass.AREA: AreaConverter,
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
     SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: BloodGlucoseConcentrationConverter,
@@ -595,6 +603,10 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.ABSOLUTE_HUMIDITY: {
         CONCENTRATION_GRAMS_PER_CUBIC_METER,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    },
+    SensorDeviceClass.AMMONIA: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     },
     SensorDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     SensorDeviceClass.AQI: {None},
@@ -757,6 +769,7 @@ UNITS_PRECISION = {
 
 DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.ABSOLUTE_HUMIDITY: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.AMMONIA: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.APPARENT_POWER: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.AQI: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.AREA: set(SensorStateClass),

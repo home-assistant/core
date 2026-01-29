@@ -102,6 +102,7 @@ _AMBIENT_IDEAL_GAS_MOLAR_VOLUME = (  # m3⋅mol⁻¹
     _IDEAL_GAS_CONSTANT * _AMBIENT_TEMPERATURE / _AMBIENT_PRESSURE
 )
 # Molar masses in g⋅mol⁻¹
+_AMMONIA_MOLAR_MASS = 17.031
 _CARBON_MONOXIDE_MOLAR_MASS = 28.01
 _NITROGEN_DIOXIDE_MOLAR_MASS = 46.0055
 _NITROGEN_MONOXIDE_MOLAR_MASS = 30.0061
@@ -187,6 +188,22 @@ class BaseUnitConverter:
     def _are_unit_inverses(cls, from_unit: str | None, to_unit: str | None) -> bool:
         """Return true if one unit is an inverse but not the other."""
         return (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
+
+
+class AmmoniaConcentrationConverter(BaseUnitConverter):
+    """Convert ammonia ratio to mass per volume."""
+
+    UNIT_CLASS = "ammonia"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        CONCENTRATION_PARTS_PER_BILLION: 1e9,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+            _AMMONIA_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
+        ),
+    }
+    VALID_UNITS = {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    }
 
 
 class ApparentPowerConverter(BaseUnitConverter):

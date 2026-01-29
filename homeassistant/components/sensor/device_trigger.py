@@ -33,6 +33,7 @@ from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 DEVICE_CLASS_NONE = "none"
 
 CONF_ABSOLUTE_HUMIDITY = "absolute_humidity"
+CONF_AMMONIA = "ammonia"
 CONF_APPARENT_POWER = "apparent_power"
 CONF_AQI = "aqi"
 CONF_AREA = "area"
@@ -91,6 +92,7 @@ CONF_WIND_SPEED = "wind_speed"
 
 ENTITY_TRIGGERS = {
     SensorDeviceClass.ABSOLUTE_HUMIDITY: [{CONF_TYPE: CONF_ABSOLUTE_HUMIDITY}],
+    SensorDeviceClass.AMMONIA: [{CONF_TYPE: CONF_AMMONIA}],
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_APPARENT_POWER}],
     SensorDeviceClass.AQI: [{CONF_TYPE: CONF_AQI}],
     SensorDeviceClass.AREA: [{CONF_TYPE: CONF_AREA}],
@@ -166,6 +168,7 @@ TRIGGER_SCHEMA = vol.All(
             vol.Required(CONF_TYPE): vol.In(
                 [
                     CONF_ABSOLUTE_HUMIDITY,
+                    CONF_AMMONIA,
                     CONF_APPARENT_POWER,
                     CONF_AQI,
                     CONF_AREA,

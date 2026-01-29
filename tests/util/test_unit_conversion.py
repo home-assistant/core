@@ -40,6 +40,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
+    AmmoniaConcentrationConverter,
     ApparentPowerConverter,
     AreaConverter,
     BaseUnitConverter,
@@ -81,6 +82,7 @@ INVALID_SYMBOL = "bob"
 _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
     converter: sorted(converter.VALID_UNITS, key=lambda x: (x is None, x))
     for converter in (
+        AmmoniaConcentrationConverter,
         AreaConverter,
         BloodGlucoseConcentrationConverter,
         MassVolumeConcentrationConverter,
@@ -115,6 +117,11 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
+    AmmoniaConcentrationConverter: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_BILLION,
+        0.707999,
+    ),
     ApparentPowerConverter: (
         UnitOfApparentPower.MILLIVOLT_AMPERE,
         UnitOfApparentPower.VOLT_AMPERE,
@@ -226,6 +233,20 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
 _CONVERTED_VALUE: dict[
     type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
 ] = {
+    AmmoniaConcentrationConverter: [
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            0.707999,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            169.491752,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
+    ],
     ApparentPowerConverter: [
         (
             10,

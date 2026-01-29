@@ -2218,6 +2218,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
 @pytest.mark.parametrize(
     "device_class",
     [
+        SensorDeviceClass.AMMONIA,
         SensorDeviceClass.APPARENT_POWER,
         SensorDeviceClass.AQI,
         SensorDeviceClass.AREA,
