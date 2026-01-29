@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_TIMEOUT,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
     STATE_ON,
     Platform,
 )
@@ -51,6 +52,7 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_COMMAND_OFF): data_packet,
         vol.Optional(CONF_COMMAND_ON): data_packet,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -182,6 +184,8 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
             device, config.get(CONF_COMMAND_ON), config.get(CONF_COMMAND_OFF)
         )
         self._attr_name = config[CONF_NAME]
+        if unique_id := config.get(CONF_UNIQUE_ID):
+            self._attr_unique_id = unique_id
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
