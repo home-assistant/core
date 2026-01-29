@@ -51,6 +51,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> Any:
         LOGGER.debug(error.args, exc_info=True)
         raise CannotConnect from error
     except Exception as error:  # pylint: disable=broad-except
+        LOGGER.exception("Unexpected exception")
         raise UnknownError from error
 
     return device_info
@@ -83,7 +84,6 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
             return None
         except UnknownError:
-            LOGGER.exception("Unexpected exception during configuration")
             errors["base"] = "unknown"
             return None
         else:
@@ -210,7 +210,6 @@ class FullyKioskConfigFlow(ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except UnknownError:
-                LOGGER.exception("Unexpected exception during reconfiguration")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(
