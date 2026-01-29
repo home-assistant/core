@@ -30,12 +30,12 @@ async def test_not_installed_raises_exception(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_configure_addon(addon_config)
 
-    assert str(err.value) == "Test add-on is not installed"
+    assert str(err.value) == "Test app is not installed"
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_update_addon()
 
-    assert str(err.value) == "Test add-on is not installed"
+    assert str(err.value) == "Test app is not installed"
 
 
 async def test_not_available_raises_exception(
@@ -50,12 +50,12 @@ async def test_not_available_raises_exception(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_install_addon()
 
-    assert str(err.value) == "Test add-on is not available"
+    assert str(err.value) == "Test app is not available"
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_update_addon()
 
-    assert str(err.value) == "Test add-on is not available"
+    assert str(err.value) == "Test app is not available"
 
 
 async def test_get_addon_discovery_info(
@@ -92,7 +92,7 @@ async def test_get_addon_discovery_info_error(
     with pytest.raises(AddonError) as err:
         assert await addon_manager.async_get_addon_discovery_info()
 
-    assert str(err.value) == "Failed to get the Test add-on discovery info: Boom"
+    assert str(err.value) == "Failed to get the Test app discovery info: Boom"
 
     assert get_addon_discovery_info.call_count == 1
 
@@ -159,7 +159,7 @@ async def test_get_addon_info_error(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_get_addon_info()
 
-    assert str(err.value) == "Failed to get the Test add-on info: Boom"
+    assert str(err.value) == "Failed to get the Test app info: Boom"
 
     assert addon_info.call_count == addon_info_calls
     assert addon_store_info.call_count == addon_store_info_calls
@@ -186,7 +186,7 @@ async def test_set_addon_options_error(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_set_addon_options({"test_key": "test"})
 
-    assert str(err.value) == "Failed to set the Test add-on options: Boom"
+    assert str(err.value) == "Failed to set the Test app options: Boom"
 
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
@@ -223,7 +223,7 @@ async def test_install_addon_error(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_install_addon()
 
-    assert str(err.value) == "Failed to install the Test add-on: Boom"
+    assert str(err.value) == "Failed to install the Test app: Boom"
 
     assert install_addon.call_count == 1
 
@@ -274,7 +274,7 @@ async def test_schedule_install_addon_error(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_schedule_install_addon()
 
-    assert str(err.value) == "Failed to install the Test add-on: Boom"
+    assert str(err.value) == "Failed to install the Test app: Boom"
 
     assert install_addon.call_count == 1
 
@@ -290,7 +290,7 @@ async def test_schedule_install_addon_logs_error(
 
     await addon_manager.async_schedule_install_addon(catch_error=True)
 
-    assert "Failed to install the Test add-on: Boom" in caplog.text
+    assert "Failed to install the Test app: Boom" in caplog.text
     assert install_addon.call_count == 1
 
 
@@ -312,7 +312,7 @@ async def test_uninstall_addon_error(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_uninstall_addon()
 
-    assert str(err.value) == "Failed to uninstall the Test add-on: Boom"
+    assert str(err.value) == "Failed to uninstall the Test app: Boom"
 
     assert uninstall_addon.call_count == 1
 
@@ -333,7 +333,7 @@ async def test_start_addon_error(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_start_addon()
 
-    assert str(err.value) == "Failed to start the Test add-on: Boom"
+    assert str(err.value) == "Failed to start the Test app: Boom"
 
     assert start_addon.call_count == 1
 
@@ -375,7 +375,7 @@ async def test_schedule_start_addon_error(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_schedule_start_addon()
 
-    assert str(err.value) == "Failed to start the Test add-on: Boom"
+    assert str(err.value) == "Failed to start the Test app: Boom"
 
     assert start_addon.call_count == 1
 
@@ -391,7 +391,7 @@ async def test_schedule_start_addon_logs_error(
 
     await addon_manager.async_schedule_start_addon(catch_error=True)
 
-    assert "Failed to start the Test add-on: Boom" in caplog.text
+    assert "Failed to start the Test app: Boom" in caplog.text
     assert start_addon.call_count == 1
 
 
@@ -413,7 +413,7 @@ async def test_restart_addon_error(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_restart_addon()
 
-    assert str(err.value) == "Failed to restart the Test add-on: Boom"
+    assert str(err.value) == "Failed to restart the Test app: Boom"
 
     assert restart_addon.call_count == 1
 
@@ -455,7 +455,7 @@ async def test_schedule_restart_addon_error(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_schedule_restart_addon()
 
-    assert str(err.value) == "Failed to restart the Test add-on: Boom"
+    assert str(err.value) == "Failed to restart the Test app: Boom"
 
     assert restart_addon.call_count == 1
 
@@ -471,7 +471,7 @@ async def test_schedule_restart_addon_logs_error(
 
     await addon_manager.async_schedule_restart_addon(catch_error=True)
 
-    assert "Failed to restart the Test add-on: Boom" in caplog.text
+    assert "Failed to restart the Test app: Boom" in caplog.text
     assert restart_addon.call_count == 1
 
 
@@ -491,7 +491,7 @@ async def test_stop_addon_error(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_stop_addon()
 
-    assert str(err.value) == "Failed to stop the Test add-on: Boom"
+    assert str(err.value) == "Failed to stop the Test app: Boom"
 
     assert stop_addon.call_count == 1
 
@@ -549,7 +549,7 @@ async def test_update_addon_error(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_update_addon()
 
-    assert str(err.value) == "Failed to update the Test add-on: Boom"
+    assert str(err.value) == "Failed to update the Test app: Boom"
 
     assert addon_info.call_count == 2
     assert create_backup.call_count == 1
@@ -618,14 +618,14 @@ async def test_schedule_update_addon(
             1,
             None,
             0,
-            "Failed to create a backup of the Test add-on: Boom",
+            "Failed to create a backup of the Test app: Boom",
         ),
         (
             None,
             1,
             SupervisorError("Boom"),
             1,
-            "Failed to update the Test add-on: Boom",
+            "Failed to update the Test app: Boom",
         ),
     ],
 )
@@ -668,14 +668,14 @@ async def test_schedule_update_addon_error(
             1,
             None,
             0,
-            "Failed to create a backup of the Test add-on: Boom",
+            "Failed to create a backup of the Test app: Boom",
         ),
         (
             None,
             1,
             SupervisorError("Boom"),
             1,
-            "Failed to update the Test add-on: Boom",
+            "Failed to update the Test app: Boom",
         ),
     ],
 )
@@ -733,7 +733,7 @@ async def test_create_backup_error(
     with pytest.raises(AddonError) as err:
         await addon_manager.async_create_backup()
 
-    assert str(err.value) == "Failed to create a backup of the Test add-on: Boom"
+    assert str(err.value) == "Failed to create a backup of the Test app: Boom"
 
     assert addon_info.call_count == 1
     assert create_backup.call_count == 1
@@ -799,7 +799,7 @@ async def test_schedule_install_setup_addon(
             0,
             None,
             0,
-            "Failed to install the Test add-on: Boom",
+            "Failed to install the Test app: Boom",
         ),
         (
             None,
@@ -808,7 +808,7 @@ async def test_schedule_install_setup_addon(
             1,
             None,
             0,
-            "Failed to set the Test add-on options: Boom",
+            "Failed to set the Test app options: Boom",
         ),
         (
             None,
@@ -817,7 +817,7 @@ async def test_schedule_install_setup_addon(
             1,
             SupervisorError("Boom"),
             1,
-            "Failed to start the Test add-on: Boom",
+            "Failed to start the Test app: Boom",
         ),
     ],
 )
@@ -868,7 +868,7 @@ async def test_schedule_install_setup_addon_error(
             0,
             None,
             0,
-            "Failed to install the Test add-on: Boom",
+            "Failed to install the Test app: Boom",
         ),
         (
             None,
@@ -877,7 +877,7 @@ async def test_schedule_install_setup_addon_error(
             1,
             None,
             0,
-            "Failed to set the Test add-on options: Boom",
+            "Failed to set the Test app options: Boom",
         ),
         (
             None,
@@ -886,7 +886,7 @@ async def test_schedule_install_setup_addon_error(
             1,
             SupervisorError("Boom"),
             1,
-            "Failed to start the Test add-on: Boom",
+            "Failed to start the Test app: Boom",
         ),
     ],
 )
@@ -963,14 +963,14 @@ async def test_schedule_setup_addon(
             1,
             None,
             0,
-            "Failed to set the Test add-on options: Boom",
+            "Failed to set the Test app options: Boom",
         ),
         (
             None,
             1,
             SupervisorError("Boom"),
             1,
-            "Failed to start the Test add-on: Boom",
+            "Failed to start the Test app: Boom",
         ),
     ],
 )
@@ -1012,14 +1012,14 @@ async def test_schedule_setup_addon_error(
             1,
             None,
             0,
-            "Failed to set the Test add-on options: Boom",
+            "Failed to set the Test app options: Boom",
         ),
         (
             None,
             1,
             SupervisorError("Boom"),
             1,
-            "Failed to start the Test add-on: Boom",
+            "Failed to start the Test app: Boom",
         ),
     ],
 )

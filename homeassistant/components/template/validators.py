@@ -165,7 +165,7 @@ def number(
     attribute: str,
     minimum: float | None = None,
     maximum: float | None = None,
-    return_type: type[float] | type[int] = float,
+    return_type: type[float | int] = float,
     **kwargs: Any,
 ) -> Callable[[Any], float | int | None]:
     """Convert the result to a number (float or int).
