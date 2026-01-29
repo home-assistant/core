@@ -52,18 +52,6 @@ DESCRIPTIONS: dict[CompitParameter, BinarySensorEntityDescription] = {
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    CompitParameter.HAS_BATTERY: BinarySensorEntityDescription(
-        key=CompitParameter.HAS_BATTERY.value,
-        translation_key="has_battery",
-        device_class=BinarySensorDeviceClass.BATTERY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    CompitParameter.HAS_EXTERNAL_POWER: BinarySensorEntityDescription(
-        key=CompitParameter.HAS_EXTERNAL_POWER.value,
-        translation_key="has_external_power",
-        device_class=BinarySensorDeviceClass.PLUG,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     CompitParameter.PUMP_STATUS: BinarySensorEntityDescription(
         key=CompitParameter.PUMP_STATUS.value,
         translation_key="pump_status",
@@ -84,10 +72,7 @@ class CompitDeviceDescription:
     """Class to describe a Compit device."""
 
     name: str
-    """Name of the device."""
-
     parameters: dict[CompitParameter, BinarySensorEntityDescription]
-    """Parameters of the device."""
 
 
 DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
@@ -125,10 +110,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
         parameters={
             CompitParameter.BATTERY_CHARGE_STATUS: DESCRIPTIONS[
                 CompitParameter.BATTERY_CHARGE_STATUS
-            ],
-            CompitParameter.HAS_BATTERY: DESCRIPTIONS[CompitParameter.HAS_BATTERY],
-            CompitParameter.HAS_EXTERNAL_POWER: DESCRIPTIONS[
-                CompitParameter.HAS_EXTERNAL_POWER
             ],
             CompitParameter.PUMP_STATUS: DESCRIPTIONS[CompitParameter.PUMP_STATUS],
         },
@@ -173,6 +154,8 @@ class CompitBinarySensor(
 ):
     """Representation of a Compit binary sensor entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: CompitDataUpdateCoordinator,
@@ -185,7 +168,6 @@ class CompitBinarySensor(
         super().__init__(coordinator)
         self.device_id = device_id
         self.entity_description = entity_description
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{device_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(device_id))},

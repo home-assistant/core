@@ -4,7 +4,6 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from compit_inext_api import CompitParameter
-from compit_inext_api.consts import CompitParameter
 from compit_inext_api.params_dictionary import PARAMS
 import pytest
 
@@ -98,7 +97,7 @@ def mock_connector():
         return param.value if param else None
 
     def select_device_option(
-        device_id: int, parameter_code: CompitParameter, value: int
+        device_id: int, parameter_code: CompitParameter, value: str
     ):
         next(
             p

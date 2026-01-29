@@ -1,11 +1,8 @@
 {
   "entity": {
-  	"binary_sensor": {
+    "binary_sensor": {
       "airing": {
         "default": "mdi:window-open-variant"
-      },
-      "battery_charge_status": {
-        "default": "mdi:battery-charging"
       },
       "co2_alert": {
         "default": "mdi:alert"
@@ -15,12 +12,6 @@
       },
       "dust_alert": {
         "default": "mdi:alert"
-      },
-      "has_battery": {
-        "default": "mdi:battery"
-      },
-      "has_external_power": {
-        "default": "mdi:power-plug"
       },
       "pump_status": {
         "default": "mdi:pump"

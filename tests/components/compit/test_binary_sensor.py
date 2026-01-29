@@ -19,7 +19,7 @@ async def test_binary_sensor_entities_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_connector,
+    mock_connector: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Snapshot test for binary sensor entities creation, unique IDs, and device info."""
@@ -54,16 +54,8 @@ async def test_binary_sensor_return_value(
         lambda device_id, parameter_code: mock_return_value
     )
     await setup_integration(hass, mock_config_entry)
-
-    # Test airing sensor
     state = hass.states.get("binary_sensor.nano_color_2_airing")
-    if state is not None:
-        assert state.state == expected_state
-
-    # Test pump_status sensor
-    state = hass.states.get("binary_sensor.af_1_pump_status")
-    if state is not None:
-        assert state.state == expected_state
+    assert state.state == expected_state
 
 
 async def test_binary_sensor_no_sensor(
@@ -81,7 +73,3 @@ async def test_binary_sensor_no_sensor(
     # Check that airing sensor is not created
     airing_entity = entity_registry.async_get("binary_sensor.nano_color_2_airing")
     assert airing_entity is None
-
-    # Check that pump_status sensor is not created
-    pump_status_entity = entity_registry.async_get("binary_sensor.af_1_pump_status")
-    assert pump_status_entity is None
