@@ -203,7 +203,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if mode == MODE_YAML and DOMAIN not in yaml_dashboards:
         yaml_dashboards = {
             DOMAIN: {
-                CONF_TITLE: "Home",
+                CONF_TITLE: "overview",
                 CONF_ICON: DEFAULT_ICON,
                 CONF_SHOW_IN_SIDEBAR: True,
                 CONF_REQUIRE_ADMIN: False,
