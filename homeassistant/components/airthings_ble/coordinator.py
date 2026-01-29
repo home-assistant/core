@@ -5,18 +5,24 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
+from airthings_ble import (
+    AirthingsBluetoothDeviceData,
+    AirthingsConnectivityMode,
+    AirthingsDevice,
+)
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import close_stale_connections_by_address
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
+    CONNECTIVITY_ISSUE_PREFIX,
     DEFAULT_SCAN_INTERVAL,
     DEVICE_MODEL,
     DEVICE_SPECIFIC_SCAN_INTERVAL,
@@ -94,4 +100,49 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             data = await self.airthings.update_device(self.ble_device)
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
+
+        self._check_connectivity_mode_issue(data)
         return data
+
+    @callback
+    def _check_connectivity_mode_issue(self, data: AirthingsDevice) -> None:
+        """Create or remove connectivity mode issue based on device data."""
+        connectivity_mode = data.sensors.get("connectivity_mode")
+        if connectivity_mode is None:
+            return
+
+        issue_id = f"{CONNECTIVITY_ISSUE_PREFIX}{data.address}"
+        serial_number = f"{data.model.value}{data.identifier}"
+
+        if connectivity_mode == AirthingsConnectivityMode.SMARTLINK.value:
+            ir.async_create_issue(
+                hass=self.hass,
+                domain=DOMAIN,
+                issue_id=issue_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="smartlink_detected",
+                translation_placeholders={
+                    "device_name": data.friendly_name(),
+                    "serial_number": serial_number,
+                },
+            )
+        elif connectivity_mode == AirthingsConnectivityMode.NOT_CONFIGURED.value:
+            ir.async_create_issue(
+                hass=self.hass,
+                domain=DOMAIN,
+                issue_id=issue_id,
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="not_configured",
+                translation_placeholders={
+                    "device_name": data.friendly_name(),
+                    "serial_number": serial_number,
+                },
+            )
+        else:
+            ir.async_delete_issue(
+                hass=self.hass,
+                domain=DOMAIN,
+                issue_id=issue_id,
+            )

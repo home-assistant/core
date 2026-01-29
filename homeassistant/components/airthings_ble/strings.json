@@ -54,5 +54,15 @@
         "name": "Radon longterm level"
       }
     }
+  },
+  "issues": {
+    "not_configured": {
+      "description": "Your Airthings device {device_name} ({serial_number}) has not been configured yet. Please add the device to the Airthings app to complete initial setup. Once configured, it will automatically connect via Bluetooth.",
+      "title": "Airthings device not configured"
+    },
+    "smartlink_detected": {
+      "description": "The {device_name} ({serial_number}) is using SmartLink (hub) connectivity, which is not supported by Airthings BLE.\n\nIf you want to keep using SmartLink:\n1. Set up the Airthings integration (cloud) and sign in to your Airthings account.\n2. Disable the Airthings BLE entities for this device.\n\nIf you want to use Bluetooth instead:\n1. Open the Airthings app.\n2. Go to Settings > Devices.\n3. Select your {device_name}.\n4. Select `Reset connectivity` to switch to Bluetooth.\n\nAfter switching to Bluetooth, this issue will be automatically resolved within about 5 minutes for most devices, or up to 30 minutes for Corentium Home 2.",
+      "title": "Unsupported connectivity mode"
+    }
   }
 }
