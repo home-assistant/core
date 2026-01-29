@@ -30,3 +30,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         func="get_full_affected_areas",
         supports_response=SupportsResponse.ONLY,
     )
+
+
+def async_unload_service(hass: HomeAssistant) -> None:
+    """Unload services."""
+    hass.services.async_remove(DOMAIN, SERVICE_GET_DESCRIPTION)
+    hass.services.async_remove(DOMAIN, SERVICE_GET_AFFECTED_AREAS)

@@ -20,7 +20,7 @@ from .const import (
     NO_MATCH_REGEX,
 )
 from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator
-from .services import async_setup_services
+from .services import async_setup_services, async_unload_service
 
 PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -47,7 +47,11 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        # This is the last loaded instance of NINA, deregister any services
+        async_unload_service(hass)
+    return unload_ok
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bool:
