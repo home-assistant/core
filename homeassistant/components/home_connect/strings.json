@@ -1308,6 +1308,12 @@
     "fetch_api_error": {
       "message": "Error obtaining data from the API: {error}"
     },
+    "fetch_selected_program_error": {
+      "message": "Error obtaining the selected program: {error}"
+    },
+    "no_selected_program_to_start": {
+      "message": "No selected program to start"
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
@@ -1403,7 +1409,8 @@
     "affects_to": {
       "options": {
         "active_program": "Active program",
-        "selected_program": "Selected program"
+        "selected_program": "Selected program",
+        "start_selected": "Start selected"
       }
     },
     "available_maps": {
@@ -1805,7 +1812,7 @@
       "description": "Starts or selects a program with options or sets the options for the active or the selected program.",
       "fields": {
         "affects_to": {
-          "description": "Selects if the program affected by the action should be the active or the selected program.",
+          "description": "Selects if the program affected by the action should be the active or the selected program. If \"Start selected\" is set, the already selected program and options will be started and the options defined in this service call will override the selected ones.",
           "name": "Affects to"
         },
         "b_s_h_common_option_duration": {
