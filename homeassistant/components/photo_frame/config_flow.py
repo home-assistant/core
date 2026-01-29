@@ -38,11 +38,15 @@ class PhotoFrameConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {}
         if user_input is not None:
-            try:
-                if user_media := user_input.get(CONF_MEDIA):
+            if user_media := user_input.get(CONF_MEDIA):
+                try:
                     browse = await async_browse_media(
                         self.hass, user_media.get("media_content_id")
                     )
+                except BrowseError as err:
+                    errors["media"] = "failed_browse"
+                    placeholders["error"] = str(err)
+                else:
                     if browse.children and any(
                         item.media_class == MediaClass.IMAGE for item in browse.children
                     ):
@@ -50,10 +54,7 @@ class PhotoFrameConfigFlow(ConfigFlow, domain=DOMAIN):
                             title=user_input[CONF_NAME], data=user_input
                         )
 
-                errors["media"] = "invalid_media_selected"
-            except BrowseError as err:
-                errors["media"] = "failed_browse"
-                placeholders["error"] = str(err)
+                    errors["media"] = "invalid_media_selected"
 
         return self.async_show_form(
             step_id="user",
