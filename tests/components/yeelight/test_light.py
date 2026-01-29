@@ -948,7 +948,6 @@ async def _async_test(
             {"power": "on", "color_mode": "4"},  # Unsupported
             True,
             False,
-            # lambda:(assert "Light reported unknown color mode: 4" in caplog.text),
             id="color_unsupported",
         ),
         # WhiteTemp
