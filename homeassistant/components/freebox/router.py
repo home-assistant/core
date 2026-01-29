@@ -203,7 +203,6 @@ class FreeboxRouter:
                 ftth_datas: dict[str, Any] = await self._api.connection.get_ftth()
             except HttpRequestError as err:
                 _LOGGER.debug("Could not fetch FTTH status: %s", err)
-                self.ftth_info = {}
                 return
 
             # Convert power from centidBm to dBm and store in connection sensors

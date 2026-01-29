@@ -103,6 +103,7 @@ async def test_freebox_client_partial_data_response(
     # RX sensor should have the correct value
     assert state_rx.state == "-22.25"
 
+
 async def test_freebox_client_invalid_data_types(
     hass: HomeAssistant, router: Mock
 ) -> None:
