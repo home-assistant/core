@@ -1,7 +1,9 @@
 """The syncthing integration."""
 
 import asyncio
+from asyncio import Task
 import logging
+from typing import Any
 
 import aiosyncthing
 
@@ -59,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def cancel_listen_task(_):
+    async def cancel_listen_task(_) -> None:
         await syncthing.unsubscribe()
 
     entry.async_on_unload(
@@ -82,14 +84,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SyncthingClient:
     """A Syncthing client."""
 
-    def __init__(self, hass, client, server_id):
+    def __init__(
+        self, hass: HomeAssistant, client: aiosyncthing.Syncthing, server_id: str
+    ) -> None:
         """Initialize the client."""
-        self._hass = hass
-        self._client = client
-        self._server_id = server_id
-        self._listen_task = None
-        self._initial_events = []
-        self._inital_events_processed = False
+        self._hass: HomeAssistant = hass
+        self._client: aiosyncthing.Syncthing = client
+        self._server_id: str = server_id
+        self._listen_task: Task[None] | None = None
+        self._initial_events: list[dict[str, Any]] = []
+        self._inital_events_processed: bool = False
 
     @property
     def server_id(self) -> str:
@@ -116,21 +120,21 @@ class SyncthingClient:
         """Get config namespace client."""
         return self._client.config
 
-    def subscribe(self):
+    def subscribe(self) -> None:
         """Start event listener coroutine."""
         self._listen_task = asyncio.create_task(self._listen())
 
-    def get_initial_events(self) -> list:
+    def get_initial_events(self) -> list[dict[str, Any]]:
         """Get initial events received upon subscription."""
         return self._initial_events
 
-    async def unsubscribe(self):
+    async def unsubscribe(self) -> None:
         """Stop event listener coroutine."""
         if self._listen_task:
             self._listen_task.cancel()
         await self._client.close()
 
-    async def _listen(self):
+    async def _listen(self) -> None:
         """Listen to Syncthing events."""
         events = self._client.events
         server_was_unavailable = False

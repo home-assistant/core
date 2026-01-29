@@ -76,9 +76,8 @@ MOCK_FOLDER_STATUS = {
     "state": "idle",
 }
 
-MOCK_CONFIG_DEVICE = {
-    "deviceID": DEVICE_ID,
-    "name": DEVICE_NAME,
+# Common device config structure
+MOCK_DEVICE_CONFIG_BASE = {
     "addresses": ["dynamic"],
     "compression": "metadata",
     "certName": "",
@@ -96,24 +95,16 @@ MOCK_CONFIG_DEVICE = {
     "remoteGUIPort": 0,
 }
 
+MOCK_CONFIG_DEVICE = {
+    "deviceID": DEVICE_ID,
+    "name": DEVICE_NAME,
+    **MOCK_DEVICE_CONFIG_BASE,
+}
+
 MOCK_CONFIG_SERVER = {
     "deviceID": SERVER_ID,
     "name": SERVER_NAME,
-    "addresses": ["dynamic"],
-    "compression": "metadata",
-    "certName": "",
-    "introducer": False,
-    "skipIntroductionRemovals": False,
-    "introducedBy": "",
-    "paused": False,
-    "allowedNetworks": [],
-    "autoAcceptFolders": False,
-    "maxSendKbps": 0,
-    "maxRecvKbps": 0,
-    "ignoredFolders": [],
-    "maxRequestKiB": 0,
-    "untrusted": False,
-    "remoteGUIPort": 0,
+    **MOCK_DEVICE_CONFIG_BASE,
 }
 
 MOCK_DEVICE_CONNECTED_EVENT = {
@@ -228,7 +219,7 @@ def create_mock_syncthing_client(
         mock_system.ping = AsyncMock(return_value=MOCK_PING)
         mock_system.config = AsyncMock(return_value=MOCK_CONFIG)
 
-        async def devices_side_effect(device_id: str):
+        async def devices_side_effect(device_id: str) -> dict[str, object]:
             if device_id == DEVICE_ID:
                 return MOCK_CONFIG_DEVICE
             if device_id == SERVER_ID:

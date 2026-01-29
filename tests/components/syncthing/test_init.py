@@ -34,7 +34,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_syncthing():
+def mock_syncthing() -> MagicMock:
     """Create a mock Syncthing client."""
     return create_mock_syncthing_client()
 
@@ -150,13 +150,12 @@ async def test_syncthing_client_stores_initial_events(
     async def mock_listen():
         """Mock events.listen that yields all events indefinitely without blocking."""
         for event in initial_events:
-            await asyncio.sleep(0)  # yield to event loop
-            yield event
-        while True:
-            # Simulate transition to regular events
-            mock_syncthing.events.last_seen_id = 10
             await asyncio.sleep(0)
-            yield None  # keep generator alive
+            yield event
+        mock_syncthing.events.last_seen_id = 10
+        while True:
+            await asyncio.sleep(0)
+            yield None
 
     mock_syncthing.events.listen = mock_listen
 

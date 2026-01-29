@@ -127,7 +127,7 @@ async def test_folder_sensor_updates_on_summary_event(
 
     # Initial state
     state = hass.states.get(FOLDER_ENTITY_ID)
-    assert state.state == "idle"
+    assert state is not None and state.state == "idle"
 
     # Dispatch FolderSummary event
     dispatcher.async_dispatcher_send(
@@ -139,7 +139,7 @@ async def test_folder_sensor_updates_on_summary_event(
 
     # State should be updated
     state = hass.states.get(FOLDER_ENTITY_ID)
-    assert state.state == "syncing"
+    assert state is not None and state.state == "syncing"
 
 
 async def test_folder_sensor_updates_on_state_changed_event(
@@ -161,7 +161,7 @@ async def test_folder_sensor_updates_on_state_changed_event(
 
     # State should be updated
     state = hass.states.get(FOLDER_ENTITY_ID)
-    assert state.state == "syncing"
+    assert state is not None and state.state == "syncing"
 
 
 async def test_folder_sensor_updates_on_paused_event(
@@ -183,7 +183,7 @@ async def test_folder_sensor_updates_on_paused_event(
 
     # State should be paused
     state = hass.states.get(FOLDER_ENTITY_ID)
-    assert state.state == "paused"
+    assert state is not None and state.state == "paused"
 
 
 async def test_folder_sensor_unavailable_on_server_unavailable(
@@ -197,7 +197,7 @@ async def test_folder_sensor_unavailable_on_server_unavailable(
 
     # Initial state should be available
     state = hass.states.get(FOLDER_ENTITY_ID)
-    assert state.state == "idle"
+    assert state is not None and state.state == "idle"
 
     # Dispatch server unavailable event
     dispatcher.async_dispatcher_send(
@@ -208,7 +208,7 @@ async def test_folder_sensor_unavailable_on_server_unavailable(
 
     # State should be unavailable
     state = hass.states.get(FOLDER_ENTITY_ID)
-    assert state.state == "unavailable"
+    assert state is not None and state.state == "unavailable"
 
 
 async def test_folder_sensor_available_on_server_available(
@@ -228,7 +228,7 @@ async def test_folder_sensor_available_on_server_available(
     await hass.async_block_till_done()
 
     state = hass.states.get(FOLDER_ENTITY_ID)
-    assert state.state == "unavailable"
+    assert state is not None and state.state == "unavailable"
 
     # Dispatch server available event
     dispatcher.async_dispatcher_send(
@@ -239,7 +239,7 @@ async def test_folder_sensor_available_on_server_available(
 
     # State should be available again
     state = hass.states.get(FOLDER_ENTITY_ID)
-    assert state.state == "idle"
+    assert state is not None and state.state == "idle"
 
 
 async def test_folder_sensor_polls_status(
@@ -262,7 +262,7 @@ async def test_folder_sensor_polls_status(
 
     # State should be updated
     state = hass.states.get(FOLDER_ENTITY_ID)
-    assert state.state == "syncing"
+    assert state is not None and state.state == "syncing"
 
 
 async def test_folder_sensor_error_makes_unavailable(
@@ -284,7 +284,7 @@ async def test_folder_sensor_error_makes_unavailable(
 
     # State should be unavailable
     state = hass.states.get(FOLDER_ENTITY_ID)
-    assert state.state == "unavailable"
+    assert state is not None and state.state == "unavailable"
 
 
 async def test_device_sensor_updates_on_connected_event(
@@ -298,7 +298,7 @@ async def test_device_sensor_updates_on_connected_event(
 
     # Initial state
     state = hass.states.get(DEVICE_ENTITY_ID)
-    assert state.state == "unknown"
+    assert state is not None and state.state == "unknown"
 
     # Dispatch DeviceConnected event
     dispatcher.async_dispatcher_send(
@@ -310,7 +310,7 @@ async def test_device_sensor_updates_on_connected_event(
 
     # State should be connected
     state = hass.states.get(DEVICE_ENTITY_ID)
-    assert state.state == "connected"
+    assert state is not None and state.state == "connected"
     assert state.attributes["addr"] == "192.168.1.100:22000"
     assert state.attributes["name"] == DEVICE_NAME
 
@@ -333,7 +333,7 @@ async def test_device_sensor_updates_on_disconnected_event(
     await hass.async_block_till_done()
 
     state = hass.states.get(DEVICE_ENTITY_ID)
-    assert state.state == "connected"
+    assert state is not None and state.state == "connected"
 
     # Dispatch DeviceDisconnected event
     dispatcher.async_dispatcher_send(
@@ -345,7 +345,7 @@ async def test_device_sensor_updates_on_disconnected_event(
 
     # State should be disconnected
     state = hass.states.get(DEVICE_ENTITY_ID)
-    assert state.state == "disconnected"
+    assert state is not None and state.state == "disconnected"
 
 
 async def test_device_sensor_updates_on_paused_event(
@@ -367,7 +367,7 @@ async def test_device_sensor_updates_on_paused_event(
 
     # State should be paused
     state = hass.states.get(DEVICE_ENTITY_ID)
-    assert state.state == "paused"
+    assert state is not None and state.state == "paused"
 
 
 async def test_device_sensor_stays_paused_on_disconnect(
@@ -397,7 +397,7 @@ async def test_device_sensor_stays_paused_on_disconnect(
 
     # State should still be paused
     state = hass.states.get(DEVICE_ENTITY_ID)
-    assert state.state == "paused"
+    assert state is not None and state.state == "paused"
 
 
 async def test_device_sensor_updates_on_resumed_event(
@@ -418,7 +418,7 @@ async def test_device_sensor_updates_on_resumed_event(
     await hass.async_block_till_done()
 
     state = hass.states.get(DEVICE_ENTITY_ID)
-    assert state.state == "paused"
+    assert state is not None and state.state == "paused"
 
     # Dispatch DeviceResumed event
     dispatcher.async_dispatcher_send(
@@ -430,7 +430,7 @@ async def test_device_sensor_updates_on_resumed_event(
 
     # State should be disconnected
     state = hass.states.get(DEVICE_ENTITY_ID)
-    assert state.state == "disconnected"
+    assert state is not None and state.state == "disconnected"
 
 
 async def test_device_sensor_processes_initial_events(
@@ -462,7 +462,7 @@ async def test_device_sensor_processes_initial_events(
 
     # State should reflect the last event (disconnected)
     state = hass.states.get(DEVICE_ENTITY_ID)
-    assert state.state == "disconnected"
+    assert state is not None and state.state == "disconnected"
 
 
 async def test_device_sensor_unavailable_on_server_unavailable(
@@ -476,7 +476,7 @@ async def test_device_sensor_unavailable_on_server_unavailable(
 
     # Initial state should be available
     state = hass.states.get(DEVICE_ENTITY_ID)
-    assert state.state == "unknown"
+    assert state is not None and state.state == "unknown"
 
     # Dispatch server unavailable event
     dispatcher.async_dispatcher_send(
@@ -487,7 +487,7 @@ async def test_device_sensor_unavailable_on_server_unavailable(
 
     # State should be unavailable
     state = hass.states.get(DEVICE_ENTITY_ID)
-    assert state.state == "unavailable"
+    assert state is not None and state.state == "unavailable"
 
 
 async def test_device_sensor_available_on_server_available(
@@ -507,7 +507,7 @@ async def test_device_sensor_available_on_server_available(
     await hass.async_block_till_done()
 
     state = hass.states.get(DEVICE_ENTITY_ID)
-    assert state.state == "unavailable"
+    assert state is not None and state.state == "unavailable"
 
     # Dispatch server available event
     dispatcher.async_dispatcher_send(
@@ -518,7 +518,7 @@ async def test_device_sensor_available_on_server_available(
 
     # State should be available again
     state = hass.states.get(DEVICE_ENTITY_ID)
-    assert state.state == "unknown"
+    assert state is not None and state.state == "unknown"
 
 
 async def test_device_sensor_polls_status(
@@ -561,4 +561,4 @@ async def test_device_sensor_error_makes_unavailable(
 
     # State should be unavailable
     state = hass.states.get(DEVICE_ENTITY_ID)
-    assert state.state == "unavailable"
+    assert state is not None and state.state == "unavailable"

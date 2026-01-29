@@ -253,23 +253,23 @@ class FolderSensor(SensorEntity):
 
         await self.async_update_status()
 
-    def _filter_state(self, state) -> dict:
+    def _filter_state(self, state: dict[str, Any]) -> dict[str, Any]:
         # Select only needed state attributes and map their names
-        state = {
+        filtered_state: dict[str, Any] = {
             self.STATE_ATTRIBUTES[key]: value
             for key, value in state.items()
             if key in self.STATE_ATTRIBUTES
         }
 
         # A workaround, for some reason, state of paused folders is an empty string
-        if state["state"] == "":
-            state["state"] = "paused"
+        if filtered_state["state"] == "":
+            filtered_state["state"] = "paused"
 
         # Add some useful attributes
-        state["id"] = self._folder_id
-        state["label"] = self._folder_label
+        filtered_state["id"] = self._folder_id
+        filtered_state["label"] = self._folder_label
 
-        return state
+        return filtered_state
 
 
 class DeviceSensor(SensorEntity):
@@ -490,7 +490,7 @@ class DeviceSensor(SensorEntity):
 
         await self.async_update_status()
 
-    def _get_initial_device_state(self) -> dict:
+    def _get_initial_device_state(self) -> dict[str, Any]:
         """Get initial device state from stored events on startup."""
         # Default state
         state = "unknown" if self._server_id != self._device_id else "online"
@@ -517,7 +517,7 @@ class DeviceSensor(SensorEntity):
         last_event["data"]["state"] = state
         return self._update_state(last_event["data"])
 
-    def _update_state(self, updates) -> dict:
+    def _update_state(self, updates: dict[str, Any]) -> dict[str, Any]:
         # Select only needed state attributes and map their names
         state = self._state if self._state is not None else {}
 
