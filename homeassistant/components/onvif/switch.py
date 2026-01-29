@@ -72,7 +72,7 @@ async def async_setup_entry(
     device = hass.data[DOMAIN][config_entry.unique_id]
 
     # Add predefined switches
-    entities = [
+    entities: list[ONVIFSwitch | ONVIFRelaySwitch] = [
         ONVIFSwitch(device, description)
         for description in SWITCHES
         if description.supported_fn(device)
@@ -81,8 +81,7 @@ async def async_setup_entry(
     # Add relay output switches
     if device.capabilities.deviceio and device.capabilities.relay_outputs > 0:
         relays = await device.async_get_relay_outputs()
-        for relay in relays:
-            entities.append(ONVIFRelaySwitch(device, relay))
+        entities.extend(ONVIFRelaySwitch(device, relay) for relay in relays)
 
     async_add_entities(entities)
 
@@ -142,9 +141,7 @@ class ONVIFRelaySwitch(ONVIFBaseEntity, SwitchEntity):
         """Turn on relay."""
         previous_state = self._attr_is_on
         try:
-            await self.device.async_set_relay_output_state(
-                self._relay_token, "active"
-            )
+            await self.device.async_set_relay_output_state(self._relay_token, "active")
             self._attr_is_on = True
             self.async_write_ha_state()
         except Exception:
@@ -157,9 +154,7 @@ class ONVIFRelaySwitch(ONVIFBaseEntity, SwitchEntity):
         """Turn off relay."""
         previous_state = self._attr_is_on
         try:
-            await self.device.async_set_relay_output_state(
-                self._relay_token, "inactive"
-            )
+            await self.device.async_set_relay_output_state(self._relay_token, "inactive")
             self._attr_is_on = False
             self.async_write_ha_state()
         except Exception:
@@ -167,4 +162,3 @@ class ONVIFRelaySwitch(ONVIFBaseEntity, SwitchEntity):
             self._attr_is_on = previous_state
             self.async_write_ha_state()
             raise
-

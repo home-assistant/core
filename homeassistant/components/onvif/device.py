@@ -426,7 +426,13 @@ class ONVIFDevice:
                 ):
                     pass
 
-        return Capabilities(snapshot=snapshot, ptz=ptz, imaging=imaging, deviceio=deviceio, relay_outputs=relay_outputs)
+        return Capabilities(
+            snapshot=snapshot,
+            ptz=ptz,
+            imaging=imaging,
+            deviceio=deviceio,
+            relay_outputs=relay_outputs,
+        )
 
     async def async_start_events(self):
         """Start the event handler."""
@@ -735,9 +741,7 @@ class ONVIFDevice:
 
         return []
 
-    async def async_set_relay_output_state(
-        self, relay_token: str, state: str
-    ) -> None:
+    async def async_set_relay_output_state(self, relay_token: str, state: str) -> None:
         """Set relay output state.
 
         NOTE: Per ONVIF Core Specification 8.6.3, SetRelayOutputState elements
