@@ -814,6 +814,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "286D97*",
     },
     {
+        "domain": "smartthings",
+        "hostname": "samsung-*",
+    },
+    {
         "domain": "smlight",
         "registered_devices": True,
     },
