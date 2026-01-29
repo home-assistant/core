@@ -200,9 +200,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # For YAML mode, add the default "lovelace" dashboard if not already defined
     # This migrates the legacy yaml mode to a proper yaml dashboard entry
     if mode == MODE_YAML and DOMAIN not in yaml_dashboards:
+        translations = await async_get_translations(
+            hass, hass.config.language, "dashboard", {onboarding.DOMAIN}
+        )
+        title = translations.get(
+            "component.onboarding.dashboard.overview.title", "Overview"
+        )
         yaml_dashboards = {
             DOMAIN: {
-                CONF_TITLE: "overview",
+                CONF_TITLE: title,
                 CONF_ICON: DEFAULT_ICON,
                 CONF_SHOW_IN_SIDEBAR: True,
                 CONF_REQUIRE_ADMIN: False,
