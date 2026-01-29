@@ -109,7 +109,6 @@ from . import (
     MODULE,
     PROPERTIES,
     UNIQUE_FRIENDLY_NAME,
-    MockAsyncBulb,
     _mocked_bulb,
     _patch_discovery,
     _patch_discovery_interval,
@@ -767,90 +766,6 @@ async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
     mocked_bulb.last_properties["flowing"] = "0"
 
 
-async def _async_setup(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mocked_bulb: MockAsyncBulb
-) -> None:
-    with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        # We use asyncio.create_task now to avoid
-        # blocking starting so we need to block again
-        await hass.async_block_till_done()
-
-
-async def _async_test(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mocked_bulb: MockAsyncBulb,
-    bulb_type: BulbType | None,
-    model: str,
-    *,
-    nightlight_entity_properties: bool,
-    nightlight_mode_properties: bool,
-    name: str,
-    entity_id: str,
-    snapshot: SnapshotAssertion,
-    param_id: str,
-) -> None:
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
-    )
-    config_entry.add_to_hass(hass)
-
-    mocked_bulb.bulb_type = bulb_type
-    model_specs = _MODEL_SPECS.get(model)
-    type(mocked_bulb).get_model_specs = MagicMock(return_value=model_specs)
-    original_nightlight_brightness = mocked_bulb.last_properties["nl_br"]
-
-    mocked_bulb.last_properties["nl_br"] = "0"
-    await _async_setup(hass, config_entry, mocked_bulb)
-
-    state = hass.states.get(entity_id)
-
-    assert state.state == "on"
-    assert state.attributes == snapshot(name=param_id)
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    entity_registry.async_clear_config_entry(config_entry.entry_id)
-    mocked_bulb.last_properties["nl_br"] = original_nightlight_brightness
-
-    # nightlight as a setting of the main entity
-    if nightlight_mode_properties:
-        mocked_bulb.last_properties["active_mode"] = True
-        config_entry = MockConfigEntry(
-            domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
-        )
-        config_entry.add_to_hass(hass)
-        await _async_setup(hass, config_entry, mocked_bulb)
-        state = hass.states.get(entity_id)
-        assert state.state == "on"
-        assert state.attributes == snapshot(name=f"{param_id}_nightlight_mode")
-
-        await hass.config_entries.async_unload(config_entry.entry_id)
-        await hass.config_entries.async_remove(config_entry.entry_id)
-        entity_registry.async_clear_config_entry(config_entry.entry_id)
-        await hass.async_block_till_done()
-        mocked_bulb.last_properties.pop("active_mode")
-
-    # nightlight as a separate entity
-    if nightlight_entity_properties:
-        config_entry = MockConfigEntry(
-            domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: True}
-        )
-        config_entry.add_to_hass(hass)
-        await _async_setup(hass, config_entry, mocked_bulb)
-
-        assert hass.states.get(entity_id).state == "off"
-        state = hass.states.get(f"{entity_id}_nightlight")
-        assert state.state == "on"
-        assert state.attributes == snapshot(name=f"{param_id}_nightlight_entity")
-
-        await hass.config_entries.async_unload(config_entry.entry_id)
-        await hass.config_entries.async_remove(config_entry.entry_id)
-        entity_registry.async_clear_config_entry(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-
 @pytest.mark.parametrize(
     (
         "bulb_type",
@@ -1029,18 +944,92 @@ async def test_device_types(
     properties.update(extra_properties)
     mocked_bulb.last_properties = properties
 
+    async def _async_setup(config_entry: MockConfigEntry) -> None:
+        with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+            # We use asyncio.create_task now to avoid
+            # blocking starting so we need to block again
+            await hass.async_block_till_done()
+
+    async def _async_test(
+        bulb_type: BulbType | None,
+        model: str,
+        *,
+        nightlight_entity_properties: bool,
+        nightlight_mode_properties: bool,
+        name: str,
+        entity_id: str,
+    ) -> None:
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
+        )
+        config_entry.add_to_hass(hass)
+
+        mocked_bulb.bulb_type = bulb_type
+        model_specs = _MODEL_SPECS.get(model)
+        type(mocked_bulb).get_model_specs = MagicMock(return_value=model_specs)
+        original_nightlight_brightness = mocked_bulb.last_properties["nl_br"]
+
+        mocked_bulb.last_properties["nl_br"] = "0"
+        await _async_setup(config_entry)
+
+        state = hass.states.get(entity_id)
+
+        assert state.state == "on"
+        assert state.attributes == snapshot(name=request.node.callspec.id)
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.config_entries.async_remove(config_entry.entry_id)
+        entity_registry.async_clear_config_entry(config_entry.entry_id)
+        mocked_bulb.last_properties["nl_br"] = original_nightlight_brightness
+
+        # nightlight as a setting of the main entity
+        if nightlight_mode_properties:
+            mocked_bulb.last_properties["active_mode"] = True
+            config_entry = MockConfigEntry(
+                domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: False}
+            )
+            config_entry.add_to_hass(hass)
+            await _async_setup(config_entry)
+            state = hass.states.get(entity_id)
+            assert state.state == "on"
+            assert state.attributes == snapshot(
+                name=f"{request.node.callspec.id}_nightlight_mode"
+            )
+
+            await hass.config_entries.async_unload(config_entry.entry_id)
+            await hass.config_entries.async_remove(config_entry.entry_id)
+            entity_registry.async_clear_config_entry(config_entry.entry_id)
+            await hass.async_block_till_done()
+            mocked_bulb.last_properties.pop("active_mode")
+
+        # nightlight as a separate entity
+        if nightlight_entity_properties:
+            config_entry = MockConfigEntry(
+                domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_NIGHTLIGHT_SWITCH: True}
+            )
+            config_entry.add_to_hass(hass)
+            await _async_setup(config_entry)
+
+            assert hass.states.get(entity_id).state == "off"
+            state = hass.states.get(f"{entity_id}_nightlight")
+            assert state.state == "on"
+            assert state.attributes == snapshot(
+                name=f"{request.node.callspec.id}_nightlight_entity"
+            )
+
+            await hass.config_entries.async_unload(config_entry.entry_id)
+            await hass.config_entries.async_remove(config_entry.entry_id)
+            entity_registry.async_clear_config_entry(config_entry.entry_id)
+            await hass.async_block_till_done()
+
     await _async_test(
-        hass,
-        entity_registry,
-        mocked_bulb,
         bulb_type,
         model,
         name=name,
         entity_id=entity_id,
         nightlight_entity_properties=nightlight_entity,
         nightlight_mode_properties=nightlight_mode,
-        snapshot=snapshot,
-        param_id=request.node.callspec.id,
     )
     assert ("Light reported unknown color mode: 4" in caplog.text) == (
         request.node.callspec.id == "color_unsupported"
