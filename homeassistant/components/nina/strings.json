@@ -53,13 +53,13 @@
     },
     "sensor": {
       "affected_areas": {
-        "name": "Affected Areas: {region_name} {slot_id}"
+        "name": "Affected areas: {region_name} {slot_id}"
       },
       "headline": {
         "name": "Headline: {region_name} {slot_id}"
       },
       "more_info_url": {
-        "name": "More Information URL: {region_name} {slot_id}"
+        "name": "More information URL: {region_name} {slot_id}"
       },
       "sender": {
         "name": "Sender: {region_name} {slot_id}"
