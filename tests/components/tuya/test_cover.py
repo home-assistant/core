@@ -19,6 +19,10 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
 )
+from homeassistant.components.tuya.const import (
+    OPTION_ENTRY_COVER_POSITION_REVERSED,
+    OPTION_ENTRY_DEVICE_OPTIONS,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_CLOSED,
@@ -30,7 +34,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
 
-from . import initialize_entry
+from . import MockDeviceListener, initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -312,3 +316,144 @@ async def test_cl_n3xgr5pdmpinictg_state(
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["clkg_wltqkykhni0papzj"],
+)
+@pytest.mark.parametrize(
+    (
+        "entry_options",
+        "initial_position",
+        "after_set_position",
+        "after_close",
+        "after_open",
+    ),
+    [
+        (
+            {},
+            25,  # 25 => 25% open
+            65,  # set position to 65 => send 65 => 65% open
+            0,  # close service => send 0 => 0% closed
+            100,  # open service => send 100 => 100% open
+        ),
+        (
+            {
+                OPTION_ENTRY_DEVICE_OPTIONS: {
+                    "jzpap0inhkykqtlwgklc": {
+                        OPTION_ENTRY_COVER_POSITION_REVERSED: False
+                    }
+                }
+            },
+            25,  # 25 => 25% open
+            65,  # set position to 65 => send 65 => 65% open
+            0,  # close service => send 0 => 0% closed
+            100,  # open service => send 100 => 100% open
+        ),
+        (
+            {
+                OPTION_ENTRY_DEVICE_OPTIONS: {
+                    "jzpap0inhkykqtlwgklc": {OPTION_ENTRY_COVER_POSITION_REVERSED: True}
+                }
+            },
+            75,  # 25 => 75% open
+            35,  # set position to 65 => send 35 => 65% open
+            100,  # close service => send 100 => 0% closed
+            0,  # open service => send 0 => 100% open
+        ),
+    ],
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
+async def test_cover_position_reversed_config_flow_option(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    mock_listener: MockDeviceListener,
+    entry_options: dict[str, Any],
+    initial_position: int,
+    after_set_position: int,
+    after_close: int,
+    after_open: int,
+) -> None:
+    """Test cover_position_reversed from options flow."""
+    object.__setattr__(mock_config_entry, "options", entry_options)
+    entity_id = "cover.roller_shutter_living_room_curtain"
+    mock_device.status["percent_control"] = 25
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == STATE_OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == initial_position
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_POSITION: 65,
+        },
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id,
+        [
+            {"code": "percent_control", "value": after_set_position},
+        ],
+    )
+    await mock_listener.async_send_device_update(
+        hass, mock_device, {"percent_control": after_set_position}
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == STATE_OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 65
+
+    mock_manager.send_commands.reset_mock()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id,
+        [
+            {"code": "percent_control", "value": after_close},
+        ],
+    )
+    await mock_listener.async_send_device_update(
+        hass, mock_device, {"percent_control": after_close}
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == STATE_CLOSED
+    assert state.attributes[ATTR_CURRENT_POSITION] == 0
+
+    mock_manager.send_commands.reset_mock()
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id,
+        [
+            {"code": "percent_control", "value": after_open},
+        ],
+    )
+    await mock_listener.async_send_device_update(
+        hass, mock_device, {"percent_control": after_open}
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == STATE_OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 100

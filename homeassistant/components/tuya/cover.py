@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -20,7 +21,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .const import (
+    OPTION_ENTRY_COVER_POSITION_REVERSED,
+    OPTION_ENTRY_DEVICE_OPTIONS,
+    TUYA_DISCOVERY_NEW,
+    DeviceCategory,
+    DPCode,
+)
 from .entity import TuyaEntity
 from .models import (
     DeviceWrapper,
@@ -275,6 +282,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Tuya cover dynamically through Tuya discovery."""
     manager = entry.runtime_data.manager
+    entry_device_options: Mapping[str, Any] = entry.options.get(
+        OPTION_ENTRY_DEVICE_OPTIONS, {}
+    )
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
@@ -294,6 +304,7 @@ async def async_setup_entry(
                         current_state_wrapper=description.current_state_wrapper.find_dpcode(
                             device, description.current_state
                         ),
+                        device_options=entry_device_options.get(device_id),
                         instruction_wrapper=_get_instruction_wrapper(
                             device, description
                         ),
@@ -335,6 +346,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         *,
         current_position: DeviceWrapper[int] | None,
         current_state_wrapper: DeviceWrapper[bool] | None,
+        device_options: dict[str, Any] | None = None,
         instruction_wrapper: DeviceWrapper[str] | None,
         set_position: DeviceWrapper[int] | None,
         tilt_position: DeviceWrapper[int] | None,
@@ -344,6 +356,10 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._attr_supported_features = CoverEntityFeature(0)
+
+        self._cover_position_reversed = device_options and device_options.get(
+            OPTION_ENTRY_COVER_POSITION_REVERSED
+        )
 
         self._current_position = current_position or set_position
         self._current_state_wrapper = current_state_wrapper
@@ -367,7 +383,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     @property
     def current_cover_position(self) -> int | None:
         """Return cover current position."""
-        return self._read_wrapper(self._current_position)
+        if (position := self._read_wrapper(self._current_position)) is None:
+            return None
+        return 100 - position if self._cover_position_reversed else position
 
     @property
     def current_cover_tilt_position(self) -> int | None:
@@ -390,7 +408,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         """Open the cover."""
         if self._set_position is not None:
             await self._async_send_commands(
-                self._set_position.get_update_commands(self.device, 100)
+                self._set_position.get_update_commands(
+                    self.device, 0 if self._cover_position_reversed else 100
+                )
             )
             return
 
@@ -405,7 +425,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         """Close cover."""
         if self._set_position is not None:
             await self._async_send_commands(
-                self._set_position.get_update_commands(self.device, 0)
+                self._set_position.get_update_commands(
+                    self.device, 100 if self._cover_position_reversed else 0
+                )
             )
             return
 
@@ -418,8 +440,10 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
+        position = kwargs[ATTR_POSITION]
         await self._async_send_wrapper_updates(
-            self._set_position, kwargs[ATTR_POSITION]
+            self._set_position,
+            100 - position if self._cover_position_reversed else position,
         )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:

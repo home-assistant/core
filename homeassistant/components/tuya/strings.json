@@ -1103,5 +1103,37 @@
       "description": "The Tuya entity `{entity}` is deprecated, replaced by a new valve entity.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue.",
       "title": "{name} is deprecated"
     }
+  },
+  "options": {
+    "abort": {
+      "no_configurable_devices": "No configurable devices found"
+    },
+    "error": {
+      "device_not_selected": "Select devices to configure"
+    },
+    "step": {
+      "configure_device": {
+        "data": {
+          "cover_position_reversed": "Reverse cover position direction"
+        },
+        "data_description": {
+          "cover_position_reversed": "Enable this if your cover shows 100% when fully closed instead of fully open."
+        },
+        "description": "Select options for {device_id}",
+        "title": "Tuya device options"
+      },
+      "device_selection": {
+        "data": {
+          "clear_device_options": "Reset all device customizations",
+          "device_selection": "Customize specific devices"
+        },
+        "data_description": {
+          "clear_device_options": "Use this to reset all device-specific options to default values.",
+          "device_selection": "Customize behavior of individual devices."
+        },
+        "description": "Choose how you want to configure your Tuya devices",
+        "title": "Tuya device options"
+      }
+    }
   }
 }
