@@ -22,7 +22,7 @@ class NRGkickSwitchEntityDescription(SwitchEntityDescription):
     """Class describing NRGkick switch entities."""
 
     is_on_fn: Callable[[NRGkickData], bool]
-    set_pause_fn: Callable[[NRGkickDataUpdateCoordinator, bool], Awaitable[int]]
+    set_is_on_fn: Callable[[NRGkickDataUpdateCoordinator, bool], Awaitable[None]]
 
 
 def _is_charging_enabled(data: NRGkickData) -> bool:
@@ -31,11 +31,15 @@ def _is_charging_enabled(data: NRGkickData) -> bool:
     return charge_pause == 0
 
 
-async def _async_set_charge_pause(
-    coordinator: NRGkickDataUpdateCoordinator, pause: bool
-) -> int:
-    """Set the charge pause state."""
-    return await async_api_call(coordinator.api.set_charge_pause(pause))
+async def _async_set_charging_enabled(
+    coordinator: NRGkickDataUpdateCoordinator, is_on: bool
+) -> None:
+    """Enable or pause charging.
+
+    The NRGkick API uses a pause flag (pause=True means charging is paused).
+    """
+    await async_api_call(coordinator.api.set_charge_pause(not is_on))
+    coordinator.async_update_control_cache({"charge_pause": 0 if is_on else 1})
 
 
 SWITCHES: tuple[NRGkickSwitchEntityDescription, ...] = (
@@ -43,8 +47,7 @@ SWITCHES: tuple[NRGkickSwitchEntityDescription, ...] = (
         key="charging_enabled",
         translation_key="charging_enabled",
         is_on_fn=_is_charging_enabled,
-        # API expects pause=True to stop charging
-        set_pause_fn=_async_set_charge_pause,
+        set_is_on_fn=_async_set_charging_enabled,
     ),
 )
 
@@ -83,20 +86,10 @@ class NRGkickSwitch(NRGkickEntity, SwitchEntity):
         assert data is not None
         return self.entity_description.is_on_fn(data)
 
-    def _optimistic_set_charge_pause(self, pause: bool) -> None:
-        """Optimistically update the cached control data.
-
-        This makes state changes visible immediately after a successful command,
-        while a background coordinator refresh verifies the actual device state.
-        """
-        self.coordinator.async_update_control_cache({"charge_pause": 1 if pause else 0})
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on (enable charging)."""
-        await self.entity_description.set_pause_fn(self.coordinator, False)
-        self._optimistic_set_charge_pause(False)
+        await self.entity_description.set_is_on_fn(self.coordinator, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off (pause charging)."""
-        await self.entity_description.set_pause_fn(self.coordinator, True)
-        self._optimistic_set_charge_pause(True)
+        await self.entity_description.set_is_on_fn(self.coordinator, False)
