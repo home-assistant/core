@@ -101,7 +101,6 @@ def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any
         "achievements": None,
         "gamerscore": None,
         "progress": None,
-        "title_id": title.title_id if title else None,
         "platform": None,
     }
 

@@ -144,8 +144,7 @@
           "progress": { "name": "Progress" },
           "publisher": { "name": "Publisher" },
           "release_date": { "name": "Release date" },
-          "short_description": { "name": "Short description" },
-          "title_id": { "name": "Title ID" }
+          "short_description": { "name": "Short description" }
         }
       },
       "status": {

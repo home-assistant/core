@@ -1,14 +1,14 @@
 """Test the Xbox sensor platform."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.xbox.const import DOMAIN
-from homeassistant.components.xbox.sensor import XboxSensor
+from homeassistant.components.xbox.sensor import XboxSensor, now_playing_attributes
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -84,3 +84,23 @@ async def test_sensor_deprecation_remove_entity(
     assert config_entry.state is ConfigEntryState.LOADED
 
     assert entity_registry.async_get(f"sensor.{entity_id}") is None
+
+
+async def test_platform_fallback(hass: HomeAssistant) -> None:
+    """Test the fallback capitalize feature for an unknown device."""
+
+    mock_title = MagicMock()
+    mock_title.detail = None
+    mock_title.achievement = None
+
+    mock_person = MagicMock()
+    mock_device = MagicMock()
+    mock_device.device = "playstation"
+    mock_device.state = "Active"
+    mock_device.is_game = True
+
+    mock_person.presence_details = [mock_device]
+
+    attributes = now_playing_attributes(mock_person, mock_title)
+
+    assert attributes.get("platform") == "Playstation"
