@@ -5,6 +5,10 @@ DOMAIN = "surepetcare"
 CONF_FEEDERS = "feeders"
 CONF_FLAPS = "flaps"
 CONF_PETS = "pets"
+CONF_CREATE_PET_SELECT = "create_pet_select"
+CONF_MANUALLY_SET_LOCATION = "manually_set_location"
+CONF_FLAPS_MAPPINGS = "flaps_mappings"
+CONF_PET_SELECT_OPTIONS = "pet_select_options"
 
 # sure petcare api
 SURE_API_TIMEOUT = 60

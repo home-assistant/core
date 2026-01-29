@@ -1,4 +1,8 @@
 {
+  "common": {
+    "flap_entry": "Entry",
+    "flap_exit": "Exit"
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
@@ -23,6 +27,45 @@
           "username": "[%key:common::config_flow::data::username%]"
         }
       }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "create_pet_select": "Create a pet location select entity for each pet"
+        },
+        "data_description": {
+          "create_pet_select": "This will create a select entity for each pet representing its current location. This is especially useful if you have multiple flaps that do not directly lead outside and the existing binary sensors can't accurately reflect your pets' locations."
+        }
+      },
+      "pet_select_config": {
+        "title": "Map flap entry/exit to zones",
+        "description": "Choose in which zone your pet should be reported after it enters or exits a flap. You can either select one of your areas or enter a custom zone name. This controls how the integration determines and reports a pet's location when the flap records an entry or an exit.",
+        "sections": {
+          "flap_1": {
+            "name": "Flap \"{flap_name_1}\"",
+            "data": {
+              "entry": "[%key:component::surepetcare::common::flap_entry%]",
+              "exit": "[%key:component::surepetcare::common::flap_exit%]"
+            }
+          },
+          "manually_set_location": {
+            "name": "Manually set location",
+            "description": "When the pet location is changed manually through the Sure Petcare app",
+            "data": {
+              "exit": "Outside",
+              "entry": "Inside"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_zones_selected": "Please select or enter a zone for each entry and exit."
     }
   },
   "services": {
