@@ -111,33 +111,5 @@
         }),
       }),
     }),
-    'mobile_devices': dict({
-      'mobile_device': dict({
-        '123456': dict({
-          'deviceMetadata': dict({
-            'locale': 'nl',
-            'model': 'Samsung',
-            'osVersion': '14',
-            'platform': 'Android',
-          }),
-          'id': 123456,
-          'name': 'Home',
-          'settings': dict({
-            'geoTrackingEnabled': False,
-            'onDemandLogRetrievalEnabled': False,
-            'pushNotifications': dict({
-              'awayModeReminder': True,
-              'energyIqReminder': False,
-              'energySavingsReportReminder': True,
-              'homeModeReminder': True,
-              'incidentDetection': True,
-              'lowBatteryReminder': True,
-              'openWindowReminder': True,
-            }),
-            'specialOffersEnabled': False,
-          }),
-        }),
-      }),
-    }),
   })
 # ---
