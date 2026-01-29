@@ -161,4 +161,3 @@ class ViaggiaTrenoSensor(SensorEntity):
             # Update attributes
             for info in MONITORED_INFO:
                 self._attributes[info] = self._viaggiatreno.json[self._line][info]
-            self._attributes["tstatus"] = self._tstatus
