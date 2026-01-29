@@ -42,7 +42,9 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: done
+  discovery-update-info:
+    status: exempt
+    comment: Cloud API does not require updating entry data from network discovery.
   discovery: done
   docs-data-update: done
   docs-examples: todo

@@ -19,10 +19,11 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+# Complete multi-zone device for comprehensive testing
 MOCK_DEVICE = Device(
     device_id="test_device_id",
-    nickname="Test Device",
-    device_type=DeviceType.FRIDGE,
+    nickname="Test Fridge",
+    device_type=DeviceType.COMBI,
     device_name="CBNes1234",
 )
 
@@ -36,7 +37,15 @@ MOCK_DEVICE_STATE = DeviceState(
             type="fridge",
             value=5,
             unit=TemperatureUnit.CELSIUS,
-        )
+        ),
+        TemperatureControl(
+            zone_id=2,
+            zone_position=ZonePosition.BOTTOM,
+            name="Freezer",
+            type="freezer",
+            value=-18,
+            unit=TemperatureUnit.CELSIUS,
+        ),
     ],
 )
 

@@ -36,10 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
     except LiebherrConnectionError as err:
         raise ConfigEntryNotReady(f"Failed to connect to Liebherr API: {err}") from err
 
-    if not devices:
-        raise ConfigEntryNotReady("No devices found for this API key")
-
-    # Create a coordinator for each device
+    # Create a coordinator for each device (may be empty if no devices)
     coordinators: dict[str, LiebherrCoordinator] = {}
     for device in devices:
         coordinator = LiebherrCoordinator(

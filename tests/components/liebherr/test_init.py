@@ -17,14 +17,14 @@ from .conftest import MOCK_DEVICE
 from tests.common import MockConfigEntry
 
 
+# Test errors during initial get_devices() call in async_setup_entry
 @pytest.mark.parametrize(
     ("side_effect", "expected_state"),
     [
         (LiebherrAuthenticationError("Invalid API key"), ConfigEntryState.SETUP_ERROR),
         (LiebherrConnectionError("Connection failed"), ConfigEntryState.SETUP_RETRY),
-        ([[]], ConfigEntryState.SETUP_RETRY),
     ],
-    ids=["auth_failed", "connection_error", "no_devices"],
+    ids=["auth_failed", "connection_error"],
 )
 async def test_setup_entry_errors(
     hass: HomeAssistant,
@@ -43,6 +43,7 @@ async def test_setup_entry_errors(
     assert mock_config_entry.state is expected_state
 
 
+# Test errors during get_device() call in coordinator setup (after successful get_devices)
 @pytest.mark.parametrize(
     ("side_effect", "expected_state"),
     [

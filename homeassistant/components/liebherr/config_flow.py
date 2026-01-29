@@ -15,7 +15,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -67,16 +66,3 @@ class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_zeroconf(
-        self, discovery_info: ZeroconfServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle zeroconf discovery."""
-        # Abort if any Liebherr entry already exists (cloud API covers all devices)
-        self._async_abort_entries_match()
-
-        # Set unique ID to prevent duplicate discovery notifications for the same device
-        await self.async_set_unique_id(discovery_info.name)
-        self._abort_if_unique_id_configured()
-
-        return await self.async_step_user()
