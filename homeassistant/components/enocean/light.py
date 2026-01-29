@@ -55,23 +55,17 @@ class EnOceanLight(EnOceanEntity, LightEntity):
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light source on or sets a specific dimmer value."""
 
-        # set new brightness if a value is given
-        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
-            self._attr_brightness = brightness
-
-        # if no brightness is set, assume full brightness
-        if self._attr_brightness is None:
-            self._attr_brightness = 255
+        # set new brightness if a value is given, else default to 255
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
+            brightness = 255
 
         # turn on the light with the given brightness and update state
-        self.gateway.light_turn_on(self.enocean_entity_id, self._attr_brightness)
-        self._attr_is_on = True
+        self.gateway.light_turn_on(self.enocean_entity_id, brightness=brightness)
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         self.gateway.light_turn_off(self.enocean_entity_id)
-        self._attr_is_on = False
         self.schedule_update_ha_state()
 
     @property
