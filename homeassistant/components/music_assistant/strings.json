@@ -32,7 +32,7 @@
       },
       "hassio_confirm": {
         "description": "Do you want to add the Music Assistant server to Home Assistant?",
-        "title": "Discovered Music Assistant add-on"
+        "title": "Discovered Music Assistant app"
       },
       "reauth_confirm": {
         "description": "The authentication token for Music Assistant server `{url}` is no longer valid. Please re-authenticate to continue using the integration.",
@@ -168,6 +168,10 @@
         "announce_volume": {
           "description": "Use a forced volume level for the announcement. Omit to use player default.",
           "name": "Announce volume"
+        },
+        "pre_announce_url": {
+          "description": "URL to the pre-announcement sound.",
+          "name": "Pre-announce URL"
         },
         "url": {
           "description": "URL to the notification sound.",

@@ -22,6 +22,7 @@ from homeassistant.components.energy import (
     DOMAIN as ENERGY_DOMAIN,
     is_configured as energy_is_configured,
 )
+from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.components.recorder import (
     DOMAIN as RECORDER_DOMAIN,
     get_instance as get_recorder_instance,
@@ -241,12 +242,10 @@ class Analytics:
         self,
         hass: HomeAssistant,
         snapshots_url: str | None = None,
-        disable_snapshots: bool = False,
     ) -> None:
         """Initialize the Analytics class."""
         self._hass: HomeAssistant = hass
         self._snapshots_url = snapshots_url
-        self._disable_snapshots = disable_snapshots
 
         self._session = async_get_clientsession(hass)
         self._data = AnalyticsData(False, {})
@@ -258,15 +257,13 @@ class Analytics:
     def preferences(self) -> dict:
         """Return the current active preferences."""
         preferences = self._data.preferences
-        result = {
+        return {
             ATTR_BASE: preferences.get(ATTR_BASE, False),
             ATTR_DIAGNOSTICS: preferences.get(ATTR_DIAGNOSTICS, False),
             ATTR_USAGE: preferences.get(ATTR_USAGE, False),
             ATTR_STATISTICS: preferences.get(ATTR_STATISTICS, False),
+            ATTR_SNAPSHOTS: preferences.get(ATTR_SNAPSHOTS, False),
         }
-        if not self._disable_snapshots:
-            result[ATTR_SNAPSHOTS] = preferences.get(ATTR_SNAPSHOTS, False)
-        return result
 
     @property
     def onboarded(self) -> bool:
@@ -290,6 +287,11 @@ class Analytics:
     def supervisor(self) -> bool:
         """Return bool if a supervisor is present."""
         return is_hassio(self._hass)
+
+    @property
+    def _snapshots_enabled(self) -> bool:
+        """Check if snapshots feature is enabled via labs."""
+        return async_is_preview_feature_enabled(self._hass, DOMAIN, "snapshots")
 
     async def load(self) -> None:
         """Load preferences."""
@@ -645,7 +647,10 @@ class Analytics:
                 ),
             )
 
-        if not self.preferences.get(ATTR_SNAPSHOTS, False) or self._disable_snapshots:
+        if (
+            not self.preferences.get(ATTR_SNAPSHOTS, False)
+            or not self._snapshots_enabled
+        ):
             LOGGER.debug("Snapshot analytics not scheduled")
             if self._snapshot_scheduled:
                 self._snapshot_scheduled()
