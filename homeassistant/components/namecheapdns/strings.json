@@ -34,7 +34,7 @@
       },
       "user": {
         "data": {
-          "domain": "[%key:common::config_flow::data::username%]",
+          "domain": "Domain",
           "host": "[%key:common::config_flow::data::host%]",
           "password": "Dynamic DNS password"
         },
