@@ -16,10 +16,7 @@ from homeassistant.helpers import (
     discovery,
     entity_registry as er,
 )
-from homeassistant.helpers.device import (
-    async_entity_id_to_device_id,
-    async_remove_stale_devices_links_keep_entity_device,
-)
+from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
     async_remove_helper_config_entry_from_source_device,
@@ -179,11 +176,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Utility Meter from a config entry."""
-
-    # This can be removed in HA Core 2026.2
-    async_remove_stale_devices_links_keep_entity_device(
-        hass, entry.entry_id, entry.options[CONF_SOURCE_SENSOR]
-    )
 
     entity_registry = er.async_get(hass)
     hass.data[DATA_UTILITY][entry.entry_id] = {
