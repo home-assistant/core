@@ -35,17 +35,19 @@ async def test_state_entity_device_snapshots(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_auth_client")
+@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_init")
 async def test_device_tracker_no_position(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_tracker_no_position: Tracker,
-    mock_api_client: MagicMock,
+    mock_api_client_coordinator: MagicMock,
 ) -> None:
     """Test device tracker is unavailable when position is None."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_api_client.get_tracker = AsyncMock(return_value=mock_tracker_no_position)
+    mock_api_client_coordinator.get_tracker = AsyncMock(
+        return_value=mock_tracker_no_position
+    )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
