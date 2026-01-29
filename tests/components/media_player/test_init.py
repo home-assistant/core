@@ -713,23 +713,30 @@ async def test_get_groupable_players_same_platform_only(hass: HomeAssistant) -> 
     # Create test entities on the same platform
     player1 = TestMediaPlayer("test_player_1", "Player 1")
     player1.hass = hass
-    player1.platform = MockEntityPlatform(hass, platform_name="test_platform")
     player1.entity_id = "media_player.player_1"
 
     player2 = TestMediaPlayer("test_player_2", "Player 2")
     player2.hass = hass
-    player2.platform = MockEntityPlatform(hass, platform_name="test_platform")
     player2.entity_id = "media_player.player_2"
 
     player3 = TestMediaPlayer("test_player_3", "Player 3")
     player3.hass = hass
-    player3.platform = MockEntityPlatform(hass, platform_name="test_platform")
     player3.entity_id = "media_player.player_3"
 
-    # Add entities to the component
-    component = hass.data.get("entity_components", {}).get("media_player")
-    assert component
-    await component.async_add_entities([player1, player2, player3])
+    other_player = TestMediaPlayer("test_player_4", "Player 4")
+    other_player.hass = hass
+    other_player.entity_id = "media_player.player_4"
+
+    # Add entities via explicit platforms to preserve platform_name
+    platform = MockEntityPlatform(
+        hass, domain="media_player", platform_name="test_platform"
+    )
+    other_platform = MockEntityPlatform(
+        hass, domain="media_player", platform_name="other_platform"
+    )
+
+    await platform.async_add_entities([player1, player2, player3])
+    await other_platform.async_add_entities([other_player])
     await hass.async_block_till_done()
 
     # Get groupable players for player1
@@ -752,6 +759,7 @@ async def test_get_groupable_players_same_platform_only(hass: HomeAssistant) -> 
     # Should return the other two players from the same platform
     assert "media_player.player_2" in groupable
     assert "media_player.player_3" in groupable
+    assert "media_player.player_4" not in groupable
     assert len(groupable) == 2
 
 
@@ -797,12 +805,9 @@ async def test_get_groupable_players_multiplatform_override(
 
     # Manually add entity to the entity component
     component = hass.data.get("entity_components", {}).get("media_player")
-    if component:
-        await component.async_add_entities([entity])
-    else:
-        # Fallback: add directly to state machine
-        await entity.async_internal_added_to_hass()
-        await hass.async_block_till_done()
+
+    assert component is not None
+    await component.async_add_entities([entity])
 
     # Call the service
     result = await hass.services.async_call(

@@ -53,7 +53,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant, SupportsResponse
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -1207,26 +1207,16 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if component is None:
             return {"result": []}
 
-        entity_registry = er.async_get(self.hass)
+        current_platform = self.platform
 
-        # Get the integration platform of the current entity
-        if not (entry := entity_registry.async_get(self.entity_id)):
-            return {"result": []}
-
-        current_platform = entry.platform
-
-        # Build a set of entity_ids for the current platform for faster lookup
-        platform_entity_ids = {
-            entity_id
-            for entity_id, registry_entry in entity_registry.entities.items()
-            if registry_entry.platform == current_platform
-        }
-        # Return only players that support grouping, excluding the calling entity
+        # Return only players that support grouping on the same platform, excluding this entity
+        current_platform_name = current_platform.platform_name
         result = [
             entity.entity_id
             for entity in component.entities
-            if entity.entity_id != self.entity_id
-            and entity.entity_id in platform_entity_ids
+            if entity is not self
+            and entity.platform is not None
+            and entity.platform.platform_name == current_platform_name
             and MediaPlayerEntityFeature.GROUPING in entity.supported_features
         ]
 
