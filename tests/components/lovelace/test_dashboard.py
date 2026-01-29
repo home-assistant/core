@@ -277,7 +277,10 @@ async def test_lovelace_from_yaml(
 ) -> None:
     """Test we load lovelace config from yaml."""
     assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
-    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "yaml"}
+    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {
+        "mode": "yaml",
+        "legacy_lovelace": True,
+    }
 
     client = await hass_ws_client(hass)
 
@@ -369,7 +372,10 @@ async def test_lovelace_from_yaml_creates_repair_issue(
     assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
 
     # Panel should still be registered for backwards compatibility
-    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "yaml"}
+    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {
+        "mode": "yaml",
+        "legacy_lovelace": True,
+    }
 
     # Repair issue should be created
     issue_registry = ir.async_get(hass)
