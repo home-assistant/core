@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import switchbot
-from switchbot import HumidifierWaterLevel
+from switchbot import HumidifierWaterLevel, SwitchbotModel
 from switchbot.const.air_purifier import AirQualityLevel
 
 from homeassistant.components.bluetooth import async_last_service_info
@@ -126,6 +126,10 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENUM,
         options=HumidifierWaterLevel.get_levels(),
     ),
+    "battery_range": SensorEntityDescription(
+        key="battery_range",
+        translation_key="battery_range",
+    ),
 }
 
 
@@ -136,6 +140,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot sensor based on a config entry."""
     coordinator = entry.runtime_data
+    parsed_data = coordinator.device.parsed_data
     sensor_entities: list[SensorEntity] = []
     if isinstance(coordinator.device, switchbot.SwitchbotRelaySwitch2PM):
         sensor_entities.extend(
@@ -144,10 +149,20 @@ async def async_setup_entry(
             for sensor in coordinator.device.get_parsed_data(channel)
             if sensor in SENSOR_TYPES
         )
+    elif coordinator.model == SwitchbotModel.PRESENCE_SENSOR:
+        sensor_entities.extend(
+            SwitchBotSensor(coordinator, sensor)
+            for sensor in parsed_data
+            if sensor in SENSOR_TYPES and sensor not in ("battery", "battery_range")
+        )
+        if "battery" in parsed_data:
+            sensor_entities.append(SwitchBotSensor(coordinator, "battery"))
+        else:
+            sensor_entities.append(SwitchBotSensor(coordinator, "battery_range"))
     else:
         sensor_entities.extend(
             SwitchBotSensor(coordinator, sensor)
-            for sensor in coordinator.device.parsed_data
+            for sensor in parsed_data
             if sensor in SENSOR_TYPES
         )
     sensor_entities.append(SwitchbotRSSISensor(coordinator, "rssi"))
