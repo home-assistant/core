@@ -95,16 +95,19 @@ async def async_setup_entry(
         ):
             entities.append(HomematicipDimmer(hap, device))
         elif isinstance(device, WiredPushButton):
-            led_number = 1
-            for ch in device.functionalChannels:
-                if (
-                    ch.functionalChannelType
+            optical_channels = sorted(
+                (
+                    ch
+                    for ch in device.functionalChannels
+                    if ch.functionalChannelType
                     == FunctionalChannelType.OPTICAL_SIGNAL_CHANNEL
-                ):
-                    entities.append(
-                        HomematicipOpticalSignalLight(hap, device, ch.index, led_number)
-                    )
-                    led_number += 1
+                ),
+                key=lambda ch: ch.index,
+            )
+            for led_number, ch in enumerate(optical_channels, start=1):
+                entities.append(
+                    HomematicipOpticalSignalLight(hap, device, ch.index, led_number)
+                )
 
     async_add_entities(entities)
 
