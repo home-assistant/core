@@ -309,7 +309,7 @@ async def test_relay_switch_turn_off_error_handling(hass: HomeAssistant) -> None
     _, _camera, device = await setup_onvif_integration(
         hass, capabilities=Capabilities(deviceio=True, relay_outputs=1)
     )
-    
+
     # First turn on the relay
     device.async_set_relay_output_state = AsyncMock(return_value=None)
     await hass.services.async_call(
@@ -319,11 +319,11 @@ async def test_relay_switch_turn_off_error_handling(hass: HomeAssistant) -> None
         blocking=True,
     )
     await hass.async_block_till_done()
-    
+
     # Verify it's on
     state = hass.states.get("switch.testcamera_relay_relayoutputtoken_0")
     assert state.state == STATE_ON
-    
+
     # Now make turn_off fail
     device.async_set_relay_output_state = AsyncMock(
         side_effect=ONVIFError("Test error")
