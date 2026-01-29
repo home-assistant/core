@@ -36,7 +36,10 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.hass_dict import HassKey
 
-from .storage import async_setup_frontend_storage
+from .storage import (
+    async_setup_frontend_storage,
+    async_system_store as async_system_store,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

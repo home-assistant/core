@@ -20,8 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AbodeSystem
-from .const import DOMAIN
+from .const import DOMAIN_DATA
 from .entity import AbodeDevice
 
 
@@ -31,7 +30,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode light devices."""
-    data: AbodeSystem = hass.data[DOMAIN]
+    data = hass.data[DOMAIN_DATA]
 
     async_add_entities(
         AbodeLight(data, device)

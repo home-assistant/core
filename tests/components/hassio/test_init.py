@@ -1084,6 +1084,10 @@ async def test_setup_hardware_integration(
             f"homeassistant.components.{integration}.async_setup_entry",
             return_value=True,
         ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.homeassistant_yellow.config_flow.probe_silabs_firmware_info",
+            return_value=None,
+        ),
     ):
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
         await hass.async_block_till_done(wait_background_tasks=True)

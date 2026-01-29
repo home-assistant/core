@@ -4585,6 +4585,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "nrgkick": {
+      "name": "NRGkick",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "nsw_fuel_station": {
       "name": "NSW Fuel Station Price",
       "integration_type": "hub",
@@ -4784,7 +4790,7 @@
       "name": "OpenEVSE",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "openexchangerates": {
       "name": "Open Exchange Rates",
@@ -5920,7 +5926,7 @@
     },
     "sensirion_ble": {
       "name": "Sensirion BLE",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -7199,6 +7205,12 @@
       "name": "Ublockout",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
+    },
+    "uhoo": {
+      "name": "uHoo",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "uk_transport": {
       "name": "UK Transport",

@@ -34,23 +34,118 @@
       "ambient_temp": {
         "name": "Ambient temperature"
       },
+      "available_current": {
+        "name": "Available current"
+      },
+      "charge_rate": {
+        "name": "Charge rate"
+      },
       "charge_time": {
         "name": "Charge time elapsed"
+      },
+      "charging_current": {
+        "name": "Charging current"
+      },
+      "charging_power": {
+        "name": "Charging power"
+      },
+      "charging_voltage": {
+        "name": "Charging voltage"
+      },
+      "current_capacity": {
+        "name": "Current capacity"
+      },
+      "current_power": {
+        "name": "Current power"
+      },
+      "esp_temp": {
+        "name": "ESP temperature"
+      },
+      "freeram": {
+        "name": "Free memory"
+      },
+      "gfi_trip_count": {
+        "name": "GFCI trip count"
       },
       "ir_temp": {
         "name": "IR temperature"
       },
+      "max_amps": {
+        "name": "Maximum amperage"
+      },
+      "max_current": {
+        "name": "Current limit"
+      },
+      "min_amps": {
+        "name": "Minimum amperage"
+      },
+      "mode": {
+        "name": "Mode"
+      },
+      "no_gnd_trip_count": {
+        "name": "No ground trip count"
+      },
+      "ota_update": {
+        "name": "OTA update"
+      },
       "rtc_temp": {
         "name": "RTC temperature"
       },
+      "service_level": {
+        "name": "Service level",
+        "state": {
+          "automatic": "Automatic",
+          "level_1": "Level 1 (120V)",
+          "level_2": "Level 2 (240V)"
+        }
+      },
+      "shaper_available_current": {
+        "name": "Shaper available current"
+      },
+      "shaper_live_power": {
+        "name": "Shaper live power"
+      },
+      "shaper_max_power": {
+        "name": "Shaper maximum power"
+      },
+      "smoothed_available_current": {
+        "name": "Smoothed available current"
+      },
       "status": {
         "name": "Charging status"
+      },
+      "stuck_relay_trip_count": {
+        "name": "Stuck relay trip count"
+      },
+      "total_day": {
+        "name": "Daily energy usage"
+      },
+      "total_month": {
+        "name": "Monthly energy usage"
+      },
+      "total_week": {
+        "name": "Weekly energy usage"
+      },
+      "total_year": {
+        "name": "Yearly energy usage"
+      },
+      "uptime": {
+        "name": "Uptime"
       },
       "usage_session": {
         "name": "Usage this session"
       },
       "usage_total": {
         "name": "Total energy usage"
+      },
+      "vehicle_eta": {
+        "name": "Vehicle charge completion"
+      },
+      "vehicle_range": {
+        "name": "Vehicle range"
+      },
+      "vehicle_soc": {
+        "name": "Vehicle state of charge"
       }
     }
   },
