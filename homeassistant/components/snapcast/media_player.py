@@ -25,7 +25,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_platform,
     entity_registry as er,
-    issue_registry as ir,
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -35,8 +34,6 @@ from .const import (
     CLIENT_PREFIX,
     CLIENT_SUFFIX,
     DOMAIN,
-    GROUP_PREFIX,
-    GROUP_SUFFIX,
     SERVICE_JOIN,
     SERVICE_RESTORE,
     SERVICE_SET_LATENCY,
@@ -95,7 +92,6 @@ async def async_setup_entry(
 
     @callback
     def _update_entities(
-        entity_class: type[SnapcastClientDevice | SnapcastGroupDevice],
         known_ids: set[str],
         get_device: Callable[[str], Snapclient | Snapgroup],
         get_devices: Callable[[], list[Snapclient] | list[Snapgroup]],
@@ -115,20 +111,18 @@ async def async_setup_entry(
             return
 
         _LOGGER.debug(
-            "New %s: %s",
-            entity_class,
+            "New SnapcastClientDevice: %s",
             str([get_device(d).friendly_name for d in ids_to_add]),
         )
         _LOGGER.debug(
-            "Remove %s IDs: %s",
-            entity_class,
+            "Remove SnapcastClientDevice IDs: %s",
             str([list(ids_to_remove)]),
         )
 
         # Add new entities
         async_add_entities(
             [
-                entity_class(coordinator, get_device(snapcast_id))
+                SnapcastClientDevice(coordinator, get_device(snapcast_id))
                 for snapcast_id in ids_to_add
             ]
         )
@@ -139,13 +133,12 @@ async def async_setup_entry(
             if entity_id := entity_registry.async_get_entity_id(
                 MEDIA_PLAYER_DOMAIN,
                 DOMAIN,
-                entity_class.get_unique_id(coordinator.host_id, snapcast_id),
+                SnapcastClientDevice.get_unique_id(coordinator.host_id, snapcast_id),
             ):
                 entity_registry.async_remove(entity_id)
 
     def _update_clients() -> None:
         _update_entities(
-            SnapcastClientDevice,
             _known_client_ids,
             coordinator.server.client,
             lambda: coordinator.server.clients,
@@ -154,18 +147,6 @@ async def async_setup_entry(
     # Create client entities and add listener to update clients on server update
     _update_clients()
     coordinator.async_add_listener(_update_clients)
-
-    def _update_groups() -> None:
-        _update_entities(
-            SnapcastGroupDevice,
-            _known_group_ids,
-            coordinator.server.group,
-            lambda: coordinator.server.groups,
-        )
-
-    # Create group entities and add listener to update groups on server update
-    _update_groups()
-    coordinator.async_add_listener(_update_groups)
 
 
 class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
@@ -271,19 +252,6 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         """Handle the unjoin service."""
         raise NotImplementedError
 
-    def _async_create_grouping_deprecation_issue(self) -> None:
-        """Create an issue for deprecated grouping actions."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "deprecated_grouping_actions",
-            breaks_in_ha_version="2026.2.0",
-            is_fixable=False,
-            is_persistent=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_grouping_actions",
-        )
-
     @property
     def metadata(self) -> Mapping[str, Any]:
         """Get metadata from the current stream."""
@@ -355,94 +323,6 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         return None
 
 
-class SnapcastGroupDevice(SnapcastBaseDevice):
-    """Representation of a Snapcast group device."""
-
-    _device: Snapgroup
-
-    @classmethod
-    def get_unique_id(cls, host, id) -> str:
-        """Get a unique ID for a group."""
-        return f"{GROUP_PREFIX}{host}_{id}"
-
-    @property
-    def _current_group(self) -> Snapgroup:
-        """Return the group."""
-        return self._device
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return f"{self._device.friendly_name} {GROUP_SUFFIX}"
-
-    @property
-    def state(self) -> MediaPlayerState | None:
-        """Return the state of the player."""
-        if self.is_volume_muted:
-            return MediaPlayerState.IDLE
-        return STREAM_STATUS.get(self._device.stream_status)
-
-    async def async_set_latency(self, latency) -> None:
-        """Handle the set_latency service."""
-        raise ServiceValidationError("Latency can only be set for a Snapcast client.")
-
-    async def async_join(self, master) -> None:
-        """Handle the join service."""
-        raise ServiceValidationError("Entity is not a client. Can only join clients.")
-
-    async def async_unjoin(self) -> None:
-        """Handle the unjoin service."""
-        raise ServiceValidationError("Entity is not a client. Can only unjoin clients.")
-
-    def _async_create_group_deprecation_issue(self) -> None:
-        """Create an issue for deprecated group entities."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "deprecated_group_entities",
-            breaks_in_ha_version="2026.2.0",
-            is_fixable=False,
-            is_persistent=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_group_entities",
-        )
-
-    async def async_select_source(self, source: str) -> None:
-        """Set input source."""
-        # Groups are deprecated, create an issue when used
-        self._async_create_group_deprecation_issue()
-
-        await super().async_select_source(source)
-
-    async def async_mute_volume(self, mute: bool) -> None:
-        """Send the mute command."""
-        # Groups are deprecated, create an issue when used
-        self._async_create_group_deprecation_issue()
-
-        await super().async_mute_volume(mute)
-
-    async def async_set_volume_level(self, volume: float) -> None:
-        """Set the volume level."""
-        # Groups are deprecated, create an issue when used
-        self._async_create_group_deprecation_issue()
-
-        await super().async_set_volume_level(volume)
-
-    async def async_snapshot(self) -> None:
-        """Snapshot the group state."""
-        # Groups are deprecated, create an issue when used
-        self._async_create_group_deprecation_issue()
-
-        await super().async_snapshot()
-
-    async def async_restore(self) -> None:
-        """Restore the group state."""
-        # Groups are deprecated, create an issue when used
-        self._async_create_group_deprecation_issue()
-
-        await super().async_restore()
-
-
 class SnapcastClientDevice(SnapcastBaseDevice):
     """Representation of a Snapcast client device."""
 
@@ -491,41 +371,6 @@ class SnapcastClientDevice(SnapcastBaseDevice):
     async def async_set_latency(self, latency) -> None:
         """Set the latency of the client."""
         await self._device.set_latency(latency)
-        self.async_write_ha_state()
-
-    async def async_join(self, master) -> None:
-        """Join the group of the master player."""
-        # Action is deprecated, create an issue
-        self._async_create_grouping_deprecation_issue()
-
-        entity_registry = er.async_get(self.hass)
-        master_entity = entity_registry.async_get(master)
-        if master_entity is None:
-            raise ServiceValidationError(f"Master entity '{master}' not found.")
-
-        # Validate master entity is a client
-        unique_id = master_entity.unique_id
-        if not unique_id.startswith(CLIENT_PREFIX):
-            raise ServiceValidationError(
-                "Master is not a client device. Can only join clients."
-            )
-
-        # Extract the client ID and locate it's group
-        identifier = unique_id.split("_")[-1]
-        master_group = next(
-            group
-            for group in self._device.groups_available()
-            if identifier in group.clients
-        )
-        await master_group.add_client(self._device.identifier)
-        self.async_write_ha_state()
-
-    async def async_unjoin(self) -> None:
-        """Unjoin the group the player is currently in."""
-        # Action is deprecated, create an issue
-        self._async_create_grouping_deprecation_issue()
-
-        await self._current_group.remove_client(self._device.identifier)
         self.async_write_ha_state()
 
     @property
