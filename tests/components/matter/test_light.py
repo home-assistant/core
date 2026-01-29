@@ -214,7 +214,7 @@ async def test_color_temperature_light(
     assert state is not None
     assert state.state == "on"
     assert state.attributes["color_mode"] == ColorMode.COLOR_TEMP
-    assert state.attributes["color_temp"] == 3003
+    assert state.attributes["color_temp_kelvin"] == 333
 
     # Change color temperature
     await hass.services.async_call(
@@ -222,7 +222,7 @@ async def test_color_temperature_light(
         "turn_on",
         {
             "entity_id": entity_id,
-            "color_temp": 300,
+            "color_temp_kelvin": 3333,
         },
         blocking=True,
     )
@@ -253,7 +253,7 @@ async def test_color_temperature_light(
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": entity_id, "color_temp": 300, "transition": 4.0},
+        {"entity_id": entity_id, "color_temp_kelvin": 3333, "transition": 4.0},
         blocking=True,
     )
 
