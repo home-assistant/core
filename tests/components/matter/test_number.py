@@ -162,7 +162,7 @@ async def test_matter_exception_on_write_attribute(
         )
 
 
-@pytest.mark.parametrize("node_fixture", ["pump"])
+@pytest.mark.parametrize("node_fixture", ["mock_pump"])
 async def test_pump_level(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -280,7 +280,7 @@ async def test_thermostat_occupied_setback(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_lock_attributes(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -310,7 +310,7 @@ async def test_lock_attributes(
     assert state.state == "30"
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_matter_exception_on_door_lock_write_attribute(
     hass: HomeAssistant,
     matter_client: MagicMock,

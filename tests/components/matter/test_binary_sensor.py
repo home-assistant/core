@@ -45,7 +45,7 @@ async def test_binary_sensors(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
 
 
-@pytest.mark.parametrize("node_fixture", ["occupancy_sensor"])
+@pytest.mark.parametrize("node_fixture", ["mock_occupancy_sensor"])
 async def test_occupancy_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -96,7 +96,7 @@ async def test_boolean_state_sensors(
     assert state.state == "off"
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_battery_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -119,7 +119,7 @@ async def test_battery_sensor(
     assert state.state == "on"
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_optional_sensor_from_featuremap(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -220,7 +220,7 @@ async def test_water_heater(
     assert state.state == "on"
 
 
-@pytest.mark.parametrize("node_fixture", ["pump"])
+@pytest.mark.parametrize("node_fixture", ["mock_pump"])
 async def test_pump(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -303,7 +303,7 @@ async def test_dishwasher_alarm(
     assert state.state == "on"
 
 
-@pytest.mark.parametrize("node_fixture", ["valve"])
+@pytest.mark.parametrize("node_fixture", ["mock_valve"])
 async def test_water_valve(
     hass: HomeAssistant,
     matter_client: MagicMock,

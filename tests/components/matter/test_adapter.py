@@ -133,7 +133,7 @@ async def test_node_added_subscription(
     )
 
     node_added_callback = matter_client.subscribe_events.call_args.kwargs["callback"]
-    node = create_node_from_fixture("onoff_light")
+    node = create_node_from_fixture("mock_onoff_light")
 
     entity_state = hass.states.get("light.mock_onoff_light")
     assert not entity_state
