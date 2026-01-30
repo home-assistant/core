@@ -101,7 +101,6 @@ rules:
     comment: |
       No repair issues needed for this integration.
   stale-devices: todo
-
   # Platinum
   async-dependency: done
   inject-websession: done
