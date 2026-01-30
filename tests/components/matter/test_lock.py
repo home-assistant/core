@@ -197,7 +197,7 @@ async def test_lock_requires_pin(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock_with_unbolt"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock_with_unbolt"])
 async def test_lock_with_unbolt(
     hass: HomeAssistant,
     matter_client: MagicMock,
