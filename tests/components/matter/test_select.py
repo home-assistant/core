@@ -29,7 +29,7 @@ async def test_selects(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.SELECT)
 
 
-@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_mode_select_entities(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -79,7 +79,7 @@ async def test_mode_select_entities(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_attribute_select_entities(
     hass: HomeAssistant,
     matter_client: MagicMock,
