@@ -38,6 +38,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_RESTORED,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -889,7 +890,12 @@ async def test_restore_option_entity(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that option entities are restored if the available program does not include them but they existed once."""
+    """Test restoration of option entities when program options are missing.
+
+    This test ensures that number entities representing options are restored
+    to the entity registry and set to unavailable if the current available
+    program does not include them, but they existed previously.
+    """
     entity_id = "switch.dishwasher_half_load"
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
@@ -908,4 +914,7 @@ async def test_restore_option_entity(
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert not state.attributes.get(ATTR_RESTORED)
