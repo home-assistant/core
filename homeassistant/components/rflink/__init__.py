@@ -138,6 +138,7 @@ ALLOWED_PLATFORMS = [
     Platform.SWITCH,
 ]
 
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Rflink component."""
     # Allow entities to register themselves by device_id to be looked up when
@@ -345,7 +346,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     for pltfrm in ALLOWED_PLATFORMS:
         if pltfrm in config[DOMAIN]:
             hass.async_create_task(
-                async_load_platform(hass, pltfrm, DOMAIN, config[DOMAIN][pltfrm], config),
+                async_load_platform(
+                    hass, pltfrm, DOMAIN, config[DOMAIN][pltfrm], config
+                ),
                 eager_start=False,
             )
 
