@@ -17,7 +17,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "The API key from the Liebherr SmartDevice app. Note: The API key can only be copied once from the app."
+          "api_key": "[%key:component::liebherr::config::step::user::data_description::api_key%]"
         },
         "description": "Your API key is no longer valid. Please enter a new API key to continue."
       },

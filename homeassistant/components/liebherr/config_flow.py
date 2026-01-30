@@ -31,6 +31,25 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for liebherr."""
 
+    async def _validate_api_key(self, api_key: str) -> tuple[list, dict[str, str]]:
+        """Validate the API key and return devices and errors."""
+        errors: dict[str, str] = {}
+        devices: list = []
+        client = LiebherrClient(
+            api_key=api_key,
+            session=async_get_clientsession(self.hass),
+        )
+        try:
+            devices = await client.get_devices()
+        except LiebherrAuthenticationError:
+            errors["base"] = "invalid_auth"
+        except LiebherrConnectionError:
+            errors["base"] = "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        return devices, errors
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -41,21 +60,8 @@ class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
 
-            try:
-                # Create a client and test the connection
-                client = LiebherrClient(
-                    api_key=user_input[CONF_API_KEY],
-                    session=async_get_clientsession(self.hass),
-                )
-                devices = await client.get_devices()
-            except LiebherrAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except LiebherrConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            devices, errors = await self._validate_api_key(user_input[CONF_API_KEY])
+            if not errors:
                 if not devices:
                     return self.async_abort(reason="no_devices")
 
@@ -83,20 +89,8 @@ class LiebherrConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             api_key = user_input[CONF_API_KEY].strip()
 
-            try:
-                client = LiebherrClient(
-                    api_key=api_key,
-                    session=async_get_clientsession(self.hass),
-                )
-                await client.get_devices()
-            except LiebherrAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except LiebherrConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            _, errors = await self._validate_api_key(api_key)
+            if not errors:
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(),
                     data_updates={CONF_API_KEY: api_key},
