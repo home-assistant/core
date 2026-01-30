@@ -6,6 +6,7 @@ import logging
 from typing import Any, Final
 
 from pyvesync.base_devices import VeSyncBaseDevice, VeSyncHumidifier
+from pyvesync.const import DeviceStatus
 from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.switch import (
@@ -18,7 +19,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import is_outlet, is_wall_switch, rgetattr
+from .common import is_outlet, is_purifier, is_wall_switch, rgetattr
 from .const import VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -58,6 +59,15 @@ def _toggle_auto_stop(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
             return sw.toggle_automatic_stop(*args)
         case _:
             raise HomeAssistantError("Device does not support toggling automatic stop.")
+
+
+def _toggle_drying_mode(device: VeSyncBaseDevice, *args) -> Awaitable[bool]:
+    """Toggle drying mode on purifier devices."""
+    match device:
+        case VeSyncHumidifier() as sw if hasattr(sw, "toggle_drying_mode"):
+            return sw.toggle_drying_mode(*args)
+        case _:
+            raise HomeAssistantError("Device does not support toggling drying mode.")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -107,6 +117,17 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         translation_key="auto_off_config",
         on_fn=lambda device: _toggle_auto_stop(device, True),
         off_fn=lambda device: _toggle_auto_stop(device, False),
+    ),
+    VeSyncSwitchEntityDescription(
+        key="dry_mode",
+        is_on=lambda device: device.state.drying_mode_state == DeviceStatus.ON,
+        exists_fn=(
+            lambda device: is_purifier(device)
+            and rgetattr(device, "state.dry_mode") is not None
+        ),
+        translation_key="dry_mode",
+        on_fn=lambda device: _toggle_drying_mode(device, True),
+        off_fn=lambda device: _toggle_drying_mode(device, False),
     ),
 )
 

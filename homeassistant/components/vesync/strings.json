@@ -148,6 +148,9 @@
       },
       "display": {
         "name": "Display"
+      },
+      "dry_mode": {
+        "name": "Dry mode"
       }
     }
   },
