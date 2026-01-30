@@ -54,6 +54,18 @@ ERR_INVALID_PIN_CODE = "invalid_pin_code"
 ERR_CREDENTIAL_NOT_SUPPORTED = "credential_not_supported"
 ERR_NO_AVAILABLE_CREDENTIAL_SLOTS = "no_available_credential_slots"
 
+# Service names
+SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
+SERVICE_CLEAR_LOCK_USERCODE = "clear_lock_usercode"
+SERVICE_SET_LOCK_USER = "set_lock_user"
+SERVICE_CLEAR_LOCK_USER = "clear_lock_user"
+SERVICE_GET_LOCK_INFO = "get_lock_info"
+SERVICE_GET_LOCK_USERS = "get_lock_users"
+
+# Service field keys
+ATTR_CODE_SLOT = "code_slot"
+ATTR_USERCODE = "usercode"
+
 # SetCredential status mapping (Matter DlStatus)
 SET_CREDENTIAL_STATUS_MAP: dict[int, str] = {
     0: "success",

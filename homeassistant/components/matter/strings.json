@@ -618,6 +618,34 @@
     }
   },
   "services": {
+    "clear_lock_user": {
+      "description": "Deletes a lock user and all associated credentials. Use index 65534 to clear all users.",
+      "fields": {
+        "user_index": {
+          "description": "The user slot index (1-based) to clear, or 65534 to clear all.",
+          "name": "User index"
+        }
+      },
+      "name": "Clear lock user"
+    },
+    "clear_lock_usercode": {
+      "description": "Clears the user and all credentials at the specified code slot.",
+      "fields": {
+        "code_slot": {
+          "description": "The user slot index (1-based) to clear.",
+          "name": "Code slot"
+        }
+      },
+      "name": "Clear lock user code"
+    },
+    "get_lock_info": {
+      "description": "Returns lock capabilities including supported credential types, user capacity, and PIN length constraints.",
+      "name": "Get lock info"
+    },
+    "get_lock_users": {
+      "description": "Returns all users configured on the lock with their credentials.",
+      "name": "Get lock users"
+    },
     "open_commissioning_window": {
       "description": "Allows adding one of your devices to another Matter network by opening the commissioning window for this Matter device for 60 seconds.",
       "fields": {
@@ -627,6 +655,46 @@
         }
       },
       "name": "Open commissioning window"
+    },
+    "set_lock_user": {
+      "description": "Creates or updates a lock user with optional PIN credential.",
+      "fields": {
+        "credential_rule": {
+          "description": "The credential rule for the user.",
+          "name": "Credential rule"
+        },
+        "pin_code": {
+          "description": "Optional PIN code to set for the user (digits only).",
+          "name": "PIN code"
+        },
+        "user_index": {
+          "description": "The user slot index (1-based). Leave empty to auto-find an available slot.",
+          "name": "User index"
+        },
+        "user_name": {
+          "description": "The name for the user.",
+          "name": "User name"
+        },
+        "user_type": {
+          "description": "The type of user to create.",
+          "name": "User type"
+        }
+      },
+      "name": "Set lock user"
+    },
+    "set_lock_usercode": {
+      "description": "Sets a user code (PIN) on the lock at the specified code slot. Creates the user if the slot is empty.",
+      "fields": {
+        "code_slot": {
+          "description": "The user slot index (1-based) to set the code on.",
+          "name": "Code slot"
+        },
+        "usercode": {
+          "description": "The PIN code to set (digits only).",
+          "name": "User code"
+        }
+      },
+      "name": "Set lock user code"
     },
     "water_heater_boost": {
       "description": "Enables water heater boost for a specific duration.",

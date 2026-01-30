@@ -25,3 +25,107 @@ water_heater_boost:
           step: 1
           mode: slider
       default: 65
+
+set_lock_usercode:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    code_slot:
+      selector:
+        number:
+          min: 1
+          max: 255
+          step: 1
+          mode: box
+      required: true
+    usercode:
+      selector:
+        text:
+      required: true
+
+clear_lock_usercode:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    code_slot:
+      selector:
+        number:
+          min: 1
+          max: 255
+          step: 1
+          mode: box
+      required: true
+
+set_lock_user:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    user_index:
+      selector:
+        number:
+          min: 1
+          max: 255
+          step: 1
+          mode: box
+    user_name:
+      selector:
+        text:
+    user_type:
+      selector:
+        select:
+          options:
+            - unrestricted_user
+            - year_day_schedule_user
+            - week_day_schedule_user
+            - programming_user
+            - non_access_user
+            - forced_user
+            - disposable_user
+            - expiring_user
+            - schedule_restricted_user
+            - remote_only_user
+      default: unrestricted_user
+    credential_rule:
+      selector:
+        select:
+          options:
+            - single
+            - dual
+            - tri
+      default: single
+    pin_code:
+      selector:
+        text:
+
+clear_lock_user:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    user_index:
+      selector:
+        number:
+          min: 1
+          max: 65534
+          step: 1
+          mode: box
+      required: true
+
+get_lock_info:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+
+get_lock_users:
+  target:
+    entity:
+      domain: lock
+      integration: matter
