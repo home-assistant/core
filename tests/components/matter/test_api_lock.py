@@ -358,7 +358,7 @@ async def test_set_user_with_pin(
             TYPE: "matter/lock/set_user",
             DEVICE_ID: _get_device_id(device_registry),
             ATTR_USER_NAME: "Alice",
-            ATTR_PIN_CODE: "1234",
+            ATTR_PIN_CODE: "12345678",
         }
     )
     msg = await ws_client.receive_json()
@@ -411,7 +411,7 @@ async def test_set_user_update_existing_pin(
             TYPE: "matter/lock/set_user",
             DEVICE_ID: _get_device_id(device_registry),
             ATTR_USER_INDEX: 3,
-            ATTR_PIN_CODE: "5678",
+            ATTR_PIN_CODE: "87654321",
         }
     )
     msg = await ws_client.receive_json()
@@ -496,7 +496,7 @@ async def test_set_user_pin_too_short(
             TYPE: "matter/lock/set_user",
             DEVICE_ID: _get_device_id(device_registry),
             ATTR_USER_NAME: "Short",
-            ATTR_PIN_CODE: "1",  # MinPINCodeLength from fixture is 4
+            ATTR_PIN_CODE: "1",  # MinPINCodeLength from fixture is 6
         }
     )
     msg = await ws_client.receive_json()
@@ -522,7 +522,7 @@ async def test_set_user_pin_too_long(
             TYPE: "matter/lock/set_user",
             DEVICE_ID: _get_device_id(device_registry),
             ATTR_USER_NAME: "Long",
-            ATTR_PIN_CODE: "12345678901",  # MaxPINCodeLength from fixture is 8
+            ATTR_PIN_CODE: "123456789",  # MaxPINCodeLength from fixture is 8
         }
     )
     msg = await ws_client.receive_json()
@@ -599,17 +599,9 @@ async def test_set_user_rollback_on_credential_failure(
             None,  # SetUser: success
             # _get_existing_pin_credential_index: GetUser
             {"userStatus": 1, "credentials": None},
-            # _find_available_credential_slot: all slots occupied
-            {"credentialExists": True},  # slot 1
-            {"credentialExists": True},  # slot 2
-            {"credentialExists": True},  # slot 3
-            {"credentialExists": True},  # slot 4
-            {"credentialExists": True},  # slot 5
-            {"credentialExists": True},  # slot 6
-            {"credentialExists": True},  # slot 7
-            {"credentialExists": True},  # slot 8
-            {"credentialExists": True},  # slot 9
-            {"credentialExists": True},  # slot 10
+            # _find_available_credential_slot: all 10 slots occupied
+            # (NumberOfPINUsersSupported=10 in door_lock fixture)
+            *[{"credentialExists": True} for _ in range(10)],
             None,  # ClearUser (rollback): success
         ]
     )
@@ -621,7 +613,7 @@ async def test_set_user_rollback_on_credential_failure(
             TYPE: "matter/lock/set_user",
             DEVICE_ID: _get_device_id(device_registry),
             ATTR_USER_NAME: "FailCred",
-            ATTR_PIN_CODE: "1234",
+            ATTR_PIN_CODE: "12345678",
         }
     )
     msg = await ws_client.receive_json()
@@ -662,6 +654,7 @@ async def test_set_user_no_credential_slots(
             # _get_existing_pin_credential_index: no existing PIN
             {"userStatus": 1, "credentials": None},
             # _find_available_credential_slot: all 10 slots occupied
+            # (NumberOfPINUsersSupported=10 in door_lock fixture)
             *[{"credentialExists": True} for _ in range(10)],
         ]
     )
@@ -673,7 +666,7 @@ async def test_set_user_no_credential_slots(
             TYPE: "matter/lock/set_user",
             DEVICE_ID: _get_device_id(device_registry),
             ATTR_USER_INDEX: 1,
-            ATTR_PIN_CODE: "1234",
+            ATTR_PIN_CODE: "12345678",
         }
     )
     msg = await ws_client.receive_json()
