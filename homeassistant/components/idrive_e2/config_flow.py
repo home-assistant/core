@@ -65,8 +65,10 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """First step: prompt for access_key and secret_access_key, then fetch region endpoint."""
+        """First step: prompt for access_key and secret_access_key, then fetch region endpoint and buckets."""
         errors: dict[str, str] = {}
+        schema = STEP_USER_DATA_SCHEMA
+
         if user_input is not None:
             session = async_get_clientsession(self.hass)
             client = IDriveE2Client(session)
@@ -88,29 +90,26 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
             except ValueError:
                 errors["base"] = "invalid_endpoint_url"
             else:
+                # Check if any buckets were found
                 if not buckets:
                     errors["base"] = "no_buckets"
 
-            if errors:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=self.add_suggested_values_to_schema(
-                        STEP_USER_DATA_SCHEMA, user_input
-                    ),
-                    errors=errors,
-                )
+            if not errors:
+                # Store validated data for the next step
+                self._access_key = user_input[CONF_ACCESS_KEY_ID]
+                self._secret_key = user_input[CONF_SECRET_ACCESS_KEY]
+                self._endpoint_url = endpoint
+                self._buckets = buckets
+                return await self.async_step_bucket()
 
-            # Store validated data for the next step
-            self._access_key = user_input[CONF_ACCESS_KEY_ID]
-            self._secret_key = user_input[CONF_SECRET_ACCESS_KEY]
-            self._endpoint_url = endpoint
-            self._buckets = buckets
-
-            return await self.async_step_bucket()
+            # Keep the entered values in the form
+            schema = self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=schema,
             errors=errors,
         )
 
