@@ -27,20 +27,20 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_dashboard_api() -> Generator[MagicMock]:
     """Return a mocked ESPHome Dashboard API."""
     api = MagicMock()
-    api.login = AsyncMock(return_value=True)
+    api.request = AsyncMock(return_value=None)
     api.get_devices = AsyncMock(
         return_value={
             "configured": [
                 {
                     "name": "test_device",
-                    "current_version": "2023.12.0",
-                    "target_version": "2024.1.0",
+                    "deployed_version": "2023.12.0",
+                    "current_version": "2024.1.0",
                     "configuration": "test_device.yaml",
                 },
                 {
                     "name": "test_device_2",
+                    "deployed_version": "2023.11.0",
                     "current_version": "2023.11.0",
-                    "target_version": "2023.11.0",
                     "configuration": "test_device_2.yaml",
                 },
             ]
@@ -57,7 +57,7 @@ def mock_dashboard_api() -> Generator[MagicMock]:
 def mock_dashboard_api_no_devices() -> Generator[MagicMock]:
     """Return a mocked ESPHome Dashboard API with no devices."""
     api = MagicMock()
-    api.login = AsyncMock(return_value=True)
+    api.request = AsyncMock(return_value=None)
     api.get_devices = AsyncMock(return_value={"configured": []})
     with patch(
         "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",
@@ -70,7 +70,7 @@ def mock_dashboard_api_no_devices() -> Generator[MagicMock]:
 def mock_dashboard_api_error() -> Generator[MagicMock]:
     """Return a mocked ESPHome Dashboard API that raises an error."""
     api = MagicMock()
-    api.login = AsyncMock(return_value=True)
+    api.request = AsyncMock(return_value=None)
     api.get_devices = AsyncMock(side_effect=Exception("Connection error"))
     with patch(
         "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",

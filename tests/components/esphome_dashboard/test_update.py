@@ -15,25 +15,25 @@ async def test_update_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test update entities are created correctly."""
-    # Check that update entities are created
-    state = hass.states.get("update.test_device")
+    # Check that update entities are created (entity name is "Firmware" from device name)
+    state = hass.states.get("update.test_device_firmware")
     assert state is not None
-    assert state.state == STATE_ON  # Update available
-    assert state.attributes["installed_version"] == "2023.12.0"
-    assert state.attributes["latest_version"] == "2024.1.0"
+    assert state.state == STATE_ON  # Update available (deployed != current)
+    assert state.attributes["installed_version"] == "2023.12.0"  # deployed_version
+    assert state.attributes["latest_version"] == "2024.1.0"  # current_version
 
-    state2 = hass.states.get("update.test_device_2")
+    state2 = hass.states.get("update.test_device_2_firmware")
     assert state2 is not None
-    assert state2.state == STATE_OFF  # No update available
-    assert state2.attributes["installed_version"] == "2023.11.0"
-    assert state2.attributes["latest_version"] == "2023.11.0"
+    assert state2.state == STATE_OFF  # No update available (deployed == current)
+    assert state2.attributes["installed_version"] == "2023.11.0"  # deployed_version
+    assert state2.attributes["latest_version"] == "2023.11.0"  # current_version
 
     # Verify entity registry entries
-    entry = entity_registry.async_get("update.test_device")
+    entry = entity_registry.async_get("update.test_device_firmware")
     assert entry
     assert entry.unique_id == f"{init_integration.entry_id}_test_device"
 
-    entry2 = entity_registry.async_get("update.test_device_2")
+    entry2 = entity_registry.async_get("update.test_device_2_firmware")
     assert entry2
     assert entry2.unique_id == f"{init_integration.entry_id}_test_device_2"
 
@@ -43,7 +43,7 @@ async def test_update_entity_device_removed(
 ) -> None:
     """Test update entity when device is removed from dashboard."""
     # Initially device exists
-    state = hass.states.get("update.test_device")
+    state = hass.states.get("update.test_device_firmware")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -53,8 +53,8 @@ async def test_update_entity_device_removed(
             "configured": [
                 {
                     "name": "test_device_2",
+                    "deployed_version": "2023.11.0",
                     "current_version": "2023.11.0",
-                    "target_version": "2023.11.0",
                     "configuration": "test_device_2.yaml",
                 }
             ]
@@ -67,7 +67,7 @@ async def test_update_entity_device_removed(
     await hass.async_block_till_done()
 
     # Entity should now be unavailable
-    state = hass.states.get("update.test_device")
+    state = hass.states.get("update.test_device_firmware")
     assert state is not None
     assert state.state == "unavailable"
 
@@ -77,7 +77,7 @@ async def test_coordinator_update_failure(
 ) -> None:
     """Test coordinator update failure."""
     # Initially entities are available
-    state = hass.states.get("update.test_device")
+    state = hass.states.get("update.test_device_firmware")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -92,7 +92,7 @@ async def test_coordinator_update_failure(
     await hass.async_block_till_done()
 
     # Entities should become unavailable
-    state = hass.states.get("update.test_device")
+    state = hass.states.get("update.test_device_firmware")
     assert state is not None
     assert state.state == "unavailable"
 
@@ -102,13 +102,13 @@ async def test_dynamic_device_addition(
 ) -> None:
     """Test that new devices are added dynamically."""
     # Initially two devices
-    state = hass.states.get("update.test_device")
+    state = hass.states.get("update.test_device_firmware")
     assert state is not None
-    state2 = hass.states.get("update.test_device_2")
+    state2 = hass.states.get("update.test_device_2_firmware")
     assert state2 is not None
 
     # No third device yet
-    state3 = hass.states.get("update.test_device_3")
+    state3 = hass.states.get("update.test_device_3_firmware")
     assert state3 is None
 
     # Update coordinator data to add a new device
@@ -117,20 +117,20 @@ async def test_dynamic_device_addition(
             "configured": [
                 {
                     "name": "test_device",
-                    "current_version": "2023.12.0",
-                    "target_version": "2024.1.0",
+                    "deployed_version": "2023.12.0",
+                    "current_version": "2024.1.0",
                     "configuration": "test_device.yaml",
                 },
                 {
                     "name": "test_device_2",
+                    "deployed_version": "2023.11.0",
                     "current_version": "2023.11.0",
-                    "target_version": "2023.11.0",
                     "configuration": "test_device_2.yaml",
                 },
                 {
                     "name": "test_device_3",
+                    "deployed_version": "2024.2.0",
                     "current_version": "2024.2.0",
-                    "target_version": "2024.2.0",
                     "configuration": "test_device_3.yaml",
                 },
             ]
@@ -143,7 +143,7 @@ async def test_dynamic_device_addition(
     await hass.async_block_till_done()
 
     # Third device should now exist
-    state3 = hass.states.get("update.test_device_3")
+    state3 = hass.states.get("update.test_device_3_firmware")
     assert state3 is not None
     assert state3.state == STATE_OFF
     assert state3.attributes["installed_version"] == "2024.2.0"

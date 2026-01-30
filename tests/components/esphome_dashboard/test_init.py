@@ -44,15 +44,15 @@ async def test_coordinator_auth_failure(hass: HomeAssistant, mock_config_entry) 
     mock_config_entry.add_to_hass(hass)
 
     mock_api = MagicMock()
-    mock_api.login = AsyncMock(return_value=True)
+    mock_api.request = AsyncMock(return_value=None)
     # First call succeeds for setup
     mock_api.get_devices = AsyncMock(
         return_value={
             "configured": [
                 {
                     "name": "test_device",
-                    "current_version": "2023.12.0",
-                    "target_version": "2024.1.0",
+                    "deployed_version": "2023.12.0",
+                    "current_version": "2024.1.0",
                     "configuration": "test_device.yaml",
                 }
             ]

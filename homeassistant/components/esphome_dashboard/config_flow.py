@@ -180,6 +180,10 @@ class ESPHomeDashboardConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, suggested_values
             ),
             errors=errors,
+            description_placeholders={
+                "local_url": "http://192.168.1.100:6052",
+                "remote_url": "http://esphome.example.com",
+            },
         )
 
     async def async_step_reauth(

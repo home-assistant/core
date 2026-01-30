@@ -17,6 +17,10 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "password": "[%key:component::esphome_dashboard::config::step::user::data_description::password%]",
+          "username": "[%key:component::esphome_dashboard::config::step::user::data_description::username%]"
+        },
         "description": "The authentication credentials for {url} are no longer valid. Please enter updated credentials.",
         "title": "Reauthenticate ESPHome Dashboard"
       },
@@ -25,6 +29,11 @@
           "password": "[%key:common::config_flow::data::password%]",
           "url": "Dashboard URL",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::esphome_dashboard::config::step::user::data_description::password%]",
+          "url": "[%key:component::esphome_dashboard::config::step::user::data_description::url%]",
+          "username": "[%key:component::esphome_dashboard::config::step::user::data_description::username%]"
         },
         "description": "Update the URL or authentication credentials for your ESPHome Dashboard instance.",
         "title": "Reconfigure ESPHome Dashboard"

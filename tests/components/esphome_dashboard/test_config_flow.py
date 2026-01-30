@@ -57,7 +57,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.esphome_dashboard.config_flow.ESPHomeDashboardAPI"
     ) as mock_api:
-        mock_api.return_value.login = AsyncMock(
+        mock_api.return_value.request = AsyncMock(
             side_effect=Exception("Connection error")
         )
 
@@ -79,7 +79,7 @@ async def test_user_flow_invalid_dashboard(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.esphome_dashboard.config_flow.ESPHomeDashboardAPI"
     ) as mock_api:
-        mock_api.return_value.login = AsyncMock(return_value=True)
+        mock_api.return_value.request = AsyncMock(return_value=None)
         mock_api.return_value.get_devices = AsyncMock(return_value={})
 
         result = await hass.config_entries.flow.async_configure(
@@ -162,7 +162,7 @@ async def test_reconfigure_flow_cannot_connect(
     with patch(
         "homeassistant.components.esphome_dashboard.config_flow.ESPHomeDashboardAPI"
     ) as mock_api:
-        mock_api.return_value.login = AsyncMock(
+        mock_api.return_value.request = AsyncMock(
             side_effect=Exception("Connection error")
         )
 
@@ -211,7 +211,7 @@ async def test_user_flow_invalid_authentication(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.esphome_dashboard.config_flow.ESPHomeDashboardAPI"
     ) as mock_api:
-        mock_api.return_value.login = AsyncMock(
+        mock_api.return_value.request = AsyncMock(
             side_effect=aiohttp.ClientResponseError(
                 request_info=None, history=None, status=401
             )
@@ -282,7 +282,7 @@ async def test_reauth_flow_invalid_credentials(
     with patch(
         "homeassistant.components.esphome_dashboard.config_flow.ESPHomeDashboardAPI"
     ) as mock_api:
-        mock_api.return_value.login = AsyncMock(
+        mock_api.return_value.request = AsyncMock(
             side_effect=aiohttp.ClientResponseError(
                 request_info=None, history=None, status=401
             )
