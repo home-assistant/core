@@ -301,16 +301,9 @@ class Control4Climate(Control4Entity, ClimateEntity):
         if data is None:
             return None
         modes = data.get(CONTROL4_FAN_MODES_LIST)
-        if modes is None:
+        if not modes:
             return None
-        # Handle both string (comma-separated) and list formats
-        if isinstance(modes, str):
-            c4_modes = [m.strip() for m in modes.split(",") if m.strip()]
-        else:
-            c4_modes = list(modes)
-        if not c4_modes:
-            return None
-        return [m.lower() for m in c4_modes]
+        return [m.strip().lower() for m in modes.split(",") if m.strip()]
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
