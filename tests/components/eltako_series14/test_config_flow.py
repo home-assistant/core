@@ -143,7 +143,7 @@ class TestEltakoFlowHandler:
         )
 
         with patch(
-            "homeassistant.components.eltako_series14.config_flow._async_validate_gateway",
+            "homeassistant.components.eltako_series14.config_flow.EltakoFlowHandler._async_validate_gateway",
             side_effect=RuntimeError,
         ):
             result = await hass.config_entries.flow.async_configure(
@@ -161,7 +161,7 @@ class TestEltakoFlowHandler:
         )
 
         with patch(
-            "homeassistant.components.eltako_series14.config_flow._async_validate_gateway",
+            "homeassistant.components.eltako_series14.config_flow.EltakoFlowHandler._async_validate_gateway",
             side_effect=Exception,
         ):
             result = await hass.config_entries.flow.async_configure(
