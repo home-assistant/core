@@ -14,7 +14,8 @@
       'preset_modes': list([
         'away',
         'home',
-        'boost',
+        'high',
+        'fireplace',
       ]),
       'target_temp_step': 0.5,
     }),
@@ -43,7 +44,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
-    'translation_key': None,
+    'translation_key': 'flexit_bacnet',
     'unique_id': '0000-0001',
     'unit_of_measurement': None,
   })
@@ -60,11 +61,12 @@
       ]),
       'max_temp': 30,
       'min_temp': 10,
-      'preset_mode': 'boost',
+      'preset_mode': 'high',
       'preset_modes': list([
         'away',
         'home',
-        'boost',
+        'high',
+        'fireplace',
       ]),
       'supported_features': <ClimateEntityFeature: 401>,
       'target_temp_step': 0.5,

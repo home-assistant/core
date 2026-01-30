@@ -59,6 +59,7 @@ async def test_set_hvac_preset_mode(
 
     # Set preset mode to away
     mock_flexit_bacnet.ventilation_mode = VENTILATION_MODE_AWAY
+    mock_flexit_bacnet.operation_mode = 2  # OPERATION_MODE_AWAY
     await hass.services.async_call(
         Platform.CLIMATE,
         SERVICE_SET_PRESET_MODE,
@@ -78,6 +79,7 @@ async def test_set_hvac_preset_mode(
 
     # Set preset mode to home
     mock_flexit_bacnet.ventilation_mode = VENTILATION_MODE_HOME
+    mock_flexit_bacnet.operation_mode = 3  # OPERATION_MODE_HOME
     await hass.services.async_call(
         Platform.CLIMATE,
         SERVICE_SET_PRESET_MODE,
@@ -121,6 +123,7 @@ async def test_set_hvac_mode(
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     mock_flexit_bacnet.ventilation_mode = VENTILATION_MODE_STOP
+    mock_flexit_bacnet.operation_mode = 1  # OPERATION_MODE_OFF
     await hass.services.async_call(
         Platform.CLIMATE,
         SERVICE_SET_HVAC_MODE,
