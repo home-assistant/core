@@ -11,10 +11,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.idrive_e2 import ClientError
-from homeassistant.components.idrive_e2.config_flow import (
-    CONF_ACCESS_KEY_ID,
-    SelectSelector,
-)
+from homeassistant.components.idrive_e2.config_flow import CONF_ACCESS_KEY_ID
 from homeassistant.components.idrive_e2.const import (
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
@@ -24,6 +21,7 @@ from homeassistant.components.idrive_e2.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.selector import SelectSelector
 
 from .const import USER_INPUT
 
@@ -31,20 +29,25 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_idrive_client() -> Generator[AsyncMock]:
-    """Patch IDriveE2Client + aiohttp session, return the client mock."""
+def mock_aiohttp_session() -> Generator[AsyncMock]:
+    """Patch async_get_clientsession to return a mocked aiohttp session."""
     mock_session = AsyncMock()
+    with patch(
+        "homeassistant.components.idrive_e2.config_flow.async_get_clientsession",
+        return_value=mock_session,
+    ):
+        yield mock_session
+
+
+@pytest.fixture
+def mock_idrive_client(mock_aiohttp_session: AsyncMock) -> Generator[AsyncMock]:
+    """Patch IDriveE2Client to return a mocked client."""
     mock_client = AsyncMock()
     mock_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
-    with (
-        patch(
-            "homeassistant.components.idrive_e2.config_flow.async_get_clientsession",
-            return_value=mock_session,
-        ),
-        patch(
-            "homeassistant.components.idrive_e2.config_flow.IDriveE2Client",
-            return_value=mock_client,
-        ),
+
+    with patch(
+        "homeassistant.components.idrive_e2.config_flow.IDriveE2Client",
+        return_value=mock_client,
     ):
         yield mock_client
 
