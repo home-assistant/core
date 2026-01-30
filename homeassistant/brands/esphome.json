@@ -1,0 +1,5 @@
+{
+  "domain": "esphome",
+  "name": "ESPHome",
+  "integrations": ["esphome", "esphome_dashboard"]
+}
