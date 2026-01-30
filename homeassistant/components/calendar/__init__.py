@@ -32,7 +32,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_time
@@ -516,6 +516,26 @@ class CalendarEntity(Entity):
 
     _alarm_unsubs: list[CALLBACK_TYPE] | None = None
 
+    _attr_initial_color: str | None = None
+
+    @property
+    def initial_color(self) -> str | None:
+        """Return the initial color for the calendar entity."""
+        return self._attr_initial_color
+
+    def get_initial_entity_options(self) -> er.EntityOptionsType | None:
+        """Return initial entity options."""
+        if self.initial_color is None:
+            return None
+
+        # Validate that it's a valid hex color string with # prefix
+        try:
+            validated_color = cv.color_hex(self.initial_color)
+        except vol.Invalid:
+            return None
+
+        return {DOMAIN: {"color": validated_color}}
+
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
@@ -533,8 +553,8 @@ class CalendarEntity(Entity):
             "all_day": event.all_day,
             "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
             "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
-            "location": event.location if event.location else "",
-            "description": event.description if event.description else "",
+            "location": event.location or "",
+            "description": event.description or "",
         }
 
     @final

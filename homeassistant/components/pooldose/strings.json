@@ -4,7 +4,9 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_device_info": "Unable to retrieve device information",
-      "no_serial_number": "No serial number found on the device"
+      "no_serial_number": "No serial number found on the device",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_device": "The provided device does not match the configured device"
     },
     "error": {
       "api_not_set": "API version not found in device response. Device firmware may not be compatible with this integration.",
@@ -19,6 +21,14 @@
       "dhcp_confirm": {
         "description": "A PoolDose device was found on your network at {ip} with MAC address {mac}.\n\nDo you want to add {name} to Home Assistant?",
         "title": "Confirm DHCP discovered PoolDose device"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::pooldose::config::step::user::data_description::host%]"
+        }
       },
       "user": {
         "data": {

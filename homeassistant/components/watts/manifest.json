@@ -3,7 +3,7 @@
   "name": "Watts Vision +",
   "codeowners": ["@theobld-ww", "@devender-verma-ww", "@ssi-spyro"],
   "config_flow": true,
-  "dependencies": ["application_credentials"],
+  "dependencies": ["application_credentials", "cloud"],
   "documentation": "https://www.home-assistant.io/integrations/watts",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
