@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from calendar import monthrange
 from datetime import date, datetime, timedelta
 from enum import Enum
 from typing import Any, NoReturn, cast
@@ -94,11 +95,12 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
 
 @callback
 def _get_month_start_end(start: datetime) -> tuple[datetime, datetime]:
+    """Get the first day of the month for start and current time."""
     start = dt_util.as_local(start)
     end = dt_util.now()
 
-    start = start.replace(day=1, hour=0, minute=0, second=1, microsecond=0)
-    end = end.replace(day=1, hour=0, minute=0, second=2, microsecond=0)
+    start = start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    end = end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     return start, end
 
@@ -113,20 +115,19 @@ def _bad_identifier(identifier: str, err: Exception | None = None) -> NoReturn:
 
 @callback
 def _format_duration(duration: timedelta) -> str:
-    formatted = ""
     seconds = int(duration.total_seconds())
-    if seconds > 3600:
-        hours = seconds // 3600
-        formatted += f"{hours}h "
-        seconds -= hours * 3600
-    if seconds > 60:
-        minutes = seconds // 60
-        formatted += f"{minutes}m "
-        seconds -= minutes * 60
-    if seconds > 0:
-        formatted += f"{seconds}s "
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
 
-    return formatted.strip()
+    parts = []
+    if hours > 0:
+        parts.append(f"{hours}h")
+    if minutes > 0:
+        parts.append(f"{minutes}m")
+    if seconds > 0:
+        parts.append(f"{seconds}s")
+
+    return " ".join(parts) if parts else "0s"
 
 
 @callback
@@ -593,7 +594,8 @@ class ProtectMediaSource(MediaSource):
         start = max(recording_start, start)
 
         recording_end = dt_util.now().date()
-        end = start.replace(month=start.month + 1) - timedelta(days=1)
+
+        end = start.replace(day=monthrange(start.year, start.month)[1])
         end = min(recording_end, end)
 
         children = [self._build_days(data, camera_id, event_type, start, is_all=True)]
@@ -660,10 +662,9 @@ class ProtectMediaSource(MediaSource):
             tzinfo=dt_util.get_default_time_zone(),
         )
         if is_all:
-            if start_dt.month < 12:
-                end_dt = start_dt.replace(month=start_dt.month + 1)
-            else:
-                end_dt = start_dt.replace(year=start_dt.year + 1, month=1)
+            # Move to first day of next month
+            days_in_month = monthrange(start_dt.year, start_dt.month)[1]
+            end_dt = start_dt + timedelta(days=days_in_month)
         else:
             end_dt = start_dt + timedelta(hours=24)
 
@@ -726,7 +727,7 @@ class ProtectMediaSource(MediaSource):
         ]
 
         start, end = _get_month_start_end(data.api.bootstrap.recording_start)
-        while end > start:
+        while end >= start:
             children.append(self._build_month(data, camera_id, event_type, end.date()))
             end = (end - timedelta(days=1)).replace(day=1)
 

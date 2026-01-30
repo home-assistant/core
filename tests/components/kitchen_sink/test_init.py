@@ -374,55 +374,57 @@ async def test_service(
     )
 
 
-@pytest.mark.parametrize(
-    ("preview_feature_enabled", "should_create_issue"),
-    [
-        (False, False),
-        (True, True),
-    ],
-    ids=["preview_feature_disabled", "preview_feature_enabled"],
-)
-async def test_special_repair_preview_feature_state(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    hass_ws_client: WebSocketGenerator,
-    preview_feature_enabled: bool,
-    should_create_issue: bool,
-) -> None:
-    """Test that special repair issue is created/removed based on preview feature state."""
+@pytest.fixture
+async def setup_kitchen_sink_with_repairs(hass: HomeAssistant) -> None:
+    """Set up kitchen_sink integration with labs and repairs."""
     assert await async_setup_component(hass, "labs", {})
     assert await async_setup_component(hass, "repairs", {})
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
-    if preview_feature_enabled:
-        ws_client = await hass_ws_client(hass)
 
-        # Enable the special repair preview feature
-        await ws_client.send_json_auto_id(
-            {
-                "type": "labs/update",
-                "domain": "kitchen_sink",
-                "preview_feature": "special_repair",
-                "enabled": True,
-            }
-        )
-        msg = await ws_client.receive_json()
-        assert msg["success"]
-
-        # Wait for event handling
-        await hass.async_block_till_done()
-
-    # Check if issue exists based on preview feature state
+async def test_special_repair_issue_not_created_when_disabled(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    setup_kitchen_sink_with_repairs: None,
+) -> None:
+    """Test that special repair issue is not created when preview feature is disabled."""
+    # Check that issue does not exist when preview feature is disabled
     issue = issue_registry.async_get_issue(DOMAIN, "kitchen_sink_special_repair_issue")
-    if should_create_issue:
-        assert issue is not None
-        assert issue.domain == DOMAIN
-        assert issue.translation_key == "special_repair"
-        assert issue.is_fixable is False
-        assert issue.severity == ir.IssueSeverity.WARNING
-    else:
-        assert issue is None
+    assert issue is None
+
+
+async def test_special_repair_issue_created_when_enabled(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_ws_client: WebSocketGenerator,
+    setup_kitchen_sink_with_repairs: None,
+) -> None:
+    """Test that special repair issue is created when preview feature is enabled."""
+    ws_client = await hass_ws_client(hass)
+
+    # Enable the special repair preview feature
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "kitchen_sink",
+            "preview_feature": "special_repair",
+            "enabled": True,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    # Wait for event handling
+    await hass.async_block_till_done()
+
+    # Check that issue was created
+    issue = issue_registry.async_get_issue(DOMAIN, "kitchen_sink_special_repair_issue")
+    assert issue is not None
+    assert issue.domain == DOMAIN
+    assert issue.translation_key == "special_repair"
+    assert issue.is_fixable is False
+    assert issue.severity == ir.IssueSeverity.WARNING
 
 
 async def test_special_repair_preview_feature_toggle(

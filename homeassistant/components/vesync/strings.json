@@ -1,17 +1,24 @@
 {
   "config": {
     "abort": {
+      "already_configured": "VeSync account is already configured",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "wrong_account": "The account you are trying to re-authenticate is different from the one configured"
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "api_response_error": "API response error",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "server_error": "Server error occurred"
     },
     "step": {
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::email%]"
+        },
+        "data_description": {
+          "password": "[%key:component::vesync::config::step::user::data_description::password%]",
+          "username": "[%key:component::vesync::config::step::user::data_description::username%]"
         },
         "description": "The VeSync integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
@@ -21,6 +28,11 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::email%]"
         },
+        "data_description": {
+          "password": "Password associated with your VeSync account",
+          "username": "Email address associated with your VeSync account"
+        },
+        "description": "Enter the account used in the vesync app. 2FA is not supported and must be disabled.",
         "title": "Enter username and password"
       }
     }
@@ -39,8 +51,8 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "advanced_sleep": "Advanced sleep",
               "auto": "[%key:common::state::auto%]",
+              "normal": "[%key:common::state::normal%]",
               "pet": "Pet",
               "sleep": "Sleep",
               "turbo": "Turbo"
@@ -80,8 +92,30 @@
       "air_quality": {
         "name": "Air quality"
       },
+      "cook_set_temp": {
+        "name": "Cooking set temperature"
+      },
+      "cook_set_time": {
+        "name": "Cooking set time"
+      },
+      "cook_status": {
+        "name": "Cooking status",
+        "state": {
+          "cooking": "Cooking",
+          "cooking_end": "Cooking finished",
+          "cooking_stop": "Cooking stopped",
+          "heating": "Preheating",
+          "preheat_end": "Preheating finished",
+          "preheat_stop": "Preheating stopped",
+          "pull_out": "Drawer pulled out",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
       "current_power": {
         "name": "Current power"
+      },
+      "current_temp": {
+        "name": "Current temperature"
       },
       "current_voltage": {
         "name": "Current voltage"
@@ -100,9 +134,15 @@
       },
       "filter_life": {
         "name": "Filter lifetime"
+      },
+      "preheat_set_time": {
+        "name": "Preheating set time"
       }
     },
     "switch": {
+      "auto_off_config": {
+        "name": "Auto Off"
+      },
       "child_lock": {
         "name": "Child lock"
       },

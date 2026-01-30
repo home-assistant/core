@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Final, cast
 
-from systembridgemodels.modules.cpu import PerCPU
-from systembridgemodels.modules.displays import Display
-from systembridgemodels.modules.gpus import GPU
+from systembridgeconnector.models.modules.cpu import PerCPU
+from systembridgeconnector.models.modules.displays import Display
+from systembridgeconnector.models.modules.gpus import GPU
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

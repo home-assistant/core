@@ -27,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dust filter alarm threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -88,6 +89,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dust filter alarm threshold',
     'options': dict({
     }),
     'original_device_class': None,
@@ -148,6 +150,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lamp',
     'options': dict({
     }),
     'original_device_class': None,
@@ -206,6 +209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lamp',
     'options': dict({
     }),
     'original_device_class': None,
@@ -237,79 +241,15 @@
     'state': 'high',
   })
 # ---
-# name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven-entry]
+# name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven_lamp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'stop',
-        'run',
-        'pause',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': None,
-    'entity_id': 'select.kitchen_oven',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'operating_state',
-    'unique_id': '199d7863-ad04-793d-176d-658f10062575_main_washerOperatingState_machineState_machineState',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen oven',
-      'options': list([
-        'stop',
-        'run',
-        'pause',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.kitchen_oven',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'stop',
-  })
-# ---
-# name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven_spin_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'rinse_hold',
-        'no_spin',
-        '400',
-        '800',
-        '1000',
-        '1200',
-        '1400',
+        'off',
+        'high',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -319,7 +259,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.kitchen_oven_spin_level',
+    'entity_id': 'select.kitchen_oven_lamp',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -327,107 +267,36 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lamp',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Spin level',
+    'original_name': 'Lamp',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'spin_level',
-    'unique_id': '199d7863-ad04-793d-176d-658f10062575_main_custom.washerSpinLevel_washerSpinLevel_washerSpinLevel',
+    'translation_key': 'lamp',
+    'unique_id': '199d7863-ad04-793d-176d-658f10062575_main_samsungce.lamp_brightnessLevel_brightnessLevel',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven_spin_level-state]
+# name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen oven Spin level',
+      'friendly_name': 'Kitchen oven Lamp',
       'options': list([
-        'rinse_hold',
-        'no_spin',
-        '400',
-        '800',
-        '1000',
-        '1200',
-        '1400',
+        'off',
+        'high',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.kitchen_oven_spin_level',
+    'entity_id': 'select.kitchen_oven_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1400',
-  })
-# ---
-# name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven_water_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'none',
-        'cold',
-        '20',
-        '30',
-        '40',
-        '60',
-        '90',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.kitchen_oven_water_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Water temperature',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'water_temperature',
-    'unique_id': '199d7863-ad04-793d-176d-658f10062575_main_custom.washerWaterTemperature_washerWaterTemperature_washerWaterTemperature',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven_water_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen oven Water temperature',
-      'options': list([
-        'none',
-        'cold',
-        '20',
-        '30',
-        '40',
-        '60',
-        '90',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.kitchen_oven_water_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'none',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[da_ks_range_0101x][select.vulcan_lamp-entry]
@@ -456,6 +325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lamp',
     'options': dict({
     }),
     'original_device_class': None,
@@ -487,6 +357,64 @@
     'state': 'extra_high',
   })
 # ---
+# name: test_all_entities[da_ks_walloven_0107x][select.four_lamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.four_lamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lamp',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lamp',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lamp',
+    'unique_id': '1c77a562-df00-7d6a-ca73-b67f6d4c4607_main_samsungce.lamp_brightnessLevel_brightnessLevel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ks_walloven_0107x][select.four_lamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Four Lamp',
+      'options': list([
+        'off',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.four_lamp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
+  })
+# ---
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_lamp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -513,6 +441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lamp',
     'options': dict({
     }),
     'original_device_class': None,
@@ -571,6 +500,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -630,6 +560,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -689,6 +620,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -748,6 +680,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -807,6 +740,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -866,6 +800,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -925,6 +860,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -987,6 +923,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Soil level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1052,6 +989,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Spin level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1117,6 +1055,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water temperature',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1179,6 +1118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1242,6 +1182,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Spin level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1309,6 +1250,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water temperature',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1372,6 +1314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1432,6 +1375,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Detergent dispense amount',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1493,6 +1437,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Flexible compartment dispense amount',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1557,6 +1502,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Spin level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1624,6 +1570,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water temperature',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1687,6 +1634,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1746,6 +1694,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

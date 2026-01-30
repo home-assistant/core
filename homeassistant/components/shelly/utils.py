@@ -29,6 +29,7 @@ from yarl import URL
 
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -110,8 +111,6 @@ def get_block_number_of_channels(device: BlockDevice, block: Block) -> int:
         channels = device.shelly.get("num_emeters")
     elif block.type in ["relay", "light"]:
         channels = device.shelly.get("num_outputs")
-    elif block.type in ["roller", "device"]:
-        channels = 1
 
     return channels or 1
 
@@ -132,21 +131,6 @@ def get_block_channel(block: Block | None, base: str = "1") -> str:
     assert block and block.channel
 
     return chr(int(block.channel) + ord(base))
-
-
-def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | None:
-    """Get name based on device and channel name."""
-    if (
-        not block
-        or block.type in ("device", "light", "relay", "emeter")
-        or get_block_number_of_channels(device, block) == 1
-    ):
-        return None
-
-    if custom_name := get_block_custom_name(device, block):
-        return custom_name
-
-    return f"Channel {get_block_channel(block)}"
 
 
 def get_block_sub_device_name(device: BlockDevice, block: Block) -> str:
@@ -259,6 +243,13 @@ def get_shbtn_input_triggers() -> list[tuple[str, str]]:
     return [(trigger_type, "button") for trigger_type in SHBTN_INPUTS_EVENTS_TYPES]
 
 
+def get_coiot_port(hass: HomeAssistant) -> int:
+    """Get CoIoT port from config."""
+    if DOMAIN in hass.data:
+        return cast(int, hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT))
+    return DEFAULT_COAP_PORT
+
+
 @singleton.singleton("shelly_coap")
 async def get_coap_context(hass: HomeAssistant) -> COAP:
     """Get CoAP context to be used in all Shelly Gen1 devices."""
@@ -270,7 +261,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
     ipv4: list[IPv4Address] = []
     if not network.async_only_default_interface_enabled(adapters):
         ipv4.extend(
-            address
+            cast(IPv4Address, address)
             for address in await network.async_get_enabled_source_ips(hass)
             if address.version == 4
             and not (
@@ -281,10 +272,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
             )
         )
     LOGGER.debug("Network IPv4 addresses: %s", ipv4)
-    if DOMAIN in hass.data:
-        port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
-    else:
-        port = DEFAULT_COAP_PORT
+    port = get_coiot_port(hass)
     LOGGER.info("Starting CoAP context with UDP port %s", port)
     await context.initialize(port, ipv4)
 
@@ -455,25 +443,10 @@ def get_rpc_sub_device_name(
         return f"{device.name} Energy Meter {component_id}"
     if component == "em" and emeter_phase is not None:
         return f"{device.name} Phase {emeter_phase}"
+    if component == "switch":
+        return f"{device.name} Output {component_id}"
 
     return f"{device.name} {component.title()} {component_id}"
-
-
-def get_entity_translation_attributes(
-    channel_name: str | None,
-    translation_key: str | None,
-    device_class: str | None,
-    default_to_device_class_name: bool,
-) -> tuple[dict[str, str] | None, str | None]:
-    """Translation attributes for entity with channel name."""
-    if channel_name is None:
-        return None, None
-
-    key = translation_key
-    if key is None and default_to_device_class_name:
-        key = device_class
-
-    return {"channel_name": channel_name}, f"{key}_with_channel_name" if key else None
 
 
 def get_device_entry_gen(entry: ConfigEntry) -> int:
@@ -681,10 +654,7 @@ def async_remove_shelly_rpc_entities(
 
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
-    component = VIRTUAL_COMPONENTS_MAP.get(platform)
-
-    if not component:
-        return []
+    component = VIRTUAL_COMPONENTS_MAP[platform]
 
     ids: list[str] = []
 
@@ -753,14 +723,29 @@ def async_remove_orphaned_entities(
         async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
 
 
-def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
-    """Return the RPC websocket URL."""
+def _get_homeassistant_url(hass: HomeAssistant) -> URL | None:
+    """Return HomeAssistant URL."""
     try:
         raw_url = get_url(hass, prefer_external=False, allow_cloud=False)
     except NoURLAvailableError:
-        LOGGER.debug("URL not available, skipping outbound websocket setup")
+        LOGGER.debug("URL not available, skipping setup")
         return None
-    url = URL(raw_url)
+    return URL(raw_url)
+
+
+async def get_coiot_address(hass: HomeAssistant) -> str | None:
+    """Return the CoIoT ip address."""
+    url = _get_homeassistant_url(hass)
+    if url is None or url.host is None:
+        return None
+    return await async_get_source_ip(hass, url.host)
+
+
+def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
+    """Return the RPC websocket URL."""
+    url = _get_homeassistant_url(hass)
+    if url is None:
+        return None
     ws_url = url.with_scheme("wss" if url.scheme == "https" else "ws")
     return str(ws_url.joinpath(API_WS_URL.removeprefix("/")))
 
@@ -992,10 +977,10 @@ def async_migrate_rpc_virtual_components_unique_ids(
     The new unique_id format is: {mac}-{key}-{component}_{role}
     """
     for component in VIRTUAL_COMPONENTS:
-        if entity_entry.unique_id.endswith(f"-{component!s}"):
-            key = entity_entry.unique_id.split("-")[-2]
-            if key not in config:
-                continue
+        if (
+            entity_entry.unique_id.endswith(f"-{component!s}")
+            and (key := entity_entry.unique_id.split("-")[-2]) in config
+        ):
             role = get_rpc_role_by_key(config, key)
             new_unique_id = f"{entity_entry.unique_id}_{role}"
             LOGGER.debug(
@@ -1011,3 +996,11 @@ def async_migrate_rpc_virtual_components_unique_ids(
             }
 
     return None
+
+
+def is_rpc_ble_scanner_supported(entry: ConfigEntry) -> bool:
+    """Return true if BLE scanner is supported."""
+    return (
+        entry.runtime_data.rpc_supports_scripts
+        and not entry.runtime_data.rpc_zigbee_firmware
+    )

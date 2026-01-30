@@ -8,7 +8,7 @@
   "iot_class": "local_polling",
   "loggers": ["eheimdigital"],
   "quality_scale": "platinum",
-  "requirements": ["eheimdigital==1.4.0"],
+  "requirements": ["eheimdigital==1.5.0"],
   "zeroconf": [
     { "name": "eheimdigital._http._tcp.local.", "type": "_http._tcp.local." }
   ]

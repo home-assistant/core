@@ -1,4 +1,62 @@
 {
+  "common": {
+    "condition_behavior_description": "How the state should match on the targeted media players.",
+    "condition_behavior_name": "Behavior",
+    "trigger_behavior_description": "The behavior of the targeted media players to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_not_playing": {
+      "description": "Tests if one or more media players are not playing.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::media_player::common::condition_behavior_description%]",
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Media player is not playing"
+    },
+    "is_off": {
+      "description": "Tests if one or more media players are off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::media_player::common::condition_behavior_description%]",
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Media player is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more media players are on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::media_player::common::condition_behavior_description%]",
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Media player is on"
+    },
+    "is_paused": {
+      "description": "Tests if one or more media players are paused.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::media_player::common::condition_behavior_description%]",
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Media player is paused"
+    },
+    "is_playing": {
+      "description": "Tests if one or more media players are playing.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::media_player::common::condition_behavior_description%]",
+          "name": "[%key:component::media_player::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Media player is playing"
+    }
+  },
   "device_automation": {
     "condition_type": {
       "is_buffering": "{entity_name} is buffering",
@@ -163,6 +221,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "enqueue": {
       "options": {
         "add": "Add to queue",
@@ -176,6 +240,13 @@
         "all": "Repeat all",
         "off": "[%key:common::state::off%]",
         "one": "Repeat one"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
       }
     }
   },
@@ -367,5 +438,17 @@
       "name": "Turn up volume"
     }
   },
-  "title": "Media player"
+  "title": "Media player",
+  "triggers": {
+    "stopped_playing": {
+      "description": "Triggers after one or more media players stop playing media.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::media_player::common::trigger_behavior_description%]",
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Media player stopped playing"
+    }
+  }
 }

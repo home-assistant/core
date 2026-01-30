@@ -33,9 +33,6 @@
       },
       "solar_elevation": {
         "default": "mdi:theme-light-dark"
-      },
-      "solar_rising": {
-        "default": "mdi:sun-clock"
       }
     }
   }

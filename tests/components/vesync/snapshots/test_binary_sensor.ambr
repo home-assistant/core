@@ -147,6 +147,80 @@
   list([
   ])
 # ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Cooking',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Cooking',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][entities]
+  list([
+  ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Standby',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Standby',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][entities]
+  list([
+  ])
+# ---
 # name: test_sensor_state[Dimmable Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -304,6 +378,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -337,6 +412,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -435,6 +511,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -468,6 +545,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -566,6 +644,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Low water',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -599,6 +678,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Water tank lifted',
       'options': dict({
       }),
       'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,

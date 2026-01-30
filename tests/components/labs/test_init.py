@@ -9,19 +9,24 @@ import pytest
 
 from homeassistant.components.labs import (
     EVENT_LABS_UPDATED,
-    LabsStorage,
     async_is_preview_feature_enabled,
-    async_setup,
+    async_listen,
+    async_update_preview_feature,
 )
-from homeassistant.components.labs.const import LABS_DATA, LabPreviewFeature
+from homeassistant.components.labs.const import DOMAIN, LABS_DATA
+from homeassistant.components.labs.models import LabPreviewFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.storage import Store
 from homeassistant.loader import Integration
+from homeassistant.setup import async_setup_component
+
+from . import assert_stored_labs_data
+
+from tests.common import async_capture_events
 
 
 async def test_async_setup(hass: HomeAssistant) -> None:
     """Test the Labs integration setup."""
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     # Verify WebSocket commands are registered
@@ -40,7 +45,7 @@ async def test_async_is_preview_feature_enabled_nonexistent(
     hass: HomeAssistant,
 ) -> None:
     """Test checking if non-existent preview feature is enabled."""
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     result = async_is_preview_feature_enabled(
@@ -68,7 +73,7 @@ async def test_async_is_preview_feature_enabled_when_enabled(
         },
     }
 
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     result = async_is_preview_feature_enabled(hass, "kitchen_sink", "special_repair")
@@ -82,7 +87,7 @@ async def test_async_is_preview_feature_enabled_when_disabled(
     # Load kitchen_sink integration so preview feature exists
     hass.config.components.add("kitchen_sink")
 
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     result = async_is_preview_feature_enabled(hass, "kitchen_sink", "special_repair")
@@ -90,7 +95,12 @@ async def test_async_is_preview_feature_enabled_when_disabled(
 
 
 @pytest.mark.parametrize(
-    ("features_to_store", "expected_enabled", "expected_cleaned"),
+    (
+        "features_to_store",
+        "expected_enabled",
+        "expected_cleaned",
+        "expected_cleaned_store",
+    ),
     [
         # Single stale feature cleanup
         (
@@ -100,6 +110,7 @@ async def test_async_is_preview_feature_enabled_when_disabled(
             ],
             [("kitchen_sink", "special_repair")],
             [("nonexistent_domain", "fake_feature")],
+            [{"domain": "kitchen_sink", "preview_feature": "special_repair"}],
         ),
         # Multiple stale features cleanup
         (
@@ -115,12 +126,14 @@ async def test_async_is_preview_feature_enabled_when_disabled(
                 ("stale_domain_2", "another_old"),
                 ("stale_domain_3", "yet_another"),
             ],
+            [{"domain": "kitchen_sink", "preview_feature": "special_repair"}],
         ),
         # All features cleaned (no integrations loaded)
         (
             [{"domain": "nonexistent", "preview_feature": "fake"}],
             [],
             [("nonexistent", "fake")],
+            [],
         ),
     ],
 )
@@ -130,6 +143,7 @@ async def test_storage_cleanup_stale_features(
     features_to_store: list[dict[str, str]],
     expected_enabled: list[tuple[str, str]],
     expected_cleaned: list[tuple[str, str]],
+    expected_cleaned_store: list[dict[str, str]],
 ) -> None:
     """Test that stale preview features are removed from storage on setup."""
     # Load kitchen_sink only if we expect any features to remain
@@ -143,7 +157,7 @@ async def test_storage_cleanup_stale_features(
         "data": {"preview_feature_status": features_to_store},
     }
 
-    assert await async_setup(hass, {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     # Verify expected features are preserved
@@ -154,37 +168,7 @@ async def test_storage_cleanup_stale_features(
     for domain, feature in expected_cleaned:
         assert not async_is_preview_feature_enabled(hass, domain, feature)
 
-
-async def test_event_fired_on_preview_feature_update(hass: HomeAssistant) -> None:
-    """Test that labs_updated event is fired when preview feature is toggled."""
-    # Load kitchen_sink integration
-    hass.config.components.add("kitchen_sink")
-
-    assert await async_setup(hass, {})
-    await hass.async_block_till_done()
-
-    events = []
-
-    def event_listener(event):
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_LABS_UPDATED, event_listener)
-
-    # Fire event manually to test listener (websocket handler does this)
-    hass.bus.async_fire(
-        EVENT_LABS_UPDATED,
-        {
-            "domain": "kitchen_sink",
-            "preview_feature": "special_repair",
-            "enabled": True,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert len(events) == 1
-    assert events[0].data["domain"] == "kitchen_sink"
-    assert events[0].data["preview_feature"] == "special_repair"
-    assert events[0].data["enabled"] is True
+    assert_stored_labs_data(hass_storage, expected_cleaned_store)
 
 
 @pytest.mark.parametrize(
@@ -215,42 +199,11 @@ async def test_async_is_preview_feature_enabled(
         },
     }
 
-    await async_setup(hass, {})
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     result = async_is_preview_feature_enabled(hass, domain, preview_feature)
     assert result is expected
-
-
-async def test_multiple_setups_idempotent(hass: HomeAssistant) -> None:
-    """Test that calling async_setup multiple times is safe."""
-    result1 = await async_setup(hass, {})
-    assert result1 is True
-
-    result2 = await async_setup(hass, {})
-    assert result2 is True
-
-    # Verify store is still accessible
-    assert LABS_DATA in hass.data
-
-
-async def test_storage_load_missing_preview_feature_status_key(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """Test loading storage when preview_feature_status key is missing."""
-    # Storage data without preview_feature_status key
-    hass_storage["core.labs"] = {
-        "version": 1,
-        "minor_version": 1,
-        "key": "core.labs",
-        "data": {},  # Missing preview_feature_status
-    }
-
-    assert await async_setup(hass, {})
-    await hass.async_block_till_done()
-
-    # Should initialize correctly - verify no feature is enabled
-    assert not async_is_preview_feature_enabled(hass, "kitchen_sink", "special_repair")
 
 
 async def test_preview_feature_full_key(hass: HomeAssistant) -> None:
@@ -307,24 +260,6 @@ async def test_preview_feature_to_dict_with_no_urls(hass: HomeAssistant) -> None
     }
 
 
-async def test_storage_load_returns_none_when_no_file(
-    hass: HomeAssistant,
-) -> None:
-    """Test storage load when no file exists (returns None)."""
-    # Create a storage instance but don't write any data
-    store = LabsStorage(hass, 1, "test_labs_none.json")
-
-    # Mock the parent Store's _async_load_data to return None
-    # This simulates the edge case where Store._async_load_data returns None
-    # This tests line 60: return None
-    async def mock_load_none():
-        return None
-
-    with patch.object(Store, "_async_load_data", new=mock_load_none):
-        result = await store.async_load()
-        assert result is None
-
-
 async def test_custom_integration_with_preview_features(
     hass: HomeAssistant,
 ) -> None:
@@ -343,7 +278,7 @@ async def test_custom_integration_with_preview_features(
         "homeassistant.components.labs.async_get_custom_components",
         return_value={"custom_test": mock_integration},
     ):
-        assert await async_setup(hass, {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
     # Verify the custom integration's preview feature can be checked
@@ -375,13 +310,13 @@ async def test_preview_feature_is_built_in_flag(
             "homeassistant.components.labs.async_get_custom_components",
             return_value={"custom_test": mock_integration},
         ):
-            assert await async_setup(hass, {})
+            assert await async_setup_component(hass, DOMAIN, {})
             await hass.async_block_till_done()
         feature_key = "custom_test.custom_feature"
     else:
         # Load built-in kitchen_sink integration
         hass.config.components.add("kitchen_sink")
-        assert await async_setup(hass, {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         feature_key = "kitchen_sink.special_repair"
 
@@ -421,3 +356,140 @@ async def test_preview_feature_to_dict_is_built_in(
     assert feature.is_built_in is expected_default
     result = feature.to_dict(enabled=True)
     assert result["is_built_in"] is expected_default
+
+
+async def test_async_listen_helper(hass: HomeAssistant) -> None:
+    """Test the async_listen helper function for preview feature events."""
+    # Load kitchen_sink integration
+    hass.config.components.add("kitchen_sink")
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Track listener calls
+    listener_calls = []
+
+    def test_listener() -> None:
+        """Test listener callback."""
+        listener_calls.append("called")
+
+    # Subscribe to a specific preview feature
+    unsub = async_listen(
+        hass,
+        domain="kitchen_sink",
+        preview_feature="special_repair",
+        listener=test_listener,
+    )
+
+    # Fire event for the subscribed feature
+    hass.bus.async_fire(
+        EVENT_LABS_UPDATED,
+        {
+            "domain": "kitchen_sink",
+            "preview_feature": "special_repair",
+            "enabled": True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Verify listener was called
+    assert len(listener_calls) == 1
+
+    # Fire event for a different feature - should not trigger listener
+    hass.bus.async_fire(
+        EVENT_LABS_UPDATED,
+        {
+            "domain": "kitchen_sink",
+            "preview_feature": "other_feature",
+            "enabled": True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Verify listener was not called again
+    assert len(listener_calls) == 1
+
+    # Fire event for a different domain - should not trigger listener
+    hass.bus.async_fire(
+        EVENT_LABS_UPDATED,
+        {
+            "domain": "other_domain",
+            "preview_feature": "special_repair",
+            "enabled": True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Verify listener was not called again
+    assert len(listener_calls) == 1
+
+    # Test unsubscribe
+    unsub()
+
+    # Fire event again - should not trigger listener after unsubscribe
+    hass.bus.async_fire(
+        EVENT_LABS_UPDATED,
+        {
+            "domain": "kitchen_sink",
+            "preview_feature": "special_repair",
+            "enabled": True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Verify listener was not called after unsubscribe
+    assert len(listener_calls) == 1
+
+
+async def test_async_update_preview_feature(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test enabling and disabling a preview feature using the helper function."""
+    hass.config.components.add("kitchen_sink")
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    events = async_capture_events(hass, EVENT_LABS_UPDATED)
+
+    await async_update_preview_feature(
+        hass, "kitchen_sink", "special_repair", enabled=True
+    )
+    await hass.async_block_till_done()
+
+    assert async_is_preview_feature_enabled(hass, "kitchen_sink", "special_repair")
+
+    assert len(events) == 1
+    assert events[0].data["domain"] == "kitchen_sink"
+    assert events[0].data["preview_feature"] == "special_repair"
+    assert events[0].data["enabled"] is True
+
+    assert_stored_labs_data(
+        hass_storage,
+        [{"domain": "kitchen_sink", "preview_feature": "special_repair"}],
+    )
+
+    await async_update_preview_feature(
+        hass, "kitchen_sink", "special_repair", enabled=False
+    )
+    await hass.async_block_till_done()
+
+    assert not async_is_preview_feature_enabled(hass, "kitchen_sink", "special_repair")
+
+    assert len(events) == 2
+    assert events[1].data["domain"] == "kitchen_sink"
+    assert events[1].data["preview_feature"] == "special_repair"
+    assert events[1].data["enabled"] is False
+
+    assert_stored_labs_data(hass_storage, [])
+
+
+async def test_async_update_preview_feature_not_found(hass: HomeAssistant) -> None:
+    """Test updating a preview feature that doesn't exist raises."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    with pytest.raises(
+        ValueError, match="Preview feature nonexistent.feature not found"
+    ):
+        await async_update_preview_feature(hass, "nonexistent", "feature", enabled=True)

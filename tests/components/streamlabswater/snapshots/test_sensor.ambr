@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -73,6 +74,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -126,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Yearly usage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

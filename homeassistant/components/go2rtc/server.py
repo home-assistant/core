@@ -12,13 +12,13 @@ from go2rtc_client import Go2RtcRestClient
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import HA_MANAGED_API_PORT, HA_MANAGED_UNIX_SOCKET, HA_MANAGED_URL
+from .const import HA_MANAGED_API_PORT, HA_MANAGED_URL
+from .util import get_go2rtc_unix_socket_path
 
 _LOGGER = logging.getLogger(__name__)
 _TERMINATE_TIMEOUT = 5
 _SETUP_TIMEOUT = 30
 _SUCCESSFUL_BOOT_MESSAGE = "INF [api] listen addr="
-_LOCALHOST_IP = "127.0.0.1"
 _LOG_BUFFER_SIZE = 512
 _RESPAWN_COOLDOWN = 1
 
@@ -122,7 +122,9 @@ def _format_list_for_yaml(items: tuple[str, ...]) -> str:
     return f"[{formatted_items}]"
 
 
-def _create_temp_file(enable_ui: bool, username: str, password: str) -> str:
+def _create_temp_file(
+    enable_ui: bool, username: str, password: str, working_dir: str
+) -> str:
     """Create temporary config file."""
     app_modules: tuple[str, ...] = _APP_MODULES
     api_paths: tuple[str, ...] = _API_ALLOW_PATHS
@@ -139,11 +141,13 @@ def _create_temp_file(enable_ui: bool, username: str, password: str) -> str:
 
     # Set delete=False to prevent the file from being deleted when the file is closed
     # Linux is clearing tmp folder on reboot, so no need to delete it manually
-    with NamedTemporaryFile(prefix="go2rtc_", suffix=".yaml", delete=False) as file:
+    with NamedTemporaryFile(
+        prefix="go2rtc_", suffix=".yaml", dir=working_dir, delete=False
+    ) as file:
         file.write(
             _GO2RTC_CONFIG_FORMAT.format(
                 listen_config=listen_config,
-                unix_socket=HA_MANAGED_UNIX_SOCKET,
+                unix_socket=get_go2rtc_unix_socket_path(working_dir),
                 app_modules=_format_list_for_yaml(app_modules),
                 api_allow_paths=_format_list_for_yaml(api_paths),
                 username=username,
@@ -165,6 +169,7 @@ class Server:
         enable_ui: bool = False,
         username: str,
         password: str,
+        working_dir: str,
     ) -> None:
         """Initialize the server."""
         self._hass = hass
@@ -173,6 +178,7 @@ class Server:
         self._enable_ui = enable_ui
         self._username = username
         self._password = password
+        self._working_dir = working_dir
         self._log_buffer: deque[str] = deque(maxlen=_LOG_BUFFER_SIZE)
         self._process: asyncio.subprocess.Process | None = None
         self._startup_complete = asyncio.Event()
@@ -190,7 +196,11 @@ class Server:
         """Start the server."""
         _LOGGER.debug("Starting go2rtc server")
         config_file = await self._hass.async_add_executor_job(
-            _create_temp_file, self._enable_ui, self._username, self._password
+            _create_temp_file,
+            self._enable_ui,
+            self._username,
+            self._password,
+            self._working_dir,
         )
 
         self._startup_complete.clear()
