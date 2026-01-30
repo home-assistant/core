@@ -24,7 +24,6 @@ from homeassistant.components.conversation.chat_log import (
 )
 from homeassistant.components.conversation.default_agent import METADATA_CUSTOM_SENTENCE
 from homeassistant.components.conversation.models import ConversationInput
-from homeassistant.components.conversation.trigger import TriggerDetails
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import (
     async_get_assistant_settings,
@@ -429,7 +428,7 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
     manager = get_agent_manager(hass)
 
     callback = AsyncMock(return_value=trigger_response)
-    unregister = manager.register_trigger(TriggerDetails(trigger_sentences, callback))
+    unregister = manager.register_trigger(trigger_sentences, callback)
 
     result = await conversation.async_converse(hass, "Not the trigger", None, Context())
     assert result.response.response_type == intent.IntentResponseType.ERROR
@@ -485,7 +484,7 @@ async def test_trigger_sentence_response_translation(
         return_value=translations.get(language),
     ):
         unregister = manager.register_trigger(
-            TriggerDetails(["test sentence"], AsyncMock(return_value=None))
+            ["test sentence"], AsyncMock(return_value=None)
         )
         result = await conversation.async_converse(
             hass, "test sentence", None, Context()
@@ -3496,7 +3495,7 @@ async def test_trigger_tool_call_in_chat_log(hass: HomeAssistant) -> None:
 
     manager = get_agent_manager(hass)
     callback = AsyncMock(return_value=trigger_response)
-    manager.register_trigger(TriggerDetails([trigger_sentence], callback))
+    manager.register_trigger([trigger_sentence], callback)
 
     result = await conversation.async_converse(
         hass, trigger_sentence, None, Context(), None
