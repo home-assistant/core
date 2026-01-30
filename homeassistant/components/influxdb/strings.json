@@ -1,4 +1,7 @@
 {
+  "common": {
+    "ssl_ca_cert": "SSL CA certificate (Optional)"
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -16,10 +19,14 @@
         "data": {
           "database": "Database",
           "password": "[%key:common::config_flow::data::password%]",
-          "ssl_ca_cert": "SSL CA certificate (Optional)",
+          "ssl_ca_cert": "[%key:component::influxdb::common::ssl_ca_cert%]",
           "url": "[%key:common::config_flow::data::url%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "database": "The name of the database.",
+          "ssl_ca_cert": "Part to the SSL Certificate"
         },
         "title": "InfluxDB Configuration"
       },
@@ -27,15 +34,19 @@
         "data": {
           "bucket": "Bucket",
           "organization": "Organization",
-          "ssl_ca_cert": "SSL CA certificate (Optional)",
+          "ssl_ca_cert": "[%key:component::influxdb::common::ssl_ca_cert%]",
           "token": "[%key:common::config_flow::data::api_token%]",
           "url": "[%key:common::config_flow::data::url%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
+        "data_description": {
+          "bucket": "The name of the bucket.",
+          "organization": "The name of the organization.",
+          "ssl_ca_cert": "Part to the SSL Certificate"
+        },
         "title": "InfluxDB Configuration"
       },
       "import": {
-        "data": {},
         "title": "Import configuration"
       },
       "user": {
