@@ -65,25 +65,25 @@ def _validate_gateway_path(user_input: dict[str, Any]) -> None:
         raise InvalidGatewayPath from e
 
 
-async def _async_validate_gateway(user_input: dict[str, Any]) -> None:
-    """Return True if the gateway can be accessed."""
-    gateway = EltakoGateway(
-        GATEWAY_MODELS[user_input[CONF_MODEL]],
-        user_input[CONF_SERIAL_PORT],
-        user_input[CONF_GATEWAY_AUTO_RECONNECT],
-        user_input[CONF_GATEWAY_MESSAGE_DELAY],
-        user_input[CONF_FAST_STATUS_CHANGE],
-    )
-    await gateway.async_setup()
-    gateway.unload()
-
-
 def _get_model_options(models: Mapping[str, ModelDefinition]) -> dict[str, str]:
     return {key: model.name for key, model in models.items()}
 
 
 class EltakoFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle the Eltako config flows."""
+
+    async def _async_validate_gateway(self, user_input: dict[str, Any]) -> None:
+        """Return True if the gateway can be accessed."""
+        gateway = EltakoGateway(
+            self.hass,
+            GATEWAY_MODELS[user_input[CONF_MODEL]],
+            user_input[CONF_SERIAL_PORT],
+            user_input[CONF_GATEWAY_AUTO_RECONNECT],
+            user_input[CONF_GATEWAY_MESSAGE_DELAY],
+            user_input[CONF_FAST_STATUS_CHANGE],
+        )
+        await gateway.async_setup()
+        await gateway.async_unload()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -109,7 +109,7 @@ class EltakoFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 _validate_enocean_id(user_input, CONF_ID)
                 _validate_gateway_path(user_input)
-                await _async_validate_gateway(user_input)
+                await self._async_validate_gateway(user_input)
             except InvalidIdFormat:
                 errors[CONF_ID] = "invalid_id"
             except InvalidGatewayPath:

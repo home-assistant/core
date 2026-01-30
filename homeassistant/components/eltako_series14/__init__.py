@@ -30,6 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EltakoConfigEntry) -> bo
 
     # Set up gateway
     gateway = EltakoGateway(
+        hass,
         GATEWAY_MODELS[entry.data[CONF_MODEL]],
         entry.data[CONF_SERIAL_PORT],
         entry.data[CONF_GATEWAY_AUTO_RECONNECT],
@@ -82,6 +83,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: EltakoConfigEntry) -> b
 
     if unload_ok:
         _LOGGER.debug("Unloading Eltako gateway: %s", entry.data[CONF_NAME])
-        entry.runtime_data.unload()
+        await entry.runtime_data.async_unload()
 
     return unload_ok
