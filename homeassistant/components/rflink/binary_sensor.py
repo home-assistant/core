@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ALIASES, DOMAIN
+from .const import CONF_ALIASES
 from .entity import RflinkDevice
 from .utils import create_issue_yaml_migration
 

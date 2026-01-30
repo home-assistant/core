@@ -1,6 +1,7 @@
 """RFLink integration utils."""
 
-from homeassistant.helpers.issue_registry import async_create_issue, IssueSeverity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN, EVENT_KEY_COMMAND, EVENT_KEY_SENSOR
 
@@ -28,6 +29,7 @@ def identify_event_type(event):
 
 
 def create_issue_yaml_migration(hass: HomeAssistant, platform: str):
+    """Create a YAML migration repair."""
     async_create_issue(
         hass=hass,
         domain=DOMAIN,

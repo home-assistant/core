@@ -29,7 +29,6 @@ from .const import (
     CONF_NOGROUP_ALIASES,
     CONF_SIGNAL_REPETITIONS,
     DEVICE_DEFAULTS_SCHEMA,
-    DOMAIN,
 )
 from .entity import RflinkCommand
 from .utils import create_issue_yaml_migration
