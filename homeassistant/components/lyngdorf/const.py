@@ -9,7 +9,7 @@ DEFAULT_DEVICE_NAME = "Lyngdorf MP-60"
 VOLUME_MIN = -99.9  # dB
 VOLUME_MAX = 20.0  # dB
 
-PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT]
+PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_MAKE_MODEL = "make_and_model"
 
