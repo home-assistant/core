@@ -87,16 +87,13 @@ class EltakoGateway:
             callback(status)
 
     def _init_bus(self) -> None:
-        if self._device_model.is_bus_gw:
-            self._bus = RS485SerialInterfaceV2(
-                self._serial_port,
-                baud_rate=self._device_model.baud_rate,
-                callback=self._callback_receive_message_from_serial_bus,
-                delay_message=self._message_delay,
-                auto_reconnect=self._auto_reconnect_enabled,
-            )
-        else:
-            raise NotImplementedError
+        self._bus = RS485SerialInterfaceV2(
+            self._serial_port,
+            baud_rate=self._device_model.baud_rate,
+            callback=self._callback_receive_message_from_serial_bus,
+            delay_message=self._message_delay,
+            auto_reconnect=self._auto_reconnect_enabled,
+        )
 
         self._bus.set_status_changed_handler(self._fire_connection_state_changed_event)
 

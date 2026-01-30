@@ -23,7 +23,6 @@ class ModelDefinition:
 class GatewayModelDefinition(ModelDefinition):
     """Representation of an Eltako gateway model."""
 
-    is_bus_gw: bool = True
     baud_rate: int = 57600
 
 
