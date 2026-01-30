@@ -48,10 +48,7 @@ rules:
     comment: |
       No discovery is implemented, since it's software based.
   docs-data-update: done
-  docs-examples:
-    status: exempt
-    comment: |
-      No examples are there to give.
+  docs-examples: done
   docs-known-limitations:
     status: exempt
     comment: |
