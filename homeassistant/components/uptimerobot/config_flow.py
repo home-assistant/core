@@ -70,7 +70,7 @@ class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors, account = await self._validate_input(user_input)
         if account:
-            await self.async_set_unique_id(str(account.email))
+            await self.async_set_unique_id(account.email)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=account.email, data=user_input)
 
@@ -94,12 +94,13 @@ class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         errors, account = await self._validate_input(user_input)
         if account:
-            if self.context.get("unique_id") and self.context["unique_id"] != str(
-                account.email
+            if (
+                self.context.get("unique_id")
+                and self.context["unique_id"] != account.email
             ):
                 errors["base"] = "reauth_failed_matching_account"
             else:
-                existing_entry = await self.async_set_unique_id(str(account.email))
+                existing_entry = await self.async_set_unique_id(account.email)
                 if existing_entry:
                     self.hass.config_entries.async_update_entry(
                         existing_entry, data=user_input
@@ -129,7 +130,7 @@ class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors, account = await self._validate_input(user_input)
         if account:
-            await self.async_set_unique_id(str(account.email))
+            await self.async_set_unique_id(account.email)
             self._abort_if_unique_id_configured()
             return self.async_update_reload_and_abort(
                 reconfigure_entry, data_updates=user_input
