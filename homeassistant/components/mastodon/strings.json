@@ -108,7 +108,7 @@
           "name": "Mastodon instance"
         }
       },
-      "name": "Look up account"
+      "name": "Lookup account"
     },
     "post": {
       "description": "Posts a status on your Mastodon account.",
