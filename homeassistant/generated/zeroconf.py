@@ -1016,6 +1016,11 @@ ZEROCONF = {
             "domain": "technove",
         },
     ],
+    "_tfa_me._tcp.local.": [
+        {
+            "domain": "tfa_me",
+        },
+    ],
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",
