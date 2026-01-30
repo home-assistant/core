@@ -18,19 +18,29 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_connection_success() -> Generator[MagicMock]:
-    """Mock successful TCP connection."""
+    """Mock successful HegelClient connection."""
     with patch(
-        "homeassistant.components.hegel.config_flow.asyncio.open_connection",
-        return_value=(AsyncMock(), AsyncMock()),
-    ) as mock_conn:
-        yield mock_conn
+        "homeassistant.components.hegel.config_flow.HegelClient",
+    ) as mock_client_class:
+        mock_client = MagicMock()
+        mock_client.start = AsyncMock()
+        mock_client.ensure_connected = AsyncMock()
+        mock_client.stop = AsyncMock()
+        mock_client_class.return_value = mock_client
+        yield mock_client_class
 
 
 @pytest.fixture
 def mock_connection_error() -> Generator[MagicMock]:
-    """Mock failed TCP connection."""
+    """Mock failed HegelClient connection."""
     with patch(
-        "homeassistant.components.hegel.config_flow.asyncio.open_connection",
-        side_effect=OSError("Connection refused"),
-    ) as mock_conn:
-        yield mock_conn
+        "homeassistant.components.hegel.config_flow.HegelClient",
+    ) as mock_client_class:
+        mock_client = MagicMock()
+        mock_client.start = AsyncMock()
+        mock_client.ensure_connected = AsyncMock(
+            side_effect=OSError("Connection refused")
+        )
+        mock_client.stop = AsyncMock()
+        mock_client_class.return_value = mock_client
+        yield mock_client_class
