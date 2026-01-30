@@ -467,7 +467,7 @@ async def test_platform_not_ready(
                     "platform": "template",
                     "climates": {
                         "central_heating": {
-                            "hvac_mode": "{{ 'heat' }}",
+                            "value_template": "{{ 'heat' }}",
                             "hvac_modes": ["heat", "off"],
                             "set_hvac_mode": {"action": "script.toggle"},
                         }

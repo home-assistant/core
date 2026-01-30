@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from .conftest import ConfigurationStyle, async_get_flow_preview_state
@@ -213,7 +213,9 @@ async def test_template_state_attributes(
     "style",
     [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-async def test_actions(hass: HomeAssistant, style: ConfigurationStyle, calls) -> None:
+async def test_actions(
+    hass: HomeAssistant, style: ConfigurationStyle, calls: list[ServiceCall]
+) -> None:
     """Test actions of a template climate."""
     base = {
         "name": TEST_OBJECT_ID,
@@ -254,7 +256,9 @@ async def test_actions(hass: HomeAssistant, style: ConfigurationStyle, calls) ->
     "style",
     [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-async def test_optimistic_mode(hass: HomeAssistant, style: ConfigurationStyle) -> None:
+async def test_optimistic_mode(
+    hass: HomeAssistant, style: ConfigurationStyle, calls: list[ServiceCall]
+) -> None:
     """Test optimistic mode when no state templates are defined."""
     base = {
         "name": TEST_OBJECT_ID,
