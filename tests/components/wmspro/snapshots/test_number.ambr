@@ -1,0 +1,58 @@
+# serializer version: 1
+# name: test_number_update[number.keuken_alle_maximum_rotation]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by WMS WebControl pro API',
+      'friendly_name': 'Keuken alle Maximum Rotation',
+      'icon': 'mdi:rotate-right',
+      'max': 127,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.keuken_alle_maximum_rotation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '75',
+  })
+# ---
+# name: test_number_update[number.keuken_alle_minimum_rotation]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by WMS WebControl pro API',
+      'friendly_name': 'Keuken alle Minimum Rotation',
+      'icon': 'mdi:rotate-left',
+      'max': 0,
+      'min': -127,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.keuken_alle_minimum_rotation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-75',
+  })
+# ---
+# name: test_number_update[number.keuken_alle_rotation]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by WMS WebControl pro API',
+      'friendly_name': 'Keuken alle Rotation',
+      'icon': 'mdi:rotate-360',
+      'max': 127,
+      'min': -127,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.keuken_alle_rotation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '127',
+  })
+# ---

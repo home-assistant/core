@@ -14,3 +14,13 @@ async def setup_config_entry(
     result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     return result
+
+
+async def unload_config_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> bool:
+    """Unload a config entry."""
+    result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    return result
