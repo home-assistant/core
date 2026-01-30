@@ -15,6 +15,11 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import callback
 
+# from homeassistant import config_entries
+# from homeassistant.components import zeroconf
+# from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
 from .const import CONF_NAME_WITH_STATION_ID, DEFAULT_STATION_NAME, DOMAIN, RAIN_KEYS
 from .coordinator import TFAmeDataCoordinator
 from .data import TFAmeData, TFAmeException
@@ -38,11 +43,26 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, Any] = {}
         self.name_with_station_id: bool = False
 
+        # For zeroconf discovery
+        self._discovered_host_or_id: str | None = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step of the config flow."""
         errors: dict[str, str] = {}
+
+        default_host = self._discovered_host_or_id or ""
+        default_name_with_id = False
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_IP_ADDRESS, default=default_host): str,
+                vol.Required(
+                    CONF_NAME_WITH_STATION_ID, default=default_name_with_id
+                ): bool,
+            }
+        )
 
         if user_input is not None:
             # Validate "name_with_station_id" option
@@ -94,7 +114,7 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
         # the flow must show the form again with error messages.
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA,
+            data_schema=data_schema,
             errors=errors,
         )
 
@@ -103,6 +123,31 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Discover TFA.me stations via mDNS service '_tfa_me._tcp'."""
+        props = discovery_info.properties or {}
+        unique_id = (props.get("id") or "").strip()
+        host = (discovery_info.host or "").rstrip(".")
+
+        # Add "Discovered" info)
+        self.context["configuration_url"] = f"http://{host}/ha_menu"
+        self._discovered_host_or_id = host or None
+        if unique_id:
+            formatted_station_id = f"{unique_id[:3].upper()}-{unique_id[3:6].upper()}-{unique_id[6:].upper()}"
+            title = f"{DEFAULT_STATION_NAME} {formatted_station_id}"  # e.g. "TFA.me Station XXX-XXX-XXX"
+            self.context["title_placeholders"] = {
+                "name": title,
+                "id": unique_id,
+            }
+            self._discovered_host_or_id = f"{host or None} or {formatted_station_id}"
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
+
+        # Show "Discovered" -> user must confirm (ADD)
+        return await self.async_step_user()
 
 
 class OptionsFlowHandler(OptionsFlow):
