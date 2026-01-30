@@ -384,11 +384,7 @@ class PrometheusMetrics:
         if event.data["action"] != "update" or "area_id" not in event.data["changes"]:
             return
 
-        device_id = event.data.get("device_id")
-
-        if device_id is None:
-            return
-
+        device_id = event.data["device_id"]
         _LOGGER.debug("Handling device update for %s", device_id)
 
         device = self.device_registry.async_get(device_id)
