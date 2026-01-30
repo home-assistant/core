@@ -10,10 +10,8 @@ VOLUME_MIN = -99.9  # dB
 VOLUME_MAX = 20.0  # dB
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT]
-CONF_RECEIVER = "receiver"
 CONF_SERIAL_NUMBER = "serial_number"
 CONF_MAKE_MODEL = "make_and_model"
-CONF_DEVICE_INFO = "device_info"
 
 MANUFACTURER_LYNGDORF = "Lyngdorf"
 

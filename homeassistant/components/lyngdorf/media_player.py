@@ -14,21 +14,13 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .config_flow import DOMAIN
-from .const import (
-    CONF_DEVICE_INFO,
-    CONF_RECEIVER,
-    FEATURES_MP60,
-    FEATURES_MP60_ZONE_B,
-    NAME_MAIN_ZONE,
-    NAME_ZONE_B,
-)
+from .const import FEATURES_MP60, FEATURES_MP60_ZONE_B, NAME_MAIN_ZONE, NAME_ZONE_B
+from .models import LyngdorfConfigEntry
 
 ATTR_AUDIO_INFO = "audio_info"
 ATTR_VIDEO_INFO = "video_info"
@@ -48,7 +40,7 @@ class MP60Device(MediaPlayerEntity):
     def __init__(
         self,
         receiver: Receiver,
-        config_entry: ConfigEntry,
+        config_entry: LyngdorfConfigEntry,
         device_info: DeviceInfo,
         name: str,
         id: str,
@@ -77,7 +69,10 @@ class MP60ZoneBDevice(MP60Device):
     """MP60 Zone B."""
 
     def __init__(
-        self, receiver: Receiver, config_entry: ConfigEntry, device_info: DeviceInfo
+        self,
+        receiver: Receiver,
+        config_entry: LyngdorfConfigEntry,
+        device_info: DeviceInfo,
     ) -> None:
         """Create the device."""
         MP60Device.__init__(
@@ -174,7 +169,10 @@ class MP60MainDevice(MP60Device):
     """MP60 Main Device."""
 
     def __init__(
-        self, receiver: Receiver, config_entry: ConfigEntry, device_info: DeviceInfo
+        self,
+        receiver: Receiver,
+        config_entry: LyngdorfConfigEntry,
+        device_info: DeviceInfo,
     ) -> None:
         """Create the device."""
         MP60Device.__init__(
@@ -343,16 +341,16 @@ class MP60MainDevice(MP60Device):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LyngdorfConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the receiver from a config entry."""
-    entities = []
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    client: Receiver = data[CONF_RECEIVER]
-    device_info: DeviceInfo = data[CONF_DEVICE_INFO]
+    client = config_entry.runtime_data.receiver
+    device_info = config_entry.runtime_data.device_info
 
-    entities.append(cast(Entity, MP60MainDevice(client, config_entry, device_info)))
-    entities.append(cast(Entity, MP60ZoneBDevice(client, config_entry, device_info)))
+    entities = [
+        cast(Entity, MP60MainDevice(client, config_entry, device_info)),
+        cast(Entity, MP60ZoneBDevice(client, config_entry, device_info)),
+    ]
 
     async_add_entities(entities)

@@ -5,15 +5,11 @@ from typing import cast
 from lyngdorf.device import Receiver
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .config_flow import DOMAIN
 from .const import (
-    CONF_DEVICE_INFO,
-    CONF_RECEIVER,
     ICON_TRIM_BASS,
     ICON_TRIM_CENTRE,
     ICON_TRIM_HEIGHT,
@@ -21,6 +17,7 @@ from .const import (
     ICON_TRIM_SURROUND,
     ICON_TRIM_TREBLE,
 )
+from .models import LyngdorfConfigEntry
 
 TRIMS = {
     "trim_bass": {
@@ -70,28 +67,27 @@ TRIMS = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LyngdorfConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the receiver from a config entry."""
-    entities = []
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    receiver: Receiver = data[CONF_RECEIVER]
-    device_info: DeviceInfo = data[CONF_DEVICE_INFO]
-    for prop_name, info in TRIMS.items():
-        entities.append(
-            TrimEntity(
-                receiver,
-                config_entry,
-                device_info,
-                prop_name,
-                cast(float, info["min"]),
-                cast(float, info["max"]),
-                cast(str, info["icon"]),
-                cast(float, info["step"]),
-                cast(str, info["name"]),
-            )
+    receiver = config_entry.runtime_data.receiver
+    device_info = config_entry.runtime_data.device_info
+
+    entities = [
+        TrimEntity(
+            receiver,
+            config_entry,
+            device_info,
+            prop_name,
+            cast(float, info["min"]),
+            cast(float, info["max"]),
+            cast(str, info["icon"]),
+            cast(float, info["step"]),
+            cast(str, info["name"]),
         )
+        for prop_name, info in TRIMS.items()
+    ]
 
     async_add_entities(entities, update_before_add=True)
 
@@ -102,7 +98,7 @@ class TrimEntity(NumberEntity):
     def __init__(
         self,
         receiver: Receiver,
-        config_entry: ConfigEntry,
+        config_entry: LyngdorfConfigEntry,
         device_info: DeviceInfo,
         property: str,
         min: float,

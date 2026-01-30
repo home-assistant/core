@@ -7,6 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/lyngdorf",
   "iot_class": "local_push",
   "loggers": ["lyngdorf", "async_upnp_client"],
+  "quality_scale": "bronze",
   "requirements": ["lyngdorf==0.3.7"],
   "ssdp": [
     {

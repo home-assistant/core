@@ -5,20 +5,17 @@ from typing import cast
 from lyngdorf.device import Receiver
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .config_flow import DOMAIN
 from .const import (
-    CONF_DEVICE_INFO,
-    CONF_RECEIVER,
     ICOM_ROOM_PERFECT_POSITION,
     ICON_SOUND_MODE,
     ICON_SOURCE,
     ICON_VOICING,
 )
+from .models import LyngdorfConfigEntry
 
 SELECTS = {
     "source": {
@@ -51,27 +48,26 @@ SELECTS = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LyngdorfConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the receiver from a config entry."""
-    entities = []
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    receiver: Receiver = data[CONF_RECEIVER]
-    device_info: DeviceInfo = data[CONF_DEVICE_INFO]
+    receiver = config_entry.runtime_data.receiver
+    device_info = config_entry.runtime_data.device_info
 
-    for prop_name, info in SELECTS.items():
-        entities.append(
-            LyngdorfSelectEntity(
-                receiver,
-                config_entry,
-                device_info,
-                prop_name,
-                info["name"],
-                info["icon"],
-                info["options_property"],
-            )
+    entities = [
+        LyngdorfSelectEntity(
+            receiver,
+            config_entry,
+            device_info,
+            prop_name,
+            info["name"],
+            info["icon"],
+            info["options_property"],
         )
+        for prop_name, info in SELECTS.items()
+    ]
+
     async_add_entities(entities, update_before_add=True)
 
 
@@ -81,7 +77,7 @@ class LyngdorfSelectEntity(SelectEntity):
     def __init__(
         self,
         receiver: Receiver,
-        config_entry: ConfigEntry,
+        config_entry: LyngdorfConfigEntry,
         device_info: DeviceInfo,
         property: str,
         name: str,
