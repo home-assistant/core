@@ -694,15 +694,11 @@ async def test_hmip_light_hs_monochrome(
     )
 
     # Simulate monochrome mode by setting hue and saturationLevel to None
-    await async_manipulate_test_data(
-        hass, hmip_device, "hue", None, channel=1
-    )
+    await async_manipulate_test_data(hass, hmip_device, "hue", None, channel=1)
     await async_manipulate_test_data(
         hass, hmip_device, "saturationLevel", None, channel=1
     )
-    await async_manipulate_test_data(
-        hass, hmip_device, "dimLevel", 0.5, channel=1
-    )
+    await async_manipulate_test_data(hass, hmip_device, "dimLevel", 0.5, channel=1)
 
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
@@ -719,10 +715,7 @@ async def test_hmip_light_hs_monochrome(
         blocking=True,
     )
     assert len(hmip_device.functionalChannels[1].mock_calls) == service_call_counter + 1
-    assert (
-        hmip_device.functionalChannels[1].mock_calls[-1][0]
-        == "set_dim_level_async"
-    )
+    assert hmip_device.functionalChannels[1].mock_calls[-1][0] == "set_dim_level_async"
     assert hmip_device.functionalChannels[1].mock_calls[-1][2] == {
         "dim_level": 0.78,
     }
