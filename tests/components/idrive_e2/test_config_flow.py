@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from botocore.exceptions import EndpointConnectionError
 from idrive_e2 import CannotConnect, InvalidAuth
@@ -31,17 +31,6 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_aiobotocore_s3_client() -> Generator[AsyncMock]:
-    """Patch AioSession.create_client to return a mocked async context manager."""
-    client = AsyncMock()
-    with patch(
-        "homeassistant.components.idrive_e2.config_flow.AioSession.create_client",
-        return_value=_mock_aiobotocore_cm(client),
-    ):
-        yield client
-
-
-@pytest.fixture
 def mock_idrive_client() -> Generator[AsyncMock]:
     """Patch IDriveE2Client + aiohttp session, return the client mock."""
     mock_session = AsyncMock()
@@ -57,25 +46,6 @@ def mock_idrive_client() -> Generator[AsyncMock]:
         ),
     ):
         yield mock_client
-
-
-@pytest.fixture
-def mock_list_buckets() -> Generator[AsyncMock]:
-    """Patch _list_buckets, return the mock."""
-    mock = AsyncMock()
-    with patch(
-        "homeassistant.components.idrive_e2.config_flow._list_buckets",
-        new=mock,
-    ):
-        yield mock
-
-
-def _mock_aiobotocore_cm(client: AsyncMock) -> MagicMock:
-    """Return an async context manager yielding the provided client."""
-    cm = MagicMock()
-    cm.__aenter__ = AsyncMock(return_value=client)
-    cm.__aexit__ = AsyncMock(return_value=None)
-    return cm
 
 
 async def _start_flow(hass: HomeAssistant) -> dict:
@@ -107,7 +77,7 @@ async def _submit_bucket(hass: HomeAssistant, flow_id: str, bucket: str) -> dict
 async def test_flow(
     hass: HomeAssistant,
     mock_idrive_client: AsyncMock,
-    mock_list_buckets: AsyncMock,
+    mock_client: AsyncMock,
 ) -> None:
     """Test config flow success path."""
     result = await _start_flow(hass)
@@ -115,7 +85,9 @@ async def test_flow(
     assert result["step_id"] == "user"
 
     mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
-    mock_list_buckets.return_value = [USER_INPUT[CONF_BUCKET]]
+    mock_client.list_buckets.return_value = {
+        "Buckets": [{"Name": USER_INPUT[CONF_BUCKET]}]
+    }
 
     result = await _submit_user(hass, result["flow_id"])
     assert result["type"] is FlowResultType.FORM
@@ -146,7 +118,7 @@ async def test_flow(
 async def test_flow_list_buckets_errors(
     hass: HomeAssistant,
     mock_idrive_client: AsyncMock,
-    mock_list_buckets: AsyncMock,
+    mock_client: AsyncMock,
     exception: Exception,
     errors: dict[str, str],
 ) -> None:
@@ -156,7 +128,7 @@ async def test_flow_list_buckets_errors(
     assert result["step_id"] == "user"
 
     mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
-    mock_list_buckets.side_effect = exception
+    mock_client.list_buckets.side_effect = exception
 
     result = await _submit_user(hass, result["flow_id"])
     assert result["type"] is FlowResultType.FORM
@@ -167,7 +139,7 @@ async def test_flow_list_buckets_errors(
 async def test_flow_no_buckets(
     hass: HomeAssistant,
     mock_idrive_client: AsyncMock,
-    mock_aiobotocore_s3_client: AsyncMock,
+    mock_client: AsyncMock,
 ) -> None:
     """Test we show an error when no buckets are returned."""
     # Start flow
@@ -179,7 +151,7 @@ async def test_flow_no_buckets(
     mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
 
     # S3 list_buckets returns no buckets
-    mock_aiobotocore_s3_client.list_buckets.return_value = {"Buckets": []}
+    mock_client.list_buckets.return_value = {"Buckets": []}
 
     # Submit credentials
     result = await _submit_user(hass, result["flow_id"])
@@ -191,7 +163,7 @@ async def test_flow_no_buckets(
 async def test_flow_bucket_step_options_from_s3_list_buckets(
     hass: HomeAssistant,
     mock_idrive_client: AsyncMock,
-    mock_aiobotocore_s3_client: AsyncMock,
+    mock_client: AsyncMock,
 ) -> None:
     """Test bucket step shows dropdown options coming from S3 list_buckets()."""
     # Start flow
@@ -203,7 +175,7 @@ async def test_flow_bucket_step_options_from_s3_list_buckets(
     mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
 
     # S3 list_buckets returns our test payload
-    mock_aiobotocore_s3_client.list_buckets.return_value = {
+    mock_client.list_buckets.return_value = {
         "Buckets": [{"Name": "bucket1"}, {"Name": "bucket2"}]
     }
 
@@ -252,7 +224,7 @@ async def test_flow_get_region_endpoint_error(
 async def test_abort_if_already_configured(
     hass: HomeAssistant,
     mock_idrive_client: AsyncMock,
-    mock_list_buckets: AsyncMock,
+    mock_client: AsyncMock,
 ) -> None:
     """Test we abort if the account is already configured."""
     # Existing entry that should cause abort when selecting the same bucket + endpoint
@@ -268,7 +240,9 @@ async def test_abort_if_already_configured(
     result = await _start_flow(hass)
 
     mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
-    mock_list_buckets.return_value = [USER_INPUT[CONF_BUCKET]]
+    mock_client.list_buckets.return_value = {
+        "Buckets": [{"Name": USER_INPUT[CONF_BUCKET]}]
+    }
 
     result = await _submit_user(hass, result["flow_id"])
     assert result["type"] is FlowResultType.FORM
