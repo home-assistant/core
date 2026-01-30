@@ -11,7 +11,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -27,6 +27,7 @@ from .const import (
     DOMAIN,
 )
 from .entity import SwitchableRflinkDevice
+from .utils import create_issue_yaml_migration
 
 PARALLEL_UPDATES = 0
 
@@ -80,20 +81,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Rflink platform."""
     if not discovery_info:
-        ir.async_create_issue(
-            hass=hass,
-            domain=DOMAIN,
-            issue_id=f"{PLATFORM_DOMAIN}_yaml_migration",
-            breaks_in_ha_version="2026.8.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            learn_more_url="https://www.home-assistant.io/integrations/rflink/#configuration",
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="yaml_migration",
-            translation_placeholders={
-                "platform": PLATFORM_DOMAIN,
-            },
-        )
+        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
         async_add_entities(devices_from_config(config))
     else:
         async_add_entities(devices_from_config(discovery_info))

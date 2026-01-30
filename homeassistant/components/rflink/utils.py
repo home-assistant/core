@@ -1,6 +1,8 @@
 """RFLink integration utils."""
 
-from .const import EVENT_KEY_COMMAND, EVENT_KEY_SENSOR
+from homeassistant.helpers.issue_registry import async_create_issue, IssueSeverity
+
+from .const import DOMAIN, EVENT_KEY_COMMAND, EVENT_KEY_SENSOR
 
 
 def brightness_to_rflink(brightness: int) -> int:
@@ -23,3 +25,20 @@ def identify_event_type(event):
     if EVENT_KEY_SENSOR in event:
         return EVENT_KEY_SENSOR
     return "unknown"
+
+
+def create_issue_yaml_migration(hass: HomeAssistant, platform: str):
+    async_create_issue(
+        hass=hass,
+        domain=DOMAIN,
+        issue_id=f"{platform}_yaml_migration",
+        breaks_in_ha_version="2026.8.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        learn_more_url="https://www.home-assistant.io/integrations/rflink/#configuration",
+        severity=IssueSeverity.WARNING,
+        translation_key="yaml_migration",
+        translation_placeholders={
+            "platform": platform,
+        },
+    )

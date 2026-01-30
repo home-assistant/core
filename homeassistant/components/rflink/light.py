@@ -17,7 +17,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -37,7 +37,11 @@ from .const import (
     EVENT_KEY_ID,
 )
 from .entity import SwitchableRflinkDevice
-from .utils import brightness_to_rflink, rflink_to_brightness
+from .utils import (
+    brightness_to_rflink,
+    create_issue_yaml_migration,
+    rflink_to_brightness,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,20 +186,7 @@ async def async_setup_platform(
             hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
 
     if not discovery_info:
-        ir.async_create_issue(
-            hass=hass,
-            domain=DOMAIN,
-            issue_id=f"{PLATFORM_DOMAIN}_yaml_migration",
-            breaks_in_ha_version="2026.8.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            learn_more_url="https://www.home-assistant.io/integrations/rflink/#configuration",
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="yaml_migration",
-            translation_placeholders={
-                "platform": PLATFORM_DOMAIN,
-            },
-        )
+        create_issue_yaml_migration(hass, PLATFORM_DOMAIN)
         device_config = config[CONF_DEVICE_DEFAULTS]
         async_add_entities(devices_from_config(config))
         automatic_add_config(hass, config)
@@ -203,6 +194,7 @@ async def async_setup_platform(
         device_config = discovery_info[CONF_DEVICE_DEFAULTS]
         async_add_entities(devices_from_config(discovery_info))
         automatic_add_config(hass, discovery_info)
+
 
 class RflinkLight(SwitchableRflinkDevice, LightEntity):
     """Representation of a Rflink light."""
