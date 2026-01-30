@@ -389,7 +389,9 @@ async def test_update_state_restore(
             ),
         ),
     )
-    await setup_integration_with_node_fixture(hass, "dimmable_light", matter_client)
+    await setup_integration_with_node_fixture(
+        hass, "mock_dimmable_light", matter_client
+    )
 
     assert check_node_update.call_count == 0
 
