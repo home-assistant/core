@@ -20,6 +20,7 @@ from pyliebherrhomeapi.exceptions import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.liebherr.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -28,8 +29,6 @@ from homeassistant.helpers import entity_registry as er
 from .conftest import MOCK_DEVICE
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-DOMAIN = "liebherr"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
