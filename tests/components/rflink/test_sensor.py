@@ -48,7 +48,9 @@ async def test_default_setup_old(
 ) -> None:
     """Test all basic functionality of the rflink sensor component."""
     # setup mocking rflink module
-    event_callback, create, _, _ = await mock_rflink(hass, CONFIG_OLD, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, create, _, _ = await mock_rflink(
+        hass, CONFIG_OLD, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     # make sure arguments are passed
     assert create.call_args_list[0][1]["ignore"]
@@ -116,7 +118,9 @@ async def test_disable_automatic_add_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     # test event for new unconfigured sensor
     event_callback(
@@ -170,7 +174,9 @@ async def test_entity_availability_old(
     assert hass.states.get("sensor.test").state == STATE_UNKNOWN
 
 
-async def test_aliases_old(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_aliases_old(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Validate the response to sensor's alias (with aliases)."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -187,7 +193,9 @@ async def test_aliases_old(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch)
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     # test default state of sensor loaded from config
     config_sensor = hass.states.get("sensor.test_02")
@@ -220,7 +228,9 @@ async def test_race_condition_old(
     tmp_entity = TMP_ENTITY.format("test3")
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     # test event for new unconfigured sensor
     event_callback({"id": "test3", "sensor": "battery", "value": "ok", "unit": ""})
@@ -289,7 +299,9 @@ async def test_sensor_attributes_old(
     }
 
     # setup mocking rflink module
-    _event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    _event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     # test sensor loaded from config
     meter_state = hass.states.get("sensor.meter_device")

@@ -114,7 +114,9 @@ async def test_group_alias_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     assert hass.states.get(f"{DOMAIN}.test").state == "off"
 
@@ -149,7 +151,9 @@ async def test_nogroup_alias_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     assert hass.states.get(f"{DOMAIN}.test").state == "off"
 
@@ -179,7 +183,9 @@ async def test_nogroup_device_id_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     assert hass.states.get(f"{DOMAIN}.test").state == "off"
 
@@ -212,7 +218,9 @@ async def test_device_defaults_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     calls = []
 
@@ -245,7 +253,9 @@ async def test_not_firing_default_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     calls = []
 
@@ -301,6 +311,7 @@ async def test_restore_state_old(
     assert state.state == STATE_OFF
     assert state.attributes["assumed_state"]
 
+
 ## NEW YAML TESTS ##
 
 CONFIG = {
@@ -308,7 +319,9 @@ CONFIG = {
         "port": "/dev/ttyABC0",
         "ignore_devices": ["ignore_wildcard_*", "ignore_sensor"],
         DOMAIN: {
-            "devices": {"protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]}},
+            "devices": {
+                "protocol_0_0": {"name": "test", "aliases": ["test_alias_0_0"]}
+            },
         },
     },
 }
@@ -385,7 +398,10 @@ async def test_group_alias(
             "port": "/dev/ttyABC0",
             DOMAIN: {
                 "devices": {
-                    "protocol_0_0": {"name": "test", "group_aliases": ["test_group_0_0"]}
+                    "protocol_0_0": {
+                        "name": "test",
+                        "group_aliases": ["test_group_0_0"],
+                    }
                 },
             },
         },

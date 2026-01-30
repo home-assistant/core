@@ -171,7 +171,9 @@ async def test_firing_bus_event_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     calls = []
 
@@ -263,7 +265,9 @@ async def test_signal_repetitions_alternation_old(
     }
 
     # setup mocking rflink module
-    _, _, protocol, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    _, _, protocol, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
@@ -293,7 +297,9 @@ async def test_signal_repetitions_cancelling_old(
     }
 
     # setup mocking rflink module
-    _, _, protocol, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    _, _, protocol, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -329,7 +335,9 @@ async def test_type_toggle_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     # default value = 'off'
     assert hass.states.get(f"{DOMAIN}.toggle_test").state == "off"
@@ -381,7 +389,9 @@ async def test_set_level_command_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     # test sending command to a newkaku device
     event_callback({"id": "newkaku_12345678_0", "command": "set_level=10"})
@@ -472,7 +482,9 @@ async def test_group_alias_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     assert hass.states.get(f"{DOMAIN}.test").state == "off"
 
@@ -509,7 +521,9 @@ async def test_nogroup_alias_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     assert hass.states.get(f"{DOMAIN}.test").state == "off"
 
@@ -539,7 +553,9 @@ async def test_nogroup_device_id_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     assert hass.states.get(f"{DOMAIN}.test").state == "off"
 
@@ -566,7 +582,9 @@ async def test_disable_automatic_add_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     # test event for new unconfigured sensor
     event_callback({"id": "protocol_0_0", "command": "off"})
@@ -1083,7 +1101,10 @@ async def test_group_alias(
             "port": "/dev/ttyABC0",
             DOMAIN: {
                 "devices": {
-                    "protocol_0_0": {"name": "test", "group_aliases": ["test_group_0_0"]},
+                    "protocol_0_0": {
+                        "name": "test",
+                        "group_aliases": ["test_group_0_0"],
+                    },
                     "protocol_0_1": {
                         "name": "test2",
                         "type": "dimmable",

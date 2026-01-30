@@ -127,7 +127,9 @@ async def test_firing_bus_event_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     calls = []
 
@@ -162,7 +164,9 @@ async def test_signal_repetitions_old(
     }
 
     # setup mocking rflink module
-    _, _, protocol, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    _, _, protocol, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     # test if signal repetition is performed according to configuration
     await hass.services.async_call(
@@ -201,7 +205,9 @@ async def test_signal_repetitions_alternation_old(
     }
 
     # setup mocking rflink module
-    _, _, protocol, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    _, _, protocol, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     await hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
@@ -231,7 +237,9 @@ async def test_signal_repetitions_cancelling_old(
     }
 
     # setup mocking rflink module
-    _, _, protocol, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    _, _, protocol, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     await hass.services.async_call(
         DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
@@ -264,7 +272,9 @@ async def test_group_alias_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     assert hass.states.get(f"{DOMAIN}.test").state == CoverState.CLOSED
 
@@ -299,7 +309,9 @@ async def test_nogroup_alias_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     assert hass.states.get(f"{DOMAIN}.test").state == CoverState.CLOSED
 
@@ -329,7 +341,9 @@ async def test_nogroup_device_id_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     assert hass.states.get(f"{DOMAIN}.test").state == CoverState.CLOSED
 
@@ -784,6 +798,7 @@ async def test_inverted_cover_old(
     assert protocol.send_command_ack.call_args_list[11][0][0] == "newkaku_device_6"
     assert protocol.send_command_ack.call_args_list[11][0][1] == "DOWN"
 
+
 ## NEW YAML TESTS ##
 
 
@@ -1028,7 +1043,10 @@ async def test_group_alias(
             "port": "/dev/ttyABC0",
             DOMAIN: {
                 "devices": {
-                    "protocol_0_0": {"name": "test", "group_aliases": ["test_group_0_0"]}
+                    "protocol_0_0": {
+                        "name": "test",
+                        "group_aliases": ["test_group_0_0"],
+                    }
                 },
             },
         },

@@ -90,6 +90,7 @@ async def mock_rflink(
 
 ## OLD YAML TESTS ##
 
+
 async def test_version_banner_old(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -105,7 +106,9 @@ async def test_version_banner_old(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, domain, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, domain, monkeypatch, old_yaml=True
+    )
 
     event_callback(
         {
@@ -133,7 +136,9 @@ async def test_send_no_wait_old(
     }
 
     # setup mocking rflink module
-    _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch, old_yaml=True)
+    _, _, protocol, _ = await mock_rflink(
+        hass, config, domain, monkeypatch, old_yaml=True
+    )
 
     await hass.services.async_call(
         domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "switch.test"}
@@ -159,7 +164,9 @@ async def test_cover_send_no_wait_old(
     }
 
     # setup mocking rflink module
-    _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch, old_yaml=True)
+    _, _, protocol, _ = await mock_rflink(
+        hass, config, domain, monkeypatch, old_yaml=True
+    )
 
     await hass.services.async_call(
         domain, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: "cover.test"}
@@ -185,7 +192,9 @@ async def test_send_command_event_propagation_old(
     }
 
     # setup mocking rflink module
-    _, _, protocol, _ = await mock_rflink(hass, config, domain, monkeypatch, old_yaml=True)
+    _, _, protocol, _ = await mock_rflink(
+        hass, config, domain, monkeypatch, old_yaml=True
+    )
 
     # default value = 'off'
     assert hass.states.get(f"{domain}.test1").state == "off"
@@ -309,7 +318,9 @@ async def test_race_condition_old(
     tmp_entity = TMP_ENTITY.format("test3")
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, domain, monkeypatch, old_yaml=True)
+    event_callback, _, _, _ = await mock_rflink(
+        hass, config, domain, monkeypatch, old_yaml=True
+    )
 
     # test event for new unconfigured sensor
     event_callback({"id": "test3", "command": "off"})
@@ -366,7 +377,9 @@ async def test_unique_id_old(
     }
 
     # setup mocking rflink module
-    _event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch, old_yaml=True)
+    _event_callback, _, _, _ = await mock_rflink(
+        hass, config, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     humidity_entry = entity_registry.async_get("sensor.humidity_device")
     assert humidity_entry
@@ -378,6 +391,7 @@ async def test_unique_id_old(
 
 
 ## NEW YAML TESTS ##
+
 
 async def test_version_banner(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch

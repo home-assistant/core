@@ -53,7 +53,9 @@ async def test_default_setup_old(
 ) -> None:
     """Test all basic functionality of the rflink sensor component."""
     # setup mocking rflink module
-    event_callback, create, _, _ = await mock_rflink(hass, CONFIG_OLD, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, create, _, _ = await mock_rflink(
+        hass, CONFIG_OLD, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     # make sure arguments are passed
     assert create.call_args_list[0][1]["ignore"]
@@ -132,10 +134,14 @@ async def test_entity_availability_old(
     assert hass.states.get("binary_sensor.test").state == STATE_ON
 
 
-async def test_off_delay_old(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_off_delay_old(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test off_delay option."""
     # setup mocking rflink module
-    event_callback, create, _, _ = await mock_rflink(hass, CONFIG_OLD, DOMAIN, monkeypatch, old_yaml=True)
+    event_callback, create, _, _ = await mock_rflink(
+        hass, CONFIG_OLD, DOMAIN, monkeypatch, old_yaml=True
+    )
 
     # make sure arguments are passed
     assert create.call_args_list[0][1]["ignore"]
@@ -216,6 +222,7 @@ async def test_restore_state_old(
     state = hass.states.get(f"{DOMAIN}.test2")
     assert state
     assert state.state == STATE_OFF
+
 
 ## NEW YAML TESTS ##
 
