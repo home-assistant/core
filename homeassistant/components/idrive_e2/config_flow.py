@@ -81,16 +81,15 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_ACCESS_KEY_ID],
                     user_input[CONF_SECRET_ACCESS_KEY],
                 )
-
             except (InvalidAuth, ClientError):
                 errors["base"] = "invalid_credentials"
             except (CannotConnect, ConnectionError):
                 errors["base"] = "cannot_connect"
             except ValueError:
                 errors["base"] = "invalid_endpoint_url"
-                
-            if not buckets:
-                errors["base"] = "no_buckets"
+            else:
+                if not buckets:
+                    errors["base"] = "no_buckets"
 
             if errors:
                 return self.async_show_form(
@@ -136,13 +135,6 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_ENDPOINT_URL: self._endpoint_url,
                     CONF_BUCKET: user_input[CONF_BUCKET],
                 },
-            )
-
-        # Make sure that the bucket step is only executed after
-        # the buckets are determined in the user step
-        if not hasattr(self, "_buckets"):
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
         # Show the bucket selection form with a dropdown selector

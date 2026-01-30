@@ -13,7 +13,6 @@ import voluptuous as vol
 from homeassistant.components.idrive_e2 import ClientError
 from homeassistant.components.idrive_e2.config_flow import (
     CONF_ACCESS_KEY_ID,
-    IDriveE2ConfigFlow,
     SelectSelector,
 )
 from homeassistant.components.idrive_e2.const import (
@@ -287,16 +286,3 @@ async def test_async_step_user_initial_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
     assert "data_schema" in result
-
-
-async def test_bucket_step_without_user_step_shows_user_form(
-    hass: HomeAssistant,
-) -> None:
-    """Test bucket step without preloaded buckets returns to user step."""
-    flow = IDriveE2ConfigFlow()
-    flow.hass = hass
-
-    result = await flow.async_step_bucket()
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
