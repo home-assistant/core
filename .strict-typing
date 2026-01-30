@@ -53,6 +53,7 @@ homeassistant.components.air_quality.*
 homeassistant.components.airgradient.*
 homeassistant.components.airly.*
 homeassistant.components.airnow.*
+homeassistant.components.airobot.*
 homeassistant.components.airos.*
 homeassistant.components.airq.*
 homeassistant.components.airthings.*
@@ -375,6 +376,7 @@ homeassistant.components.no_ip.*
 homeassistant.components.nordpool.*
 homeassistant.components.notify.*
 homeassistant.components.notion.*
+homeassistant.components.nrgkick.*
 homeassistant.components.ntfy.*
 homeassistant.components.number.*
 homeassistant.components.nut.*
@@ -455,6 +457,7 @@ homeassistant.components.russound_rio.*
 homeassistant.components.ruuvi_gateway.*
 homeassistant.components.ruuvitag_ble.*
 homeassistant.components.samsungtv.*
+homeassistant.components.saunum.*
 homeassistant.components.scene.*
 homeassistant.components.schedule.*
 homeassistant.components.schlage.*

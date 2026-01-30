@@ -443,6 +443,37 @@ async def test_migrate_from_future_version_fails(hass: HomeAssistant) -> None:
     assert entry.version == 3  # Version should remain unchanged
 
 
+async def test_oauth_implementation_not_available(hass: HomeAssistant) -> None:
+    """Test that missing OAuth implementation triggers reauth."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        unique_id=UNIQUE_ID,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "test_access_token",
+                "refresh_token": "test_refresh_token",
+                "expires_at": int(time.time()) + 3600,
+            },
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    # Mock the implementation lookup to raise ValueError
+    with patch(
+        "homeassistant.components.teslemetry.async_get_config_entry_implementation",
+        side_effect=ValueError("Implementation not available"),
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry is not None
+    # Should trigger reauth, not just fail silently
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
 RETRY_EXCEPTIONS = [
     (RateLimited(data={"after": 5}), 5.0),
     (InvalidResponse(), 10.0),
