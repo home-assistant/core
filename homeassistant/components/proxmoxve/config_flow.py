@@ -136,6 +136,56 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconf_entry = self._get_reconfigure_entry()
+        suggested_values = {
+            CONF_HOST: reconf_entry.data[CONF_HOST],
+            CONF_PORT: reconf_entry.data[CONF_PORT],
+            CONF_REALM: reconf_entry.data[CONF_REALM],
+            CONF_USERNAME: reconf_entry.data[CONF_USERNAME],
+            CONF_PASSWORD: reconf_entry.data[CONF_PASSWORD],
+            CONF_VERIFY_SSL: reconf_entry.data[CONF_VERIFY_SSL],
+        }
+
+        if user_input:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            user_input = {**reconf_entry.data, **user_input}
+            try:
+                await self.hass.async_add_executor_job(_get_nodes_data, user_input)
+            except ProxmoxConnectTimeout:
+                errors["base"] = "connect_timeout"
+            except ProxmoxAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except ProxmoxSSLError:
+                errors["base"] = "ssl_error"
+            except ProxmoxNoNodesFound:
+                errors["base"] = "no_nodes_found"
+            else:
+                return self.async_update_reload_and_abort(
+                    reconf_entry,
+                    data_updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                        CONF_REALM: user_input[CONF_REALM],
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=CONFIG_SCHEMA,
+                suggested_values=user_input or suggested_values,
+            ),
+            errors=errors,
+        )
+
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initiated by configuration file."""
         self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
