@@ -113,18 +113,26 @@ def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any
             next((d for d in person.presence_details if d.state == "Active"), None),
         )
 
+    if person.presence_details:
+        active_entry = next(
+            (d for d in person.presence_details if d.state == "Active" and d.is_game),
+            next((d for d in person.presence_details if d.state == "Active"), None),
+        )
+
         if active_entry:
             if active_entry.device == "Scarlett" and title.devices:
                 if "Xbox360" in title.devices:
-                    attributes["platform"] = MAP_PLATFORM_NAME["Xbox360"]
+                    platform = "Xbox360"
                 elif "XboxOne" in title.devices:
-                    attributes["platform"] = MAP_PLATFORM_NAME["XboxOne"]
+                    platform = "XboxOne"
                 else:
-                    attributes["platform"] = MAP_PLATFORM_NAME["Scarlett"]
+                    platform = "Scarlett"
             else:
-                attributes["platform"] = MAP_PLATFORM_NAME.get(
-                    active_entry.device, active_entry.device.capitalize()
-                )
+                platform = active_entry.device
+
+            attributes["platform"] = MAP_PLATFORM_NAME.get(
+                platform, platform.capitalize()
+            )
     if title.detail is not None:
         attributes.update(
             {
