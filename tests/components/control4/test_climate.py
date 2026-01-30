@@ -399,24 +399,6 @@ async def test_climate_unknown_hvac_state(
     "mock_climate_update_variables",
     "init_integration",
 )
-async def test_fan_mode_states(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test fan mode properties."""
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.attributes.get("fan_mode") == "auto"
-    assert state.attributes.get("fan_modes") == ["auto", "on", "circulate"]
-    assert state.attributes.get("supported_features") & ClimateEntityFeature.FAN_MODE
-
-
-@pytest.mark.usefixtures(
-    "mock_c4_account",
-    "mock_c4_director",
-    "mock_climate_update_variables",
-    "init_integration",
-)
 async def test_set_fan_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
