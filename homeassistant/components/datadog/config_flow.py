@@ -12,8 +12,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PREFIX
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.core import HomeAssistant, callback
 
 from .const import (
     CONF_RATE,
@@ -70,22 +69,6 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from configuration.yaml."""
-        # Check for duplicates
-        self._async_abort_entries_match(
-            {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
-        )
-
-        result = await self.async_step_user(user_input)
-
-        if errors := result.get("errors"):
-            await deprecate_yaml_issue(self.hass, False)
-            return self.async_abort(reason=errors["base"])
-
-        await deprecate_yaml_issue(self.hass, True)
-        return result
 
     @staticmethod
     @callback
@@ -163,41 +146,3 @@ async def validate_datadog_connection(
         return False
     else:
         return True
-
-
-async def deprecate_yaml_issue(
-    hass: HomeAssistant,
-    import_success: bool,
-) -> None:
-    """Create an issue to deprecate YAML config."""
-    if import_success:
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            breaks_in_ha_version="2026.2.0",
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Datadog",
-            },
-        )
-    else:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_import_connection_error",
-            breaks_in_ha_version="2026.2.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_import_connection_error",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Datadog",
-                "url": f"/config/integrations/dashboard/add?domain={DOMAIN}",
-            },
-        )

@@ -1039,10 +1039,20 @@
     },
     "cloudflare": {
       "name": "Cloudflare",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_push",
-      "single_config_entry": true
+      "integrations": {
+        "cloudflare": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Cloudflare"
+        },
+        "cloudflare_r2": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Cloudflare R2"
+        }
+      }
     },
     "cmus": {
       "name": "cmus",
@@ -3594,6 +3604,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "liebherr": {
+      "name": "Liebherr",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "lifx": {
       "name": "LIFX",
       "integration_type": "device",
@@ -5199,6 +5215,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "prana": {
+      "name": "Prana",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "private_ble_device": {
       "name": "Private BLE Device",
