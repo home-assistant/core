@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, SUBENTRY_TYPE_FRIEND, SUBENTRY_TYPE_GAME
 from .coordinator import (
     XboxConfigEntry,
     XboxConsolesCoordinator,
@@ -408,7 +408,7 @@ async def async_setup_entry(
                 for description in SENSOR_DESCRIPTIONS
                 if subentry.unique_id
                 and subentry.unique_id in presence.data.presence
-                and subentry.subentry_type == "friend"
+                and subentry.subentry_type == SUBENTRY_TYPE_FRIEND
             ],
             config_subentry_id=subentry_id,
         )
@@ -421,7 +421,7 @@ async def async_setup_entry(
                 for description in GAME_SENSOR_DESCRIPTIONS
                 if subentry.unique_id
                 and subentry.unique_id in title_history.data
-                and subentry.subentry_type == "game"
+                and subentry.subentry_type == SUBENTRY_TYPE_GAME
             ],
             config_subentry_id=subentry_id,
         )
