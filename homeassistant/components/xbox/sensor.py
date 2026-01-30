@@ -113,12 +113,6 @@ def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any
             next((d for d in person.presence_details if d.state == "Active"), None),
         )
 
-    if person.presence_details:
-        active_entry = next(
-            (d for d in person.presence_details if d.state == "Active" and d.is_game),
-            next((d for d in person.presence_details if d.state == "Active"), None),
-        )
-
         if active_entry:
             if active_entry.device == "Scarlett" and title.devices:
                 if "Xbox360" in title.devices:
