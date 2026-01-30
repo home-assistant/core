@@ -87,7 +87,9 @@ from .const import (
     CHAT_ACTION_UPLOAD_VIDEO,
     CHAT_ACTION_UPLOAD_VIDEO_NOTE,
     CHAT_ACTION_UPLOAD_VOICE,
+    CONF_API_ENDPOINT,
     CONF_CONFIG_ENTRY_ID,
+    DEFAULT_API_ENDPOINT,
     DOMAIN,
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
@@ -549,6 +551,40 @@ def _deprecate_timeout(hass: HomeAssistant, service: ServiceCall) -> None:
         },
         learn_more_url="https://github.com/home-assistant/core/pull/155198",
     )
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: TelegramBotConfigEntry
+) -> bool:
+    """Migrate Telegram Bot config entry."""
+
+    version = config_entry.version
+    minor_version = config_entry.minor_version
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        version,
+        minor_version,
+    )
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    # version 1.1: to add default API endpoint
+    if version == 1 and minor_version == 1:
+        new_data = {**config_entry.data}
+        new_data[CONF_API_ENDPOINT] = DEFAULT_API_ENDPOINT
+        updated = hass.config_entries.async_update_entry(
+            config_entry, data=new_data, minor_version=2
+        )
+        _LOGGER.debug(
+            "Migrated Telegram Bot config entry to %s.%s, entry updated: %s",
+            config_entry.version,
+            config_entry.minor_version,
+            updated,
+        )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
