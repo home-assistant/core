@@ -154,6 +154,27 @@
     }
   },
   "config_panel": {
+    "dashboard": {
+      "connection_flow": {
+        "description": "Reconfigure KNX connection or import a new KNX keyring file",
+        "title": "Connection settings"
+      },
+      "options_flow": {
+        "description": "Configure integration settings",
+        "title": "Integration options"
+      },
+      "project_upload": {
+        "description": "Import a KNX project file to help configure group addresses and datapoint types",
+        "title": "[%key:component::knx::config_panel::dialogs::project_upload::title%]"
+      }
+    },
+    "dialogs": {
+      "project_upload": {
+        "description": "Details such as group address names, datapoint types, devices and group objects are extracted from your project file. The ETS project file itself and its optional password are not stored.\n\n`.knxproj` files exported by ETS 4, 5 or 6 are supported.",
+        "file_upload_label": "ETS project file",
+        "title": "Import ETS project"
+      }
+    },
     "dpt": {
       "options": {
         "5": "Generic 1-byte unsigned integer",

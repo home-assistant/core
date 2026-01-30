@@ -11,7 +11,16 @@ from enum import StrEnum
 import functools
 import inspect
 import logging
-from typing import TYPE_CHECKING, Any, Final, Protocol, TypedDict, cast, override
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    Literal,
+    Protocol,
+    TypedDict,
+    cast,
+    override,
+)
 
 import voluptuous as vol
 
@@ -20,13 +29,17 @@ from homeassistant.const import (
     CONF_ABOVE,
     CONF_ALIAS,
     CONF_BELOW,
+    CONF_DEVICE_ID,
     CONF_ENABLED,
+    CONF_ENTITY_ID,
+    CONF_EVENT_DATA,
     CONF_ID,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_SELECTOR,
     CONF_TARGET,
     CONF_VARIABLES,
+    CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -41,6 +54,7 @@ from homeassistant.core import (
     get_hassjob_callable_job_type,
     is_callback,
     split_entity_id,
+    valid_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.loader import (
@@ -537,7 +551,7 @@ def _validate_range[_T: dict[str, Any]](
 
 _NUMBER_OR_ENTITY_CHOOSE_SCHEMA = vol.Schema(
     {
-        vol.Required("chosen_selector"): vol.In(["number", "entity"]),
+        vol.Required("active_choice"): vol.In(["number", "entity"]),
         vol.Optional("entity"): cv.entity_id,
         vol.Optional("number"): vol.Coerce(float),
     }
@@ -548,7 +562,7 @@ def _validate_number_or_entity(value: dict | float | str) -> float | str:
     """Validate number or entity selector result."""
     if isinstance(value, dict):
         _NUMBER_OR_ENTITY_CHOOSE_SCHEMA(value)
-        return value[value["chosen_selector"]]  # type: ignore[no-any-return]
+        return value[value["active_choice"]]  # type: ignore[no-any-return]
     return value
 
 
@@ -594,6 +608,8 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
     _above: None | float | str
     _below: None | float | str
 
+    _converter: Callable[[Any], float] = float
+
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the state trigger."""
         super().__init__(hass, config)
@@ -616,7 +632,7 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
             return False
 
         try:
-            current_value = float(_attribute_value)
+            current_value = self._converter(_attribute_value)
         except (TypeError, ValueError):
             # Attribute is not a valid number, don't trigger
             return False
@@ -683,7 +699,7 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
                 ),
                 vol.Optional(CONF_LOWER_LIMIT): _number_or_entity,
                 vol.Optional(CONF_UPPER_LIMIT): _number_or_entity,
-                vol.Required(CONF_THRESHOLD_TYPE): ThresholdType,
+                vol.Required(CONF_THRESHOLD_TYPE): vol.Coerce(ThresholdType),
             },
             _validate_range(CONF_LOWER_LIMIT, CONF_UPPER_LIMIT),
             _validate_limits_for_threshold_type,
@@ -705,6 +721,8 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
     _lower_limit: float | str | None = None
     _upper_limit: float | str | None = None
     _threshold_type: ThresholdType
+
+    _converter: Callable[[Any], float] = float
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the state trigger."""
@@ -741,7 +759,7 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
             return False
 
         try:
-            current_value = float(_attribute_value)
+            current_value = self._converter(_attribute_value)
         except (TypeError, ValueError):
             # Attribute is not a valid number, don't trigger
             return False
@@ -1436,3 +1454,73 @@ async def async_get_all_descriptions(
         new_descriptions_cache[missing_trigger] = description
     hass.data[TRIGGER_DESCRIPTION_CACHE] = new_descriptions_cache
     return new_descriptions_cache
+
+
+@callback
+def async_extract_devices(trigger_conf: dict) -> list[str]:
+    """Extract devices from a trigger config."""
+    if trigger_conf[CONF_PLATFORM] == "device":
+        return [trigger_conf[CONF_DEVICE_ID]]
+
+    if (
+        trigger_conf[CONF_PLATFORM] == "event"
+        and CONF_EVENT_DATA in trigger_conf
+        and CONF_DEVICE_ID in trigger_conf[CONF_EVENT_DATA]
+        and isinstance(trigger_conf[CONF_EVENT_DATA][CONF_DEVICE_ID], str)
+    ):
+        return [trigger_conf[CONF_EVENT_DATA][CONF_DEVICE_ID]]
+
+    if trigger_conf[CONF_PLATFORM] == "tag" and CONF_DEVICE_ID in trigger_conf:
+        return trigger_conf[CONF_DEVICE_ID]  # type: ignore[no-any-return]
+
+    if target_devices := async_extract_targets(trigger_conf, CONF_DEVICE_ID):
+        return target_devices
+
+    return []
+
+
+@callback
+def async_extract_entities(trigger_conf: dict) -> list[str]:
+    """Extract entities from a trigger config."""
+    if trigger_conf[CONF_PLATFORM] in ("state", "numeric_state"):
+        return trigger_conf[CONF_ENTITY_ID]  # type: ignore[no-any-return]
+
+    if trigger_conf[CONF_PLATFORM] == "calendar":
+        return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]
+
+    if trigger_conf[CONF_PLATFORM] == "zone":
+        return trigger_conf[CONF_ENTITY_ID] + [trigger_conf[CONF_ZONE]]  # type: ignore[no-any-return]
+
+    if trigger_conf[CONF_PLATFORM] == "geo_location":
+        return [trigger_conf[CONF_ZONE]]
+
+    if trigger_conf[CONF_PLATFORM] == "sun":
+        return ["sun.sun"]
+
+    if (
+        trigger_conf[CONF_PLATFORM] == "event"
+        and CONF_EVENT_DATA in trigger_conf
+        and CONF_ENTITY_ID in trigger_conf[CONF_EVENT_DATA]
+        and isinstance(trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID], str)
+        and valid_entity_id(trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID])
+    ):
+        return [trigger_conf[CONF_EVENT_DATA][CONF_ENTITY_ID]]
+
+    if target_entities := async_extract_targets(trigger_conf, CONF_ENTITY_ID):
+        return target_entities
+
+    return []
+
+
+@callback
+def async_extract_targets(
+    config: dict,
+    target: Literal["entity_id", "device_id", "area_id", "floor_id", "label_id"],
+) -> list[str]:
+    """Extract targets from a target config."""
+    if not (target_conf := config.get(CONF_TARGET)):
+        return []
+    if not (targets := target_conf.get(target)):
+        return []
+
+    return [targets] if isinstance(targets, str) else targets
