@@ -97,7 +97,7 @@ async def integration_fixture(
         "extended_color_light",
         "haojai_switch",
         "heiman_motion_sensor_m1",
-        "humidity_sensor",
+        "mock_humidity_sensor",
         "ikea_air_quality_monitor",
         "ikea_scroll_wheel",
         "inovelli_vtm30",
