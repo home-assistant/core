@@ -253,7 +253,7 @@ async def test_thermostat_outdoor(
     assert state.state == "-5.5"
 
 
-@pytest.mark.parametrize("node_fixture", ["pressure_sensor"])
+@pytest.mark.parametrize("node_fixture", ["mock_pressure_sensor"])
 async def test_pressure_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -436,7 +436,7 @@ async def test_countdown_time_sensor(
 ) -> None:
     """Test CountdownTime sensor."""
     # OperationalState Cluster / CountdownTime (1/96/2)
-    state = hass.states.get("sensor.microwave_oven_estimated_end_time")
+    state = hass.states.get("sensor.mock_microwave_oven_estimated_end_time")
     assert state
     # 1/96/2 = 30 seconds, so 30 s should be added to the current time.
     assert state.state == "2025-01-01T14:00:30+00:00"
@@ -743,7 +743,7 @@ async def test_valve(
     """Test valve AutoCloseTime sensor with Matter epoch microseconds conversion."""
     # ValveConfigurationAndControl Cluster / AutoCloseTime attribute (1/129/2)
     # Initial value is 789004800000000 microseconds = 2025-01-01 00:00:00 UTC
-    state = hass.states.get("sensor.valve_auto_close_time")
+    state = hass.states.get("sensor.mock_valve_auto_close_time")
     assert state
     assert state.state == "2025-01-01T00:00:00+00:00"
 
@@ -753,7 +753,7 @@ async def test_valve(
     set_node_attribute(matter_node, 1, 129, 2, 820540800000000)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.valve_auto_close_time")
+    state = hass.states.get("sensor.mock_valve_auto_close_time")
     assert state
     assert state.state == "2026-01-01T00:00:00+00:00"
 
@@ -761,6 +761,6 @@ async def test_valve(
     set_node_attribute(matter_node, 1, 129, 2, 0)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.valve_auto_close_time")
+    state = hass.states.get("sensor.mock_valve_auto_close_time")
     assert state
     assert state.state == "unknown"

@@ -101,7 +101,6 @@ async def integration_fixture(
         "ikea_air_quality_monitor",
         "ikea_scroll_wheel",
         "inovelli_vtm30",
-        "laundry_dryer",
         "longan_link_thermostat",
         "mock_battery_storage",
         "mock_cooktop",
