@@ -29,11 +29,7 @@ class EltakoEntity(Entity):
         self._attr_gateway = config_entry.runtime_data
 
         self._attr_dev_id = AddressExpression.parse(subentry.data[CONF_ID])
-        self._attr_unique_id = (
-            f"{subentry.subentry_id}_{self.entity_description.key}"
-            if self.entity_description.key
-            else subentry.subentry_id
-        )
+        self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{config_entry.entry_id}_{subentry.subentry_id}")}
         )

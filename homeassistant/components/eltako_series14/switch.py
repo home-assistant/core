@@ -1,6 +1,5 @@
 """Support for Eltako Series 14 switches."""
 
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -8,16 +7,11 @@ from eltakobus.eep import A5_38_08, F6_02_01, M5_38_08, CentralCommandSwitching
 from eltakobus.message import ESP2Message
 from eltakobus.util import AddressExpression
 
-from homeassistant.components.switch import (
-    SwitchDeviceClass,
-    SwitchEntity,
-    SwitchEntityDescription,
-)
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import UndefinedType
 
 from . import EltakoConfigEntry
 from .const import CONF_SENDER_ID
@@ -27,20 +21,12 @@ from .entity import EltakoEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class EltakoSwitchEntityDescription(SwitchEntityDescription):
-    """Describes Eltako switch entity."""
-
-    key: str = ""
-    has_entity_name: bool = True
-    name: str | UndefinedType | None = None
-    device_class: SwitchDeviceClass | None = SwitchDeviceClass.OUTLET
-
-
 class EltakoStandardSwitch(EltakoEntity, SwitchEntity):
     """Representation of an Eltako switch device."""
 
-    entity_description = EltakoSwitchEntityDescription()
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_device_class = SwitchDeviceClass.OUTLET
 
     def __init__(
         self, config_entry: EltakoConfigEntry, subentry: ConfigSubentry
