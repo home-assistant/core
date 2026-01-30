@@ -3,11 +3,7 @@ rules:
   action-setup: done
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: todo
-    comment: |
-      Multiline lambdas should be wrapped in parentheses for readability (e.g. streaming_listener).
-      Use chained comparison: "if 1 < x < 100" instead of "if x > 1 and x < 100".
+  common-modules: done
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
