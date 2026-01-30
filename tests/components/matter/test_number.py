@@ -32,7 +32,7 @@ async def test_numbers(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.NUMBER)
 
 
-@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_level_control_config_entities(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -140,7 +140,7 @@ async def test_temperature_control_temperature_setpoint(
     )
 
 
-@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
+@pytest.mark.parametrize("node_fixture", ["mock_dimmable_light"])
 async def test_matter_exception_on_write_attribute(
     hass: HomeAssistant,
     matter_client: MagicMock,
