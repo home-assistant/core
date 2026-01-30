@@ -260,7 +260,6 @@ async def test_remove_privacy_zone(
     assert not doorbell.privacy_zones
 
 
-@pytest.mark.asyncio
 async def get_user_keyring_info(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

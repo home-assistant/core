@@ -40,6 +40,7 @@ from .const import (
     AVAILABILITY_TIMEOUT,
     BATTERY_SCAN_INTERVAL,
     DOMAIN,
+    LONG_SERVICE_TIMEOUT,
     SCAN_INTERVAL,
     SONOS_CHECK_ACTIVITY,
     SONOS_CREATE_ALARM,
@@ -958,6 +959,23 @@ class SonosSpeaker:
                 # as those "invisible" speakers will bypass the single speaker check
                 return
 
+            # Clear coordinator on speakers that are no longer in this group
+            old_members = set(self.sonos_group[1:])
+            new_members = set(sonos_group[1:])
+            removed_members = old_members - new_members
+            for removed_speaker in removed_members:
+                # Only clear if this speaker was coordinated by self and in the same group
+                if (
+                    removed_speaker.coordinator == self
+                    and removed_speaker.sonos_group is self.sonos_group
+                ):
+                    _LOGGER.debug(
+                        "Zone %s Cleared coordinator [%s] (removed from group)",
+                        removed_speaker.zone_name,
+                        self.zone_name,
+                    )
+                    removed_speaker.clear_coordinator()
+
             self.coordinator = None
             self.sonos_group = sonos_group
             self.sonos_group_entities = sonos_group_entities
@@ -989,6 +1007,19 @@ class SonosSpeaker:
                     self.data.topology_condition.notify_all()
 
         return _async_handle_group_event(event)
+
+    @callback
+    def clear_coordinator(self) -> None:
+        """Clear coordinator from speaker."""
+        self.coordinator = None
+        self.sonos_group = [self]
+        entity_registry = er.async_get(self.hass)
+        speaker_entity_id = cast(
+            str,
+            entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, self.uid),
+        )
+        self.sonos_group_entities = [speaker_entity_id]
+        self.async_write_entity_states()
 
     @soco_error()
     def join(self, speakers: list[SonosSpeaker]) -> list[SonosSpeaker]:
@@ -1037,8 +1068,7 @@ class SonosSpeaker:
         """Unjoin the player from a group."""
         if self.sonos_group == [self]:
             return
-        self.soco.unjoin()
-        self.coordinator = None
+        self.soco.unjoin(timeout=LONG_SERVICE_TIMEOUT)
 
     @staticmethod
     async def unjoin_multi(

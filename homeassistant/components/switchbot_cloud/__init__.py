@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, ENTRY_TITLE
 from .coordinator import SwitchBotCoordinator
@@ -170,6 +171,7 @@ async def make_device_data(
         "K20+ Pro",
         "Robot Vacuum Cleaner K10+ Pro Combo",
         "Robot Vacuum Cleaner S10",
+        "Robot Vacuum Cleaner S20",
         "S20",
         "Robot Vacuum Cleaner K11 Plus",
     ]:
@@ -183,6 +185,9 @@ async def make_device_data(
         "Smart Lock Lite",
         "Smart Lock Pro",
         "Smart Lock Ultra",
+        "Smart Lock Vision",
+        "Smart Lock Vision Pro",
+        "Smart Lock Pro Wifi",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
@@ -278,6 +283,9 @@ async def make_device_data(
         "RGBICWW Strip Light",
         "Ceiling Light",
         "Ceiling Light Pro",
+        "RGBIC Neon Rope Light",
+        "RGBIC Neon Wire Rope Light",
+        "Candle Warmer Lamp",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
@@ -309,7 +317,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     token = entry.data[CONF_API_TOKEN]
     secret = entry.data[CONF_API_KEY]
 
-    api = SwitchBotAPI(token=token, secret=secret)
+    api = SwitchBotAPI(
+        token=token, secret=secret, session=async_get_clientsession(hass)
+    )
     try:
         devices = await api.list_devices()
     except SwitchBotAuthenticationError as ex:

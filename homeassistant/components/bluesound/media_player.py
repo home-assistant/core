@@ -8,7 +8,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from pyblu import Input, Player, Preset, Status, SyncStatus
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -22,12 +21,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -41,7 +35,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN
+from .const import (
+    ATTR_BLUESOUND_GROUP,
+    ATTR_MASTER,
+    DOMAIN,
+    SERVICE_JOIN,
+    SERVICE_UNJOIN,
+)
 from .coordinator import BluesoundCoordinator
 from .utils import (
     dispatcher_join_signal,
@@ -60,11 +60,6 @@ SCAN_INTERVAL = timedelta(minutes=15)
 DATA_BLUESOUND = DOMAIN
 DEFAULT_PORT = 11000
 
-SERVICE_CLEAR_TIMER = "clear_sleep_timer"
-SERVICE_JOIN = "join"
-SERVICE_SET_TIMER = "set_sleep_timer"
-SERVICE_UNJOIN = "unjoin"
-
 POLL_TIMEOUT = 120
 
 
@@ -79,20 +74,6 @@ async def async_setup_entry(
         config_entry.data[CONF_HOST],
         config_entry.data[CONF_PORT],
         config_entry.runtime_data.player,
-    )
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_TIMER, None, "async_increase_timer"
-    )
-    platform.async_register_entity_service(
-        SERVICE_CLEAR_TIMER, None, "async_clear_timer"
-    )
-    platform.async_register_entity_service(
-        SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, "async_bluesound_join"
-    )
-    platform.async_register_entity_service(
-        SERVICE_UNJOIN, None, "async_bluesound_unjoin"
     )
 
     async_add_entities([bluesound_player], update_before_add=True)
@@ -619,42 +600,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
     async def async_remove_follower(self, host: str, port: int) -> None:
         """Remove follower to leader."""
         await self._player.remove_follower(host, port)
-
-    async def async_increase_timer(self) -> int:
-        """Increase sleep time on player."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_service_{SERVICE_SET_TIMER}",
-            is_fixable=False,
-            breaks_in_ha_version="2025.12.0",
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_service_set_sleep_timer",
-            translation_placeholders={
-                "name": slugify(self.sync_status.name),
-            },
-        )
-        return await self._player.sleep_timer()
-
-    async def async_clear_timer(self) -> None:
-        """Clear sleep timer on player."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_service_{SERVICE_CLEAR_TIMER}",
-            is_fixable=False,
-            breaks_in_ha_version="2025.12.0",
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_service_clear_sleep_timer",
-            translation_placeholders={
-                "name": slugify(self.sync_status.name),
-            },
-        )
-        sleep = 1
-        while sleep > 0:
-            sleep = await self._player.sleep_timer()
 
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable or disable shuffle mode."""
