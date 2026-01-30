@@ -73,13 +73,13 @@ def _trigger_automation(call: ServiceCall) -> None:
 
 ACTIONS = {
     SERVICE_SETTINGS: make_action(
-        DOMAIN, service_func=_change_setting, schema=CHANGE_SETTING_SCHEMA
+        DOMAIN, func=_change_setting, schema=CHANGE_SETTING_SCHEMA
     ),
     SERVICE_CAPTURE_IMAGE: make_action(
-        DOMAIN, service_func=_capture_image, schema=CAPTURE_IMAGE_SCHEMA
+        DOMAIN, func=_capture_image, schema=CAPTURE_IMAGE_SCHEMA
     ),
     SERVICE_TRIGGER_AUTOMATION: make_action(
-        DOMAIN, service_func=_trigger_automation, schema=AUTOMATION_SCHEMA
+        DOMAIN, func=_trigger_automation, schema=AUTOMATION_SCHEMA
     ),
 }
 

@@ -74,30 +74,30 @@ class ActionProtocol(Protocol):
 def make_action(
     domain: str,
     *,
-    service_func: Callable[
+    description_placeholders: Mapping[str, str] | None = None,
+    func: Callable[
         [ServiceCall],
         Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
         | ServiceResponse
         | EntityServiceResponse
         | None,
     ],
+    job_type: HassJobType | None = None,
     schema: VolSchemaType | None = None,
     supports_response: SupportsResponse = SupportsResponse.NONE,
-    job_type: HassJobType | None = None,
-    description_placeholders: Mapping[str, str] | None = None,
 ) -> type[Action]:
-    """Create a generic action for a component entity service."""
+    """Create an action definition."""
 
     class _Action(Action):
-        """Define a standard action."""
+        """Define an action."""
 
         @override
         def async_register(self, hass: HomeAssistant, name: str) -> None:
-            """Register the service."""
+            """Register the action."""
             hass.services.async_register(
                 domain,
                 service=name,
-                service_func=service_func,
+                service_func=func,
                 job_type=job_type,
                 schema=schema,
                 supports_response=supports_response,
