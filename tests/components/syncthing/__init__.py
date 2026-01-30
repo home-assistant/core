@@ -220,6 +220,7 @@ def create_mock_syncthing_client(
         mock_system.config = AsyncMock(return_value=MOCK_CONFIG)
 
         async def devices_side_effect(device_id: str) -> dict[str, object]:
+            """Return device config based on device ID."""
             if device_id == DEVICE_ID:
                 return MOCK_CONFIG_DEVICE
             if device_id == SERVER_ID:

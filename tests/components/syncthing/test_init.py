@@ -1,6 +1,7 @@
 """Tests for the syncthing integration setup and client."""
 
 import asyncio
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from aiosyncthing.exceptions import SyncthingError
@@ -40,7 +41,7 @@ def mock_syncthing() -> MagicMock:
 
 
 @pytest.fixture
-def entry(hass: HomeAssistant):
+def entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a mock ConfigEntry for Syncthing component."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -71,13 +72,16 @@ async def test_syncthing_client_event_listener(
     folder_summary_calls = []
     state_changed_calls = []
 
-    async def device_connected_handler(event):
+    async def device_connected_handler(event: dict[str, Any]) -> None:
+        """Handle device connected event."""
         device_connected_calls.append(event)
 
-    async def folder_summary_handler(event):
+    async def folder_summary_handler(event: dict[str, Any]) -> None:
+        """Handle folder summary event."""
         folder_summary_calls.append(event)
 
-    async def state_changed_handler(event):
+    async def state_changed_handler(event: dict[str, Any]) -> None:
+        """Handle state changed event."""
         state_changed_calls.append(event)
 
     # Subscribe to dispatcher signals
@@ -99,7 +103,7 @@ async def test_syncthing_client_event_listener(
 
     # Create async generator for events.listen
     async def mock_listen():
-        """Mock events.listen that yields all events indefinitely without blocking."""
+        """Mock events.listen that yields all events and then loops indefinitely without blocking."""
         for event in events:
             await asyncio.sleep(0)  # yield to event loop
             yield event
@@ -148,7 +152,7 @@ async def test_syncthing_client_stores_initial_events(
 
     # Create async generator for events.listen
     async def mock_listen():
-        """Mock events.listen that yields all events indefinitely without blocking."""
+        """Mock events.listen that yields all events and then loops indefinitely without blocking."""
         for event in initial_events:
             await asyncio.sleep(0)
             yield event
@@ -161,7 +165,8 @@ async def test_syncthing_client_stores_initial_events(
 
     initial_events_ready_calls = []
 
-    async def initial_events_ready_handler():
+    async def initial_events_ready_handler() -> None:
+        """Handle initial events ready signal."""
         initial_events_ready_calls.append(True)
 
     dispatcher.async_dispatcher_connect(
@@ -201,6 +206,7 @@ async def test_syncthing_client_reconnect_on_error(
     call_count = 0
 
     async def mock_listen():
+        """Mock listen that raises error first, then succeeds."""
         nonlocal call_count
         call_count += 1
         if call_count == 1:
@@ -215,10 +221,12 @@ async def test_syncthing_client_reconnect_on_error(
     server_unavailable_calls = []
     server_available_calls = []
 
-    async def server_unavailable_handler():
+    async def server_unavailable_handler() -> None:
+        """Handle server unavailable signal."""
         server_unavailable_calls.append(True)
 
-    async def server_available_handler():
+    async def server_available_handler() -> None:
+        """Handle server available signal."""
         server_available_calls.append(True)
 
     dispatcher.async_dispatcher_connect(

@@ -15,7 +15,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -61,7 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def cancel_listen_task(_) -> None:
+    async def cancel_listen_task(event: Event) -> None:
+        """Cancel the listen task on Home Assistant stop."""
         await syncthing.unsubscribe()
 
     entry.async_on_unload(
@@ -205,6 +206,7 @@ class SyncthingClient:
                 continue
 
     async def _server_available(self) -> bool:
+        """Check if the Syncthing server is available."""
         try:
             await self._client.system.ping()
         except aiosyncthing.exceptions.SyncthingError:

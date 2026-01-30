@@ -7,7 +7,7 @@ import aiosyncthing
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -115,17 +115,17 @@ class FolderSensor(SensorEntity):
         version: str,
     ) -> None:
         """Initialize the sensor."""
-        self._syncthing = syncthing
-        self._server_id = server_id
-        self._folder_id = folder_id
-        self._folder_label = folder_label
-        self._state = None
-        self._unsub_timer = None
+        self._syncthing: SyncthingClient = syncthing
+        self._server_id: str = server_id
+        self._folder_id: str = folder_id
+        self._folder_label: str = folder_label
+        self._state: dict[str, Any] | None = None
+        self._unsub_timer: CALLBACK_TYPE | None = None
 
-        self._short_server_id = server_id.split("-")[0]
-        self._attr_name = f"{self._short_server_id} {folder_id} {folder_label}"
-        self._attr_unique_id = f"{self._short_server_id}-{folder_id}"
-        self._attr_device_info = DeviceInfo(
+        self._short_server_id: str = server_id.split("-")[0]
+        self._attr_name: str = f"{self._short_server_id} {folder_id} {folder_label}"
+        self._attr_unique_id: str = f"{self._short_server_id}-{folder_id}"
+        self._attr_device_info: DeviceInfo = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self._server_id)},
             manufacturer="Syncthing Team",
@@ -148,7 +148,7 @@ class FolderSensor(SensorEntity):
         """Return the state attributes."""
         return self._state
 
-    async def async_update_status(self):
+    async def async_update_status(self) -> None:
         """Request folder status and update state."""
         try:
             state = await self._syncthing.database.status(self._folder_id)
@@ -158,11 +158,11 @@ class FolderSensor(SensorEntity):
             self._state = self._filter_state(state)
         self.async_write_ha_state()
 
-    def subscribe(self):
+    def subscribe(self) -> None:
         """Start polling syncthing folder status."""
         if self._unsub_timer is None:
 
-            async def refresh(event_time):
+            async def refresh(event_time: Any) -> None:
                 """Get the latest data from Syncthing."""
                 await self.async_update_status()
 
@@ -171,7 +171,7 @@ class FolderSensor(SensorEntity):
             )
 
     @callback
-    def unsubscribe(self):
+    def unsubscribe(self) -> None:
         """Stop polling syncthing folder status."""
         if self._unsub_timer is not None:
             self._unsub_timer()
@@ -181,8 +181,9 @@ class FolderSensor(SensorEntity):
         """Handle entity which will be added."""
 
         @callback
-        def handle_folder_summary(event):
-            if self._state is not None:
+        def handle_folder_summary(event: dict[str, Any]) -> None:
+            """Handle folder summary event."""
+            if self._state:
                 self._state = self._filter_state(event["data"]["summary"])
                 self.async_write_ha_state()
 
@@ -195,8 +196,9 @@ class FolderSensor(SensorEntity):
         )
 
         @callback
-        def handle_state_changed(event):
-            if self._state is not None:
+        def handle_state_changed(event: dict[str, Any]) -> None:
+            """Handle folder state changed event."""
+            if self._state:
                 self._state["state"] = event["data"]["to"]
                 self.async_write_ha_state()
 
@@ -209,8 +211,9 @@ class FolderSensor(SensorEntity):
         )
 
         @callback
-        def handle_folder_paused(event):
-            if self._state is not None:
+        def handle_folder_paused(event: dict[str, Any]) -> None:
+            """Handle folder paused event."""
+            if self._state:
                 self._state["state"] = "paused"
                 self.async_write_ha_state()
 
@@ -223,7 +226,8 @@ class FolderSensor(SensorEntity):
         )
 
         @callback
-        def handle_server_unavailable():
+        def handle_server_unavailable() -> None:
+            """Handle server becoming unavailable."""
             self._state = None
             self.unsubscribe()
             self.async_write_ha_state()
@@ -236,7 +240,8 @@ class FolderSensor(SensorEntity):
             )
         )
 
-        async def handle_server_available():
+        async def handle_server_available() -> None:
+            """Handle server becoming available."""
             self.subscribe()
             await self.async_update_status()
 
@@ -254,6 +259,7 @@ class FolderSensor(SensorEntity):
         await self.async_update_status()
 
     def _filter_state(self, state: dict[str, Any]) -> dict[str, Any]:
+        """Filter and map state attributes."""
         # Select only needed state attributes and map their names
         filtered_state: dict[str, Any] = {
             self.STATE_ATTRIBUTES[key]: value
@@ -313,20 +319,20 @@ class DeviceSensor(SensorEntity):
         version: str,
     ) -> None:
         """Initialize the sensor."""
-        self._syncthing = syncthing
-        self._server_id = server_id
-        self._device_id = device_id
-        self._device_label = device_label
-        self._state = None
-        self._unsub_timer = None
+        self._syncthing: SyncthingClient = syncthing
+        self._server_id: str = server_id
+        self._device_id: str = device_id
+        self._device_label: str = device_label
+        self._state: dict[str, Any] | None = None
+        self._unsub_timer: CALLBACK_TYPE | None = None
 
-        self._short_server_id = server_id.split("-")[0]
-        self._short_device_id = device_id.split("-")[0]
-        self._attr_name = (
+        self._short_server_id: str = server_id.split("-")[0]
+        self._short_device_id: str = device_id.split("-")[0]
+        self._attr_name: str = (
             f"{self._short_server_id} {self._short_device_id} {device_label}"
         )
-        self._attr_unique_id = f"{self._short_server_id}-{device_id}"
-        self._attr_device_info = DeviceInfo(
+        self._attr_unique_id: str = f"{self._short_server_id}-{device_id}"
+        self._attr_device_info: DeviceInfo = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self._server_id)},
             manufacturer="Syncthing Team",
@@ -349,29 +355,30 @@ class DeviceSensor(SensorEntity):
         """Return the state attributes."""
         return self._state
 
-    async def async_update_status(self):
+    async def async_update_status(self) -> None:
         """Request device status and update state."""
         try:
             state = await self._syncthing.config.devices(self._device_id)
         except aiosyncthing.exceptions.SyncthingError:
             self._state = None
         else:
-            if state["deviceID"] == self._server_id:
-                state["state"] = "online"
-            else:
-                state["state"] = (
-                    self._state.get("state", "unknown") if self._state else "unknown"
-                )
+            state["state"] = (
+                "online"
+                if state["deviceID"] == self._server_id
+                else self._state.get("state", "unknown")
+                if self._state
+                else "unknown"
+            )
 
             self._state = self._update_state(state)
 
         self.async_write_ha_state()
 
-    def subscribe(self):
+    def subscribe(self) -> None:
         """Start polling syncthing device status."""
         if self._unsub_timer is None:
 
-            async def refresh(event_time):
+            async def refresh(event_time: Any) -> None:
                 """Get the latest data from Syncthing."""
                 await self.async_update_status()
 
@@ -380,7 +387,7 @@ class DeviceSensor(SensorEntity):
             )
 
     @callback
-    def unsubscribe(self):
+    def unsubscribe(self) -> None:
         """Stop polling syncthing device status."""
         if self._unsub_timer is not None:
             self._unsub_timer()
@@ -390,8 +397,9 @@ class DeviceSensor(SensorEntity):
         """Handle entity which will be added."""
 
         @callback
-        def handle_device_connected(event):
-            if self._state is not None:
+        def handle_device_connected(event: dict[str, Any]) -> None:
+            """Handle device connected event."""
+            if self._state:
                 self._state = self._update_state(event["data"])
                 self._state["state"] = "connected"
                 self.async_write_ha_state()
@@ -405,8 +413,9 @@ class DeviceSensor(SensorEntity):
         )
 
         @callback
-        def handle_device_disconnected(event):
-            if self._state is not None and self._state["state"] != "paused":
+        def handle_device_disconnected(event: dict[str, Any]) -> None:
+            """Handle device disconnected event."""
+            if self._state and self._state["state"] != "paused":
                 self._state["state"] = "disconnected"
                 self.async_write_ha_state()
 
@@ -419,8 +428,9 @@ class DeviceSensor(SensorEntity):
         )
 
         @callback
-        def handle_device_paused(event):
-            if self._state is not None:
+        def handle_device_paused(event: dict[str, Any]) -> None:
+            """Handle device paused event."""
+            if self._state:
                 self._state["state"] = "paused"
                 self.async_write_ha_state()
 
@@ -432,8 +442,9 @@ class DeviceSensor(SensorEntity):
             )
         )
 
-        async def handle_device_resumed(event):
-            if self._state is not None:
+        async def handle_device_resumed(event: dict[str, Any]) -> None:
+            """Handle device resumed event."""
+            if self._state:
                 self._state["state"] = "disconnected"
                 self.async_write_ha_state()
 
@@ -446,7 +457,8 @@ class DeviceSensor(SensorEntity):
         )
 
         @callback
-        def handle_initial_events_ready():
+        def handle_initial_events_ready() -> None:
+            """Handle initial events ready."""
             self._state = self._get_initial_device_state()
             self.async_write_ha_state()
 
@@ -459,7 +471,8 @@ class DeviceSensor(SensorEntity):
         )
 
         @callback
-        def handle_server_unavailable():
+        def handle_server_unavailable() -> None:
+            """Handle server becoming unavailable."""
             self._state = None
 
             self.unsubscribe()
@@ -473,7 +486,8 @@ class DeviceSensor(SensorEntity):
             )
         )
 
-        async def handle_server_available():
+        async def handle_server_available() -> None:
+            """Handle server becoming available."""
             self.subscribe()
             await self.async_update_status()
 
@@ -492,7 +506,6 @@ class DeviceSensor(SensorEntity):
 
     def _get_initial_device_state(self) -> dict[str, Any]:
         """Get initial device state from stored events on startup."""
-        # Default state
         state = "unknown" if self._server_id != self._device_id else "online"
         last_event: Mapping[str, Any] = {"data": {}}
 
@@ -518,8 +531,9 @@ class DeviceSensor(SensorEntity):
         return self._update_state(last_event["data"])
 
     def _update_state(self, updates: dict[str, Any]) -> dict[str, Any]:
+        """Update device state with new data."""
         # Select only needed state attributes and map their names
-        state = self._state if self._state is not None else {}
+        state = self._state if self._state else {}
 
         for key, value in updates.items():
             if key in self.STATE_ATTRIBUTES:

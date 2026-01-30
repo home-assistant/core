@@ -1,5 +1,6 @@
 """Tests for the syncthing sensor platform."""
 
+from collections.abc import Iterator
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -49,7 +50,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-def mock_syncthing():
+def mock_syncthing() -> Iterator[MagicMock]:
     """Create a mock Syncthing client."""
     mock_syncthing = create_mock_syncthing_client()
     with patch(
@@ -60,7 +61,7 @@ def mock_syncthing():
 
 
 @pytest.fixture
-def entry(hass: HomeAssistant):
+def entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a mock ConfigEntry for Syncthing component."""
     entry = MockConfigEntry(
         domain=DOMAIN,
