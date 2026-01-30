@@ -28,7 +28,7 @@ async def test_sensors(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.SENSOR)
 
 
-@pytest.mark.parametrize("node_fixture", ["flow_sensor"])
+@pytest.mark.parametrize("node_fixture", ["mock_flow_sensor"])
 async def test_sensor_null_value(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -47,7 +47,7 @@ async def test_sensor_null_value(
     assert state.state == "unknown"
 
 
-@pytest.mark.parametrize("node_fixture", ["flow_sensor"])
+@pytest.mark.parametrize("node_fixture", ["mock_flow_sensor"])
 async def test_flow_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -66,7 +66,7 @@ async def test_flow_sensor(
     assert state.state == "2.0"
 
 
-@pytest.mark.parametrize("node_fixture", ["humidity_sensor"])
+@pytest.mark.parametrize("node_fixture", ["mock_humidity_sensor"])
 async def test_humidity_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -85,7 +85,7 @@ async def test_humidity_sensor(
     assert state.state == "40.0"
 
 
-@pytest.mark.parametrize("node_fixture", ["light_sensor"])
+@pytest.mark.parametrize("node_fixture", ["mock_light_sensor"])
 async def test_light_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -104,7 +104,7 @@ async def test_light_sensor(
     assert state.state == "2.0"
 
 
-@pytest.mark.parametrize("node_fixture", ["temperature_sensor"])
+@pytest.mark.parametrize("node_fixture", ["mock_temperature_sensor"])
 async def test_temperature_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
