@@ -7,10 +7,7 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: exempt
-    comment: |
-      No custom actions are defined.
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -33,10 +30,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: exempt
-    comment: |
-      No explicit parallel updates are defined.
+  parallel-updates: todo
   reauthentication-flow:
     status: todo
     comment: |

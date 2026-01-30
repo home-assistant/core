@@ -242,6 +242,13 @@ def get_shbtn_input_triggers() -> list[tuple[str, str]]:
     return [(trigger_type, "button") for trigger_type in SHBTN_INPUTS_EVENTS_TYPES]
 
 
+def get_coiot_port(hass: HomeAssistant) -> int:
+    """Get CoIoT port from config."""
+    if DOMAIN in hass.data:
+        return cast(int, hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT))
+    return DEFAULT_COAP_PORT
+
+
 @singleton.singleton("shelly_coap")
 async def get_coap_context(hass: HomeAssistant) -> COAP:
     """Get CoAP context to be used in all Shelly Gen1 devices."""
@@ -253,7 +260,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
     ipv4: list[IPv4Address] = []
     if not network.async_only_default_interface_enabled(adapters):
         ipv4.extend(
-            address
+            cast(IPv4Address, address)
             for address in await network.async_get_enabled_source_ips(hass)
             if address.version == 4
             and not (
@@ -264,10 +271,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
             )
         )
     LOGGER.debug("Network IPv4 addresses: %s", ipv4)
-    if DOMAIN in hass.data:
-        port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
-    else:
-        port = DEFAULT_COAP_PORT
+    port = get_coiot_port(hass)
     LOGGER.info("Starting CoAP context with UDP port %s", port)
     await context.initialize(port, ipv4)
 
@@ -718,14 +722,29 @@ def async_remove_orphaned_entities(
         async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
 
 
-def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
-    """Return the RPC websocket URL."""
+def _get_homeassistant_url(hass: HomeAssistant) -> URL | None:
+    """Return HomeAssistant URL."""
     try:
         raw_url = get_url(hass, prefer_external=False, allow_cloud=False)
     except NoURLAvailableError:
-        LOGGER.debug("URL not available, skipping outbound websocket setup")
+        LOGGER.debug("URL not available, skipping setup")
         return None
-    url = URL(raw_url)
+    return URL(raw_url)
+
+
+def get_coiot_address(hass: HomeAssistant) -> str | None:
+    """Return the CoIoT ip address."""
+    url = _get_homeassistant_url(hass)
+    if url is None:
+        return None
+    return str(url.host)
+
+
+def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
+    """Return the RPC websocket URL."""
+    url = _get_homeassistant_url(hass)
+    if url is None:
+        return None
     ws_url = url.with_scheme("wss" if url.scheme == "https" else "ws")
     return str(ws_url.joinpath(API_WS_URL.removeprefix("/")))
 

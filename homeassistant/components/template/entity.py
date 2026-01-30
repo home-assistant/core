@@ -96,6 +96,30 @@ class AbstractTemplateEntity(Entity):
     ) -> None:
         """Set up a template that manages the main state of the entity."""
 
+    @abstractmethod
+    def setup_template(
+        self,
+        option: str,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+    ) -> None:
+        """Set up a template that manages any property or attribute of the entity.
+
+        Parameters
+        ----------
+        option
+            The configuration key provided by ConfigFlow or the yaml option
+        attribute
+            The name of the attribute to link to. This attribute must exist
+            unless a custom on_update method is supplied.
+        validator:
+            Optional function that validates the rendered result.
+        on_update:
+            Called to store the template result rather than storing it
+            the supplied attribute. Passed the result of the validator.
+        """
+
     def add_template(
         self,
         option: str,
@@ -109,7 +133,11 @@ class AbstractTemplateEntity(Entity):
         if (template := self._config.get(option)) and isinstance(template, Template):
             if add_if_static or (not template.is_static):
                 self._templates[option] = EntityTemplate(
-                    attribute, template, validator, on_update, none_on_template_error
+                    attribute,
+                    template,
+                    validator,
+                    on_update,
+                    none_on_template_error,
                 )
             return template
 

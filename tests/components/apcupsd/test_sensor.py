@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+import dateutil.parser
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -151,13 +152,17 @@ async def test_sensor_unknown(
 
     # Simulate an event (a self test) such that "LASTSTEST" field is being reported, the state of
     # the sensor should be properly updated with the corresponding value.
+    last_self_test_value = "1970-01-01 00:00:00 +0000"
     mock_request_status.return_value = MOCK_MINIMAL_STATUS | {
-        "LASTSTEST": "1970-01-01 00:00:00 0000"
+        "LASTSTEST": last_self_test_value
     }
     future = utcnow() + timedelta(minutes=2)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
-    assert hass.states.get(last_self_test_id).state == "1970-01-01 00:00:00 0000"
+    assert (
+        hass.states.get(last_self_test_id).state
+        == dateutil.parser.parse(last_self_test_value).isoformat()
+    )
 
     # Simulate another event (e.g., daemon restart) such that "LASTSTEST" is no longer reported.
     mock_request_status.return_value = MOCK_MINIMAL_STATUS
