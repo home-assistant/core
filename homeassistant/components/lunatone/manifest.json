@@ -3,7 +3,14 @@
   "name": "Lunatone",
   "codeowners": ["@MoonDevLT"],
   "config_flow": true,
-  "dependencies": ["network"],
+  "dhcp": [
+    {
+      "registered_devices": true
+    },
+    {
+      "hostname": "dm1-sqly-rorootfs"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/lunatone",
   "integration_type": "hub",
   "iot_class": "local_polling",

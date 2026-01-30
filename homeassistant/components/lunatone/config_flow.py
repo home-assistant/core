@@ -4,11 +4,6 @@ from typing import Any, Final
 
 import aiohttp
 from lunatone_rest_api_client import Auth, Info
-from lunatone_rest_api_client.discovery import (
-    Feature,
-    LunatoneDiscoveryInfo,
-    async_discover_devices_stream,
-)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -16,9 +11,10 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_DEVICE, CONF_URL
+from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_URL
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
 
@@ -38,48 +34,12 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    _discovered_devices: list[LunatoneDiscoveryInfo] = []
+    _discovered_ip: str = ""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        self._discovered_devices = [
-            device
-            async for device in async_discover_devices_stream(
-                self.hass.loop, filter_feature=Feature.REST_API
-            )
-        ]
-        if self._discovered_devices:
-            return await self.async_step_select_device()
-        return await self.async_step_url_input()
-
-    async def async_step_select_device(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the device selection."""
-        if user_input is not None:
-            selected_host = user_input[CONF_DEVICE]
-            device = next(
-                (d for d in self._discovered_devices if d.host == selected_host),
-                None,
-            )
-            return await self.async_step_url_input(
-                {CONF_URL: f"http://{device.host}"} if device else None
-            )
-
-        device_options = {
-            d.host: f"{d.name} ({d.host})" for d in self._discovered_devices
-        }
-        device_options["__manual__"] = "Enter URL manually"
-
-        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(device_options)})
-        return self.async_show_form(step_id="select_device", data_schema=schema)
-
-    async def async_step_url_input(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the URL input."""
         errors: dict[str, str] = {}
         if user_input is not None:
             url = user_input[CONF_URL]
@@ -97,7 +57,7 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             except aiohttp.ClientConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                if info_api.data is None or info_api.serial_number is None:
+                if info_api.name is None or info_api.serial_number is None:
                     errors["base"] = "missing_device_info"
                 else:
                     await self.async_set_unique_id(str(info_api.serial_number))
@@ -113,10 +73,42 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
                         title=compose_title(info_api.name, info_api.serial_number),
                         data={CONF_URL: url},
                     )
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=vol.Schema(
+                    {vol.Required(CONF_URL, default=entry.data[CONF_URL]): cv.string},
+                ),
+                errors=errors,
+                description_placeholders={CONF_NAME: entry.title},
+            )
         return self.async_show_form(
-            step_id="url_input",
-            data_schema=DATA_SCHEMA,
-            errors=errors,
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by dhcp discovery."""
+        await self.async_set_unique_id(discovery_info.macaddress)
+        self._abort_if_unique_id_configured()
+
+        self._discovered_ip = discovery_info.ip
+
+        return self.async_show_form(step_id="dhcp_confirm")
+
+    async def async_step_dhcp_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the discovered device."""
+        if user_input is not None:
+            return await self.async_step_user(
+                {CONF_URL: f"http://{self._discovered_ip}"}
+            )
+        return self.async_show_form(
+            step_id="dhcp_confirm",
+            description_placeholders={CONF_IP_ADDRESS: self._discovered_ip},
         )
 
     async def async_step_reconfigure(

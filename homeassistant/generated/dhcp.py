@@ -398,6 +398,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "litter-robot4",
     },
     {
+        "domain": "lunatone",
+        "registered_devices": True,
+    },
+    {
+        "domain": "lunatone",
+        "hostname": "dm1-sqly-rorootfs",
+    },
+    {
         "domain": "lyric",
         "hostname": "lyric-*",
         "macaddress": "48A2E6*",
