@@ -35,6 +35,7 @@ def mock_idrive_client() -> Generator[AsyncMock]:
     """Patch IDriveE2Client + aiohttp session, return the client mock."""
     mock_session = AsyncMock()
     mock_client = AsyncMock()
+    mock_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
     with (
         patch(
             "homeassistant.components.idrive_e2.config_flow.async_get_clientsession",
@@ -84,7 +85,6 @@ async def test_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
     mock_client.list_buckets.return_value = {
         "Buckets": [{"Name": USER_INPUT[CONF_BUCKET]}]
     }
@@ -127,7 +127,6 @@ async def test_flow_list_buckets_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
     mock_client.list_buckets.side_effect = exception
 
     result = await _submit_user(hass, result["flow_id"])
@@ -146,9 +145,6 @@ async def test_flow_no_buckets(
     result = await _start_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-
-    # User step: endpoint lookup succeeds
-    mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
 
     # S3 list_buckets returns no buckets
     mock_client.list_buckets.return_value = {"Buckets": []}
@@ -170,9 +166,6 @@ async def test_flow_bucket_step_options_from_s3_list_buckets(
     result = await _start_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-
-    # User step: endpoint lookup succeeds
-    mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
 
     # S3 list_buckets returns our test payload
     mock_client.list_buckets.return_value = {
@@ -239,7 +232,6 @@ async def test_abort_if_already_configured(
 
     result = await _start_flow(hass)
 
-    mock_idrive_client.get_region_endpoint.return_value = USER_INPUT[CONF_ENDPOINT_URL]
     mock_client.list_buckets.return_value = {
         "Buckets": [{"Name": USER_INPUT[CONF_BUCKET]}]
     }
