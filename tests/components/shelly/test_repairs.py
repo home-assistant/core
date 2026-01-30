@@ -516,7 +516,7 @@ async def test_coiot_missing_or_wrong_peer_issue(
     monkeypatch.setitem(
         mock_block_device.settings,
         "coiot",
-        {"enabled": False, "update_period": 15, "peer": "wrong.peer.address"},
+        {"enabled": False, "update_period": 15, "peer": "wrong.peer.address:5683"},
     )
     issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
@@ -555,7 +555,7 @@ async def test_coiot_exception(
     monkeypatch.setitem(
         mock_block_device.settings,
         "coiot",
-        {"enabled": True, "update_period": 15, "peer": "correct.peer.address"},
+        {"enabled": True, "update_period": 15, "peer": "correct.peer.address:5683"},
     )
     issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
@@ -584,22 +584,34 @@ async def test_coiot_exception(
     assert len(issue_registry.issues) == 1
 
 
+@pytest.mark.parametrize(
+    "raw_url",
+    [
+        "http://10.10.10.10:8123",
+        "https://homeassistant.local:443",
+    ],
+)
 async def test_coiot_configured_no_issue_created(
     hass: HomeAssistant,
     mock_block_device: Mock,
     issue_registry: ir.IssueRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    raw_url: str,
 ) -> None:
     """Test no repair issues when CoIoT configuration is missing."""
     monkeypatch.setitem(
         mock_block_device.settings,
         "coiot",
-        {"enabled": True, "update_period": 15, "peer": "10.10.10.10"},
+        {"enabled": True, "update_period": 15, "peer": "10.10.10.10:5683"},
     )
     issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
-    await hass.async_block_till_done()
-    await init_integration(hass, 1)
+    with patch(
+        "homeassistant.components.shelly.utils.get_url",
+        return_value=raw_url,
+    ):
+        await hass.async_block_till_done()
+        await init_integration(hass, 1)
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
@@ -634,7 +646,7 @@ async def test_coiot_no_hass_url(
     monkeypatch.setitem(
         mock_block_device.settings,
         "coiot",
-        {"enabled": True, "update_period": 15, "peer": "correct.peer.address"},
+        {"enabled": True, "update_period": 15, "peer": "correct.peer.address:5683"},
     )
     issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})

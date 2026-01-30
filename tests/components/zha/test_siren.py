@@ -114,7 +114,6 @@ async def test_siren(
                 2,
                 manufacturer=None,
                 expect_reply=True,
-                tsn=None,
             )
         ]
 
@@ -149,7 +148,6 @@ async def test_siren(
                 2,
                 manufacturer=None,
                 expect_reply=True,
-                tsn=None,
             )
         ]
 
@@ -192,7 +190,6 @@ async def test_siren(
                 2,
                 manufacturer=None,
                 expect_reply=True,
-                tsn=None,
             )
         ]
         # test that the state has changed to on

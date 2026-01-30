@@ -462,6 +462,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Shopping list panel was replaced by todo panel in 2023.11
     hass.http.register_redirect("/shopping-list", "/todo")
 
+    # Developer tools moved to config panel in 2026.2
+    for url in (
+        "/developer-tools",
+        "/developer-tools/yaml",
+        "/developer-tools/state",
+        "/developer-tools/action",
+        "/developer-tools/template",
+        "/developer-tools/event",
+        "/developer-tools/statistics",
+        "/developer-tools/assist",
+        "/developer-tools/debug",
+    ):
+        hass.http.register_redirect(url, f"/config{url}")
+
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
     async_register_built_in_panel(
@@ -494,14 +508,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     async_register_built_in_panel(hass, "profile")
-
-    async_register_built_in_panel(
-        hass,
-        "developer-tools",
-        require_admin=True,
-        sidebar_title="developer_tools",
-        sidebar_icon="mdi:hammer",
-    )
 
     @callback
     def async_change_listener(

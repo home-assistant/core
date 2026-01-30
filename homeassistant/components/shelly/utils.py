@@ -29,6 +29,7 @@ from yarl import URL
 
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -260,7 +261,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
     ipv4: list[IPv4Address] = []
     if not network.async_only_default_interface_enabled(adapters):
         ipv4.extend(
-            address
+            cast(IPv4Address, address)
             for address in await network.async_get_enabled_source_ips(hass)
             if address.version == 4
             and not (
@@ -732,12 +733,12 @@ def _get_homeassistant_url(hass: HomeAssistant) -> URL | None:
     return URL(raw_url)
 
 
-def get_coiot_address(hass: HomeAssistant) -> str | None:
+async def get_coiot_address(hass: HomeAssistant) -> str | None:
     """Return the CoIoT ip address."""
     url = _get_homeassistant_url(hass)
-    if url is None:
+    if url is None or url.host is None:
         return None
-    return str(url.host)
+    return await async_get_source_ip(hass, url.host)
 
 
 def get_rpc_ws_url(hass: HomeAssistant) -> str | None:

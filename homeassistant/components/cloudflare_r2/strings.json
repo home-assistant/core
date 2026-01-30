@@ -1,0 +1,46 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:component::cloudflare_r2::exceptions::cannot_connect::message%]",
+      "invalid_bucket_name": "[%key:component::cloudflare_r2::exceptions::invalid_bucket_name::message%]",
+      "invalid_credentials": "[%key:component::cloudflare_r2::exceptions::invalid_credentials::message%]",
+      "invalid_endpoint_url": "[%key:component::cloudflare_r2::exceptions::invalid_endpoint_url::message%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "access_key_id": "Access key ID",
+          "bucket": "Bucket name",
+          "endpoint_url": "Endpoint URL",
+          "prefix": "Folder prefix (optional)",
+          "secret_access_key": "Secret access key"
+        },
+        "data_description": {
+          "access_key_id": "Access key ID to connect to Cloudflare R2 (this is your Account ID)",
+          "bucket": "Bucket must already exist and be writable by the provided credentials.",
+          "endpoint_url": "Cloudflare R2 S3-compatible endpoint.",
+          "prefix": "Optional folder path inside the bucket. Example: backups/homeassistant",
+          "secret_access_key": "Secret access key to connect to Cloudflare R2. See [Docs]({auth_docs_url})"
+        },
+        "title": "Add Cloudflare R2 bucket"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to endpoint"
+    },
+    "invalid_bucket_name": {
+      "message": "Invalid bucket name"
+    },
+    "invalid_credentials": {
+      "message": "Bucket cannot be accessed using provided access key ID and secret."
+    },
+    "invalid_endpoint_url": {
+      "message": "Invalid endpoint URL. Please enter a valid Cloudflare R2 endpoint URL."
+    }
+  }
+}
