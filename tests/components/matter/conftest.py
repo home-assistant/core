@@ -116,6 +116,7 @@ async def integration_fixture(
         "mock_generic_switch_multi",
         "mock_humidity_sensor",
         "mock_laundry_dryer",
+        "mock_leak_sensor",
         "mock_light_sensor",
         "mock_lock",
         "mock_microwave_oven",

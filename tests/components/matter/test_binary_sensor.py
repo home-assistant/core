@@ -70,7 +70,7 @@ async def test_occupancy_sensor(
     ("node_fixture", "entity_id"),
     [
         ("eve_contact_sensor", "binary_sensor.eve_door_door"),
-        ("leak_sensor", "binary_sensor.water_leak_detector_water_leak"),
+        ("mock_leak_sensor", "binary_sensor.water_leak_detector_water_leak"),
     ],
 )
 async def test_boolean_state_sensors(
