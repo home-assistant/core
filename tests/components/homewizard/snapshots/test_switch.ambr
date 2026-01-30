@@ -33,6 +33,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud connection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +117,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud connection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -200,6 +202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -283,6 +286,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud connection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -366,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -450,6 +455,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -533,6 +539,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud connection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -616,6 +623,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Switch lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -699,6 +707,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud connection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -782,6 +791,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud connection',
     'options': dict({
     }),
     'original_device_class': None,
@@ -865,6 +875,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cloud connection',
     'options': dict({
     }),
     'original_device_class': None,
