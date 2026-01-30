@@ -69,21 +69,27 @@ class MatterEventEntity(MatterEntity, EventEntity):
         feature_map = int(
             self.get_matter_attribute_value(clusters.Switch.Attributes.FeatureMap)
         )
+
+        # Either momentary xor latching is required
         if feature_map & SwitchFeature.kLatchingSwitch:
-            # a latching switch only supports switch_latched event
             event_types.append("switch_latched")
-        elif feature_map & SwitchFeature.kMomentarySwitchMultiPress:
-            # Momentary switch with multi press support
+
+        if feature_map & SwitchFeature.kMomentarySwitch:
+            event_types.append("initial_press")
+
+        # The specs are more strict about what features a device must support
+        # We just trust the device. No harm in expecting more events.
+
+        # release is optional, but requires momentary support
+        if feature_map & SwitchFeature.kMomentarySwitchRelease:
+            event_types.append("short_release")
+
+        # multi press is optional, but requires release support
+        if feature_map & SwitchFeature.kMomentarySwitchMultiPress:
             event_types.append("multi_press_ongoing")
             event_types.append("multi_press_complete")
-        elif feature_map & SwitchFeature.kMomentarySwitch:
-            # momentary switch without multi press support
-            event_types.append("initial_press")
-            if feature_map & SwitchFeature.kMomentarySwitchRelease:
-                # momentary switch without multi press support can optionally support release
-                event_types.append("short_release")
 
-        # a momentary switch can optionally support long press
+        # long press is optional, but requires release support
         if feature_map & SwitchFeature.kMomentarySwitchLongPress:
             event_types.append("long_press")
             event_types.append("long_release")
