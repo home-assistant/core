@@ -6,6 +6,7 @@ from unittest.mock import call, patch
 import pytest
 from zigpy.device import Device
 from zigpy.profiles import zha
+from zigpy.typing import UNDEFINED
 from zigpy.zcl.clusters import general
 import zigpy.zcl.foundation as zcl_f
 
@@ -143,5 +144,5 @@ async def test_switch(
     )
     assert len(cluster.read_attributes.mock_calls) == 1
     assert cluster.read_attributes.call_args == call(
-        ["on_off"], allow_cache=False, only_cache=False, manufacturer=None
+        ["on_off"], allow_cache=False, only_cache=False, manufacturer=UNDEFINED
     )
