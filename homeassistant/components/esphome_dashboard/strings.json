@@ -37,7 +37,7 @@
         },
         "data_description": {
           "password": "Password for dashboard authentication",
-          "url": "The full URL to your ESPHome Dashboard (e.g., `{esphome_dashboard_full_url_local}` or `{esphome_dashboard_full_url_remote}`)",
+          "url": "The full URL to your ESPHome Dashboard (e.g., {local_url} or {remote_url})",
           "username": "Username for dashboard authentication (leave blank if not required)"
         },
         "description": "Enter the URL of your ESPHome Dashboard instance and authentication credentials if required.",

@@ -115,8 +115,8 @@ class ESPHomeDashboardConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
-                "esphome_dashboard_full_url_local": "http://192.168.1.100:6052",
-                "esphome_dashboard_full_url_remote": "http://esphome.example.com",
+                "local_url": "http://192.168.1.100:6052",
+                "remote_url": "http://esphome.example.com",
             },
         )
 
