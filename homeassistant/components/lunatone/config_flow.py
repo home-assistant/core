@@ -65,7 +65,7 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
                 None,
             )
             return await self.async_step_url_input(
-                {"url": f"http://{device.host}"} if device else None
+                {CONF_URL: f"http://{device.host}"} if device else None
             )
 
         device_options = {
@@ -73,7 +73,7 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         device_options["__manual__"] = "Enter URL manually"
 
-        schema = vol.Schema({vol.Required("device"): vol.In(device_options)})
+        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(device_options)})
         return self.async_show_form(step_id="select_device", data_schema=schema)
 
     async def async_step_url_input(
