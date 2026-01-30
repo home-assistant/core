@@ -233,7 +233,7 @@ async def _async_setup_block_entry(
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
-        async_manage_coiot_unconfigured_issue(hass, entry)
+        await async_manage_coiot_unconfigured_issue(hass, entry)
         remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None

@@ -162,8 +162,7 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
     ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
-@callback
-def async_manage_coiot_unconfigured_issue(
+async def async_manage_coiot_unconfigured_issue(
     hass: HomeAssistant,
     entry: ShellyConfigEntry,
 ) -> None:
@@ -183,10 +182,10 @@ def async_manage_coiot_unconfigured_issue(
     coiot_config = device.settings["coiot"]
     coiot_enabled = coiot_config.get("enabled")
 
+    coiot_peer = f"{await get_coiot_address(hass)}:{get_coiot_port(hass)}"
     # Check if CoIoT is disabled or peer address is not correctly set
     if not coiot_enabled or (
-        (peer_config := coiot_config.get("peer"))
-        and peer_config != get_coiot_address(hass)
+        (peer_config := coiot_config.get("peer")) and peer_config != coiot_peer
     ):
         ir.async_create_issue(
             hass,
@@ -275,7 +274,7 @@ class CoiotConfigureFlow(ShellyBlockRepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
-        coiot_addr = get_coiot_address(self.hass)
+        coiot_addr = await get_coiot_address(self.hass)
         coiot_port = get_coiot_port(self.hass)
         if coiot_addr is None or coiot_port is None:
             return self.async_abort(reason="cannot_configure")
