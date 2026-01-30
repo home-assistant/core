@@ -50,11 +50,11 @@
   "selector": {},
   "services": {
     "disable_motion_detection": {
-      "description": "Disables the motion detection.",
+      "description": "Disables the motion detection of a camera.",
       "name": "Disable motion detection"
     },
     "enable_motion_detection": {
-      "description": "Enables the motion detection.",
+      "description": "Enables the motion detection of a camera.",
       "name": "Enable motion detection"
     },
     "play_stream": {
@@ -100,11 +100,11 @@
       "name": "Take snapshot"
     },
     "turn_off": {
-      "description": "Turns off the camera.",
+      "description": "Turns off a camera.",
       "name": "[%key:common::action::turn_off%]"
     },
     "turn_on": {
-      "description": "Turns on the camera.",
+      "description": "Turns on a camera.",
       "name": "[%key:common::action::turn_on%]"
     }
   },
