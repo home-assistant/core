@@ -31,6 +31,8 @@ def mock_charger() -> Generator[MagicMock]:
             "serial": "deadbeeffeed",
             "model": "openevse_wifi_v1",
         }
+        charger.async_charge_current = AsyncMock()
+        charger.async_charge_current.return_value = 20
         # Websocket support
         charger.ws_start = MagicMock()
         charger.ws_disconnect = AsyncMock()
