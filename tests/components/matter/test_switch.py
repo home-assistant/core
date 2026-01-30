@@ -107,7 +107,7 @@ async def test_switch_unit(hass: HomeAssistant, matter_node: MatterNode) -> None
     assert state.attributes["friendly_name"] == "Mock SwitchUnit"
 
 
-@pytest.mark.parametrize("node_fixture", ["room_airconditioner"])
+@pytest.mark.parametrize("node_fixture", ["mock_room_airconditioner"])
 async def test_power_switch(hass: HomeAssistant, matter_node: MatterNode) -> None:
     """Test if a Power switch entity is created for a device that supports that."""
     state = hass.states.get("switch.room_airconditioner_power")

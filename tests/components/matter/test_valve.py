@@ -28,7 +28,7 @@ async def test_valves(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.VALVE)
 
 
-@pytest.mark.parametrize("node_fixture", ["valve"])
+@pytest.mark.parametrize("node_fixture", ["mock_valve"])
 async def test_valve(
     hass: HomeAssistant,
     matter_client: MagicMock,

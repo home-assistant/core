@@ -598,7 +598,7 @@ async def test_water_heater(
     assert state.state == "opt_out"
 
 
-@pytest.mark.parametrize("node_fixture", ["pump"])
+@pytest.mark.parametrize("node_fixture", ["mock_pump"])
 async def test_pump(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -734,7 +734,7 @@ async def test_optional_door_event_sensors_from_featuremap(
     assert state.state == "8"
 
 
-@pytest.mark.parametrize("node_fixture", ["valve"])
+@pytest.mark.parametrize("node_fixture", ["mock_valve"])
 async def test_valve(
     hass: HomeAssistant,
     matter_client: MagicMock,
