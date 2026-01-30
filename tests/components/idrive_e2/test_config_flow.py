@@ -52,39 +52,15 @@ def mock_idrive_client(mock_aiohttp_session: AsyncMock) -> Generator[AsyncMock]:
         yield mock_client
 
 
-async def _start_flow(hass: HomeAssistant) -> dict:
-    """Start the flow via HA's flow manager."""
-    return await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-
-async def _submit_user(hass: HomeAssistant, flow_id: str) -> dict:
-    """Submit the user step credentials."""
-    return await hass.config_entries.flow.async_configure(
-        flow_id,
-        {
-            CONF_ACCESS_KEY_ID: USER_INPUT[CONF_ACCESS_KEY_ID],
-            CONF_SECRET_ACCESS_KEY: USER_INPUT[CONF_SECRET_ACCESS_KEY],
-        },
-    )
-
-
-async def _submit_bucket(hass: HomeAssistant, flow_id: str, bucket: str) -> dict:
-    """Submit the bucket selection."""
-    return await hass.config_entries.flow.async_configure(
-        flow_id,
-        {CONF_BUCKET: bucket},
-    )
-
-
 async def test_flow(
     hass: HomeAssistant,
     mock_idrive_client: AsyncMock,
     mock_client: AsyncMock,
 ) -> None:
     """Test config flow success path."""
-    result = await _start_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -92,11 +68,20 @@ async def test_flow(
         "Buckets": [{"Name": USER_INPUT[CONF_BUCKET]}]
     }
 
-    result = await _submit_user(hass, result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ACCESS_KEY_ID: USER_INPUT[CONF_ACCESS_KEY_ID],
+            CONF_SECRET_ACCESS_KEY: USER_INPUT[CONF_SECRET_ACCESS_KEY],
+        },
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bucket"
 
-    result = await _submit_bucket(hass, result["flow_id"], USER_INPUT[CONF_BUCKET])
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_BUCKET: USER_INPUT[CONF_BUCKET]},
+    )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
     assert result["data"] == USER_INPUT
@@ -126,13 +111,21 @@ async def test_flow_list_buckets_errors(
     errors: dict[str, str],
 ) -> None:
     """Test errors when listing buckets."""
-    result = await _start_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     mock_client.list_buckets.side_effect = exception
 
-    result = await _submit_user(hass, result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ACCESS_KEY_ID: USER_INPUT[CONF_ACCESS_KEY_ID],
+            CONF_SECRET_ACCESS_KEY: USER_INPUT[CONF_SECRET_ACCESS_KEY],
+        },
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == errors
@@ -145,7 +138,9 @@ async def test_flow_no_buckets(
 ) -> None:
     """Test we show an error when no buckets are returned."""
     # Start flow
-    result = await _start_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -153,7 +148,13 @@ async def test_flow_no_buckets(
     mock_client.list_buckets.return_value = {"Buckets": []}
 
     # Submit credentials
-    result = await _submit_user(hass, result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ACCESS_KEY_ID: USER_INPUT[CONF_ACCESS_KEY_ID],
+            CONF_SECRET_ACCESS_KEY: USER_INPUT[CONF_SECRET_ACCESS_KEY],
+        },
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "no_buckets"}
@@ -166,7 +167,9 @@ async def test_flow_bucket_step_options_from_s3_list_buckets(
 ) -> None:
     """Test bucket step shows dropdown options coming from S3 list_buckets()."""
     # Start flow
-    result = await _start_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -176,7 +179,13 @@ async def test_flow_bucket_step_options_from_s3_list_buckets(
     }
 
     # Submit credentials
-    result = await _submit_user(hass, result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ACCESS_KEY_ID: USER_INPUT[CONF_ACCESS_KEY_ID],
+            CONF_SECRET_ACCESS_KEY: USER_INPUT[CONF_SECRET_ACCESS_KEY],
+        },
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bucket"
 
@@ -205,13 +214,21 @@ async def test_flow_get_region_endpoint_error(
     expected_error: str,
 ) -> None:
     """Test user step error mapping when resolving region endpoint via client."""
-    result = await _start_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     mock_idrive_client.get_region_endpoint.side_effect = exception
 
-    result = await _submit_user(hass, result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ACCESS_KEY_ID: USER_INPUT[CONF_ACCESS_KEY_ID],
+            CONF_SECRET_ACCESS_KEY: USER_INPUT[CONF_SECRET_ACCESS_KEY],
+        },
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": expected_error}
@@ -233,24 +250,37 @@ async def test_abort_if_already_configured(
         unique_id="existing",
     ).add_to_hass(hass)
 
-    result = await _start_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     mock_client.list_buckets.return_value = {
         "Buckets": [{"Name": USER_INPUT[CONF_BUCKET]}]
     }
 
-    result = await _submit_user(hass, result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_ACCESS_KEY_ID: USER_INPUT[CONF_ACCESS_KEY_ID],
+            CONF_SECRET_ACCESS_KEY: USER_INPUT[CONF_SECRET_ACCESS_KEY],
+        },
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bucket"
 
-    result = await _submit_bucket(hass, result["flow_id"], USER_INPUT[CONF_BUCKET])
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_BUCKET: USER_INPUT[CONF_BUCKET]},
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
 async def test_async_step_user_initial_form(hass: HomeAssistant) -> None:
     """Test initial user step shows the form with no errors and correct schema."""
-    result = await _start_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
