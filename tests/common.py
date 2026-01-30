@@ -73,6 +73,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import (
+    action,
     area_registry as ar,
     category_registry as cr,
     condition,
@@ -297,6 +298,7 @@ async def async_test_home_assistant(
     # Load the registries
     entity.async_setup(hass)
     loader.async_setup(hass)
+    await action.async_setup(hass)
     await condition.async_setup(hass)
     await trigger.async_setup(hass)
 
