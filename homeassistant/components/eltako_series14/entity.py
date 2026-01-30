@@ -1,5 +1,6 @@
 """Representation of an Eltako Series 14 entity."""
 
+from abc import ABC, abstractmethod
 import logging
 
 from eltakobus.message import ESP2Message
@@ -17,7 +18,7 @@ from .gateway import EltakoGateway
 _LOGGER = logging.getLogger(__name__)
 
 
-class EltakoEntity(Entity):
+class EltakoEntity(Entity, ABC):
     """Parent class for all entities associated with the Eltako component."""
 
     _attr_should_poll = False
@@ -52,9 +53,9 @@ class EltakoEntity(Entity):
         """Return the id of the entity."""
         return self._attr_dev_id
 
+    @abstractmethod
     def value_changed(self, msg: ESP2Message) -> None:
         """Update the internal state of the device when a message arrives."""
-        raise NotImplementedError("value_changed needs to be implemented")
 
     async def async_send_message(self, msg: ESP2Message) -> None:
         """Put message on RS485 bus. First the message is put onto HA event bus so that other automations can react on messages."""
