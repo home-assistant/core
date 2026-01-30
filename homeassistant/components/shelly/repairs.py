@@ -183,10 +183,10 @@ def async_manage_coiot_unconfigured_issue(
     coiot_config = device.settings["coiot"]
     coiot_enabled = coiot_config.get("enabled")
 
+    coiot_peer = f"{get_coiot_address(hass)}:{get_coiot_port(hass)}"
     # Check if CoIoT is disabled or peer address is not correctly set
     if not coiot_enabled or (
-        (peer_config := coiot_config.get("peer"))
-        and peer_config != get_coiot_address(hass)
+        (peer_config := coiot_config.get("peer")) and peer_config != coiot_peer
     ):
         ir.async_create_issue(
             hass,

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address, ip_address
+from socket import gethostbyname
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
@@ -735,9 +736,9 @@ def _get_homeassistant_url(hass: HomeAssistant) -> URL | None:
 def get_coiot_address(hass: HomeAssistant) -> str | None:
     """Return the CoIoT ip address."""
     url = _get_homeassistant_url(hass)
-    if url is None:
+    if url is None or url.host is None:
         return None
-    return str(url.host)
+    return gethostbyname(url.host)
 
 
 def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
