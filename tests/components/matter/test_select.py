@@ -237,7 +237,7 @@ async def test_pump(
     assert state.state == "local"
 
 
-@pytest.mark.parametrize("node_fixture", ["microwave_oven"])
+@pytest.mark.parametrize("node_fixture", ["mock_microwave_oven"])
 async def test_microwave_oven(
     hass: HomeAssistant,
     matter_client: MagicMock,

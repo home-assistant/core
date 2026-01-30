@@ -428,7 +428,7 @@ async def test_draft_electrical_measurement_sensor(
 
 
 @pytest.mark.freeze_time("2025-01-01T14:00:00+00:00")
-@pytest.mark.parametrize("node_fixture", ["microwave_oven"])
+@pytest.mark.parametrize("node_fixture", ["mock_microwave_oven"])
 async def test_countdown_time_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -630,7 +630,7 @@ async def test_pump(
     assert state.state == "500"
 
 
-@pytest.mark.parametrize("node_fixture", ["vacuum_cleaner"])
+@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
 async def test_vacuum_actions(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -650,7 +650,7 @@ async def test_vacuum_actions(
     assert state.state == "2025-08-29T21:13:20+00:00"
 
 
-@pytest.mark.parametrize("node_fixture", ["vacuum_cleaner"])
+@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
 async def test_vacuum_operational_error_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
