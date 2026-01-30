@@ -19,7 +19,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import is_outlet, is_purifier, is_wall_switch, rgetattr
+from .common import is_humidifier, is_outlet, is_wall_switch, rgetattr
 from .const import VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -122,7 +122,7 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         key="dry_mode",
         is_on=lambda device: device.state.drying_mode_state == DeviceStatus.ON,
         exists_fn=(
-            lambda device: is_purifier(device)
+            lambda device: is_humidifier(device)
             and rgetattr(device, "state.dry_mode") is not None
         ),
         translation_key="dry_mode",
