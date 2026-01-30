@@ -31,6 +31,7 @@ from .const import (
     DOOR_LOCK_OPERATION_TYPE,
     EVENT_LOCK_DISPOSABLE_USER_DELETED,
     EVENT_LOCK_OPERATION,
+    LOCK_TIMED_REQUEST_TIMEOUT_MS,
     LOGGER,
 )
 from .entity import MatterEntity, MatterEntityDescription
@@ -188,7 +189,7 @@ class MatterLock(MatterEntity, LockEntity):
                 node_id=self._endpoint.node.node_id,
                 endpoint_id=self._endpoint.endpoint_id,
                 command=clusters.DoorLock.Commands.ClearUser(userIndex=user_index),
-                timed_request_timeout_ms=1000,
+                timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
             )
             LOGGER.info(
                 "Deleted disposable user '%s' at index %s after one-time use for %s",
@@ -247,7 +248,7 @@ class MatterLock(MatterEntity, LockEntity):
         code_bytes = code.encode() if code else None
         await self.send_device_command(
             command=clusters.DoorLock.Commands.LockDoor(code_bytes),
-            timed_request_timeout_ms=1000,
+            timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
         )
 
     async def async_unlock(self, **kwargs: Any) -> None:
@@ -269,12 +270,12 @@ class MatterLock(MatterEntity, LockEntity):
             # and unlatch on the HA 'open' command.
             await self.send_device_command(
                 command=clusters.DoorLock.Commands.UnboltDoor(code_bytes),
-                timed_request_timeout_ms=1000,
+                timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
             )
         else:
             await self.send_device_command(
                 command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
-                timed_request_timeout_ms=1000,
+                timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
             )
 
     async def async_open(self, **kwargs: Any) -> None:
@@ -291,7 +292,7 @@ class MatterLock(MatterEntity, LockEntity):
         code_bytes = code.encode() if code else None
         await self.send_device_command(
             command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
-            timed_request_timeout_ms=1000,
+            timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
         )
 
     @callback

@@ -8,23 +8,24 @@ import pytest
 
 from homeassistant.components.matter.api_base import DEVICE_ID, ID, TYPE
 from homeassistant.components.matter.const import (
-    ATTR_CREDENTIAL_RULE,
     ATTR_MAX_CREDENTIALS_PER_USER,
     ATTR_MAX_PIN_USERS,
     ATTR_MAX_RFID_USERS,
     ATTR_MAX_USERS,
+    ATTR_PIN_CODE,
     ATTR_SUPPORTS_USER_MGMT,
     ATTR_USER_INDEX,
     ATTR_USER_NAME,
-    ATTR_USER_STATUS,
     ATTR_USER_TYPE,
-    ATTR_USER_UNIQUE_ID,
+    CLEAR_ALL_INDEX,
     CRED_TYPE_PIN,
     CRED_TYPE_RFID,
     DOMAIN,
+    ERR_CREDENTIAL_NOT_SUPPORTED,
+    ERR_INVALID_PIN_CODE,
     ERR_LOCK_NOT_FOUND,
+    ERR_NO_AVAILABLE_CREDENTIAL_SLOTS,
     ERR_NO_AVAILABLE_SLOTS,
-    ERR_USER_ALREADY_EXISTS,
     ERR_USER_NOT_FOUND,
     ERR_USR_NOT_SUPPORTED,
 )
@@ -146,188 +147,6 @@ async def test_get_lock_info_no_lock(
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_LOCK_NOT_FOUND
-
-
-# --- Add user ---
-
-
-@pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
-@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
-async def test_add_lock_user(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    device_registry: dr.DeviceRegistry,
-    matter_client: MagicMock,
-) -> None:
-    """Test adding a new user to the lock."""
-    # GetUser returns empty slot, then SetUser succeeds
-    matter_client.send_device_command = AsyncMock(
-        side_effect=[
-            {"userStatus": None},  # GetUser: slot empty
-            None,  # SetUser: success
-        ]
-    )
-
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json(
-        {
-            ID: 1,
-            TYPE: "matter/lock/add_user",
-            DEVICE_ID: _get_device_id(device_registry),
-            ATTR_USER_INDEX: 1,
-            ATTR_USER_NAME: "Alice",
-            ATTR_USER_UNIQUE_ID: 12345,
-        }
-    )
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    assert msg["result"][ATTR_USER_INDEX] == 1
-
-    # Verify two commands were sent (GetUser + SetUser)
-    assert matter_client.send_device_command.call_count == 2
-
-    # Verify SetUser was called with correct parameters
-    set_user_call = matter_client.send_device_command.call_args_list[1]
-    cmd = set_user_call.kwargs.get("command") or set_user_call[1].get("command")
-    assert cmd.userIndex == 1
-    assert cmd.userName == "Alice"
-    assert cmd.userUniqueID == 12345
-
-
-@pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
-@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
-async def test_add_lock_user_already_exists(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    device_registry: dr.DeviceRegistry,
-    matter_client: MagicMock,
-) -> None:
-    """Test adding a user to an occupied slot returns error."""
-    # GetUser returns occupied slot
-    matter_client.send_device_command = AsyncMock(
-        return_value={"userStatus": 1, "userName": "Existing"}
-    )
-
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json(
-        {
-            ID: 1,
-            TYPE: "matter/lock/add_user",
-            DEVICE_ID: _get_device_id(device_registry),
-            ATTR_USER_INDEX: 1,
-        }
-    )
-    msg = await ws_client.receive_json()
-
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_USER_ALREADY_EXISTS
-
-
-@pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
-async def test_add_lock_user_usr_not_supported(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    device_registry: dr.DeviceRegistry,
-    matter_client: MagicMock,
-) -> None:
-    """Test adding a user to a lock without USR feature returns error."""
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json(
-        {
-            ID: 1,
-            TYPE: "matter/lock/add_user",
-            DEVICE_ID: _get_device_id(device_registry),
-            ATTR_USER_INDEX: 1,
-        }
-    )
-    msg = await ws_client.receive_json()
-
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_USR_NOT_SUPPORTED
-
-
-# --- Update user ---
-
-
-@pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
-@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
-async def test_update_lock_user(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    device_registry: dr.DeviceRegistry,
-    matter_client: MagicMock,
-) -> None:
-    """Test updating an existing user on the lock."""
-    # GetUser returns existing user, then SetUser succeeds
-    matter_client.send_device_command = AsyncMock(
-        side_effect=[
-            {
-                "userIndex": 1,
-                "userName": "Alice",
-                "userUniqueID": 100,
-                "userStatus": 1,
-                "userType": 0,
-                "credentialRule": 0,
-            },
-            None,  # SetUser: success
-        ]
-    )
-
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json(
-        {
-            ID: 1,
-            TYPE: "matter/lock/update_user",
-            DEVICE_ID: _get_device_id(device_registry),
-            ATTR_USER_INDEX: 1,
-            ATTR_USER_NAME: "Bob",
-            ATTR_USER_TYPE: "week_day_schedule_user",
-        }
-    )
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    assert msg["result"][ATTR_USER_INDEX] == 1
-    assert matter_client.send_device_command.call_count == 2
-
-    # Verify SetUser was called with updated name but preserved other fields
-    set_user_call = matter_client.send_device_command.call_args_list[1]
-    cmd = set_user_call.kwargs.get("command") or set_user_call[1].get("command")
-    assert cmd.userName == "Bob"
-    assert cmd.userUniqueID == 100  # preserved from GetUser
-
-
-@pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
-@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
-async def test_update_lock_user_not_found(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    device_registry: dr.DeviceRegistry,
-    matter_client: MagicMock,
-) -> None:
-    """Test updating a user in an empty slot returns error."""
-    matter_client.send_device_command = AsyncMock(return_value={"userStatus": None})
-
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json(
-        {
-            ID: 1,
-            TYPE: "matter/lock/update_user",
-            DEVICE_ID: _get_device_id(device_registry),
-            ATTR_USER_INDEX: 5,
-            ATTR_USER_NAME: "Ghost",
-        }
-    )
-    msg = await ws_client.receive_json()
-
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_USER_NOT_FOUND
 
 
 # --- Set user (add or update) ---
@@ -467,83 +286,400 @@ async def test_set_lock_user_with_index_not_found(
     assert msg["error"]["code"] == ERR_USER_NOT_FOUND
 
 
-# --- Get user ---
-
-
 @pytest.mark.usefixtures("matter_node")
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
-async def test_get_lock_user(
+async def test_set_lock_user_disposable_type(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
-    """Test getting a single user from the lock."""
+    """Test set_user with disposable_user type."""
+    # Empty slot, then SetUser succeeds
     matter_client.send_device_command = AsyncMock(
-        return_value={
-            "userIndex": 1,
-            "userName": "Alice",
-            "userUniqueID": 42,
-            "userStatus": 1,
-            "userType": 0,
-            "credentialRule": 0,
-            "credentials": [
-                {"credentialType": 1, "credentialIndex": 1},
-            ],
-            "nextUserIndex": 2,
-        }
+        side_effect=[
+            {"userStatus": None},  # GetUser(1): empty
+            None,  # SetUser: success
+        ]
     )
 
     ws_client = await hass_ws_client(hass)
     await ws_client.send_json(
         {
             ID: 1,
-            TYPE: "matter/lock/get_user",
+            TYPE: "matter/lock/set_user",
             DEVICE_ID: _get_device_id(device_registry),
-            ATTR_USER_INDEX: 1,
+            ATTR_USER_NAME: "OneTime",
+            ATTR_USER_TYPE: "disposable_user",
         }
     )
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    result = msg["result"]
-    assert result[ATTR_USER_INDEX] == 1
-    assert result[ATTR_USER_NAME] == "Alice"
-    assert result[ATTR_USER_UNIQUE_ID] == 42
-    assert result[ATTR_USER_STATUS] == "occupied_enabled"
-    assert result[ATTR_USER_TYPE] == "unrestricted_user"
-    assert result[ATTR_CREDENTIAL_RULE] == "single"
-    assert len(result["credentials"]) == 1
-    assert result["credentials"][0]["type"] == CRED_TYPE_PIN
-    assert result["credentials"][0]["index"] == 1
+    assert msg["result"][ATTR_USER_INDEX] == 1
+
+    # Verify SetUser was called with disposable user type (6)
+    set_user_call = matter_client.send_device_command.call_args_list[1]
+    cmd = set_user_call.kwargs.get("command") or set_user_call[1].get("command")
+    assert cmd.userType == 6
+
+
+# --- Set user with PIN credential ---
 
 
 @pytest.mark.usefixtures("matter_node")
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
 @pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
-async def test_get_lock_user_not_found(
+async def test_set_user_with_pin(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
-    """Test getting a user from an empty slot returns error."""
-    matter_client.send_device_command = AsyncMock(return_value={"userStatus": None})
+    """Test creating a user with a PIN in one call."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {"userStatus": None},  # GetUser(1): empty slot
+            None,  # SetUser: success
+            # _get_existing_pin_credential_index: GetUser for credential check
+            {"userStatus": 1, "credentials": None},
+            # _find_available_credential_slot: GetCredentialStatus(1)
+            {"credentialExists": False},
+            # _set_credential_for_user: SetCredential
+            {"status": 0, "nextCredentialIndex": 2},
+        ]
+    )
 
     ws_client = await hass_ws_client(hass)
     await ws_client.send_json(
         {
             ID: 1,
-            TYPE: "matter/lock/get_user",
+            TYPE: "matter/lock/set_user",
             DEVICE_ID: _get_device_id(device_registry),
-            ATTR_USER_INDEX: 99,
+            ATTR_USER_NAME: "Alice",
+            ATTR_PIN_CODE: "1234",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"][ATTR_USER_INDEX] == 1
+    # GetUser(slot scan) + SetUser + GetUser(cred check) + GetCredentialStatus + SetCredential
+    assert matter_client.send_device_command.call_count == 5
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
+async def test_set_user_update_existing_pin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test replacing PIN on an existing user."""
+    pin_cred_type = clusters.DoorLock.Enums.CredentialTypeEnum.kPin
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            # GetUser for update check
+            {
+                "userIndex": 3,
+                "userName": "Bob",
+                "userUniqueID": None,
+                "userStatus": 1,
+                "userType": 0,
+                "credentialRule": 0,
+            },
+            None,  # SetUser (modify): success
+            # _get_existing_pin_credential_index: GetUser
+            {
+                "userStatus": 1,
+                "credentials": [
+                    {"credentialType": pin_cred_type, "credentialIndex": 2},
+                ],
+            },
+            # _set_credential_for_user: SetCredential (modify existing)
+            {"status": 0, "nextCredentialIndex": 3},
+        ]
+    )
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_user",
+            DEVICE_ID: _get_device_id(device_registry),
+            ATTR_USER_INDEX: 3,
+            ATTR_PIN_CODE: "5678",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"][ATTR_USER_INDEX] == 3
+    # GetUser + SetUser + GetUser(cred) + SetCredential
+    assert matter_client.send_device_command.call_count == 4
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
+async def test_set_user_clear_pin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test clearing PIN by passing pin_code=null."""
+    pin_cred_type = clusters.DoorLock.Enums.CredentialTypeEnum.kPin
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            # GetUser for update check
+            {
+                "userIndex": 3,
+                "userName": "Bob",
+                "userUniqueID": None,
+                "userStatus": 1,
+                "userType": 0,
+                "credentialRule": 0,
+            },
+            None,  # SetUser (modify): success
+            # _clear_pin_credentials_for_user: GetUser
+            {
+                "userStatus": 1,
+                "credentials": [
+                    {"credentialType": pin_cred_type, "credentialIndex": 2},
+                ],
+            },
+            None,  # ClearCredential: success
+        ]
+    )
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_user",
+            DEVICE_ID: _get_device_id(device_registry),
+            ATTR_USER_INDEX: 3,
+            ATTR_PIN_CODE: None,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"][ATTR_USER_INDEX] == 3
+    # GetUser + SetUser + GetUser(cred) + ClearCredential
+    assert matter_client.send_device_command.call_count == 4
+
+    # Verify ClearCredential was called
+    clear_cred_call = matter_client.send_device_command.call_args_list[3]
+    cmd = clear_cred_call.kwargs.get("command") or clear_cred_call[1].get("command")
+    assert isinstance(cmd, clusters.DoorLock.Commands.ClearCredential)
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
+async def test_set_user_pin_too_short(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test PIN validation rejects too-short PIN."""
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_user",
+            DEVICE_ID: _get_device_id(device_registry),
+            ATTR_USER_NAME: "Short",
+            ATTR_PIN_CODE: "1",  # MinPINCodeLength from fixture is 4
         }
     )
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == ERR_USER_NOT_FOUND
+    assert msg["error"]["code"] == ERR_INVALID_PIN_CODE
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
+async def test_set_user_pin_too_long(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test PIN validation rejects too-long PIN."""
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_user",
+            DEVICE_ID: _get_device_id(device_registry),
+            ATTR_USER_NAME: "Long",
+            ATTR_PIN_CODE: "12345678901",  # MaxPINCodeLength from fixture is 8
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_INVALID_PIN_CODE
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
+async def test_set_user_pin_non_numeric(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test PIN validation rejects non-numeric PIN."""
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_user",
+            DEVICE_ID: _get_device_id(device_registry),
+            ATTR_USER_NAME: "Letters",
+            ATTR_PIN_CODE: "abcd",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_INVALID_PIN_CODE
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR}])
+async def test_set_user_pin_not_supported(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test PIN credential on lock without kPinCredential returns error."""
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_user",
+            DEVICE_ID: _get_device_id(device_registry),
+            ATTR_USER_NAME: "NoPinLock",
+            ATTR_PIN_CODE: "1234",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_CREDENTIAL_NOT_SUPPORTED
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
+async def test_set_user_rollback_on_credential_failure(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test that new user is rolled back when credential operation fails."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            {"userStatus": None},  # GetUser(1): empty slot
+            None,  # SetUser: success
+            # _get_existing_pin_credential_index: GetUser
+            {"userStatus": 1, "credentials": None},
+            # _find_available_credential_slot: all slots occupied
+            {"credentialExists": True},  # slot 1
+            {"credentialExists": True},  # slot 2
+            {"credentialExists": True},  # slot 3
+            {"credentialExists": True},  # slot 4
+            {"credentialExists": True},  # slot 5
+            {"credentialExists": True},  # slot 6
+            {"credentialExists": True},  # slot 7
+            {"credentialExists": True},  # slot 8
+            {"credentialExists": True},  # slot 9
+            {"credentialExists": True},  # slot 10
+            None,  # ClearUser (rollback): success
+        ]
+    )
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_user",
+            DEVICE_ID: _get_device_id(device_registry),
+            ATTR_USER_NAME: "FailCred",
+            ATTR_PIN_CODE: "1234",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NO_AVAILABLE_CREDENTIAL_SLOTS
+
+    # Verify ClearUser was called to rollback
+    last_call = matter_client.send_device_command.call_args_list[-1]
+    cmd = last_call.kwargs.get("command") or last_call[1].get("command")
+    assert isinstance(cmd, clusters.DoorLock.Commands.ClearUser)
+    assert cmd.userIndex == 1
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
+async def test_set_user_no_credential_slots(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test ERR_NO_AVAILABLE_CREDENTIAL_SLOTS when all credential slots are full."""
+    # Existing user (no rollback expected)
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            # GetUser for update check
+            {
+                "userIndex": 1,
+                "userName": "Existing",
+                "userUniqueID": None,
+                "userStatus": 1,
+                "userType": 0,
+                "credentialRule": 0,
+            },
+            None,  # SetUser (modify): success
+            # _get_existing_pin_credential_index: no existing PIN
+            {"userStatus": 1, "credentials": None},
+            # _find_available_credential_slot: all 10 slots occupied
+            *[{"credentialExists": True} for _ in range(10)],
+        ]
+    )
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_user",
+            DEVICE_ID: _get_device_id(device_registry),
+            ATTR_USER_INDEX: 1,
+            ATTR_PIN_CODE: "1234",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NO_AVAILABLE_CREDENTIAL_SLOTS
 
 
 # --- Get all users ---
@@ -651,8 +787,20 @@ async def test_clear_lock_user(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test clearing a user from the lock."""
-    matter_client.send_device_command = AsyncMock(return_value=None)
+    """Test clearing a user clears credentials first, then clears the user."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            # _clear_user_credentials: GetUser returns user with a PIN credential
+            {
+                "userStatus": 1,
+                "credentials": [
+                    {"credentialType": 1, "credentialIndex": 1},
+                ],
+            },
+            None,  # ClearCredential: success
+            None,  # ClearUser: success
+        ]
+    )
 
     ws_client = await hass_ws_client(hass)
     await ws_client.send_json(
@@ -667,13 +815,54 @@ async def test_clear_lock_user(
 
     assert msg["success"]
 
-    # Verify ClearUser command was sent
-    matter_client.send_device_command.assert_called_once()
-    call_kwargs = matter_client.send_device_command.call_args.kwargs
-    assert call_kwargs["node_id"] == matter_node.node_id
-    assert call_kwargs["endpoint_id"] == 1
-    assert isinstance(call_kwargs["command"], clusters.DoorLock.Commands.ClearUser)
-    assert call_kwargs["command"].userIndex == 2
+    # Verify: GetUser + ClearCredential + ClearUser
+    assert matter_client.send_device_command.call_count == 3
+
+    # Verify ClearCredential was called
+    clear_cred_call = matter_client.send_device_command.call_args_list[1]
+    cmd = clear_cred_call.kwargs.get("command") or clear_cred_call[1].get("command")
+    assert isinstance(cmd, clusters.DoorLock.Commands.ClearCredential)
+
+    # Verify ClearUser was called last
+    clear_user_call = matter_client.send_device_command.call_args_list[2]
+    cmd = clear_user_call.kwargs.get("command") or clear_user_call[1].get("command")
+    assert isinstance(cmd, clusters.DoorLock.Commands.ClearUser)
+    assert cmd.userIndex == 2
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
+async def test_clear_lock_user_no_credentials(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test clearing a user with no credentials still works."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            # _clear_user_credentials: GetUser returns user with no credentials
+            {"userStatus": 1, "credentials": None},
+            None,  # ClearUser: success
+        ]
+    )
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/clear_user",
+            DEVICE_ID: _get_device_id(device_registry),
+            ATTR_USER_INDEX: 2,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    # GetUser + ClearUser (no ClearCredential needed)
+    assert matter_client.send_device_command.call_count == 2
 
 
 @pytest.mark.usefixtures("matter_node")
@@ -685,7 +874,7 @@ async def test_clear_all_lock_users(
     device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
-    """Test clearing all users with the special 0xFFFE index."""
+    """Test clearing all users with CLEAR_ALL_INDEX clears credentials first."""
     matter_client.send_device_command = AsyncMock(return_value=None)
 
     ws_client = await hass_ws_client(hass)
@@ -694,41 +883,72 @@ async def test_clear_all_lock_users(
             ID: 1,
             TYPE: "matter/lock/clear_user",
             DEVICE_ID: _get_device_id(device_registry),
-            ATTR_USER_INDEX: 0xFFFE,
+            ATTR_USER_INDEX: CLEAR_ALL_INDEX,
         }
     )
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    call_kwargs = matter_client.send_device_command.call_args.kwargs
-    assert call_kwargs["command"].userIndex == 0xFFFE
 
+    # Should have called ClearCredential(null) then ClearUser(CLEAR_ALL_INDEX)
+    assert matter_client.send_device_command.call_count == 2
 
-# --- USR not supported (shared error path) ---
+    # First call: ClearCredential with credential=None
+    clear_cred_call = matter_client.send_device_command.call_args_list[0]
+    cmd = clear_cred_call.kwargs.get("command") or clear_cred_call[1].get("command")
+    assert isinstance(cmd, clusters.DoorLock.Commands.ClearCredential)
+    assert cmd.credential is None
+
+    # Second call: ClearUser with CLEAR_ALL_INDEX
+    clear_user_call = matter_client.send_device_command.call_args_list[1]
+    cmd = clear_user_call.kwargs.get("command") or clear_user_call[1].get("command")
+    assert isinstance(cmd, clusters.DoorLock.Commands.ClearUser)
+    assert cmd.userIndex == CLEAR_ALL_INDEX
 
 
 @pytest.mark.usefixtures("matter_node")
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
-async def test_get_user_usr_not_supported(
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_USR_PIN_RFID}])
+async def test_clear_user_cleans_credentials(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     matter_client: MagicMock,
 ) -> None:
-    """Test get_user on a lock without USR feature returns error."""
+    """Test that clear_user clears each credential before clearing the user."""
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[
+            # _clear_user_credentials: GetUser with multiple credentials
+            {
+                "userStatus": 1,
+                "credentials": [
+                    {"credentialType": 1, "credentialIndex": 1},  # PIN
+                    {"credentialType": 2, "credentialIndex": 3},  # RFID
+                ],
+            },
+            None,  # ClearCredential(PIN, 1)
+            None,  # ClearCredential(RFID, 3)
+            None,  # ClearUser
+        ]
+    )
+
     ws_client = await hass_ws_client(hass)
     await ws_client.send_json(
         {
             ID: 1,
-            TYPE: "matter/lock/get_user",
+            TYPE: "matter/lock/clear_user",
             DEVICE_ID: _get_device_id(device_registry),
-            ATTR_USER_INDEX: 1,
+            ATTR_USER_INDEX: 5,
         }
     )
     msg = await ws_client.receive_json()
 
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_USR_NOT_SUPPORTED
+    assert msg["success"]
+    # GetUser + 2x ClearCredential + ClearUser
+    assert matter_client.send_device_command.call_count == 4
+
+
+# --- USR not supported (shared error path) ---
 
 
 @pytest.mark.usefixtures("matter_node")
@@ -793,31 +1013,6 @@ async def test_set_user_usr_not_supported(
             ID: 1,
             TYPE: "matter/lock/set_user",
             DEVICE_ID: _get_device_id(device_registry),
-            ATTR_USER_NAME: "Test",
-        }
-    )
-    msg = await ws_client.receive_json()
-
-    assert not msg["success"]
-    assert msg["error"]["code"] == ERR_USR_NOT_SUPPORTED
-
-
-@pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
-async def test_update_user_usr_not_supported(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    device_registry: dr.DeviceRegistry,
-    matter_client: MagicMock,
-) -> None:
-    """Test update_user on a lock without USR feature returns error."""
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json(
-        {
-            ID: 1,
-            TYPE: "matter/lock/update_user",
-            DEVICE_ID: _get_device_id(device_registry),
-            ATTR_USER_INDEX: 1,
             ATTR_USER_NAME: "Test",
         }
     )

@@ -35,12 +35,32 @@ ATTR_MAX_PIN_USERS = "max_pin_users"
 ATTR_MAX_RFID_USERS = "max_rfid_users"
 ATTR_MAX_CREDENTIALS_PER_USER = "max_credentials_per_user"
 
+# Magic values
+CLEAR_ALL_INDEX = 0xFFFE  # Matter spec: pass to ClearUser/ClearCredential to clear all
+
+# Timed request timeout (used by all lock commands that modify state)
+LOCK_TIMED_REQUEST_TIMEOUT_MS = 1000
+
+# Credential field keys
+ATTR_PIN_CODE = "pin_code"
+
 # Error codes
 ERR_LOCK_NOT_FOUND = "lock_not_found"
 ERR_USR_NOT_SUPPORTED = "usr_not_supported"
 ERR_USER_ALREADY_EXISTS = "user_already_exists"
 ERR_USER_NOT_FOUND = "user_not_found"
 ERR_NO_AVAILABLE_SLOTS = "no_available_slots"
+ERR_INVALID_PIN_CODE = "invalid_pin_code"
+ERR_CREDENTIAL_NOT_SUPPORTED = "credential_not_supported"
+ERR_NO_AVAILABLE_CREDENTIAL_SLOTS = "no_available_credential_slots"
+
+# SetCredential status mapping (Matter DlStatus)
+SET_CREDENTIAL_STATUS_MAP: dict[int, str] = {
+    0: "success",
+    1: "failure",
+    2: "duplicate",
+    3: "occupied",
+}
 
 # Credential type strings
 CRED_TYPE_PIN = "pin"
