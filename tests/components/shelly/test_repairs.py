@@ -555,7 +555,7 @@ async def test_coiot_exception(
     monkeypatch.setitem(
         mock_block_device.settings,
         "coiot",
-        {"enabled": True, "update_period": 15, "peer": "correct.peer.address"},
+        {"enabled": True, "update_period": 15, "peer": "correct.peer.address:5683"},
     )
     issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
@@ -585,10 +585,10 @@ async def test_coiot_exception(
 
 
 @pytest.mark.parametrize(
-    "address",
+    "raw_url",
     [
-        "10.10.10.10",
-        "homeassistant.local",
+        "http://10.10.10.10:8123",
+        "https://homeassistant.local:443",
     ],
 )
 async def test_coiot_configured_no_issue_created(
@@ -596,7 +596,7 @@ async def test_coiot_configured_no_issue_created(
     mock_block_device: Mock,
     issue_registry: ir.IssueRegistry,
     monkeypatch: pytest.MonkeyPatch,
-    address: str,
+    raw_url: str,
 ) -> None:
     """Test no repair issues when CoIoT configuration is missing."""
     monkeypatch.setitem(
@@ -607,8 +607,8 @@ async def test_coiot_configured_no_issue_created(
     issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=MOCK_MAC)
     assert await async_setup_component(hass, "repairs", {})
     with patch(
-        "homeassistant.components.shelly.utils.gethostbyname",
-        return_value="10.10.10.10",
+        "homeassistant.components.shelly.utils.get_url",
+        return_value=raw_url,
     ):
         await hass.async_block_till_done()
         await init_integration(hass, 1)
