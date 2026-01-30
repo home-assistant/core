@@ -42,7 +42,7 @@ NUMBER_TYPES: tuple[OpenEVSENumberDescription, ...] = (
     OpenEVSENumberDescription(
         key="charge_rate",
         translation_key="charge_rate",
-        value_fn=lambda ev: ev.max_current_soft,
+        value_fn=lambda ev: ev.charge_current,
         min_value_fn=lambda ev: ev.min_amps,
         max_value_fn=lambda ev: ev.max_amps,
         set_value_fn=lambda ev, value: ev.set_current(value),
@@ -99,7 +99,7 @@ class OpenEVSENumber(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], NumberEnt
     @property
     def native_value(self) -> float:
         """Return the state of the number."""
-        return self.entity_description.value_fn(self.coordinator.charger)
+        return self.entity_description.value_fn(self.coordinator)
 
     @property
     def native_min_value(self) -> float:

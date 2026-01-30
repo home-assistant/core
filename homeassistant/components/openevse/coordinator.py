@@ -43,9 +43,11 @@ class OpenEVSEDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         # Set up websocket callback for push updates
         self.charger.callback = self._async_websocket_callback
+        self.charge_current = None
 
     async def _async_websocket_callback(self) -> None:
         """Handle websocket data update."""
+        self.charge_current = await self.charger.async_charge_current()
         self.async_set_updated_data(None)
 
     def start_websocket(self) -> None:
