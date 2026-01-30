@@ -86,14 +86,15 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
         """Update the entity and learn current rotation."""
         await super().async_update()
 
-        # Get current rotation and update value
+        # Learn min/max rotation if different from action limits
         action = self._dest.action(ACTION_DESC.SlatRotate)
         if action is not None:
             rotation = action["rotation"]
             if rotation is not None:
-                self._attr_native_value = self._value_func(
-                    self._attr_native_value, rotation
-                )
+                if rotation is not action.minValue and rotation is not action.maxValue:
+                    self._attr_native_value = self._value_func(
+                        self._attr_native_value, rotation
+                    )
 
     @property
     def native_min_value(self) -> float:
