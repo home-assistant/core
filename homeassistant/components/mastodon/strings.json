@@ -96,7 +96,7 @@
     }
   },
   "services": {
-    "account_lookup": {
+    "lookup_account": {
       "description": "Gets information about a Mastodon account.",
       "fields": {
         "account_name": {

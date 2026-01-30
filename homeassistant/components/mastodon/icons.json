@@ -32,7 +32,7 @@
     }
   },
   "services": {
-    "account_lookup": {
+    "lookup_account": {
       "service": "mdi:account-search"
     },
     "post": {

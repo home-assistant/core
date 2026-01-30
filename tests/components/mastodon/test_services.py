@@ -17,7 +17,7 @@ from homeassistant.components.mastodon.const import (
     DOMAIN,
 )
 from homeassistant.components.mastodon.services import (
-    SERVICE_ACCOUNT_LOOKUP,
+    SERVICE_LOOKUP_ACCOUNT,
     SERVICE_POST,
 )
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
@@ -40,7 +40,7 @@ async def test_account_lookup_success(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_ACCOUNT_LOOKUP,
+        SERVICE_LOOKUP_ACCOUNT,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             "account_name": "@trwnh@mastodon.social",
@@ -71,7 +71,7 @@ async def test_account_lookup_failures(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ACCOUNT_LOOKUP,
+            SERVICE_LOOKUP_ACCOUNT,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 "account_name": "@test@mastodon.social",
