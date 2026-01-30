@@ -854,7 +854,7 @@ async def websocket_read_zigbee_cluster_attributes(
     cluster_id: int = msg[ATTR_CLUSTER_ID]
     cluster_type: str = msg[ATTR_CLUSTER_TYPE]
     attribute: int = msg[ATTR_ATTRIBUTE]
-    manufacturer: int | None = msg.get(ATTR_MANUFACTURER)
+    manufacturer: int | ZigpyUndefinedType = msg.get(ATTR_MANUFACTURER, ZIGPY_UNDEFINED)
     zha_device = zha_gateway.get_device(ieee)
     success = {}
     failure = {}
