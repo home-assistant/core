@@ -1,5 +1,7 @@
 """The tests for the Template climate platform."""
 
+from __future__ import annotations
+
 from typing import Any
 
 import pytest
@@ -39,7 +41,40 @@ TEST_STATE_TRIGGER = {
             "sensor.fan",
         ],
     },
-    "action": [{"event": "action_event"}],
+    "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
+    "action": [
+        {"event": "action_event", "event_data": {"what": "{{ triggering_entity}}"}}
+    ],
+}
+
+SET_HVAC_MODE = {
+    "service": "test.automation",
+    "data_template": {
+        "action": "set_hvac_mode",
+        "caller": "{{ this.entity_id }}",
+        "hvac_mode": "{{ hvac_mode }}",
+    },
+}
+SET_TEMPERATURE = {
+    "service": "test.automation",
+    "data_template": {
+        "action": "set_temperature",
+        "caller": "{{ this.entity_id }}",
+        "temperature": "{{ temperature }}",
+    },
+}
+SET_FAN_MODE = {
+    "service": "test.automation",
+    "data_template": {
+        "action": "set_fan_mode",
+        "caller": "{{ this.entity_id }}",
+        "fan_mode": "{{ fan_mode }}",
+    },
+}
+
+NAMED_ACTIONS = {
+    "name": TEST_OBJECT_ID,
+    "set_hvac_mode": SET_HVAC_MODE,
 }
 
 
@@ -50,11 +85,7 @@ async def async_setup_modern_format(
     config = {"template": {"climate": climate_config}}
 
     with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
+        assert await async_setup_component(hass, template.DOMAIN, config)
 
     await hass.async_block_till_done()
     await hass.async_start()
@@ -68,11 +99,7 @@ async def async_setup_trigger_format(
     config = {"template": {**TEST_STATE_TRIGGER, "climate": climate_config}}
 
     with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
+        assert await async_setup_component(hass, template.DOMAIN, config)
 
     await hass.async_block_till_done()
     await hass.async_start()
@@ -105,7 +132,8 @@ async def setup_climate(
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("climate_config", "entity_id"),
@@ -115,7 +143,7 @@ async def setup_climate(
                 "name": TEST_OBJECT_ID,
                 "hvac_mode": "{{ 'heat' }}",
                 "hvac_modes": ["heat", "off"],
-                "set_hvac_mode": [{"action": "script.turn_on"}],
+                "set_hvac_mode": SET_HVAC_MODE,
             },
             TEST_ENTITY_ID,
         ),
@@ -124,8 +152,6 @@ async def setup_climate(
 @pytest.mark.usefixtures("setup_climate")
 async def test_template_state_text(
     hass: HomeAssistant,
-    style: ConfigurationStyle,
-    climate_config: dict[str, Any],
     entity_id: str,
 ) -> None:
     """Test the state of a template climate."""
@@ -135,7 +161,8 @@ async def test_template_state_text(
 
 
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_template_state_attributes(
     hass: HomeAssistant, style: ConfigurationStyle
@@ -146,6 +173,7 @@ async def test_template_state_attributes(
     hass.states.async_set("sensor.mode", "cool")
     hass.states.async_set("sensor.action", "cooling")
     hass.states.async_set("sensor.fan", "high")
+    await hass.async_block_till_done()
 
     climate_config: dict[str, Any] = {
         "name": TEST_OBJECT_ID,
@@ -156,9 +184,9 @@ async def test_template_state_attributes(
         "fan_mode": "{{ states('sensor.fan') }}",
         "hvac_modes": ["heat", "cool", "off"],
         "fan_modes": ["low", "high"],
-        "set_hvac_mode": [{"action": "script.turn_on"}],
-        "set_temperature": [{"action": "script.turn_on"}],
-        "set_fan_mode": [{"action": "script.turn_on"}],
+        "set_hvac_mode": SET_HVAC_MODE,
+        "set_temperature": SET_TEMPERATURE,
+        "set_fan_mode": SET_FAN_MODE,
     }
 
     await async_setup_climate_config(hass, 1, style, climate_config)
@@ -182,35 +210,16 @@ async def test_template_state_attributes(
 
 
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
-async def test_actions(hass: HomeAssistant, style: ConfigurationStyle) -> None:
+async def test_actions(hass: HomeAssistant, style: ConfigurationStyle, calls) -> None:
     """Test actions of a template climate."""
-    assert await async_setup_component(
-        hass, "input_boolean", {"input_boolean": {"test_hvac": {}}}
-    )
-    assert await async_setup_component(
-        hass,
-        "input_number",
-        {"input_number": {"test_temp": {"min": 0, "max": 100, "step": 1}}},
-    )
-
     base = {
         "name": TEST_OBJECT_ID,
         "hvac_modes": ["heat", "off"],
-        "set_hvac_mode": [
-            {
-                "action": "input_boolean.turn_on",
-                "target": {"entity_id": "input_boolean.test_hvac"},
-            }
-        ],
-        "set_temperature": [
-            {
-                "action": "input_number.set_value",
-                "target": {"entity_id": "input_number.test_temp"},
-                "data": {"value": "{{ temperature }}"},
-            }
-        ],
+        "set_hvac_mode": SET_HVAC_MODE,
+        "set_temperature": SET_TEMPERATURE,
     }
 
     await async_setup_climate_config(hass, 1, style, base)
@@ -221,7 +230,12 @@ async def test_actions(hass: HomeAssistant, style: ConfigurationStyle) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
-    assert hass.states.get("input_boolean.test_hvac").state == "on"
+    await hass.async_block_till_done()
+
+    assert len(calls) >= 1
+    assert calls[-1].data["action"] == "set_hvac_mode"
+    assert calls[-1].data["caller"] == TEST_ENTITY_ID
+    assert calls[-1].data["hvac_mode"] == HVACMode.HEAT
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -229,34 +243,25 @@ async def test_actions(hass: HomeAssistant, style: ConfigurationStyle) -> None:
         {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_TEMPERATURE: 25},
         blocking=True,
     )
-    assert hass.states.get("input_number.test_temp").state == "25.0"
+    await hass.async_block_till_done()
+
+    assert calls[-1].data["action"] == "set_temperature"
+    assert calls[-1].data["caller"] == TEST_ENTITY_ID
+    assert float(calls[-1].data["temperature"]) == 25.0
 
 
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_optimistic_mode(hass: HomeAssistant, style: ConfigurationStyle) -> None:
     """Test optimistic mode when no state templates are defined."""
-    assert await async_setup_component(
-        hass, "input_boolean", {"input_boolean": {"test": {}}}
-    )
-
     base = {
         "name": TEST_OBJECT_ID,
         "hvac_modes": ["heat", "off"],
         "fan_modes": ["low", "high"],
-        "set_hvac_mode": [
-            {
-                "action": "input_boolean.turn_on",
-                "target": {"entity_id": "input_boolean.test"},
-            }
-        ],
-        "set_fan_mode": [
-            {
-                "action": "input_boolean.turn_on",
-                "target": {"entity_id": "input_boolean.test"},
-            }
-        ],
+        "set_hvac_mode": SET_HVAC_MODE,
+        "set_fan_mode": SET_FAN_MODE,
     }
 
     await async_setup_climate_config(hass, 1, style, base)
@@ -267,6 +272,8 @@ async def test_optimistic_mode(hass: HomeAssistant, style: ConfigurationStyle) -
         {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
+    await hass.async_block_till_done()
+
     state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
     assert state.state == HVACMode.HEAT
@@ -277,13 +284,16 @@ async def test_optimistic_mode(hass: HomeAssistant, style: ConfigurationStyle) -
         {ATTR_ENTITY_ID: TEST_ENTITY_ID, ATTR_FAN_MODE: "high"},
         blocking=True,
     )
+    await hass.async_block_till_done()
+
     state = hass.states.get(TEST_ENTITY_ID)
     assert state is not None
     assert state.attributes[ATTR_FAN_MODE] == "high"
 
 
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_invalid_hvac_mode_logs_and_sets_unknown(
     hass: HomeAssistant,
@@ -298,7 +308,7 @@ async def test_invalid_hvac_mode_logs_and_sets_unknown(
         "name": TEST_OBJECT_ID,
         "hvac_mode": "{{ states('sensor.mode') }}",
         "hvac_modes": ["heat", "off"],
-        "set_hvac_mode": [{"action": "script.turn_on"}],
+        "set_hvac_mode": SET_HVAC_MODE,
     }
 
     await async_setup_climate_config(hass, 1, style, base)
@@ -316,7 +326,8 @@ async def test_invalid_hvac_mode_logs_and_sets_unknown(
 
 
 @pytest.mark.parametrize(
-    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 async def test_invalid_hvac_action_logs_and_clears_attribute(
     hass: HomeAssistant,
@@ -333,7 +344,7 @@ async def test_invalid_hvac_action_logs_and_clears_attribute(
         "hvac_mode": "{{ states('sensor.mode') }}",
         "hvac_action": "{{ states('sensor.action') }}",
         "hvac_modes": ["heat", "off"],
-        "set_hvac_mode": [{"action": "script.turn_on"}],
+        "set_hvac_mode": SET_HVAC_MODE,
     }
 
     await async_setup_climate_config(hass, 1, style, base)
@@ -378,9 +389,6 @@ async def test_setup_config_entry(
 
     state = hass.states.get("climate.my_template_climate")
     assert state is not None
-    assert state.state == HVACMode.HEAT
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.5
-
     assert state == snapshot
 
 
