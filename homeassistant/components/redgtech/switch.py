@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from redgtech_api.api import RedgtechAuthError, RedgtechConnectionError
@@ -22,8 +21,6 @@ from .coordinator import (
 )
 
 PARALLEL_UPDATES = 0
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -74,23 +71,20 @@ class RedgtechSwitch(CoordinatorEntity[RedgtechDataUpdateCoordinator], SwitchEnt
                 new_state,
                 self.coordinator.access_token,
             )
-            await self.coordinator.async_refresh()
         except RedgtechAuthError as err:
-            _LOGGER.error(
-                "Failed to set switch state due to authentication error: %s", err
-            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_auth_error",
                 translation_placeholders={"integration_name": INTEGRATION_NAME},
             ) from err
         except RedgtechConnectionError as err:
-            _LOGGER.error("Connection error: %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_error",
                 translation_placeholders={"integration_name": INTEGRATION_NAME},
             ) from err
+
+        await self.coordinator.async_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
