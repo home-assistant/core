@@ -176,7 +176,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterButtonEntityDescription(
             key="WindowCoveringCalibrationMode",
             translation_key="calibration_mode",
-            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_category=EntityCategory.CONFIG,
         ),
         entity_class=WindowCoveringCalibrationModeButton,
         required_attributes=(clusters.WindowCovering.Attributes.Mode,),
