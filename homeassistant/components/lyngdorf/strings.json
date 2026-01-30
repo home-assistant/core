@@ -1,0 +1,28 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "manual": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "description": "hostname or ip",
+        "title": "Lyngdorf device connection"
+      },
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "description": "Choose a device to configure",
+        "title": "Discovered Lyngdorf Devices"
+      }
+    }
+  }
+}

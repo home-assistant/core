@@ -1,0 +1,17 @@
+{
+  "domain": "lyngdorf",
+  "name": "Lyngdorf",
+  "codeowners": ["@fishloa"],
+  "config_flow": true,
+  "dependencies": ["ssdp"],
+  "documentation": "https://www.home-assistant.io/integrations/lyngdorf",
+  "iot_class": "local_push",
+  "loggers": ["lyngdorf", "async_upnp_client"],
+  "requirements": ["lyngdorf==0.3.7"],
+  "ssdp": [
+    {
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+      "manufacturer": "Lyngdorf"
+    }
+  ]
+}
