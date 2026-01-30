@@ -894,7 +894,7 @@ fressnapftracker==0.2.1
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection[qr]==1.15.0
+fritzconnection[qr]==1.15.1
 
 # homeassistant.components.fyta
 fyta_cli==0.7.2
@@ -1077,7 +1077,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260128.1
+home-assistant-frontend==20260128.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.1.28
@@ -1379,7 +1379,7 @@ nextdns==5.0.0
 nhc==0.7.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.21.0
+nibe==2.22.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.1
@@ -1696,7 +1696,7 @@ pydeako==0.6.0
 pydeconz==120
 
 # homeassistant.components.dexcom
-pydexcom==0.2.3
+pydexcom==0.5.1
 
 # homeassistant.components.discovergy
 pydiscovergy==3.0.2
@@ -1854,6 +1854,9 @@ pylgnetcast==0.3.9
 
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.1
+
+# homeassistant.components.liebherr
+pyliebherrhomeapi==0.2.1
 
 # homeassistant.components.litejet
 pylitejet==0.6.3
@@ -2314,7 +2317,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.5.2
+renault-api==0.5.3
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
