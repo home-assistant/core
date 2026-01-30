@@ -248,7 +248,7 @@ async def test_microwave_oven(
     # SupportedWatts    from MicrowaveOvenControl cluster (1/96/6)
     # SelectedWattIndex from MicrowaveOvenControl cluster (1/96/7)
     matter_client.write_attribute.reset_mock()
-    state = hass.states.get("select.microwave_oven_power_level_w")
+    state = hass.states.get("select.mock_microwave_oven_power_level_w")
     assert state
     assert state.state == "1000"
     assert state.attributes["options"] == [
@@ -269,7 +269,7 @@ async def test_microwave_oven(
         "select",
         "select_option",
         {
-            "entity_id": "select.microwave_oven_power_level_w",
+            "entity_id": "select.mock_microwave_oven_power_level_w",
             "option": "900",
         },
         blocking=True,
