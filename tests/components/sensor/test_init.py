@@ -3107,7 +3107,6 @@ def test_device_class_converters_are_complete() -> None:
         SensorDeviceClass.IRRADIANCE,
         SensorDeviceClass.MOISTURE,
         SensorDeviceClass.MONETARY,
-        SensorDeviceClass.NITROGEN_MONOXIDE,
         SensorDeviceClass.NITROUS_OXIDE,
         SensorDeviceClass.PH,
         SensorDeviceClass.PM1,

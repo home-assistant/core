@@ -76,7 +76,7 @@ async def async_migrate_entities(
     def _update_entry(entry: RegistryEntry) -> dict[str, str] | None:
         """Fix unique_id of power binary_sensor entry."""
         if entry.domain == Platform.BINARY_SENSOR and ":" not in entry.unique_id:
-            if "_power" in entry.unique_id:
+            if entry.unique_id.endswith("_power"):
                 return {"new_unique_id": f"{coordinator.unique_id}_power"}
         return None
 
