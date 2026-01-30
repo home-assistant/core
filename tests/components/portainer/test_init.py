@@ -92,8 +92,6 @@ async def test_migration_v3_to_v4(
     entry.add_to_hass(hass)
     assert entry.version == 3
 
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
     endpoint_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, f"{entry.entry_id}_endpoint_1")},
