@@ -229,24 +229,16 @@ async def _set_credential_for_user(
     user_index: int,
     cred_type: int,
     cred_data: bytes,
-    cred_index: int | None,
+    credential_index: int,
+    operation: clusters.DoorLock.Enums.DataOperationTypeEnum,
 ) -> dict[str, Any]:
-    """Set a credential for a user.
+    """Set a credential for a user at a specific credential slot.
 
-    If cred_index is provided, modifies existing credential.
-    Otherwise adds a new credential.
+    Uses the given operation type (kAdd for new credentials, kModify for
+    existing ones) and writes credential data to the specified slot index.
 
     Returns a dict with 'status' (str) and 'credential_index' (int|None).
     """
-    if cred_index is not None:
-        operation = clusters.DoorLock.Enums.DataOperationTypeEnum.kModify
-        index = cred_index
-    else:
-        operation = clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd
-        index = 0  # Lock assigns the index for kAdd when we don't know it
-
-    # For kAdd we need to pass the actual slot index we found
-    # For kModify we use the existing credential index
     response = await matter_client.send_device_command(
         node_id=node_id,
         endpoint_id=endpoint_id,
@@ -254,7 +246,7 @@ async def _set_credential_for_user(
             operationType=operation,
             credential=clusters.DoorLock.Structs.CredentialStruct(
                 credentialType=cred_type,
-                credentialIndex=index,
+                credentialIndex=credential_index,
             ),
             credentialData=cred_data,
             userIndex=user_index,
@@ -708,7 +700,8 @@ async def _handle_pin_credential(
             user_index,
             pin_cred_type,
             pin_code.encode(),
-            existing_cred_index,
+            credential_index=existing_cred_index,
+            operation=clusters.DoorLock.Enums.DataOperationTypeEnum.kModify,
         )
     else:
         # Find available slot and add new credential
@@ -731,7 +724,8 @@ async def _handle_pin_credential(
             user_index,
             pin_cred_type,
             pin_code.encode(),
-            slot,
+            credential_index=slot,
+            operation=clusters.DoorLock.Enums.DataOperationTypeEnum.kAdd,
         )
         if result["status"] != "success":
             raise _CredentialSetError(result["status"])
