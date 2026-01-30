@@ -600,6 +600,16 @@ class AnthropicBaseLLMEntity(Entity):
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):
             raise TypeError("First message must be a system message")
+
+        # System prompt with caching enabled
+        system_prompt: list[TextBlockParam] = [
+            TextBlockParam(
+                type="text",
+                text=system.content,
+                cache_control={"type": "ephemeral"},
+            )
+        ]
+
         messages = _convert_content(chat_log.content[1:])
 
         model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
@@ -608,7 +618,7 @@ class AnthropicBaseLLMEntity(Entity):
             model=model,
             messages=messages,
             max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
-            system=system.content,
+            system=system_prompt,
             stream=True,
         )
 
@@ -695,10 +705,6 @@ class AnthropicBaseLLMEntity(Entity):
                     type="auto",
                 )
 
-                if isinstance(model_args["system"], str):
-                    model_args["system"] = [
-                        TextBlockParam(type="text", text=model_args["system"])
-                    ]
                 model_args["system"].append(  # type: ignore[union-attr]
                     TextBlockParam(
                         type="text",
