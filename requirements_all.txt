@@ -1011,7 +1011,7 @@ freebox-api==1.3.0
 freesms==0.2.0
 
 # homeassistant.components.fressnapf_tracker
-fressnapftracker==0.2.1
+fressnapftracker==0.2.2
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
