@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from mastodon.Mastodon import MastodonAPIError, MediaAttachment
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mastodon.const import (
     ATTR_CONTENT_WARNING,
@@ -15,7 +16,10 @@ from homeassistant.components.mastodon.const import (
     ATTR_VISIBILITY,
     DOMAIN,
 )
-from homeassistant.components.mastodon.services import SERVICE_POST
+from homeassistant.components.mastodon.services import (
+    SERVICE_ACCOUNT_LOOKUP,
+    SERVICE_POST,
+)
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -23,6 +27,58 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+
+
+async def test_account_lookup_success(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the account_lookup service successfully returns account data."""
+    await setup_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ACCOUNT_LOOKUP,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            "account_name": "@trwnh@mastodon.social",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == snapshot
+    mock_mastodon_client.account_lookup.assert_called_once_with(
+        acct="@trwnh@mastodon.social"
+    )
+
+
+async def test_account_lookup_failures(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the account_lookup service handles API errors."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Test API error (this is the only error type currently caught by the service)
+    mock_mastodon_client.account_lookup.side_effect = MastodonAPIError("API error")
+    with pytest.raises(
+        ServiceValidationError,
+        match='Unable to get account "@test@mastodon.social"',
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ACCOUNT_LOOKUP,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                "account_name": "@test@mastodon.social",
+            },
+            blocking=True,
+            return_response=True,
+        )
 
 
 @pytest.mark.parametrize(

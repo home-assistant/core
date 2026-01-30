@@ -32,6 +32,9 @@
     }
   },
   "services": {
+    "account_lookup": {
+      "service": "mdi:account-search"
+    },
     "post": {
       "service": "mdi:message-text"
     }
