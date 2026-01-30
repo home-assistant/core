@@ -4,6 +4,13 @@ To update, run python3 -m script.hassfest
 """
 
 LABS_PREVIEW_FEATURES = {
+    "analytics": {
+        "snapshots": {
+            "feedback_url": "https://forms.gle/GqvRmgmghSDco8M46",
+            "learn_more_url": "",
+            "report_issue_url": "https://github.com/OHF-Device-Database/device-database/issues/new",
+        },
+    },
     "automation": {
         "new_triggers_conditions": {
             "feedback_url": "https://forms.gle/fWFZqf5MzuwWTsCH8",
