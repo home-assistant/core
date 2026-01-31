@@ -1401,7 +1401,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
@@ -1564,7 +1564,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
@@ -1781,7 +1781,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
@@ -2109,7 +2109,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
@@ -2661,7 +2661,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
@@ -2900,7 +2900,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
@@ -4210,7 +4210,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
@@ -5070,7 +5070,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
@@ -5452,7 +5452,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
@@ -6112,7 +6112,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
@@ -6587,7 +6587,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
@@ -7204,7 +7204,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
@@ -9748,6 +9748,63 @@
     'state': '60.0',
   })
 # ---
+# name: test_sensors[resideo_x2s_thermostat][sensor.x2s_smart_thermostat_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.x2s_smart_thermostat_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ThermostatLocalTemperature-513-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[resideo_x2s_thermostat][sensor.x2s_smart_thermostat_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'X2S Smart Thermostat Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.x2s_smart_thermostat_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.55',
+  })
+# ---
 # name: test_sensors[room_airconditioner][sensor.room_airconditioner_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -11768,7 +11825,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
@@ -13046,7 +13103,7 @@
     'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,

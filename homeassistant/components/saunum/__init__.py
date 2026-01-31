@@ -44,7 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator = entry.runtime_data
-        coordinator.client.close()
+        await entry.runtime_data.client.async_close()
 
     return unload_ok

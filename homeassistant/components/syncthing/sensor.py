@@ -83,6 +83,7 @@ class FolderSensor(SensorEntity):
         "needTotalItems": "need_total_items",
         "pullErrors": "pull_errors",
         "state": "state",
+        "stateChanged": "state_changed",
     }
 
     def __init__(self, syncthing, server_id, folder_id, folder_label, version):
