@@ -6,7 +6,6 @@ from abc import abstractmethod
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
 from typing import Any
 
 from pyportainer import Portainer
@@ -35,7 +34,7 @@ from .coordinator import (
 )
 from .entity import PortainerContainerEntity, PortainerEndpointEntity
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -23,6 +23,8 @@ from .entity import (
     PortainerEndpointEntity,
 )
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class PortainerContainerBinarySensorEntityDescription(BinarySensorEntityDescription):
