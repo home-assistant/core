@@ -41,10 +41,7 @@ async def test_dynamic_entities(
         )
         await hass.async_block_till_done()
 
-    assert (
-        "00:00:00:00:00:02"
-        in mock_config_entry.runtime_data.unsuccessful_configured_devices
-    )
+    assert "00:00:00:00:00:02" in mock_config_entry.runtime_data.incomplete_devices
 
     eheimdigital_hub_mock.return_value.devices[
         "00:00:00:00:00:02"
@@ -52,7 +49,7 @@ async def test_dynamic_entities(
 
     await mock_config_entry.runtime_data._async_receive_callback()
 
-    assert len(mock_config_entry.runtime_data.unsuccessful_configured_devices) == 0
+    assert len(mock_config_entry.runtime_data.incomplete_devices) == 0
     assert hass.states.get("number.mock_heater_night_temperature_offset").state == str(
         eheimdigital_hub_mock.return_value.devices[
             "00:00:00:00:00:02"

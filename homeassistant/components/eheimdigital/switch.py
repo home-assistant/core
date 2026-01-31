@@ -5,7 +5,6 @@ from typing import Any, override
 from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.filter import EheimDigitalFilter
-from eheimdigital.types import EheimDigitalDataMissingError
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -27,23 +26,15 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
-        devices: dict[str, EheimDigitalDevice],
-    ) -> dict[str, bool]:
+        device_address: dict[str, EheimDigitalDevice],
+    ) -> None:
         """Set up the switch entities for one or multiple devices."""
-        return_value: dict[str, bool] = {}
         entities: list[SwitchEntity] = []
-        for device in devices.values():
-            try:
-                if isinstance(device, (EheimDigitalClassicVario, EheimDigitalFilter)):
-                    entities.append(EheimDigitalFilterSwitch(coordinator, device))
-            except EheimDigitalDataMissingError:
-                return_value[device.mac_address] = False
-            else:
-                if device.mac_address not in return_value:
-                    return_value[device.mac_address] = True
+        for device in device_address.values():
+            if isinstance(device, (EheimDigitalClassicVario, EheimDigitalFilter)):
+                entities.append(EheimDigitalFilterSwitch(coordinator, device))  # noqa: PERF401
 
-        async_add_entities(entities, update_before_add=True)
-        return return_value
+        async_add_entities(entities)
 
     coordinator.add_platform_callback(async_setup_device_entities)
     async_setup_device_entities(coordinator.hub.devices)
