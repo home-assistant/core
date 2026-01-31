@@ -58,15 +58,15 @@ async def test_state_entity_device_snapshots(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_init")
+@pytest.mark.usefixtures("mock_auth_client")
 async def test_not_added_when_no_led(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_api_client_coordinator: MagicMock,
+    mock_api_client_init: MagicMock,
 ) -> None:
     """Test light entity is created correctly."""
-    mock_api_client_coordinator.get_tracker.return_value = TRACKER_NO_LED
+    mock_api_client_init.get_tracker.return_value = TRACKER_NO_LED
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -149,16 +149,17 @@ async def test_turn_off(
         "not_charging",
     ],
 )
-@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_init")
+@pytest.mark.usefixtures("mock_auth_client")
 async def test_turn_on_led_not_activatable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_api_client_init: MagicMock,
     mock_api_client_coordinator: MagicMock,
     activatable_parameter: str,
 ) -> None:
     """Test turning on the light when LED is not activatable raises."""
     setattr(
-        mock_api_client_coordinator.get_tracker.return_value.led_activatable,
+        mock_api_client_init.get_tracker.return_value.led_activatable,
         activatable_parameter,
         False,
     )

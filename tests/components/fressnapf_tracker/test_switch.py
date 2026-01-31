@@ -57,15 +57,15 @@ async def test_state_entity_device_snapshots(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_init")
+@pytest.mark.usefixtures("mock_auth_client")
 async def test_not_added_when_no_energy_saving_mode(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_api_client_coordinator: MagicMock,
+    mock_api_client_init: MagicMock,
 ) -> None:
     """Test switch entity is created correctly."""
-    mock_api_client_coordinator.get_tracker.return_value = TRACKER_NO_ENERGY_SAVING_MODE
+    mock_api_client_init.get_tracker.return_value = TRACKER_NO_ENERGY_SAVING_MODE
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

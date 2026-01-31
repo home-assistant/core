@@ -9,6 +9,7 @@ from fressnapftracker import (
     FressnapfTrackerAuthenticationError,
     FressnapfTrackerError,
     FressnapfTrackerInvalidTrackerResponseError,
+    Tracker,
 )
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -34,8 +35,8 @@ PLATFORMS: list[Platform] = [
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _tracker_is_valid(hass: HomeAssistant, device: Device) -> bool:
-    """Test if the tracker returns valid data.
+async def _get_valid_tracker(hass: HomeAssistant, device: Device) -> Tracker | None:
+    """Test if the tracker returns valid data and return it.
 
     Malformed data might indicate the tracker is broken or hasn't been properly registered with the app.
     """
@@ -45,7 +46,7 @@ async def _tracker_is_valid(hass: HomeAssistant, device: Device) -> bool:
         client=get_async_client(hass),
     )
     try:
-        await client.get_tracker()
+        return await client.get_tracker()
     except FressnapfTrackerInvalidTrackerResponseError:
         _LOGGER.warning(
             "Tracker with serialnumber %s is invalid. Consider removing it via the App",
@@ -64,10 +65,9 @@ async def _tracker_is_valid(hass: HomeAssistant, device: Device) -> bool:
                 "tracker_id": device.serialnumber,
             },
         )
-        return False
+        return None
     except FressnapfTrackerError as err:
         raise ConfigEntryNotReady(err) from err
-    return True
 
 
 async def async_setup_entry(
@@ -88,14 +88,15 @@ async def async_setup_entry(
 
     coordinators: list[FressnapfTrackerDataUpdateCoordinator] = []
     for device in devices:
-        if not await _tracker_is_valid(hass, device):
+        tracker = await _get_valid_tracker(hass, device)
+        if tracker is None:
             continue
         coordinator = FressnapfTrackerDataUpdateCoordinator(
             hass,
             entry,
             device,
+            initial_data=tracker,
         )
-        await coordinator.async_config_entry_first_refresh()
         coordinators.append(coordinator)
 
     entry.runtime_data = coordinators

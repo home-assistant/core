@@ -34,9 +34,7 @@ def mock_api_client_malformed_tracker() -> Generator[MagicMock]:
         yield client
 
 
-@pytest.mark.usefixtures(
-    "mock_auth_client", "mock_api_client_init", "mock_api_client_coordinator"
-)
+@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_init")
 async def test_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -50,9 +48,7 @@ async def test_setup_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.usefixtures(
-    "mock_auth_client", "mock_api_client_init", "mock_api_client_coordinator"
-)
+@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_init")
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -71,26 +67,7 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_init")
-async def test_setup_entry_coordinator_api_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_api_client_coordinator: MagicMock,
-) -> None:
-    """Test setup retries when API returns error during coordinator update."""
-    mock_config_entry.add_to_hass(hass)
-
-    mock_api_client_coordinator.get_tracker = AsyncMock(
-        side_effect=FressnapfTrackerError("API Error")
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.usefixtures("mock_auth_client", "mock_api_client_coordinator")
+@pytest.mark.usefixtures("mock_auth_client")
 async def test_setup_entry_tracker_is_valid_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
