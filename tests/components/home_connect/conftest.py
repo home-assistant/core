@@ -401,7 +401,10 @@ def mock_client(
                 return ArrayOfCommands.from_dict(
                     MOCK_AVAILABLE_COMMANDS[appliance_.type]
                 )
-        return ArrayOfCommands([])
+        raise HomeConnectApiError(
+            "missing available commands at mock",
+            "Mock didn't include available commands for appliance with id {ha_id}",
+        )
 
     mock.start_program = AsyncMock(
         side_effect=_get_set_program_side_effect(

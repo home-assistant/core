@@ -447,53 +447,68 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         events = {}
         options = {}
         if appliance.type in APPLIANCES_WITH_PROGRAMS:
-            all_programs = await self.client.get_all_programs(appliance.ha_id)
-            programs.extend(all_programs.programs)
-            current_program_key = None
-            program_options = None
-            for program, event_key in (
-                (
-                    all_programs.selected,
-                    EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
-                ),
-                (
-                    all_programs.active,
-                    EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-                ),
-            ):
-                if program and program.key:
-                    events[event_key] = Event(
-                        event_key,
-                        event_key.value,
-                        0,
-                        "",
-                        "",
-                        program.key,
-                    )
-                    current_program_key = program.key
-                    program_options = program.options
-            if current_program_key:
-                options = await self.get_options_definitions(current_program_key)
-                for option in program_options or []:
-                    option_event_key = EventKey(option.key)
-                    events[option_event_key] = Event(
-                        option_event_key,
-                        option.key,
-                        0,
-                        "",
-                        "",
-                        option.value,
-                        option.name,
-                        display_value=option.display_value,
-                        unit=option.unit,
-                    )
+            try:
+                all_programs = await self.client.get_all_programs(appliance.ha_id)
+            except TooManyRequestsError:
+                raise
+            except HomeConnectError as error:
+                _LOGGER.debug(
+                    "Error fetching programs for %s: %s",
+                    appliance.ha_id,
+                    error,
+                )
+            else:
+                programs.extend(all_programs.programs)
+                current_program_key = None
+                program_options = None
+                for program, event_key in (
+                    (
+                        all_programs.selected,
+                        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                    ),
+                    (
+                        all_programs.active,
+                        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                    ),
+                ):
+                    if program and program.key:
+                        events[event_key] = Event(
+                            event_key,
+                            event_key.value,
+                            0,
+                            "",
+                            "",
+                            program.key,
+                        )
+                        current_program_key = program.key
+                        program_options = program.options
+                if current_program_key:
+                    options = await self.get_options_definitions(current_program_key)
+                    for option in program_options or []:
+                        option_event_key = EventKey(option.key)
+                        events[option_event_key] = Event(
+                            option_event_key,
+                            option.key,
+                            0,
+                            "",
+                            "",
+                            option.value,
+                            option.name,
+                            display_value=option.display_value,
+                            unit=option.unit,
+                        )
 
-        commands = {
-            command.key
-            for command in (
-                await self.client.get_available_commands(appliance.ha_id)
-            ).commands
-        }
+        try:
+            commands = {
+                command.key
+                for command in (
+                    await self.client.get_available_commands(appliance.ha_id)
+                ).commands
+            }
+        except TooManyRequestsError:
+            raise
+        except HomeConnectError:
+            commands = set()
 
         self.data.update(
             HomeConnectApplianceData(
