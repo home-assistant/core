@@ -1,5 +1,7 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted lights.",
+    "condition_behavior_name": "Behavior",
     "field_brightness_description": "Number indicating brightness, where 0 turns the light off, 1 is the minimum brightness, and 255 is the maximum brightness.",
     "field_brightness_name": "Brightness value",
     "field_brightness_pct_description": "Number indicating the percentage of full brightness, where 0 turns the light off, 1 is the minimum brightness, and 100 is the maximum brightness.",
@@ -34,7 +36,31 @@
     "field_white_name": "White",
     "field_xy_color_description": "Color in XY-format. A list of two decimal numbers between 0 and 1.",
     "field_xy_color_name": "XY-color",
-    "section_advanced_fields_name": "Advanced options"
+    "section_advanced_fields_name": "Advanced options",
+    "trigger_behavior_description": "The behavior of the targeted lights to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_off": {
+      "description": "Tests if one or more lights are off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::light::common::condition_behavior_description%]",
+          "name": "[%key:component::light::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Light is off"
+    },
+    "is_on": {
+      "description": "Tests if one or more lights are on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::light::common::condition_behavior_description%]",
+          "name": "[%key:component::light::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Light is on"
+    }
   },
   "device_automation": {
     "action_type": {
@@ -284,10 +310,43 @@
         "yellowgreen": "Yellow green"
       }
     },
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "flash": {
       "options": {
         "long": "Long",
         "short": "Short"
+      }
+    },
+    "number_or_entity": {
+      "choices": {
+        "entity": "Entity",
+        "number": "Number"
+      }
+    },
+    "state": {
+      "options": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    },
+    "trigger_threshold_type": {
+      "options": {
+        "above": "Above a value",
+        "below": "Below a value",
+        "between": "In a range",
+        "outside": "Outside a range"
       }
     }
   },
@@ -462,5 +521,63 @@
       }
     }
   },
-  "title": "Light"
+  "title": "Light",
+  "triggers": {
+    "brightness_changed": {
+      "description": "Triggers after the brightness of one or more lights changes.",
+      "fields": {
+        "above": {
+          "description": "Trigger when the target brightness is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Trigger when the target brightness is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Light brightness changed"
+    },
+    "brightness_crossed_threshold": {
+      "description": "Triggers after the brightness of one or more lights crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::light::common::trigger_behavior_description%]",
+          "name": "[%key:component::light::common::trigger_behavior_name%]"
+        },
+        "lower_limit": {
+          "description": "Lower threshold limit.",
+          "name": "Lower threshold"
+        },
+        "threshold_type": {
+          "description": "Type of threshold crossing to trigger on.",
+          "name": "Threshold type"
+        },
+        "upper_limit": {
+          "description": "Upper threshold limit.",
+          "name": "Upper threshold"
+        }
+      },
+      "name": "Light brightness crossed threshold"
+    },
+    "turned_off": {
+      "description": "Triggers after one or more lights turn off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::light::common::trigger_behavior_description%]",
+          "name": "[%key:component::light::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Light turned off"
+    },
+    "turned_on": {
+      "description": "Triggers after one or more lights turn on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::light::common::trigger_behavior_description%]",
+          "name": "[%key:component::light::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Light turned on"
+    }
+  }
 }

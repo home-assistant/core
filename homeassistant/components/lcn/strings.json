@@ -94,28 +94,6 @@
     }
   },
   "services": {
-    "address_to_device_id": {
-      "description": "Converts an LCN address into a device ID.",
-      "fields": {
-        "host": {
-          "description": "Host name as given in the integration panel.",
-          "name": "Host name"
-        },
-        "id": {
-          "description": "Module or group number of the target.",
-          "name": "Module or group ID"
-        },
-        "segment_id": {
-          "description": "Segment number of the target.",
-          "name": "Segment ID"
-        },
-        "type": {
-          "description": "Module type of the target.",
-          "name": "Type"
-        }
-      },
-      "name": "Address to device ID"
-    },
     "dyn_text": {
       "description": "Sends dynamic text to LCN-GTxD displays.",
       "fields": {

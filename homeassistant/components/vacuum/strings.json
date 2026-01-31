@@ -1,4 +1,62 @@
 {
+  "common": {
+    "condition_behavior_description": "How the state should match on the targeted vacuum cleaners.",
+    "condition_behavior_name": "Behavior",
+    "trigger_behavior_description": "The behavior of the targeted vacuum cleaners to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_cleaning": {
+      "description": "Tests if one or more vacuum cleaners are cleaning.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
+          "name": "[%key:component::vacuum::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Vacuum cleaner is cleaning"
+    },
+    "is_docked": {
+      "description": "Tests if one or more vacuum cleaners are docked.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
+          "name": "[%key:component::vacuum::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Vacuum cleaner is docked"
+    },
+    "is_encountering_an_error": {
+      "description": "Tests if one or more vacuum cleaners are encountering an error.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
+          "name": "[%key:component::vacuum::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Vacuum cleaner is encountering an error"
+    },
+    "is_paused": {
+      "description": "Tests if one or more vacuum cleaners are paused.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
+          "name": "[%key:component::vacuum::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Vacuum cleaner is paused"
+    },
+    "is_returning": {
+      "description": "Tests if one or more vacuum cleaners are returning to the dock.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::condition_behavior_description%]",
+          "name": "[%key:component::vacuum::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Vacuum cleaner is returning"
+    }
+  },
   "device_automation": {
     "action_type": {
       "clean": "Let {entity_name} clean",
@@ -28,6 +86,21 @@
         "on": "[%key:common::state::on%]",
         "paused": "[%key:common::state::paused%]",
         "returning": "Returning to dock"
+      }
+    }
+  },
+  "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
       }
     }
   },
@@ -97,5 +170,57 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Vacuum"
+  "title": "Vacuum",
+  "triggers": {
+    "docked": {
+      "description": "Triggers after one or more vacuums have returned to dock.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
+          "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Vacuum returned to dock"
+    },
+    "errored": {
+      "description": "Triggers after one or more vacuums encounter an error.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
+          "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Vacuum encountered an error"
+    },
+    "paused_cleaning": {
+      "description": "Triggers after one or more vacuums pause cleaning.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
+          "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Vacuum cleaner paused cleaning"
+    },
+    "started_cleaning": {
+      "description": "Triggers after one or more vacuums start cleaning.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
+          "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Vacuum cleaner started cleaning"
+    },
+    "started_returning": {
+      "description": "Triggers after one or more vacuums start returning to dock.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::vacuum::common::trigger_behavior_description%]",
+          "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Vacuum cleaner started returning to dock"
+    }
+  }
 }

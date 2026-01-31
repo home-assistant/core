@@ -1,6 +1,6 @@
 """Test Roborock Button platform."""
 
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import Mock
 
 import pytest
 from roborock import RoborockException
@@ -11,25 +11,28 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
+from .conftest import FakeDevice
+
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def bypass_api_client_get_scenes_fixture(bypass_api_fixture) -> None:
+def get_scenes_failure_fixture(fake_vacuum: FakeDevice) -> None:
     """Fixture to raise when getting scenes."""
-    with (
-        patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_scenes",
-            side_effect=RoborockException(),
-        ),
-    ):
-        yield
+    fake_vacuum.v1_properties.routines.get_routines.side_effect = RoborockException
 
 
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Fixture to set platforms used in the test."""
     return [Platform.BUTTON]
+
+
+@pytest.fixture(name="consumeables_trait", autouse=True)
+def consumeables_trait_fixture(fake_vacuum: FakeDevice) -> Mock:
+    """Get the fake vacuum device command trait for asserting that commands happened."""
+    assert fake_vacuum.v1_properties is not None
+    return fake_vacuum.v1_properties.consumables
 
 
 @pytest.mark.parametrize(
@@ -45,10 +48,10 @@ def platforms() -> list[Platform]:
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_update_success(
     hass: HomeAssistant,
-    bypass_api_fixture,
+    bypass_api_client_fixture: None,
     setup_entry: MockConfigEntry,
     entity_id: str,
-    mock_send_message: Mock,
+    consumeables_trait: Mock,
 ) -> None:
     """Test pressing the button entities."""
     # Ensure that the entity exist, as these test can pass even if there is no entity.
@@ -59,7 +62,7 @@ async def test_update_success(
         blocking=True,
         target={"entity_id": entity_id},
     )
-    assert mock_send_message.assert_called_once
+    assert consumeables_trait.reset_consumable.assert_called_once
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
 
 
@@ -71,15 +74,16 @@ async def test_update_success(
 )
 @pytest.mark.freeze_time("2023-10-30 08:50:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize("send_message_side_effect", [RoborockTimeout])
 async def test_update_failure(
     hass: HomeAssistant,
-    bypass_api_fixture,
+    bypass_api_client_fixture: None,
     setup_entry: MockConfigEntry,
     entity_id: str,
-    mock_send_message: Mock,
+    consumeables_trait: Mock,
 ) -> None:
     """Test failure while pressing the button entity."""
+    consumeables_trait.reset_consumable.side_effect = RoborockTimeout
+
     # Ensure that the entity exist, as these test can pass even if there is no entity.
     assert hass.states.get(entity_id).state == "unknown"
     with pytest.raises(
@@ -91,7 +95,7 @@ async def test_update_failure(
             blocking=True,
             target={"entity_id": entity_id},
         )
-    assert mock_send_message.assert_called_once
+    assert consumeables_trait.reset_consumable.assert_called_once
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
 
 
@@ -105,9 +109,10 @@ async def test_update_failure(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_get_button_routines_failure(
     hass: HomeAssistant,
-    bypass_api_client_get_scenes_fixture,
+    get_scenes_failure_fixture: None,
     setup_entry: MockConfigEntry,
     entity_id: str,
+    fake_vacuum: FakeDevice,
 ) -> None:
     """Test that if routine retrieval fails, no entity is being created."""
     # Ensure that the entity does not exist
@@ -125,22 +130,23 @@ async def test_get_button_routines_failure(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_press_routine_button_success(
     hass: HomeAssistant,
-    bypass_api_fixture,
+    bypass_api_client_fixture: None,
     setup_entry: MockConfigEntry,
     entity_id: str,
     routine_id: int,
+    fake_vacuum: FakeDevice,
 ) -> None:
     """Test pressing the button entities."""
-    with patch(
-        "homeassistant.components.roborock.RoborockApiClient.execute_scene"
-    ) as mock_execute_scene:
-        await hass.services.async_call(
-            "button",
-            SERVICE_PRESS,
-            blocking=True,
-            target={"entity_id": entity_id},
-        )
-    mock_execute_scene.assert_called_once_with(ANY, routine_id)
+    await hass.services.async_call(
+        "button",
+        SERVICE_PRESS,
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+
+    fake_vacuum.v1_properties.routines.execute_routine.assert_called_once_with(
+        routine_id
+    )
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"
 
 
@@ -154,24 +160,22 @@ async def test_press_routine_button_success(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_press_routine_button_failure(
     hass: HomeAssistant,
-    bypass_api_fixture,
+    bypass_api_client_fixture: None,
     setup_entry: MockConfigEntry,
     entity_id: str,
     routine_id: int,
+    fake_vacuum: FakeDevice,
 ) -> None:
     """Test failure while pressing the button entity."""
-    with (
-        patch(
-            "homeassistant.components.roborock.RoborockApiClient.execute_scene",
-            side_effect=RoborockException,
-        ) as mock_execute_scene,
-        pytest.raises(HomeAssistantError, match="Error while calling execute_scene"),
-    ):
+    fake_vacuum.v1_properties.routines.execute_routine.side_effect = RoborockException
+    with pytest.raises(HomeAssistantError, match="Error while calling execute_scene"):
         await hass.services.async_call(
             "button",
             SERVICE_PRESS,
             blocking=True,
             target={"entity_id": entity_id},
         )
-    mock_execute_scene.assert_called_once_with(ANY, routine_id)
+    fake_vacuum.v1_properties.routines.execute_routine.assert_called_once_with(
+        routine_id
+    )
     assert hass.states.get(entity_id).state == "2023-10-30T08:50:00+00:00"

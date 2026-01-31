@@ -17,15 +17,9 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_CHAT_MODEL,
-    DEFAULT_CONVERSATION_NAME,
-    DOMAIN,
-    LOGGER,
-    RECOMMENDED_CHAT_MODEL,
-)
+from .const import DEFAULT_CONVERSATION_NAME, DOMAIN, LOGGER
 
-PLATFORMS = (Platform.CONVERSATION,)
+PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type AnthropicConfigEntry = ConfigEntry[anthropic.AsyncClient]
@@ -43,14 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
         partial(anthropic.AsyncAnthropic, api_key=entry.data[CONF_API_KEY])
     )
     try:
-        # Use model from first conversation subentry for validation
-        subentries = list(entry.subentries.values())
-        if subentries:
-            model_id = subentries[0].data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
-        else:
-            model_id = RECOMMENDED_CHAT_MODEL
-        model = await client.models.retrieve(model_id=model_id, timeout=10.0)
-        LOGGER.debug("Anthropic model: %s", model.display_name)
+        await client.models.list(timeout=10.0)
     except anthropic.AuthenticationError as err:
         LOGGER.error("Invalid API key: %s", err)
         return False

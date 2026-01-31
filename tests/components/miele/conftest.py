@@ -2,9 +2,9 @@
 
 from collections.abc import AsyncGenerator, Generator
 import time
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pymiele import MieleAction, MieleDevices
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -14,6 +14,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import JsonValueType
 
 from . import get_actions_callback, get_data_callback
 from .const import CLIENT_ID, CLIENT_SECRET
@@ -79,7 +80,7 @@ def load_device_file() -> str:
 
 
 @pytest.fixture
-async def device_fixture(hass: HomeAssistant, load_device_file: str) -> MieleDevices:
+async def device_fixture(hass: HomeAssistant, load_device_file: str) -> dict[str, Any]:
     """Fixture for device."""
     return await async_load_json_object_fixture(hass, load_device_file, DOMAIN)
 
@@ -91,7 +92,7 @@ def load_action_file() -> str:
 
 
 @pytest.fixture
-async def action_fixture(hass: HomeAssistant, load_action_file: str) -> MieleAction:
+async def action_fixture(hass: HomeAssistant, load_action_file: str) -> dict[str, Any]:
     """Fixture for action."""
     return await async_load_json_object_fixture(hass, load_action_file, DOMAIN)
 
@@ -103,9 +104,25 @@ def load_programs_file() -> str:
 
 
 @pytest.fixture
-async def programs_fixture(hass: HomeAssistant, load_programs_file: str) -> list[dict]:
+async def programs_fixture(
+    hass: HomeAssistant, load_programs_file: str
+) -> JsonValueType:
     """Fixture for available programs."""
     return load_json_value_fixture(load_programs_file, DOMAIN)
+
+
+@pytest.fixture(scope="package")
+def load_filling_levels_file() -> str:
+    """Fixture for loading filling levels file."""
+    return "filling_levels.json"
+
+
+@pytest.fixture
+async def filling_levels_fixture(
+    hass: HomeAssistant, load_filling_levels_file: str
+) -> JsonValueType:
+    """Fixture for filling levels."""
+    return load_json_value_fixture(load_filling_levels_file, DOMAIN)
 
 
 @pytest.fixture
@@ -113,6 +130,7 @@ def mock_miele_client(
     device_fixture,
     action_fixture,
     programs_fixture,
+    filling_levels_fixture,
 ) -> Generator[MagicMock]:
     """Mock a Miele client."""
 
@@ -124,6 +142,7 @@ def mock_miele_client(
 
         client.get_devices.return_value = device_fixture
         client.get_actions.return_value = action_fixture
+        client.get_filling_levels.return_value = filling_levels_fixture
         client.get_programs.return_value = programs_fixture
         client.set_program.return_value = None
 
@@ -141,7 +160,7 @@ async def setup_platform(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     platforms,
-) -> AsyncGenerator[None]:
+) -> AsyncGenerator[MockConfigEntry]:
     """Set up one or all platforms."""
 
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
@@ -169,7 +188,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 async def push_data_and_actions(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
-    device_fixture: MieleDevices,
+    device_fixture: dict[str, Any],
 ) -> None:
     """Fixture to push data and actions through mock."""
 

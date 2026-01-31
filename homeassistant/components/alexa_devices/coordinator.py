@@ -16,11 +16,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import _LOGGER, CONF_LOGIN_DATA, DOMAIN
 
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = 300
 
 type AmazonConfigEntry = ConfigEntry[AmazonDevicesCoordinator]
 
@@ -43,6 +44,9 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             name=entry.title,
             config_entry=entry,
             update_interval=timedelta(seconds=SCAN_INTERVAL),
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=SCAN_INTERVAL, immediate=False
+            ),
         )
         self.api = AmazonEchoApi(
             session,
@@ -55,7 +59,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
         try:
-            await self.api.login_mode_stored_data()
+            await self.api.login.login_mode_stored_data()
             data = await self.api.get_devices_data()
         except CannotConnect as err:
             raise UpdateFailed(

@@ -26,6 +26,7 @@ from .util import (
     ApplicationType,
     FirmwareInfo,
     ResetTarget,
+    async_firmware_flashing_context,
     async_flash_silabs_firmware,
 )
 
@@ -86,7 +87,8 @@ class BaseFirmwareUpdateEntity(
 
     # Subclasses provide the mapping between firmware types and entity descriptions
     entity_description: FirmwareUpdateEntityDescription
-    bootloader_reset_methods: list[ResetTarget] = []
+    BOOTLOADER_RESET_METHODS: list[ResetTarget]
+    APPLICATION_PROBE_METHODS: list[tuple[ApplicationType, int]]
 
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
@@ -273,15 +275,18 @@ class BaseFirmwareUpdateEntity(
         )
 
         try:
-            firmware_info = await async_flash_silabs_firmware(
-                hass=self.hass,
-                device=self._current_device,
-                fw_data=fw_data,
-                expected_installed_firmware_type=self.entity_description.expected_firmware_type,
-                bootloader_reset_methods=self.bootloader_reset_methods,
-                progress_callback=self._update_progress,
-                domain=self._config_entry.domain,
-            )
+            async with async_firmware_flashing_context(
+                self.hass, self._current_device, self._config_entry.domain
+            ):
+                firmware_info = await async_flash_silabs_firmware(
+                    hass=self.hass,
+                    device=self._current_device,
+                    fw_data=fw_data,
+                    expected_installed_firmware_type=self.entity_description.expected_firmware_type,
+                    bootloader_reset_methods=self.BOOTLOADER_RESET_METHODS,
+                    application_probe_methods=self.APPLICATION_PROBE_METHODS,
+                    progress_callback=self._update_progress,
+                )
         finally:
             self._attr_in_progress = False
             self.async_write_ha_state()

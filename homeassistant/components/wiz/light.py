@@ -80,6 +80,9 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             color_modes.add(RGB_WHITE_CHANNELS_COLOR_MODE[bulb_type.white_channels])
         if features.color_tmp:
             color_modes.add(ColorMode.COLOR_TEMP)
+            kelvin = bulb_type.kelvin_range
+            self._attr_max_color_temp_kelvin = kelvin.max
+            self._attr_min_color_temp_kelvin = kelvin.min
         if features.brightness:
             color_modes.add(ColorMode.BRIGHTNESS)
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
@@ -87,10 +90,6 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             # If the light supports only a single color mode, set it now
             self._attr_color_mode = next(iter(self._attr_supported_color_modes))
         self._attr_effect_list = wiz_data.scenes
-        if bulb_type.bulb_type != BulbClass.DW:
-            kelvin = bulb_type.kelvin_range
-            self._attr_max_color_temp_kelvin = kelvin.max
-            self._attr_min_color_temp_kelvin = kelvin.min
         if bulb_type.features.effect:
             self._attr_supported_features = LightEntityFeature.EFFECT
         self._async_update_attrs()
@@ -99,10 +98,13 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         state = self._device.state
-        color_modes = self.supported_color_modes
-        assert color_modes is not None
+
         if (brightness := state.get_brightness()) is not None:
             self._attr_brightness = max(0, min(255, brightness))
+
+        color_modes = self.supported_color_modes
+        assert color_modes is not None
+
         if ColorMode.COLOR_TEMP in color_modes and (
             color_temp := state.get_colortemp()
         ):
@@ -111,12 +113,19 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         elif (
             ColorMode.RGBWW in color_modes and (rgbww := state.get_rgbww()) is not None
         ):
-            self._attr_rgbww_color = rgbww
             self._attr_color_mode = ColorMode.RGBWW
+            self._attr_rgbww_color = rgbww
         elif ColorMode.RGBW in color_modes and (rgbw := state.get_rgbw()) is not None:
-            self._attr_rgbw_color = rgbw
             self._attr_color_mode = ColorMode.RGBW
-        self._attr_effect = state.get_scene()
+            self._attr_rgbw_color = rgbw
+
+        self._attr_effect = effect = state.get_scene()
+        if effect is not None:
+            if brightness is not None:
+                self._attr_color_mode = ColorMode.BRIGHTNESS
+            else:
+                self._attr_color_mode = ColorMode.ONOFF
+
         super()._async_update_attrs()
 
     async def async_turn_on(self, **kwargs: Any) -> None:

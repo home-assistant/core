@@ -162,7 +162,7 @@
       "fields": {
         "filenames": {
           "description": "Attachments to add to the prompt (images, PDFs, etc)",
-          "example": "/config/www/image.jpg",
+          "example": "{example_image_path}",
           "name": "Attachment filenames"
         },
         "prompt": {

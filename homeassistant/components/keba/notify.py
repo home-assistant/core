@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -27,7 +29,7 @@ class KebaNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._client = client
 
-    async def async_send_message(self, message="", **kwargs):
+    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send the message."""
         text = message.replace(" ", "$")  # Will be translated back by the display
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Self
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -16,37 +16,142 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import EnumTypeData, find_dpcode
-from .util import get_dpcode
+from .models import DeviceWrapper, DPCodeBooleanWrapper, DPCodeEnumWrapper
 
-TUYA_MODE_RETURN_HOME = "chargego"
-TUYA_STATUS_TO_HA = {
-    "charge_done": VacuumActivity.DOCKED,
-    "chargecompleted": VacuumActivity.DOCKED,
-    "chargego": VacuumActivity.DOCKED,
-    "charging": VacuumActivity.DOCKED,
-    "cleaning": VacuumActivity.CLEANING,
-    "docking": VacuumActivity.RETURNING,
-    "goto_charge": VacuumActivity.RETURNING,
-    "goto_pos": VacuumActivity.CLEANING,
-    "mop_clean": VacuumActivity.CLEANING,
-    "part_clean": VacuumActivity.CLEANING,
-    "paused": VacuumActivity.PAUSED,
-    "pick_zone_clean": VacuumActivity.CLEANING,
-    "pos_arrived": VacuumActivity.CLEANING,
-    "pos_unarrive": VacuumActivity.CLEANING,
-    "random": VacuumActivity.CLEANING,
-    "sleep": VacuumActivity.IDLE,
-    "smart_clean": VacuumActivity.CLEANING,
-    "smart": VacuumActivity.CLEANING,
-    "spot_clean": VacuumActivity.CLEANING,
-    "standby": VacuumActivity.IDLE,
-    "wall_clean": VacuumActivity.CLEANING,
-    "wall_follow": VacuumActivity.CLEANING,
-    "zone_clean": VacuumActivity.CLEANING,
-}
+
+class _VacuumActivityWrapper(DeviceWrapper):
+    """Wrapper for the state of a device."""
+
+    _TUYA_STATUS_TO_HA = {
+        "charge_done": VacuumActivity.DOCKED,
+        "chargecompleted": VacuumActivity.DOCKED,
+        "chargego": VacuumActivity.DOCKED,
+        "charging": VacuumActivity.DOCKED,
+        "cleaning": VacuumActivity.CLEANING,
+        "docking": VacuumActivity.RETURNING,
+        "goto_charge": VacuumActivity.RETURNING,
+        "goto_pos": VacuumActivity.CLEANING,
+        "mop_clean": VacuumActivity.CLEANING,
+        "part_clean": VacuumActivity.CLEANING,
+        "paused": VacuumActivity.PAUSED,
+        "pick_zone_clean": VacuumActivity.CLEANING,
+        "pos_arrived": VacuumActivity.CLEANING,
+        "pos_unarrive": VacuumActivity.CLEANING,
+        "random": VacuumActivity.CLEANING,
+        "sleep": VacuumActivity.IDLE,
+        "smart_clean": VacuumActivity.CLEANING,
+        "smart": VacuumActivity.CLEANING,
+        "spot_clean": VacuumActivity.CLEANING,
+        "standby": VacuumActivity.IDLE,
+        "wall_clean": VacuumActivity.CLEANING,
+        "wall_follow": VacuumActivity.CLEANING,
+        "zone_clean": VacuumActivity.CLEANING,
+    }
+
+    def __init__(
+        self,
+        pause_wrapper: DPCodeBooleanWrapper | None = None,
+        status_wrapper: DPCodeEnumWrapper | None = None,
+    ) -> None:
+        """Init _VacuumActivityWrapper."""
+        self._pause_wrapper = pause_wrapper
+        self._status_wrapper = status_wrapper
+
+    @classmethod
+    def find_dpcode(cls, device: CustomerDevice) -> Self | None:
+        """Find and return a _VacuumActivityWrapper for the given DP codes."""
+        pause_wrapper = DPCodeBooleanWrapper.find_dpcode(device, DPCode.PAUSE)
+        status_wrapper = DPCodeEnumWrapper.find_dpcode(device, DPCode.STATUS)
+        if pause_wrapper or status_wrapper:
+            return cls(pause_wrapper=pause_wrapper, status_wrapper=status_wrapper)
+        return None
+
+    def read_device_status(self, device: CustomerDevice) -> VacuumActivity | None:
+        """Read the device status."""
+        if (
+            self._status_wrapper
+            and (status := self._status_wrapper.read_device_status(device)) is not None
+        ):
+            return self._TUYA_STATUS_TO_HA.get(status)
+
+        if self._pause_wrapper and self._pause_wrapper.read_device_status(device):
+            return VacuumActivity.PAUSED
+        return None
+
+
+class _VacuumActionWrapper(DeviceWrapper):
+    """Wrapper for sending actions to a vacuum."""
+
+    _TUYA_MODE_RETURN_HOME = "chargego"
+
+    def __init__(
+        self,
+        charge_wrapper: DPCodeBooleanWrapper | None,
+        locate_wrapper: DPCodeBooleanWrapper | None,
+        pause_wrapper: DPCodeBooleanWrapper | None,
+        mode_wrapper: DPCodeEnumWrapper | None,
+        switch_wrapper: DPCodeBooleanWrapper | None,
+    ) -> None:
+        """Init _VacuumActionWrapper."""
+        self._charge_wrapper = charge_wrapper
+        self._locate_wrapper = locate_wrapper
+        self._mode_wrapper = mode_wrapper
+        self._switch_wrapper = switch_wrapper
+
+        self.options = []
+        if charge_wrapper or (
+            mode_wrapper and self._TUYA_MODE_RETURN_HOME in mode_wrapper.options
+        ):
+            self.options.append("return_to_base")
+        if locate_wrapper:
+            self.options.append("locate")
+        if pause_wrapper:
+            self.options.append("pause")
+        if switch_wrapper:
+            self.options.append("start")
+            self.options.append("stop")
+
+    @classmethod
+    def find_dpcode(cls, device: CustomerDevice) -> Self:
+        """Find and return a _VacuumActionWrapper for the given DP codes."""
+        return cls(
+            charge_wrapper=DPCodeBooleanWrapper.find_dpcode(
+                device, DPCode.SWITCH_CHARGE, prefer_function=True
+            ),
+            locate_wrapper=DPCodeBooleanWrapper.find_dpcode(
+                device, DPCode.SEEK, prefer_function=True
+            ),
+            mode_wrapper=DPCodeEnumWrapper.find_dpcode(
+                device, DPCode.MODE, prefer_function=True
+            ),
+            pause_wrapper=DPCodeBooleanWrapper.find_dpcode(device, DPCode.PAUSE),
+            switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
+                device, DPCode.POWER_GO, prefer_function=True
+            ),
+        )
+
+    def get_update_commands(
+        self, device: CustomerDevice, value: Any
+    ) -> list[dict[str, Any]]:
+        """Get the commands for the action wrapper."""
+        if value == "locate" and self._locate_wrapper:
+            return self._locate_wrapper.get_update_commands(device, True)
+        if value == "pause" and self._switch_wrapper:
+            return self._switch_wrapper.get_update_commands(device, False)
+        if value == "return_to_base":
+            if self._charge_wrapper:
+                return self._charge_wrapper.get_update_commands(device, True)
+            if self._mode_wrapper:
+                return self._mode_wrapper.get_update_commands(
+                    device, self._TUYA_MODE_RETURN_HOME
+                )
+        if value == "start" and self._switch_wrapper:
+            return self._switch_wrapper.get_update_commands(device, True)
+        if value == "stop" and self._switch_wrapper:
+            return self._switch_wrapper.get_update_commands(device, False)
+        return []
 
 
 async def async_setup_entry(
@@ -64,7 +169,17 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = manager.device_map[device_id]
             if device.category == DeviceCategory.SD:
-                entities.append(TuyaVacuumEntity(device, manager))
+                entities.append(
+                    TuyaVacuumEntity(
+                        device,
+                        manager,
+                        action_wrapper=_VacuumActionWrapper.find_dpcode(device),
+                        activity_wrapper=_VacuumActivityWrapper.find_dpcode(device),
+                        fan_speed_wrapper=DPCodeEnumWrapper.find_dpcode(
+                            device, DPCode.SUCTION, prefer_function=True
+                        ),
+                    )
+                )
         async_add_entities(entities)
 
     async_discover_device([*manager.device_map])
@@ -77,91 +192,80 @@ async def async_setup_entry(
 class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     """Tuya Vacuum Device."""
 
-    _fan_speed: EnumTypeData | None = None
     _attr_name = None
 
-    def __init__(self, device: CustomerDevice, device_manager: Manager) -> None:
+    def __init__(
+        self,
+        device: CustomerDevice,
+        device_manager: Manager,
+        *,
+        action_wrapper: DeviceWrapper[str] | None,
+        activity_wrapper: DeviceWrapper[VacuumActivity] | None,
+        fan_speed_wrapper: DeviceWrapper[str] | None,
+    ) -> None:
         """Init Tuya vacuum."""
         super().__init__(device, device_manager)
+        self._action_wrapper = action_wrapper
+        self._activity_wrapper = activity_wrapper
+        self._fan_speed_wrapper = fan_speed_wrapper
 
         self._attr_fan_speed_list = []
+        self._attr_supported_features = VacuumEntityFeature.SEND_COMMAND
 
-        self._attr_supported_features = (
-            VacuumEntityFeature.SEND_COMMAND | VacuumEntityFeature.STATE
-        )
-        if get_dpcode(self.device, DPCode.PAUSE):
-            self._attr_supported_features |= VacuumEntityFeature.PAUSE
+        if action_wrapper:
+            if "pause" in action_wrapper.options:
+                self._attr_supported_features |= VacuumEntityFeature.PAUSE
+            if "return_to_base" in action_wrapper.options:
+                self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
+            if "locate" in action_wrapper.options:
+                self._attr_supported_features |= VacuumEntityFeature.LOCATE
+            if "start" in action_wrapper.options:
+                self._attr_supported_features |= VacuumEntityFeature.START
+            if "stop" in action_wrapper.options:
+                self._attr_supported_features |= VacuumEntityFeature.STOP
 
-        self._return_home_use_switch_charge = False
-        if get_dpcode(self.device, DPCode.SWITCH_CHARGE):
-            self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
-            self._return_home_use_switch_charge = True
-        elif (
-            enum_type := find_dpcode(
-                self.device, DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
-            )
-        ) and TUYA_MODE_RETURN_HOME in enum_type.range:
-            self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
+        if activity_wrapper:
+            self._attr_supported_features |= VacuumEntityFeature.STATE
 
-        if get_dpcode(self.device, DPCode.SEEK):
-            self._attr_supported_features |= VacuumEntityFeature.LOCATE
-
-        if get_dpcode(self.device, DPCode.POWER_GO):
-            self._attr_supported_features |= (
-                VacuumEntityFeature.STOP | VacuumEntityFeature.START
-            )
-
-        if enum_type := find_dpcode(
-            self.device, DPCode.SUCTION, dptype=DPType.ENUM, prefer_function=True
-        ):
-            self._fan_speed = enum_type
-            self._attr_fan_speed_list = enum_type.range
+        if fan_speed_wrapper:
+            self._attr_fan_speed_list = fan_speed_wrapper.options
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
 
     @property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
-        return self.device.status.get(DPCode.SUCTION)
+        return self._read_wrapper(self._fan_speed_wrapper)
 
     @property
     def activity(self) -> VacuumActivity | None:
         """Return Tuya vacuum device state."""
-        if self.device.status.get(DPCode.PAUSE) and not (
-            self.device.status.get(DPCode.STATUS)
-        ):
-            return VacuumActivity.PAUSED
-        if not (status := self.device.status.get(DPCode.STATUS)):
-            return None
-        return TUYA_STATUS_TO_HA.get(status)
+        return self._read_wrapper(self._activity_wrapper)
 
-    def start(self, **kwargs: Any) -> None:
+    async def async_start(self, **kwargs: Any) -> None:
         """Start the device."""
-        self._send_command([{"code": DPCode.POWER_GO, "value": True}])
+        await self._async_send_wrapper_updates(self._action_wrapper, "start")
 
-    def stop(self, **kwargs: Any) -> None:
+    async def async_stop(self, **kwargs: Any) -> None:
         """Stop the device."""
-        self._send_command([{"code": DPCode.POWER_GO, "value": False}])
+        await self._async_send_wrapper_updates(self._action_wrapper, "stop")
 
-    def pause(self, **kwargs: Any) -> None:
+    async def async_pause(self, **kwargs: Any) -> None:
         """Pause the device."""
-        self._send_command([{"code": DPCode.POWER_GO, "value": False}])
+        await self._async_send_wrapper_updates(self._action_wrapper, "pause")
 
-    def return_to_base(self, **kwargs: Any) -> None:
+    async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
-        if self._return_home_use_switch_charge:
-            self._send_command([{"code": DPCode.SWITCH_CHARGE, "value": True}])
-        else:
-            self._send_command([{"code": DPCode.MODE, "value": TUYA_MODE_RETURN_HOME}])
+        await self._async_send_wrapper_updates(self._action_wrapper, "return_to_base")
 
-    def locate(self, **kwargs: Any) -> None:
+    async def async_locate(self, **kwargs: Any) -> None:
         """Locate the device."""
-        self._send_command([{"code": DPCode.SEEK, "value": True}])
+        await self._async_send_wrapper_updates(self._action_wrapper, "locate")
 
-    def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        self._send_command([{"code": DPCode.SUCTION, "value": fan_speed}])
+        await self._async_send_wrapper_updates(self._fan_speed_wrapper, fan_speed)
 
-    def send_command(
+    async def async_send_command(
         self,
         command: str,
         params: dict[str, Any] | list[Any] | None = None,
@@ -172,4 +276,4 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             raise ValueError("Params cannot be omitted for Tuya vacuum commands")
         if not isinstance(params, list):
             raise TypeError("Params must be a list for Tuya vacuum commands")
-        self._send_command([{"code": command, "value": params[0]}])
+        await self._async_send_commands([{"code": command, "value": params[0]}])

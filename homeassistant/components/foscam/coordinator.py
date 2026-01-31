@@ -116,20 +116,28 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
         is_open_wdr = None
         is_open_hdr = None
         reserve3 = product_info.get("reserve4")
-        reserve3_int = int(reserve3) if reserve3 is not None else 0
-        supports_wdr_adjustment_val = bool(int(reserve3_int & 256))
-        supports_hdr_adjustment_val = bool(int(reserve3_int & 128))
-        if supports_wdr_adjustment_val:
-            ret_wdr, is_open_wdr_data = self.session.getWdrMode()
-            mode = is_open_wdr_data["mode"] if ret_wdr == 0 and is_open_wdr_data else 0
-            is_open_wdr = bool(int(mode))
-        elif supports_hdr_adjustment_val:
-            ret_hdr, is_open_hdr_data = self.session.getHdrMode()
-            mode = is_open_hdr_data["mode"] if ret_hdr == 0 and is_open_hdr_data else 0
-            is_open_hdr = bool(int(mode))
-
+        model = product_info.get("model")
+        model_int = int(model) if model is not None else 7002
+        if model_int > 7001:
+            reserve3_int = int(reserve3) if reserve3 is not None else 0
+            supports_wdr_adjustment_val = bool(int(reserve3_int & 256))
+            supports_hdr_adjustment_val = bool(int(reserve3_int & 128))
+            if supports_wdr_adjustment_val:
+                ret_wdr, is_open_wdr_data = self.session.getWdrMode()
+                mode = (
+                    is_open_wdr_data["mode"] if ret_wdr == 0 and is_open_wdr_data else 0
+                )
+                is_open_wdr = bool(int(mode))
+            elif supports_hdr_adjustment_val:
+                ret_hdr, is_open_hdr_data = self.session.getHdrMode()
+                mode = (
+                    is_open_hdr_data["mode"] if ret_hdr == 0 and is_open_hdr_data else 0
+                )
+                is_open_hdr = bool(int(mode))
+        else:
+            supports_wdr_adjustment_val = False
+            supports_hdr_adjustment_val = False
         ret_sw, software_capabilities = self.session.getSWCapabilities()
-
         supports_speak_volume_adjustment_val = (
             bool(int(software_capabilities.get("swCapabilities1")) & 32)
             if ret_sw == 0

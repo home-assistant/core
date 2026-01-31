@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
+from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -35,7 +35,7 @@ async def test_motion_sensor(
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_host.motion_detected.return_value = False
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -69,7 +69,7 @@ async def test_smart_ai_sensor(
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_host.baichuan.smart_ai_state.return_value = False
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -94,7 +94,7 @@ async def test_index_sensor(
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_host.baichuan.io_input_state.return_value = False
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

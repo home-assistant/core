@@ -53,7 +53,7 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_IGNORE_NON_NUMERIC, DOMAIN
 from .entity import GroupEntity
@@ -346,7 +346,6 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._attr_name = name
         if name == DEFAULT_NAME:
             self._attr_name = f"{DEFAULT_NAME} {sensor_type}".capitalize()
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
         self._ignore_non_numeric = ignore_non_numeric
         self.mode = all if ignore_non_numeric is False else any
@@ -374,7 +373,7 @@ class SensorGroup(GroupEntity, SensorEntity):
     def async_update_group_state(self) -> None:
         """Query all members and determine the sensor group state."""
         self.calculate_state_attributes(self._get_valid_entities())
-        states: list[StateType] = []
+        states: list[str | None] = []
         valid_units = self._valid_units
         valid_states: list[bool] = []
         sensor_values: list[tuple[str, float, State]] = []
@@ -435,9 +434,12 @@ class SensorGroup(GroupEntity, SensorEntity):
                             state.attributes.get("unit_of_measurement"),
                             self.entity_id,
                         )
+            else:
+                states.append(None)
+                valid_states.append(False)
 
-        # Set group as unavailable if all members do not have numeric values
-        self._attr_available = any(numeric_state for numeric_state in valid_states)
+        # Set group as unavailable if all members are unavailable or missing
+        self._attr_available = not all(s in (STATE_UNAVAILABLE, None) for s in states)
 
         valid_state = self.mode(
             state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
@@ -446,6 +448,7 @@ class SensorGroup(GroupEntity, SensorEntity):
 
         if not valid_state or not valid_state_numeric:
             self._attr_native_value = None
+            self._extra_state_attribute = {}
             return
 
         # Calculate values
