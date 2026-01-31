@@ -1548,3 +1548,50 @@
     'unit_of_measurement': None,
   })
 # ---
+# name: test_buttons[zoe_50][button.reg_zoe_50_start_horn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-ZOE-50 Start horn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_zoe_50_start_horn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[captur_phev][button.reg_captur_phev_start_horn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'REG-CAPTUR_PHEV Start horn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reg_captur_phev_start_horn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_buttons[captur_fuel][button.reg_captur_fuel_start_horn-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.reg_captur_fuel_start_horn',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    })
+  })
