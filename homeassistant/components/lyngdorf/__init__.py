@@ -95,10 +95,11 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
 
-    try:
-        await config_entry.runtime_data.receiver.async_disconnect()
-        _LOGGER.debug("disconnected %s", config_entry.runtime_data.receiver.name)
-    except Exception:
-        _LOGGER.exception("Error disconnecting from receiver")
+    if hasattr(config_entry, "runtime_data"):
+        try:
+            await config_entry.runtime_data.receiver.async_disconnect()
+            _LOGGER.debug("disconnected %s", config_entry.runtime_data.receiver.name)
+        except Exception:
+            _LOGGER.exception("Error disconnecting from receiver")
 
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

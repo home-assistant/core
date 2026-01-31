@@ -103,18 +103,24 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 model: LyngdorfModel = await async_find_receiver_model(
                     self._host
                 )  # This opens and closes a TCP socket, so therefore updates the ARP table
-                self._device_model = model.model
-                self._mac = await _async_get_mac_address(
-                    self.hass, self._host
-                )  # Depends on the ARP table being up to date
-
-                if not self._mac:
-                    errors["base"] = "no_mac"
+                if not model:
+                    errors["base"] = "unsupported_model"
                 else:
                     self._device_manufacturer = model.manufacturer
-
-                    await self.async_set_unique_id(self._mac)
+                    self._device_model = model.model
+                    await self.async_set_unique_id(f"{model.model}:{self._host}")
                     self._abort_if_unique_id_configured()
+                    # self._mac = await _async_get_mac_address(
+                    #     self.hass, self._host
+                    # )  # Depends on the ARP table being up to date
+
+                    # if not self._mac:
+                    #     errors["base"] = "no_mac"
+                    # else:
+                    #     self._device_manufacturer = model.manufacturer
+
+                    #     await self.async_set_unique_id(self._mac)
+                    #     self._abort_if_unique_id_configured()
 
                     return await self._create_entry()
 
@@ -212,10 +218,10 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             title = self._name or DEFAULT_DEVICE_NAME
 
-        assert self._mac
+        # assert self._mac
 
         data = {
-            CONF_DEVICE_ID: self._mac,
+            # CONF_DEVICE_ID: self._mac,
             # CONF_TYPE: self._device_type,
             CONF_MAC: self._mac,
             CONF_MODEL: self._device_model,
@@ -223,7 +229,8 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_SERIAL_NUMBER: self._device_serial_number,
             CONF_HOST: self._host,
         }
-        await self.async_set_unique_id(self._mac)
+        # unique_id is already set by calling function (async_step_manual, etc.)
+        # Don't overwrite it here
         return self.async_create_entry(title=title, data=data, options=self._options)
 
     async def _async_set_info_from_discovery(
@@ -235,9 +242,10 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._location = discovery_info.ssdp_location
             assert isinstance(self._location, str)
 
-        self._mac = await _async_get_mac_address(self.hass, self._host)
-
-        await self.async_set_unique_id(self._mac, raise_on_progress=abort_if_configured)
+        self._host = str(
+            discovery_info.ssdp_headers.get("_host")
+            or urlparse(self._location).hostname
+        )
 
         self._device_model = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""
         self._device_serial_number = (
@@ -253,10 +261,10 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             or urlparse(self._location).hostname
             or DEFAULT_DEVICE_NAME
         )
-        self._host = str(
-            discovery_info.ssdp_headers.get("_host")
-            or urlparse(self._location).hostname
-        )
+
+        # Use model:host as unique_id to match manual flow
+        unique_id = f"{self._device_model}:{self._host}"
+        await self.async_set_unique_id(unique_id, raise_on_progress=abort_if_configured)
 
         if abort_if_configured:
             self._abort_if_unique_id_configured(reload_on_update=False)
