@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from copy import copy
 from unittest.mock import AsyncMock, Mock
 
@@ -749,3 +750,148 @@ async def test_select_ptz_patrol_stop(
             blocking=True,
         )
         mock_method.assert_called_once()
+
+
+async def test_select_ptz_preset_timer_reset(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test PTZ preset resets to idle after timer fires."""
+    await _setup_ptz_camera(hass, ufp, ptz_camera, presets=_make_presets()[:1])
+
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_preset")
+    assert entity_id is not None
+
+    with patch_ufp_method(ptz_camera, "ptz_goto_preset_public", new_callable=AsyncMock):
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Preset 1"},
+            blocking=True,
+        )
+
+    # State should be "Preset 1" immediately after selection
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "Preset 1"
+
+    # Wait for timer to fire and reset to idle
+    await asyncio.sleep(0.6)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == PTZ_PRESET_IDLE
+
+
+async def test_select_ptz_preset_timer_cancel_on_new_selection(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test that selecting a new preset cancels the existing timer."""
+    presets = _make_presets()
+    await _setup_ptz_camera(hass, ufp, ptz_camera, presets=presets)
+
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_preset")
+    assert entity_id is not None
+
+    with patch_ufp_method(ptz_camera, "ptz_goto_preset_public", new_callable=AsyncMock):
+        # Select first preset
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Preset 1"},
+            blocking=True,
+        )
+
+        # Quickly select second preset (should cancel first timer)
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Preset 2"},
+            blocking=True,
+        )
+
+    # State should be "Preset 2"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "Preset 2"
+
+    # Wait for timer to fire
+    await asyncio.sleep(0.6)
+    await hass.async_block_till_done()
+
+    # Should still reset to idle
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == PTZ_PRESET_IDLE
+
+
+async def test_select_ptz_patrol_active_state(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test PTZ patrol shows active patrol from device state."""
+    patrols = _make_patrols(ptz_camera.id)
+    # Set active patrol slot before setup
+    ptz_camera.active_patrol_slot = 0
+
+    await _setup_ptz_camera(hass, ufp, ptz_camera, patrols=patrols)
+
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
+    assert entity_id is not None
+
+    # Should show "Patrol 1" since active_patrol_slot is 0
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "Patrol 1"
+
+
+async def test_select_ptz_camera_adopt(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test adopting a new PTZ camera creates PTZ entities."""
+    # First setup without the PTZ camera
+    ufp.api.bootstrap.nvr.system_info.ustorage = None
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.SELECT, 0, 0)
+
+    # Setup API reference for the PTZ camera (required for adopt_devices)
+    ptz_camera._api = ufp.api
+    for channel in ptz_camera.channels:
+        channel._api = ufp.api
+
+    # Now adopt the PTZ camera
+    ptz_camera.get_ptz_presets.return_value = _make_presets()
+    ptz_camera.get_ptz_patrols.return_value = _make_patrols(ptz_camera.id)
+
+    await adopt_devices(hass, ufp, [ptz_camera])
+    # Wait for adopt signal processing
+    await hass.async_block_till_done()
+    # Wait for async task to complete (PTZ data loading)
+    await hass.async_block_till_done()
+
+    # Should have 2 regular camera selects + 2 PTZ selects = 4
+    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+
+    # Verify PTZ entities exist
+    preset_entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_preset")
+    patrol_entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
+    assert preset_entity_id is not None
+    assert patrol_entity_id is not None
+
+
+async def test_select_ptz_preset_idle_selection(
+    hass: HomeAssistant, ufp: MockUFPFixture, ptz_camera: Camera
+) -> None:
+    """Test PTZ preset does nothing when Idle is selected."""
+    await _setup_ptz_camera(hass, ufp, ptz_camera)
+
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_preset")
+    assert entity_id is not None
+
+    # Selecting Idle should not call any API
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: PTZ_PRESET_IDLE},
+        blocking=True,
+    )
+    ptz_camera.ptz_goto_preset_public.assert_not_called()

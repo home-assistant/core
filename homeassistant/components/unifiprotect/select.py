@@ -619,9 +619,8 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
     @async_ufp_instance_command
     async def async_select_option(self, option: str) -> None:
         """Start or stop a PTZ patrol."""
-        unifi_value = self._hass_to_unifi_options.get(option)
-        if unifi_value is None:
-            return
-
+        # Home Assistant validates options before calling this method,
+        # so we can safely assume the option is valid
+        unifi_value = self._hass_to_unifi_options[option]
         await _set_ptz_patrol(self.device, unifi_value)
         # State will be updated via websocket when active_patrol_slot changes
