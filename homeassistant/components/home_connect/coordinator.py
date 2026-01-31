@@ -34,7 +34,7 @@ from aiohomeconnect.model.program import EnumerateProgram, ProgramDefinitionOpti
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -51,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 MAX_EXECUTIONS_TIME_WINDOW = 60 * 60  # 1 hour
 MAX_EXECUTIONS = 8
 
-type HomeConnectConfigEntry = ConfigEntry[HomeConnectCoordinator]
+type HomeConnectConfigEntry = ConfigEntry[HomeConnectRuntimeData]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -93,8 +93,8 @@ class HomeConnectApplianceData:
         )
 
 
-class HomeConnectCoordinator:
-    """Class to manage fetching Home Connect data."""
+class HomeConnectRuntimeData:
+    """Class to manage Home Connect's integration runtime data."""
 
     config_entry: HomeConnectConfigEntry
     appliance_coordinators: dict[str, HomeConnectApplianceCoordinator]
@@ -197,8 +197,8 @@ class HomeConnectCoordinator:
 
         return remove_listener
 
-    async def async_setup(self) -> None:
-        """Set up the devices."""
+    async def setup_appliance_coordinators(self) -> None:
+        """Set up the coordinators for each appliance."""
         try:
             appliances = await self.client.get_home_appliances()
         except UnauthorizedError as error:
@@ -208,7 +208,7 @@ class HomeConnectCoordinator:
                 translation_placeholders=get_dict_from_home_connect_error(error),
             ) from error
         except HomeConnectError as error:
-            raise UpdateFailed(
+            raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="fetch_api_error",
                 translation_placeholders=get_dict_from_home_connect_error(error),

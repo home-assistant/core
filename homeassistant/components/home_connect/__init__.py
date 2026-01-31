@@ -25,11 +25,10 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, OLD_NEW_UNIQUE_ID_SUFFIX_MAP
-from .coordinator import HomeConnectConfigEntry, HomeConnectCoordinator
+from .coordinator import HomeConnectConfigEntry, HomeConnectRuntimeData
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,16 +76,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
 
     home_connect_client = HomeConnectClient(config_entry_auth)
 
-    coordinator = HomeConnectCoordinator(hass, entry, home_connect_client)
-    try:
-        await coordinator.async_setup()
-    except UpdateFailed as ex:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key=ex.translation_key,
-            translation_placeholders=ex.translation_placeholders,
-        ) from ex
-    entry.runtime_data = coordinator
+    runtime_data = HomeConnectRuntimeData(hass, entry, home_connect_client)
+    await runtime_data.setup_appliance_coordinators()
+    entry.runtime_data = runtime_data
 
     appliances_identifiers = {
         (entry.domain, ha_id) for ha_id in entry.runtime_data.appliance_coordinators
@@ -104,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    for listener, context in coordinator.global_listeners.values():
+    for listener, context in runtime_data.global_listeners.values():
         # We call the PAIRED event listener to start adding entities
         # from the appliances we already found above
         assert isinstance(context, tuple)
