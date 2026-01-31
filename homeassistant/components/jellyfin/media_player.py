@@ -190,7 +190,9 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         )
         features = MediaPlayerEntityFeature(0)
 
-        if "PlayMediaSource" in commands:
+        if "PlayMediaSource" in commands or self.capabilities.get(
+            "SupportsMediaControl", False
+        ):
             features |= (
                 MediaPlayerEntityFeature.BROWSE_MEDIA
                 | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -201,10 +203,12 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
                 | MediaPlayerEntityFeature.SEARCH_MEDIA
             )
 
-            if "Mute" in commands:
+            if (
+                "Mute" in commands and "Unmute" in commands
+            ) or "ToggleMute" in commands:
                 features |= MediaPlayerEntityFeature.VOLUME_MUTE
 
-            if "VolumeSet" in commands:
+            if "VolumeSet" in commands or "SetVolume" in commands:
                 features |= MediaPlayerEntityFeature.VOLUME_SET
 
         return features
@@ -250,7 +254,13 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
 
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        if mute:
+        commands: list[str] = self.capabilities.get("SupportedCommands", [])
+
+        # If ToggleMute is available and we need to change state, use it
+        if "ToggleMute" in commands and self._attr_is_volume_muted != mute:
+            self.coordinator.api_client.jellyfin.remote_toggle_mute(self.session_id)
+        # Otherwise use individual Mute/Unmute commands
+        elif mute:
             self.coordinator.api_client.jellyfin.remote_mute(self.session_id)
         else:
             self.coordinator.api_client.jellyfin.remote_unmute(self.session_id)
