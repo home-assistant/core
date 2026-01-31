@@ -87,6 +87,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> b
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         # Close the client connection
         if entry.runtime_data:
-            await entry.runtime_data.client.close()
+            try:
+                await entry.runtime_data.client.close()
+            except Exception:  # noqa: BLE001
+                LOGGER.debug("Error closing LoJack client connection")
 
     return unload_ok
