@@ -15,12 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_OAUTH1_TOKEN,
-    CONF_OAUTH2_TOKEN,
-    DEFAULT_UPDATE_INTERVAL,
-    DOMAIN,
-)
+from .const import CONF_OAUTH1_TOKEN, CONF_OAUTH2_TOKEN, DEFAULT_UPDATE_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Account is already configured",
-      "mfa_session_expired": "MFA session expired, please try again"
+      "already_configured": "Account is already configured"
     },
     "error": {
       "invalid_auth": "Invalid credentials",
@@ -19,30 +18,6 @@
         },
         "description": "Enter the verification code from Garmin.",
         "title": "Two-Factor Authentication"
-      },
-      "reauth_confirm": {
-        "data": {
-          "password": "Password",
-          "username": "Email"
-        },
-        "data_description": {
-          "password": "Your Garmin Connect password",
-          "username": "Your Garmin Connect email address"
-        },
-        "description": "Your Garmin Connect session has expired. Please log in again.",
-        "title": "Reauthenticate"
-      },
-      "reconfigure": {
-        "data": {
-          "password": "Password",
-          "username": "Email"
-        },
-        "data_description": {
-          "password": "Your Garmin Connect password",
-          "username": "Your Garmin Connect email address"
-        },
-        "description": "Update your Garmin Connect credentials.",
-        "title": "Reconfigure Garmin Connect"
       },
       "user": {
         "data": {
