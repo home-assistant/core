@@ -554,12 +554,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> 
     except ConnectionError as err:
         raise ConfigEntryNotReady(err) from err
 
-    event_to_json = _generate_event_to_json(config)
-    max_tries = config[CONF_RETRY_COUNT]
     influx_thread = hass.data[DOMAIN] = InfluxThread(
-        hass, entry, influx, event_to_json, max_tries
+        hass, entry, influx, _generate_event_to_json(config), config[CONF_RETRY_COUNT]
     )
-    influx_thread.start()
+    await hass.async_add_executor_job(influx_thread.start)
 
     entry.runtime_data = influx_thread
 
