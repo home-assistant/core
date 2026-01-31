@@ -387,12 +387,12 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
 
 async def test_event_listener_error(
     hass: HomeAssistant,
-    client: MagicMock,
+    client_with_exception: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
     """Test that the configuration entry is reloaded when the event stream raises an API error."""
-    client.stream_all_events = MagicMock(
+    client_with_exception.stream_all_events = MagicMock(
         side_effect=HomeConnectApiError("error.key", "error description")
     )
 
@@ -400,10 +400,10 @@ async def test_event_listener_error(
         ConfigEntries,
         "async_schedule_reload",
     ) as mock_schedule_reload:
-        await integration_setup(client)
+        await integration_setup(client_with_exception)
         await hass.async_block_till_done()
 
-    client.stream_all_events.assert_called_once()
+    client_with_exception.stream_all_events.assert_called_once()
     mock_schedule_reload.assert_called_once_with(config_entry.entry_id)
     assert not config_entry._background_tasks
 
@@ -774,7 +774,9 @@ async def test_auth_error_while_updating_appliance(
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(entity_id)
 
-    client.get_settings = AsyncMock(side_effect=UnauthorizedError("unauthorized"))
+    client.get_specific_appliance = AsyncMock(
+        side_effect=UnauthorizedError("unauthorized")
+    )
 
     await async_setup_component(hass, HA_DOMAIN, {})
     await hass.services.async_call(

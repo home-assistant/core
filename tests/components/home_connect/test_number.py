@@ -455,7 +455,7 @@ async def test_fetch_constraints_after_rate_limit_error(
 )
 async def test_number_entity_error(
     hass: HomeAssistant,
-    client: MagicMock,
+    client_with_exception: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
@@ -463,8 +463,8 @@ async def test_number_entity_error(
     mock_attr: str,
 ) -> None:
     """Test number entity error."""
-    client.get_settings.side_effect = None
-    client.get_settings.return_value = ArrayOfSettings(
+    client_with_exception.get_settings.side_effect = None
+    client_with_exception.get_settings.return_value = ArrayOfSettings(
         [
             GetSetting(
                 key=setting_key,
@@ -478,11 +478,11 @@ async def test_number_entity_error(
             )
         ]
     )
-    assert await integration_setup(client)
+    assert await integration_setup(client_with_exception)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock = AsyncMock(side_effect=HomeConnectError("error.key"))
-    setattr(client, mock_attr, mock)
+    with pytest.raises(HomeConnectError):
+        await getattr(client_with_exception, mock_attr)()
 
     with pytest.raises(
         HomeAssistantError, match=r"Error.*assign.*value.*to.*setting.*"
@@ -496,7 +496,7 @@ async def test_number_entity_error(
             },
             blocking=True,
         )
-    mock.assert_awaited_once()
+    assert getattr(client_with_exception, mock_attr).call_count == 2
 
 
 @pytest.mark.parametrize(

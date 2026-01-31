@@ -434,7 +434,7 @@ async def test_select_program_functionality(
 )
 async def test_select_exception_handling(
     hass: HomeAssistant,
-    client: MagicMock,
+    client_with_exception: MagicMock,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     config_entry: MockConfigEntry,
     entity_id: str,
@@ -443,8 +443,8 @@ async def test_select_exception_handling(
     exception_match: str,
 ) -> None:
     """Test exception handling."""
-    client.get_all_programs.side_effect = None
-    client.get_all_programs.return_value = ArrayOfPrograms(
+    client_with_exception.get_all_programs.side_effect = None
+    client_with_exception.get_all_programs.return_value = ArrayOfPrograms(
         [
             EnumerateProgram(
                 key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
@@ -453,13 +453,14 @@ async def test_select_exception_handling(
         ]
     )
 
-    assert await integration_setup(client)
+    assert await integration_setup(client_with_exception)
     assert config_entry.state is ConfigEntryState.LOADED
 
     assert hass.states.is_state(entity_id, STATE_UNKNOWN)
 
-    mock = AsyncMock(side_effect=HomeConnectError("error.key"))
-    setattr(client, mock_attr, mock)
+    # Assert that an exception is called.
+    with pytest.raises(HomeConnectError):
+        await getattr(client_with_exception, mock_attr)()
 
     with pytest.raises(HomeAssistantError, match=exception_match):
         await hass.services.async_call(
@@ -468,7 +469,7 @@ async def test_select_exception_handling(
             {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: program_to_set},
             blocking=True,
         )
-    mock.assert_awaited_once()
+    assert getattr(client_with_exception, mock_attr).call_count == 2
 
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
@@ -798,7 +799,7 @@ async def test_default_values_after_fetch_allowed_values_error(
 )
 async def test_select_entity_error(
     hass: HomeAssistant,
-    client: MagicMock,
+    client_with_exception: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
@@ -808,8 +809,8 @@ async def test_select_entity_error(
     mock_attr: str,
 ) -> None:
     """Test select entity error."""
-    client.get_settings.side_effect = None
-    client.get_settings.return_value = ArrayOfSettings(
+    client_with_exception.get_settings.side_effect = None
+    client_with_exception.get_settings.return_value = ArrayOfSettings(
         [
             GetSetting(
                 key=setting_key,
@@ -819,11 +820,11 @@ async def test_select_entity_error(
             )
         ]
     )
-    assert await integration_setup(client)
+    assert await integration_setup(client_with_exception)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock = AsyncMock(side_effect=HomeConnectError("error.key"))
-    setattr(client, mock_attr, mock)
+    with pytest.raises(HomeConnectError):
+        await getattr(client_with_exception, mock_attr)()
 
     with pytest.raises(
         HomeAssistantError, match=r"Error.*assign.*value.*to.*setting.*"
@@ -834,7 +835,7 @@ async def test_select_entity_error(
             {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: value_to_set},
             blocking=True,
         )
-    mock.assert_awaited_once()
+    assert getattr(client_with_exception, mock_attr).call_count == 2
 
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)

@@ -441,14 +441,36 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                     "ha_id": appliance.ha_id,
                 },
             )
-        settings = {
-            setting.key: setting
-            for setting in (await self.client.get_settings(appliance.ha_id)).settings
-        }
-        status = {
-            status.key: status
-            for status in (await self.client.get_status(appliance.ha_id)).status
-        }
+        try:
+            settings = {
+                setting.key: setting
+                for setting in (
+                    await self.client.get_settings(appliance.ha_id)
+                ).settings
+            }
+        except TooManyRequestsError:
+            raise
+        except HomeConnectError as error:
+            _LOGGER.debug(
+                "Error fetching settings for %s: %s",
+                appliance.ha_id,
+                error,
+            )
+            settings = {}
+        try:
+            status = {
+                status.key: status
+                for status in (await self.client.get_status(appliance.ha_id)).status
+            }
+        except TooManyRequestsError:
+            raise
+        except HomeConnectError as error:
+            _LOGGER.debug(
+                "Error fetching status for %s: %s",
+                appliance.ha_id,
+                error,
+            )
+            status = {}
 
         programs = []
         events = {}
