@@ -35,10 +35,12 @@
   "entity": {
     "sensor": {
       "abnormal_hr_alerts": {
-        "name": "Abnormal heart rate alerts"
+        "name": "Abnormal heart rate alerts",
+        "unit_of_measurement": "alerts"
       },
       "active_calories": {
-        "name": "Active calories"
+        "name": "Active calories",
+        "unit_of_measurement": "kcal"
       },
       "active_time": {
         "name": "Active time"
@@ -56,7 +58,8 @@
         "name": "Average SpO2"
       },
       "avg_stress_level": {
-        "name": "Average stress level"
+        "name": "Average stress level",
+        "unit_of_measurement": "level"
       },
       "awake_duration": {
         "name": "Awake duration"
@@ -65,7 +68,8 @@
         "name": "Awake time"
       },
       "bmr_calories": {
-        "name": "BMR calories"
+        "name": "BMR calories",
+        "unit_of_measurement": "kcal"
       },
       "body_battery_charged": {
         "name": "Body battery charged"
@@ -83,28 +87,34 @@
         "name": "Body battery"
       },
       "burned_calories": {
-        "name": "Burned calories"
+        "name": "Burned calories",
+        "unit_of_measurement": "kcal"
       },
       "consumed_calories": {
-        "name": "Consumed calories"
+        "name": "Consumed calories",
+        "unit_of_measurement": "kcal"
       },
       "daily_step_goal": {
-        "name": "Daily step goal"
+        "name": "Daily step goal",
+        "unit_of_measurement": "steps"
       },
       "deep_sleep": {
         "name": "Deep sleep"
       },
       "floors_ascended": {
-        "name": "Floors ascended"
+        "name": "Floors ascended",
+        "unit_of_measurement": "floors"
       },
       "floors_ascended_goal": {
-        "name": "Floors ascended goal"
+        "name": "Floors ascended goal",
+        "unit_of_measurement": "floors"
       },
       "floors_ascended_distance": {
         "name": "Floors ascended distance"
       },
       "floors_descended": {
-        "name": "Floors descended"
+        "name": "Floors descended",
+        "unit_of_measurement": "floors"
       },
       "floors_descended_distance": {
         "name": "Floors descended distance"
@@ -116,7 +126,8 @@
         "name": "High stress percentage"
       },
       "highest_respiration": {
-        "name": "Highest respiration"
+        "name": "Highest respiration",
+        "unit_of_measurement": "brpm"
       },
       "highly_active_time": {
         "name": "Highly active time"
@@ -125,10 +136,12 @@
         "name": "Intensity minutes goal"
       },
       "last_7_days_avg_resting_heart_rate": {
-        "name": "7-day average resting heart rate"
+        "name": "7-day average resting heart rate",
+        "unit_of_measurement": "bpm"
       },
       "latest_respiration": {
-        "name": "Latest respiration"
+        "name": "Latest respiration",
+        "unit_of_measurement": "brpm"
       },
       "latest_respiration_time": {
         "name": "Latest respiration time"
@@ -149,19 +162,23 @@
         "name": "Low stress percentage"
       },
       "lowest_respiration": {
-        "name": "Lowest respiration"
+        "name": "Lowest respiration",
+        "unit_of_measurement": "brpm"
       },
       "lowest_spo2": {
         "name": "Lowest SpO2"
       },
       "max_avg_heart_rate": {
-        "name": "Max average heart rate"
+        "name": "Max average heart rate",
+        "unit_of_measurement": "bpm"
       },
       "max_heart_rate": {
-        "name": "Max heart rate"
+        "name": "Max heart rate",
+        "unit_of_measurement": "bpm"
       },
       "max_stress_level": {
-        "name": "Max stress level"
+        "name": "Max stress level",
+        "unit_of_measurement": "level"
       },
       "medium_stress_duration": {
         "name": "Medium stress duration"
@@ -170,10 +187,12 @@
         "name": "Medium stress percentage"
       },
       "min_avg_heart_rate": {
-        "name": "Min average heart rate"
+        "name": "Min average heart rate",
+        "unit_of_measurement": "bpm"
       },
       "min_heart_rate": {
-        "name": "Min heart rate"
+        "name": "Min heart rate",
+        "unit_of_measurement": "bpm"
       },
       "moderate_intensity": {
         "name": "Moderate intensity minutes"
@@ -182,7 +201,8 @@
         "name": "REM sleep"
       },
       "remaining_calories": {
-        "name": "Remaining calories"
+        "name": "Remaining calories",
+        "unit_of_measurement": "kcal"
       },
       "rest_stress_duration": {
         "name": "Rest stress duration"
@@ -191,7 +211,8 @@
         "name": "Rest stress percentage"
       },
       "resting_heart_rate": {
-        "name": "Resting heart rate"
+        "name": "Resting heart rate",
+        "unit_of_measurement": "bpm"
       },
       "sedentary_time": {
         "name": "Sedentary time"
@@ -212,7 +233,8 @@
         "name": "Stress qualifier"
       },
       "total_calories": {
-        "name": "Calories"
+        "name": "Calories",
+        "unit_of_measurement": "kcal"
       },
       "total_distance": {
         "name": "Distance"
@@ -224,7 +246,8 @@
         "name": "Sleep duration"
       },
       "total_steps": {
-        "name": "Steps"
+        "name": "Steps",
+        "unit_of_measurement": "steps"
       },
       "total_stress_duration": {
         "name": "Stress duration"
@@ -242,13 +265,16 @@
         "name": "Weekly distance average"
       },
       "weekly_step_avg": {
-        "name": "Weekly step average"
+        "name": "Weekly step average",
+        "unit_of_measurement": "steps"
       },
       "wellness_active_calories": {
-        "name": "Wellness active calories"
+        "name": "Wellness active calories",
+        "unit_of_measurement": "kcal"
       },
       "wellness_calories": {
-        "name": "Wellness calories"
+        "name": "Wellness calories",
+        "unit_of_measurement": "kcal"
       },
       "wellness_distance": {
         "name": "Wellness distance"
@@ -263,7 +289,8 @@
         "name": "Yesterday distance"
       },
       "yesterday_steps": {
-        "name": "Yesterday steps"
+        "name": "Yesterday steps",
+        "unit_of_measurement": "steps"
       },
       "nap_time": {
         "name": "Nap time"

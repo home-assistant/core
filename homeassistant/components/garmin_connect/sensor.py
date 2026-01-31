@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import datetime
-import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,8 +21,6 @@ from . import GarminConnectConfigEntry
 from .const import DOMAIN
 from .coordinator import CoreCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 # Limit parallel updates to prevent API rate limiting
 PARALLEL_UPDATES = 1
 
@@ -38,26 +35,22 @@ ACTIVITY_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
     GarminConnectSensorEntityDescription(
         key="totalSteps",
         translation_key="total_steps",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="steps",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GarminConnectSensorEntityDescription(
         key="dailyStepGoal",
         translation_key="daily_step_goal",
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="steps",
     ),
     GarminConnectSensorEntityDescription(
         key="yesterdaySteps",
         translation_key="yesterday_steps",
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="steps",
     ),
     GarminConnectSensorEntityDescription(
         key="weeklyStepAvg",
         translation_key="weekly_step_avg",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="steps",
     ),
     GarminConnectSensorEntityDescription(
         key="yesterdayDistance",
@@ -77,26 +70,23 @@ ACTIVITY_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
         key="totalDistanceMeters",
         translation_key="total_distance",
         device_class=SensorDeviceClass.DISTANCE,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfLength.METERS,
     ),
     GarminConnectSensorEntityDescription(
         key="floorsAscended",
         translation_key="floors_ascended",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="floors",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GarminConnectSensorEntityDescription(
         key="floorsDescended",
         translation_key="floors_descended",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="floors",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GarminConnectSensorEntityDescription(
         key="userFloorsAscendedGoal",
         translation_key="floors_ascended_goal",
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="floors",
     ),
 )
 
@@ -105,38 +95,32 @@ CALORIES_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
     GarminConnectSensorEntityDescription(
         key="totalKilocalories",
         translation_key="total_calories",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="kcal",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GarminConnectSensorEntityDescription(
         key="activeKilocalories",
         translation_key="active_calories",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="kcal",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GarminConnectSensorEntityDescription(
         key="bmrKilocalories",
         translation_key="bmr_calories",
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="kcal",
     ),
     GarminConnectSensorEntityDescription(
         key="burnedKilocalories",
         translation_key="burned_calories",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="kcal",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GarminConnectSensorEntityDescription(
         key="consumedKilocalories",
         translation_key="consumed_calories",
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="kcal",
     ),
     GarminConnectSensorEntityDescription(
         key="remainingKilocalories",
         translation_key="remaining_calories",
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="kcal",
     ),
 )
 
@@ -146,25 +130,21 @@ HEART_RATE_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
         key="restingHeartRate",
         translation_key="resting_heart_rate",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="bpm",
     ),
     GarminConnectSensorEntityDescription(
         key="maxHeartRate",
         translation_key="max_heart_rate",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="bpm",
     ),
     GarminConnectSensorEntityDescription(
         key="minHeartRate",
         translation_key="min_heart_rate",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="bpm",
     ),
     GarminConnectSensorEntityDescription(
         key="lastSevenDaysAvgRestingHeartRate",
         translation_key="last_7_days_avg_resting_heart_rate",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="bpm",
     ),
 )
 
@@ -175,13 +155,11 @@ STRESS_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
         key="averageStressLevel",
         translation_key="avg_stress_level",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="level",
     ),
     GarminConnectSensorEntityDescription(
         key="maxStressLevel",
         translation_key="max_stress_level",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="level",
     ),
     GarminConnectSensorEntityDescription(
         key="stressQualifierText",
@@ -351,35 +329,35 @@ INTENSITY_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
         key="activeMinutes",
         translation_key="active_time",
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
     GarminConnectSensorEntityDescription(
         key="highlyActiveMinutes",
         translation_key="highly_active_time",
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
     GarminConnectSensorEntityDescription(
         key="sedentaryMinutes",
         translation_key="sedentary_time",
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
     GarminConnectSensorEntityDescription(
         key="moderateIntensityMinutes",
         translation_key="moderate_intensity",
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
     GarminConnectSensorEntityDescription(
         key="vigorousIntensityMinutes",
         translation_key="vigorous_intensity",
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
     GarminConnectSensorEntityDescription(
@@ -393,7 +371,7 @@ INTENSITY_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
         key="totalIntensityMinutes",
         translation_key="total_intensity_minutes",
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
 )
@@ -427,19 +405,16 @@ HEALTH_MONITORING_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
         key="highestRespirationValue",
         translation_key="highest_respiration",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="brpm",
     ),
     GarminConnectSensorEntityDescription(
         key="lowestRespirationValue",
         translation_key="lowest_respiration",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="brpm",
     ),
     GarminConnectSensorEntityDescription(
         key="latestRespirationValue",
         translation_key="latest_respiration",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="brpm",
     ),
     GarminConnectSensorEntityDescription(
         key="latestRespirationTime",
@@ -460,13 +435,11 @@ ADDITIONAL_HEART_RATE_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] 
         key="minAvgHeartRate",
         translation_key="min_avg_heart_rate",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="bpm",
     ),
     GarminConnectSensorEntityDescription(
         key="maxAvgHeartRate",
         translation_key="max_avg_heart_rate",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="bpm",
     ),
     GarminConnectSensorEntityDescription(
         key="abnormalHeartRateAlertsCount",
@@ -573,13 +546,11 @@ WELLNESS_SENSORS: tuple[GarminConnectSensorEntityDescription, ...] = (
         key="wellnessActiveKilocalories",
         translation_key="wellness_active_calories",
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="kcal",
     ),
     GarminConnectSensorEntityDescription(
         key="wellnessKilocalories",
         translation_key="wellness_calories",
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="kcal",
     ),
 )
 
@@ -619,20 +590,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Garmin Connect sensors."""
-    coordinators = entry.runtime_data
-    coordinator = coordinators.core
+    coordinator = entry.runtime_data.core
 
-    entities: list[GarminConnectSensor] = []
-
-    for description in SENSOR_DESCRIPTIONS:
-        _LOGGER.debug(
-            "Registering entity: %s (%s)",
-            description.key,
-            description.translation_key,
-        )
-        entities.append(GarminConnectSensor(coordinator, description, entry.entry_id))
-
-    async_add_entities(entities)
+    async_add_entities(
+        GarminConnectSensor(coordinator, description, entry.entry_id)
+        for description in SENSOR_DESCRIPTIONS
+    )
 
 
 class GarminConnectSensor(CoordinatorEntity[CoreCoordinator], SensorEntity):
@@ -661,26 +624,5 @@ class GarminConnectSensor(CoordinatorEntity[CoreCoordinator], SensorEntity):
     @property
     def native_value(self) -> str | int | float | datetime.datetime | None:
         """Return the state of the sensor."""
-        if not self.coordinator.data:
-            return None
-
-        value = self.coordinator.data.get(self.entity_description.key)
-
-        if value is None:
-            return None
-
-        # Preserve int types, only round floats
-        if isinstance(value, int):
-            return value
-        if isinstance(value, float):
-            # Round floats to 1 decimal place, but return int if it's a whole number
-            rounded = round(value, 1)
-            if rounded == int(rounded):
-                return int(rounded)
-            return rounded
-        # For strings and datetime objects, return as-is
-        if isinstance(value, (str, datetime.datetime)):
-            return value
-        # Fallback: return as string
-        return str(value)
+        return self.coordinator.data.get(self.entity_description.key)
 
