@@ -139,17 +139,8 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
         if user_input is not None:
             user_input = {**reauth_entry.data, **user_input}
-            try:
-                await self.hass.async_add_executor_job(_get_nodes_data, user_input)
-            except ProxmoxConnectTimeout:
-                errors["base"] = "connect_timeout"
-            except ProxmoxAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except ProxmoxSSLError:
-                errors["base"] = "ssl_error"
-            except ProxmoxNoNodesFound:
-                errors["base"] = "no_nodes_found"
-            else:
+            _, errors = await self._validate_input(user_input)
+            if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},

@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
@@ -22,6 +22,7 @@
         },
         "description": "The connection to the Proxmox VE server requires re-authentication. Please enter your password to continue.",
         "title": "Re-authenticate Proxmox VE integration"
+      },
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
