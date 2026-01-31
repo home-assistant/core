@@ -45,18 +45,15 @@ def mock_setup_entry() -> Generator[None]:
 @pytest.fixture
 def mock_lyngdorf_model() -> LyngdorfModel:
     """Return a mocked Lyngdorf model."""
-    return LyngdorfModel(
-        manufacturer="Lyngdorf",
-        model="MP-60",
-        supported_sources=["S1", "S2"],
-        supported_sound_modes=["Stereo", "Surround"],
-    )
+    return LyngdorfModel.MP_60
 
 
 @pytest.fixture
 def mock_receiver() -> Generator[MagicMock]:
     """Return a mocked Lyngdorf receiver."""
-    with patch("homeassistant.components.lyngdorf.create_receiver") as create_mock:
+    with patch(
+        "homeassistant.components.lyngdorf.async_create_receiver"
+    ) as create_mock:
         receiver = MagicMock()
         receiver.async_connect = AsyncMock()
         receiver.async_disconnect = AsyncMock()
@@ -66,18 +63,12 @@ def mock_receiver() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_find_receiver_model() -> Generator[MagicMock]:
-    """Return a mocked find_receiver_model function."""
+def mock_find_receiver_model() -> Generator[AsyncMock]:
+    """Return a mocked async_find_receiver_model function."""
     with patch(
-        "homeassistant.components.lyngdorf.config_flow.find_receiver_model"
+        "homeassistant.components.lyngdorf.config_flow.async_find_receiver_model"
     ) as find_mock:
-        model = LyngdorfModel(
-            manufacturer="Lyngdorf",
-            model="MP-60",
-            supported_sources=["S1", "S2"],
-            supported_sound_modes=["Stereo", "Surround"],
-        )
-        find_mock.return_value = model
+        find_mock.return_value = LyngdorfModel.MP_60
         yield find_mock
 
 
@@ -101,12 +92,7 @@ async def init_integration(
     mock_config_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.lyngdorf.lookup_receiver_model") as lookup:
-        lookup.return_value = LyngdorfModel(
-            manufacturer="Lyngdorf",
-            model="MP-60",
-            supported_sources=["S1", "S2"],
-            supported_sound_modes=["Stereo", "Surround"],
-        )
+        lookup.return_value = LyngdorfModel.MP_60
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

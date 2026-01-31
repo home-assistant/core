@@ -6,14 +6,13 @@ from collections.abc import Mapping
 from functools import partial
 from ipaddress import IPv6Address, ip_address
 import logging
-from pprint import pformat
 from typing import Any, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.profiles.dlna import DmrDevice
 from getmac import get_mac_address
 from lyngdorf.const import LyngdorfModel
-from lyngdorf.device import find_receiver_model
+from lyngdorf.device import async_find_receiver_model
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -27,7 +26,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import IntegrationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
@@ -43,14 +42,8 @@ _LOGGER = logging.getLogger(__name__)
 FlowInput = Mapping[str, Any] | None
 
 
-class ConnectError(IntegrationError):
-    """Error occurred when trying to connect to a device."""
-
-
 class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Lyngdorf config flow the mac address is used for the device ID."""
-
-    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize flow."""
@@ -72,7 +65,6 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         Let user choose from a list of found and unconfigured devices or to
         enter an URL manually.
         """
-        _LOGGER.debug("async_step_user: user_input: %s", user_input)
 
         if user_input is not None:
             if not (name := user_input.get(CONF_NAME)):
@@ -100,12 +92,11 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual(self, user_input: FlowInput = None) -> ConfigFlowResult:
         """Manual URL entry by the user."""
-        _LOGGER.debug("async_step_manual: user_input: %s", user_input)
 
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._name = user_input[CONF_NAME]
-            model: LyngdorfModel = find_receiver_model(
+            model: LyngdorfModel = await async_find_receiver_model(
                 self._host
             )  # This opens and closes a TCP socket, so therefore updates the ARP table
             self._device_model = model.model
@@ -134,8 +125,6 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: ssdp.SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by SSDP discovery."""
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
 
         await self._async_set_info_from_discovery(discovery_info)
 
@@ -154,7 +143,6 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Ignore this config flow."""
-        _LOGGER.debug("async_step_ignore: user_input: %s", user_input)
         self._mac = user_input["unique_id"]
         assert self._mac
         await self.async_set_unique_id(self._mac, raise_on_progress=False)
@@ -176,7 +164,6 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Rediscover previously ignored devices by their unique_id."""
-        _LOGGER.debug("async_step_unignore: user_input: %s", user_input)
         self._mac = user_input["unique_id"]
         assert self._mac
         await self.async_set_unique_id(self._mac)
@@ -199,9 +186,6 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _create_entry(self) -> ConfigFlowResult:
         """Create a config entry, assuming all required information is now known."""
-        _LOGGER.debug(
-            "_async_create_entry: location: %s, mac: %s", self._location, self._mac
-        )
         title: str
         if self._location:
             title = "" + (
@@ -228,9 +212,6 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: ssdp.SsdpServiceInfo, abort_if_configured: bool = True
     ) -> None:
         """Set information required for a config entry from the SSDP discovery."""
-        _LOGGER.debug(
-            "_async_set_info_from_discovery: location: %s", discovery_info.ssdp_location
-        )
 
         if not self._location:
             self._location = discovery_info.ssdp_location
@@ -264,7 +245,6 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_discoveries(self) -> list[ssdp.SsdpServiceInfo]:
         """Get list of unconfigured DLNA devices discovered by SSDP."""
-        _LOGGER.debug("_get_discoveries")
 
         # Get all compatible devices from ssdp's cache
         discoveries: list[ssdp.SsdpServiceInfo] = []
@@ -327,3 +307,7 @@ async def _async_get_mac_address(hass: HomeAssistant, host: str) -> str | None:
         return None
 
     return dr.format_mac(mac_address)
+
+
+class ConnectError(HomeAssistantError):
+    """Error occurred when trying to connect to a device."""

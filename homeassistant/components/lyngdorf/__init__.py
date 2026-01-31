@@ -5,7 +5,11 @@ from __future__ import annotations
 import logging
 
 from lyngdorf.const import LyngdorfModel
-from lyngdorf.device import create_receiver, find_receiver_model, lookup_receiver_model
+from lyngdorf.device import (
+    async_create_receiver,
+    async_find_receiver_model,
+    lookup_receiver_model,
+)
 
 from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
@@ -36,14 +40,16 @@ async def async_setup_entry(
         config_entry.data[CONF_MODEL],
         config_entry.data[CONF_HOST],
     )
-    lyngdorf_model: LyngdorfModel = lookup_receiver_model(config_entry.data[CONF_MODEL])
-    if not (lyngdorf_model):
-        lyngdorf_model = find_receiver_model(config_entry.data[CONF_HOST])
-    if not (lyngdorf_model):
+    lyngdorf_model: LyngdorfModel | None = lookup_receiver_model(
+        config_entry.data[CONF_MODEL]
+    )
+    if not lyngdorf_model:
+        lyngdorf_model = await async_find_receiver_model(config_entry.data[CONF_HOST])
+    if not lyngdorf_model:
         raise ConfigEntryError(
             f"Unable to connect to unsupported model {config_entry.data[CONF_MODEL]}"
         )
-    receiver = create_receiver(config_entry.data[CONF_HOST], lyngdorf_model)
+    receiver = await async_create_receiver(config_entry.data[CONF_HOST], lyngdorf_model)
     await receiver.async_connect()
 
     device_info = DeviceInfo(

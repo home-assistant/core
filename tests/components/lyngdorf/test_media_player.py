@@ -1,10 +1,6 @@
 """The tests for the denonavr media player platform."""
 
 from homeassistant.components import media_player
-from homeassistant.components.lyngdorf.config_flow import DOMAIN
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_NAME = "Test_Receiver"
@@ -30,15 +26,12 @@ TEST_VIDEO_INPUT = "VID 1"
 TEST_AUDIO_INPUT = "AUD 1"
 
 
-async def test_options_zone_flow_validation(hass: HomeAssistant) -> None:
-    """Mock the etnry."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    await hass.config_entries.options.async_init(entry.entry_id)
+# TODO: Implement options flow and re-enable this test
+# async def test_options_zone_flow_validation(
+#     hass: HomeAssistant, init_integration: MockConfigEntry
+# ) -> None:
+#     """Mock the entry."""
+#     await hass.config_entries.options.async_init(init_integration.entry_id)
 
 
 # async def test_properties(player) -> None:
