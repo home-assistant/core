@@ -71,7 +71,10 @@ class LoJackDeviceTracker(LoJackEntity, TrackerEntity):
     def location_accuracy(self) -> int:
         """Return the location accuracy of the device."""
         if self.vehicle_data and self.vehicle_data.accuracy is not None:
-            return int(self.vehicle_data.accuracy)
+            try:
+                return int(self.vehicle_data.accuracy)
+            except (ValueError, TypeError):
+                return 0
         return 0
 
     @callback

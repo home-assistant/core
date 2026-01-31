@@ -100,7 +100,9 @@ class LoJackConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm", data_schema=STEP_REAUTH_SCHEMA
             )
 
-        assert self._username is not None
+        # _username is set in async_step_reauth before calling this method
+        if self._username is None:
+            return self.async_abort(reason="unknown")
 
         errors = await self._async_validate_credentials(
             self._username, user_input[CONF_PASSWORD]

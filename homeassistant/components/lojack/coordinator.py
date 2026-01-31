@@ -104,6 +104,15 @@ class LoJackCoordinator(DataUpdateCoordinator[LoJackVehicleData]):
                 return obj.get(attr, default)
             return getattr(obj, attr, default)
 
+        def safe_float(value: Any) -> float | None:
+            """Safely convert value to float."""
+            if value is None:
+                return None
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                return None
+
         return LoJackVehicleData(
             device_id=self.device_id,
             name=safe_get(device, "name"),
@@ -113,15 +122,15 @@ class LoJackCoordinator(DataUpdateCoordinator[LoJackVehicleData]):
             year=str(safe_get(device, "year", "")) or None,
             color=safe_get(device, "color"),
             license_plate=safe_get(device, "license_plate"),
-            odometer=safe_get(device, "odometer"),
-            latitude=float(lat) if lat is not None else None,
-            longitude=float(lon) if lon is not None else None,
-            accuracy=safe_get(location, "accuracy"),
+            odometer=safe_float(safe_get(device, "odometer")),
+            latitude=safe_float(lat),
+            longitude=safe_float(lon),
+            accuracy=safe_float(safe_get(location, "accuracy")),
             address=self._format_address(safe_get(location, "address")),
-            speed=safe_get(location, "speed"),
-            heading=safe_get(location, "heading"),
-            battery_voltage=safe_get(location, "battery_voltage"),
-            engine_hours=safe_get(location, "engine_hours"),
+            speed=safe_float(safe_get(location, "speed")),
+            heading=safe_float(safe_get(location, "heading")),
+            battery_voltage=safe_float(safe_get(location, "battery_voltage")),
+            engine_hours=safe_float(safe_get(location, "engine_hours")),
             timestamp=safe_get(location, "timestamp"),
         )
 
