@@ -1,14 +1,16 @@
 """Support for EnOcean devices."""
 
+from homeassistant_enocean.address import EnOceanDeviceAddress
+from homeassistant_enocean.legacy import combine_hex
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_DEVICE
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_DEVICE, Platform
+from homeassistant.core import _LOGGER, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, PLATFORMS
+from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE
 from .dongle import EnOceanDongle
 
 CONFIG_SCHEMA = vol.Schema(
@@ -19,17 +21,29 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the EnOcean component."""
 
-    # search for platforms
-    enocean_devices: dict[str, list[dict]] = {}
-    for platform in PLATFORMS:
-        enocean_devices[platform.value] = []
-        if platform.value not in config:
-            continue
+    # gateway = EnOceanHomeAssistantGateway()
 
-        for entry in config[platform.value]:
+    if Platform.BINARY_SENSOR in config:
+        for entry in config[Platform.BINARY_SENSOR]:
             if "platform" not in entry or entry["platform"] != DOMAIN:
                 continue
-            enocean_devices[platform.value].append(entry)
+
+            if "id" not in entry:
+                continue
+
+            dev_id = entry["id"]
+            try:
+                eurid = EnOceanDeviceAddress.from_number(combine_hex(dev_id))
+                device_name = "EnOcean Binary Sensor " + eurid.to_string()
+                if "name" in entry:
+                    device_name = entry["name"]
+
+                _LOGGER.warning("Adding EnOcean binary sensor %s", device_name)
+
+                # gateway.add_device(eurid, device_type=BINARY_SENSOR_DEVICE_TYPE, device_name = device_name, sender_id=None)
+
+            except ValueError:
+                continue
 
     # _LOGGER.warning("EnOcean platform %s found in config entries", config[platform.value])
 
