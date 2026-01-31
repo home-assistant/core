@@ -241,7 +241,6 @@ class BaseNotificationService:
         """Handle sending notification message service calls."""
         kwargs = {}
         message: str = service.data[ATTR_MESSAGE]
-        title: str | None
         if service.data.get(ATTR_TITLE) is not None:
             kwargs[ATTR_TITLE] = service.data.get(ATTR_TITLE)
 
