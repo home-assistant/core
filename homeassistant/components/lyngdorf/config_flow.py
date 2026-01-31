@@ -29,6 +29,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
 from .const import (
     CONF_MANUFACTURER,
@@ -48,7 +55,7 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._discoveries: dict[str, ssdp.SsdpServiceInfo] = {}
+        self._discoveries: dict[str, SsdpServiceInfo] = {}
         self._location: str | None = None
         # self._id: str | None = None
         self._device_manufacturer: str | None = None
@@ -81,7 +88,7 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual()
 
         self._discoveries = {
-            discovery.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            discovery.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
             or cast(str, urlparse(discovery.ssdp_location).hostname): discovery
             for discovery in discoveries
         }
@@ -146,7 +153,7 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by SSDP discovery."""
 
@@ -234,7 +241,7 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=title, data=data, options=self._options)
 
     async def _async_set_info_from_discovery(
-        self, discovery_info: ssdp.SsdpServiceInfo, abort_if_configured: bool = True
+        self, discovery_info: SsdpServiceInfo, abort_if_configured: bool = True
     ) -> None:
         """Set information required for a config entry from the SSDP discovery."""
 
@@ -247,17 +254,17 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             or urlparse(self._location).hostname
         )
 
-        self._device_model = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""
+        self._device_model = discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME) or ""
         self._device_serial_number = (
-            discovery_info.upnp.get(ssdp.ATTR_UPNP_SERIAL) or ""
+            discovery_info.upnp.get(ATTR_UPNP_SERIAL) or ""
         ).lower()
         self._device_manufacturer = (
-            discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER) or ""
+            discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER) or ""
         )
 
         # self._device_type = discovery_info.ssdp_nt or discovery_info.ssdp_st
         self._name = (
-            discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
             or urlparse(self._location).hostname
             or DEFAULT_DEVICE_NAME
         )
@@ -269,11 +276,11 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if abort_if_configured:
             self._abort_if_unique_id_configured(reload_on_update=False)
 
-    async def _async_get_discoveries(self) -> list[ssdp.SsdpServiceInfo]:
+    async def _async_get_discoveries(self) -> list[SsdpServiceInfo]:
         """Get list of unconfigured DLNA devices discovered by SSDP."""
 
         # Get all compatible devices from ssdp's cache
-        discoveries: list[ssdp.SsdpServiceInfo] = []
+        discoveries: list[SsdpServiceInfo] = []
         for udn_st in DmrDevice.DEVICE_TYPES:
             st_discoveries = await ssdp.async_get_discovery_info_by_st(
                 self.hass, udn_st
@@ -292,11 +299,11 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return [disc for disc in discoveries if _is_lyngdorf_device(disc)]
 
 
-def _is_lyngdorf_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
+def _is_lyngdorf_device(discovery_info: SsdpServiceInfo) -> bool:
     # Special cases for devices with other discovery methods (e.g. mDNS), or
     # that advertise multiple unrelated (sent in separate discovery packets)
     # UPnP devices.
-    manufacturer = (discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER) or "").lower()
+    manufacturer = (discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER) or "").lower()
 
     if manufacturer in map(str.lower, SUPPORTED_MANUFACTURERS):
         # one of ours
