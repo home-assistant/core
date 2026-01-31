@@ -11,20 +11,18 @@ from telegram.error import BadRequest, InvalidToken, TelegramError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_IMPORT,
     SOURCE_RECONFIGURE,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    ConfigSubentryData,
     ConfigSubentryFlow,
     OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, section
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -35,22 +33,19 @@ from homeassistant.helpers.selector import (
 )
 
 from . import initialize_bot
-from .bot import TelegramBotConfigEntry
+from .bot import TelegramBotConfigEntry, TelegramNotificationService
 from .const import (
     ATTR_PARSER,
     BOT_NAME,
-    CONF_ALLOWED_CHAT_IDS,
-    CONF_BOT_COUNT,
+    CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
+    DEFAULT_API_ENDPOINT,
     DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
     ERROR_FIELD,
     ERROR_MESSAGE,
-    ISSUE_DEPRECATED_YAML,
-    ISSUE_DEPRECATED_YAML_HAS_MORE_PLATFORMS,
-    ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR,
     PARSER_HTML,
     PARSER_MD,
     PARSER_MD2,
@@ -63,6 +58,16 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+DESCRIPTION_PLACEHOLDERS: dict[str, str] = {
+    "botfather_username": "@BotFather",
+    "botfather_url": "https://t.me/botfather",
+    "getidsbot_username": "@GetIDs Bot",
+    "getidsbot_url": "https://t.me/getidsbot",
+    "socks_url": "socks5://username:password@proxy_ip:proxy_port",
+    # used in advanced settings section
+    "default_api_endpoint": DEFAULT_API_ENDPOINT,
+}
 
 STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
     {
@@ -85,6 +90,12 @@ STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
         vol.Required(SECTION_ADVANCED_SETTINGS): section(
             vol.Schema(
                 {
+                    vol.Required(
+                        CONF_API_ENDPOINT,
+                        default=DEFAULT_API_ENDPOINT,
+                    ): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
                     vol.Optional(CONF_PROXY_URL): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
@@ -109,6 +120,12 @@ STEP_RECONFIGURE_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
         vol.Required(SECTION_ADVANCED_SETTINGS): section(
             vol.Schema(
                 {
+                    vol.Required(
+                        CONF_API_ENDPOINT,
+                        default=DEFAULT_API_ENDPOINT,
+                    ): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
                     vol.Optional(CONF_PROXY_URL): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.URL)
                     ),
@@ -145,7 +162,7 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
                 options=[PARSER_MD, PARSER_MD2, PARSER_HTML, PARSER_PLAIN_TEXT],
                 translation_key="parse_mode",
             )
-        )
+        ),
     }
 )
 
@@ -174,6 +191,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Telegram."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -200,120 +218,12 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         # for passing data between steps
         self._step_user_data: dict[str, Any] = {}
 
-    # triggered by async_setup() from __init__.py
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import of config entry from configuration.yaml."""
-
-        telegram_bot: str = f"{import_data[CONF_PLATFORM]} Telegram bot"
-        bot_count: int = import_data[CONF_BOT_COUNT]
-
-        import_data[CONF_TRUSTED_NETWORKS] = ",".join(
-            import_data[CONF_TRUSTED_NETWORKS]
-        )
-        import_data[SECTION_ADVANCED_SETTINGS] = {
-            CONF_PROXY_URL: import_data.get(CONF_PROXY_URL)
-        }
-        try:
-            config_flow_result: ConfigFlowResult = await self.async_step_user(
-                import_data
-            )
-        except AbortFlow:
-            # this happens if the config entry is already imported
-            self._create_issue(ISSUE_DEPRECATED_YAML, telegram_bot, bot_count)
-            raise
-        else:
-            errors: dict[str, str] | None = config_flow_result.get("errors")
-            if errors:
-                error: str = errors.get("base", "unknown")
-                self._create_issue(
-                    error,
-                    telegram_bot,
-                    bot_count,
-                    config_flow_result["description_placeholders"],
-                )
-                return self.async_abort(reason="import_failed")
-
-            subentries: list[ConfigSubentryData] = []
-            allowed_chat_ids: list[int] = import_data[CONF_ALLOWED_CHAT_IDS]
-            assert self._bot is not None, "Bot should be initialized during import"
-            for chat_id in allowed_chat_ids:
-                chat_name: str = await _async_get_chat_name(self._bot, chat_id)
-                subentry: ConfigSubentryData = ConfigSubentryData(
-                    data={CONF_CHAT_ID: chat_id},
-                    subentry_type=CONF_ALLOWED_CHAT_IDS,
-                    title=f"{chat_name} ({chat_id})",
-                    unique_id=str(chat_id),
-                )
-                subentries.append(subentry)
-            config_flow_result["subentries"] = subentries
-
-            self._create_issue(
-                ISSUE_DEPRECATED_YAML,
-                telegram_bot,
-                bot_count,
-                config_flow_result["description_placeholders"],
-            )
-            return config_flow_result
-
-    def _create_issue(
-        self,
-        issue: str,
-        telegram_bot_type: str,
-        bot_count: int,
-        description_placeholders: Mapping[str, str] | None = None,
-    ) -> None:
-        translation_key: str = (
-            ISSUE_DEPRECATED_YAML
-            if bot_count == 1
-            else ISSUE_DEPRECATED_YAML_HAS_MORE_PLATFORMS
-        )
-        if issue != ISSUE_DEPRECATED_YAML:
-            translation_key = ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR
-
-        telegram_bot = (
-            description_placeholders.get(BOT_NAME, telegram_bot_type)
-            if description_placeholders
-            else telegram_bot_type
-        )
-        error_field = (
-            description_placeholders.get(ERROR_FIELD, "Unknown error")
-            if description_placeholders
-            else "Unknown error"
-        )
-        error_message = (
-            description_placeholders.get(ERROR_MESSAGE, "Unknown error")
-            if description_placeholders
-            else "Unknown error"
-        )
-
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            ISSUE_DEPRECATED_YAML,
-            breaks_in_ha_version="2025.12.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key=translation_key,
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Telegram Bot",
-                "telegram_bot": telegram_bot,
-                ERROR_FIELD: error_field,
-                ERROR_MESSAGE: error_message,
-            },
-            learn_more_url="https://github.com/home-assistant/core/pull/144617",
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow to create a new config entry for a Telegram bot."""
 
-        description_placeholders: dict[str, str] = {
-            "botfather_username": "@BotFather",
-            "botfather_url": "https://t.me/botfather",
-        }
+        description_placeholders: dict[str, str] = DESCRIPTION_PLACEHOLDERS.copy()
         if not user_input:
             return self.async_show_form(
                 step_id="user",
@@ -327,6 +237,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # validate connection to Telegram API
         errors: dict[str, str] = {}
+        user_input[CONF_API_ENDPOINT] = (
+            user_input[SECTION_ADVANCED_SETTINGS][CONF_API_ENDPOINT],
+        )
         user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
             CONF_PROXY_URL
         )
@@ -351,28 +264,19 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=bot_name,
                 data={
                     CONF_PLATFORM: user_input[CONF_PLATFORM],
+                    CONF_API_ENDPOINT: user_input[CONF_API_ENDPOINT],
                     CONF_API_KEY: user_input[CONF_API_KEY],
                     CONF_PROXY_URL: user_input[SECTION_ADVANCED_SETTINGS].get(
                         CONF_PROXY_URL
                     ),
                 },
-                options={
-                    # this value may come from yaml import
-                    ATTR_PARSER: user_input.get(ATTR_PARSER, PARSER_MD)
-                },
+                options={ATTR_PARSER: PARSER_MD},
                 description_placeholders=description_placeholders,
             )
 
         self._bot_name = bot_name
         self._step_user_data.update(user_input)
 
-        if self.source == SOURCE_IMPORT:
-            return await self.async_step_webhooks(
-                {
-                    CONF_URL: user_input.get(CONF_URL),
-                    CONF_TRUSTED_NETWORKS: user_input[CONF_TRUSTED_NETWORKS],
-                }
-            )
         return await self.async_step_webhooks()
 
     async def _shutdown_bot(self) -> None:
@@ -475,6 +379,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_PLATFORM: self._step_user_data[CONF_PLATFORM],
                 CONF_API_KEY: self._step_user_data[CONF_API_KEY],
+                CONF_API_ENDPOINT: self._step_user_data[SECTION_ADVANCED_SETTINGS][
+                    CONF_API_ENDPOINT
+                ],
                 CONF_PROXY_URL: self._step_user_data[SECTION_ADVANCED_SETTINGS].get(
                     CONF_PROXY_URL
                 ),
@@ -546,25 +453,62 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         **self._get_reconfigure_entry().data,
                         SECTION_ADVANCED_SETTINGS: {
+                            CONF_API_ENDPOINT: self._get_reconfigure_entry().data[
+                                CONF_API_ENDPOINT
+                            ],
                             CONF_PROXY_URL: self._get_reconfigure_entry().data.get(
                                 CONF_PROXY_URL
                             ),
                         },
                     },
                 ),
+                description_placeholders=DESCRIPTION_PLACEHOLDERS,
             )
         user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
             CONF_PROXY_URL
         )
 
+        user_input[CONF_API_ENDPOINT] = user_input[SECTION_ADVANCED_SETTINGS][
+            CONF_API_ENDPOINT
+        ]
+
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
+        description_placeholders: dict[str, str] = DESCRIPTION_PLACEHOLDERS.copy()
 
         user_input[CONF_API_KEY] = api_key
         bot_name = await self._validate_bot(
             user_input, errors, description_placeholders
         )
         self._bot_name = bot_name
+
+        existing_api_endpoint: str = self._get_reconfigure_entry().data[
+            CONF_API_ENDPOINT
+        ]
+        if (
+            self._get_reconfigure_entry().state == ConfigEntryState.LOADED
+            and user_input[CONF_API_ENDPOINT] != DEFAULT_API_ENDPOINT
+            and existing_api_endpoint == DEFAULT_API_ENDPOINT
+        ):
+            # logout existing bot from the official Telegram bot API
+            # logout is only used when changing the API endpoint from official to a custom one
+            # there is a 10-minute lockout period after logout so we only logout if necessary
+            service: TelegramNotificationService = (
+                self._get_reconfigure_entry().runtime_data
+            )
+            try:
+                is_logged_out = await service.bot.log_out()
+            except TelegramError as err:
+                errors["base"] = "telegram_error"
+                description_placeholders[ERROR_MESSAGE] = str(err)
+            else:
+                _LOGGER.info(
+                    "[%s %s] Logged out: %s",
+                    service.bot.username,
+                    service.bot.id,
+                    is_logged_out,
+                )
+                if not is_logged_out:
+                    errors["base"] = "bot_logout_failed"
 
         if errors:
             return self.async_show_form(
@@ -574,6 +518,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         **user_input,
                         SECTION_ADVANCED_SETTINGS: {
+                            CONF_API_ENDPOINT: user_input[CONF_API_ENDPOINT],
                             CONF_PROXY_URL: user_input.get(CONF_PROXY_URL),
                         },
                     },
@@ -613,8 +558,10 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
+        updated_data = {**self._get_reauth_entry().data}
+        updated_data[CONF_API_KEY] = user_input[CONF_API_KEY]
         bot_name = await self._validate_bot(
-            user_input, errors, description_placeholders
+            updated_data, errors, description_placeholders
         )
         await self._shutdown_bot()
 
@@ -629,7 +576,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_update_reload_and_abort(
-            self._get_reauth_entry(), title=bot_name, data_updates=user_input
+            self._get_reauth_entry(), title=bot_name, data_updates=updated_data
         )
 
 
@@ -661,6 +608,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)}),
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
             errors=errors,
         )
 

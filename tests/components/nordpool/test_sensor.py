@@ -59,8 +59,8 @@ async def test_sensor_no_next_price(hass: HomeAssistant, load_int: ConfigEntry) 
     assert last_price is not None
     assert next_price is not None
     assert current_price.state == "0.78568"  # SE3 2025-10-01T21:45:00Z
-    assert last_price.state == "0.82171"  # SE3 2025-10-01T21:30:00Z
-    assert next_price.state == "0.81174"  # SE3 2025-10-01T22:00:00Z
+    assert last_price.state == "0.82005"  # SE3 2025-10-01T21:30:00Z
+    assert next_price.state == "0.93322"  # SE3 2025-10-01T22:00:00Z
 
 
 @pytest.mark.freeze_time("2025-10-02T00:00:00+02:00")
@@ -78,8 +78,8 @@ async def test_sensor_no_previous_price(
     assert last_price is not None
     assert next_price is not None
     assert current_price.state == "0.93322"  # SE3 2025-10-01T22:00:00Z
-    assert last_price.state == "0.8605"  # SE3 2025-10-01T21:45:00Z
-    assert next_price.state == "0.83513"  # SE3 2025-10-01T22:15:00Z
+    assert last_price.state == "0.78568"  # SE3 2025-10-01T21:45:00Z
+    assert next_price.state == "0.85422"  # SE3 2025-10-01T22:15:00Z
 
 
 @pytest.mark.freeze_time("2025-10-01T11:00:01+01:00")
@@ -102,8 +102,8 @@ async def test_sensor_empty_response(
     assert last_price is not None
     assert next_price is not None
     assert current_price.state == "0.67405"
-    assert last_price.state == "0.8616"
-    assert next_price.state == "0.63736"
+    assert last_price.state == "0.60774"
+    assert next_price.state == "0.63858"
 
     aioclient_mock.clear_requests()
     aioclient_mock.request(
@@ -154,8 +154,8 @@ async def test_sensor_empty_response(
     assert last_price is not None
     assert next_price is not None
     assert current_price.state == "0.63736"
-    assert last_price.state == "0.67405"
-    assert next_price.state == "0.62233"
+    assert last_price.state == "0.63482"
+    assert next_price.state == "0.66068"
 
     aioclient_mock.clear_requests()
     aioclient_mock.request(
@@ -207,5 +207,5 @@ async def test_sensor_empty_response(
     assert last_price is not None
     assert next_price is not None
     assert current_price.state == "0.78568"
-    assert last_price.state == "0.82171"
+    assert last_price.state == "0.82005"
     assert next_price.state == STATE_UNKNOWN

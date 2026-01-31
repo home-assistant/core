@@ -1,4 +1,21 @@
 {
+  "conditions": {
+    "is_cooling": {
+      "condition": "mdi:snowflake"
+    },
+    "is_drying": {
+      "condition": "mdi:water-percent"
+    },
+    "is_heating": {
+      "condition": "mdi:fire"
+    },
+    "is_off": {
+      "condition": "mdi:power-off"
+    },
+    "is_on": {
+      "condition": "mdi:power-on"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:thermostat",
@@ -42,6 +59,13 @@
             "sleep": "mdi:bed"
           }
         },
+        "swing_horizontal_mode": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "off": "mdi:arrow-oscillating-off",
+            "on": "mdi:arrow-expand-horizontal"
+          }
+        },
         "swing_mode": {
           "default": "mdi:circle-medium",
           "state": {
@@ -51,50 +75,87 @@
             "on": "mdi:arrow-oscillating",
             "vertical": "mdi:arrow-up-down"
           }
-        },
-        "swing_horizontal_mode": {
-          "default": "mdi:circle-medium",
-          "state": {
-            "off": "mdi:arrow-oscillating-off",
-            "on": "mdi:arrow-expand-horizontal"
-          }
         }
       }
     }
   },
   "services": {
+    "set_aux_heat": {
+      "service": "mdi:radiator"
+    },
     "set_fan_mode": {
       "service": "mdi:fan"
     },
     "set_humidity": {
       "service": "mdi:water-percent"
     },
-    "set_swing_mode": {
-      "service": "mdi:arrow-oscillating"
-    },
-    "set_swing_horizontal_mode": {
-      "service": "mdi:arrow-expand-horizontal"
-    },
-    "set_temperature": {
-      "service": "mdi:thermometer"
-    },
-    "set_aux_heat": {
-      "service": "mdi:radiator"
+    "set_hvac_mode": {
+      "service": "mdi:hvac"
     },
     "set_preset_mode": {
       "service": "mdi:sofa"
     },
-    "set_hvac_mode": {
-      "service": "mdi:hvac"
+    "set_swing_horizontal_mode": {
+      "service": "mdi:arrow-expand-horizontal"
     },
-    "turn_on": {
-      "service": "mdi:power-on"
+    "set_swing_mode": {
+      "service": "mdi:arrow-oscillating"
+    },
+    "set_temperature": {
+      "service": "mdi:thermometer"
+    },
+    "toggle": {
+      "service": "mdi:toggle-switch"
     },
     "turn_off": {
       "service": "mdi:power-off"
     },
-    "toggle": {
-      "service": "mdi:toggle-switch"
+    "turn_on": {
+      "service": "mdi:power-on"
+    }
+  },
+  "triggers": {
+    "current_humidity_changed": {
+      "trigger": "mdi:water-percent"
+    },
+    "current_humidity_crossed_threshold": {
+      "trigger": "mdi:water-percent"
+    },
+    "current_temperature_changed": {
+      "trigger": "mdi:thermometer"
+    },
+    "current_temperature_crossed_threshold": {
+      "trigger": "mdi:thermometer"
+    },
+    "hvac_mode_changed": {
+      "trigger": "mdi:thermostat"
+    },
+    "started_cooling": {
+      "trigger": "mdi:snowflake"
+    },
+    "started_drying": {
+      "trigger": "mdi:water-percent"
+    },
+    "started_heating": {
+      "trigger": "mdi:fire"
+    },
+    "target_humidity_changed": {
+      "trigger": "mdi:water-percent"
+    },
+    "target_humidity_crossed_threshold": {
+      "trigger": "mdi:water-percent"
+    },
+    "target_temperature_changed": {
+      "trigger": "mdi:thermometer"
+    },
+    "target_temperature_crossed_threshold": {
+      "trigger": "mdi:thermometer"
+    },
+    "turned_off": {
+      "trigger": "mdi:power-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:power-on"
     }
   }
 }

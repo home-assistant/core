@@ -11,6 +11,12 @@ USB = [
         "vid": "303A",
     },
     {
+        "description": "*zbt-2*",
+        "domain": "homeassistant_connect_zbt2",
+        "pid": "831A",
+        "vid": "303A",
+    },
+    {
         "description": "*skyconnect v1.0*",
         "domain": "homeassistant_sky_connect",
         "pid": "EA60",
@@ -172,5 +178,12 @@ USB = [
         "manufacturer": "nabu casa",
         "pid": "4001",
         "vid": "303A",
+    },
+    {
+        "description": "*sonoff*zwave*",
+        "domain": "zwave_js",
+        "manufacturer": "sonoff",
+        "pid": "EA60",
+        "vid": "10C4",
     },
 ]

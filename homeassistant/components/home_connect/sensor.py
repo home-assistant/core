@@ -540,6 +540,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect sensor."""
     setup_home_connect_entry(
+        hass,
         entry,
         _get_entities_for_appliance,
         async_add_entities,
@@ -556,8 +557,11 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
         status = self.appliance.status[cast(StatusKey, self.bsh_key)].value
         self._update_native_value(status)
 
-    def _update_native_value(self, status: str | float) -> None:
+    def _update_native_value(self, status: str | float | None) -> None:
         """Set the value of the sensor based on the given value."""
+        if status is None:
+            self._attr_native_value = None
+            return
         match self.device_class:
             case SensorDeviceClass.TIMESTAMP:
                 self._attr_native_value = dt_util.utcnow() + timedelta(

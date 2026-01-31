@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import API_NONE_VALUE
-from .coordinator import VolvoBaseCoordinator, VolvoConfigEntry
+from .coordinator import VolvoConfigEntry
 from .entity import VolvoEntity, VolvoEntityDescription
 
 PARALLEL_UPDATES = 0
@@ -379,16 +379,6 @@ class VolvoBinarySensor(VolvoEntity, BinarySensorEntity):
     """Volvo binary sensor."""
 
     entity_description: VolvoBinarySensorDescription
-
-    def __init__(
-        self,
-        coordinator: VolvoBaseCoordinator,
-        description: VolvoBinarySensorDescription,
-    ) -> None:
-        """Initialize entity."""
-        self._attr_extra_state_attributes = {}
-
-        super().__init__(coordinator, description)
 
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
         """Update the state of the entity."""

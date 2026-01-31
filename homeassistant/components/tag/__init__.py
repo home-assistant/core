@@ -83,8 +83,8 @@ def _create_entry(
         DOMAIN,
         DOMAIN,
         tag_id,
+        object_id_base=slugify(name) if name else tag_id,
         original_name=f"{DEFAULT_NAME} {tag_id}",
-        suggested_object_id=slugify(name) if name else tag_id,
     )
     if name:
         return entity_registry.async_update_entity(entry.entity_id, name=name)

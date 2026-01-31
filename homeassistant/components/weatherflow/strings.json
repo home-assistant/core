@@ -1,35 +1,43 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "description": "Unable to discover Tempest WeatherFlow devices. Select **Submit** to try again.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        },
-        "data_description": {
-          "host": "Hostname or IP address of your Tempest WeatherFlow device."
-        }
-      }
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
       "address_in_use": "Unable to open local UDP port 50222.",
       "cannot_connect": "UDP discovery error.",
       "no_device_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Tempest WeatherFlow device."
+        },
+        "description": "Unable to discover Tempest WeatherFlow devices. Select **Submit** to try again."
+      }
     }
   },
   "entity": {
+    "event": {
+      "lightning_strike_event": {
+        "name": "Lightning strike"
+      },
+      "precip_start_event": {
+        "name": "Precipitation start"
+      }
+    },
     "sensor": {
       "air_density": {
         "name": "Air density"
       },
-      "dew_point": {
-        "name": "Dew point"
-      },
       "battery_voltage": {
         "name": "Battery voltage"
+      },
+      "dew_point": {
+        "name": "Dew point"
       },
       "feels_like": {
         "name": "Feels like"
@@ -43,9 +51,9 @@
       "precipitation_type": {
         "name": "Precipitation type",
         "state": {
+          "hail": "Hail",
           "none": "None",
           "rain": "Rain",
-          "hail": "Hail",
           "rain_hail": "Rain and hail"
         }
       },
@@ -64,9 +72,6 @@
       "wet_bulb_temperature": {
         "name": "Wet bulb temperature"
       },
-      "wind_speed_average": {
-        "name": "Wind speed average"
-      },
       "wind_direction": {
         "name": "Wind direction"
       },
@@ -78,14 +83,9 @@
       },
       "wind_lull": {
         "name": "Wind lull"
-      }
-    },
-    "event": {
-      "lightning_strike_event": {
-        "name": "Lightning strike"
       },
-      "precip_start_event": {
-        "name": "Precipitation start"
+      "wind_speed_average": {
+        "name": "Wind speed average"
       }
     }
   }

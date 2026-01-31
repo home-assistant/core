@@ -1,34 +1,22 @@
 {
   "entity": {
     "sensor": {
-      "media_location": {
-        "default": "mdi:monitor"
+      "cinemascape_mask": {
+        "default": "mdi:monitor-star"
       },
-      "play_status": {
+      "cinemascape_mode": {
+        "default": "mdi:monitor-star"
+      },
+      "media_location": {
         "default": "mdi:monitor"
       },
       "play_speed": {
         "default": "mdi:monitor"
       },
-      "video_mode": {
-        "default": "mdi:monitor-screenshot"
+      "play_status": {
+        "default": "mdi:monitor"
       },
-      "video_color_eotf": {
-        "default": "mdi:monitor-eye"
-      },
-      "video_color_space": {
-        "default": "mdi:monitor-eye"
-      },
-      "video_color_depth": {
-        "default": "mdi:monitor-eye"
-      },
-      "video_color_sampling": {
-        "default": "mdi:monitor-eye"
-      },
-      "screen_mask_ratio": {
-        "default": "mdi:monitor-screenshot"
-      },
-      "screen_mask_top_trim_rel": {
+      "screen_mask_bottom_mask_abs": {
         "default": "mdi:monitor-screenshot"
       },
       "screen_mask_bottom_trim_rel": {
@@ -37,17 +25,29 @@
       "screen_mask_conservative_ratio": {
         "default": "mdi:monitor-screenshot"
       },
+      "screen_mask_ratio": {
+        "default": "mdi:monitor-screenshot"
+      },
       "screen_mask_top_mask_abs": {
         "default": "mdi:monitor-screenshot"
       },
-      "screen_mask_bottom_mask_abs": {
+      "screen_mask_top_trim_rel": {
         "default": "mdi:monitor-screenshot"
       },
-      "cinemascape_mask": {
-        "default": "mdi:monitor-star"
+      "video_color_depth": {
+        "default": "mdi:monitor-eye"
       },
-      "cinemascape_mode": {
-        "default": "mdi:monitor-star"
+      "video_color_eotf": {
+        "default": "mdi:monitor-eye"
+      },
+      "video_color_sampling": {
+        "default": "mdi:monitor-eye"
+      },
+      "video_color_space": {
+        "default": "mdi:monitor-eye"
+      },
+      "video_mode": {
+        "default": "mdi:monitor-screenshot"
       }
     }
   }

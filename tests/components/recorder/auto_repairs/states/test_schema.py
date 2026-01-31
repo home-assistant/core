@@ -84,7 +84,8 @@ async def test_validate_db_schema_fix_utf8_issue_states(
         in caplog.text
     )
     assert (
-        "Updating character set and collation of table states to utf8mb4" in caplog.text
+        "Updating table states to character set utf8mb4 and collation utf8mb4_bin"
+        in caplog.text
     )
 
 
@@ -116,7 +117,7 @@ async def test_validate_db_schema_fix_utf8_issue_state_attributes(
         in caplog.text
     )
     assert (
-        "Updating character set and collation of table state_attributes to utf8mb4"
+        "Updating table state_attributes to character set utf8mb4 and collation utf8mb4_bin"
         in caplog.text
     )
 
@@ -137,7 +138,7 @@ async def test_validate_db_schema_fix_collation_issue(
     with (
         patch(
             "homeassistant.components.recorder.auto_repairs.schema._validate_table_schema_has_correct_collation",
-            return_value={"states.utf8mb4_unicode_ci"},
+            return_value={"states.utf8mb4_bin"},
         ),
     ):
         async with async_test_recorder(hass):
@@ -145,9 +146,10 @@ async def test_validate_db_schema_fix_collation_issue(
 
     assert "Schema validation failed" not in caplog.text
     assert (
-        "Database is about to correct DB schema errors: states.utf8mb4_unicode_ci"
+        "Database is about to correct DB schema errors: states.utf8mb4_bin"
         in caplog.text
     )
     assert (
-        "Updating character set and collation of table states to utf8mb4" in caplog.text
+        "Updating table states to character set utf8mb4 and collation utf8mb4_bin"
+        in caplog.text
     )

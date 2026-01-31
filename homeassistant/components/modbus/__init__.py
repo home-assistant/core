@@ -66,6 +66,8 @@ from .const import (
     CONF_BYTESIZE,
     CONF_CLIMATES,
     CONF_COLOR_TEMP_REGISTER,
+    CONF_CURRENT_TEMP_OFFSET,
+    CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_AUTO,
@@ -137,6 +139,8 @@ from .const import (
     CONF_SWING_MODE_SWING_VERT,
     CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_OFFSET,
+    CONF_TARGET_TEMP_SCALE,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_VERIFY,
     CONF_VIRTUAL_COUNT,
@@ -159,8 +163,10 @@ from .modbus import DATA_MODBUS_HUBS, ModbusHub, async_modbus_setup
 from .validators import (
     duplicate_fan_mode_validator,
     duplicate_swing_mode_validator,
+    ensure_and_check_conflicting_scales_and_offsets,
     hvac_fixedsize_reglist_validator,
     nan_validator,
+    not_zero_value,
     register_int_list_validator,
     struct_validator,
 )
@@ -210,8 +216,10 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_STRUCTURE): cv.string,
-        vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
-        vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
+        vol.Optional(CONF_SCALE): vol.All(
+            vol.Coerce(float), lambda v: not_zero_value(v, "Scale cannot be zero.")
+        ),
+        vol.Optional(CONF_OFFSET): vol.Coerce(float),
         vol.Optional(CONF_PRECISION): cv.positive_int,
         vol.Optional(
             CONF_SWAP,
@@ -273,6 +281,18 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Exclusive(CONF_HVAC_ONOFF_COIL, "hvac_onoff_type"): cv.positive_int,
             vol.Exclusive(CONF_HVAC_ONOFF_REGISTER, "hvac_onoff_type"): cv.positive_int,
+            vol.Optional(CONF_CURRENT_TEMP_SCALE): vol.All(
+                vol.Coerce(float),
+                lambda v: not_zero_value(
+                    v, "Current temperature scale cannot be zero."
+                ),
+            ),
+            vol.Optional(CONF_TARGET_TEMP_SCALE): vol.All(
+                vol.Coerce(float),
+                lambda v: not_zero_value(v, "Target temperature scale cannot be zero."),
+            ),
+            vol.Optional(CONF_CURRENT_TEMP_OFFSET): vol.Coerce(float),
+            vol.Optional(CONF_TARGET_TEMP_OFFSET): vol.Coerce(float),
             vol.Optional(
                 CONF_HVAC_ON_VALUE, default=DEFAULT_HVAC_ON_VALUE
             ): cv.positive_int,
@@ -385,6 +405,7 @@ CLIMATE_SCHEMA = vol.All(
             ),
         },
     ),
+    ensure_and_check_conflicting_scales_and_offsets,
 )
 
 COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(

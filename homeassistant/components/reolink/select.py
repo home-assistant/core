@@ -13,6 +13,7 @@ from reolink_aio.api import (
     ChimeToneEnum,
     DayNightEnum,
     EncodingEnum,
+    ExposureEnum,
     HDREnum,
     Host,
     HubToneEnum,
@@ -209,6 +210,17 @@ SELECT_ENTITIES = (
         method=lambda api, ch, name: api.set_HDR(ch, HDREnum[name].value),
     ),
     ReolinkSelectEntityDescription(
+        key="exposure",
+        cmd_key="GetIsp",
+        translation_key="exposure",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=[method.name for method in ExposureEnum],
+        supported=lambda api, ch: api.supported(ch, "exposure"),
+        value=lambda api, ch: ExposureEnum(api.exposure(ch)).name,
+        method=lambda api, ch, name: api.set_exposure(ch, ExposureEnum[name].value),
+    ),
+    ReolinkSelectEntityDescription(
         key="binning_mode",
         cmd_key="GetIsp",
         translation_key="binning_mode",
@@ -392,6 +404,16 @@ CHIME_SELECT_ENTITIES = (
         supported=lambda chime: "package" in chime.chime_event_types,
         value=lambda chime: chime.tone_name("package"),
         method=lambda chime, name: chime.set_tone("package", ChimeToneEnum[name].value),
+    ),
+    ReolinkChimeSelectEntityDescription(
+        key="pet_tone",
+        cmd_key="GetDingDongCfg",
+        translation_key="pet_tone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in ChimeToneEnum],
+        supported=lambda chime: "dog_cat" in chime.chime_event_types,
+        value=lambda chime: chime.tone_name("dog_cat"),
+        method=lambda chime, name: chime.set_tone("dog_cat", ChimeToneEnum[name].value),
     ),
 )
 

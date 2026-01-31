@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
+from homematicip.base.functionalChannels import MultiModeInputChannel
 from homematicip.device import (
     AccelerationSensor,
     ContactInterface,
@@ -87,8 +88,11 @@ async def async_setup_entry(
             entities.append(HomematicipTiltVibrationSensor(hap, device))
         if isinstance(device, WiredInput32):
             entities.extend(
-                HomematicipMultiContactInterface(hap, device, channel=channel)
-                for channel in range(1, 33)
+                HomematicipMultiContactInterface(
+                    hap, device, channel_real_index=channel.index
+                )
+                for channel in device.functionalChannels
+                if isinstance(channel, MultiModeInputChannel)
             )
         elif isinstance(device, FullFlushContactInterface6):
             entities.extend(
@@ -227,21 +231,24 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
         device,
         channel=1,
         is_multi_channel=True,
+        channel_real_index=None,
     ) -> None:
         """Initialize the multi contact entity."""
         super().__init__(
-            hap, device, channel=channel, is_multi_channel=is_multi_channel
+            hap,
+            device,
+            channel=channel,
+            is_multi_channel=is_multi_channel,
+            channel_real_index=channel_real_index,
         )
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the contact interface is on/open."""
-        if self._device.functionalChannels[self._channel].windowState is None:
+        channel = self.get_channel_or_raise()
+        if channel.windowState is None:
             return None
-        return (
-            self._device.functionalChannels[self._channel].windowState
-            != WindowState.CLOSED
-        )
+        return channel.windowState != WindowState.CLOSED
 
 
 class HomematicipContactInterface(HomematicipMultiContactInterface, BinarySensorEntity):

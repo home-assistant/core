@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from aioamazondevices.const import SPEAKER_GROUP_FAMILY, SPEAKER_GROUP_MODEL
+from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY, SPEAKER_GROUP_MODEL
 from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
 import pytest
 
