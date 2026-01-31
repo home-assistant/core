@@ -183,10 +183,10 @@ def _post(hass: HomeAssistant, client: Mastodon, **kwargs: Any) -> None:
     kwargs.pop("media_path", None)
     kwargs.pop("media_description", None)
 
+    media_ids: str | None = None
+    if media_data:
+        media_ids = media_data.id
     try:
-        media_ids: str | None = None
-        if media_data:
-            media_ids = media_data.id
         client.status_post(media_ids=media_ids, **kwargs)
     except MastodonAPIError as err:
         raise HomeAssistantError(
