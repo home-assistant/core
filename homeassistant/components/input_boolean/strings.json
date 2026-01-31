@@ -23,15 +23,15 @@
       "name": "[%key:common::action::reload%]"
     },
     "toggle": {
-      "description": "Toggles the helper on/off.",
+      "description": "Toggles an input boolean on/off.",
       "name": "[%key:common::action::toggle%]"
     },
     "turn_off": {
-      "description": "Turns off the helper.",
+      "description": "Turns off an input boolean.",
       "name": "[%key:common::action::turn_off%]"
     },
     "turn_on": {
-      "description": "Turns on the helper.",
+      "description": "Turns on an input boolean.",
       "name": "[%key:common::action::turn_on%]"
     }
   },
