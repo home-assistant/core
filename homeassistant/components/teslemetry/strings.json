@@ -7,6 +7,7 @@
     "end_time": "End time",
     "end_time_description": "The time this schedule ends, e.g. 01:05 for 1:05 AM.",
     "location_description": "The approximate location the vehicle must be at to use this schedule. Defaults to Home Assistant's configured location.",
+    "not_available": "Not available",
     "one_time": "One-time",
     "one_time_description": "If this is a one-time schedule.",
     "precondition_time": "Precondition time",
@@ -18,7 +19,6 @@
     "schedule_name_description": "The name of the schedule.",
     "start_time": "Start time",
     "start_time_description": "The time this schedule begins, e.g. 01:05 for 1:05 AM.",
-    "unavailable": "Unavailable",
     "vehicle": "Vehicle",
     "vehicle_to_remove_schedule": "Vehicle to remove schedule from.",
     "vehicle_to_schedule": "Vehicle to schedule.",
@@ -636,8 +636,8 @@
           "abort": "[%key:component::teslemetry::common::abort%]",
           "enabled": "[%key:common::state::enabled%]",
           "fault": "[%key:common::state::fault%]",
-          "standby": "[%key:common::state::standby%]",
-          "unavailable": "[%key:component::teslemetry::common::unavailable%]"
+          "not_available": "[%key:component::teslemetry::common::not_available%]",
+          "standby": "[%key:common::state::standby%]"
         }
       },
       "di_state_r": {
@@ -646,8 +646,8 @@
           "abort": "[%key:component::teslemetry::common::abort%]",
           "enabled": "[%key:common::state::enabled%]",
           "fault": "[%key:common::state::fault%]",
-          "standby": "[%key:common::state::standby%]",
-          "unavailable": "[%key:component::teslemetry::common::unavailable%]"
+          "not_available": "[%key:component::teslemetry::common::not_available%]",
+          "standby": "[%key:common::state::standby%]"
         }
       },
       "di_state_rel": {
@@ -656,8 +656,8 @@
           "abort": "[%key:component::teslemetry::common::abort%]",
           "enabled": "[%key:common::state::enabled%]",
           "fault": "[%key:common::state::fault%]",
-          "standby": "[%key:common::state::standby%]",
-          "unavailable": "[%key:component::teslemetry::common::unavailable%]"
+          "not_available": "[%key:component::teslemetry::common::not_available%]",
+          "standby": "[%key:common::state::standby%]"
         }
       },
       "di_state_rer": {
@@ -666,8 +666,8 @@
           "abort": "[%key:component::teslemetry::common::abort%]",
           "enabled": "[%key:common::state::enabled%]",
           "fault": "[%key:common::state::fault%]",
-          "standby": "[%key:common::state::standby%]",
-          "unavailable": "[%key:component::teslemetry::common::unavailable%]"
+          "not_available": "[%key:component::teslemetry::common::not_available%]",
+          "standby": "[%key:common::state::standby%]"
         }
       },
       "di_stator_temp_f": {

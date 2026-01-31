@@ -72,7 +72,7 @@ CHARGE_STATES = {
 }
 
 DRIVE_INVERTER_STATES = {
-    "Unavailable": "unavailable",
+    "Unavailable": "not_available",
     "Standby": "standby",
     "Fault": "fault",
     "Abort": "abort",

@@ -75,11 +75,7 @@ rules:
       new TeslemetryVehicleData/TeslemetryEnergyData to runtime_data, then trigger
       entity creation via coordinator listeners in each platform.
   entity-category: done
-  entity-device-class:
-    status: todo
-    comment: |
-      DRIVE_INVERTER_STATES has "unavailable" as a state value which conflicts with HA's
-      unavailable state - shows duplicate in state trigger UI.
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations:
