@@ -545,6 +545,7 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
             # The date could be "N/A" for certain fields (e.g., XOFFBATT), so when parsing fails,
             # we should simply mark it as unknown.
             except (dateutil.parser.ParserError, OverflowError):
+                _LOGGER.debug('Failed to parse date for %s: "%s"', key, data)
                 self._attr_native_value = None
             return
 
