@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import FEATURES_MP60, FEATURES_MP60_ZONE_B, NAME_MAIN_ZONE, NAME_ZONE_B
 from .models import LyngdorfConfigEntry
@@ -342,7 +342,7 @@ class MP60MainDevice(MP60Device):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: LyngdorfConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the receiver from a config entry."""
     client = config_entry.runtime_data.receiver
