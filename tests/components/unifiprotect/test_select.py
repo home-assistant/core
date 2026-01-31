@@ -563,9 +563,13 @@ async def test_select_set_option_viewer(
 # --- PTZ Test Helpers ---
 
 
-def _ptz_entity_id(camera: Camera, suffix: str) -> str:
-    """Generate PTZ entity ID."""
-    return f"select.{camera.name.lower().replace(' ', '_')}_{suffix}"
+def _get_ptz_entity_id(hass: HomeAssistant, camera: Camera, key: str) -> str | None:
+    """Get PTZ entity ID by unique_id from entity registry."""
+    entity_registry = er.async_get(hass)
+    unique_id = f"{camera.mac}_{key}"
+    return entity_registry.async_get_entity_id(
+        Platform.SELECT, "unifiprotect", unique_id
+    )
 
 
 def _make_presets() -> list[PTZPreset]:
@@ -617,6 +621,8 @@ async def _setup_ptz_camera(
     patrols: list[PTZPatrol] | None = None,
 ) -> None:
     """Set up PTZ camera with mocked presets and patrols."""
+    # Set up return values before init_entry so they're available when
+    # async_load_ptz_data is called during setup
     ptz_camera.get_ptz_presets.return_value = presets or []
     ptz_camera.get_ptz_patrols.return_value = patrols or []
     ufp.api.bootstrap.nvr.system_info.ustorage = None
@@ -637,7 +643,9 @@ async def test_select_ptz_preset_setup(
     assert_entity_counts(hass, Platform.SELECT, 4, 4)
 
     # Verify preset entity exists and has correct options
-    state = hass.states.get(_ptz_entity_id(ptz_camera, "ptz_preset"))
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_preset")
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == PTZ_PRESET_IDLE
     options = state.attributes.get(ATTR_OPTIONS, [])
@@ -650,7 +658,9 @@ async def test_select_ptz_patrol_setup(
     """Test PTZ patrol select entity setup."""
     await _setup_ptz_camera(hass, ufp, ptz_camera, patrols=_make_patrols(ptz_camera.id))
 
-    state = hass.states.get(_ptz_entity_id(ptz_camera, "ptz_patrol"))
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == PTZ_PATROL_STOP
     options = state.attributes.get(ATTR_OPTIONS, [])
@@ -663,7 +673,8 @@ async def test_select_ptz_preset_goto(
     """Test selecting a PTZ preset."""
     await _setup_ptz_camera(hass, ufp, ptz_camera, presets=_make_presets()[:1])
 
-    entity_id = _ptz_entity_id(ptz_camera, "ptz_preset")
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_preset")
+    assert entity_id is not None
     with patch_ufp_method(
         ptz_camera, "ptz_goto_preset_public", new_callable=AsyncMock
     ) as mock_method:
@@ -682,7 +693,8 @@ async def test_select_ptz_preset_goto_home(
     """Test selecting the Home PTZ preset."""
     await _setup_ptz_camera(hass, ufp, ptz_camera)
 
-    entity_id = _ptz_entity_id(ptz_camera, "ptz_preset")
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_preset")
+    assert entity_id is not None
     with patch_ufp_method(
         ptz_camera, "ptz_goto_preset_public", new_callable=AsyncMock
     ) as mock_method:
@@ -703,7 +715,8 @@ async def test_select_ptz_patrol_start(
         hass, ufp, ptz_camera, patrols=_make_patrols(ptz_camera.id)[:1]
     )
 
-    entity_id = _ptz_entity_id(ptz_camera, "ptz_patrol")
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
+    assert entity_id is not None
     with patch_ufp_method(
         ptz_camera, "ptz_patrol_start_public", new_callable=AsyncMock
     ) as mock_method:
@@ -724,7 +737,8 @@ async def test_select_ptz_patrol_stop(
         hass, ufp, ptz_camera, patrols=_make_patrols(ptz_camera.id)[:1]
     )
 
-    entity_id = _ptz_entity_id(ptz_camera, "ptz_patrol")
+    entity_id = _get_ptz_entity_id(hass, ptz_camera, "ptz_patrol")
+    assert entity_id is not None
     with patch_ufp_method(
         ptz_camera, "ptz_patrol_stop_public", new_callable=AsyncMock
     ) as mock_method:

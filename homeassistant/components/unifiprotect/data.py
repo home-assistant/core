@@ -17,6 +17,8 @@ from uiprotect.data import (
     EventType,
     ModelType,
     ProtectAdoptableDeviceModel,
+    PTZPatrol,
+    PTZPreset,
     WSSubscriptionMessage,
 )
 from uiprotect.exceptions import ClientError, NotAuthorized
@@ -89,6 +91,9 @@ class ProtectData:
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
         self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
+        # PTZ data cache: camera_id -> list of presets/patrols
+        self.ptz_presets: dict[str, list[PTZPreset]] = {}
+        self.ptz_patrols: dict[str, list[PTZPatrol]] = {}
 
     @property
     def disable_stream(self) -> bool:
@@ -125,6 +130,17 @@ class ProtectData:
         return cast(
             Generator[Camera], self.get_by_types({ModelType.CAMERA}, ignore_unadopted)
         )
+
+    async def async_load_ptz_data(self) -> None:
+        """Load PTZ presets and patrols for all PTZ cameras."""
+        for camera in self.get_cameras():
+            await self.async_load_ptz_data_for_camera(camera)
+
+    async def async_load_ptz_data_for_camera(self, camera: Camera) -> None:
+        """Load PTZ presets and patrols for a specific camera."""
+        if camera.feature_flags.is_ptz:
+            self.ptz_presets[camera.id] = await camera.get_ptz_presets()
+            self.ptz_patrols[camera.id] = await camera.get_ptz_patrols()
 
     @callback
     def async_setup(self) -> None:
