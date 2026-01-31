@@ -150,6 +150,12 @@ async def test_manual_update_entity(
             MOCK_MINIMAL_STATUS | {"XOFFBATT": "1970-01-01 00:00:00 +0000"},
             id="xoffbatt_na",
         ),
+        pytest.param(
+            MOCK_MINIMAL_STATUS | {"XOFFBATT": "invalid-time-string"},
+            "sensor.apc_ups_transfer_from_battery",
+            MOCK_MINIMAL_STATUS | {"XOFFBATT": "1970-01-01 00:00:00 +0000"},
+            id="xoffbatt_invalid_time_string",
+        ),
     ],
     indirect=["mock_request_status"],
 )
