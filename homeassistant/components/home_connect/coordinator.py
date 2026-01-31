@@ -432,12 +432,15 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
             model=appliance.vib,
         )
         if not appliance.connected:
-            _LOGGER.debug(
-                "Appliance %s is not connected, skipping data fetch",
-                appliance.ha_id,
-            )
             self.data.update(HomeConnectApplianceData.empty(appliance))
-            return
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="appliance_disconnected",
+                translation_placeholders={
+                    "appliance_name": appliance.name,
+                    "ha_id": appliance.ha_id,
+                },
+            )
         settings = {
             setting.key: setting
             for setting in (await self.client.get_settings(appliance.ha_id)).settings
