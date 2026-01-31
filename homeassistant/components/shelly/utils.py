@@ -22,6 +22,7 @@ from aioshelly.const import (
     MODEL_EM3,
     MODEL_I3,
     MODEL_NAMES,
+    MODEL_PLUG,
     RPC_GENERATIONS,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
@@ -55,6 +56,7 @@ from homeassistant.util.dt import utcnow
 from .const import (
     API_WS_URL,
     BASIC_INPUTS_EVENTS_TYPES,
+    COIOT_UNCONFIGURED_ISSUE_ID,
     COMPONENT_ID_PATTERN,
     CONF_COAP_PORT,
     CONF_GEN,
@@ -67,6 +69,7 @@ from .const import (
     GEN2_RELEASE_URL,
     LOGGER,
     MAX_SCRIPT_SIZE,
+    PUSH_UPDATE_ISSUE_ID,
     ROLE_GENERIC,
     RPC_INPUTS_EVENTS_TYPES,
     SHAIR_MAX_WORK_HOURS,
@@ -1003,4 +1006,87 @@ def is_rpc_ble_scanner_supported(entry: ConfigEntry) -> bool:
     return (
         entry.runtime_data.rpc_supports_scripts
         and not entry.runtime_data.rpc_zigbee_firmware
+    )
+
+
+async def check_coiot_config(device: BlockDevice, hass: HomeAssistant) -> bool:
+    """Check if CoIoT is correctly configured."""
+    if device.model == MODEL_PLUG:
+        # Shelly Plug Gen 1 does not have CoIoT settings
+        return True
+
+    coiot_config = device.settings["coiot"]
+
+    # Check if CoIoT is disabled
+    if not coiot_config.get("enabled"):
+        return False
+
+    coiot_address = await get_coiot_address(hass)
+    if coiot_address is None:
+        LOGGER.debug(
+            "Skipping CoIoT peer check for device %s as no local address is available",
+            device.name,
+        )
+        return True
+
+    coiot_peer = f"{coiot_address}:{get_coiot_port(hass)}"
+    # Check if CoIoT address is not correctly set
+    if (peer_config := coiot_config.get("peer")) and peer_config != coiot_peer:
+        LOGGER.debug(
+            "CoIoT is unconfigured for device %s, peer_config: %s, coiot_peer: %s",
+            device.name,
+            peer_config,
+            coiot_peer,
+        )
+        return False
+
+    return True
+
+
+async def async_manage_coiot_issues_task(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """CoIoT configuration or push updates issues task."""
+    config_issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=entry.unique_id)
+    push_updates_issue_id = PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
+
+    if TYPE_CHECKING:
+        assert entry.runtime_data.block is not None
+
+    device = entry.runtime_data.block.device
+
+    if await check_coiot_config(device, hass):
+        # CoIoT is correctly configured, create push updates issue
+        ir.async_delete_issue(hass, DOMAIN, config_issue_id)
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            push_updates_issue_id,
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.ERROR,
+            learn_more_url="https://www.home-assistant.io/integrations/shelly/#shelly-device-configuration-generation-1",
+            translation_key="push_update_failure",
+            translation_placeholders={
+                "device_name": device.name,
+                "ip_address": device.ip_address,
+            },
+        )
+        return
+
+    # CoIoT is not correctly configured, create config issue
+    ir.async_delete_issue(hass, DOMAIN, push_updates_issue_id)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        config_issue_id,
+        is_fixable=True,
+        is_persistent=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="coiot_unconfigured",
+        translation_placeholders={
+            "device_name": device.name,
+            "ip_address": device.ip_address,
+        },
+        data={"entry_id": entry.entry_id},
     )
