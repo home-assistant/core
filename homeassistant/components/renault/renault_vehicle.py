@@ -225,7 +225,7 @@ class RenaultVehicleProxy:
     async def start_horn(self) -> dict[str, Any]:
         """Start vehicle horn."""
         return await self._vehicle.start_horn()
- 
+
     @with_error_wrapping
     async def start_lights(self) -> dict[str, Any]:
         """Start vehicle lights."""

@@ -183,6 +183,7 @@ async def test_button_start_air_conditioner(
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (21, None)
 
+
 @pytest.mark.usefixtures("fixtures_with_data")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
 async def test_button_start_horn(
@@ -198,13 +199,16 @@ async def test_button_start_horn(
 
     with patch(
         "renault_api.renault_vehicle.RenaultVehicle.set_horn_start",
-        return_value=await async_load_fixture(hass, "action.set_horn_start.json", DOMAIN)
+        return_value=await async_load_fixture(
+            hass, "action.set_horn_start.json", DOMAIN
+        ),
     ) as mock_action:
         await hass.services.async_call(
             BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()
+
 
 @pytest.mark.usefixtures("fixtures_with_data")
 @pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
@@ -221,7 +225,9 @@ async def test_button_start_lights(
 
     with patch(
         "renault_api.renault_vehicle.RenaultVehicle.set_lights_start",
-        return_value=await async_load_fixture(hass, "action.set_lights_start.json", DOMAIN)
+        return_value=await async_load_fixture(
+            hass, "action.set_lights_start.json", DOMAIN
+        ),
     ) as mock_action:
         await hass.services.async_call(
             BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
