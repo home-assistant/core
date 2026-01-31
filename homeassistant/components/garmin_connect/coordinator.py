@@ -5,17 +5,19 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiogarmin import GarminAuth, GarminClient
 from aiogarmin.exceptions import GarminAPIError, GarminAuthError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_OAUTH1_TOKEN, CONF_OAUTH2_TOKEN, DEFAULT_UPDATE_INTERVAL, DOMAIN
+
+if TYPE_CHECKING:
+    from . import GarminConnectConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,12 +32,12 @@ class GarminConnectCoordinators:
 class BaseGarminCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Base class for Garmin Connect coordinators."""
 
-    config_entry: ConfigEntry
+    config_entry: GarminConnectConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: GarminConnectConfigEntry,
         client: GarminClient,
         auth: GarminAuth,
         name: str,
@@ -51,12 +53,11 @@ class BaseGarminCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
         self.auth = auth
-        self.config_entry = entry
 
     async def _update_tokens_if_changed(self) -> None:
         """Update stored tokens if they changed during refresh."""
-        current_oauth1 = self.config_entry.data.get(CONF_OAUTH1_TOKEN)
-        current_oauth2 = self.config_entry.data.get(CONF_OAUTH2_TOKEN)
+        current_oauth1 = self.config_entry.data[CONF_OAUTH1_TOKEN]
+        current_oauth2 = self.config_entry.data[CONF_OAUTH2_TOKEN]
 
         if (
             self.auth.oauth1_token != current_oauth1
@@ -78,7 +79,7 @@ class CoreCoordinator(BaseGarminCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: GarminConnectConfigEntry,
         client: GarminClient,
         auth: GarminAuth,
     ) -> None:
