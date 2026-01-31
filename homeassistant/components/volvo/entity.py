@@ -103,3 +103,4 @@ class VolvoEntity(CoordinatorEntity[VolvoBaseCoordinator], VolvoBaseEntity):
     @abstractmethod
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
         """Update the state of the entity."""
+        raise NotImplementedError
