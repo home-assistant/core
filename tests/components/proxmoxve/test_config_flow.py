@@ -228,3 +228,118 @@ async def test_import_flow_exceptions(
     assert result["reason"] == reason
     assert len(mock_setup_entry.mock_calls) == 0
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+
+
+async def test_full_flow_reconfigure(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_setup_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the full flow of the config flow."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_USER_STEP,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == MOCK_TEST_CONFIG
+
+
+async def test_full_flow_reconfigure_match_entries(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_setup_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the full flow of the config flow, this time matching existing entries."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Adding a second entry with a different host, since configuring the same host should work
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Second ProxmoxVE",
+        data={
+            **MOCK_TEST_CONFIG,
+            CONF_HOST: "192.168.1.1",
+        },
+    )
+    second_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            **MOCK_USER_STEP,
+            CONF_HOST: "192.168.1.1",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data == MOCK_TEST_CONFIG
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (
+            AuthenticationError("Invalid credentials"),
+            "invalid_auth",
+        ),
+        (
+            SSLError("SSL handshake failed"),
+            "ssl_error",
+        ),
+        (
+            ConnectTimeout("Connection timed out"),
+            "connect_timeout",
+        ),
+        (
+            ResourceException("404", "status_message", "content"),
+            "no_nodes_found",
+        ),
+    ],
+)
+async def test_full_flow_reconfigure_exceptions(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_setup_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    reason: str,
+) -> None:
+    """Test the full flow of the config flow."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_proxmox_client.nodes.get.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_USER_STEP,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": reason}
+
+    mock_proxmox_client.nodes.get.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_USER_STEP,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == MOCK_TEST_CONFIG
