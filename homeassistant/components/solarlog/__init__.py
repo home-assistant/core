@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> 
 
     basic_coordinator = SolarLogBasicDataCoordinator(hass, entry, solarlog)
 
-    solarLogData: SolarlogIntegrationData = SolarlogIntegrationData(
+    solarLogData = SolarlogIntegrationData(
         api=solarlog,
         basic_data_coordinator=basic_coordinator,
     )
