@@ -22,7 +22,7 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "description": "Use the following form to reconfigure your Proxmox VE server connection.",
-        "title": "Reconfigure Proxmox VE Integration"
+        "title": "Reconfigure Proxmox VE integration"
       },
       "user": {
         "data": {
