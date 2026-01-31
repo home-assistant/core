@@ -106,9 +106,6 @@
       "power_dc": {
         "name": "Power DC"
       },
-      "production_year": {
-        "name": "Production year"
-      },
       "self_consumption_year": {
         "name": "Self-consumption year"
       },
