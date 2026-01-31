@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE
+from .const import DATA_ENOCEAN, DOMAIN, ENOCEAN_DONGLE, PLATFORMS
 from .dongle import EnOceanDongle
 
 CONFIG_SCHEMA = vol.Schema(
@@ -18,6 +18,21 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the EnOcean component."""
+
+    # search for platforms
+    enocean_devices: dict[str, list[dict]] = {}
+    for platform in PLATFORMS:
+        enocean_devices[platform.value] = []
+        if platform.value not in config:
+            continue
+
+        for entry in config[platform.value]:
+            if "platform" not in entry or entry["platform"] != DOMAIN:
+                continue
+            enocean_devices[platform.value].append(entry)
+
+    # _LOGGER.warning("EnOcean platform %s found in config entries", config[platform.value])
+
     # support for text-based configuration (legacy)
     if DOMAIN not in config:
         return True
