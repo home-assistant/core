@@ -275,7 +275,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            errors, _device_info = await self._handle_user_input(
+            errors, _ = await self._handle_user_input(
                 user_input=user_input, discovery=True
             )
 
