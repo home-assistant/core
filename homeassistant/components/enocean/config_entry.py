@@ -1,8 +1,8 @@
 """Config entry type runtime_data type specification for EnOcean integration."""
 
-from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
-
 from homeassistant.config_entries import ConfigEntry
+
+from .dongle import EnOceanDongle
 
 type EnOceanConfigEntry = ConfigEntry[EnOceanConfigRuntimeData]
 
@@ -10,11 +10,11 @@ type EnOceanConfigEntry = ConfigEntry[EnOceanConfigRuntimeData]
 class EnOceanConfigRuntimeData:
     """Runtime data for EnOcean config entries."""
 
-    def __init__(self, gateway: EnOceanHomeAssistantGateway) -> None:
+    def __init__(self, dongle: EnOceanDongle) -> None:
         """Initialize runtime data."""
-        self._gateway = gateway
+        self._dongle = dongle
 
     @property
-    def gateway(self) -> EnOceanHomeAssistantGateway:
-        """Return the EnOcean gateway."""
-        return self._gateway
+    def dongle(self) -> EnOceanDongle:
+        """Return the EnOcean dongle."""
+        return self._dongle
