@@ -111,19 +111,8 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         proxmox_nodes: list[dict[str, Any]] = []
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            try:
-                proxmox_nodes = await self.hass.async_add_executor_job(
-                    _get_nodes_data, user_input
-                )
-            except ProxmoxConnectTimeout:
-                errors["base"] = "connect_timeout"
-            except ProxmoxAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except ProxmoxSSLError:
-                errors["base"] = "ssl_error"
-            except ProxmoxNoNodesFound:
-                errors["base"] = "no_nodes_found"
-            else:
+            proxmox_nodes, errors = await self._validate_input(user_input)
+            if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
                     data={**user_input, CONF_NODES: proxmox_nodes},
@@ -153,17 +142,8 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             user_input = {**reconf_entry.data, **user_input}
-            try:
-                await self.hass.async_add_executor_job(_get_nodes_data, user_input)
-            except ProxmoxConnectTimeout:
-                errors["base"] = "connect_timeout"
-            except ProxmoxAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except ProxmoxSSLError:
-                errors["base"] = "ssl_error"
-            except ProxmoxNoNodesFound:
-                errors["base"] = "no_nodes_found"
-            else:
+            _, errors = await self._validate_input(user_input)
+            if not errors:
                 return self.async_update_reload_and_abort(
                     reconf_entry,
                     data_updates={
@@ -184,6 +164,26 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def _validate_input(
+        self, user_input: dict[str, Any]
+    ) -> tuple[list[dict[str, Any]], dict[str, str]]:
+        """Validate the user input. Return nodes data and/or errors."""
+        errors: dict[str, str] = {}
+        proxmox_nodes: list[dict[str, Any]] = []
+        try:
+            proxmox_nodes = await self.hass.async_add_executor_job(
+                _get_nodes_data, user_input
+            )
+        except ProxmoxConnectTimeout:
+            errors["base"] = "connect_timeout"
+        except ProxmoxAuthenticationError:
+            errors["base"] = "invalid_auth"
+        except ProxmoxSSLError:
+            errors["base"] = "ssl_error"
+        except ProxmoxNoNodesFound:
+            errors["base"] = "no_nodes_found"
+        return proxmox_nodes, errors
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initiated by configuration file."""
