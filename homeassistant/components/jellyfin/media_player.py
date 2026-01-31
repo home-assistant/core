@@ -150,7 +150,9 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
 
         self._attr_state = state
         self._attr_is_volume_muted = volume_muted
-        self._attr_volume_level = volume_level
+        # Only update volume_level if the API provides it, otherwise preserve current value
+        if volume_level is not None:
+            self._attr_volume_level = volume_level
         self._attr_media_content_type = media_content_type
         self._attr_media_content_id = media_content_id
         self._attr_media_title = media_title
@@ -203,9 +205,7 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
                 | MediaPlayerEntityFeature.SEARCH_MEDIA
             )
 
-            if (
-                "Mute" in commands and "Unmute" in commands
-            ) or "ToggleMute" in commands:
+            if "Mute" in commands and "Unmute" in commands:
                 features |= MediaPlayerEntityFeature.VOLUME_MUTE
 
             if "VolumeSet" in commands or "SetVolume" in commands:
@@ -251,19 +251,15 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         self.coordinator.api_client.jellyfin.remote_set_volume(
             self.session_id, int(volume * 100)
         )
+        self._attr_volume_level = volume
 
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        commands: list[str] = self.capabilities.get("SupportedCommands", [])
-
-        # If ToggleMute is available and we need to change state, use it
-        if "ToggleMute" in commands and self._attr_is_volume_muted != mute:
-            self.coordinator.api_client.jellyfin.remote_toggle_mute(self.session_id)
-        # Otherwise use individual Mute/Unmute commands
-        elif mute:
+        if mute:
             self.coordinator.api_client.jellyfin.remote_mute(self.session_id)
         else:
             self.coordinator.api_client.jellyfin.remote_unmute(self.session_id)
+        self._attr_is_volume_muted = mute
 
     async def async_browse_media(
         self,
