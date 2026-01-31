@@ -6,6 +6,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -47,6 +49,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -69,6 +73,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -110,6 +116,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -132,6 +140,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -173,6 +183,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -258,6 +270,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -299,6 +313,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -321,6 +337,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -362,6 +380,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -384,6 +404,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -425,6 +447,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -447,6 +471,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -488,6 +514,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -510,6 +538,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -551,6 +581,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -573,6 +605,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -614,6 +648,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -636,6 +672,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -677,6 +715,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -699,6 +739,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -740,6 +782,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -762,6 +806,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
       ]),
@@ -801,6 +847,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
       ]),
@@ -821,6 +869,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
       ]),
@@ -860,6 +910,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
       ]),
@@ -880,6 +932,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -921,6 +975,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -943,6 +999,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
       ]),
@@ -982,6 +1040,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
       ]),
@@ -1002,6 +1062,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
       ]),
@@ -1041,6 +1103,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
       ]),
@@ -1061,6 +1125,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1102,6 +1168,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1124,6 +1192,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
       ]),
@@ -1163,6 +1233,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
       ]),
@@ -1183,6 +1255,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
       ]),
@@ -1222,6 +1296,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
       ]),
@@ -1242,6 +1318,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1283,6 +1361,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1305,6 +1385,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1346,6 +1428,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1368,6 +1452,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1409,6 +1495,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1431,6 +1519,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1472,6 +1562,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1494,6 +1586,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1535,6 +1629,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1557,6 +1653,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1598,6 +1696,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1620,6 +1720,8 @@
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
@@ -1661,6 +1763,8 @@
       'device_class': 'button',
       'event_type': None,
       'event_types': list([
+        'initial_press',
+        'short_release',
         'multi_press_ongoing',
         'multi_press_complete',
         'long_press',
