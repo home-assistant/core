@@ -381,9 +381,14 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         """Fetch data from Home Connect."""
         while True:
             try:
-                self.data.info.connected = (
-                    await self.client.get_specific_appliance(self.data.info.ha_id)
-                ).connected
+                try:
+                    self.data.info.connected = (
+                        await self.client.get_specific_appliance(self.data.info.ha_id)
+                    ).connected
+                except HomeConnectError:
+                    self.data.info.connected = False
+                    raise
+
                 await self.get_appliance_data()
             except TooManyRequestsError as err:
                 _LOGGER.debug(
@@ -398,7 +403,6 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                     translation_placeholders=get_dict_from_home_connect_error(error),
                 ) from error
             except HomeConnectError as error:
-                self.data.info.connected = False
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="fetch_api_error",
