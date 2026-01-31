@@ -48,7 +48,7 @@ class HMLock(HMDevice, LockEntity):
         """Open the door latch."""
         self._hmdevice.open()
 
-    def _init_data_struct(self):
+    def _init_data_struct(self) -> None:
         """Generate the data dictionary (self._data) from metadata."""
         self._state = "STATE"
         self._data.update({self._state: None})

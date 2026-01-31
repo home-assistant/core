@@ -24,7 +24,12 @@ def gather_info(arguments) -> Info:
         info = _gather_info(
             {
                 "domain": {
-                    "prompt": "What is the domain?",
+                    "prompt": (
+                        """What is the domain?
+
+Hint: The domain is a short name consisting of characters and underscores.
+This domain has to be unique, cannot be changed, and has to match the directory name of the integration."""
+                    ),
                     "validators": [
                         CHECK_EMPTY,
                         [
@@ -72,13 +77,8 @@ def gather_new_integration(determine_auth: bool) -> Info:
         },
         "codeowner": {
             "prompt": "What is your GitHub handle?",
-            "validators": [
-                CHECK_EMPTY,
-                [
-                    'GitHub handles need to start with an "@"',
-                    lambda value: value.startswith("@"),
-                ],
-            ],
+            "validators": [CHECK_EMPTY],
+            "converter": lambda value: value if value.startswith("@") else f"@{value}",
         },
         "requirement": {
             "prompt": "What PyPI package and version do you depend on? Leave blank for none.",

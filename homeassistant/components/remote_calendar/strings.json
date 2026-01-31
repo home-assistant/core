@@ -19,7 +19,7 @@
         "data_description": {
           "calendar_name": "The name of the calendar shown in the UI.",
           "url": "The URL of the remote calendar.",
-          "verify_ssl": "Enable SSL certificate verification for secure connections."
+          "verify_ssl": "[%key:common::config_flow::description::verify_ssl%]"
         },
         "description": "Please choose a name for the calendar to be imported"
       }

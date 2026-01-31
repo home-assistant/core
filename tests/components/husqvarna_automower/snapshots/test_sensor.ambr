@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutting blade usage time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -134,6 +136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Downtime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -324,6 +327,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -505,6 +509,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn last time completed',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -556,6 +561,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn progress',
     'options': dict({
     }),
     'original_device_class': None,
@@ -612,6 +618,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Inactive reason',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -675,6 +682,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -732,6 +740,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn last time completed',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -783,6 +792,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn progress',
     'options': dict({
     }),
     'original_device_class': None,
@@ -833,6 +843,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -884,6 +895,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Number of charging cycles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -935,6 +947,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Number of collisions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -984,6 +997,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1065,6 +1079,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restricted reason',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1140,6 +1155,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1199,6 +1215,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cutting time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1258,6 +1275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total drive distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1317,6 +1335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total running time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1376,6 +1395,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total searching time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1435,6 +1455,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1499,6 +1520,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Work area',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1561,6 +1583,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1745,6 +1768,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1935,6 +1959,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1992,6 +2017,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -2041,6 +2067,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2122,6 +2149,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restricted reason',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
