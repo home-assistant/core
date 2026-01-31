@@ -9,7 +9,7 @@ import re
 from collections.abc import Callable, Iterable
 from http import HTTPStatus
 from itertools import groupby
-from typing import Any, Final, Optional, TypedDict, cast, final
+from typing import Any, Final, TypedDict, cast, final
 
 import voluptuous as vol
 from aiohttp import web
@@ -278,9 +278,9 @@ CalendarEventArgs = TypedDict(
         "dtstart": datetime.date | datetime.datetime,
         "dtend": datetime.date | datetime.datetime,
         "summary": str,
-        "description": Optional[str],
-        "location": Optional[str],
-        "rrule": Optional[str],
+        "description": str | None,
+        "location": str | None,
+        "rrule": str | None,
     },
 )
 
