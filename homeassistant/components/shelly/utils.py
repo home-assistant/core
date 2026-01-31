@@ -1024,8 +1024,7 @@ async def check_coiot_config(device: BlockDevice, hass: HomeAssistant) -> bool:
     coiot_address = await get_coiot_address(hass)
     if coiot_address is None:
         LOGGER.debug(
-            "Skipping CoIoT peer check for device %s as no local address "
-            "is available",
+            "Skipping CoIoT peer check for device %s as no local address is available",
             device.name,
         )
         return True

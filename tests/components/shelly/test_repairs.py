@@ -639,14 +639,37 @@ async def test_coiot_key_missing_no_issue_created(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
-async def test_coiot_no_hass_url(
+async def test_coiot_push_issue_when_missing_hass_url(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     mock_block_device: Mock,
     issue_registry: ir.IssueRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test no CoIoT repair issues when HA URL is not available."""
+    """Test CoIoT push update issue created when HA URL is not available."""
+    issue_id = PUSH_UPDATE_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 1)
+
+    with patch(
+        "homeassistant.components.shelly.utils.get_url",
+        side_effect=NoURLAvailableError(),
+    ):
+        await mock_block_device_push_update_failure(hass, mock_block_device)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 1
+
+
+async def test_coiot_fix_flow_no_hass_url(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_block_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test CoIoT repair issue when HA URL is not available."""
     monkeypatch.setitem(
         mock_block_device.settings,
         "coiot",
