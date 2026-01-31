@@ -778,7 +778,9 @@ async def test_proactive_mode_filter_states(
     aioclient_mock.post(TEST_URL, text="", status=202)
     with patch(
         "homeassistant.components.alexa.entities.AlexaEntity.serialize_properties",
-        return_value=[{"same": "info"}],
+        return_value=[
+            {"name": "dummy", "namespace": "dummy", "value": {"same": "info"}}
+        ],
     ):
         hass.states.async_set(
             "binary_sensor.same_serialize",

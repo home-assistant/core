@@ -236,6 +236,7 @@ async def async_handle_message(
     if directive.has_endpoint:
         assert directive.entity_id is not None
         request_info["entity_id"] = directive.entity_id
+        response.update_tos_for_state_report(directive.entity_id, config)
 
     hass.bus.async_fire(
         EVENT_ALEXA_SMART_HOME,
