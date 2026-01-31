@@ -20,6 +20,7 @@ from homeassistant.components.homeassistant import (
     SERVICE_SET_LOCATION,
 )
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
@@ -34,15 +35,25 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers import entity, entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     MockEntityPlatform,
     MockUser,
+    RegistryEntryWithDefaults,
     async_capture_events,
     async_mock_service,
+    mock_area_registry,
+    mock_device_registry,
+    mock_registry,
     patch_yaml_files,
 )
 
@@ -83,6 +94,168 @@ async def test_toggle(hass: HomeAssistant) -> None:
         ha.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "light.Bowl"}, blocking=True
     )
     assert len(calls) == 1
+
+
+async def test_toggle_area_any_on_turns_all_off(hass: HomeAssistant) -> None:
+    """Test toggle with area target turns all off when any entity is on."""
+    await async_setup_component(hass, ha.DOMAIN, {})
+
+    # Set up area
+    area = ar.AreaEntry(
+        id="test-area",
+        name="Test area",
+        aliases={},
+        floor_id=None,
+        icon=None,
+        picture=None,
+        temperature_entity_id=None,
+        humidity_entity_id=None,
+    )
+    mock_area_registry(hass, {area.id: area})
+
+    # Set up device in area
+    device = dr.DeviceEntry(id="device-1", area_id="test-area")
+    mock_device_registry(hass, {device.id: device})
+
+    # Set up entities in the area
+    entity1 = RegistryEntryWithDefaults(
+        entity_id="light.one",
+        unique_id="light-1",
+        platform="test",
+        device_id=device.id,
+    )
+    entity2 = RegistryEntryWithDefaults(
+        entity_id="light.two",
+        unique_id="light-2",
+        platform="test",
+        device_id=device.id,
+    )
+    mock_registry(hass, {entity1.entity_id: entity1, entity2.entity_id: entity2})
+
+    # One entity ON, one OFF
+    hass.states.async_set("light.one", STATE_ON)
+    hass.states.async_set("light.two", STATE_OFF)
+
+    # Mock turn_off service (toggle should become turn_off when any is on)
+    turn_off_calls = async_mock_service(hass, "light", SERVICE_TURN_OFF)
+    turn_on_calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
+
+    await hass.services.async_call(
+        ha.DOMAIN, SERVICE_TOGGLE, {ATTR_AREA_ID: "test-area"}, blocking=True
+    )
+
+    # Should call turn_off, not turn_on or toggle
+    assert len(turn_off_calls) == 1
+    assert len(turn_on_calls) == 0
+    assert set(turn_off_calls[0].data[ATTR_ENTITY_ID]) == {"light.one", "light.two"}
+
+
+async def test_toggle_area_all_off_turns_all_on(hass: HomeAssistant) -> None:
+    """Test toggle with area target turns all on when all entities are off."""
+    await async_setup_component(hass, ha.DOMAIN, {})
+
+    # Set up area
+    area = ar.AreaEntry(
+        id="test-area",
+        name="Test area",
+        aliases={},
+        floor_id=None,
+        icon=None,
+        picture=None,
+        temperature_entity_id=None,
+        humidity_entity_id=None,
+    )
+    mock_area_registry(hass, {area.id: area})
+
+    # Set up device in area
+    device = dr.DeviceEntry(id="device-1", area_id="test-area")
+    mock_device_registry(hass, {device.id: device})
+
+    # Set up entities in the area
+    entity1 = RegistryEntryWithDefaults(
+        entity_id="light.one",
+        unique_id="light-1",
+        platform="test",
+        device_id=device.id,
+    )
+    entity2 = RegistryEntryWithDefaults(
+        entity_id="light.two",
+        unique_id="light-2",
+        platform="test",
+        device_id=device.id,
+    )
+    mock_registry(hass, {entity1.entity_id: entity1, entity2.entity_id: entity2})
+
+    # Both entities OFF
+    hass.states.async_set("light.one", STATE_OFF)
+    hass.states.async_set("light.two", STATE_OFF)
+
+    # Mock services
+    turn_off_calls = async_mock_service(hass, "light", SERVICE_TURN_OFF)
+    turn_on_calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
+
+    await hass.services.async_call(
+        ha.DOMAIN, SERVICE_TOGGLE, {ATTR_AREA_ID: "test-area"}, blocking=True
+    )
+
+    # Should call turn_on, not turn_off or toggle
+    assert len(turn_on_calls) == 1
+    assert len(turn_off_calls) == 0
+    assert set(turn_on_calls[0].data[ATTR_ENTITY_ID]) == {"light.one", "light.two"}
+
+
+async def test_toggle_area_all_on_turns_all_off(hass: HomeAssistant) -> None:
+    """Test toggle with area target turns all off when all entities are on."""
+    await async_setup_component(hass, ha.DOMAIN, {})
+
+    # Set up area
+    area = ar.AreaEntry(
+        id="test-area",
+        name="Test area",
+        aliases={},
+        floor_id=None,
+        icon=None,
+        picture=None,
+        temperature_entity_id=None,
+        humidity_entity_id=None,
+    )
+    mock_area_registry(hass, {area.id: area})
+
+    # Set up device in area
+    device = dr.DeviceEntry(id="device-1", area_id="test-area")
+    mock_device_registry(hass, {device.id: device})
+
+    # Set up entities in the area
+    entity1 = RegistryEntryWithDefaults(
+        entity_id="light.one",
+        unique_id="light-1",
+        platform="test",
+        device_id=device.id,
+    )
+    entity2 = RegistryEntryWithDefaults(
+        entity_id="light.two",
+        unique_id="light-2",
+        platform="test",
+        device_id=device.id,
+    )
+    mock_registry(hass, {entity1.entity_id: entity1, entity2.entity_id: entity2})
+
+    # Both entities ON
+    hass.states.async_set("light.one", STATE_ON)
+    hass.states.async_set("light.two", STATE_ON)
+
+    # Mock services
+    turn_off_calls = async_mock_service(hass, "light", SERVICE_TURN_OFF)
+    turn_on_calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
+
+    await hass.services.async_call(
+        ha.DOMAIN, SERVICE_TOGGLE, {ATTR_AREA_ID: "test-area"}, blocking=True
+    )
+
+    # Should call turn_off, not turn_on or toggle
+    assert len(turn_off_calls) == 1
+    assert len(turn_on_calls) == 0
+    assert set(turn_off_calls[0].data[ATTR_ENTITY_ID]) == {"light.one", "light.two"}
 
 
 @patch("homeassistant.config.os.path.isfile", Mock(return_value=True))

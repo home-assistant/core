@@ -24,6 +24,7 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_ON,
 )
 from homeassistant.core import (
     Event,
@@ -127,6 +128,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             )
             return
 
+        # Determine the actual service to call
+        actual_service = service.service
+
+        # For toggle, implement conditional behavior: if any entity is on,
+        # turn all off; otherwise turn all on
+        if service.service == SERVICE_TOGGLE:
+            any_on = any(
+                (state := hass.states.get(entity_id)) is not None
+                and state.state == STATE_ON
+                for entity_id in all_referenced
+            )
+            actual_service = SERVICE_TURN_OFF if any_on else SERVICE_TURN_ON
+
         # Group entity_ids by domain. groupby requires sorted data.
         by_domain = it.groupby(
             sorted(all_referenced), lambda item: split_entity_id(item)[0]
@@ -145,7 +159,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 )
                 continue
 
-            if not hass.services.has_service(domain, service.service):
+            if not hass.services.has_service(domain, actual_service):
                 unsupported_entities.update(set(ent_ids) & referenced.referenced)
                 continue
 
@@ -158,7 +172,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             tasks.append(
                 hass.services.async_call(
                     domain,
-                    service.service,
+                    actual_service,
                     data,
                     blocking=True,
                     context=service.context,
