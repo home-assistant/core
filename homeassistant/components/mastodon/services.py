@@ -43,8 +43,8 @@ class StatusVisibility(StrEnum):
     DIRECT = "direct"
 
 
-SERVICE_LOOKUP_ACCOUNT = "lookup_account"
-SERVICE_LOOKUP_ACCOUNT_SCHEMA = vol.Schema(
+SERVICE_GET_ACCOUNT = "get_account"
+SERVICE_GET_ACCOUNT_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
         vol.Required("account_name"): str,
@@ -71,9 +71,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Mastodon integration."""
     hass.services.async_register(
         DOMAIN,
-        SERVICE_LOOKUP_ACCOUNT,
-        _async_lookup_account,
-        schema=SERVICE_LOOKUP_ACCOUNT_SCHEMA,
+        SERVICE_GET_ACCOUNT,
+        _async_get_account,
+        schema=SERVICE_GET_ACCOUNT_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
@@ -81,7 +81,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
 
 
-async def _async_lookup_account(call: ServiceCall) -> ServiceResponse:
+async def _async_get_account(call: ServiceCall) -> ServiceResponse:
     """Get account information."""
     entry: MastodonConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]

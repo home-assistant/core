@@ -96,7 +96,7 @@
     }
   },
   "services": {
-    "lookup_account": {
+    "get_account": {
       "description": "Gets information about a Mastodon account.",
       "fields": {
         "account_name": {
@@ -108,7 +108,7 @@
           "name": "Mastodon instance"
         }
       },
-      "name": "Look up account"
+      "name": "Get account"
     },
     "post": {
       "description": "Posts a status on your Mastodon account.",

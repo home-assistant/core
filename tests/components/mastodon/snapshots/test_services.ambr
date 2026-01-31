@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_account_lookup_success
+# name: test_get_account_success
   dict({
     'account': Account({
       'id': 14715,

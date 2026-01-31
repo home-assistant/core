@@ -16,10 +16,7 @@ from homeassistant.components.mastodon.const import (
     ATTR_VISIBILITY,
     DOMAIN,
 )
-from homeassistant.components.mastodon.services import (
-    SERVICE_LOOKUP_ACCOUNT,
-    SERVICE_POST,
-)
+from homeassistant.components.mastodon.services import SERVICE_GET_ACCOUNT, SERVICE_POST
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -29,18 +26,18 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
-async def test_account_lookup_success(
+async def test_get_account_success(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the account_lookup service successfully returns account data."""
+    """Test the get_account service successfully returns account data."""
     await setup_integration(hass, mock_config_entry)
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_LOOKUP_ACCOUNT,
+        SERVICE_GET_ACCOUNT,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             "account_name": "@trwnh@mastodon.social",
@@ -55,12 +52,12 @@ async def test_account_lookup_success(
     )
 
 
-async def test_account_lookup_failures(
+async def test_get_account_failure(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the account_lookup service handles API errors."""
+    """Test the get_account service handles API errors."""
     await setup_integration(hass, mock_config_entry)
 
     # Test API error (this is the only error type currently caught by the service)
@@ -71,7 +68,7 @@ async def test_account_lookup_failures(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_LOOKUP_ACCOUNT,
+            SERVICE_GET_ACCOUNT,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 "account_name": "@test@mastodon.social",

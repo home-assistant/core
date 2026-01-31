@@ -1,4 +1,4 @@
-lookup_account:
+get_account:
   fields:
     config_entry_id:
       required: true
