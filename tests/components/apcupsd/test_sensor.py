@@ -135,18 +135,19 @@ async def test_manual_update_entity(
 
 
 @pytest.mark.parametrize(
-    ("mock_request_status", "entity_id", "unknown_status"),
+    ("mock_request_status", "entity_id", "known_status"),
     [
         pytest.param(
-            MOCK_MINIMAL_STATUS | {"LASTSTEST": "1970-01-01 00:00:00 +0000"},
-            "sensor.apc_ups_last_self_test",
+            # Even though the "LASTSTEST" field is not available, we should still create the entity.
             MOCK_MINIMAL_STATUS,
+            "sensor.apc_ups_last_self_test",
+            MOCK_MINIMAL_STATUS | {"LASTSTEST": "1970-01-01 00:00:00 +0000"},
             id="last_self_test_missing",
         ),
         pytest.param(
-            MOCK_MINIMAL_STATUS | {"XOFFBATT": "1970-01-01 00:00:00 +0000"},
-            "sensor.apc_ups_transfer_from_battery",
             MOCK_MINIMAL_STATUS | {"XOFFBATT": "N/A"},
+            "sensor.apc_ups_transfer_from_battery",
+            MOCK_MINIMAL_STATUS | {"XOFFBATT": "1970-01-01 00:00:00 +0000"},
             id="xoffbatt_na",
         ),
     ],
@@ -156,27 +157,27 @@ async def test_sensor_unknown(
     hass: HomeAssistant,
     mock_request_status: AsyncMock,
     entity_id: str,
-    unknown_status: dict[str, str],
+    known_status: dict[str, str],
 ) -> None:
-    """Test if our integration can properly mark certain sensors as unknown when it becomes so."""
+    """Test if our integration can properly mark certain sensors as known/unknown when it becomes so."""
     base_status = mock_request_status.return_value
 
-    # The state should be known initially.
+    # The state should be unknown initially.
     state = hass.states.get(entity_id)
     assert state
-    assert state.state != STATE_UNKNOWN
+    assert state.state == STATE_UNKNOWN
 
-    # Update to a payload that should make the entity unknown.
-    mock_request_status.return_value = unknown_status
+    # Update to a payload that should make the entity known.
+    mock_request_status.return_value = known_status
     future = utcnow() + timedelta(minutes=2)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_UNKNOWN
+    assert state.state != STATE_UNKNOWN
 
-    # Revert back to the initial status, and the state should now be known again.
+    # Revert back to the initial status, and the state should now be unknown again.
     mock_request_status.return_value = base_status
     future = utcnow() + timedelta(minutes=2)
     async_fire_time_changed(hass, future)
@@ -184,7 +185,7 @@ async def test_sensor_unknown(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state != STATE_UNKNOWN
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(("entity_key", "issue_key"), DEPRECATED_SENSORS.items())
