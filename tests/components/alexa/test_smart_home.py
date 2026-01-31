@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import camera
@@ -5868,3 +5869,31 @@ async def test_alexa_config(
         assert len(test_config._auth.async_invalidate_access_token.mock_calls) == 1
         await test_config.async_accept_grant("grant_code")
         test_config._auth.async_do_auth.assert_called_once_with("grant_code")
+
+
+async def test_inject_tos(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test injecting the time of sample."""
+    freezer.move_to("2022-04-19 07:53:05")
+    test_config = smart_home.AlexaConfig(hass, {})
+    prop = {"namespace": "Alexa.Switch", "name": "Name", "value": "ON"}
+
+    assert test_config.inject_time_of_sample("switch.test", prop)
+    assert prop["timeOfSample"] == "2022-04-19T07:53:05Z"
+    assert prop["uncertaintyInMilliseconds"] == 1000
+
+    freezer.move_to("2022-04-19 08:53:05")
+    assert not test_config.inject_time_of_sample("switch.test", prop)
+    assert prop["timeOfSample"] == "2022-04-19T07:53:05Z"
+
+    freezer.move_to("2022-04-19 09:53:05")
+    prop["value"] = "OFF"
+    assert test_config.inject_time_of_sample("switch.test", prop)
+    assert prop["timeOfSample"] == "2022-04-19T09:53:05Z"
+
+    freezer.move_to("2022-04-19 10:53:05")
+    assert not test_config.inject_time_of_sample("switch.test", prop)
+    assert prop["timeOfSample"] == "2022-04-19T09:53:05Z"

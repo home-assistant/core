@@ -50,13 +50,12 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.util import color as color_util, dt as dt_util
+from homeassistant.util import color as color_util
 
 from .const import (
     API_TEMP_UNITS,
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_PRESETS,
-    DATE_FORMAT,
     PRESET_MODE_NA,
     Inputs,
 )
@@ -150,8 +149,7 @@ class AlexaCapability:
 
         Return value should be a dict, or raise UnsupportedProperty.
 
-        Properties can also have a timeOfSample and uncertaintyInMilliseconds,
-        but returning those metadata is not yet implemented.
+        Properties timeOfSample and uncertaintyInMilliseconds values are added later.
         """
         raise UnsupportedProperty(name)
 
@@ -274,13 +272,7 @@ class AlexaCapability:
             if prop_value is None:
                 continue
 
-            result = {
-                "name": prop_name,
-                "namespace": self.name(),
-                "value": prop_value,
-                "timeOfSample": dt_util.utcnow().strftime(DATE_FORMAT),
-                "uncertaintyInMilliseconds": 0,
-            }
+            result = {"name": prop_name, "namespace": self.name(), "value": prop_value}
             if (instance := self.instance) is not None:
                 result["instance"] = instance
 
