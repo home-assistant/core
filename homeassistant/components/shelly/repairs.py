@@ -5,12 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from aioshelly.block_device import BlockDevice
-from aioshelly.const import (
-    MODEL_OUT_PLUG_S_G3,
-    MODEL_PLUG,
-    MODEL_PLUG_S_G3,
-    RPC_GENERATIONS,
-)
+from aioshelly.const import MODEL_OUT_PLUG_S_G3, MODEL_PLUG_S_G3, RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 from aioshelly.rpc_device import RpcDevice
 from awesomeversion import AwesomeVersion
@@ -24,7 +19,6 @@ from homeassistant.helpers import issue_registry as ir
 from .const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     BLE_SCANNER_MIN_FIRMWARE,
-    COIOT_UNCONFIGURED_ISSUE_ID,
     CONF_BLE_SCANNER_MODE,
     DEPRECATED_FIRMWARE_ISSUE_ID,
     DEPRECATED_FIRMWARES,
@@ -151,50 +145,6 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="outbound_websocket_incorrectly_enabled",
-            translation_placeholders={
-                "device_name": device.name,
-                "ip_address": device.ip_address,
-            },
-            data={"entry_id": entry.entry_id},
-        )
-        return
-
-    ir.async_delete_issue(hass, DOMAIN, issue_id)
-
-
-async def async_manage_coiot_unconfigured_issue(
-    hass: HomeAssistant,
-    entry: ShellyConfigEntry,
-) -> None:
-    """Manage the CoIoT unconfigured issue."""
-    issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=entry.unique_id)
-
-    if TYPE_CHECKING:
-        assert entry.runtime_data.block is not None
-
-    device = entry.runtime_data.block.device
-
-    if device.model == MODEL_PLUG:
-        # Shelly Plug Gen 1 does not have CoIoT settings
-        ir.async_delete_issue(hass, DOMAIN, issue_id)
-        return
-
-    coiot_config = device.settings["coiot"]
-    coiot_enabled = coiot_config.get("enabled")
-
-    coiot_peer = f"{await get_coiot_address(hass)}:{get_coiot_port(hass)}"
-    # Check if CoIoT is disabled or peer address is not correctly set
-    if not coiot_enabled or (
-        (peer_config := coiot_config.get("peer")) and peer_config != coiot_peer
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            is_fixable=True,
-            is_persistent=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="coiot_unconfigured",
             translation_placeholders={
                 "device_name": device.name,
                 "ip_address": device.ip_address,

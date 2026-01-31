@@ -754,7 +754,7 @@ easyenergy==2.2.0
 egauge-async==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.5.0
+eheimdigital==1.6.0
 
 # homeassistant.components.ekeybionyx
 ekey-bionyxpy==1.0.1
@@ -1465,7 +1465,7 @@ openrgb-python==0.3.6
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.16.5
+opower==0.17.0
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
@@ -1949,7 +1949,7 @@ pyopnsense==0.4.0
 pyosoenergyapi==1.2.4
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.2.2
+pyotgw==2.2.3
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -2594,7 +2594,7 @@ uasiren==0.0.1
 uhooapi==1.2.6
 
 # homeassistant.components.unifiprotect
-uiprotect==10.0.1
+uiprotect==10.1.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
