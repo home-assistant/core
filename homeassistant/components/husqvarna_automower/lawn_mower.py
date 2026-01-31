@@ -135,22 +135,22 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
         """Return the work areas of the mower."""
         return self.mower_attributes.work_areas
 
-    @handle_sending_exception()
+    @handle_sending_exception
     async def async_start_mowing(self) -> None:
         """Resume schedule."""
         await self.coordinator.api.commands.resume_schedule(self.mower_id)
 
-    @handle_sending_exception()
+    @handle_sending_exception
     async def async_pause(self) -> None:
         """Pauses the mower."""
         await self.coordinator.api.commands.pause_mowing(self.mower_id)
 
-    @handle_sending_exception()
+    @handle_sending_exception
     async def async_dock(self) -> None:
         """Parks the mower until next schedule."""
         await self.coordinator.api.commands.park_until_next_schedule(self.mower_id)
 
-    @handle_sending_exception()
+    @handle_sending_exception
     async def async_override_schedule(
         self, override_mode: str, duration: timedelta
     ) -> None:
@@ -160,7 +160,7 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
         if override_mode == PARK:
             await self.coordinator.api.commands.park_for(self.mower_id, duration)
 
-    @handle_sending_exception()
+    @handle_sending_exception
     async def async_override_schedule_work_area(
         self, work_area_id: int, duration: timedelta
     ) -> None:

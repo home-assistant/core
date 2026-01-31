@@ -15,10 +15,21 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import PortainerCoordinator
+from .services import async_setup_services
 
-_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
+_PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.BUTTON,
+]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -43,6 +54,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     return True
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Portainer integration."""
+    await async_setup_services(hass)
+    return True
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
@@ -56,5 +73,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
         data[CONF_URL] = data.pop(CONF_HOST)
         data[CONF_API_TOKEN] = data.pop(CONF_API_KEY)
         hass.config_entries.async_update_entry(entry=entry, data=data, version=2)
+
+    if entry.version < 3:
+        data = dict(entry.data)
+        data[CONF_VERIFY_SSL] = True
+        hass.config_entries.async_update_entry(entry=entry, data=data, version=3)
 
     return True

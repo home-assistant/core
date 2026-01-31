@@ -13,9 +13,11 @@ from reolink_aio.api import (
     ChimeToneEnum,
     DayNightEnum,
     EncodingEnum,
+    ExposureEnum,
     HDREnum,
     Host,
     HubToneEnum,
+    SpotlightEventModeEnum,
     SpotlightModeEnum,
     StatusLedEnum,
     TrackMethodEnum,
@@ -86,12 +88,28 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="floodlight_mode",
         cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
         translation_key="floodlight_mode",
         entity_category=EntityCategory.CONFIG,
         get_options=lambda api, ch: api.whiteled_mode_list(ch),
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         value=lambda api, ch: SpotlightModeEnum(api.whiteled_mode(ch)).name,
         method=lambda api, ch, name: api.set_whiteled(ch, mode=name),
+    ),
+    ReolinkSelectEntityDescription(
+        key="floodlight_event_mode",
+        cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
+        translation_key="floodlight_event_mode",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[mode.name for mode in SpotlightEventModeEnum],
+        supported=lambda api, ch: api.supported(ch, "floodlight_event"),
+        value=lambda api, ch: SpotlightEventModeEnum(api.whiteled_event_mode(ch)).name,
+        method=lambda api, ch, name: (
+            api.baichuan.set_floodlight(
+                ch, event_mode=SpotlightEventModeEnum[name].value
+            )
+        ),
     ),
     ReolinkSelectEntityDescription(
         key="day_night_mode",
@@ -190,6 +208,17 @@ SELECT_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "HDR"),
         value=lambda api, ch: HDREnum(api.HDR_state(ch)).name,
         method=lambda api, ch, name: api.set_HDR(ch, HDREnum[name].value),
+    ),
+    ReolinkSelectEntityDescription(
+        key="exposure",
+        cmd_key="GetIsp",
+        translation_key="exposure",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=[method.name for method in ExposureEnum],
+        supported=lambda api, ch: api.supported(ch, "exposure"),
+        value=lambda api, ch: ExposureEnum(api.exposure(ch)).name,
+        method=lambda api, ch, name: api.set_exposure(ch, ExposureEnum[name].value),
     ),
     ReolinkSelectEntityDescription(
         key="binning_mode",
@@ -375,6 +404,16 @@ CHIME_SELECT_ENTITIES = (
         supported=lambda chime: "package" in chime.chime_event_types,
         value=lambda chime: chime.tone_name("package"),
         method=lambda chime, name: chime.set_tone("package", ChimeToneEnum[name].value),
+    ),
+    ReolinkChimeSelectEntityDescription(
+        key="pet_tone",
+        cmd_key="GetDingDongCfg",
+        translation_key="pet_tone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in ChimeToneEnum],
+        supported=lambda chime: "dog_cat" in chime.chime_event_types,
+        value=lambda chime: chime.tone_name("dog_cat"),
+        method=lambda chime, name: chime.set_tone("dog_cat", ChimeToneEnum[name].value),
     ),
 )
 

@@ -34,7 +34,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.LIGHT, Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.CLIMATE, Platform.LIGHT, Platform.MEDIA_PLAYER]
 
 
 @dataclass
@@ -61,13 +61,22 @@ async def call_c4_api_retry(func, *func_args):
         try:
             return await func(*func_args)
         except client_exceptions.ClientError as exception:
-            _LOGGER.error(
-                "Try: %d, Error connecting to Control4 account API: %s",
+            _LOGGER.debug(
+                "Attempt %d/%d failed connecting to Control4 account API: %s",
                 i + 1,
+                API_RETRY_TIMES,
                 exception,
             )
             exc = exception
-    raise ConfigEntryNotReady(exc) from exc
+
+    _LOGGER.error(
+        "Failed to connect to Control4 account API after %d attempts: %s",
+        API_RETRY_TIMES,
+        exc,
+    )
+    raise ConfigEntryNotReady(
+        f"Failed to connect to Control4 account API after {API_RETRY_TIMES} attempts"
+    ) from exc
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
@@ -80,7 +89,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
         await account.getAccountBearerToken()
     except client_exceptions.ClientError as exception:
         _LOGGER.error("Error connecting to Control4 account API: %s", exception)
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady(
+            "Error connecting to Control4 account API to get bearer token"
+        ) from exception
     except BadCredentials as exception:
         _LOGGER.error(
             (
@@ -122,14 +133,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     )
 
     # Store all items found on controller for platforms to use
-    director_all_items: list[dict[str, Any]] = json.loads(
-        await director.getAllItemInfo()
-    )
+    try:
+        all_items_raw = await director.getAllItemInfo()
+    except (TimeoutError, client_exceptions.ClientError) as err:
+        _LOGGER.error(
+            "Timeout connecting to Control4 controller at %s",
+            config[CONF_HOST],
+        )
+        raise ConfigEntryNotReady(
+            f"Timeout connecting to Control4 controller at {config[CONF_HOST]}"
+        ) from err
+
+    director_all_items: list[dict[str, Any]] = json.loads(all_items_raw)
 
     # Check if OS version is 3 or higher to get UI configuration
     ui_configuration: dict[str, Any] | None = None
     if int(director_sw_version.split(".")[0]) >= 3:
-        ui_configuration = json.loads(await director.getUiConfiguration())
+        try:
+            ui_config_raw = await director.getUiConfiguration()
+        except (TimeoutError, client_exceptions.ClientError) as err:
+            _LOGGER.error(
+                "Timeout getting UI configuration from Control4 controller at %s",
+                config[CONF_HOST],
+            )
+            raise ConfigEntryNotReady(
+                f"Timeout getting UI configuration from Control4 controller at {config[CONF_HOST]}"
+            ) from err
+
+        ui_configuration = json.loads(ui_config_raw)
 
     # Load options from config entry
     scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)

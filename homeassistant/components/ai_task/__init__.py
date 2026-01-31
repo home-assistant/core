@@ -53,9 +53,6 @@ __all__ = [
     "GenImageTaskResult",
     "async_generate_data",
     "async_generate_image",
-    "async_setup",
-    "async_setup_entry",
-    "async_unload_entry",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,8 +101,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     vol.Schema({str: STRUCTURE_FIELD_SCHEMA}),
                     _validate_structure_fields,
                 ),
-                vol.Optional(ATTR_ATTACHMENTS): vol.All(
-                    cv.ensure_list, [selector.MediaSelector({"accept": ["*/*"]})]
+                vol.Optional(ATTR_ATTACHMENTS): selector.MediaSelector(
+                    {"accept": ["*/*"], "multiple": True}
                 ),
             }
         ),
@@ -121,8 +118,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 vol.Required(ATTR_TASK_NAME): cv.string,
                 vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
                 vol.Required(ATTR_INSTRUCTIONS): cv.string,
-                vol.Optional(ATTR_ATTACHMENTS): vol.All(
-                    cv.ensure_list, [selector.MediaSelector({"accept": ["*/*"]})]
+                vol.Optional(ATTR_ATTACHMENTS): selector.MediaSelector(
+                    {"accept": ["*/*"], "multiple": True}
                 ),
             }
         ),

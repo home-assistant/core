@@ -1,6 +1,7 @@
 """Support for LCN sensors."""
 
 from collections.abc import Iterable
+from datetime import timedelta
 from functools import partial
 from itertools import chain
 
@@ -18,6 +19,7 @@ from homeassistant.const import (
     CONF_SOURCE,
     CONF_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
+    PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfSpeed,
@@ -38,7 +40,9 @@ from .const import (
 from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 2
+SCAN_INTERVAL = timedelta(minutes=1)
+
 
 DEVICE_CLASS_MAPPING = {
     pypck.lcn_defs.VarUnit.CELSIUS: SensorDeviceClass.TEMPERATURE,
@@ -50,6 +54,7 @@ DEVICE_CLASS_MAPPING = {
     pypck.lcn_defs.VarUnit.VOLT: SensorDeviceClass.VOLTAGE,
     pypck.lcn_defs.VarUnit.AMPERE: SensorDeviceClass.CURRENT,
     pypck.lcn_defs.VarUnit.PPM: SensorDeviceClass.CO2,
+    pypck.lcn_defs.VarUnit.PERCENT: SensorDeviceClass.HUMIDITY,
 }
 
 UNIT_OF_MEASUREMENT_MAPPING = {
@@ -62,6 +67,7 @@ UNIT_OF_MEASUREMENT_MAPPING = {
     pypck.lcn_defs.VarUnit.VOLT: UnitOfElectricPotential.VOLT,
     pypck.lcn_defs.VarUnit.AMPERE: UnitOfElectricCurrent.AMPERE,
     pypck.lcn_defs.VarUnit.PPM: CONCENTRATION_PARTS_PER_MILLION,
+    pypck.lcn_defs.VarUnit.PERCENT: PERCENTAGE,
 }
 
 
@@ -125,17 +131,14 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
         )
         self._attr_device_class = DEVICE_CLASS_MAPPING.get(self.unit)
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.variable)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.variable)
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        self._attr_available = (
+            await self.device_connection.request_status_variable(
+                self.variable, SCAN_INTERVAL.seconds
+            )
+            is not None
+        )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
@@ -144,7 +147,7 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
             or input_obj.get_var() != self.variable
         ):
             return
-
+        self._attr_available = True
         is_regulator = self.variable.name in SETPOINTS
         self._attr_native_value = input_obj.get_value().to_var_unit(
             self.unit, is_regulator
@@ -155,6 +158,8 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
 
 class LcnLedLogicSensor(LcnEntity, SensorEntity):
     """Representation of a LCN sensor for leds and logicops."""
+
+    source: pypck.lcn_defs.LedPort | pypck.lcn_defs.LogicOpPort
 
     def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN sensor."""
@@ -167,23 +172,20 @@ class LcnLedLogicSensor(LcnEntity, SensorEntity):
                 config[CONF_DOMAIN_DATA][CONF_SOURCE]
             ]
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.source)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.source)
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        self._attr_available = (
+            await self.device_connection.request_status_led_and_logic_ops(
+                SCAN_INTERVAL.seconds
+            )
+            is not None
+        )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusLedsAndLogicOps):
             return
-
+        self._attr_available = True
         if self.source in pypck.lcn_defs.LedPort:
             self._attr_native_value = input_obj.get_led_state(
                 self.source.value

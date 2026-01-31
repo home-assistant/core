@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -76,6 +77,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -137,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Car connection',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -199,6 +202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging connection status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -255,6 +259,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -316,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -380,6 +386,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -443,6 +450,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -476,6 +484,59 @@
     'state': 'ac',
   })
 # ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Direction',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo EX30 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_distance_to_empty_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -499,6 +560,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -555,6 +617,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -611,6 +674,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -667,6 +731,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -700,6 +765,83 @@
     'state': '30000',
   })
 # ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Service',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_target_battery_charge_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -721,6 +863,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target battery charge level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -775,6 +918,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to engine service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -831,6 +975,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -887,6 +1032,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -943,6 +1089,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -999,6 +1146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average energy consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1054,6 +1202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1110,6 +1259,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1166,6 +1316,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1228,6 +1379,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Car connection',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1263,6 +1415,59 @@
     'state': 'available',
   })
 # ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Direction',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo S90 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
 # name: test_sensor[s90_diesel_2018][sensor.volvo_s90_distance_to_empty_tank-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1286,6 +1491,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty tank',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1342,6 +1548,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1398,6 +1605,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel amount',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1454,6 +1662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1487,6 +1696,83 @@
     'state': '30000',
   })
 # ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Service',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
 # name: test_sensor[s90_diesel_2018][sensor.volvo_s90_time_to_engine_service-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1510,6 +1796,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to engine service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1566,6 +1853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1622,6 +1910,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1678,6 +1967,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1734,6 +2024,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average fuel consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1789,6 +2080,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1845,6 +2137,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1901,6 +2194,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1955,6 +2249,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2016,6 +2311,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Car connection',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2078,6 +2374,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging connection status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2134,6 +2431,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging limit',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2190,6 +2488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2251,6 +2550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2315,6 +2615,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2378,6 +2679,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2411,6 +2713,59 @@
     'state': 'ac',
   })
 # ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Direction',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC40 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_distance_to_empty_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2434,6 +2789,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2490,6 +2846,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2546,6 +2903,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2602,6 +2960,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2635,6 +2994,83 @@
     'state': '30000',
   })
 # ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Service',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_target_battery_charge_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2656,6 +3092,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target battery charge level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2710,6 +3147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to engine service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2766,6 +3204,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2822,6 +3261,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2878,6 +3318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2934,6 +3375,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average energy consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2989,6 +3431,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3045,6 +3488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3101,6 +3545,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3155,6 +3600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3216,6 +3662,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Car connection',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3278,6 +3725,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging connection status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3341,6 +3789,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -3377,6 +3826,59 @@
     'state': 'idle',
   })
 # ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Direction',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC60 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
 # name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_distance_to_empty_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3400,6 +3902,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3456,6 +3959,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty tank',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3512,6 +4016,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3568,6 +4073,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel amount',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3624,6 +4130,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3657,6 +4164,83 @@
     'state': '30000',
   })
 # ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Service',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
 # name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_target_battery_charge_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3678,6 +4262,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target battery charge level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3732,6 +4317,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to engine service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3788,6 +4374,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3844,6 +4431,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -3900,6 +4488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average fuel consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3955,6 +4544,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4011,6 +4601,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4067,6 +4658,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4129,6 +4721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Car connection',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4164,6 +4757,59 @@
     'state': 'available',
   })
 # ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Direction',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC90 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
 # name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_distance_to_empty_tank-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4187,6 +4833,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty tank',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4243,6 +4890,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4299,6 +4947,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel amount',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4355,6 +5004,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4388,6 +5038,83 @@
     'state': '30000',
   })
 # ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Service',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
 # name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_time_to_engine_service-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4411,6 +5138,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to engine service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4467,6 +5195,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4523,6 +5252,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4579,6 +5309,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4635,6 +5366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average fuel consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -4690,6 +5422,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4746,6 +5479,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4802,6 +5536,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -4856,6 +5591,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4917,6 +5653,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Car connection',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -4979,6 +5716,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging connection status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5040,6 +5778,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging power status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5104,6 +5843,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5167,6 +5907,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Charging type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -5200,6 +5941,59 @@
     'state': 'none',
   })
 # ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Direction',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Direction',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'direction',
+    'unique_id': 'yv1abcdefg1234567_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC90 Direction',
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
 # name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_distance_to_empty_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5223,6 +6017,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty battery',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5279,6 +6074,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to empty tank',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5335,6 +6131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5391,6 +6188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Estimated charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5447,6 +6245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel amount',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5503,6 +6302,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Odometer',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5536,6 +6336,83 @@
     'state': '30000',
   })
 # ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Service',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'no_warning',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
 # name: test_sensor[xc90_phev_2024][sensor.volvo_xc90_target_battery_charge_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5557,6 +6434,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target battery charge level',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5611,6 +6489,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to engine service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5667,6 +6546,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to service',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -5723,6 +6603,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic average fuel consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5778,6 +6659,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5834,6 +6716,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip automatic distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -5890,6 +6773,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average energy consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -5945,6 +6829,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average fuel consumption',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -6000,6 +6885,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual average speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -6056,6 +6942,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Trip manual distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

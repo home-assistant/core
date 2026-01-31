@@ -67,7 +67,7 @@ class PushoverNotificationService(BaseNotificationService):
 
         # Extract params from data dict
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        data = kwargs.get(ATTR_DATA, {})
+        data = kwargs.get(ATTR_DATA) or {}
         url = data.get(ATTR_URL)
         url_title = data.get(ATTR_URL_TITLE)
         priority = data.get(ATTR_PRIORITY)

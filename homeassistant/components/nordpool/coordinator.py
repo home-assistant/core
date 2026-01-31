@@ -44,9 +44,10 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
             name=DOMAIN,
         )
         self.client = NordPoolClient(session=async_get_clientsession(hass))
-        self.unsub: Callable[[], None] | None = None
+        self.data_unsub: Callable[[], None] | None = None
+        self.listener_unsub: Callable[[], None] | None = None
 
-    def get_next_interval(self, now: datetime) -> datetime:
+    def get_next_data_interval(self, now: datetime) -> datetime:
         """Compute next time an update should occur."""
         next_hour = dt_util.utcnow() + timedelta(hours=1)
         next_run = datetime(
@@ -56,23 +57,45 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
             next_hour.hour,
             tzinfo=dt_util.UTC,
         )
-        LOGGER.debug("Next update at %s", next_run)
+        LOGGER.debug("Next data update at %s", next_run)
+        return next_run
+
+    def get_next_15_interval(self, now: datetime) -> datetime:
+        """Compute next time we need to notify listeners."""
+        next_run = dt_util.utcnow() + timedelta(minutes=15)
+        next_minute = next_run.minute // 15 * 15
+        next_run = next_run.replace(
+            minute=next_minute, second=0, microsecond=0, tzinfo=dt_util.UTC
+        )
+
+        LOGGER.debug("Next listener update at %s", next_run)
         return next_run
 
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
         await super().async_shutdown()
-        if self.unsub:
-            self.unsub()
-            self.unsub = None
+        if self.data_unsub:
+            self.data_unsub()
+            self.data_unsub = None
+        if self.listener_unsub:
+            self.listener_unsub()
+            self.listener_unsub = None
+
+    async def update_listeners(self, now: datetime) -> None:
+        """Update entity listeners."""
+        self.listener_unsub = async_track_point_in_utc_time(
+            self.hass,
+            self.update_listeners,
+            self.get_next_15_interval(dt_util.utcnow()),
+        )
+        self.async_update_listeners()
 
     async def fetch_data(self, now: datetime, initial: bool = False) -> None:
         """Fetch data from Nord Pool."""
-        self.unsub = async_track_point_in_utc_time(
-            self.hass, self.fetch_data, self.get_next_interval(dt_util.utcnow())
+        self.data_unsub = async_track_point_in_utc_time(
+            self.hass, self.fetch_data, self.get_next_data_interval(dt_util.utcnow())
         )
         if self.config_entry.pref_disable_polling and not initial:
-            self.async_update_listeners()
             return
         try:
             data = await self.handle_data(initial)

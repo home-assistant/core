@@ -149,6 +149,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             }
         ),
         supports_response=SupportsResponse.ONLY,
+        description_placeholders={"example_image_path": "/config/www/image.jpg"},
     )
     return True
 

@@ -26,7 +26,13 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, MEDIA_PLAYER_PREFIX, MEDIA_TYPE_SHOW, PLAYABLE_MEDIA_TYPES
+from .const import (
+    DOMAIN,
+    MEDIA_PLAYER_PREFIX,
+    MEDIA_TYPE_SHOW,
+    MEDIA_TYPE_USER_SAVED_TRACKS,
+    PLAYABLE_MEDIA_TYPES,
+)
 from .util import fetch_image_url
 
 BROWSE_LIMIT = 48
@@ -107,7 +113,7 @@ class BrowsableMedia(StrEnum):
     CURRENT_USER_PLAYLISTS = "current_user_playlists"
     CURRENT_USER_FOLLOWED_ARTISTS = "current_user_followed_artists"
     CURRENT_USER_SAVED_ALBUMS = "current_user_saved_albums"
-    CURRENT_USER_SAVED_TRACKS = "current_user_saved_tracks"
+    CURRENT_USER_SAVED_TRACKS = MEDIA_TYPE_USER_SAVED_TRACKS
     CURRENT_USER_SAVED_SHOWS = "current_user_saved_shows"
     CURRENT_USER_RECENTLY_PLAYED = "current_user_recently_played"
     CURRENT_USER_TOP_ARTISTS = "current_user_top_artists"
@@ -119,7 +125,7 @@ LIBRARY_MAP = {
     BrowsableMedia.CURRENT_USER_PLAYLISTS.value: "Playlists",
     BrowsableMedia.CURRENT_USER_FOLLOWED_ARTISTS.value: "Artists",
     BrowsableMedia.CURRENT_USER_SAVED_ALBUMS.value: "Albums",
-    BrowsableMedia.CURRENT_USER_SAVED_TRACKS.value: "Tracks",
+    BrowsableMedia.CURRENT_USER_SAVED_TRACKS.value: "Liked songs",
     BrowsableMedia.CURRENT_USER_SAVED_SHOWS.value: "Podcasts",
     BrowsableMedia.CURRENT_USER_RECENTLY_PLAYED.value: "Recently played",
     BrowsableMedia.CURRENT_USER_TOP_ARTISTS.value: "Top Artists",
@@ -321,6 +327,7 @@ async def build_item_response(  # noqa: C901
                 for saved_album in saved_albums
             ]
     elif media_content_type == BrowsableMedia.CURRENT_USER_SAVED_TRACKS:
+        title = LIBRARY_MAP.get(media_content_type)
         if saved_tracks := await spotify.get_saved_tracks():
             items = [
                 _get_track_item_payload(saved_track.track)
@@ -445,8 +452,10 @@ def item_payload(item: ItemPayload, *, can_play_artist: bool) -> BrowseMedia:
         MediaType.EPISODE,
     ]
 
-    can_play = media_type in PLAYABLE_MEDIA_TYPES and (
-        media_type != MediaType.ARTIST or can_play_artist
+    can_play = (
+        media_type in PLAYABLE_MEDIA_TYPES
+        and (media_type != MediaType.ARTIST or can_play_artist)
+        and media_type != BrowsableMedia.CURRENT_USER_SAVED_TRACKS
     )
 
     return BrowseMedia(

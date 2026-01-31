@@ -215,9 +215,17 @@ async def test_select_entity_availability(
     appliance: HomeAppliance,
 ) -> None:
     """Test if select entities availability are based on the appliance connection state."""
-    entity_ids = [
-        "select.washer_active_program",
-    ]
+    entity_ids = ["select.washer_active_program", "select.washer_temperature"]
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE, "Boolean"
+                )
+            ],
+        )
+    )
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -347,6 +355,7 @@ async def test_filter_programs(
     ],
     indirect=["appliance"],
 )
+@pytest.mark.parametrize("program_value", ["A not known program", None])
 async def test_select_program_functionality(
     hass: HomeAssistant,
     client: MagicMock,
@@ -359,6 +368,7 @@ async def test_select_program_functionality(
     program_key: ProgramKey,
     program_to_set: str,
     event_key: EventKey,
+    program_value: str,
 ) -> None:
     """Test select functionality."""
     assert await integration_setup(client)
@@ -389,7 +399,7 @@ async def test_select_program_functionality(
                             timestamp=0,
                             level="",
                             handling="",
-                            value="A not known program",
+                            value=program_value,
                         )
                     ]
                 ),
@@ -965,3 +975,133 @@ async def test_options_functionality(
     assert hass.states.is_state(
         entity_id, "laundry_care_washer_enum_type_temperature_ul_warm"
     )
+
+
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_options_unavailable_when_option_is_missing(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test that option entities become unavailable when the option is missing."""
+    entity_id = "select.washer_temperature"
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE, "Boolean"
+                )
+            ],
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.LAUNDRY_CARE_WASHER_AUTO_30,
+            options=[],
+        )
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                            0,
+                            level="info",
+                            handling="auto",
+                            value=ProgramKey.LAUNDRY_CARE_WASHER_AUTO_30,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+@pytest.mark.parametrize(
+    "event_key",
+    [
+        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+    ],
+)
+async def test_options_available_when_program_is_null(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    event_key: EventKey,
+) -> None:
+    """Test that option entities still available when the active program becomes null.
+
+    This can happen when the appliance starts or finish the program; the appliance first
+    updates the non-null program, and then the null program value.
+    This test ensures that the options defined by the non-null program are not removed
+    from the coordinator and therefore, the entities remain available.
+    """
+    entity_id = "select.washer_temperature"
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE, "Enumeration"
+                )
+            ],
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            event_key,
+                            event_key.value,
+                            0,
+                            level="info",
+                            handling="auto",
+                            value=None,
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE

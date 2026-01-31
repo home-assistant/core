@@ -50,17 +50,17 @@ rules:
   discovery:
     status: exempt
     comment: The integration is a cloud service and thus does not support discovery.
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: This is a service, which doesn't integrate with any devices.
-  docs-supported-functions: todo
+  docs-supported-functions: done
   docs-troubleshooting:
     status: exempt
     comment: No known issues that could be resolved by the user.
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: This integration has a fixed single service.

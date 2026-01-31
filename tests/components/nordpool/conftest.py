@@ -47,7 +47,7 @@ async def get_data_from_library(
         "GET",
         url=API + "/DayAheadPrices",
         params={
-            "date": "2024-11-05",
+            "date": "2025-10-01",
             "market": "DayAhead",
             "deliveryArea": "SE3,SE4",
             "currency": "SEK",
@@ -58,7 +58,7 @@ async def get_data_from_library(
         "GET",
         url=API + "/DayAheadPrices",
         params={
-            "date": "2024-11-05",
+            "date": "2025-10-01",
             "market": "DayAhead",
             "deliveryArea": "SE3",
             "currency": "EUR",
@@ -69,7 +69,7 @@ async def get_data_from_library(
         "GET",
         url=API + "/DayAheadPrices",
         params={
-            "date": "2024-11-04",
+            "date": "2025-09-30",
             "market": "DayAhead",
             "deliveryArea": "SE3,SE4",
             "currency": "SEK",
@@ -80,7 +80,7 @@ async def get_data_from_library(
         "GET",
         url=API + "/DayAheadPrices",
         params={
-            "date": "2024-11-06",
+            "date": "2025-10-02",
             "market": "DayAhead",
             "deliveryArea": "SE3,SE4",
             "currency": "SEK",

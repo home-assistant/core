@@ -41,6 +41,8 @@
         'nwk_manager_id': 0,
         'nwk_update_id': 0,
         'pan_id': 4660,
+        'route_table': dict({
+        }),
         'security_level': 0,
         'source': None,
         'stack_specific': dict({
@@ -69,6 +71,7 @@
           'seq': 0,
           'tx_counter': 0,
         }),
+        'tx_power': None,
       }),
       'node_info': dict({
         'ieee': '**REDACTED**',
@@ -117,8 +120,8 @@
       'subentries': list([
       ]),
       'title': 'Mock Title',
-      'unique_id': None,
-      'version': 4,
+      'unique_id': '**REDACTED**',
+      'version': 5,
     }),
     'devices': list([
       dict({
@@ -182,6 +185,12 @@
                 'zcl_type': 'EUI64',
               }),
               dict({
+                'id': '0x0013',
+                'name': 'current_zone_sensitivity_level',
+                'unsupported': True,
+                'zcl_type': 'uint8',
+              }),
+              dict({
                 'id': '0x0012',
                 'name': 'num_zone_sensitivity_levels_supported',
                 'unsupported': True,
@@ -191,6 +200,8 @@
             'cluster_id': '0x0500',
             'endpoint_attribute': 'ias_zone',
           }),
+        ]),
+        'out_clusters': list([
           dict({
             'attributes': list([
             ]),
@@ -198,11 +209,11 @@
             'endpoint_attribute': 'ias_ace',
           }),
         ]),
-        'out_clusters': list([
-        ]),
         'profile_id': 260,
       }),
     }),
+    'exposes_features': list([
+    ]),
     'friendly_manufacturer': 'FakeManufacturer',
     'friendly_model': 'FakeModel',
     'ieee': '**REDACTED**',
@@ -232,7 +243,6 @@
     'power_source': 'Mains',
     'quirk_applied': False,
     'quirk_class': 'zigpy.device.Device',
-    'quirk_id': None,
     'routes': list([
     ]),
     'rssi': None,
@@ -245,15 +255,15 @@
             'class_name': 'AlarmControlPanel',
             'cluster_handlers': list([
               dict({
-                'class_name': 'IasAceClusterHandler',
+                'class_name': 'IasAceClientClusterHandler',
                 'cluster': dict({
                   'id': 1281,
                   'name': 'IAS Ancillary Control Equipment',
-                  'type': 'server',
+                  'type': 'client',
                 }),
                 'endpoint_id': 1,
-                'generic_id': 'cluster_handler_0x0501',
-                'id': '1:0x0501',
+                'generic_id': 'cluster_handler_0x0501_client',
+                'id': '1:0x0501_client',
                 'status': 'INITIALIZED',
                 'unique_id': '**REDACTED**',
                 'value_attribute': None,
@@ -276,6 +286,7 @@
             'state_class': None,
             'supported_features': 15,
             'translation_key': 'alarm_control_panel',
+            'translation_placeholders': None,
             'unique_id': '**REDACTED**',
           }),
           'state': dict({
@@ -321,6 +332,7 @@
             'primary': True,
             'state_class': None,
             'translation_key': 'ias_zone',
+            'translation_placeholders': None,
             'unique_id': '**REDACTED**',
           }),
           'state': dict({

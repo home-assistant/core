@@ -56,6 +56,34 @@ WASHER_SPIN_LEVEL_TO_HA = {
     "1600": "1600",
 }
 
+WASHER_WATER_TEMPERATURE_TO_HA = {
+    "none": "none",
+    "20": "20",
+    "30": "30",
+    "40": "40",
+    "50": "50",
+    "60": "60",
+    "65": "65",
+    "70": "70",
+    "75": "75",
+    "80": "80",
+    "90": "90",
+    "95": "95",
+    "tapCold": "tap_cold",
+    "cold": "cold",
+    "cool": "cool",
+    "ecoWarm": "eco_warm",
+    "warm": "warm",
+    "semiHot": "semi_hot",
+    "hot": "hot",
+    "extraHot": "extra_hot",
+    "extraLow": "extra_low",
+    "low": "low",
+    "mediumLow": "medium_low",
+    "medium": "medium",
+    "high": "high",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class SmartThingsSelectDescription(SelectEntityDescription):
@@ -70,6 +98,7 @@ class SmartThingsSelectDescription(SelectEntityDescription):
     default_options: list[str] | None = None
     extra_components: list[str] | None = None
     capability_ignore_list: list[Capability] | None = None
+    value_is_integer: bool = False
 
 
 CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
@@ -147,6 +176,25 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         options_map=WASHER_SOIL_LEVEL_TO_HA,
         entity_category=EntityCategory.CONFIG,
     ),
+    Capability.CUSTOM_WASHER_WATER_TEMPERATURE: SmartThingsSelectDescription(
+        key=Capability.CUSTOM_WASHER_WATER_TEMPERATURE,
+        translation_key="water_temperature",
+        requires_remote_control_status=True,
+        options_attribute=Attribute.SUPPORTED_WASHER_WATER_TEMPERATURE,
+        status_attribute=Attribute.WASHER_WATER_TEMPERATURE,
+        command=Command.SET_WASHER_WATER_TEMPERATURE,
+        options_map=WASHER_WATER_TEMPERATURE_TO_HA,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_DUST_FILTER_ALARM: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_DUST_FILTER_ALARM,
+        translation_key="dust_filter_alarm",
+        options_attribute=Attribute.SUPPORTED_ALARM_THRESHOLDS,
+        status_attribute=Attribute.ALARM_THRESHOLD,
+        command=Command.SET_ALARM_THRESHOLD,
+        entity_category=EntityCategory.CONFIG,
+        value_is_integer=True,
+    ),
 }
 
 
@@ -215,6 +263,8 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
                 self.entity_description.options_map.get(option, option)
                 for option in options
             ]
+        if self.entity_description.value_is_integer:
+            options = [str(option) for option in options]
         return options
 
     @property
@@ -225,6 +275,8 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
         )
         if self.entity_description.options_map:
             option = self.entity_description.options_map.get(option)
+        if self.entity_description.value_is_integer and option is not None:
+            option = str(option)
         return option
 
     async def async_select_option(self, option: str) -> None:
@@ -239,17 +291,20 @@ class SmartThingsSelectEntity(SmartThingsEntity, SelectEntity):
             raise ServiceValidationError(
                 "Can only be updated when remote control is enabled"
             )
+        new_option: str | int = option
         if self.entity_description.options_map:
-            option = next(
+            new_option = next(
                 (
                     key
                     for key, value in self.entity_description.options_map.items()
                     if value == option
                 ),
-                option,
+                new_option,
             )
+        if self.entity_description.value_is_integer:
+            new_option = int(option)
         await self.execute_device_command(
             self.entity_description.key,
             self.entity_description.command,
-            option,
+            new_option,
         )

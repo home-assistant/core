@@ -469,11 +469,11 @@ async def test_ac_set_preset_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.office_airfree", ATTR_PRESET_MODE: mode},
+        {ATTR_ENTITY_ID: "climate.clim_salon", ATTR_PRESET_MODE: mode},
         blocking=True,
     )
     devices.execute_device_command.assert_called_with(
-        "c76d6f38-1b7f-13dd-37b5-db18d5272783",
+        "1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977",
         Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
         Command.SET_AC_OPTIONAL_MODE,
         MAIN,

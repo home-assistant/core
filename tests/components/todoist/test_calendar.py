@@ -1,12 +1,13 @@
 """Unit tests for the Todoist calendar platform."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, patch
 import urllib
 import zoneinfo
 
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from todoist_api_python.models import Due
@@ -28,7 +29,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
-from .conftest import PROJECT_ID, SECTION_ID, SUMMARY
+from .conftest import PROJECT_ID, SECTION_ID, SUMMARY, make_api_due
 
 from tests.typing import ClientSessionGenerator
 
@@ -36,6 +37,13 @@ from tests.typing import ClientSessionGenerator
 # This keeps UTC-6 all year round
 TZ_NAME = "America/Regina"
 TIMEZONE = zoneinfo.ZoneInfo(TZ_NAME)
+
+
+@pytest.fixture(autouse=True)
+def freeze_the_time():
+    """Freeze the time."""
+    with freeze_time("2024-05-24 12:00:00"):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -139,9 +147,14 @@ async def test_update_entity_for_custom_project_no_due_date_on(
 @pytest.mark.parametrize(
     "due",
     [
-        Due(
+        make_api_due(
             # Note: This runs before the test fixture that sets the timezone
-            date=(dt_util.now(TIMEZONE) + timedelta(days=3)).strftime("%Y-%m-%d"),
+            date=(
+                datetime(
+                    day=15, month=10, year=2025, hour=23, minute=45, tzinfo=TIMEZONE
+                )
+                + timedelta(days=3)
+            ).strftime("%Y-%m-%d"),
             is_recurring=False,
             string="3 days from today",
         )
@@ -151,6 +164,7 @@ async def test_update_entity_for_calendar_with_due_date_in_the_future(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     api: AsyncMock,
+    due: Due,
 ) -> None:
     """Test that a task with a due date in the future has on state and correct end_time."""
     await async_update_entity(hass, "calendar.name")
@@ -158,9 +172,9 @@ async def test_update_entity_for_calendar_with_due_date_in_the_future(
     assert state.state == "on"
 
     # The end time should be in the user's timezone
-    expected_end_time = (dt_util.now() + timedelta(days=3)).strftime(
-        "%Y-%m-%d 00:00:00"
-    )
+    expected_end_time = (
+        datetime(day=15, month=10, year=2025, hour=23, minute=45) + timedelta(days=3)
+    ).strftime("%Y-%m-%d 00:00:00")
     assert state.attributes["end_time"] == expected_end_time
 
 
@@ -203,37 +217,37 @@ async def test_calendar_custom_project_unique_id(
     ("due", "start", "end", "expected_response"),
     [
         (
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-28T00:00:00.000Z",
             "2023-04-01T00:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
         ),
         (
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-30T06:00:00.000Z",
             "2023-03-31T06:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
         ),
         (
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-29T08:00:00.000Z",
             "2023-03-30T08:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
         ),
         (
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-30T08:00:00.000Z",
             "2023-03-31T08:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
         ),
         (
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-31T08:00:00.000Z",
             "2023-04-01T08:00:00.000Z",
             [],
         ),
         (
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-29T06:00:00.000Z",
             "2023-03-30T06:00:00.000Z",
             [],
@@ -321,25 +335,22 @@ async def test_create_task_service_call_with_section(
     [
         # These are all equivalent due dates for the same time in different
         # timezone formats.
-        Due(
-            date="2023-03-30",
+        make_api_due(
+            date="2023-03-31T00:00:00Z",
             is_recurring=False,
             string="Mar 30 6:00 PM",
-            datetime="2023-03-31T00:00:00Z",
             timezone="America/Regina",
         ),
-        Due(
-            date="2023-03-30",
+        make_api_due(
+            date="2023-03-31T00:00:00Z",
             is_recurring=False,
             string="Mar 30 7:00 PM",
-            datetime="2023-03-31T00:00:00Z",
             timezone="America/Los_Angeles",
         ),
-        Due(
-            date="2023-03-30",
+        make_api_due(
+            date="2023-03-30T18:00:00",
             is_recurring=False,
             string="Mar 30 6:00 PM",
-            datetime="2023-03-30T18:00:00",
         ),
     ],
     ids=("in_local_timezone", "in_other_timezone", "floating"),
@@ -418,35 +429,35 @@ async def test_task_due_datetime(
     [
         (
             {"custom_projects": [{"name": "Test", "labels": ["Label1"]}]},
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-28T00:00:00.000Z",
             "2023-04-01T00:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
         ),
         (
             {"custom_projects": [{"name": "Test", "labels": ["custom"]}]},
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-28T00:00:00.000Z",
             "2023-04-01T00:00:00.000Z",
             [],
         ),
         (
             {"custom_projects": [{"name": "Test", "include_projects": ["Name"]}]},
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-28T00:00:00.000Z",
             "2023-04-01T00:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
         ),
         (
             {"custom_projects": [{"name": "Test", "due_date_days": 1}]},
-            Due(date="2023-03-30", is_recurring=False, string="Mar 30"),
+            make_api_due(date="2023-03-30", is_recurring=False, string="Mar 30"),
             "2023-03-28T00:00:00.000Z",
             "2023-04-01T00:00:00.000Z",
             [get_events_response({"date": "2023-03-30"}, {"date": "2023-03-31"})],
         ),
         (
             {"custom_projects": [{"name": "Test", "due_date_days": 1}]},
-            Due(
+            make_api_due(
                 date=(dt_util.now() + timedelta(days=2)).strftime("%Y-%m-%d"),
                 is_recurring=False,
                 string="Mar 30",
@@ -484,11 +495,10 @@ async def test_events_filtered_for_custom_projects(
     ("due", "setup_platform"),
     [
         (
-            Due(
-                date="2023-03-30",
+            make_api_due(
+                date="2023-03-31T00:00:00Z",
                 is_recurring=False,
                 string="Mar 30 6:00 PM",
-                datetime="2023-03-31T00:00:00Z",
                 timezone="America/Regina",
             ),
             None,

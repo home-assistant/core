@@ -28,6 +28,9 @@ from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
 from homeassistant.components import usb
+from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
+    ZigbeeFlowStrategy,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -74,6 +77,8 @@ HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
         vol.Required("name"): str,
         vol.Required("port"): DEVICE_SCHEMA,
         vol.Required("radio_type"): str,
+        vol.Optional("flow_strategy"): vol.All(str, vol.Coerce(ZigbeeFlowStrategy)),
+        vol.Optional("tx_power"): vol.All(vol.Coerce(int), vol.Range(min=0, max=10)),
     }
 )
 

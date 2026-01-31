@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 import logging
 from typing import Any
+from uuid import UUID
 
 from habiticalib import ContentData, GroupData, HabiticaClass, TaskData, UserData, ha
 
@@ -23,7 +25,7 @@ from homeassistant.util import dt as dt_util
 from . import HABITICA_KEY
 from .const import ASSETS_URL
 from .coordinator import HabiticaConfigEntry
-from .entity import HabiticaBase, HabiticaPartyBase
+from .entity import HabiticaBase, HabiticaPartyBase, HabiticaPartyMemberBase
 from .util import (
     collected_quest_items,
     get_attribute_points,
@@ -53,7 +55,7 @@ PARALLEL_UPDATES = 1
 class HabiticaSensorEntityDescription(SensorEntityDescription):
     """Habitica Sensor Description."""
 
-    value_fn: Callable[[UserData, ContentData], StateType]
+    value_fn: Callable[[UserData, ContentData], StateType | datetime]
     attributes_fn: Callable[[UserData, ContentData], dict[str, Any] | None] | None = (
         None
     )
@@ -114,14 +116,16 @@ class HabiticaSensorEntity(StrEnum):
     COLLECTED_ITEMS = "collected_items"
     BOSS_RAGE = "boss_rage"
     BOSS_RAGE_LIMIT = "boss_rage_limit"
+    LAST_CHECKIN = "last_checkin"
 
 
-SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
+SENSOR_DESCRIPTIONS_COMMON: tuple[HabiticaSensorEntityDescription, ...] = (
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.DISPLAY_NAME,
         translation_key=HabiticaSensorEntity.DISPLAY_NAME,
         value_fn=lambda user, _: user.profile.name,
         attributes_fn=lambda user, _: {
+            "username": f"@{user.auth.local.username}",
             "blurb": user.profile.blurb,
             "joined": (
                 dt_util.as_local(joined).date()
@@ -174,33 +178,11 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         value_fn=lambda user, _: user.stats.lvl,
     ),
     HabiticaSensorEntityDescription(
-        key=HabiticaSensorEntity.GOLD,
-        translation_key=HabiticaSensorEntity.GOLD,
-        suggested_display_precision=2,
-        value_fn=lambda user, _: user.stats.gp,
-        entity_picture=ha.GP,
-    ),
-    HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.CLASS,
         translation_key=HabiticaSensorEntity.CLASS,
         value_fn=lambda user, _: user.stats.Class.value if user.stats.Class else None,
         device_class=SensorDeviceClass.ENUM,
         options=[item.value for item in HabiticaClass],
-    ),
-    HabiticaSensorEntityDescription(
-        key=HabiticaSensorEntity.GEMS,
-        translation_key=HabiticaSensorEntity.GEMS,
-        value_fn=lambda user, _: None if (b := user.balance) is None else round(b * 4),
-        suggested_display_precision=0,
-        entity_picture="shop_gem.png",
-    ),
-    HabiticaSensorEntityDescription(
-        key=HabiticaSensorEntity.TRINKETS,
-        translation_key=HabiticaSensorEntity.TRINKETS,
-        value_fn=lambda user, _: user.purchased.plan.consecutive.trinkets,
-        suggested_display_precision=0,
-        native_unit_of_measurement="⧖",
-        entity_picture="notif_subscriber_reward.png",
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.STRENGTH,
@@ -233,6 +215,40 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         attributes_fn=lambda user, content: get_attribute_points(user, content, "con"),
         suggested_display_precision=0,
         native_unit_of_measurement="CON",
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.LAST_CHECKIN,
+        translation_key=HabiticaSensorEntity.LAST_CHECKIN,
+        value_fn=(
+            lambda user, _: dt_util.as_local(last)
+            if (last := user.auth.timestamps.loggedin)
+            else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+)
+SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.GOLD,
+        translation_key=HabiticaSensorEntity.GOLD,
+        suggested_display_precision=2,
+        value_fn=lambda user, _: user.stats.gp,
+        entity_picture=ha.GP,
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.GEMS,
+        translation_key=HabiticaSensorEntity.GEMS,
+        value_fn=lambda user, _: None if (b := user.balance) is None else round(b * 4),
+        suggested_display_precision=0,
+        entity_picture="shop_gem.png",
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.TRINKETS,
+        translation_key=HabiticaSensorEntity.TRINKETS,
+        value_fn=lambda user, _: user.purchased.plan.consecutive.trinkets,
+        suggested_display_precision=0,
+        native_unit_of_measurement="⧖",
+        entity_picture="notif_subscriber_reward.png",
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.EGGS_TOTAL,
@@ -377,7 +393,8 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        HabiticaSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
+        HabiticaSensor(coordinator, description)
+        for description in SENSOR_DESCRIPTIONS + SENSOR_DESCRIPTIONS_COMMON
     )
 
     if party := coordinator.data.user.party.id:
@@ -391,6 +408,23 @@ async def async_setup_entry(
             )
             for description in SENSOR_DESCRIPTIONS_PARTY
         )
+        for subentry_id, subentry in config_entry.subentries.items():
+            if (
+                subentry.unique_id
+                and UUID(subentry.unique_id) in party_coordinator.data.members
+            ):
+                async_add_entities(
+                    [
+                        HabiticaPartyMemberSensor(
+                            coordinator,
+                            party_coordinator,
+                            description,
+                            subentry,
+                        )
+                        for description in SENSOR_DESCRIPTIONS_COMMON
+                    ],
+                    config_subentry_id=subentry_id,
+                )
 
 
 class HabiticaSensor(HabiticaBase, SensorEntity):
@@ -399,30 +433,36 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
     entity_description: HabiticaSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
 
-        return self.entity_description.value_fn(
-            self.coordinator.data.user, self.coordinator.content
+        return (
+            self.entity_description.value_fn(self.user, self.coordinator.content)
+            if self.user is not None
+            else None
         )
 
     @property
     def extra_state_attributes(self) -> dict[str, float | None] | None:
         """Return entity specific state attributes."""
-        if func := self.entity_description.attributes_fn:
-            return func(self.coordinator.data.user, self.coordinator.content)
+        if self.user is not None and (func := self.entity_description.attributes_fn):
+            return func(self.user, self.coordinator.content)
         return None
 
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
-        if self.entity_description.key is HabiticaSensorEntity.CLASS and (
-            _class := self.coordinator.data.user.stats.Class
+        if (
+            self.entity_description.key is HabiticaSensorEntity.CLASS
+            and self.user is not None
+            and (_class := self.user.stats.Class)
         ):
             return SVG_CLASS[_class]
 
-        if self.entity_description.key is HabiticaSensorEntity.DISPLAY_NAME and (
-            img_url := self.coordinator.data.user.profile.imageUrl
+        if (
+            self.entity_description.key is HabiticaSensorEntity.DISPLAY_NAME
+            and self.user is not None
+            and (img_url := self.user.profile.imageUrl)
         ):
             return img_url
 
@@ -436,16 +476,22 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
         return None
 
 
+class HabiticaPartyMemberSensor(HabiticaSensor, HabiticaPartyMemberBase):
+    """Habitica party member sensor."""
+
+
 class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
     """Habitica party sensor."""
 
     entity_description: HabiticaPartySensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
 
-        return self.entity_description.value_fn(self.coordinator.data, self.content)
+        return self.entity_description.value_fn(
+            self.coordinator.data.party, self.content
+        )
 
     @property
     def entity_picture(self) -> str | None:
@@ -453,7 +499,9 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
         pic = self.entity_description.entity_picture
 
         entity_picture = (
-            pic if isinstance(pic, str) or pic is None else pic(self.coordinator.data)
+            pic
+            if isinstance(pic, str) or pic is None
+            else pic(self.coordinator.data.party)
         )
 
         return (
@@ -468,5 +516,5 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return entity specific state attributes."""
         if func := self.entity_description.attributes_fn:
-            return func(self.coordinator.data, self.content)
+            return func(self.coordinator.data.party, self.content)
         return None
