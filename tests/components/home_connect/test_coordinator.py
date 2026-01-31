@@ -544,6 +544,41 @@ async def test_devices_updated_on_refresh(
 
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_paired_event(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test that Home Connect API is not fetched after pairing a disconnected device."""
+    client.get_home_appliances = AsyncMock(return_value=ArrayOfHomeAppliances([]))
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.PAIRED,
+                data=ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    # Ideally, the get_specific_appliance should be called once
+    # but because paired event is not pretty frequent, we allow it to be
+    # called twice. One when creating the coordinator,
+    # and another on first coordinator refresh (to get connected status)
+    assert client.get_specific_appliance.call_count == 2
+    for call in client.get_specific_appliance.call_args_list:
+        assert call.args[0] == appliance.ha_id
+    for method in INITIAL_FETCH_CLIENT_METHODS:
+        getattr(client, method).assert_awaited_once()
+
+
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
 async def test_paired_disconnected_devices_not_fetching(
     hass: HomeAssistant,
     client: MagicMock,
@@ -568,9 +603,15 @@ async def test_paired_disconnected_devices_not_fetching(
     )
     await hass.async_block_till_done()
 
-    client.get_specific_appliance.assert_awaited_once_with(appliance.ha_id)
+    # Ideally, the get_specific_appliance should be called once
+    # but because paired event is not pretty frequent, we allow it to be
+    # called twice. One when creating the coordinator,
+    # and another on first coordinator refresh (to get connected status)
+    assert client.get_specific_appliance.call_count == 2
+    for call in client.get_specific_appliance.call_args_list:
+        assert call.args[0] == appliance.ha_id
     for method in INITIAL_FETCH_CLIENT_METHODS:
-        assert getattr(client, method).call_count == 0
+        getattr(client, method).assert_not_awaited()
 
 
 async def test_coordinator_disabling_updates_for_appliance(

@@ -334,7 +334,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 if self.refreshed_too_often_recently():
                     return
 
-                await self.get_appliance_data()
+                await self.async_refresh()
                 for (
                     listener,
                     context,
