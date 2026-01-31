@@ -59,7 +59,6 @@ from .coordinator import (
 )
 from .repairs import (
     async_manage_ble_scanner_firmware_unsupported_issue,
-    async_manage_coiot_unconfigured_issue,
     async_manage_deprecated_firmware_issue,
     async_manage_open_wifi_ap_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
@@ -233,7 +232,6 @@ async def _async_setup_block_entry(
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
-        await async_manage_coiot_unconfigured_issue(hass, entry)
         remove_empty_sub_devices(hass, entry)
     elif (
         sleep_period is None

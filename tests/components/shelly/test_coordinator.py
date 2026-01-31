@@ -20,7 +20,6 @@ from homeassistant.components.shelly.const import (
     CONF_SLEEP_PERIOD,
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
-    MAX_PUSH_UPDATE_FAILURES,
     RPC_RECONNECT_INTERVAL,
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
@@ -36,6 +35,7 @@ from . import (
     MOCK_MAC,
     init_integration,
     inject_rpc_device_event,
+    mock_block_device_push_update_failure,
     mock_polling_rpc_update,
     mock_rest_update,
     register_device,
@@ -332,15 +332,7 @@ async def test_block_device_push_updates_failure(
 ) -> None:
     """Test block device with push updates failure."""
     await init_integration(hass, 1)
-
-    # Updates with COAP_REPLAY type should create an issue
-    for _ in range(MAX_PUSH_UPDATE_FAILURES):
-        mock_block_device.mock_update_reply()
-        await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id=f"push_update_{MOCK_MAC}"
-    )
+    await mock_block_device_push_update_failure(hass, mock_block_device)
 
     # An update with COAP_PERIODIC type should clear the issue
     mock_block_device.mock_update()
