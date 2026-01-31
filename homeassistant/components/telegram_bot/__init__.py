@@ -11,6 +11,7 @@ from telegram.error import InvalidToken, TelegramError
 import voluptuous as vol
 
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
@@ -408,11 +409,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     translation_key="multiple_config_entry",
                 )
 
-        if not config_entry or not hasattr(config_entry, "runtime_data"):
+        # config_entry is initialized above; either from config_entry_id or the first entry
+        assert config_entry is not None
+
+        if config_entry.state != ConfigEntryState.LOADED:
             raise ServiceValidationError(
-                "No config entries found or setup failed. Please set up the Telegram Bot first.",
                 translation_domain=DOMAIN,
-                translation_key="missing_config_entry",
+                translation_key="entry_not_loaded",
+                translation_placeholders={"telegram_bot": config_entry.title},
             )
 
         notify_service = config_entry.runtime_data
