@@ -18,7 +18,7 @@ from telegram import (
     Message,
     Update,
 )
-from telegram.constants import ChatType, InputMediaType, ParseMode
+from telegram.constants import ChatType, InputMediaType
 from telegram.error import (
     InvalidToken,
     NetworkError,
@@ -65,6 +65,7 @@ from homeassistant.components.telegram_bot.const import (
     CHAT_ACTION_TYPING,
     CONF_CONFIG_ENTRY_ID,
     DOMAIN,
+    PARSER_HTML,
     PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     SECTION_ADVANCED_SETTINGS,
@@ -139,7 +140,7 @@ async def test_polling_platform_init(
             {
                 ATTR_KEYBOARD: ["/command1, /command2", "/command3"],
                 ATTR_MESSAGE: "test_message",
-                ATTR_PARSER: ParseMode.HTML,
+                ATTR_PARSER: PARSER_HTML,
                 ATTR_DISABLE_NOTIF: True,
                 ATTR_DISABLE_WEB_PREV: True,
                 ATTR_MESSAGE_TAG: "mock_tag",
@@ -1151,6 +1152,7 @@ async def test_edit_message_media(
                 ATTR_MESSAGEID: 12345,
                 ATTR_CHAT_ID: 123456,
                 ATTR_KEYBOARD_INLINE: "/mock",
+                ATTR_PARSER: PARSER_PLAIN_TEXT,
             },
             blocking=True,
         )
@@ -1183,7 +1185,12 @@ async def test_edit_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EDIT_MESSAGE,
-            {ATTR_MESSAGE: "mock message", ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: 12345},
+            {
+                ATTR_MESSAGE: "mock message",
+                ATTR_CHAT_ID: 123456,
+                ATTR_MESSAGEID: 12345,
+                ATTR_PARSER: PARSER_PLAIN_TEXT,
+            },
             blocking=True,
         )
 
@@ -1197,7 +1204,12 @@ async def test_edit_message(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_EDIT_CAPTION,
-            {ATTR_CAPTION: "mock caption", ATTR_CHAT_ID: 123456, ATTR_MESSAGEID: 12345},
+            {
+                ATTR_CAPTION: "mock caption",
+                ATTR_CHAT_ID: 123456,
+                ATTR_MESSAGEID: 12345,
+                ATTR_PARSER: PARSER_PLAIN_TEXT,
+            },
             blocking=True,
         )
 
