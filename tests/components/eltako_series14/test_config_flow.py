@@ -204,9 +204,7 @@ class TestEltakoFlowHandler:
         assert result["data"] == _DEFAULT_DATA
         assert len(mock_setup_entry.mock_calls) == 1
 
-    async def test_reconfigure_form(
-        self, hass: HomeAssistant, mock_setup_entry: AsyncMock
-    ) -> None:
+    async def test_reconfigure_form(self, hass: HomeAssistant) -> None:
         """Test the reconfiguration of an entry."""
         entry = MockConfigEntry(domain=DOMAIN, data=_DEFAULT_DATA)
         entry.add_to_hass(hass)
@@ -221,6 +219,38 @@ class TestEltakoFlowHandler:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
 
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={**_DEFAULT_DATA, CONF_ID: "00-B1-00-00"},
+        )
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert entry.data[CONF_ID] == "00-B1-00-00"
+
+    async def test_reconfigure_error(self, hass: HomeAssistant) -> None:
+        """Test error handling and recovering during reconfiguration."""
+        entry = MockConfigEntry(domain=DOMAIN, data=_DEFAULT_DATA)
+        entry.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "entry_id": entry.entry_id,
+            },
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        # Check for small ID
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={**_DEFAULT_DATA, CONF_ID: "00-B0-00-0"},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {CONF_ID: "invalid_id"}
+
+        # Check for ID which is not hex
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={**_DEFAULT_DATA, CONF_ID: "00-B1-00-00"},
@@ -374,8 +404,8 @@ class TestDeviceSubentryFlowHandler:
         )
         await hass.async_block_till_done()
 
+        # Reconfigure the subentry
         subentry = next(iter(setup_default_entry.subentries.values()))
-
         result = await hass.config_entries.subentries.async_init(
             (setup_default_entry.entry_id, "device"),
             context={
@@ -387,6 +417,52 @@ class TestDeviceSubentryFlowHandler:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "switch"
 
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={**self._DEFAULT_SWITCH, CONF_ID: "00-00-00-03"},
+        )
+        await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+        assert subentry.data[CONF_ID] == "00-00-00-03"
+
+    async def test_reconfigure_subentry_error(
+        self, hass: HomeAssistant, setup_default_entry: MockConfigEntry
+    ) -> None:
+        """Test error handling and recovering during the reconfiguration of a subentry."""
+
+        # Create a subentry
+        result = await hass.config_entries.subentries.async_init(
+            (setup_default_entry.entry_id, "device"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={"next_step_id": "switch"}
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input=self._DEFAULT_SWITCH
+        )
+        await hass.async_block_till_done()
+
+        # Reconfigure with invalid ID
+        subentry = next(iter(setup_default_entry.subentries.values()))
+        result = await hass.config_entries.subentries.async_init(
+            (setup_default_entry.entry_id, "device"),
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "entry_id": setup_default_entry.entry_id,
+                "subentry_id": subentry.subentry_id,
+            },
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            user_input={**self._DEFAULT_SWITCH, CONF_ID: "00-00-00-0"},
+        )
+        await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {CONF_ID: "invalid_id"}
+
+        # Reconfigure with valid ID
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"],
             user_input={**self._DEFAULT_SWITCH, CONF_ID: "00-00-00-03"},
