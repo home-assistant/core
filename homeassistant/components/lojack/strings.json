@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to LoJack",
+        "description": "Enter your LoJack (Spireon) account credentials",
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "The email address for your LoJack account",
+          "password": "The password for your LoJack account"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate LoJack",
+        "description": "Your LoJack credentials have expired. Please enter your password to re-authenticate",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "device_tracker": {
+      "vehicle": {
+        "name": "[%key:component::device_tracker::entity_component::_::name%]"
+      }
+    }
+  }
+}
