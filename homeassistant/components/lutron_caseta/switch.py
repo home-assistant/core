@@ -5,9 +5,12 @@ from typing import Any
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import LutronCasetaUpdatableEntity
+from .const import DOMAIN
+from .entity import LutronCasetaEntity, LutronCasetaUpdatableEntity
+from .models import LutronCasetaData
 
 
 async def async_setup_entry(
@@ -23,9 +26,14 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     bridge = data.bridge
     switch_devices = bridge.get_devices_by_domain(SWITCH_DOMAIN)
-    async_add_entities(
+    entities: list[LutronCasetaLight | LutronCasetaSmartAwaySwitch] = [
         LutronCasetaLight(switch_device, data) for switch_device in switch_devices
-    )
+    ]
+
+    if bridge.smart_away_state != "":
+        entities.append(LutronCasetaSmartAwaySwitch(data))
+
+    async_add_entities(entities)
 
 
 class LutronCasetaLight(LutronCasetaUpdatableEntity, SwitchEntity):
@@ -61,3 +69,50 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device["current_state"] > 0
+
+
+class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
+    """Representation of Lutron Caseta Smart Away."""
+
+    def __init__(self, data: LutronCasetaData) -> None:
+        """Init a switch entity."""
+        device = {
+            "device_id": "smart_away",
+            "name": "Smart Away",
+            "type": "SmartAway",
+            "model": "Smart Away",
+            "area": data.bridge_device["area"],
+            "serial": data.bridge_device["serial"],
+        }
+        super().__init__(device, data)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, data.bridge_device["serial"])},
+        )
+        self._smart_away_unique_id = f"{self._bridge_unique_id}_smart_away"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the smart away switch."""
+        return self._smart_away_unique_id
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+        self._smartbridge.add_smart_away_subscriber(self._handle_smart_away_update)
+
+    def _handle_smart_away_update(self, smart_away_state: str | None = None) -> None:
+        """Handle updated smart away state from the bridge."""
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn Smart Away on."""
+        await self._smartbridge.activate_smart_away()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn Smart Away off."""
+        await self._smartbridge.deactivate_smart_away()
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if Smart Away is on."""
+        return self._smartbridge.smart_away_state == "Enabled"

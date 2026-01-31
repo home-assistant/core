@@ -756,10 +756,9 @@ async def webhook_get_config(
         "theme_color": MANIFEST_JSON["theme_color"],
     }
 
-    if CONF_CLOUDHOOK_URL in config_entry.data:
-        resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
-
     if cloud.async_active_subscription(hass):
+        if CONF_CLOUDHOOK_URL in config_entry.data:
+            resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
         with suppress(cloud.CloudNotAvailable):
             resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
 

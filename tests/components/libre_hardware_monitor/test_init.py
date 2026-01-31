@@ -88,3 +88,8 @@ async def test_migration_to_unique_ids(
     assert (
         entity_registry.async_get_entity_id("sensor", DOMAIN, legacy_entity_id) is None
     )
+
+    updated_config_entry = hass.config_entries.async_get_entry(
+        legacy_config_entry_v1.entry_id
+    )
+    assert updated_config_entry.version == 2

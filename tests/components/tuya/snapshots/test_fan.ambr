@@ -21,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -92,7 +94,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bree',
-      'preset_mode': 'normal',
+      'preset_mode': None,
       'preset_modes': list([
         'sleep',
       ]),
@@ -112,8 +114,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -130,6 +131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -149,11 +151,10 @@
     'attributes': ReadOnlyDict({
       'direction': 'forward',
       'friendly_name': 'ceiling fan/Light v2',
-      'percentage': 20,
+      'percentage': 21,
       'percentage_step': 1.0,
       'preset_mode': None,
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
       'supported_features': <FanEntityFeature: 53>,
     }),
     'context': <ANY>,
@@ -191,6 +192,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -234,8 +236,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -252,6 +253,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -270,8 +272,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dehumidifer',
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -304,6 +305,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -338,8 +340,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -356,6 +357,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -377,8 +379,7 @@
       'percentage': 50,
       'percentage_step': 50.0,
       'preset_mode': None,
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -395,8 +396,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -413,6 +413,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -434,8 +435,7 @@
       'percentage': None,
       'percentage_step': 33.333333333333336,
       'preset_mode': None,
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -468,6 +468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -523,6 +524,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -563,8 +565,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -581,6 +582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -602,8 +604,7 @@
       'percentage': 100,
       'percentage_step': 50.0,
       'preset_mode': None,
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -641,6 +642,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

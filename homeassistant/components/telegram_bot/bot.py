@@ -5,6 +5,8 @@ import asyncio
 from collections.abc import Callable, Sequence
 import io
 import logging
+import os
+from pathlib import Path
 from ssl import SSLContext
 from types import MappingProxyType
 from typing import Any, cast
@@ -13,6 +15,7 @@ import httpx
 from telegram import (
     Bot,
     CallbackQuery,
+    File,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     InputMedia,
@@ -45,6 +48,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.json import JsonValueType
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
@@ -61,6 +65,7 @@ from .const import (
     ATTR_FILE_ID,
     ATTR_FILE_MIME_TYPE,
     ATTR_FILE_NAME,
+    ATTR_FILE_PATH,
     ATTR_FILE_SIZE,
     ATTR_FROM_FIRST,
     ATTR_FROM_LAST,
@@ -89,6 +94,7 @@ from .const import (
     ATTR_USER_ID,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     DOMAIN,
@@ -448,7 +454,7 @@ class TelegramNotificationService:
                 params[ATTR_MESSAGE_THREAD_ID] = data[ATTR_MESSAGE_THREAD_ID]
             # Keyboards:
             if ATTR_KEYBOARD in data:
-                keys = data.get(ATTR_KEYBOARD)
+                keys = data[ATTR_KEYBOARD]
                 keys = keys if isinstance(keys, list) else [keys]
                 if keys:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
@@ -783,6 +789,7 @@ class TelegramNotificationService:
                 None,
                 chat_id=chat_id,
                 action=chat_action,
+                message_thread_id=kwargs.get(ATTR_MESSAGE_THREAD_ID),
                 context=context,
             )
             result[chat_id] = is_successful
@@ -923,6 +930,7 @@ class TelegramNotificationService:
                 self.bot.send_sticker,
                 "Error sending sticker",
                 params[ATTR_MESSAGE_TAG],
+                target=kwargs.get(ATTR_TARGET),
                 sticker=stickerid,
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
@@ -949,6 +957,7 @@ class TelegramNotificationService:
             self.bot.send_location,
             "Error sending location",
             params[ATTR_MESSAGE_TAG],
+            target=target,
             latitude=latitude,
             longitude=longitude,
             disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -975,6 +984,7 @@ class TelegramNotificationService:
             self.bot.send_poll,
             "Error sending poll",
             params[ATTR_MESSAGE_TAG],
+            target=target,
             question=question,
             options=options,
             is_anonymous=is_anonymous,
@@ -1033,18 +1043,81 @@ class TelegramNotificationService:
             context=context,
         )
 
+    async def download_file(
+        self,
+        file_id: str,
+        directory_path: str | None = None,
+        file_name: str | None = None,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> dict[str, JsonValueType]:
+        """Download a file from Telegram."""
+        if not directory_path:
+            directory_path = self.hass.config.path(DOMAIN)
+        file: File = await self._send_msg(
+            self.bot.get_file,
+            "Error getting file",
+            None,
+            file_id=file_id,
+            context=context,
+        )
+        if not file.file_path:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_failed",
+                translation_placeholders={
+                    "error": "No file path returned from Telegram"
+                },
+            )
+        if not file_name:
+            file_name = os.path.basename(file.file_path)
+
+        custom_path = os.path.join(directory_path, file_name)
+        await self.hass.async_add_executor_job(
+            self._prepare_download_directory, directory_path
+        )
+        _LOGGER.debug("Download file %s to %s", file_id, custom_path)
+        try:
+            file_content = await file.download_as_bytearray()
+            await self.hass.async_add_executor_job(
+                Path(custom_path).write_bytes, file_content
+            )
+        except (RuntimeError, OSError, TelegramError) as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_failed",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
+        return {ATTR_FILE_PATH: custom_path}
+
+    @staticmethod
+    def _prepare_download_directory(directory_path: str) -> None:
+        """Create download directory if it does not exist."""
+        if not os.path.exists(directory_path):
+            _LOGGER.debug("directory %s does not exist, creating it", directory_path)
+            os.makedirs(directory_path, exist_ok=True)
+
 
 def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:
     """Initialize telegram bot with proxy support."""
-    api_key: str = p_config[CONF_API_KEY]
-    proxy_url: str | None = p_config.get(CONF_PROXY_URL)
 
+    api_key: str = p_config[CONF_API_KEY]
+
+    proxy_url: str | None = p_config.get(CONF_PROXY_URL)
     if proxy_url is not None:
         proxy = httpx.Proxy(proxy_url)
         request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
     else:
         request = HTTPXRequest(connection_pool_size=8)
-    return Bot(token=api_key, request=request)
+
+    base_url: str = p_config[CONF_API_ENDPOINT]
+
+    return Bot(
+        token=api_key,
+        base_url=f"{base_url}/bot",
+        base_file_url=f"{base_url}/file/bot",
+        request=request,
+    )
 
 
 async def load_data(

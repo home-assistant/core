@@ -36,13 +36,14 @@ from .entity import (
     ShellyBlockAttributeEntity,
     ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
-    async_setup_entry_attribute_entities,
+    async_setup_entry_block,
     async_setup_entry_rpc,
     rpc_call,
 )
 from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
+    get_rpc_channel_name,
     get_virtual_component_ids,
     is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
@@ -305,7 +306,6 @@ RPC_SWITCHES = {
     "cury_away_mode": RpcSwitchDescription(
         key="cury",
         sub_key="away_mode",
-        name="Away mode",
         translation_key="cury_away_mode",
         is_on=lambda status: status["away_mode"],
         method_on="cury_set_away_mode",
@@ -337,11 +337,11 @@ def _async_setup_block_entry(
     coordinator = config_entry.runtime_data.block
     assert coordinator
 
-    async_setup_entry_attribute_entities(
+    async_setup_entry_block(
         hass, config_entry, async_add_entities, BLOCK_RELAY_SWITCHES, BlockRelaySwitch
     )
 
-    async_setup_entry_attribute_entities(
+    async_setup_entry_block(
         hass,
         config_entry,
         async_add_entities,
@@ -424,9 +424,6 @@ class BlockSleepingMotionSwitch(
         super().__init__(coordinator, block, attribute, description, entry)
         self.last_state: State | None = None
 
-        if hasattr(self, "_attr_name"):
-            delattr(self, "_attr_name")
-
     @property
     def is_on(self) -> bool | None:
         """If motion is active."""
@@ -470,6 +467,7 @@ class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
         """Initialize relay switch."""
         super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
+        self._attr_name = None  # Main device entity
         self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
 
     @property
@@ -512,12 +510,8 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
 
-        if (
-            hasattr(self, "_attr_name")
-            and description.role != ROLE_GENERIC
-            and description.key not in ("switch", "script")
-        ):
-            delattr(self, "_attr_name")
+        if description.key in ("switch", "script"):
+            self._attr_name = get_rpc_channel_name(coordinator.device, key)
 
     @property
     def is_on(self) -> bool:

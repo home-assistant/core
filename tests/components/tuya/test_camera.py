@@ -72,7 +72,7 @@ async def test_platform_setup_and_discovery(
         ),
     ],
 )
-async def test_motion_detection(
+async def test_action(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
@@ -80,7 +80,7 @@ async def test_motion_detection(
     service: str,
     expected_command: dict[str, Any],
 ) -> None:
-    """Test turning off a switch."""
+    """Test camera action."""
     entity_id = "camera.burocam"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 

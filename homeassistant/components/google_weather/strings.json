@@ -61,5 +61,42 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "apparent_temperature": {
+        "name": "Apparent temperature"
+      },
+      "cloud_coverage": {
+        "name": "Cloud coverage"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "heat_index": {
+        "name": "Heat index temperature"
+      },
+      "precipitation_probability": {
+        "name": "Precipitation probability"
+      },
+      "thunderstorm_probability": {
+        "name": "Thunderstorm probability"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "visibility": {
+        "name": "Visibility"
+      },
+      "weather_condition": {
+        "name": "Weather condition"
+      },
+      "wind_chill": {
+        "name": "Wind chill temperature"
+      },
+      "wind_gust_speed": {
+        "name": "Wind gust speed"
+      }
+    }
   }
 }

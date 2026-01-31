@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import syslog
+from typing import Any
 
 import voluptuous as vol
 
@@ -91,7 +92,7 @@ class SyslogNotificationService(BaseNotificationService):
         self._option = option
         self._priority = priority
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to syslog."""
 
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)

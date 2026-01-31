@@ -1,0 +1,12 @@
+{
+  "domain": "essent",
+  "name": "Essent",
+  "codeowners": ["@jaapp"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/essent",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "silver",
+  "requirements": ["essent-dynamic-pricing==0.2.7"],
+  "single_config_entry": true
+}

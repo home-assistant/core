@@ -256,7 +256,7 @@
     },
     {
       "date": "2024-01-23",
-      "entryType": "dinner",
+      "entryType": "dessert",
       "title": "",
       "text": "",
       "recipeId": "47595e4c-52bc-441d-b273-3edf4258806d",
@@ -500,7 +500,7 @@
     },
     {
       "date": "2024-01-22",
-      "entryType": "dinner",
+      "entryType": "drink",
       "title": "",
       "text": "",
       "recipeId": "9d553779-607e-471b-acf3-84e6be27b159",
@@ -574,7 +574,7 @@
     },
     {
       "date": "2024-01-22",
-      "entryType": "dinner",
+      "entryType": "snack",
       "title": "",
       "text": "",
       "recipeId": "55c88810-4cf1-4d86-ae50-63b15fd173fb",

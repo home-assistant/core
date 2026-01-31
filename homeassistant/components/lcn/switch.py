@@ -17,8 +17,8 @@ from .const import CONF_DOMAIN_DATA, CONF_OUTPUT, OUTPUT_PORTS, RELAY_PORTS, SET
 from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
-PARALLEL_UPDATES = 0
-SCAN_INTERVAL = timedelta(minutes=1)
+PARALLEL_UPDATES = 2
+SCAN_INTERVAL = timedelta(minutes=10)
 
 
 def add_lcn_switch_entities(
@@ -95,8 +95,11 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Update the state of the entity."""
-        await self.device_connection.request_status_output(
-            self.output, SCAN_INTERVAL.seconds
+        self._attr_available = (
+            await self.device_connection.request_status_output(
+                self.output, SCAN_INTERVAL.seconds
+            )
+            is not None
         )
 
     def input_received(self, input_obj: InputType) -> None:
@@ -106,7 +109,7 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
             or input_obj.get_output_id() != self.output.value
         ):
             return
-
+        self._attr_available = True
         self._attr_is_on = input_obj.get_percent() > 0
         self.async_write_ha_state()
 
@@ -142,13 +145,16 @@ class LcnRelaySwitch(LcnEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Update the state of the entity."""
-        await self.device_connection.request_status_relays(SCAN_INTERVAL.seconds)
+        self._attr_available = (
+            await self.device_connection.request_status_relays(SCAN_INTERVAL.seconds)
+            is not None
+        )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set switch state when LCN input object (command) is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusRelays):
             return
-
+        self._attr_available = True
         self._attr_is_on = input_obj.get_state(self.output.value)
         self.async_write_ha_state()
 
@@ -183,8 +189,11 @@ class LcnRegulatorLockSwitch(LcnEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Update the state of the entity."""
-        await self.device_connection.request_status_variable(
-            self.setpoint_variable, SCAN_INTERVAL.seconds
+        self._attr_available = (
+            await self.device_connection.request_status_variable(
+                self.setpoint_variable, SCAN_INTERVAL.seconds
+            )
+            is not None
         )
 
     def input_received(self, input_obj: InputType) -> None:
@@ -194,7 +203,7 @@ class LcnRegulatorLockSwitch(LcnEntity, SwitchEntity):
             or input_obj.get_var() != self.setpoint_variable
         ):
             return
-
+        self._attr_available = True
         self._attr_is_on = input_obj.get_value().is_locked_regulator()
         self.async_write_ha_state()
 
@@ -236,7 +245,12 @@ class LcnKeyLockSwitch(LcnEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Update the state of the entity."""
-        await self.device_connection.request_status_locked_keys(SCAN_INTERVAL.seconds)
+        self._attr_available = (
+            await self.device_connection.request_status_locked_keys(
+                SCAN_INTERVAL.seconds
+            )
+            is not None
+        )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set switch state when LCN input object (command) is received."""
@@ -245,6 +259,6 @@ class LcnKeyLockSwitch(LcnEntity, SwitchEntity):
             or self.key not in pypck.lcn_defs.Key
         ):
             return
-
+        self._attr_available = True
         self._attr_is_on = input_obj.get_state(self.table_id, self.key_id)
         self.async_write_ha_state()
