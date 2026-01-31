@@ -32,7 +32,7 @@
           "preset_mode": {
             "state": {
               "fireplace": "Fireplace",
-              "high": "High"
+              "high": "[%key:common::state::high%]"
             }
           }
         }
@@ -154,7 +154,7 @@
   },
   "issues": {
     "deprecated_fireplace_switch": {
-      "description": "The fireplace mode switch entity `{entity_id}` is deprecated and will be removed in a future version.\n\nFireplace mode has been moved to a climate preset on the climate entity to better match the device interface.\n\nPlease update your automations to use the `climate.set_preset_mode` service with preset mode `fireplace` instead of using the switch entity.\n\nAfter updating your automations, you can safely disable this switch entity.",
+      "description": "The fireplace mode switch entity `{entity_id}` is deprecated and will be removed in a future version.\n\nFireplace mode has been moved to a climate preset on the climate entity to better match the device interface.\n\nPlease update your automations to use the `climate.set_preset_mode` action with preset mode `fireplace` instead of using the switch entity.\n\nAfter updating your automations, you can safely disable this switch entity.",
       "title": "Fireplace mode switch is deprecated"
     }
   }
