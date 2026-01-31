@@ -740,9 +740,9 @@
       'area_id': None,
       'capabilities': dict({
         'preset_modes': list([
-          'advanced_sleep',
           'auto',
           'normal',
+          'sleep',
           'turbo',
         ]),
       }),
@@ -783,15 +783,15 @@
       'active_time': None,
       'display_status': 'off',
       'friendly_name': 'SmartTowerFan',
-      'mode': 'normal',
+      'mode': <FanModes.NORMAL: 'normal'>,
       'oscillating': True,
       'percentage': 0,
       'percentage_step': 8.333333333333334,
       'preset_mode': 'normal',
       'preset_modes': list([
-        'advanced_sleep',
         'auto',
         'normal',
+        'sleep',
         'turbo',
       ]),
       'supported_features': <FanEntityFeature: 59>,
