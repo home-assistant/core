@@ -14,7 +14,7 @@
           "name": "[%key:component::fan::common::condition_behavior_name%]"
         }
       },
-      "name": "If a fan is off"
+      "name": "Fan is off"
     },
     "is_on": {
       "description": "Tests if one or more fans are on.",
@@ -24,7 +24,7 @@
           "name": "[%key:component::fan::common::condition_behavior_name%]"
         }
       },
-      "name": "If a fan is on"
+      "name": "Fan is on"
     }
   },
   "device_automation": {
