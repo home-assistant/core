@@ -19,7 +19,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -165,20 +165,16 @@ async def async_setup_entry(
     evt800 = config_entry.runtime_data.client
     coordinator = config_entry.runtime_data
 
-    entities = [
+    async_add_entities(
         EnvertechEVT800Sensor(
             evt800,
             coordinator,
             config_entry,
             description,
             name,
-            evt800.data.get(name),
         )
         for name, description in SENSORS.items()
-    ]
-
-    if entities:
-        async_add_entities(entities)
+    )
 
 
 class EnvertechEVT800Sensor(EnvertechEVT800Entity, SensorEntity):
@@ -191,18 +187,11 @@ class EnvertechEVT800Sensor(EnvertechEVT800Entity, SensorEntity):
         config_entry: ConfigEntry[Any],
         description: SensorEntityDescription,
         name: str,
-        value: Any,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(evt800, coordinator, config_entry)
         self.entity_description = description
         self._key = name
-        self._attr_unique_id = f"{config_entry.unique_id}-{name}"
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle an update from the coordinator."""
-        super()._handle_coordinator_update()
 
     @property
     def native_value(self) -> StateType:

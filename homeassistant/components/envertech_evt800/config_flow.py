@@ -39,23 +39,21 @@ class EnvertechFlowHandler(ConfigFlow, domain=DOMAIN):
         """First step in config flow."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            ip_address = user_input[CONF_IP_ADDRESS]
+            port = user_input[CONF_PORT]
+
             self._async_abort_entries_match(
                 {
-                    CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
-                    CONF_PORT: user_input[CONF_PORT],
+                    CONF_IP_ADDRESS: ip_address,
+                    CONF_PORT: port,
                 }
             )
-            self._data[CONF_IP_ADDRESS] = user_input[CONF_IP_ADDRESS]
-            self._data[CONF_PORT] = user_input[CONF_PORT]
-            self._data[CONF_TYPE] = TYPE_TCP_SERVER_MODE
 
-            evt800 = pyenvertechevt800.EnvertechEVT800(
-                user_input[CONF_IP_ADDRESS], user_input[CONF_PORT]
-            )
+            evt800 = pyenvertechevt800.EnvertechEVT800(ip_address, port)
 
-            canConnect = await evt800.test_connection()
+            can_connect = await evt800.test_connection()
 
-            if not canConnect:
+            if not can_connect:
                 errors["base"] = "cannot_connect"
 
             if not errors:

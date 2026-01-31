@@ -104,10 +104,8 @@ rules:
     comment: |
       The dependency pyenvertechevt800 is not async.
   inject-websession:
-    status: todo
+    status: exempt
     comment: |
       No websession is used
   strict-typing:
     status: todo
-    comment: |
-      Not all functions and variables are type-annotated.

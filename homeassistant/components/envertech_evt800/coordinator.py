@@ -6,10 +6,10 @@ from typing import Any
 
 import pyenvertechevt800
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import EnvertechEVT800ConfigEntry
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,11 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 class EnvertechEVT800Coordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Data update coordinator for Envertech EVT800."""
 
+    config_entry: EnvertechEVT800ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
         client: pyenvertechevt800.EnvertechEVT800,
-        config_entry: ConfigEntry[pyenvertechevt800.EnvertechEVT800],
+        config_entry: EnvertechEVT800ConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
