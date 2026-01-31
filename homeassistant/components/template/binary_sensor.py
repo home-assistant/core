@@ -295,7 +295,13 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         self._last_delay_to: bool | None = None
         self._auto_off_cancel: CALLBACK_TYPE | None = None
         self._auto_off_time: datetime | None = None
-        self.setup_template(CONF_AUTO_OFF, "_auto_off_time", cv.positive_time_period)
+
+        # Auto off should not render the result as a stand alone template, it should
+        # only be render when the binary sensor state updates. The validator for
+        # Auto off is built into self._set_state.
+        if isinstance(config.get(CONF_AUTO_OFF), template.Template):
+            self._to_render_simple.append(CONF_AUTO_OFF)
+            self._parse_result.add(CONF_AUTO_OFF)
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
