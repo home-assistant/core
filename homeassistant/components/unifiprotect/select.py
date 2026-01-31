@@ -359,7 +359,7 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities = async_all_device_entities(
+        entities: list[BaseProtectEntity] = async_all_device_entities(
             data,
             ProtectSelects,
             model_descriptions=_MODEL_DESCRIPTIONS,
@@ -367,25 +367,19 @@ async def async_setup_entry(
         )
         # Add PTZ select entities for cameras
         if isinstance(device, Camera) and device.feature_flags.is_ptz:
-            # Load PTZ data for newly adopted camera
+            # Load PTZ data for newly adopted camera, then add all entities together
             hass.async_create_task(
-                _async_add_new_ptz_camera(data, device),
+                _async_add_new_ptz_camera(data, device, entities),
                 name="unifiprotect_add_ptz_entities",
             )
         else:
             async_add_entities(entities)
 
     async def _async_add_new_ptz_camera(
-        protect_data: ProtectData, camera: Camera
+        protect_data: ProtectData, camera: Camera, entities: list[BaseProtectEntity]
     ) -> None:
-        """Load PTZ data and add entities for newly adopted camera."""
+        """Load PTZ data and add all entities for newly adopted camera."""
         await protect_data.async_load_ptz_data_for_camera(camera)
-        entities: list[BaseProtectEntity] = async_all_device_entities(
-            protect_data,
-            ProtectSelects,
-            model_descriptions=_MODEL_DESCRIPTIONS,
-            ufp_device=camera,
-        )
         entities.extend(_create_ptz_entities(protect_data, camera))
         async_add_entities(entities)
 
