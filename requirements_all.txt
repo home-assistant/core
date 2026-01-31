@@ -854,7 +854,7 @@ ecoaliface==0.4.0
 egauge-async==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.5.0
+eheimdigital==1.6.0
 
 # homeassistant.components.ekeybionyx
 ekey-bionyxpy==1.0.1
@@ -1008,11 +1008,11 @@ freebox-api==1.3.0
 freesms==0.2.0
 
 # homeassistant.components.fressnapf_tracker
-fressnapftracker==0.2.1
+fressnapftracker==0.2.2
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection[qr]==1.15.0
+fritzconnection[qr]==1.15.1
 
 # homeassistant.components.fyta
 fyta_cli==0.7.2
@@ -1216,10 +1216,10 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260128.1
+home-assistant-frontend==20260128.3
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.1.6
+home-assistant-intents==2026.1.28
 
 # homeassistant.components.enocean
 homeassistant_enocean==0.0.10
@@ -1524,7 +1524,7 @@ motionblindsble==0.1.3
 motioneye-client==0.3.14
 
 # homeassistant.components.bang_olufsen
-mozart-api==5.3.1.108.0
+mozart-api==5.3.1.108.2
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -1584,7 +1584,7 @@ nextdns==5.0.0
 nhc==0.7.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.21.0
+nibe==2.22.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.1
@@ -1691,7 +1691,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.16.5
+opower==0.17.0
 
 # homeassistant.components.oralb
 oralb-ble==1.0.2
@@ -1989,7 +1989,7 @@ pydeconz==120
 pydelijn==1.1.0
 
 # homeassistant.components.dexcom
-pydexcom==0.2.3
+pydexcom==0.5.1
 
 # homeassistant.components.discovergy
 pydiscovergy==3.0.2
@@ -2143,7 +2143,7 @@ pyitachip2ir==0.0.7
 pyituran==0.1.5
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==2.0.0
+pyjvcprojector==2.0.1
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.2
@@ -2186,6 +2186,9 @@ pylgnetcast==0.3.9
 
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.1
+
+# homeassistant.components.liebherr
+pyliebherrhomeapi==0.2.1
 
 # homeassistant.components.litejet
 pylitejet==0.6.3
@@ -2296,7 +2299,7 @@ pyoppleio-legacy==1.0.8
 pyosoenergyapi==1.2.4
 
 # homeassistant.components.opentherm_gw
-pyotgw==2.2.2
+pyotgw==2.2.3
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -2748,7 +2751,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.5.2
+renault-api==0.5.3
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -3040,7 +3043,7 @@ tilt-pi==0.2.1
 tmb==0.0.4
 
 # homeassistant.components.todoist
-todoist-api-python==2.1.7
+todoist-api-python==3.1.0
 
 # homeassistant.components.togrill
 togrill-bluetooth==0.8.1
@@ -3094,7 +3097,7 @@ uasiren==0.0.1
 uhooapi==1.2.6
 
 # homeassistant.components.unifiprotect
-uiprotect==10.0.1
+uiprotect==10.1.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -3142,6 +3145,9 @@ velbus-aio==2026.1.4
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
+
+# homeassistant.components.viaggiatreno
+viaggiatreno_ha==0.2.4
 
 # homeassistant.components.victron_ble
 victron-ble-ha-parser==0.4.9
@@ -3293,7 +3299,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.87
+zha==0.0.88
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
