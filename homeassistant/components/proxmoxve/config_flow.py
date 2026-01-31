@@ -123,8 +123,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "ssl_error"
             except ProxmoxNoNodesFound:
                 errors["base"] = "no_nodes_found"
-
-            if not errors:
+            else:
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
                     data={**user_input, CONF_NODES: proxmox_nodes},
