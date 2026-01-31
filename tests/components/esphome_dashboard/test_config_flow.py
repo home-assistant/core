@@ -50,6 +50,22 @@ async def test_user_flow_invalid_url(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "invalid_url"}
 
 
+async def test_user_flow_invalid_port(hass: HomeAssistant) -> None:
+    """Test user flow with port number out of valid range."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Port number exceeds valid range (0-65535), triggers ValueError
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_URL: "http://192.168.1.100:99999999"},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_url"}
+
+
 async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test user flow when connection fails."""
     result = await hass.config_entries.flow.async_init(

@@ -49,6 +49,9 @@ class ESPHomeDashboardConfigFlow(ConfigFlow, domain=DOMAIN):
             if not parsed.scheme or not parsed.netloc:
                 errors["base"] = "invalid_url"
                 return errors
+            # Access port to validate it's in valid range (0-65535)
+            # This raises ValueError if port is out of range
+            _ = parsed.port
         except ValueError:
             errors["base"] = "invalid_url"
             return errors
