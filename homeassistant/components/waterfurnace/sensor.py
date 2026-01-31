@@ -12,11 +12,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
-from . import DOMAIN, UPDATE_TOPIC, WaterFurnaceData
+from . import UPDATE_TOPIC, WaterFurnaceConfigEntry, WaterFurnaceData
 
 SENSORS = [
     SensorEntityDescription(name="Furnace Mode", key="mode", icon="mdi:gauge"),
@@ -106,19 +105,19 @@ SENSORS = [
 ]
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: WaterFurnaceConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Waterfurnace sensor."""
-    if discovery_info is None:
-        return
+    """Set up Waterfurnace sensors from a config entry."""
 
-    client = hass.data[DOMAIN]
+    data_collector = WaterFurnaceData(hass, config_entry.runtime_data)
+    data_collector.start()
 
-    add_entities(WaterFurnaceSensor(client, description) for description in SENSORS)
+    async_add_entities(
+        WaterFurnaceSensor(data_collector, description) for description in SENSORS
+    )
 
 
 class WaterFurnaceSensor(SensorEntity):
