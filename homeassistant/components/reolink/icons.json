@@ -426,6 +426,12 @@
           "off": "mdi:music-note-off"
         }
       },
+      "pet_tone": {
+        "default": "mdi:music-note",
+        "state": {
+          "off": "mdi:music-note-off"
+        }
+      },
       "play_quick_reply_message": {
         "default": "mdi:message-reply-text-outline"
       },
