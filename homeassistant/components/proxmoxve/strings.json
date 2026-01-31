@@ -28,7 +28,7 @@
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "realm": "Realm",
+          "realm": "[%key:component::proxmoxve::config::step::user::data::realm%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
