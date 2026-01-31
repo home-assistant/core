@@ -223,11 +223,13 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         """Send pause command."""
         self.coordinator.api_client.jellyfin.remote_pause(self.session_id)
         self._attr_state = MediaPlayerState.PAUSED
+        self.schedule_update_ha_state()
 
     def media_play(self) -> None:
         """Send play command."""
         self.coordinator.api_client.jellyfin.remote_unpause(self.session_id)
         self._attr_state = MediaPlayerState.PLAYING
+        self.schedule_update_ha_state()
 
     def media_play_pause(self) -> None:
         """Send the PlayPause command to the session."""
@@ -237,6 +239,7 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         """Send stop command."""
         self.coordinator.api_client.jellyfin.remote_stop(self.session_id)
         self._attr_state = MediaPlayerState.IDLE
+        self.schedule_update_ha_state()
 
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
@@ -252,6 +255,7 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
             self.session_id, int(volume * 100)
         )
         self._attr_volume_level = volume
+        self.schedule_update_ha_state()
 
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
@@ -260,6 +264,7 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         else:
             self.coordinator.api_client.jellyfin.remote_unmute(self.session_id)
         self._attr_is_volume_muted = mute
+        self.schedule_update_ha_state()
 
     async def async_browse_media(
         self,
