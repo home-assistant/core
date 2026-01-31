@@ -1,6 +1,6 @@
 """Tests for the syncthing sensor platform."""
 
-from collections.abc import Iterator
+from collections.abc import AsyncIterator
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -50,13 +50,18 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-def mock_syncthing() -> Iterator[MagicMock]:
-    """Create a mock Syncthing client."""
+async def mock_syncthing(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+) -> AsyncIterator[MagicMock]:
+    """Create a mock Syncthing client and set up the config entry."""
     mock_syncthing = create_mock_syncthing_client()
     with patch(
         "homeassistant.components.syncthing.aiosyncthing.Syncthing",
         return_value=mock_syncthing,
     ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
         yield mock_syncthing
 
 
@@ -81,22 +86,16 @@ async def test_sensor_platform_setup(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test sensor platform sets up folder and device sensors."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Check folder sensor
     folder_state = hass.states.get(FOLDER_ENTITY_ID)
     assert folder_state is not None
     assert folder_state.state == "idle"
     assert folder_state.attributes["id"] == FOLDER_ID
     assert folder_state.attributes["label"] == FOLDER_LABEL
 
-    # Check device sensor
     device_state = hass.states.get(DEVICE_ENTITY_ID)
     assert device_state is not None
     assert device_state.state == "unknown"
 
-    # Check server device sensor (should be online)
     server_state = hass.states.get(SERVER_ENTITY_ID)
     assert server_state is not None
     assert server_state.state == "online"
@@ -123,14 +122,9 @@ async def test_folder_sensor_updates_on_summary_event(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test folder sensor updates when receiving FolderSummary event."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Initial state
     state = hass.states.get(FOLDER_ENTITY_ID)
     assert state is not None and state.state == "idle"
 
-    # Dispatch FolderSummary event
     dispatcher.async_dispatcher_send(
         hass,
         f"{FOLDER_SUMMARY_RECEIVED}-{SERVER_ID}-{FOLDER_ID}",
@@ -138,7 +132,6 @@ async def test_folder_sensor_updates_on_summary_event(
     )
     await hass.async_block_till_done()
 
-    # State should be updated
     state = hass.states.get(FOLDER_ENTITY_ID)
     assert state is not None and state.state == "syncing"
 
@@ -149,10 +142,6 @@ async def test_folder_sensor_updates_on_state_changed_event(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test folder sensor updates when receiving StateChanged event."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Dispatch StateChanged event
     dispatcher.async_dispatcher_send(
         hass,
         f"{STATE_CHANGED_RECEIVED}-{SERVER_ID}-{FOLDER_ID}",
@@ -160,7 +149,6 @@ async def test_folder_sensor_updates_on_state_changed_event(
     )
     await hass.async_block_till_done()
 
-    # State should be updated
     state = hass.states.get(FOLDER_ENTITY_ID)
     assert state is not None and state.state == "syncing"
 
@@ -171,10 +159,6 @@ async def test_folder_sensor_updates_on_paused_event(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test folder sensor updates when receiving FolderPaused event."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Dispatch FolderPaused event
     dispatcher.async_dispatcher_send(
         hass,
         f"{FOLDER_PAUSED_RECEIVED}-{SERVER_ID}-{FOLDER_ID}",
@@ -182,7 +166,6 @@ async def test_folder_sensor_updates_on_paused_event(
     )
     await hass.async_block_till_done()
 
-    # State should be paused
     state = hass.states.get(FOLDER_ENTITY_ID)
     assert state is not None and state.state == "paused"
 
@@ -193,21 +176,15 @@ async def test_folder_sensor_unavailable_on_server_unavailable(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test folder sensor becomes unavailable when server is unavailable."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Initial state should be available
     state = hass.states.get(FOLDER_ENTITY_ID)
     assert state is not None and state.state == "idle"
 
-    # Dispatch server unavailable event
     dispatcher.async_dispatcher_send(
         hass,
         f"{SERVER_UNAVAILABLE}-{SERVER_ID}",
     )
     await hass.async_block_till_done()
 
-    # State should be unavailable
     state = hass.states.get(FOLDER_ENTITY_ID)
     assert state is not None and state.state == "unavailable"
 
@@ -218,10 +195,6 @@ async def test_folder_sensor_available_on_server_available(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test folder sensor becomes available when server comes back online."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Make sensor unavailable
     dispatcher.async_dispatcher_send(
         hass,
         f"{SERVER_UNAVAILABLE}-{SERVER_ID}",
@@ -231,14 +204,12 @@ async def test_folder_sensor_available_on_server_available(
     state = hass.states.get(FOLDER_ENTITY_ID)
     assert state is not None and state.state == "unavailable"
 
-    # Dispatch server available event
     dispatcher.async_dispatcher_send(
         hass,
         f"{SERVER_AVAILABLE}-{SERVER_ID}",
     )
     await hass.async_block_till_done()
 
-    # State should be available again
     state = hass.states.get(FOLDER_ENTITY_ID)
     assert state is not None and state.state == "idle"
 
@@ -249,19 +220,13 @@ async def test_folder_sensor_polls_status(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test folder sensor polls for status updates."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Update mock to return syncing status
     syncing_status = {**MOCK_FOLDER_STATUS, "state": "syncing"}
     mock_syncthing.database.status = AsyncMock(return_value=syncing_status)
 
-    # Trigger time change to force update
     future = dt_util.utcnow() + timedelta(seconds=121)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
-    # State should be updated
     state = hass.states.get(FOLDER_ENTITY_ID)
     assert state is not None and state.state == "syncing"
 
@@ -272,18 +237,12 @@ async def test_folder_sensor_error_makes_unavailable(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test folder sensor becomes unavailable on status error."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Make status raise error
     mock_syncthing.database.status = AsyncMock(side_effect=SyncthingError("Error"))
 
-    # Trigger time change to force update
     future = dt_util.utcnow() + timedelta(seconds=121)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
-    # State should be unavailable
     state = hass.states.get(FOLDER_ENTITY_ID)
     assert state is not None and state.state == "unavailable"
 
@@ -294,14 +253,9 @@ async def test_device_sensor_updates_on_connected_event(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor updates when receiving DeviceConnected event."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Initial state
     state = hass.states.get(DEVICE_ENTITY_ID)
     assert state is not None and state.state == "unknown"
 
-    # Dispatch DeviceConnected event
     dispatcher.async_dispatcher_send(
         hass,
         f"{DEVICE_CONNECTED_RECEIVED}-{SERVER_ID}-{DEVICE_ID}",
@@ -309,7 +263,6 @@ async def test_device_sensor_updates_on_connected_event(
     )
     await hass.async_block_till_done()
 
-    # State should be connected
     state = hass.states.get(DEVICE_ENTITY_ID)
     assert state is not None and state.state == "connected"
     assert state.attributes["addr"] == "192.168.1.100:22000"
@@ -322,10 +275,6 @@ async def test_device_sensor_updates_on_disconnected_event(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor updates when receiving DeviceDisconnected event."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # First connect the device
     dispatcher.async_dispatcher_send(
         hass,
         f"{DEVICE_CONNECTED_RECEIVED}-{SERVER_ID}-{DEVICE_ID}",
@@ -336,7 +285,6 @@ async def test_device_sensor_updates_on_disconnected_event(
     state = hass.states.get(DEVICE_ENTITY_ID)
     assert state is not None and state.state == "connected"
 
-    # Dispatch DeviceDisconnected event
     dispatcher.async_dispatcher_send(
         hass,
         f"{DEVICE_DISCONNECTED_RECEIVED}-{SERVER_ID}-{DEVICE_ID}",
@@ -344,7 +292,6 @@ async def test_device_sensor_updates_on_disconnected_event(
     )
     await hass.async_block_till_done()
 
-    # State should be disconnected
     state = hass.states.get(DEVICE_ENTITY_ID)
     assert state is not None and state.state == "disconnected"
 
@@ -355,10 +302,6 @@ async def test_device_sensor_updates_on_paused_event(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor updates when receiving DevicePaused event."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Dispatch DevicePaused event
     dispatcher.async_dispatcher_send(
         hass,
         f"{DEVICE_PAUSED_RECEIVED}-{SERVER_ID}-{DEVICE_ID}",
@@ -366,7 +309,6 @@ async def test_device_sensor_updates_on_paused_event(
     )
     await hass.async_block_till_done()
 
-    # State should be paused
     state = hass.states.get(DEVICE_ENTITY_ID)
     assert state is not None and state.state == "paused"
 
@@ -377,10 +319,6 @@ async def test_device_sensor_stays_paused_on_disconnect(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor stays paused when disconnected while paused."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Pause device first
     dispatcher.async_dispatcher_send(
         hass,
         f"{DEVICE_PAUSED_RECEIVED}-{SERVER_ID}-{DEVICE_ID}",
@@ -388,7 +326,6 @@ async def test_device_sensor_stays_paused_on_disconnect(
     )
     await hass.async_block_till_done()
 
-    # Dispatch DeviceDisconnected event
     dispatcher.async_dispatcher_send(
         hass,
         f"{DEVICE_DISCONNECTED_RECEIVED}-{SERVER_ID}-{DEVICE_ID}",
@@ -396,7 +333,6 @@ async def test_device_sensor_stays_paused_on_disconnect(
     )
     await hass.async_block_till_done()
 
-    # State should still be paused
     state = hass.states.get(DEVICE_ENTITY_ID)
     assert state is not None and state.state == "paused"
 
@@ -407,10 +343,6 @@ async def test_device_sensor_updates_on_resumed_event(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor updates when receiving DeviceResumed event."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Pause device first
     dispatcher.async_dispatcher_send(
         hass,
         f"{DEVICE_PAUSED_RECEIVED}-{SERVER_ID}-{DEVICE_ID}",
@@ -421,7 +353,6 @@ async def test_device_sensor_updates_on_resumed_event(
     state = hass.states.get(DEVICE_ENTITY_ID)
     assert state is not None and state.state == "paused"
 
-    # Dispatch DeviceResumed event
     dispatcher.async_dispatcher_send(
         hass,
         f"{DEVICE_RESUMED_RECEIVED}-{SERVER_ID}-{DEVICE_ID}",
@@ -429,7 +360,6 @@ async def test_device_sensor_updates_on_resumed_event(
     )
     await hass.async_block_till_done()
 
-    # State should be disconnected
     state = hass.states.get(DEVICE_ENTITY_ID)
     assert state is not None and state.state == "disconnected"
 
@@ -440,10 +370,6 @@ async def test_device_sensor_processes_initial_events(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor processes initial events on startup."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Get the syncthing client and add initial events
     syncthing = hass.data[DOMAIN][entry.entry_id]
     syncthing._initial_events = [
         MOCK_DEVICE_CONNECTED_EVENT,
@@ -454,14 +380,12 @@ async def test_device_sensor_processes_initial_events(
         MOCK_DEVICE_DISCONNECTED_EVENT,
     ]
 
-    # Dispatch initial events ready signal
     dispatcher.async_dispatcher_send(
         hass,
         f"{INITIAL_EVENTS_READY}-{SERVER_ID}",
     )
     await hass.async_block_till_done()
 
-    # State should reflect the last event (disconnected)
     state = hass.states.get(DEVICE_ENTITY_ID)
     assert state is not None and state.state == "disconnected"
 
@@ -472,21 +396,15 @@ async def test_device_sensor_unavailable_on_server_unavailable(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor becomes unavailable when server is unavailable."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Initial state should be available
     state = hass.states.get(DEVICE_ENTITY_ID)
     assert state is not None and state.state == "unknown"
 
-    # Dispatch server unavailable event
     dispatcher.async_dispatcher_send(
         hass,
         f"{SERVER_UNAVAILABLE}-{SERVER_ID}",
     )
     await hass.async_block_till_done()
 
-    # State should be unavailable
     state = hass.states.get(DEVICE_ENTITY_ID)
     assert state is not None and state.state == "unavailable"
 
@@ -497,10 +415,6 @@ async def test_device_sensor_available_on_server_available(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor becomes available when server comes back online."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Make sensor unavailable
     dispatcher.async_dispatcher_send(
         hass,
         f"{SERVER_UNAVAILABLE}-{SERVER_ID}",
@@ -510,14 +424,12 @@ async def test_device_sensor_available_on_server_available(
     state = hass.states.get(DEVICE_ENTITY_ID)
     assert state is not None and state.state == "unavailable"
 
-    # Dispatch server available event
     dispatcher.async_dispatcher_send(
         hass,
         f"{SERVER_AVAILABLE}-{SERVER_ID}",
     )
     await hass.async_block_till_done()
 
-    # State should be available again
     state = hass.states.get(DEVICE_ENTITY_ID)
     assert state is not None and state.state == "unknown"
 
@@ -528,18 +440,12 @@ async def test_device_sensor_polls_status(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor polls for status updates."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify initial state
     initial_call_count = mock_syncthing.config.devices.call_count
 
-    # Trigger time change to force update
     future = dt_util.utcnow() + timedelta(seconds=121)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
-    # Verify devices was called again
     assert mock_syncthing.config.devices.call_count > initial_call_count
 
 
@@ -549,17 +455,11 @@ async def test_device_sensor_error_makes_unavailable(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test device sensor becomes unavailable on config error."""
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Make devices raise error
     mock_syncthing.config.devices = AsyncMock(side_effect=SyncthingError("Error"))
 
-    # Trigger time change to force update
     future = dt_util.utcnow() + timedelta(seconds=121)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
-    # State should be unavailable
     state = hass.states.get(DEVICE_ENTITY_ID)
     assert state is not None and state.state == "unavailable"

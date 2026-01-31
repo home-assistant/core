@@ -61,7 +61,6 @@ async def test_syncthing_client_event_listener(
     mock_syncthing: MagicMock,
 ) -> None:
     """Test SyncthingClient event listener handles device and folder events."""
-    # Setup mock event stream
     events = [
         MOCK_DEVICE_CONNECTED_EVENT,
         MOCK_FOLDER_SUMMARY_EVENT,
@@ -84,7 +83,6 @@ async def test_syncthing_client_event_listener(
         """Handle state changed event."""
         state_changed_calls.append(event)
 
-    # Subscribe to dispatcher signals
     dispatcher.async_dispatcher_connect(
         hass,
         f"{DEVICE_CONNECTED_RECEIVED}-{SERVER_ID}-{DEVICE_ID}",
@@ -101,15 +99,14 @@ async def test_syncthing_client_event_listener(
         state_changed_handler,
     )
 
-    # Create async generator for events.listen
     async def mock_listen():
         """Mock events.listen that yields all events and then loops indefinitely without blocking."""
         for event in events:
-            await asyncio.sleep(0)  # yield to event loop
+            await asyncio.sleep(0)
             yield event
         while True:
             await asyncio.sleep(0)
-            yield None  # keep generator alive
+            yield None
 
     mock_syncthing.events.listen = mock_listen
     mock_syncthing.events.last_seen_id = 10
@@ -120,12 +117,10 @@ async def test_syncthing_client_event_listener(
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    # Give event listener time to process
     await hass.async_block_till_done()
     await asyncio.sleep(0)
     await hass.async_block_till_done()
 
-    # Verify events were dispatched
     assert len(device_connected_calls) == 1
     assert device_connected_calls[0] == MOCK_DEVICE_CONNECTED_EVENT
 
@@ -141,8 +136,7 @@ async def test_syncthing_client_stores_initial_events(
     entry: MockConfigEntry,
     mock_syncthing: MagicMock,
 ) -> None:
-    """Test SyncthingClient stores initial device events."""
-    # Setup mock event stream with initial events (last_seen_id = 0)
+    """Test SyncthingClient stores initial device events (last_seen_id = 0)."""
     initial_events = [
         MOCK_DEVICE_CONNECTED_EVENT,
         MOCK_DEVICE_DISCONNECTED_EVENT,
@@ -150,7 +144,6 @@ async def test_syncthing_client_stores_initial_events(
 
     mock_syncthing.events.last_seen_id = 0
 
-    # Create async generator for events.listen
     async def mock_listen():
         """Mock events.listen that yields all events and then loops indefinitely without blocking."""
         for event in initial_events:
@@ -181,19 +174,16 @@ async def test_syncthing_client_stores_initial_events(
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-        # Give event listener time to process
         await asyncio.sleep(0.1)
         await hass.async_block_till_done()
 
     syncthing = hass.data[DOMAIN][entry.entry_id]
     stored_events = syncthing.get_initial_events()
 
-    # Verify initial events were stored
     assert len(stored_events) == 2
     assert stored_events[0] == MOCK_DEVICE_CONNECTED_EVENT
     assert stored_events[1] == MOCK_DEVICE_DISCONNECTED_EVENT
 
-    # Verify initial events ready signal was sent
     assert len(initial_events_ready_calls) == 1
 
 
@@ -210,9 +200,7 @@ async def test_syncthing_client_reconnect_on_error(
         nonlocal call_count
         call_count += 1
         if call_count == 1:
-            # First call raises error
             raise SyncthingError("Connection lost")
-        # Second call succeeds
         yield MOCK_DEVICE_CONNECTED_EVENT
 
     mock_syncthing.events.last_seen_id = 10
@@ -246,9 +234,7 @@ async def test_syncthing_client_reconnect_on_error(
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-        # Give event listener time to process and reconnect
         await asyncio.sleep(0.2)
         await hass.async_block_till_done()
 
-    # Verify server unavailable signal was sent
     assert len(server_unavailable_calls) >= 1

@@ -1,4 +1,4 @@
-"""Support for monitoring the Syncthing instance."""
+"""Support for Syncthing sensors."""
 
 from collections.abc import Mapping
 from typing import Any

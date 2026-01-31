@@ -7,10 +7,10 @@ from aiosyncthing.exceptions import SyncthingError
 
 SERVER_ID = "YZXABCD-ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW"
 SERVER_NAME = "This Device"
-FOLDER_ID = "test-folder"
-FOLDER_LABEL = "Test Folder"
 DEVICE_ID = "ABCDEFG-HIJKLMN-OPQRSTU-VWXYZAB-CDEFGHI-JKLMNOP-QRSTUVW-XYZABCD"
 DEVICE_NAME = "Test Device"
+FOLDER_ID = "test-folder"
+FOLDER_LABEL = "Test Folder"
 
 SERVER_ID_SHORT = SERVER_ID.split("-", maxsplit=1)[0]
 SERVER_NAME_HA = SERVER_NAME.lower().replace(" ", "_")
@@ -19,9 +19,9 @@ DEVICE_NAME_HA = DEVICE_NAME.lower().replace(" ", "_")
 FOLDER_ID_HA = FOLDER_ID.lower().replace("-", "_")
 FOLDER_LABEL_HA = FOLDER_LABEL.lower().replace(" ", "_")
 
-FOLDER_ENTITY_ID = f"sensor.{SERVER_ID_SHORT}_{FOLDER_ID_HA}_{FOLDER_LABEL_HA}"
-DEVICE_ENTITY_ID = f"sensor.{SERVER_ID_SHORT}_{DEVICE_ID_SHORT}_{DEVICE_NAME_HA}"
 SERVER_ENTITY_ID = f"sensor.{SERVER_ID_SHORT}_{SERVER_ID_SHORT}_{SERVER_NAME_HA}"
+DEVICE_ENTITY_ID = f"sensor.{SERVER_ID_SHORT}_{DEVICE_ID_SHORT}_{DEVICE_NAME_HA}"
+FOLDER_ENTITY_ID = f"sensor.{SERVER_ID_SHORT}_{FOLDER_ID_HA}_{FOLDER_LABEL_HA}"
 
 MOCK_SYSTEM_STATUS = {"myID": SERVER_ID}
 
@@ -76,7 +76,6 @@ MOCK_FOLDER_STATUS = {
     "state": "idle",
 }
 
-# Common device config structure
 MOCK_DEVICE_CONFIG_BASE = {
     "addresses": ["dynamic"],
     "compression": "metadata",
@@ -230,7 +229,6 @@ def create_mock_syncthing_client(
         mock_config.devices = AsyncMock(side_effect=devices_side_effect)
         mock_database.status = AsyncMock(return_value=MOCK_FOLDER_STATUS)
 
-        # Create async generator for events.listen
         async def mock_listen():
             """Mock events.listen that doesn't block."""
             while True:
@@ -240,13 +238,11 @@ def create_mock_syncthing_client(
         mock_events.listen = mock_listen
         mock_events.last_seen_id = 0
 
-    # Assign sub-clients
     mock_client.system = mock_system
     mock_client.config = mock_config
     mock_client.database = mock_database
     mock_client.events = mock_events
 
-    # Other methods
     mock_client.close = AsyncMock()
 
     return mock_client
