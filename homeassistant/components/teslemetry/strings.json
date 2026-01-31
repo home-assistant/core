@@ -1032,9 +1032,6 @@
       "vehicle_state_tpms_pressure_rr": {
         "name": "Tire pressure rear right"
       },
-      "version": {
-        "name": "Version"
-      },
       "vin": {
         "name": "[%key:component::teslemetry::common::vehicle%]",
         "state": {

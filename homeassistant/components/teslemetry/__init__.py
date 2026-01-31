@@ -161,13 +161,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             coordinator = TeslemetryVehicleDataCoordinator(
                 hass, entry, vehicle, product
             )
+            firmware = vehicle_metadata[vin].get("firmware", "Unknown")
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},
                 manufacturer="Tesla",
                 configuration_url="https://teslemetry.com/console",
                 name=product["display_name"],
                 model=vehicle.model,
+                model_id=vin[3],
                 serial_number=vin,
+                sw_version=firmware,
             )
             current_devices.add((DOMAIN, vin))
 
@@ -185,7 +188,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 create_handle_vehicle_stream(vin, coordinator),
                 {"vin": vin},
             )
-            firmware = vehicle_metadata[vin].get("firmware", "Unknown")
             stream_vehicle = stream.get_vehicle(vin)
             poll = vehicle_metadata[vin].get("polling", False)
 
@@ -276,7 +278,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         ),
     )
 
-    # Add energy device models
+    # Add energy device models and software version
     for energysite in energysites:
         models = set()
         for gateway in energysite.info_coordinator.data.get("components_gateways", []):
@@ -287,6 +289,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 models.add(battery["part_name"])
         if models:
             energysite.device["model"] = ", ".join(sorted(models))
+        if version := energysite.info_coordinator.data.get("version"):
+            energysite.device["sw_version"] = version
 
         # Create the energy site device regardless of it having entities
         # This is so users with a Wall Connector but without a Powerwall can still make service calls
