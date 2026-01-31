@@ -52,7 +52,7 @@
       "user": {
         "menu_options": {
           "configure_v1": "InfluxDB v1.x",
-          "configure_v2": "InfluxDB v2.x"
+          "configure_v2": "InfluxDB v2.x / v3"
         },
         "title": "Choose InfluxDB Version"
       }
