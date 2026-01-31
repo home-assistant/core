@@ -79,4 +79,20 @@ BUTTON_TYPES: tuple[RenaultButtonEntityDescription, ...] = (
         ),
         translation_key="stop_charge",
     ),
+    RenaultButtonEntityDescription(
+        async_press=lambda x: x.vehicle.start_horn(),
+        key="start_horn",
+        is_supported=lambda vehicle: (
+            vehicle.details.supports_endpoint("actions/horn-start")
+        ),
+        translation_key="start_horn",
+    ),
+    RenaultButtonEntityDescription(
+        async_press=lambda x: x.vehicle.start_lights(),
+        key="start_lights",
+        is_supported=lambda vehicle: (
+            vehicle.details.supports_endpoint("actions/lights-start")
+        ),
+        translation_key="start_lights",
+    ),
 )
