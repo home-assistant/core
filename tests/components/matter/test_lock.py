@@ -19,7 +19,7 @@ from homeassistant.components.matter.const import (
     ATTR_USER_INDEX,
     ATTR_USER_NAME,
     ATTR_USERCODE,
-    DOMAIN as MATTER_DOMAIN,
+    DOMAIN,
     EVENT_LOCK_DISPOSABLE_USER_DELETED,
     EVENT_LOCK_OPERATION,
     SERVICE_CLEAR_LOCK_USER,
@@ -630,7 +630,7 @@ async def test_set_lock_usercode(
     )
 
     await hass.services.async_call(
-        MATTER_DOMAIN,
+        DOMAIN,
         SERVICE_SET_LOCK_USERCODE,
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
@@ -654,7 +654,7 @@ async def test_set_lock_usercode_invalid_pin(
     """Test set_lock_usercode rejects invalid PIN."""
     with pytest.raises(HomeAssistantError, match="PIN code must be"):
         await hass.services.async_call(
-            MATTER_DOMAIN,
+            DOMAIN,
             SERVICE_SET_LOCK_USERCODE,
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
@@ -675,7 +675,7 @@ async def test_set_lock_usercode_not_supported(
     # Default door_lock fixture has featuremap=0, no USR support
     with pytest.raises(HomeAssistantError, match="does not support"):
         await hass.services.async_call(
-            MATTER_DOMAIN,
+            DOMAIN,
             SERVICE_SET_LOCK_USERCODE,
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
@@ -710,7 +710,7 @@ async def test_set_lock_usercode_existing_user(
     )
 
     await hass.services.async_call(
-        MATTER_DOMAIN,
+        DOMAIN,
         SERVICE_SET_LOCK_USERCODE,
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
@@ -748,7 +748,7 @@ async def test_clear_lock_usercode(
     )
 
     await hass.services.async_call(
-        MATTER_DOMAIN,
+        DOMAIN,
         SERVICE_CLEAR_LOCK_USERCODE,
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
@@ -773,7 +773,7 @@ async def test_clear_lock_usercode_not_found(
 
     with pytest.raises(HomeAssistantError, match="is empty"):
         await hass.services.async_call(
-            MATTER_DOMAIN,
+            DOMAIN,
             SERVICE_CLEAR_LOCK_USERCODE,
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
@@ -799,7 +799,7 @@ async def test_set_lock_user_service(
     )
 
     await hass.services.async_call(
-        MATTER_DOMAIN,
+        DOMAIN,
         SERVICE_SET_LOCK_USER,
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
@@ -828,7 +828,7 @@ async def test_clear_lock_user_service(
     )
 
     await hass.services.async_call(
-        MATTER_DOMAIN,
+        DOMAIN,
         SERVICE_CLEAR_LOCK_USER,
         {
             ATTR_ENTITY_ID: "lock.mock_door_lock",
@@ -849,7 +849,7 @@ async def test_get_lock_info_service(
 ) -> None:
     """Test get_lock_info entity service returns capabilities."""
     result = await hass.services.async_call(
-        MATTER_DOMAIN,
+        DOMAIN,
         SERVICE_GET_LOCK_INFO,
         {ATTR_ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
@@ -887,7 +887,7 @@ async def test_get_lock_users_service(
     )
 
     result = await hass.services.async_call(
-        MATTER_DOMAIN,
+        DOMAIN,
         SERVICE_GET_LOCK_USERS,
         {ATTR_ENTITY_ID: "lock.mock_door_lock"},
         blocking=True,
@@ -910,7 +910,7 @@ async def test_service_on_lock_without_user_management(
     # Default door_lock fixture has featuremap=0, no USR support
     with pytest.raises(HomeAssistantError, match="does not support"):
         await hass.services.async_call(
-            MATTER_DOMAIN,
+            DOMAIN,
             SERVICE_SET_LOCK_USER,
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
@@ -921,7 +921,7 @@ async def test_service_on_lock_without_user_management(
 
     with pytest.raises(HomeAssistantError, match="does not support"):
         await hass.services.async_call(
-            MATTER_DOMAIN,
+            DOMAIN,
             SERVICE_CLEAR_LOCK_USER,
             {
                 ATTR_ENTITY_ID: "lock.mock_door_lock",
