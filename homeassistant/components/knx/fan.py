@@ -48,6 +48,7 @@ def async_migrate_yaml_uids(
     hass: HomeAssistant, platform_config: list[ConfigType]
 ) -> None:
     """Migrate entities unique_id for YAML switch-only fan entities."""
+    # issue was introduced in 2026.1 - this migration in 2026.2
     ent_reg = er.async_get(hass)
     invalid_uid = str(None)
     if (
