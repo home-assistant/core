@@ -73,13 +73,24 @@ def async_migrate_yaml_uids(
             new_uid_base[0],  # list of group addresses - first item is sending address
         )
     )
-    _LOGGER.info(
-        "Migrating fan entity '%s' unique_id from '%s' to %s",
-        none_entity_id,
-        invalid_uid,
-        new_uid,
-    )
-    ent_reg.async_update_entity(none_entity_id, new_unique_id=str(new_uid))
+    try:
+        ent_reg.async_update_entity(none_entity_id, new_unique_id=str(new_uid))
+        _LOGGER.info(
+            "Migrating fan entity '%s' unique_id from '%s' to %s",
+            none_entity_id,
+            invalid_uid,
+            new_uid,
+        )
+    except ValueError:
+        # New unique_id already exists - remove invalid entry. User might have changed YAML
+        _LOGGER.info(
+            "Failed to migrate fan entity '%s' unique_id from '%s' to '%s'. "
+            "Removing the invalid entry",
+            none_entity_id,
+            invalid_uid,
+            new_uid,
+        )
+        ent_reg.async_remove(none_entity_id)
 
 
 async def async_setup_entry(
