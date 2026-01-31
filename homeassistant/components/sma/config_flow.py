@@ -202,7 +202,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             reauth_entry = self._get_reauth_entry()
-            errors, _device_info = await self._handle_user_input(
+            errors, _ = await self._handle_user_input(
                 user_input={
                     **reauth_entry.data,
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
