@@ -11,12 +11,13 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import setup_home_connect_entry
+from .common import setup_home_connect_entry, should_add_option_entity
 from .const import DOMAIN, UNIT_MAP
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
@@ -136,12 +137,15 @@ def _get_entities_for_appliance(
 def _get_option_entities_for_appliance(
     entry: HomeConnectConfigEntry,
     appliance: HomeConnectApplianceData,
+    entity_registry: er.EntityRegistry,
 ) -> list[HomeConnectOptionEntity]:
     """Get a list of currently available option entities."""
     return [
         HomeConnectOptionNumberEntity(entry.runtime_data, appliance, description)
         for description in NUMBER_OPTIONS
-        if description.key in appliance.options
+        if should_add_option_entity(
+            description, appliance, entity_registry, Platform.NUMBER
+        )
     ]
 
 
@@ -152,6 +156,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect number."""
     setup_home_connect_entry(
+        hass,
         entry,
         _get_entities_for_appliance,
         async_add_entities,
