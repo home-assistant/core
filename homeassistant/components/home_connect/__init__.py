@@ -105,6 +105,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     for listener, context in coordinator.global_listeners.values():
+        # We call the PAIRED event listener to start adding entities
+        # from the appliances we already found above
         assert isinstance(context, tuple)
         if EventKey.BSH_COMMON_APPLIANCE_PAIRED in context:
             listener()
@@ -115,6 +117,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
         appliance_id,
         appliance_coordinator,
     ) in entry.runtime_data.appliance_coordinators.items():
+        # We refresh each appliance coordinator in the background.
+        # to ensure that setup time is not impacted by this refresh.
         entry.async_create_background_task(
             hass,
             appliance_coordinator.async_refresh(),
