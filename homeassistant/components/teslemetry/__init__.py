@@ -78,12 +78,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _get_access_token(oauth_session: OAuth2Session) -> str:
     """Get a valid access token, refreshing if necessary."""
+    LOGGER.debug(
+        "Token valid: %s, expires_at: %s",
+        oauth_session.valid_token,
+        oauth_session.token.get("expires_at"),
+    )
     try:
-        LOGGER.debug(
-            "Token valid: %s, expires_at: %s",
-            oauth_session.valid_token,
-            oauth_session.token.get("expires_at"),
-        )
         await oauth_session.async_ensure_token_valid()
     except ClientResponseError as err:
         if err.status == 401:
@@ -102,7 +102,11 @@ async def _get_access_token(oauth_session: OAuth2Session) -> str:
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
-    session = async_get_clientsession(hass)
+    if "token" not in entry.data:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="token_data_malformed",
+        )
 
     try:
         implementation = await async_get_config_entry_implementation(hass, entry)
@@ -112,6 +116,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             translation_key="oauth_implementation_not_available",
         ) from err
     oauth_session = OAuth2Session(hass, entry, implementation)
+
+    session = async_get_clientsession(hass)
 
     # Create API connection
     access_token = partial(_get_access_token, oauth_session)
