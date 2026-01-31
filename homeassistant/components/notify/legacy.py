@@ -242,8 +242,8 @@ class BaseNotificationService:
         kwargs = {}
         message: str = service.data[ATTR_MESSAGE]
         title: str | None
-        if title := service.data.get(ATTR_TITLE):
-            kwargs[ATTR_TITLE] = title
+        if service.data.get(ATTR_TITLE) is not None:
+            kwargs[ATTR_TITLE] = service.data.get(ATTR_TITLE)
 
         if self.registered_targets.get(service.service) is not None:
             kwargs[ATTR_TARGET] = [self.registered_targets[service.service]]

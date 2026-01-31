@@ -577,6 +577,34 @@ async def test_calling_notify_from_script_loaded_from_yaml_without_title(
     )
 
 
+async def test_calling_notify_from_script_loaded_from_yaml_with_empty_title(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test if we can call a notify from a script."""
+    send_message_mock = await help_setup_notify(hass, tmp_path)
+    step = {
+        "service": "notify.notify",
+        "data": {
+            "data": {"push": {"sound": "US-EN-Morgan-Freeman-Roommate-Is-Arriving.wav"}}
+        },
+        "data_template": {"message": "Test 123 {{ 2 + 2 }}\n", "title": ""},
+    }
+    await async_setup_component(
+        hass, "script", {"script": {"test": {"sequence": step}}}
+    )
+    await hass.services.async_call("script", "test")
+    await hass.async_block_till_done()
+    send_message_mock.assert_called_once_with(
+        "Test 123 4",
+        {
+            "title": "",
+            "data": {
+                "push": {"sound": "US-EN-Morgan-Freeman-Roommate-Is-Arriving.wav"}
+            },
+        },
+    )
+
+
 async def test_calling_notify_from_script_loaded_from_yaml_with_title(
     hass: HomeAssistant, tmp_path: Path
 ) -> None:
