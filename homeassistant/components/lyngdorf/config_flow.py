@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
@@ -92,25 +93,40 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual(self, user_input: FlowInput = None) -> ConfigFlowResult:
         """Manual URL entry by the user."""
+        errors = {}
 
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._name = user_input[CONF_NAME]
-            model: LyngdorfModel = await async_find_receiver_model(
-                self._host
-            )  # This opens and closes a TCP socket, so therefore updates the ARP table
-            self._device_model = model.model
-            self._mac = await _async_get_mac_address(
-                self.hass, self._host
-            )  # Depends on the ARP table being up to date
 
-            self._device_manufacturer = model.manufacturer
-            assert self._mac
+            try:
+                model: LyngdorfModel = await async_find_receiver_model(
+                    self._host
+                )  # This opens and closes a TCP socket, so therefore updates the ARP table
+                self._device_model = model.model
+                self._mac = await _async_get_mac_address(
+                    self.hass, self._host
+                )  # Depends on the ARP table being up to date
 
-            await self.async_set_unique_id(self._mac)
-            self._abort_if_unique_id_configured()
+                if not self._mac:
+                    errors["base"] = "no_mac"
+                else:
+                    self._device_manufacturer = model.manufacturer
 
-            return await self._create_entry()
+                    await self.async_set_unique_id(self._mac)
+                    self._abort_if_unique_id_configured()
+
+                    return await self._create_entry()
+
+            except TimeoutError:
+                errors["base"] = "timeout_connect"
+            except ConnectionError:
+                errors["base"] = "cannot_connect"
+            except AbortFlow:
+                raise
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
         data_schema = vol.Schema(
             {
@@ -119,7 +135,9 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(step_id="manual", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="manual", data_schema=data_schema, errors=errors
+        )
 
     async def async_step_ssdp(
         self, discovery_info: ssdp.SsdpServiceInfo

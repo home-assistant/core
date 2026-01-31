@@ -97,3 +97,126 @@ async def test_manual_flow_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_get_mac_address")
+async def test_manual_flow_cannot_connect(hass: HomeAssistant) -> None:
+    """Test manual flow when cannot connect to receiver."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    with patch.object(ssdp, "async_get_discovery_info_by_st", return_value=[]):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=None,
+        )
+
+    # Mock async_find_receiver_model to raise an exception
+    with patch(
+        "homeassistant.components.lyngdorf.config_flow.async_find_receiver_model",
+        side_effect=ConnectionError("Unable to connect"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "My Lyngdorf",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.usefixtures("mock_get_mac_address")
+async def test_manual_flow_timeout(hass: HomeAssistant) -> None:
+    """Test manual flow when connection times out."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    with patch.object(ssdp, "async_get_discovery_info_by_st", return_value=[]):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=None,
+        )
+
+    # Mock async_find_receiver_model to raise timeout
+    with patch(
+        "homeassistant.components.lyngdorf.config_flow.async_find_receiver_model",
+        side_effect=TimeoutError("Connection timeout"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "My Lyngdorf",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "timeout_connect"}
+
+
+@pytest.mark.usefixtures("mock_find_receiver_model")
+async def test_manual_flow_no_mac_address(hass: HomeAssistant) -> None:
+    """Test manual flow when MAC address cannot be retrieved."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    with patch.object(ssdp, "async_get_discovery_info_by_st", return_value=[]):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=None,
+        )
+
+    # Mock MAC address retrieval to return None
+    with patch(
+        "homeassistant.components.lyngdorf.config_flow._async_get_mac_address",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "My Lyngdorf",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_mac"}
+
+
+async def test_manual_flow_unknown_error(hass: HomeAssistant) -> None:
+    """Test manual flow with unknown exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    with patch.object(ssdp, "async_get_discovery_info_by_st", return_value=[]):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=None,
+        )
+
+    # Mock async_find_receiver_model to raise an unexpected exception
+    with patch(
+        "homeassistant.components.lyngdorf.config_flow.async_find_receiver_model",
+        side_effect=Exception("Unexpected error"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "192.168.1.100",
+                CONF_NAME: "My Lyngdorf",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}

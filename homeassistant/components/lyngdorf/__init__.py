@@ -13,7 +13,7 @@ from lyngdorf.device import (
 
 from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import CONF_MANUFACTURER, CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
@@ -49,8 +49,20 @@ async def async_setup_entry(
         raise ConfigEntryError(
             f"Unable to connect to unsupported model {config_entry.data[CONF_MODEL]}"
         )
-    receiver = await async_create_receiver(config_entry.data[CONF_HOST], lyngdorf_model)
-    await receiver.async_connect()
+
+    try:
+        receiver = await async_create_receiver(
+            config_entry.data[CONF_HOST], lyngdorf_model
+        )
+        await receiver.async_connect()
+    except TimeoutError as err:
+        raise ConfigEntryNotReady(
+            f"Timeout connecting to {config_entry.data[CONF_HOST]}"
+        ) from err
+    except ConnectionError as err:
+        raise ConfigEntryNotReady(
+            f"Failed to connect to {config_entry.data[CONF_HOST]}"
+        ) from err
 
     device_info = DeviceInfo(
         identifiers={(DOMAIN, config_entry.entry_id)},
@@ -83,7 +95,10 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
 
-    await config_entry.runtime_data.receiver.async_disconnect()
-    _LOGGER.debug("disconnected %s", config_entry.runtime_data.receiver.name)
+    try:
+        await config_entry.runtime_data.receiver.async_disconnect()
+        _LOGGER.debug("disconnected %s", config_entry.runtime_data.receiver.name)
+    except Exception:
+        _LOGGER.exception("Error disconnecting from receiver")
 
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
