@@ -79,6 +79,7 @@ async def mock_block_device_push_update_failure(
     for _ in range(MAX_PUSH_UPDATE_FAILURES):
         mock_block_device.mock_update_reply()
         await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 def mutate_rpc_device_status(

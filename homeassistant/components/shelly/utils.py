@@ -1021,9 +1021,17 @@ async def check_coiot_config(device: BlockDevice, hass: HomeAssistant) -> bool:
     if not coiot_config.get("enabled"):
         return False
 
-    coiot_peer = f"{await get_coiot_address(hass)}:{get_coiot_port(hass)}"
+    coiot_address = await get_coiot_address(hass)
+    if coiot_address is None:
+        LOGGER.debug(
+            "Skipping CoIoT peer check for device %s as no local address "
+            "is available",
+            device.name,
+        )
+        return True
 
-    # Check if CoIoT is address is not correctly set
+    coiot_peer = f"{coiot_address}:{get_coiot_port(hass)}"
+    # Check if CoIoT address is not correctly set
     if (peer_config := coiot_config.get("peer")) and peer_config != coiot_peer:
         LOGGER.debug(
             "CoIoT is unconfigured for device %s, peer_config: %s, coiot_peer: %s",
