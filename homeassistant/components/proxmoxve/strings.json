@@ -20,7 +20,7 @@
           "password": "The new password for the Proxmox VE server"
         },
         "description": "The connection to the Proxmox VE server requires re-authentication. Please enter your password to continue.",
-        "title": "Re-authenticate Proxmox VE Integration"
+        "title": "Re-authenticate Proxmox VE integration"
       },
       "user": {
         "data": {
