@@ -48,12 +48,13 @@ def _get_entities_for_appliance(
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     entities: list[HomeConnectEntity] = []
+    appliance_data = appliance_coordinator.data
     entities.extend(
         HomeConnectCommandButtonEntity(appliance_coordinator, description)
         for description in COMMAND_BUTTONS
-        if description.key in appliance_coordinator.data.commands
+        if description.key in appliance_data.commands
     )
-    if appliance_coordinator.data.info.type in APPLIANCES_WITH_PROGRAMS:
+    if appliance_data.info.type in APPLIANCES_WITH_PROGRAMS:
         entities.append(HomeConnectStopProgramButtonEntity(appliance_coordinator))
 
     return entities
@@ -83,7 +84,7 @@ class HomeConnectButtonEntity(HomeConnectEntity, ButtonEntity):
         desc: ButtonEntityDescription,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(appliance_coordinator, desc, True)
+        super().__init__(appliance_coordinator, desc, context_override=True)
 
     def update_native_value(self) -> None:
         """Set the value of the entity."""
