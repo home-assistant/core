@@ -198,10 +198,8 @@ async def test_button_start_horn(
     }
 
     with patch(
-        "renault_api.renault_vehicle.RenaultVehicle.set_horn_start",
-        return_value=await async_load_fixture(
-            hass, "action.set_horn_start.json", DOMAIN
-        ),
+        "renault_api.renault_vehicle.RenaultVehicle.horn_start",
+        return_value=await async_load_fixture(hass, "action.horn_start.json", DOMAIN),
     ) as mock_action:
         await hass.services.async_call(
             BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
@@ -224,10 +222,8 @@ async def test_button_start_lights(
     }
 
     with patch(
-        "renault_api.renault_vehicle.RenaultVehicle.set_lights_start",
-        return_value=await async_load_fixture(
-            hass, "action.set_lights_start.json", DOMAIN
-        ),
+        "renault_api.renault_vehicle.RenaultVehicle.lights_start",
+        return_value=await async_load_fixture(hass, "action.lights_start.json", DOMAIN),
     ) as mock_action:
         await hass.services.async_call(
             BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
