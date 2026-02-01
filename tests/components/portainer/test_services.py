@@ -256,7 +256,7 @@ async def test_pause_container_validation_errors(
     )
     assert device is not None
 
-    # Test missing device_id
+    # Test missing device_id's
     with pytest.raises(MultipleInvalid, match="required key not provided"):
         await hass.services.async_call(
             DOMAIN,
@@ -278,6 +278,29 @@ async def test_pause_container_validation_errors(
             blocking=True,
         )
     mock_portainer_client.pause_container.assert_not_called()
+
+    # Now test the unpause, first with the missing device_id's
+    with pytest.raises(MultipleInvalid, match="required key not provided"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UNPAUSE_CONTAINER,
+            {},
+            blocking=True,
+        )
+    mock_portainer_client.unpause_container.assert_not_called()
+
+    # Test invalid device
+    with pytest.raises(ServiceValidationError, match="Invalid device targeted"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UNPAUSE_CONTAINER,
+            {
+                ATTR_DEVICE_ID: "invalid_device_id",
+                ATTR_CONTAINER_ID: "some_container_id",
+            },
+            blocking=True,
+        )
+    mock_portainer_client.unpause_container.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -328,3 +351,17 @@ async def test_pause_container_portainer_exceptions(
             blocking=True,
         )
     mock_portainer_client.pause_container.assert_called_once()
+
+    mock_portainer_client.pause_container.side_effect = None
+    mock_portainer_client.unpause_container.side_effect = exception
+    with pytest.raises(HomeAssistantError, match=message):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UNPAUSE_CONTAINER,
+            {
+                ATTR_DEVICE_ID: device_endpoint.id,
+                ATTR_CONTAINER_ID: device_container.id,
+            },
+            blocking=True,
+        )
+    mock_portainer_client.unpause_container.assert_called_once()
