@@ -2,15 +2,30 @@
 
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .config_entry import EnOceanConfigEntry, EnOceanConfigRuntimeData
 from .const import DOMAIN
 from .dongle import EnOceanDongle
+
+type EnOceanConfigEntry = ConfigEntry[EnOceanConfigRuntimeData]
+
+
+class EnOceanConfigRuntimeData:
+    """Runtime data for EnOcean config entries."""
+
+    def __init__(self, dongle: EnOceanDongle) -> None:
+        """Initialize runtime data."""
+        self._dongle = dongle
+
+    @property
+    def dongle(self) -> EnOceanDongle:
+        """Return the EnOcean dongle."""
+        return self._dongle
+
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
