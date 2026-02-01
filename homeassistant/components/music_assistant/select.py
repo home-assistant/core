@@ -54,12 +54,16 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
     ) -> None:
         """Initialize MusicAssistantPlayerConfigSelect."""
         self._choice_name_id_mapping: dict[str, str] = {}
+        self._update_available_options(player_option)
+        super().__init__(mass, player_id, player_option)
+
+    def _update_available_options(self, player_option: PlayerOption) -> None:
+        """Update selectable options."""
         if player_option.options is not None:
             self._choice_name_id_mapping = {
                 choice.name: choice.id for choice in player_option.options
             }
             self._attr_options = list(self._choice_name_id_mapping.keys())
-        super().__init__(mass, player_id, player_option)
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
@@ -67,9 +71,11 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
 
         self.entity_description = SelectEntityDescription(
             name=player_option.name,
-            key=player_option.translation_key or "",
-            translation_key=player_option.translation_key or "",
+            key=player_option.id,
+            translation_key=player_option.translation_key or player_option.name,
         )
+
+        self._update_available_options(player_option)
 
     @property
     def current_option(self) -> str | None:

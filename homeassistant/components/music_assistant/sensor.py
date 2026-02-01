@@ -62,8 +62,8 @@ class MusicAssistantPlayerConfigSensor(MusicAssistantPlayerOptionEntity, SensorE
 
         self.entity_description = SensorEntityDescription(
             name=player_option.name,
-            key=player_option.translation_key or "",
-            translation_key=player_option.translation_key or "",
+            key=player_option.id,
+            translation_key=player_option.translation_key or player_option.name,
         )
 
     @property

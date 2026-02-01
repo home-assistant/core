@@ -68,8 +68,8 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
 
         self.entity_description = NumberEntityDescription(
             name=player_option.name,
-            key=player_option.translation_key or "",
-            translation_key=player_option.translation_key or "",
+            key=player_option.id,
+            translation_key=player_option.translation_key or player_option.name,
         )
 
         self._attr_native_min_value = player_option.min_value or 0
