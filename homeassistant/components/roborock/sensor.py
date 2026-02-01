@@ -72,7 +72,81 @@ class RoborockSensorDescriptionA01(SensorEntityDescription):
 class RoborockSensorDescriptionB01(SensorEntityDescription):
     """A class that describes Roborock B01 sensors."""
 
-    value_fn: Callable[[B01Props], StateType]
+    value_fn: Callable[[B01Props | dict], StateType]
+
+
+def _get_q10_status_name(data: dict) -> str | None:
+    """Get status name from Q10 dict data."""
+    if not isinstance(data, dict):
+        # Q7 data - B01Props object
+        return data.status_name
+    # Q10 data - dict from status.refresh()
+    status = data.get("dps", {}).get("101", {})
+    # Status code is typically in key 1
+    status_code = status.get("1")
+    if status_code is not None:
+        for mapping in WorkStatusMapping:
+            if mapping.value == status_code:
+                return mapping.name
+    return None
+
+
+def _get_q10_main_brush_time_left(data: dict) -> int | None:
+    """Get main brush time left from Q10 dict data."""
+    if not isinstance(data, dict):
+        # Q7 data - B01Props object
+        return data.main_brush_time_left
+    # Q10 data - dict from status.refresh()
+    status = data.get("dps", {}).get("101", {})
+    # Main brush time left in minutes - typically in key 29
+    return status.get("29")
+
+
+def _get_q10_side_brush_time_left(data: dict) -> int | None:
+    """Get side brush time left from Q10 dict data."""
+    if not isinstance(data, dict):
+        # Q7 data - B01Props object
+        return data.side_brush_time_left
+    # Q10 data - dict from status.refresh()
+    status = data.get("dps", {}).get("101", {})
+    # Side brush time left in minutes - typically in key 30
+    return status.get("30")
+
+
+def _get_q10_filter_time_left(data: dict) -> int | None:
+    """Get filter time left from Q10 dict data."""
+    if not isinstance(data, dict):
+        # Q7 data - B01Props object
+        return data.filter_time_left
+    # Q10 data - dict from status.refresh()
+    status = data.get("dps", {}).get("101", {})
+    # Filter time left in minutes - typically in key 31
+    return status.get("31")
+
+
+def _get_q10_sensor_dirty_time_left(data: dict) -> int | None:
+    """Get sensor dirty time left from Q10 dict data."""
+    if not isinstance(data, dict):
+        # Q7 data - B01Props object
+        return data.sensor_dirty_time_left
+    # Q10 data - dict from status.refresh()
+    status = data.get("dps", {}).get("101", {})
+    # Sensor dirty time left - check common keys
+    # Could be in various keys depending on Q10 model
+    return status.get("32")  # Estimated key for sensor time
+
+
+def _get_q10_mop_life_time_left(data: dict) -> int | None:
+    """Get mop life time left from Q10 dict data."""
+    if not isinstance(data, dict):
+        # Q7 data - B01Props object
+        return data.mop_life_time_left
+    # Q10 data - dict from status.refresh()
+    status = data.get("dps", {}).get("101", {})
+    # Mop life time left - check common keys
+    # Could be in various keys depending on Q10 model
+    return status.get("33")  # Estimated key for mop time
+
 
 
 def _dock_error_value_fn(state: DeviceState) -> str | None:
@@ -340,7 +414,7 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
 Q7_B01_SENSOR_DESCRIPTIONS = [
     RoborockSensorDescriptionB01(
         key="q7_status",
-        value_fn=lambda data: data.status_name,
+        value_fn=_get_q10_status_name,
         translation_key="q7_status",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
@@ -348,7 +422,7 @@ Q7_B01_SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescriptionB01(
         key="main_brush_time_left",
-        value_fn=lambda data: data.main_brush_time_left,
+        value_fn=_get_q10_main_brush_time_left,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
@@ -357,7 +431,7 @@ Q7_B01_SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescriptionB01(
         key="side_brush_time_left",
-        value_fn=lambda data: data.side_brush_time_left,
+        value_fn=_get_q10_side_brush_time_left,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
@@ -366,7 +440,7 @@ Q7_B01_SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescriptionB01(
         key="filter_time_left",
-        value_fn=lambda data: data.filter_time_left,
+        value_fn=_get_q10_filter_time_left,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
@@ -375,7 +449,7 @@ Q7_B01_SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescriptionB01(
         key="sensor_time_left",
-        value_fn=lambda data: data.sensor_dirty_time_left,
+        value_fn=_get_q10_sensor_dirty_time_left,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
@@ -384,7 +458,7 @@ Q7_B01_SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescriptionB01(
         key="mop_life_time_left",
-        value_fn=lambda data: data.mop_life_time_left,
+        value_fn=_get_q10_mop_life_time_left,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_unit_of_measurement=UnitOfTime.HOURS,

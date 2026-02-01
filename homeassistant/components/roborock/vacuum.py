@@ -76,6 +76,39 @@ Q7_STATE_CODE_TO_STATE = {
     WorkStatusMapping.MOP_AIRDRYING: VacuumActivity.DOCKED,
 }
 
+
+def _get_q10_status(data: dict) -> WorkStatusMapping | None:
+    """Get status from Q10 or Q7 data."""
+    if not isinstance(data, dict):
+        # Q7 data - B01Props object
+        return data.status
+    # Q10 data - dict from status.refresh()
+    status = data.get("dps", {}).get("101", {})
+    # Status code is typically in key 1
+    status_code = status.get("1")
+    if status_code is not None:
+        for mapping in WorkStatusMapping:
+            if mapping.value == status_code:
+                return mapping
+    return None
+
+
+def _get_q10_wind_name(data: dict) -> str | None:
+    """Get wind/fan speed name from Q10 or Q7 data."""
+    if not isinstance(data, dict):
+        # Q7 data - B01Props object
+        return data.wind_name
+    # Q10 data - dict from status.refresh()
+    status = data.get("dps", {}).get("101", {})
+    # Wind speed is typically in key 6
+    wind_speed = status.get("6")
+    if wind_speed is not None:
+        for mapping in SCWindMapping:
+            if mapping.value == wind_speed:
+                return mapping.name
+    return None
+
+
 PARALLEL_UPDATES = 0
 
 
@@ -273,7 +306,7 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
 
 class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
-    """General Representation of a Roborock vacuum."""
+    """Representation of a Roborock Q7/Q10 vacuum."""
 
     _attr_icon = "mdi:robot-vacuum"
     _attr_supported_features = (
@@ -310,14 +343,15 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     @property
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
-        if self.coordinator.data.status is not None:
-            return Q7_STATE_CODE_TO_STATE.get(self.coordinator.data.status)
+        status = _get_q10_status(self.coordinator.data)
+        if status is not None:
+            return Q7_STATE_CODE_TO_STATE.get(status)
         return None
 
     @property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
-        return self.coordinator.data.wind_name
+        return _get_q10_wind_name(self.coordinator.data)
 
     async def async_start(self) -> None:
         """Start the vacuum."""

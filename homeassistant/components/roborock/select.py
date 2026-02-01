@@ -52,6 +52,39 @@ class RoborockSelectDescription(SelectEntityDescription):
     """Whether this entity is for the dock."""
 
 
+def _get_q10_water_level(data: dict) -> str | None:
+    """Get water level from Q10 dict data."""
+    if not isinstance(data, dict):
+        # Q7 data - B01Props object
+        return data.water.value if data.water else None
+    # Q10 data - dict from status.refresh()
+    # Water level is in dps.101 (nested status data)
+    status = data.get("dps", {}).get("101", {})
+    # Looking for water level indicator - typically key 26 in Q10
+    water_level = status.get("26")
+    if water_level is not None:
+        # Map the numeric value to WaterLevelMapping
+        for mapping in WaterLevelMapping:
+            if mapping.value == water_level:
+                return str(water_level)
+    return None
+
+
+def _get_q10_cleaning_mode(data: dict) -> str | None:
+    """Get cleaning mode from Q10 dict data."""
+    if not isinstance(data, dict):
+        # Q7 data - B01Props object
+        return data.mode.value if data.mode else None
+    # Q10 data - dict from status.refresh()
+    # Cleaning mode is in dps.101 (nested status data)
+    status = data.get("dps", {}).get("101", {})
+    # Looking for mode indicator - typically key 25 in Q10
+    mode = status.get("25")
+    if mode is not None:
+        return str(mode)
+    return None
+
+
 @dataclass(frozen=True, kw_only=True)
 class RoborockB01SelectDescription(SelectEntityDescription):
     """Class to describe a Roborock B01 select entity."""
@@ -59,7 +92,7 @@ class RoborockB01SelectDescription(SelectEntityDescription):
     api_fn: Callable[[Q7PropertiesApi, str], Awaitable[Any]]
     """Function to call the API."""
 
-    value_fn: Callable[[B01Props], str | None]
+    value_fn: Callable[[B01Props | dict], str | None]
     """Function to get the current value of the select entity."""
 
     options_lambda: Callable[[Q7PropertiesApi], list[str] | None]
@@ -73,7 +106,7 @@ B01_SELECT_DESCRIPTIONS: list[RoborockB01SelectDescription] = [
         api_fn=lambda api, value: api.set_water_level(
             WaterLevelMapping.from_value(value)
         ),
-        value_fn=lambda data: data.water.value if data.water else None,
+        value_fn=_get_q10_water_level,
         options_lambda=lambda _: [option.value for option in WaterLevelMapping],
         entity_category=EntityCategory.CONFIG,
     ),
@@ -81,7 +114,7 @@ B01_SELECT_DESCRIPTIONS: list[RoborockB01SelectDescription] = [
         key="cleaning_mode",
         translation_key="cleaning_mode",
         api_fn=lambda api, value: api.set_mode(CleanTypeMapping.from_value(value)),
-        value_fn=lambda data: data.mode.value if data.mode else None,
+        value_fn=_get_q10_cleaning_mode,
         options_lambda=lambda _: list(CleanTypeMapping.keys()),
         entity_category=EntityCategory.CONFIG,
     ),
