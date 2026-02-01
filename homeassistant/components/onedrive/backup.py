@@ -190,6 +190,9 @@ class OneDriveBackupAgent(BackupAgent):
             )
         except OneDriveException:
             # Clean up the backup file if metadata upload fails
+            _LOGGER.debug(
+                "Uploading metadata failed, deleting backup file %s", backup_filename
+            )
             await self._client.delete_drive_item(
                 f"{self._folder_id}:/{backup_filename}:"
             )
