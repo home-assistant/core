@@ -1,5 +1,7 @@
 """Support for EnOcean devices."""
 
+from dataclasses import dataclass
+
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -14,17 +16,11 @@ from .dongle import EnOceanDongle
 type EnOceanConfigEntry = ConfigEntry[EnOceanConfigRuntimeData]
 
 
+@dataclass
 class EnOceanConfigRuntimeData:
     """Runtime data for EnOcean config entries."""
 
-    def __init__(self, dongle: EnOceanDongle) -> None:
-        """Initialize runtime data."""
-        self._dongle = dongle
-
-    @property
-    def dongle(self) -> EnOceanDongle:
-        """Return the EnOcean dongle."""
-        return self._dongle
+    dongle: EnOceanDongle
 
 
 CONFIG_SCHEMA = vol.Schema(
