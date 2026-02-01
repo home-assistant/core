@@ -1,4 +1,4 @@
-"""Test the Liebherr sensor platform."""
+"""Test the Liebherr number platform."""
 
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
@@ -12,18 +12,18 @@ from pyliebherrhomeapi import (
     TemperatureUnit,
     ZonePosition,
 )
-from pyliebherrhomeapi.exceptions import (
-    LiebherrAuthenticationError,
-    LiebherrConnectionError,
-    LiebherrTimeoutError,
-)
+from pyliebherrhomeapi.exceptions import LiebherrConnectionError, LiebherrTimeoutError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.liebherr.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_DEVICE
@@ -31,19 +31,25 @@ from .conftest import MOCK_DEVICE
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.NUMBER]
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_sensors(
+async def test_numbers(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test all sensor entities with multi-zone device."""
+    """Test all number entities with multi-zone device."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_single_zone_sensor(
+async def test_single_zone_number(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
@@ -68,6 +74,9 @@ async def test_single_zone_sensor(
                 name="Fridge",
                 type="fridge",
                 value=4,
+                target=4,
+                min=2,
+                max=8,
                 unit=TemperatureUnit.CELSIUS,
             )
         ],
@@ -87,8 +96,9 @@ async def test_multi_zone_with_none_position(
     entity_registry: er.EntityRegistry,
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    platforms: list[Platform],
 ) -> None:
-    """Test multi-zone device with None zone_position falls back to no translation key."""
+    """Test multi-zone device with None zone_position falls back to base translation key."""
     device = Device(
         device_id="multi_zone_none",
         nickname="Multi Zone Fridge",
@@ -101,10 +111,13 @@ async def test_multi_zone_with_none_position(
         controls=[
             TemperatureControl(
                 zone_id=1,
-                zone_position=None,  # None triggers fallback in _get_zone_translation_key
+                zone_position=None,  # None triggers fallback
                 name="Fridge",
                 type="fridge",
                 value=5,
+                target=4,
+                min=2,
+                max=8,
                 unit=TemperatureUnit.CELSIUS,
             ),
             TemperatureControl(
@@ -113,24 +126,58 @@ async def test_multi_zone_with_none_position(
                 name="Freezer",
                 type="freezer",
                 value=-18,
+                target=-18,
+                min=-24,
+                max=-16,
                 unit=TemperatureUnit.CELSIUS,
             ),
         ],
     )
 
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.liebherr.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    # Zone with None position should have no translation key (fallback)
-    zone1_entity = entity_registry.async_get("sensor.multi_zone_fridge_temperature")
+    # Zone with None position should have base translation key
+    zone1_entity = entity_registry.async_get("number.multi_zone_fridge_setpoint")
     assert zone1_entity is not None
-    assert zone1_entity.translation_key is None
+    assert zone1_entity.translation_key == "setpoint_temperature"
 
-    # Zone with valid position should have translation key
-    zone2_entity = entity_registry.async_get("sensor.multi_zone_fridge_bottom_zone")
+    # Zone with valid position should have zone-specific translation key
+    zone2_entity = entity_registry.async_get(
+        "number.multi_zone_fridge_bottom_zone_setpoint"
+    )
     assert zone2_entity is not None
-    assert zone2_entity.translation_key == "bottom_zone"
+    assert zone2_entity.translation_key == "setpoint_temperature_bottom_zone"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_set_temperature(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+) -> None:
+    """Test setting the temperature."""
+    entity_id = "number.test_fridge_top_zone_setpoint"
+
+    # Initial state should be 4
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "4"
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 6},
+        blocking=True,
+    )
+
+    mock_liebherr_client.set_temperature.assert_called_once_with(
+        device_id="test_device_id",
+        zone_id=1,
+        target=6,
+        unit=TemperatureUnit.CELSIUS,
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -142,19 +189,47 @@ async def test_multi_zone_with_none_position(
     ],
     ids=["connection_error", "timeout_error"],
 )
-async def test_sensor_update_failure(
+async def test_set_temperature_failure(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+    exception: Exception,
+) -> None:
+    """Test setting temperature fails gracefully."""
+    entity_id = "number.test_fridge_top_zone_setpoint"
+
+    mock_liebherr_client.set_temperature.side_effect = exception
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 6},
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.parametrize(
+    "exception",
+    [
+        LiebherrConnectionError("Connection failed"),
+        LiebherrTimeoutError("Timeout"),
+    ],
+    ids=["connection_error", "timeout_error"],
+)
+async def test_number_update_failure(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:
-    """Test sensor becomes unavailable when coordinator update fails."""
-    entity_id = "sensor.test_fridge_top_zone"
+    """Test number becomes unavailable when coordinator update fails."""
+    entity_id = "number.test_fridge_top_zone_setpoint"
 
     # Initial state should be available with value
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "5"
+    assert state.state == "4"
 
     # Simulate update error
     mock_liebherr_client.get_device_state.side_effect = exception
@@ -164,7 +239,7 @@ async def test_sensor_update_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Sensor should now be unavailable
+    # Number should now be unavailable
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
@@ -176,65 +251,26 @@ async def test_sensor_update_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Sensor should recover
+    # Number should recover
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "5"
+    assert state.state == "4"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_sensor_update_auth_failure_triggers_reauth(
+async def test_number_unavailable_when_control_missing(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test authentication error triggers reauth flow."""
-    entity_id = "sensor.test_fridge_top_zone"
-
-    # Initial state should be available with value
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "5"
-
-    # Simulate auth error
-    mock_liebherr_client.get_device_state.side_effect = LiebherrAuthenticationError(
-        "API key revoked"
-    )
-
-    # Advance time to trigger coordinator refresh (60 second interval)
-    freezer.tick(timedelta(seconds=61))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Sensor should now be unavailable
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-    # Config entry should be in reauth state
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    flows = hass.config_entries.flow.async_progress()
-    assert any(
-        flow["handler"] == DOMAIN and flow["context"]["source"] == "reauth"
-        for flow in flows
-    )
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_sensor_unavailable_when_control_missing(
-    hass: HomeAssistant,
-    mock_liebherr_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test sensor becomes unavailable when temperature control is removed from device."""
-    entity_id = "sensor.test_fridge_top_zone"
+    """Test number becomes unavailable when temperature control is removed from device."""
+    entity_id = "number.test_fridge_top_zone_setpoint"
 
     # Initial state should be available
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "5"
+    assert state.state == "4"
 
     # Device stops reporting controls (e.g., zone removed or API issue)
     mock_liebherr_client.get_device_state.return_value = DeviceState(
@@ -246,13 +282,7 @@ async def test_sensor_unavailable_when_control_missing(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Sensor should now be unavailable
+    # Number should be unavailable
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-    # Verify entity properties return None when control is missing
-    entity = hass.data["entity_components"]["sensor"].get_entity(entity_id)
-    assert entity is not None
-    assert entity.native_value is None
-    assert entity.native_unit_of_measurement is None
