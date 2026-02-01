@@ -91,32 +91,10 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._name = user_input[CONF_NAME]
+            model: LyngdorfModel | None = None
 
             try:
-                model: LyngdorfModel = await async_find_receiver_model(
-                    self._host
-                )  # This opens and closes a TCP socket, so therefore updates the ARP table
-                if not model:
-                    errors["base"] = "unsupported_model"
-                else:
-                    self._device_manufacturer = model.manufacturer
-                    self._device_model = model.model
-                    await self.async_set_unique_id(f"{model.model}:{self._host}")
-                    self._abort_if_unique_id_configured()
-                    # self._mac = await _async_get_mac_address(
-                    #     self.hass, self._host
-                    # )  # Depends on the ARP table being up to date
-
-                    # if not self._mac:
-                    #     errors["base"] = "no_mac"
-                    # else:
-                    #     self._device_manufacturer = model.manufacturer
-
-                    #     await self.async_set_unique_id(self._mac)
-                    #     self._abort_if_unique_id_configured()
-
-                    return await self._create_entry()
-
+                model = await async_find_receiver_model(self._host)
             except TimeoutError:
                 errors["base"] = "timeout_connect"
             except ConnectionError:
@@ -125,6 +103,16 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 raise
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
+
+            if not errors:
+                if not model:
+                    errors["base"] = "unsupported_model"
+                else:
+                    self._device_manufacturer = model.manufacturer
+                    self._device_model = model.model
+                    await self.async_set_unique_id(f"{model.model}:{self._host}")
+                    self._abort_if_unique_id_configured()
+                    return await self._create_entry()
 
         data_schema = vol.Schema(
             {
