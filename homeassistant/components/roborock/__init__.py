@@ -86,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         )
         _LOGGER.debug("Device manager created successfully")
     except RoborockInvalidCredentials as err:
-        _LOGGER.exception("Invalid credentials error: %s", err)
+        _LOGGER.exception("Invalid credentials error")
         raise ConfigEntryAuthFailed(
             "Invalid credentials",
             translation_domain=DOMAIN,
@@ -114,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_key="api_rate_limit",
         ) from err
     except RoborockException as err:
-        _LOGGER.error("Failed to get Roborock home data: %s", err, exc_info=True)
+        _LOGGER.exception("Failed to get Roborock home data: %s", err)
         # Check if the error is due to rate limiting
         error_msg = str(err)
         if (
@@ -145,9 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_key="home_data_fail",
         ) from err
     except Exception as err:
-        _LOGGER.error(
-            "Unexpected error creating device manager: %s", err, exc_info=True
-        )
+        _LOGGER.exception("Unexpected error creating device manager: %s", err)
         raise ConfigEntryNotReady(
             f"Unexpected error: {err}",
             translation_domain=DOMAIN,
@@ -175,7 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
                 device.device_info.fv,
             )
     except Exception as err:
-        _LOGGER.error("Failed to get devices: %s", err, exc_info=True)
+        _LOGGER.exception("Failed to get devices: %s", err)
         raise ConfigEntryNotReady(
             f"Failed to get devices: {err}",
             translation_domain=DOMAIN,
