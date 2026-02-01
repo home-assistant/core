@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from music_assistant_models.player import PlayerOption, PlayerOptionType
+from music_assistant_models.player import (
+    PlayerOption,
+    PlayerOptionType,
+    PlayerOptionTypeMap,
+)
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import Platform
@@ -29,9 +33,9 @@ async def async_setup_entry(
             return
         entities: list[MusicAssistantPlayerConfigNumber] = []
         for player_option in player.options:
-            if (
-                not player_option.read_only
-                and player_option.type == PlayerOptionType.NUMBER
+            if not player_option.read_only and player_option.type in (
+                PlayerOptionType.INTEGER,
+                PlayerOptionType.FLOAT,
             ):
                 entities.extend(
                     [
@@ -52,14 +56,18 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
     @property
     def native_value(self) -> float | None:
         """Return the current value."""
-        assert isinstance(self.mass_value, int | float)
+        assert isinstance(
+            self.mass_value, int | float
+        )  # there is type checking in PlayerOptions itself
         return self.mass_value
 
     @catch_musicassistant_error
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
         await self.mass.players.set_option(
-            self.player_id, self.mass_option_id, int(value)
+            self.player_id,
+            self.mass_option_key,
+            PlayerOptionTypeMap[self.mass_type](value),
         )
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
@@ -68,10 +76,15 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
 
         self.entity_description = NumberEntityDescription(
             name=player_option.name,
-            key=player_option.id,
+            key=player_option.key,
             translation_key=player_option.translation_key or player_option.name,
         )
 
-        self._attr_native_min_value = player_option.min_value or 0
-        self._attr_native_max_value = player_option.max_value or 100
-        self._attr_native_step = player_option.step or 1
+        # The PlayerOption class makes these mandatory.
+        # The asserts are for type checking
+        assert player_option.min_value is not None
+        assert player_option.max_value is not None
+        assert player_option.step is not None
+        self._attr_native_min_value = player_option.min_value
+        self._attr_native_max_value = player_option.max_value
+        self._attr_native_step = player_option.step

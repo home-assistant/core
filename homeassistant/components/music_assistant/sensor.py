@@ -62,17 +62,11 @@ class MusicAssistantPlayerConfigSensor(MusicAssistantPlayerOptionEntity, SensorE
 
         self.entity_description = SensorEntityDescription(
             name=player_option.name,
-            key=player_option.id,
+            key=player_option.key,
             translation_key=player_option.translation_key or player_option.name,
         )
 
     @property
     def native_value(self) -> int | str:
         """Return native value."""
-        # MA's PlayerOptionValueType = bool | int | str.
-        # but native_value only allows str | int | float | date | datetime | Decimal | None
-        # convert bool to int.
-        _value = self.mass_value
-        if isinstance(_value, bool):
-            _value = int(_value)
-        return _value
+        return str(self.mass_value)

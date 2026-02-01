@@ -30,7 +30,7 @@ async def async_setup_entry(
         for player_option in player.options:
             if (
                 not player_option.read_only
-                and player_option.type == PlayerOptionType.TEXT
+                and player_option.type == PlayerOptionType.STRING
             ):
                 entities.extend(
                     [
@@ -54,7 +54,7 @@ class MusicAssistantPlayerConfigText(MusicAssistantPlayerOptionEntity, TextEntit
 
         self.entity_description = TextEntityDescription(
             name=player_option.name,
-            key=player_option.id,
+            key=player_option.key,
             translation_key=player_option.translation_key or player_option.name,
         )
 
@@ -65,4 +65,4 @@ class MusicAssistantPlayerConfigText(MusicAssistantPlayerOptionEntity, TextEntit
 
     async def async_set_value(self, value: str) -> None:
         """Set text value."""
-        await self.mass.players.set_option(self.player_id, self.mass_option_id, value)
+        await self.mass.players.set_option(self.player_id, self.mass_option_key, value)

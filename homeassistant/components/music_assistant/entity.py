@@ -99,7 +99,8 @@ class MusicAssistantPlayerOptionEntity(_MusicAssistantEntityBase):
     ) -> None:
         """Initialize MusicAssistantPlayerOptionEntity."""
         self.mass_value = player_option.value
-        self.mass_option_id = player_option.id
+        self.mass_option_key = player_option.key
+        self.mass_type = player_option.type
         self.on_player_option_update(
             player_option
         )  # sets the entity_description as well
@@ -119,7 +120,7 @@ class MusicAssistantPlayerOptionEntity(_MusicAssistantEntityBase):
     def __on_mass_player_options_update(self, event: MassEvent) -> None:
         """Call when we receive an event from MusicAssistant."""
         for option in self.player.options:
-            if option.id == self.mass_option_id:
+            if option.key == self.mass_option_key:
                 self.on_player_option_update(option)
                 self.async_write_ha_state()
                 break

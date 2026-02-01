@@ -54,12 +54,12 @@ class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchE
     @catch_musicassistant_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Handle turn on command."""
-        await self.mass.players.set_option(self.player_id, self.mass_option_id, True)
+        await self.mass.players.set_option(self.player_id, self.mass_option_key, True)
 
     @catch_musicassistant_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Handle turn on command."""
-        await self.mass.players.set_option(self.player_id, self.mass_option_id, False)
+        await self.mass.players.set_option(self.player_id, self.mass_option_key, False)
 
     @property
     def is_on(self) -> bool:
@@ -73,6 +73,6 @@ class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchE
 
         self.entity_description = SwitchEntityDescription(
             name=player_option.name,
-            key=player_option.id,
+            key=player_option.key,
             translation_key=player_option.translation_key or player_option.name,
         )
