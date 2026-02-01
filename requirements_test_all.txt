@@ -1874,7 +1874,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.meteoclimatic
-pymeteoclimatic==0.1.0
+pymeteoclimatic==0.1.1
 
 # homeassistant.components.assist_pipeline
 pymicro-vad==1.0.1
