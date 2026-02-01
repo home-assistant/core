@@ -1,17 +1,16 @@
-"""Music Assistant Number platform."""
+"""Music Assistant Select platform."""
 
 from __future__ import annotations
 
 from music_assistant_models.player import PlayerOption, PlayerOptionType
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
 from .entity import MusicAssistantPlayerOptionEntity
-from .helpers import catch_musicassistant_error
 
 
 async def async_setup_entry(
@@ -27,15 +26,15 @@ async def async_setup_entry(
         player = mass.players.get(player_id)
         if player is None:
             return
-        entities: list[MusicAssistantPlayerConfigNumber] = []
+        entities: list[MusicAssistantPlayerConfigSelect] = []
         for player_option in player.player_options:
             if (
                 not player_option.read_only
-                and player_option.type == PlayerOptionType.NUMBER
+                and player_option.type == PlayerOptionType.CHOICES
             ):
                 entities.extend(
                     [
-                        MusicAssistantPlayerConfigNumber(
+                        MusicAssistantPlayerConfigSelect(
                             mass, player_id, player_option=player_option
                         )
                     ]
@@ -43,35 +42,33 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     # register callback to add players when they are discovered
-    entry.runtime_data.platform_handlers.setdefault(Platform.NUMBER, add_player)
+    entry.runtime_data.platform_handlers.setdefault(Platform.SELECT, add_player)
 
 
-class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberEntity):
+class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectEntity):
     """Representation of a Number entity to control player provider dependent settings."""
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the current value."""
-        assert isinstance(self.mass_value, int | float)
-        return self.mass_value
-
-    @catch_musicassistant_error
-    async def async_set_native_value(self, value: float) -> None:
-        """Set a new value."""
-        await self.mass.players.set_player_option(
-            self.player_id, self.mass_option_id, int(value)
-        )
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
         super().on_player_option_update(player_option)
 
-        self.entity_description = NumberEntityDescription(
+        self.entity_description = SelectEntityDescription(
             name=player_option.name,
             key=player_option.translation_key or "",
             translation_key=player_option.translation_key or "",
         )
 
-        self._attr_native_min_value = player_option.min_value or 0
-        self._attr_native_max_value = player_option.max_value or 100
-        self._attr_native_step = player_option.step or 1
+        # self._attr_options = list(capability.options.values())
+        if choices := player_option.choices:
+            self._attr_options = [choice.id for choice in choices]
+
+    @property
+    def current_option(self) -> str | None:
+        """Return current option."""
+        return str(self.mass_value)
+
+    async def async_select_option(self, option: str) -> None:
+        """Select an option."""
+        await self.mass.players.set_player_option(
+            self.player_id, self.mass_option_id, option
+        )

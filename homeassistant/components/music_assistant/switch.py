@@ -71,10 +71,12 @@ class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchE
         assert isinstance(self.mass_value, bool)
         return self.mass_value
 
-    def update_description(self, option: PlayerOption) -> None:
-        """Update switch's description."""
+    def on_player_option_update(self, player_option: PlayerOption) -> None:
+        """Update on player option update."""
+        super().on_player_option_update(player_option)
+
         self.entity_description = SwitchEntityDescription(
-            name=option.name,
-            key=option.translation_key or "",
-            translation_key=option.translation_key or "",
+            name=player_option.name,
+            key=player_option.translation_key or "",
+            translation_key=player_option.translation_key or "",
         )

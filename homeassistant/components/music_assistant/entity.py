@@ -97,16 +97,16 @@ class MusicAssistantPlayerOptionEntity(MusicAssistantEntity):
         self.mass_option_id = player_option.id
         super().__init__(mass, player_id)
 
-        self.update_description(player_option)
+        self.on_player_option_update(player_option)
 
-    def update_description(self, option: PlayerOption) -> None:
+    def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update the entities description."""
+        self.mass_value = player_option.value
 
     async def async_on_update(self) -> None:
         """Handle player updates."""
         if player := self.mass.players.get(self.player_id):
             for option in player.player_options:
                 if option.id == self.mass_option_id:
-                    self.mass_value = option.value
-                    self.update_description(option)
+                    self.on_player_option_update(option)
                     break
