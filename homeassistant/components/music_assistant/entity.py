@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from music_assistant_models.enums import EventType
 from music_assistant_models.event import MassEvent
-from music_assistant_models.player import Player
+from music_assistant_models.player import Player, PlayerOption
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -84,3 +84,20 @@ class MusicAssistantEntity(Entity):
 
     async def async_on_update(self) -> None:
         """Handle player updates."""
+
+
+class MusicAssistantPlayerOptionEntity(MusicAssistantEntity):
+    """Base entity for Music Assistant Player Options."""
+
+    def __init__(
+        self, mass: MusicAssistantClient, player_id: str, player_option: PlayerOption
+    ) -> None:
+        """Initialize MusicAssistantPlayerOptionEntity."""
+        self.value = player_option.value
+        self.option_id = player_option.id
+        super().__init__(mass, player_id)
+
+        self.update_description(player_option)
+
+    def update_description(self, option: PlayerOption) -> None:
+        """Update the entities description."""
