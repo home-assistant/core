@@ -540,7 +540,17 @@ class APCUPSdSensor(APCUPSdEntity, SensorEntity):
         data = self.coordinator.data[key]
 
         if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
-            self._attr_native_value = dateutil.parser.parse(data)
+            # The date could be "N/A" for certain fields (e.g., XOFFBATT), indicating there is no value yet.
+            if data == "N/A":
+                self._attr_native_value = None
+                return
+
+            try:
+                self._attr_native_value = dateutil.parser.parse(data)
+            except (dateutil.parser.ParserError, OverflowError):
+                # If parsing fails we should mark it as unknown, with a log for further debugging.
+                _LOGGER.warning('Failed to parse date for %s: "%s"', key, data)
+                self._attr_native_value = None
             return
 
         self._attr_native_value, inferred_unit = infer_unit(data)
