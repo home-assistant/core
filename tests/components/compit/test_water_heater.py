@@ -122,7 +122,6 @@ async def test_water_heater_current_operation(
     assert state is not None
     assert state.state == "performance"
 
-    # Turn off
     await hass.services.async_call(
         "water_heater",
         "set_operation_mode",
