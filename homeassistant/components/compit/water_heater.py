@@ -11,6 +11,7 @@ from homeassistant.components.water_heater import (
     STATE_ON,
     STATE_PERFORMANCE,
     WaterHeaterEntity,
+    WaterHeaterEntityDescription,
     WaterHeaterEntityFeature,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -33,7 +34,7 @@ HA_STATE_TO_COMPIT = {value: key for key, value in COMPIT_STATE_TO_HA.items()}
 
 
 @dataclass(frozen=True, kw_only=True)
-class CompitWaterHeaterDeviceDescription:
+class CompitWaterHeaterEntityDescription(WaterHeaterEntityDescription):
     """Class to describe a Compit water heater device."""
 
     name: str
@@ -43,110 +44,124 @@ class CompitWaterHeaterDeviceDescription:
     supports_current_temperature: bool = True
 
 
-DEVICE_DEFINITIONS: dict[int, CompitWaterHeaterDeviceDescription] = {
-    34: CompitWaterHeaterDeviceDescription(
+DEVICE_DEFINITIONS: dict[int, CompitWaterHeaterEntityDescription] = {
+    34: CompitWaterHeaterEntityDescription(
         name="r470",
+        key="r470",
         min_temp=0.0,
         max_temp=75.0,
         supported_features=WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE,
     ),
-    91: CompitWaterHeaterDeviceDescription(
+    91: CompitWaterHeaterEntityDescription(
         name="R770RS / R771RS",
+        key="R770RS / R771RS",
         min_temp=30.0,
         max_temp=80.0,
         supported_features=WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE,
     ),
-    92: CompitWaterHeaterDeviceDescription(
+    92: CompitWaterHeaterEntityDescription(
         name="r490",
+        key="r490",
         min_temp=30.0,
         max_temp=80.0,
         supported_features=WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE,
     ),
-    215: CompitWaterHeaterDeviceDescription(
+    215: CompitWaterHeaterEntityDescription(
         name="R480",
+        key="R480",
         min_temp=30.0,
         max_temp=80.0,
         supported_features=WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE,
     ),
-    222: CompitWaterHeaterDeviceDescription(
+    222: CompitWaterHeaterEntityDescription(
         name="R377B",
+        key="R377B",
         min_temp=30.0,
         max_temp=75.0,
         supported_features=WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE,
     ),
-    224: CompitWaterHeaterDeviceDescription(
+    224: CompitWaterHeaterEntityDescription(
         name="R 900",
+        key="R 900",
         min_temp=0.0,
         max_temp=70.0,
         supported_features=WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE,
     ),
-    36: CompitWaterHeaterDeviceDescription(
+    36: CompitWaterHeaterEntityDescription(
         name="BioMax742",
+        key="BioMax742",
         min_temp=0.0,
         max_temp=75.0,
         supported_features=WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE,
     ),
-    75: CompitWaterHeaterDeviceDescription(
+    75: CompitWaterHeaterEntityDescription(
         name="BioMax772",
+        key="BioMax772",
         min_temp=0.0,
         max_temp=75.0,
         supported_features=WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE,
     ),
-    201: CompitWaterHeaterDeviceDescription(
+    201: CompitWaterHeaterEntityDescription(
         name="BioMax775",
+        key="BioMax775",
         min_temp=0.0,
         max_temp=75.0,
         supported_features=WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE,
     ),
-    210: CompitWaterHeaterDeviceDescription(
+    210: CompitWaterHeaterEntityDescription(
         name="EL750",
+        key="EL750",
         min_temp=30.0,
         max_temp=80.0,
         supported_features=WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE,
     ),
-    44: CompitWaterHeaterDeviceDescription(
+    44: CompitWaterHeaterEntityDescription(
         name="SolarComp 951",
+        key="SolarComp 951",
         min_temp=0.0,
         max_temp=85.0,
         supported_features=WaterHeaterEntityFeature.TARGET_TEMPERATURE,
         supports_current_temperature=False,
     ),
-    45: CompitWaterHeaterDeviceDescription(
+    45: CompitWaterHeaterEntityDescription(
         name="SolarComp971",
+        key="SolarComp971",
         min_temp=0.0,
         max_temp=75.0,
         supported_features=WaterHeaterEntityFeature.TARGET_TEMPERATURE,
         supports_current_temperature=False,
     ),
-    99: CompitWaterHeaterDeviceDescription(
+    99: CompitWaterHeaterEntityDescription(
         name="SolarComp971C",
+        key="SolarComp971C",
         min_temp=0.0,
         max_temp=75.0,
         supported_features=WaterHeaterEntityFeature.TARGET_TEMPERATURE,
         supports_current_temperature=False,
     ),
-    53: CompitWaterHeaterDeviceDescription(
+    53: CompitWaterHeaterEntityDescription(
         name="R350.CWU",
+        key="R350.CWU",
         min_temp=0.0,
         max_temp=80.0,
         supported_features=WaterHeaterEntityFeature.TARGET_TEMPERATURE,
@@ -164,9 +179,11 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         [
-            CompitWaterHeater(coordinator, device_id, device_definition)
+            CompitWaterHeater(
+                coordinator, device_id, entity_description.name, entity_description
+            )
             for device_id, device in coordinator.connector.all_devices.items()
-            if (device_definition := DEVICE_DEFINITIONS.get(device.definition.code))
+            if (entity_description := DEVICE_DEFINITIONS.get(device.definition.code))
         ]
     )
 
@@ -178,29 +195,31 @@ class CompitWaterHeater(
 
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_name = None
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: CompitDataUpdateCoordinator,
         device_id: int,
-        device_description: CompitWaterHeaterDeviceDescription,
+        device_name: str,
+        entity_description: CompitWaterHeaterEntityDescription,
     ) -> None:
         """Initialize the water heater."""
         super().__init__(coordinator)
         self.device_id = device_id
+        self.entity_description = entity_description
         self.supports_current_temperature = (
-            device_description.supports_current_temperature
+            entity_description.supports_current_temperature
         )
-        self._attr_min_temp = device_description.min_temp
-        self._attr_max_temp = device_description.max_temp
-        self._attr_supported_features = device_description.supported_features
-        self._attr_unique_id = f"{device_description.name}_{device_id}"
+        self._attr_min_temp = entity_description.min_temp
+        self._attr_max_temp = entity_description.max_temp
+        self._attr_supported_features = entity_description.supported_features
+        self._attr_unique_id = f"{device_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(device_id))},
-            name=device_description.name,
+            name=device_name,
             manufacturer=MANUFACTURER_NAME,
-            model=device_description.name,
+            model=device_name,
         )
 
         if self._attr_supported_features & WaterHeaterEntityFeature.OPERATION_MODE:

@@ -49,7 +49,7 @@ async def test_water_heater_unknown_temperature(
     )
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("water_heater.compit_r_900_1")
+    state = hass.states.get("water_heater.r_900_r_900")
     assert state is not None
     assert state.attributes.get("temperature") is None
     assert state.attributes.get("current_temperature") is None
@@ -65,7 +65,7 @@ async def test_water_heater_set_temperature(
         "water_heater",
         "set_temperature",
         {
-            ATTR_ENTITY_ID: "water_heater.compit_r_900_1",
+            ATTR_ENTITY_ID: "water_heater.r_900_r_900",
             ATTR_TEMPERATURE: 60.0,
         },
         blocking=True,
@@ -82,13 +82,13 @@ async def test_water_heater_turn_on(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_connector: MagicMock
 ) -> None:
     """Test turning water heater on."""
-    mock_connector.select_device_option(1, CompitParameter.DHW_ON_OFF, "off")
+    await mock_connector.select_device_option(1, CompitParameter.DHW_ON_OFF, "off")
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         "water_heater",
         "turn_on",
-        {ATTR_ENTITY_ID: "water_heater.compit_r_900_1"},
+        {ATTR_ENTITY_ID: "water_heater.r_900_r_900"},
         blocking=True,
     )
 
@@ -99,13 +99,13 @@ async def test_water_heater_turn_off(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_connector: MagicMock
 ) -> None:
     """Test turning water heater off."""
-    mock_connector.select_device_option(1, CompitParameter.DHW_ON_OFF, "on")
+    await mock_connector.select_device_option(1, CompitParameter.DHW_ON_OFF, "on")
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         "water_heater",
         "turn_off",
-        {ATTR_ENTITY_ID: "water_heater.compit_r_900_1"},
+        {ATTR_ENTITY_ID: "water_heater.r_900_r_900"},
         blocking=True,
     )
 
@@ -118,19 +118,19 @@ async def test_water_heater_current_operation(
     """Test water heater current operation state."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("water_heater.compit_r_900_1")
+    state = hass.states.get("water_heater.r_900_r_900")
     assert state is not None
     assert state.state == "performance"
 
     await hass.services.async_call(
         "water_heater",
         "set_operation_mode",
-        {ATTR_ENTITY_ID: "water_heater.compit_r_900_1", "operation_mode": "eco"},
+        {ATTR_ENTITY_ID: "water_heater.r_900_r_900", "operation_mode": "eco"},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("water_heater.compit_r_900_1")
+    state = hass.states.get("water_heater.r_900_r_900")
     assert state.state == "eco"
     assert (
         mock_connector.get_current_option(1, CompitParameter.DHW_ON_OFF) == "schedule"
