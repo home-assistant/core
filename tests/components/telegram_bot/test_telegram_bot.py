@@ -66,6 +66,8 @@ from homeassistant.components.telegram_bot.const import (
     CONF_CONFIG_ENTRY_ID,
     DOMAIN,
     PARSER_HTML,
+    PARSER_MD,
+    PARSER_MD2,
     PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     SECTION_ADVANCED_SETTINGS,
@@ -1152,7 +1154,7 @@ async def test_edit_message_media(
                 ATTR_MESSAGEID: 12345,
                 ATTR_CHAT_ID: 123456,
                 ATTR_KEYBOARD_INLINE: "/mock",
-                ATTR_PARSER: PARSER_PLAIN_TEXT,
+                ATTR_PARSER: PARSER_MD,
             },
             blocking=True,
         )
@@ -1161,6 +1163,7 @@ async def test_edit_message_media(
     mock.assert_called_once()
     assert mock.call_args[1]["media"].__class__.__name__ == expected_media_class
     assert mock.call_args[1]["media"].caption == "mock caption"
+    assert mock.call_args[1]["parse_mode"] == PARSER_MD
     assert mock.call_args[1]["chat_id"] == 123456
     assert mock.call_args[1]["message_id"] == 12345
     assert mock.call_args[1]["reply_markup"] == InlineKeyboardMarkup(
@@ -1195,7 +1198,16 @@ async def test_edit_message(
         )
 
     await hass.async_block_till_done()
-    mock.assert_called_once()
+    mock.assert_called_once_with(
+        "mock message",
+        chat_id=123456,
+        message_id=12345,
+        inline_message_id=None,
+        parse_mode=None,
+        disable_web_page_preview=None,
+        reply_markup=None,
+        read_timeout=None,
+    )
 
     with patch(
         "homeassistant.components.telegram_bot.bot.Bot.edit_message_caption",
@@ -1208,13 +1220,21 @@ async def test_edit_message(
                 ATTR_CAPTION: "mock caption",
                 ATTR_CHAT_ID: 123456,
                 ATTR_MESSAGEID: 12345,
-                ATTR_PARSER: PARSER_PLAIN_TEXT,
+                ATTR_PARSER: PARSER_MD2,
             },
             blocking=True,
         )
 
     await hass.async_block_till_done()
-    mock.assert_called_once()
+    mock.assert_called_once_with(
+        chat_id=123456,
+        message_id=12345,
+        inline_message_id=None,
+        caption="mock caption",
+        reply_markup=None,
+        read_timeout=None,
+        parse_mode=PARSER_MD2,
+    )
 
     with patch(
         "homeassistant.components.telegram_bot.bot.Bot.edit_message_reply_markup",
