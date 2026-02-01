@@ -67,9 +67,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> bool
                 translation_domain=DOMAIN,
                 translation_key="config_entry_auth_failed",
             ) from err
-        _LOGGER.error(
-            "Unexpected error fetching SENZ account: %s -> %s", type(err), err
-        )
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="config_entry_not_ready",
@@ -90,9 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> bool
             translation_key="config_entry_not_ready",
         ) from err
     except Exception as err:
-        _LOGGER.error(
-            "Unexpected error fetching SENZ account: %s -> %s", type(err), err
-        )
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="config_entry_auth_failed",
