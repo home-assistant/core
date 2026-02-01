@@ -6,6 +6,7 @@ from datetime import timedelta
 from http import HTTPStatus
 import logging
 
+from aiohttp import ClientResponseError
 from httpx import HTTPStatusError, RequestError
 import jwt
 from pysenz import SENZAPI, Thermostat
@@ -70,10 +71,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: SENZConfigEntry) -> bool
             translation_domain=DOMAIN,
             translation_key="config_entry_not_ready",
         ) from err
+    except ClientResponseError as err:
+        if err.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.BAD_REQUEST):
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_auth_failed",
+            ) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_ready",
+        ) from err
     except RequestError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="config_entry_not_ready",
+        ) from err
+    except Exception as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_auth_failed",
         ) from err
 
     coordinator: SENZDataUpdateCoordinator = DataUpdateCoordinator(
