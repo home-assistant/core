@@ -148,6 +148,18 @@ def _get_q10_mop_life_time_left(
     return None
 
 
+def _get_q10_battery(
+    data: B01Props | dict[Any, Any],
+) -> str | int | float | None:
+    """Get battery level from Q10 dict data."""
+    if isinstance(data, B01Props):
+        # Q7 data - B01Props object
+        # Battery not directly available in Q7 B01Props
+        return None
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    return data.get(B01_Q10_DP.BATTERY)
+
+
 def _dock_error_value_fn(state: DeviceState) -> str | None:
     if (
         status := state.status.dock_error_status
@@ -462,6 +474,13 @@ Q7_B01_SENSOR_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         translation_key="mop_life_time_left",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionB01(
+        key="battery",
+        value_fn=_get_q10_battery,
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
