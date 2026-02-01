@@ -2212,7 +2212,7 @@ pymata-express==1.19
 pymediaroom==0.6.5.4
 
 # homeassistant.components.meteoclimatic
-pymeteoclimatic==0.1.0
+pymeteoclimatic==0.1.1
 
 # homeassistant.components.assist_pipeline
 pymicro-vad==1.0.1
