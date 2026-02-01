@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import timedelta
 import logging
 
 from tplink_omada_client.clients import OmadaWirelessClient
@@ -20,7 +19,6 @@ from .controller import OmadaSiteController
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_TRACKER_DOMAIN = "device_tracker"
-CLEANUP_INTERVAL = timedelta(hours=1)
 
 
 def _unique_id_to_mac(unique_id: str | None) -> str | None:

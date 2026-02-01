@@ -10,7 +10,6 @@ from tplink_omada_client.clients import OmadaConnectedClient
 
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_CLIENTS
-from homeassistant.components.tplink_omada.device_tracker import CLIENT_CLEANUP_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -62,7 +61,6 @@ async def test_device_scanner_created(
 
     updated_entity = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert not updated_entity.disabled
-    async_fire_time_changed(hass, utcnow() + CLIENT_CLEANUP_INTERVAL)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get(entity_id)
@@ -83,7 +81,6 @@ async def test_device_scanner_update_to_away_nulls_properties(
 
     updated_entity = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert not updated_entity.disabled
-    async_fire_time_changed(hass, utcnow() + CLIENT_CLEANUP_INTERVAL)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     entity = hass.states.get(entity_id)
@@ -136,7 +133,8 @@ async def test_automatic_stale_tracker_cleanup(
 
     assert entity_registry.async_get(unknown.entity_id)
 
-    async_fire_time_changed(hass, utcnow() + CLIENT_CLEANUP_INTERVAL)
+    # Trigger coordinator refresh to run cleanup
+    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_omada_clients_only_site_client.get_known_clients.call_count >= 2

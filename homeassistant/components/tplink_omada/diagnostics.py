@@ -145,17 +145,15 @@ def _summarize_device_ports(
             if port_data.get("poe") in (1, True):
                 poe_capable += 1
 
-            power_value = status.get("poePower")
-            if power_value is None:
-                power_value = status.get("poe_power")
+            # Try to get and convert PoE power value (using str() to satisfy mypy)
             try:
-                power = float(power_value)
+                power_value = status.get("poePower") or status.get("poe_power")
+                power = float(str(power_value)) if power_value else 0.0
+                if power > 0:
+                    poe_active += 1
+                    poe_power += power
             except (TypeError, ValueError):
-                power = 0.0
-
-            if power > 0:
-                poe_active += 1
-                poe_power += power
+                pass  # Skip invalid power values
 
         result[switch_mac] = {
             "total_ports": total_ports,

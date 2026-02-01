@@ -15,14 +15,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .cleanup import (
-    CLEANUP_INTERVAL,
-    async_cleanup_client_trackers,
-    async_cleanup_devices,
-)
+from .cleanup import async_cleanup_client_trackers, async_cleanup_devices
 from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
 from .controller import OmadaSiteController
@@ -71,20 +66,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
     controller = OmadaSiteController(hass, entry, site_client)
-    await controller.initialize_first_refresh()
 
     entry.runtime_data = controller
-
-    await async_cleanup_devices(
-        hass,
-        config_entry_ids={entry.entry_id},
-    )
-
-    await async_cleanup_client_trackers(
-        hass,
-        config_entry_ids={entry.entry_id},
-        raise_on_error=False,
-    )
 
     async def _async_cleanup_task() -> None:
         await async_cleanup_devices(
@@ -109,17 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
         controller.devices_coordinator.async_add_listener(_schedule_cleanup)
     )
 
-    entry.async_on_unload(
-        controller.clients_coordinator.async_add_listener(_schedule_cleanup)
-    )
-
-    @callback
-    def _handle_cleanup_interval(_: object) -> None:
-        _schedule_cleanup()
-
-    entry.async_on_unload(
-        async_track_time_interval(hass, _handle_cleanup_interval, CLEANUP_INTERVAL)
-    )
+    await controller.initialize_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
