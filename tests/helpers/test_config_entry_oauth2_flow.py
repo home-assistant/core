@@ -149,6 +149,28 @@ async def test_abort_if_no_implementation(
     assert result["reason"] == "missing_configuration"
 
 
+async def test_abort_if_oauth_implementation_unavailable(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+) -> None:
+    """Check flow abort when implementation is unavailable."""
+
+    async def mock_provider(
+        hass: HomeAssistant, domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
+        raise config_entry_oauth2_flow.ImplementationUnavailableError("Test error")
+
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "test_provider", mock_provider
+    )
+
+    flow = flow_handler()
+    flow.hass = hass
+    result = await flow.async_step_user()
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "oauth_implementation_unavailable"
+
+
 async def test_missing_credentials_for_domain(
     hass: HomeAssistant,
     flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
