@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 import pytest
 from roborock import HomeDataRoom, MultiMapsListMapInfo, RoborockCategory
 from roborock.data import (
+    B01Props,
     CombinedMapInfo,
     DnDTimer,
     DyadError,
@@ -68,6 +69,7 @@ from .mock_data import (
     MULTI_MAP_LIST,
     NETWORK_INFO_BY_DEVICE,
     Q7_B01_PROPS,
+    Q10_HOME_DATA_DEVICE,
     ROBOROCK_RRUID,
     ROOM_MAPPING,
     SCENES,
@@ -141,6 +143,73 @@ def create_b01_q7_trait() -> Mock:
     b01_trait.set_water_level = AsyncMock()
     b01_trait.send = AsyncMock()
     return b01_trait
+
+
+def create_b01_q10_trait() -> Mock:
+    """Create B01 Q10 trait for Q10 devices."""
+    q10_trait = AsyncMock()
+    q10_trait._props_data = B01Props(
+        status=WorkStatusMapping.WAITING_FOR_ORDERS,
+        battery=100,
+        fan_level=2,  # Standard fan level (new in 4.10.0)
+        main_brush=5000,
+        side_brush=3000,
+        hypa=1500,
+        main_sensor=500,
+        cleaning_time=15,
+    )
+
+    async def query_values_side_effect(protocols):
+        return q10_trait._props_data
+
+    q10_trait.query_values = AsyncMock(side_effect=query_values_side_effect)
+
+    # Add API methods for Q10
+    async def start_clean_side_effect():
+        q10_trait._props_data.status = WorkStatusMapping.SWEEP_MOPING
+
+    async def pause_clean_side_effect():
+        q10_trait._props_data.status = WorkStatusMapping.PAUSED
+
+    async def stop_clean_side_effect():
+        q10_trait._props_data.status = WorkStatusMapping.WAITING_FOR_ORDERS
+
+    async def return_to_dock_side_effect():
+        q10_trait._props_data.status = WorkStatusMapping.DOCKING
+
+    q10_trait.start_clean = AsyncMock(side_effect=start_clean_side_effect)
+    q10_trait.pause_clean = AsyncMock(side_effect=pause_clean_side_effect)
+    q10_trait.stop_clean = AsyncMock(side_effect=stop_clean_side_effect)
+    q10_trait.return_to_dock = AsyncMock(side_effect=return_to_dock_side_effect)
+    q10_trait.find_me = AsyncMock()
+    q10_trait.set_fan_speed = AsyncMock()
+    q10_trait.send = AsyncMock()
+    return q10_trait
+
+
+@pytest.fixture(name="q10_s5_plus_device")
+def q10_s5_plus_device_fixture() -> RoborockDevice:
+    """Create a mock Q10 S5+ device."""
+    device = AsyncMock(spec=RoborockDevice)
+    device.home_data = HomeDataDevice.from_dict(Q10_HOME_DATA_DEVICE)
+    device.device_id = "q10_s5_plus_duid"
+    device.name = "Roborock Q10 S5+"
+    device.model = "roborock.vacuum.q10"
+    device.product_id = "q10_product_id"
+    device.pv = "B01"
+    device.fw = "03.02.01"
+    device.mac = "AA:BB:CC:DD:EE:FF"
+    device.capabilities = []
+
+    # Add B01 trait for Q10
+    device.b01_properties = create_b01_q10_trait()
+    device.status_trait = create_b01_q10_trait()
+
+    # Mock async methods
+    device.disconnect = AsyncMock()
+    device.request = AsyncMock()
+
+    return device
 
 
 @pytest.fixture(name="bypass_api_client_fixture")
