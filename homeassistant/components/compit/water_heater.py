@@ -37,16 +37,9 @@ class CompitWaterHeaterParameters:
     """Class to describe water heater parameters for a Compit device."""
 
     min_temp: float
-    """Minimum temperature in Celsius."""
-
     max_temp: float
-    """Maximum temperature in Celsius."""
-
     supported_features: WaterHeaterEntityFeature
-    """Supported features of the water heater."""
-
     supports_current_temperature: bool = True
-    """Indicates if the device supports reporting current temperature."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -54,15 +47,10 @@ class CompitWaterHeaterDeviceDescription:
     """Class to describe a Compit water heater device."""
 
     name: str
-    """Name of the device."""
-
     parameters: CompitWaterHeaterParameters
-    """Water heater parameters of the device."""
 
 
-# Device definitions for water heater support
 DEVICE_DEFINITIONS: dict[int, CompitWaterHeaterDeviceDescription] = {
-    # Heat pumps and controllers
     34: CompitWaterHeaterDeviceDescription(
         name="r470",
         parameters=CompitWaterHeaterParameters(
@@ -123,7 +111,6 @@ DEVICE_DEFINITIONS: dict[int, CompitWaterHeaterDeviceDescription] = {
             | WaterHeaterEntityFeature.OPERATION_MODE,
         ),
     ),
-    # Boilers
     36: CompitWaterHeaterDeviceDescription(
         name="BioMax742",
         parameters=CompitWaterHeaterParameters(
@@ -164,7 +151,6 @@ DEVICE_DEFINITIONS: dict[int, CompitWaterHeaterDeviceDescription] = {
             | WaterHeaterEntityFeature.OPERATION_MODE,
         ),
     ),
-    # Solar controllers
     44: CompitWaterHeaterDeviceDescription(
         name="SolarComp 951",
         parameters=CompitWaterHeaterParameters(
@@ -192,7 +178,6 @@ DEVICE_DEFINITIONS: dict[int, CompitWaterHeaterDeviceDescription] = {
             supports_current_temperature=False,
         ),
     ),
-    # DHW-specific controllers
     53: CompitWaterHeaterDeviceDescription(
         name="R350.CWU",
         parameters=CompitWaterHeaterParameters(
