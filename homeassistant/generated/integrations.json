@@ -5014,6 +5014,12 @@
         }
       }
     },
+    "photoptimizer": {
+      "name": "Photoptimizer",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "pi_hole": {
       "name": "Pi-hole",
       "integration_type": "hub",

@@ -1,0 +1,52 @@
+{
+  "config": {
+    "step": {
+      "electricity_price": {
+        "title": "Configure electricity spot price",
+        "description": "Select the electricity price entity and VAT.",
+        "data": {
+          "electricity_price_entity": "Electricity price entity",
+          "price_include_vat": "Prices include VAT"
+        }
+      },
+      "pv_forecast": {
+        "title": "Configure PV forecast",
+        "description": "Use your own PV forecast entity or leave empty to use built-in Forecast.Solar.",
+        "data": {
+          "latitude": "Latitude",
+          "longitude": "Longitude",
+          "azimuth": "Azimuth",
+          "kwp": "Peak power (kWp)",
+          "declination": "Declination",
+          "api_key": "API key (optional)",
+          "pv_forecast_entity": "PV forecast entity (optional)"
+        }
+      },
+      "load_forecast": {
+        "title": "Configure load forecast",
+        "description": "Select a load forecast entity or leave empty to use Photoptimizer's automatic profile from history.",
+        "data": {
+          "load_forecast_entity": "Load forecast entity (optional)"
+        }
+      },
+      "inverter": {
+        "title": "Configure inverter data",
+        "description": "Select entities to be pulled from inverter.",
+        "data": {
+          "current_solar_production_entity": "Current solar production",
+          "current_consumption_entity": "Current consumption",
+          "grid_power_entity": "Grid power",
+          "battery_soc_entity": "Battery state of charge",
+          "battery_capacity_kwh": "Battery capacity (kWh)",
+          "battery_soc_reserve_percent": "Reserve state of charge (%)",
+          "battery_efficiency_round_trip": "Round-trip efficiency (%)",
+          "wear_cost_per_kwh": "Battery wear cost (per kWh)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Forecast.Solar",
+      "unknown": "Unexpected error occurred"
+    }
+  }
+}

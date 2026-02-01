@@ -493,6 +493,7 @@ FLOWS = {
         "permobil",
         "pglab",
         "philips_js",
+        "photoptimizer",
         "pi_hole",
         "picnic",
         "ping",

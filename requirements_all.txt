@@ -980,6 +980,9 @@ foobot_async==1.0.0
 # homeassistant.components.forecast_solar
 forecast-solar==4.2.0
 
+# homeassistant.components.photoptimizer
+forecast_solar==4.2.0
+
 # homeassistant.components.fortios
 fortiosapi==1.0.5
 

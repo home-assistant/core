@@ -1,0 +1,184 @@
+{
+  "timeline": [
+    {
+      "start": "2026-01-07 11:00:00+01:00",
+      "price": 3.38270295,
+      "pv": 0.759,
+      "load": 0.7
+    },
+    {
+      "start": "2026-01-07 12:00:00+01:00",
+      "price": 3.4932741,
+      "pv": 0.826,
+      "load": 0.7
+    },
+    {
+      "start": "2026-01-07 13:00:00+01:00",
+      "price": 3.8591025,
+      "pv": 0.782,
+      "load": 0.7
+    },
+    {
+      "start": "2026-01-07 14:00:00+01:00",
+      "price": 3.79450185,
+      "pv": 0.639,
+      "load": 0.75
+    },
+    {
+      "start": "2026-01-07 15:00:00+01:00",
+      "price": 4.20146175,
+      "pv": 0.41,
+      "load": 0.8
+    },
+    {
+      "start": "2026-01-07 16:00:00+01:00",
+      "price": 4.2128334,
+      "pv": 0.178,
+      "load": 0.9
+    },
+    {
+      "start": "2026-01-07 17:00:00+01:00",
+      "price": 4.234125,
+      "pv": 0.0,
+      "load": 1.2
+    },
+    {
+      "start": "2026-01-07 18:00:00+01:00",
+      "price": 3.96677025,
+      "pv": 0.0,
+      "load": 1.4
+    },
+    {
+      "start": "2026-01-07 19:00:00+01:00",
+      "price": 3.750225,
+      "pv": 0.0,
+      "load": 1.5
+    },
+    {
+      "start": "2026-01-07 20:00:00+01:00",
+      "price": 3.47464395,
+      "pv": 0.0,
+      "load": 1.3
+    },
+    {
+      "start": "2026-01-07 21:00:00+01:00",
+      "price": 2.88767325,
+      "pv": 0.0,
+      "load": 1.0
+    },
+    {
+      "start": "2026-01-07 22:00:00+01:00",
+      "price": 2.65249785,
+      "pv": 0.0,
+      "load": 0.8
+    },
+    {
+      "start": "2026-01-07 23:00:00+01:00",
+      "price": 2.39845035,
+      "pv": 0.0,
+      "load": 0.6
+    },
+    {
+      "start": "2026-01-08 00:00:00+01:00",
+      "price": 2.39845035,
+      "pv": 0.0,
+      "load": 0.4
+    },
+    {
+      "start": "2026-01-08 01:00:00+01:00",
+      "price": 2.39845035,
+      "pv": 0.0,
+      "load": 0.35
+    },
+    {
+      "start": "2026-01-08 02:00:00+01:00",
+      "price": 2.39845035,
+      "pv": 0.0,
+      "load": 0.35
+    },
+    {
+      "start": "2026-01-08 03:00:00+01:00",
+      "price": 2.39845035,
+      "pv": 0.0,
+      "load": 0.35
+    },
+    {
+      "start": "2026-01-08 04:00:00+01:00",
+      "price": 2.39845035,
+      "pv": 0.0,
+      "load": 0.35
+    },
+    {
+      "start": "2026-01-08 05:00:00+01:00",
+      "price": 2.39845035,
+      "pv": 0.0,
+      "load": 0.4
+    },
+    {
+      "start": "2026-01-08 06:00:00+01:00",
+      "price": 2.39845035,
+      "pv": 0.0,
+      "load": 0.45
+    },
+    {
+      "start": "2026-01-08 07:00:00+01:00",
+      "price": 2.39845035,
+      "pv": 0.0,
+      "load": 0.5
+    },
+    {
+      "start": "2026-01-08 08:00:00+01:00",
+      "price": 2.39845035,
+      "pv": 0.033,
+      "load": 0.55
+    },
+    {
+      "start": "2026-01-08 09:00:00+01:00",
+      "price": 2.39845035,
+      "pv": 0.354,
+      "load": 0.6
+    },
+    {
+      "start": "2026-01-08 10:00:00+01:00",
+      "price": 2.39845035,
+      "pv": 0.605,
+      "load": 0.65
+    }
+  ],
+  "raw": {
+    "pv": "Estimate(watts={datetime.datetime(2026, 1, 7, 6, 41, 53, tzinfo=datetime.timezone.utc): 0, datetime.datetime(2026, 1, 7, 7, 0, tzinfo=datetime.timezone.utc): 205, datetime.datetime(2026, 1, 7, 8, 0, tzinfo=datetime.timezone.utc): 478, datetime.datetime(2026, 1, 7, 9, 0, tzinfo=datetime.timezone.utc): 695, datetime.datetime(2026, 1, 7, 10, 0, tzinfo=datetime.timezone.utc): 823, datetime.datetime(2026, 1, 7, 11, 0, tzinfo=datetime.timezone.utc): 829, datetime.datetime(2026, 1, 7, 12, 0, tzinfo=datetime.timezone.utc): 735, datetime.datetime(2026, 1, 7, 13, 0, tzinfo=datetime.timezone.utc): 542, datetime.datetime(2026, 1, 7, 14, 0, tzinfo=datetime.timezone.utc): 277, datetime.datetime(2026, 1, 7, 15, 0, tzinfo=datetime.timezone.utc): 74, datetime.datetime(2026, 1, 7, 15, 3, 54, tzinfo=datetime.timezone.utc): 0, datetime.datetime(2026, 1, 8, 6, 41, 29, tzinfo=datetime.timezone.utc): 0, datetime.datetime(2026, 1, 8, 7, 0, tzinfo=datetime.timezone.utc): 212, datetime.datetime(2026, 1, 8, 8, 0, tzinfo=datetime.timezone.utc): 495, datetime.datetime(2026, 1, 8, 9, 0, tzinfo=datetime.timezone.utc): 715, datetime.datetime(2026, 1, 8, 10, 0, tzinfo=datetime.timezone.utc): 831, datetime.datetime(2026, 1, 8, 11, 0, tzinfo=datetime.timezone.utc): 836, datetime.datetime(2026, 1, 8, 12, 0, tzinfo=datetime.timezone.utc): 741, datetime.datetime(2026, 1, 8, 13, 0, tzinfo=datetime.timezone.utc): 548, datetime.datetime(2026, 1, 8, 14, 0, tzinfo=datetime.timezone.utc): 282, datetime.datetime(2026, 1, 8, 15, 0, tzinfo=datetime.timezone.utc): 121, datetime.datetime(2026, 1, 8, 15, 5, 8, tzinfo=datetime.timezone.utc): 0}, wh_period={datetime.datetime(2026, 1, 7, 6, 41, 53, tzinfo=datetime.timezone.utc): 0, datetime.datetime(2026, 1, 7, 7, 0, tzinfo=datetime.timezone.utc): 31, datetime.datetime(2026, 1, 7, 8, 0, tzinfo=datetime.timezone.utc): 342, datetime.datetime(2026, 1, 7, 9, 0, tzinfo=datetime.timezone.utc): 587, datetime.datetime(2026, 1, 7, 10, 0, tzinfo=datetime.timezone.utc): 759, datetime.datetime(2026, 1, 7, 11, 0, tzinfo=datetime.timezone.utc): 826, datetime.datetime(2026, 1, 7, 12, 0, tzinfo=datetime.timezone.utc): 782, datetime.datetime(2026, 1, 7, 13, 0, tzinfo=datetime.timezone.utc): 639, datetime.datetime(2026, 1, 7, 14, 0, tzinfo=datetime.timezone.utc): 410, datetime.datetime(2026, 1, 7, 15, 0, tzinfo=datetime.timezone.utc): 176, datetime.datetime(2026, 1, 7, 15, 3, 54, tzinfo=datetime.timezone.utc): 2, datetime.datetime(2026, 1, 8, 6, 41, 29, tzinfo=datetime.timezone.utc): 0, datetime.datetime(2026, 1, 8, 7, 0, tzinfo=datetime.timezone.utc): 33, datetime.datetime(2026, 1, 8, 8, 0, tzinfo=datetime.timezone.utc): 354, datetime.datetime(2026, 1, 8, 9, 0, tzinfo=datetime.timezone.utc): 605, datetime.datetime(2026, 1, 8, 10, 0, tzinfo=datetime.timezone.utc): 773, datetime.datetime(2026, 1, 8, 11, 0, tzinfo=datetime.timezone.utc): 834, datetime.datetime(2026, 1, 8, 12, 0, tzinfo=datetime.timezone.utc): 789, datetime.datetime(2026, 1, 8, 13, 0, tzinfo=datetime.timezone.utc): 645, datetime.datetime(2026, 1, 8, 14, 0, tzinfo=datetime.timezone.utc): 415, datetime.datetime(2026, 1, 8, 15, 0, tzinfo=datetime.timezone.utc): 202, datetime.datetime(2026, 1, 8, 15, 5, 8, tzinfo=datetime.timezone.utc): 5}, wh_days={datetime.datetime(2026, 1, 7, 0, 0): 4554, datetime.datetime(2026, 1, 8, 0, 0): 4655}, api_rate_limit=12, api_timezone='Europe/Prague')",
+    "price": {
+      "2026-01-07T00:00:00+01:00": 2.2830402,
+      "2026-01-07T01:00:00+01:00": 2.1538389000000002,
+      "2026-01-07T02:00:00+01:00": 2.06601105,
+      "2026-01-07T03:00:00+01:00": 1.9835061,
+      "2026-01-07T04:00:00+01:00": 2.0309283000000002,
+      "2026-01-07T05:00:00+01:00": 2.34231795,
+      "2026-01-07T06:00:00+01:00": 2.7964581,
+      "2026-01-07T07:00:00+01:00": 3.4439163,
+      "2026-01-07T08:00:00+01:00": 3.87579705,
+      "2026-01-07T09:00:00+01:00": 3.8445855,
+      "2026-01-07T10:00:00+01:00": 3.3650406,
+      "2026-01-07T11:00:00+01:00": 3.38270295,
+      "2026-01-07T12:00:00+01:00": 3.4932741,
+      "2026-01-07T13:00:00+01:00": 3.8591025,
+      "2026-01-07T14:00:00+01:00": 3.79450185,
+      "2026-01-07T15:00:00+01:00": 4.20146175,
+      "2026-01-07T16:00:00+01:00": 4.2128334,
+      "2026-01-07T17:00:00+01:00": 4.234125,
+      "2026-01-07T18:00:00+01:00": 3.96677025,
+      "2026-01-07T19:00:00+01:00": 3.750225,
+      "2026-01-07T20:00:00+01:00": 3.47464395,
+      "2026-01-07T21:00:00+01:00": 2.88767325,
+      "2026-01-07T22:00:00+01:00": 2.65249785,
+      "2026-01-07T23:00:00+01:00": 2.39845035,
+      "unit_of_measurement": "K\u010d/kWh",
+      "icon": "mdi:cash",
+      "friendly_name": "Current Spot Electricity Price"
+    },
+    "load": [
+      0.4, 0.35, 0.35, 0.35, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.7,
+      0.7, 0.75, 0.8, 0.9, 1.2, 1.4, 1.5, 1.3, 1.0, 0.8, 0.6
+    ]
+  }
+}

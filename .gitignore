@@ -142,3 +142,7 @@ pytest_buckets.txt
 # AI tooling
 .claude/settings.local.json
 
+storage/
+tests/components/test_integration/__init__.py
+tests/components/test_integration/test_config_flow.py
+tests/components/test_integration/test_light.py
