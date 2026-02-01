@@ -1,150 +1,286 @@
-"""Sensor platform to display the current fuel prices at a NSW fuel station."""
+"""Sensor platform for NSW Fuel Check Integration."""
 
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    SensorEntity,
-)
-from homeassistant.const import CURRENCY_CENT, UnitOfVolume
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from .const import DOMAIN, PRICE_UNIT
+from .coordinator import NSWFuelCoordinator
 
-from . import DATA_NSW_FUEL_STATION, StationPriceData
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .data import NSWFuelConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STATION_ID = "station_id"
-ATTR_STATION_NAME = "station_name"
 
-CONF_STATION_ID = "station_id"
-CONF_FUEL_TYPES = "fuel_types"
-CONF_ALLOWED_FUEL_TYPES = [
-    "E10",
-    "U91",
-    "E85",
-    "P95",
-    "P98",
-    "DL",
-    "PDL",
-    "B20",
-    "LPG",
-    "CNG",
-    "EV",
-]
-CONF_DEFAULT_FUEL_TYPES = ["E10", "U91"]
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_STATION_ID): cv.positive_int,
-        vol.Optional(CONF_FUEL_TYPES, default=CONF_DEFAULT_FUEL_TYPES): vol.All(
-            cv.ensure_list, [vol.In(CONF_ALLOWED_FUEL_TYPES)]
-        ),
-    }
-)
-
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: NSWFuelConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the NSW Fuel Station sensor."""
+    """Set up sensors for NSW Fuel Check from a config entry."""
+    coordinator: NSWFuelCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    station_id = config[CONF_STATION_ID]
-    fuel_types = config[CONF_FUEL_TYPES]
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except Exception as err:
+        raise ConfigEntryNotReady from err
 
-    coordinator = hass.data[DATA_NSW_FUEL_STATION]
+    nicknames = config_entry.data.get("nicknames", {})
 
-    if coordinator.data is None:
-        _LOGGER.error("Initial fuel station price data not available")
-        return
+    sensors: list[SensorEntity] = []
 
-    entities = []
-    for fuel_type in fuel_types:
-        if coordinator.data.prices.get((station_id, fuel_type)) is None:
-            _LOGGER.error(
-                "Fuel station price data not available for station %d and fuel type %s",
-                station_id,
-                fuel_type,
-            )
-            continue
+    sensors.extend(create_favorite_station_sensors(coordinator, nicknames))
 
-        entities.append(StationPriceSensor(coordinator, station_id, fuel_type))
+    sensors.extend(create_cheapest_fuel_sensors(coordinator))
 
-    add_entities(entities)
+    if sensors:
+        async_add_entities(sensors)
 
 
-class StationPriceSensor(
-    CoordinatorEntity[DataUpdateCoordinator[StationPriceData]], SensorEntity
-):
-    """Implementation of a sensor that reports the fuel price for a station."""
+class FuelPriceSensor(CoordinatorEntity[NSWFuelCoordinator], SensorEntity):
+    """Sensor for user's selected favorite stations and fuel type."""
 
-    _attr_attribution = "Data provided by NSW Government FuelCheck"
+    _attr_native_unit_of_measurement = PRICE_UNIT
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_has_entity_name = True
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
-        coordinator: DataUpdateCoordinator[StationPriceData],
-        station_id: int,
+        coordinator: NSWFuelCoordinator,
+        nickname: str,
+        station_code: int,
+        au_state: str,
+        station_name: str,
         fuel_type: str,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialise favorite fuel price sensor."""
         super().__init__(coordinator)
 
-        self._station_id = station_id
+        self._nickname = nickname
+        self._station_code = station_code
+        self._au_state = au_state
+        self._station_name = station_name
         self._fuel_type = fuel_type
+        self._attr_unique_id = f"{DOMAIN}_{station_code}_{au_state}_{fuel_type}"
+        self._attr_attribution = _attribution_for_state(au_state)
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        station_name = self._get_station_name()
-        return f"{station_name} {self._fuel_type}"
+    def device_info(self) -> DeviceInfo:
+        """Device/Service/Location information."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"location_{self._nickname}")},
+            name=self._nickname,
+            manufacturer=self._attr_attribution,
+            model="Fuel Location",
+        )
 
     @property
     def native_value(self) -> float | None:
-        """Return the state of the sensor."""
-        if self.coordinator.data is None:
+        """Return the state/value of the sensor."""
+        if not self.coordinator.data:
             return None
 
-        prices = self.coordinator.data.prices
-        return prices.get((self._station_id, self._fuel_type))
+        p = (
+            self.coordinator.data.get("favorites", {})
+            .get((self._station_code, self._au_state), {})
+            .get(self._fuel_type)
+        )
+        return p.price if p else None
 
     @property
-    def extra_state_attributes(self) -> dict[str, int | str]:
-        """Return the state attributes of the device."""
+    def name(self) -> str:
+        """Return human-readable sensor name."""
+        return f"{self._station_name} {self._fuel_type}"
+
+    @property
+    def icon(self) -> str | None:
+        """Return icon for user interface."""
+        return "mdi:gas-station"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Label the sensor with fuel station numeric identifier."""
+        attrs = {}
+
+        if self._station_code is not None:
+            attrs["station_code"] = self._station_code
+
+        return attrs
+
+
+class CheapestFuelPriceSensor(CoordinatorEntity[NSWFuelCoordinator], SensorEntity):
+    """Cheapest fuel price sensors for a nickname, fuel type."""
+
+    _attr_native_unit_of_measurement = PRICE_UNIT
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: NSWFuelCoordinator,
+        nickname: str,
+        rank: int,
+        au_state: str | None = None,
+    ) -> None:
+        """Initialise cheapest fuel price sensor."""
+        super().__init__(coordinator)
+
+        self._nickname = nickname
+        self._rank = rank
+        self._index = rank - 1
+
+        # Use nickname in unique id & name (therefore entity id) so user can distinguish
+        self._attr_unique_id = f"{DOMAIN}_cheapest_{nickname}_{rank}"
+        self._attr_name = f"Cheapest {nickname} #{rank}"
+
+        self._au_state = au_state
+        self._attr_attribution = _attribution_for_state(au_state)
+
+        _LOGGER.debug(
+            "Creating %s with unique_id=%s",
+            self.entity_id,
+            self._attr_unique_id,
+        )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Device/Service/Location information."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"location_{self._nickname}")},
+            name=self._nickname,
+            manufacturer=self._attr_attribution,
+            model="Fuel Station Prices",
+        )
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state/value of the sensor."""
+        cd = self.coordinator.data or {}
+        pd = cd.get("cheapest", {}).get(self._nickname, [])
+
+        if len(pd) <= self._index:
+            return None
+
+        return pd[self._index]["price"]
+
+    @property
+    def icon(self) -> str | None:
+        """Return icon for user interface."""
+        if self._rank == 1:
+            return "mdi:gas-station-in-use"
+        return "mdi:gas-station"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """
+        Add attributes for display in the user interface.
+
+        Station name and fuel type are dynamic (as well as sensor value/price).
+        User needs a way of identifying which fuel station this sensor refers to.
+        """
+        cd = self.coordinator.data or {}
+        pd = cd.get("cheapest", {}).get(self._nickname, [])
+
+        if len(pd) <= self._index:
+            return None
+
+        station_price = pd[self._index]
+
         return {
-            ATTR_STATION_ID: self._station_id,
-            ATTR_STATION_NAME: self._get_station_name(),
+            "station_code": station_price["station_code"],
+            "station_name": station_price["station_name"],
+            "rank": self._rank,
+            "fuel_type": station_price["fuel_type"],
+            "price": station_price["price"],
         }
 
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the units of measurement."""
-        return f"{CURRENCY_CENT}/{UnitOfVolume.LITERS}"
 
-    def _get_station_name(self):
-        default_name = f"station {self._station_id}"
-        if self.coordinator.data is None:
-            return default_name
+def create_favorite_station_sensors(
+    coordinator: NSWFuelCoordinator,
+    nicknames: dict[str, dict[str, Any]],
+) -> list[FuelPriceSensor]:
+    """Create FuelPriceSensor entities for user's favorites from config entry data."""
+    sensors: list[FuelPriceSensor] = []
 
-        station = self.coordinator.data.stations.get(self._station_id)
-        if station is None:
-            return default_name
+    for nickname, nickname_data in nicknames.items():
+        for station in nickname_data.get("stations", []):
+            station_code = station["station_code"]
+            au_state = station["au_state"]
+            station_name = station["station_name"]
+            fuel_types = station.get("fuel_types", [])
 
-        return station.name
+            if not fuel_types:
+                _LOGGER.warning(
+                    "Station %s (%s) has no fuel_types configured",
+                    station_name,
+                    au_state,
+                )
+                continue
 
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return f"{self._station_id}_{self._fuel_type}"
+            _LOGGER.debug(
+                "Creating favorite sensors for station %s (%s)",
+                station_name,
+                station_code,
+            )
+
+            sensors.extend(
+                FuelPriceSensor(
+                    coordinator=coordinator,
+                    nickname=nickname,
+                    station_code=station_code,
+                    au_state=au_state,
+                    station_name=station_name,
+                    fuel_type=fuel_type,
+                )
+                for fuel_type in fuel_types
+            )
+
+    return sensors
+
+
+def create_cheapest_fuel_sensors(
+    coordinator: NSWFuelCoordinator,
+) -> list[CheapestFuelPriceSensor]:
+    """
+    Create CheapestFuelPriceSensor entities for all nicknames.
+
+    Always create 2 sensors per nickname for rank 1 and 2.
+    """
+    sensors: list[CheapestFuelPriceSensor] = []
+
+    cd = coordinator.data or {}
+
+    for nickname in coordinator.nicknames:
+        entries = cd.get("cheapest", {}).get(nickname, [])
+
+        for rank in (1, 2):
+            au_state = None
+            if len(entries) >= rank:
+                entry = entries[rank - 1]
+                au_state = entry.get("au_state")
+
+            sensors.append(
+                CheapestFuelPriceSensor(
+                    coordinator=coordinator,
+                    nickname=nickname,
+                    rank=rank,
+                    au_state=au_state,
+                )
+            )
+
+    return sensors
+
+
+def _attribution_for_state(au_state: str | None) -> str:
+    """Return the appropriate attribution string for Australian state."""
+    return "FuelCheck TAS" if au_state == "TAS" else "NSW Government FuelCheck"

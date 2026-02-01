@@ -1,0 +1,3 @@
+[pytest]
+# Required to pick up the HA pytest plugin and enable hass fixture
+addopts = --strict-markers
