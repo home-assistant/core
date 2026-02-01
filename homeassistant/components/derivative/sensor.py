@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
@@ -247,8 +246,10 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         source_class_raw = source_state.attributes.get(ATTR_DEVICE_CLASS)
         source_class: SensorDeviceClass | None = None
         if isinstance(source_class_raw, str):
-            with contextlib.suppress(ValueError):
+            try:
                 source_class = SensorDeviceClass(source_class_raw)
+            except ValueError:
+                source_class = None
         if self._string_unit_prefix is not None and self._string_unit_time is not None:
             original_unit = self._attr_native_unit_of_measurement
             source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
