@@ -86,8 +86,6 @@ async def test_entities_update_over_time(
         for x in hass.states.async_all(Platform.CLIMATE):
             assert x == snapshot(name=f"{x.entity_id}-state-updated")
 
-        return
-
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_ctl_set_hvac_mode(
