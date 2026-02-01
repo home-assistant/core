@@ -41,13 +41,13 @@ def async_setup_mediasource(hass: HomeAssistant) -> None:
     hass.http.register_view(IcloudMediaSourceView(hass))
 
 
-async def async_get_media_source(hass: HomeAssistant) -> "IcloudMediaSource":
+async def async_get_media_source(hass: HomeAssistant) -> IcloudMediaSource:
     """Set up iCloud media source."""
     return IcloudMediaSource(hass)
 
 
 def _get_icloud_account(
-    hass: HomeAssistant, identifier: "IcloudMediaSourceIdentifier"
+    hass: HomeAssistant, identifier: IcloudMediaSourceIdentifier
 ) -> IcloudAccount:
     """Get iCloud account from identifier."""
     entry = hass.config_entries.async_entry_for_domain_unique_id(
@@ -66,7 +66,7 @@ def _get_icloud_account(
 
 
 def _get_photo_album(
-    icloud_account: IcloudAccount, identifier: "IcloudMediaSourceIdentifier"
+    icloud_account: IcloudAccount, identifier: IcloudMediaSourceIdentifier
 ) -> BasePhotoAlbum:
     """Get photo album from identifier."""
     albums: AlbumContainer | None = None
@@ -87,7 +87,7 @@ def _get_photo_album(
 
 
 def _get_photo_asset(
-    hass: HomeAssistant, identifier: "IcloudMediaSourceIdentifier"
+    hass: HomeAssistant, identifier: IcloudMediaSourceIdentifier
 ) -> PhotoAsset | None:
     """Get photo asset synchronously."""
 
@@ -111,7 +111,7 @@ def _get_photo_asset(
 
 
 async def _get_media_mime_type(
-    hass: HomeAssistant, identifier: "IcloudMediaSourceIdentifier"
+    hass: HomeAssistant, identifier: IcloudMediaSourceIdentifier
 ) -> str:
     photo = await hass.async_add_executor_job(_get_photo_asset, hass, identifier)
     if photo is None:
@@ -132,10 +132,10 @@ async def _get_media_mime_type(
 class PhotoCache:
     """Simple in-memory cache for PhotoAsset objects."""
 
-    _instance: "PhotoCache"
+    _instance: PhotoCache
 
     @classmethod
-    def instance(cls) -> "PhotoCache":
+    def instance(cls) -> PhotoCache:
         """Get the singleton instance of the photo cache."""
         if not hasattr(cls, "_instance"):
             cls._instance = cls()
@@ -178,7 +178,7 @@ class IcloudMediaSourceIdentifier:
     photo_id: str | None = None
 
     @staticmethod
-    def from_identifier(identifier: str) -> "IcloudMediaSourceIdentifier":
+    def from_identifier(identifier: str) -> IcloudMediaSourceIdentifier:
         """Initialize iCloud media source identifier."""
         config_entry_id: str | None = None
         shared_album: bool | None = None
