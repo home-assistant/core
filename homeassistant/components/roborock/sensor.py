@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 import logging
+from typing import Any
 
 from roborock.data import (
     B01Props,
@@ -19,6 +20,7 @@ from roborock.data import (
     ZeoError,
     ZeoState,
 )
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 
 from homeassistant.components.sensor import (
@@ -75,15 +77,13 @@ class RoborockSensorDescriptionB01(SensorEntityDescription):
     value_fn: Callable[[B01Props | dict], StateType]
 
 
-def _get_q10_status_name(data: dict) -> str | None:
+def _get_q10_status_name(data: B01Props | dict[Any, Any]) -> str | int | float | None:
     """Get status name from Q10 dict data."""
-    if not isinstance(data, dict):
+    if isinstance(data, B01Props):
         # Q7 data - B01Props object
         return data.status_name
-    # Q10 data - dict from status.refresh()
-    status = data.get("dps", {}).get("101", {})
-    # Status code is typically in key 1
-    status_code = status.get("1")
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    status_code = data.get(B01_Q10_DP.STATUS)
     if status_code is not None:
         for mapping in WorkStatusMapping:
             if mapping.value == status_code:
@@ -91,62 +91,61 @@ def _get_q10_status_name(data: dict) -> str | None:
     return None
 
 
-def _get_q10_main_brush_time_left(data: dict) -> int | None:
+def _get_q10_main_brush_time_left(
+    data: B01Props | dict[Any, Any],
+) -> str | int | float | None:
     """Get main brush time left from Q10 dict data."""
-    if not isinstance(data, dict):
+    if isinstance(data, B01Props):
         # Q7 data - B01Props object
         return data.main_brush_time_left
-    # Q10 data - dict from status.refresh()
-    status = data.get("dps", {}).get("101", {})
-    # Main brush time left in minutes - typically in key 29
-    return status.get("29")
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    return data.get(B01_Q10_DP.MAIN_BRUSH_LIFE)
 
 
-def _get_q10_side_brush_time_left(data: dict) -> int | None:
+def _get_q10_side_brush_time_left(
+    data: B01Props | dict[Any, Any],
+) -> str | int | float | None:
     """Get side brush time left from Q10 dict data."""
-    if not isinstance(data, dict):
+    if isinstance(data, B01Props):
         # Q7 data - B01Props object
         return data.side_brush_time_left
-    # Q10 data - dict from status.refresh()
-    status = data.get("dps", {}).get("101", {})
-    # Side brush time left in minutes - typically in key 30
-    return status.get("30")
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    return data.get(B01_Q10_DP.SIDE_BRUSH_LIFE)
 
 
-def _get_q10_filter_time_left(data: dict) -> int | None:
+def _get_q10_filter_time_left(
+    data: B01Props | dict[Any, Any],
+) -> str | int | float | None:
     """Get filter time left from Q10 dict data."""
-    if not isinstance(data, dict):
+    if isinstance(data, B01Props):
         # Q7 data - B01Props object
         return data.filter_time_left
-    # Q10 data - dict from status.refresh()
-    status = data.get("dps", {}).get("101", {})
-    # Filter time left in minutes - typically in key 31
-    return status.get("31")
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    return data.get(B01_Q10_DP.FILTER_LIFE)
 
 
-def _get_q10_sensor_dirty_time_left(data: dict) -> int | None:
+def _get_q10_sensor_dirty_time_left(
+    data: B01Props | dict[Any, Any],
+) -> str | int | float | None:
     """Get sensor dirty time left from Q10 dict data."""
-    if not isinstance(data, dict):
+    if isinstance(data, B01Props):
         # Q7 data - B01Props object
         return data.sensor_dirty_time_left
     # Q10 data - dict from status.refresh()
-    status = data.get("dps", {}).get("101", {})
-    # Sensor dirty time left - check common keys
-    # Could be in various keys depending on Q10 model
-    return status.get("32")  # Estimated key for sensor time
+    # Sensor time not directly available in Q10 basic DP set
+    return None
 
 
-def _get_q10_mop_life_time_left(data: dict) -> int | None:
+def _get_q10_mop_life_time_left(
+    data: B01Props | dict[Any, Any],
+) -> str | int | float | None:
     """Get mop life time left from Q10 dict data."""
-    if not isinstance(data, dict):
+    if isinstance(data, B01Props):
         # Q7 data - B01Props object
         return data.mop_life_time_left
     # Q10 data - dict from status.refresh()
-    status = data.get("dps", {}).get("101", {})
-    # Mop life time left - check common keys
-    # Could be in various keys depending on Q10 model
-    return status.get("33")  # Estimated key for mop time
-
+    # Mop life time not directly available in Q10 basic DP set
+    return None
 
 
 def _dock_error_value_fn(state: DeviceState) -> str | None:

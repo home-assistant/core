@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 from roborock.data import B01Props, RoborockStateCode, SCWindMapping, WorkStatusMapping
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 import voluptuous as vol
@@ -82,15 +83,23 @@ def _get_q10_status(data: dict[Any, Any] | B01Props) -> WorkStatusMapping | None
     if isinstance(data, B01Props):
         # Q7 data - B01Props object
         return data.status
-    # Q10 data - dict from status.refresh()
-    status = data.get("dps", {}).get("101", {})
-    # Status code is typically in key 1
-    status_code = status.get("1")
-    if status_code is not None:
-        for mapping in WorkStatusMapping:
-            if mapping.value == status_code:
-                return mapping
-    return None
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    status_code = data.get(B01_Q10_DP.STATUS)
+    if status_code is None:
+        return None
+
+    # Map YXDeviceState codes to WorkStatusMapping
+    # Status mapping from Q10 device codes to WorkStatusMapping
+    status_map = {
+        1: WorkStatusMapping.SWEEP_MOPING,  # Cleaning
+        2: WorkStatusMapping.WAITING_FOR_ORDERS,  # Idle/Waiting
+        3: WorkStatusMapping.PAUSED,  # Paused
+        4: WorkStatusMapping.CHARGING,  # Charging
+        5: WorkStatusMapping.DOCKING,  # Going to dock/returning
+        10: WorkStatusMapping.SWEEP_MOPING,  # Mopping
+    }
+
+    return status_map.get(status_code, WorkStatusMapping.WAITING_FOR_ORDERS)
 
 
 def _get_q10_wind_name(data: dict[Any, Any] | B01Props) -> str | None:
@@ -98,14 +107,13 @@ def _get_q10_wind_name(data: dict[Any, Any] | B01Props) -> str | None:
     if isinstance(data, B01Props):
         # Q7 data - B01Props object
         return data.wind_name
-    # Q10 data - dict from status.refresh()
-    status = data.get("dps", {}).get("101", {})
-    # Wind speed is typically in key 6
-    wind_speed = status.get("6")
-    if wind_speed is not None:
-        for mapping in SCWindMapping:
-            if mapping.value == wind_speed:
-                return mapping.name
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    fan_level = data.get(B01_Q10_DP.FUN_LEVEL)
+    if fan_level is not None:
+        # Map YXFanLevel code to SCWindMapping name
+        for yx_fan in YXFanLevel:
+            if yx_fan.code == fan_level:
+                return yx_fan.name
     return None
 
 
@@ -365,6 +373,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": "start_clean",
                 },
             ) from err
+        await self.coordinator.async_refresh()
 
     async def async_pause(self) -> None:
         """Pause the vacuum."""
@@ -378,6 +387,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": "pause_clean",
                 },
             ) from err
+        await self.coordinator.async_refresh()
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
@@ -391,6 +401,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": "stop_clean",
                 },
             ) from err
+        await self.coordinator.async_refresh()
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Send vacuum back to base."""
@@ -417,6 +428,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": "find_me",
                 },
             ) from err
+        await self.coordinator.async_refresh()
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
@@ -499,6 +511,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": "start_clean",
                 },
             ) from err
+        await self.coordinator.async_refresh()
 
     async def async_pause(self) -> None:
         """Pause the vacuum."""
@@ -512,6 +525,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": "pause_clean",
                 },
             ) from err
+        await self.coordinator.async_refresh()
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum."""
@@ -525,6 +539,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": "stop_clean",
                 },
             ) from err
+        await self.coordinator.async_refresh()
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Send vacuum back to base."""
@@ -538,6 +553,7 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": "return_to_dock",
                 },
             ) from err
+        await self.coordinator.async_refresh()
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate vacuum (not available for Q10)."""

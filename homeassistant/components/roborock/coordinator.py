@@ -10,6 +10,7 @@ from typing import Any, TypeVar
 from propcache.api import cached_property
 from roborock import B01Props
 from roborock.data import HomeDataScene
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP
 from roborock.devices.device import RoborockDevice
 from roborock.devices.traits.a01 import DyadApi, ZeoApi
 from roborock.devices.traits.b01 import Q7PropertiesApi
@@ -486,7 +487,9 @@ class RoborockWetDryVacUpdateCoordinator(
             ) from ex
 
 
-class RoborockDataUpdateCoordinatorB01(DataUpdateCoordinator[B01Props]):
+class RoborockDataUpdateCoordinatorB01(
+    DataUpdateCoordinator[B01Props | dict[B01_Q10_DP, Any]]
+):
     """Class to manage fetching data from the API for B01 devices."""
 
     config_entry: RoborockConfigEntry
@@ -593,7 +596,7 @@ class RoborockB01Q10UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
 
     async def _async_update_data(
         self,
-    ) -> B01Props:
+    ) -> B01Props | dict[B01_Q10_DP, Any]:
         try:
             data = await self.api.status.refresh()
         except RoborockException as ex:
