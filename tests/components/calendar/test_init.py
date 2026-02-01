@@ -13,10 +13,16 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
-from homeassistant.components.calendar import DOMAIN, SERVICE_GET_EVENTS
+from homeassistant.components.calendar import (
+    DOMAIN,
+    SERVICE_GET_EVENTS,
+    CalendarEntity,
+    CalendarEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -657,3 +663,56 @@ async def test_calendar_initial_color_none(
     # Entities 1 and 2 were created without an initial_color
     entity = test_entities[0]
     assert entity.get_initial_entity_options() is None
+
+
+@pytest.mark.parametrize(
+    ("description_color", "attr_color", "expected_color"),
+    [
+        # no description and no attr_initial_color
+        (UNDEFINED, UNDEFINED, None),
+        # no description and attr_initial_color "A"
+        (UNDEFINED, "#AAAAAA", "#AAAAAA"),
+        # no description and attr_initial_color None
+        (UNDEFINED, None, None),
+        # description setting the color "B", and no attr_initial_color
+        ("#BBBBBB", UNDEFINED, "#BBBBBB"),
+        # description setting the color "B", but overridden by attr_initial_color "A"
+        ("#BBBBBB", "#AAAAAA", "#AAAAAA"),
+        # description setting the color "B", but overridden by attr_initial_color None
+        ("#BBBBBB", None, None),
+    ],
+)
+async def test_calendar_initial_color_precedence(
+    description_color: str | None | object,
+    attr_color: str | None | object,
+    expected_color: str | None,
+) -> None:
+    """Test that _attr_initial_color takes precedence over entity_description."""
+
+    class TestCalendarEntity(CalendarEntity):
+        """Test entity for initial_color precedence tests."""
+
+        _attr_has_entity_name = True
+
+        def __init__(
+            self,
+            description_color: str | None | object,
+            attr_color: str | None | object,
+        ) -> None:
+            """Initialize entity."""
+            self._attr_name = "Test"
+            self._attr_unique_id = "test_precedence"
+
+            # Only set entity_description if description_color is not UNDEFINED
+            if description_color is not UNDEFINED:
+                self.entity_description = CalendarEntityDescription(
+                    key="test",
+                    initial_color=description_color,
+                )
+
+            # Only set _attr_initial_color if attr_color is not UNDEFINED
+            if attr_color is not UNDEFINED:
+                self._attr_initial_color = attr_color
+
+    entity = TestCalendarEntity(description_color, attr_color)
+    assert entity.initial_color == expected_color
