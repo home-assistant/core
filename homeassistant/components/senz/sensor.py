@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -71,7 +71,7 @@ class SENZSensor(CoordinatorEntity[SENZDataUpdateCoordinator], SensorEntity):
         """Init SENZ sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._thermostat = thermostat
+        self._serial_number = thermostat.serial_number
         self._attr_unique_id = f"{thermostat.serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, thermostat.serial_number)},
@@ -81,18 +81,14 @@ class SENZSensor(CoordinatorEntity[SENZDataUpdateCoordinator], SensorEntity):
             serial_number=thermostat.serial_number,
         )
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._thermostat = self.coordinator.data[self._thermostat.serial_number]
-        self.async_write_ha_state()
-
     @property
     def available(self) -> bool:
         """Return True if the thermostat is available."""
-        return super().available and self._thermostat.online
+        return super().available and self.coordinator.data[self._serial_number].online
 
     @property
     def native_value(self) -> str | float | int | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self._thermostat)
+        return self.entity_description.value_fn(
+            self.coordinator.data[self._serial_number]
+        )
