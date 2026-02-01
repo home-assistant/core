@@ -391,6 +391,7 @@ async def test_exception_handling_disk_sensor(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.freeze_time("2024-02-24 15:00:00", tz_offset=0)
+@pytest.mark.parametrize("exception_class", [FileNotFoundError, PermissionError])
 async def test_exception_handling_battery_sensor(
     hass: HomeAssistant,
     mock_psutil: Mock,
@@ -398,9 +399,10 @@ async def test_exception_handling_battery_sensor(
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
+    exception_class: type[Exception],
 ) -> None:
     """Test the battery failures."""
-    mock_psutil.sensors_battery.side_effect = FileNotFoundError(
+    mock_psutil.sensors_battery.side_effect = exception_class(
         "[Errno 2] No such file or directory: '/sys/class/power_supply'"
     )
     mock_config_entry.add_to_hass(hass)
