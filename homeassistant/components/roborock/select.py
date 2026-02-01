@@ -1,13 +1,12 @@
 """Support for Roborock select."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Protocol, cast
 
 from roborock import B01Props, CleanTypeMapping
 from roborock.data import RoborockDockDustCollectionModeCode, WaterLevelMapping
-from roborock.devices.traits.b01 import Q7PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.home import HomeTrait
 from roborock.devices.traits.v1.maps import MapsTrait
@@ -52,7 +51,48 @@ class RoborockSelectDescription(SelectEntityDescription):
     """Whether this entity is for the dock."""
 
 
-def _get_q10_water_level(data: dict) -> str | None:
+class _EnumOption(Protocol):
+    """Protocol for enum-like values with name/value attributes."""
+
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def value(self) -> str | int: ...
+
+
+class _B01SelectApi(Protocol):
+    """Protocol for B01 select API methods used by Q7/Q10."""
+
+    async def set_water_level(self, level: WaterLevelMapping) -> Any: ...
+
+    async def set_mode(self, mode: CleanTypeMapping) -> Any: ...
+
+
+def _enum_option_value(option: _EnumOption) -> str:
+    """Return a stable string value for enum-like options."""
+    if isinstance(option.value, str):
+        return option.value
+    return option.name.lower()
+
+
+def _map_enum_value(value: Any, mapping: Iterable[_EnumOption]) -> str | None:
+    """Map a raw value to a string option from a mapping enum."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        options = {_enum_option_value(option) for option in mapping}
+        if value in options:
+            return value
+        if value.isdigit():
+            value = int(value)
+    for option in mapping:
+        if option.value == value:
+            return _enum_option_value(option)
+    return None
+
+
+def _get_q10_water_level(data: B01Props | dict[Any, Any]) -> str | None:
     """Get water level from Q10 dict data."""
     if not isinstance(data, dict):
         # Q7 data - B01Props object
@@ -62,15 +102,10 @@ def _get_q10_water_level(data: dict) -> str | None:
     status = data.get("dps", {}).get("101", {})
     # Looking for water level indicator - typically key 26 in Q10
     water_level = status.get("26")
-    if water_level is not None:
-        # Map the numeric value to WaterLevelMapping
-        for mapping in WaterLevelMapping:
-            if mapping.value == water_level:
-                return str(water_level)
-    return None
+    return _map_enum_value(water_level, WaterLevelMapping)
 
 
-def _get_q10_cleaning_mode(data: dict) -> str | None:
+def _get_q10_cleaning_mode(data: B01Props | dict[Any, Any]) -> str | None:
     """Get cleaning mode from Q10 dict data."""
     if not isinstance(data, dict):
         # Q7 data - B01Props object
@@ -80,22 +115,20 @@ def _get_q10_cleaning_mode(data: dict) -> str | None:
     status = data.get("dps", {}).get("101", {})
     # Looking for mode indicator - typically key 25 in Q10
     mode = status.get("25")
-    if mode is not None:
-        return str(mode)
-    return None
+    return _map_enum_value(mode, CleanTypeMapping)
 
 
 @dataclass(frozen=True, kw_only=True)
 class RoborockB01SelectDescription(SelectEntityDescription):
     """Class to describe a Roborock B01 select entity."""
 
-    api_fn: Callable[[Q7PropertiesApi, str], Awaitable[Any]]
+    api_fn: Callable[[_B01SelectApi, str], Awaitable[Any]]
     """Function to call the API."""
 
     value_fn: Callable[[B01Props | dict], str | None]
     """Function to get the current value of the select entity."""
 
-    options_lambda: Callable[[Q7PropertiesApi], list[str] | None]
+    options_lambda: Callable[[object], list[str] | None]
     """Function to get all options of the select entity or returns None if not supported."""
 
 
@@ -107,7 +140,9 @@ B01_SELECT_DESCRIPTIONS: list[RoborockB01SelectDescription] = [
             WaterLevelMapping.from_value(value)
         ),
         value_fn=_get_q10_water_level,
-        options_lambda=lambda _: [option.value for option in WaterLevelMapping],
+        options_lambda=lambda _: [
+            _enum_option_value(option) for option in WaterLevelMapping
+        ],
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockB01SelectDescription(
@@ -115,7 +150,9 @@ B01_SELECT_DESCRIPTIONS: list[RoborockB01SelectDescription] = [
         translation_key="cleaning_mode",
         api_fn=lambda api, value: api.set_mode(CleanTypeMapping.from_value(value)),
         value_fn=_get_q10_cleaning_mode,
-        options_lambda=lambda _: list(CleanTypeMapping.keys()),
+        options_lambda=lambda _: [
+            _enum_option_value(option) for option in CleanTypeMapping
+        ],
         entity_category=EntityCategory.CONFIG,
     ),
 ]
@@ -225,7 +262,8 @@ class RoborockB01SelectEntity(RoborockCoordinatedEntityB01, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         try:
-            await self.entity_description.api_fn(self.coordinator.api, option)
+            api = cast(_B01SelectApi, self.coordinator.api)
+            await self.entity_description.api_fn(api, option)
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

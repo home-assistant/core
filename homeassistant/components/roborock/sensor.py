@@ -242,10 +242,18 @@ def _get_q10_vacuum_error(
         return None
     # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
     fault_code = data.get(B01_Q10_DP.FAULT)
-    if fault_code is not None:
-        # Return the fault code with proper type casting
-        if isinstance(fault_code, (int, float, str)):
-            return fault_code
+    if fault_code is None:
+        return None
+
+    options = set(RoborockErrorCode.keys())
+    if isinstance(fault_code, str) and fault_code in options:
+        return fault_code
+
+    for mapping in RoborockErrorCode:
+        if mapping.value == fault_code:
+            return mapping.name
+
+    if isinstance(fault_code, (int, float, str)):
         return str(fault_code)
     return None
 
