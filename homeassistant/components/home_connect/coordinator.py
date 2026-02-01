@@ -113,7 +113,6 @@ class HomeConnectRuntimeData:
             CALLBACK_TYPE, tuple[CALLBACK_TYPE, tuple[EventKey, ...]]
         ] = {}
         self.device_registry = dr.async_get(self.hass)
-        self._execution_tracker: list[float] = []
         self.appliance_coordinators = {}
 
     @callback
