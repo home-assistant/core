@@ -249,7 +249,7 @@ async def test_reauth_flow_success(
 async def test_reauth_flow_invalid_auth(
     hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test reauth flow with invalid token."""
+    """Test reauth flow with invalid token and recovery."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -273,3 +273,16 @@ async def test_reauth_flow_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "invalid_auth"}
+
+    # Now test that we can recover from the error
+    mock_hass_splunk.check.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_TOKEN: "new-valid-token"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_TOKEN] == "new-valid-token"
