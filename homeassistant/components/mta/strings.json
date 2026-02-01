@@ -34,40 +34,31 @@
   "entity": {
     "sensor": {
       "next_arrival": {
-        "name": "Next arrival",
-        "state_attributes": {
-          "destination": {
-            "name": "Destination"
-          },
-          "route": {
-            "name": "Route"
-          }
-        }
+        "name": "Next arrival"
+      },
+      "next_arrival_destination": {
+        "name": "Next arrival destination"
+      },
+      "next_arrival_route": {
+        "name": "Next arrival route"
       },
       "second_arrival": {
-        "name": "Second arrival",
-        "state_attributes": {
-          "destination": {
-            "name": "Destination"
-          },
-          "route": {
-            "name": "Route"
-          }
-        }
+        "name": "Second arrival"
       },
-      "stop_id": {
-        "name": "Stop ID"
+      "second_arrival_destination": {
+        "name": "Second arrival destination"
+      },
+      "second_arrival_route": {
+        "name": "Second arrival route"
       },
       "third_arrival": {
-        "name": "Third arrival",
-        "state_attributes": {
-          "destination": {
-            "name": "Destination"
-          },
-          "route": {
-            "name": "Route"
-          }
-        }
+        "name": "Third arrival"
+      },
+      "third_arrival_destination": {
+        "name": "Third arrival destination"
+      },
+      "third_arrival_route": {
+        "name": "Third arrival route"
       }
     }
   }

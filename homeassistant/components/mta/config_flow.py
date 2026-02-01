@@ -80,7 +80,7 @@ class MTAConfigFlow(ConfigFlow, domain=DOMAIN):
             # Test connection to real-time GTFS-RT feed (different from static GTFS used by get_stops)
             try:
                 await self._async_test_connection()
-            except Exception:  # noqa: BLE001
+            except MTAFeedError:
                 errors["base"] = "cannot_connect"
             else:
                 title = f"{self.data[CONF_LINE]} Line - {stop_name}"

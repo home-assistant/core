@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from pymta import MTAFeedError
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.components.mta.const import (
     CONF_LINE,
     CONF_STOP_ID,
@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry
 
 async def test_form(
     hass: HomeAssistant,
-    mock_subway_feed: tuple[MagicMock, MagicMock],
+    mock_subway_feed: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the complete config flow."""
@@ -59,7 +59,7 @@ async def test_form(
 
 async def test_form_already_configured(
     hass: HomeAssistant,
-    mock_subway_feed: tuple[MagicMock, MagicMock],
+    mock_subway_feed: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle already configured."""
@@ -84,15 +84,16 @@ async def test_form_already_configured(
 
 
 async def test_form_connection_error(
-    hass: HomeAssistant, mock_subway_feed: tuple[MagicMock, MagicMock]
+    hass: HomeAssistant,
+    mock_subway_feed: MagicMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test we handle connection errors."""
-    _, mock_config_feed = mock_subway_feed
-    mock_instance = mock_config_feed.return_value
-    mock_instance.get_arrivals.side_effect = Exception("Connection error")
+    """Test we handle connection errors and can recover."""
+    mock_instance = mock_subway_feed.return_value
+    mock_instance.get_arrivals.side_effect = MTAFeedError("Connection error")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -108,17 +109,28 @@ async def test_form_connection_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    # Test recovery - reset mock to succeed
+    mock_instance.get_arrivals.side_effect = None
+    mock_instance.get_arrivals.return_value = []
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_STOP_ID: "127S"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 async def test_form_cannot_get_stops(
-    hass: HomeAssistant, mock_subway_feed: tuple[MagicMock, MagicMock]
+    hass: HomeAssistant, mock_subway_feed: MagicMock
 ) -> None:
     """Test we abort when we cannot get stops."""
-    _, mock_config_feed = mock_subway_feed
-    mock_instance = mock_config_feed.return_value
+    mock_instance = mock_subway_feed.return_value
     mock_instance.get_stops.side_effect = MTAFeedError("Feed error")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -131,15 +143,14 @@ async def test_form_cannot_get_stops(
 
 
 async def test_form_no_stops_found(
-    hass: HomeAssistant, mock_subway_feed: tuple[MagicMock, MagicMock]
+    hass: HomeAssistant, mock_subway_feed: MagicMock
 ) -> None:
     """Test we abort when no stops are found."""
-    _, mock_config_feed = mock_subway_feed
-    mock_instance = mock_config_feed.return_value
+    mock_instance = mock_subway_feed.return_value
     mock_instance.get_stops.return_value = []
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(

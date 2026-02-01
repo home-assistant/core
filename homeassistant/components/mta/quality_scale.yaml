@@ -64,7 +64,9 @@ rules:
   dynamic-devices:
     status: exempt
     comment: Integration tracks a single configured stop, not dynamically discovered devices.
-  entity-category: done
+  entity-category:
+    status: exempt
+    comment: All entities are primary entities without specific categories.
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt

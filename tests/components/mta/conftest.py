@@ -38,7 +38,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_subway_feed() -> Generator[tuple[MagicMock, MagicMock]]:
+def mock_subway_feed() -> Generator[MagicMock]:
     """Create a mock SubwayFeed for both coordinator and config flow."""
     # Fixed arrival times: 5, 10, and 15 minutes after test frozen time (2023-10-21 00:00:00 UTC)
     mock_arrivals = [
@@ -78,20 +78,15 @@ def mock_subway_feed() -> Generator[tuple[MagicMock, MagicMock]]:
     with (
         patch(
             "homeassistant.components.mta.coordinator.SubwayFeed", autospec=True
-        ) as mock_coord_feed,
+        ) as mock_feed,
         patch(
-            "homeassistant.components.mta.config_flow.SubwayFeed", autospec=True
-        ) as mock_config_feed,
+            "homeassistant.components.mta.config_flow.SubwayFeed",
+            new=mock_feed,
+        ),
     ):
-        # Setup coordinator mock
-        mock_coord_instance = mock_coord_feed.return_value
-        mock_coord_feed.get_feed_id_for_route.return_value = "1"
-        mock_coord_instance.get_arrivals.return_value = mock_arrivals
+        mock_instance = mock_feed.return_value
+        mock_feed.get_feed_id_for_route.return_value = "1"
+        mock_instance.get_arrivals.return_value = mock_arrivals
+        mock_instance.get_stops.return_value = mock_stops
 
-        # Setup config flow mock
-        mock_config_instance = mock_config_feed.return_value
-        mock_config_feed.get_feed_id_for_route.return_value = "1"
-        mock_config_instance.get_arrivals.return_value = []
-        mock_config_instance.get_stops.return_value = mock_stops
-
-        yield (mock_coord_feed, mock_config_feed)
+        yield mock_feed
