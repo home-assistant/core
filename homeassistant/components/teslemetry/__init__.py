@@ -161,7 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             coordinator = TeslemetryVehicleDataCoordinator(
                 hass, entry, vehicle, product
             )
-            firmware = vehicle_metadata[vin].get("firmware", "Unknown")
+            firmware = vehicle_metadata[vin].get("firmware")
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},
                 manufacturer="Tesla",
@@ -375,28 +375,24 @@ def async_setup_energy_device(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Set up energy device with models, versions, and listeners."""
-    # Add energy device models
+    data = energysite.info_coordinator.data
     models = set()
-    for gateway in energysite.info_coordinator.data.get("components_gateways", []):
-        if gateway.get("part_name"):
-            models.add(gateway["part_name"])
-    for battery in energysite.info_coordinator.data.get("components_batteries", []):
-        if battery.get("part_name"):
-            models.add(battery["part_name"])
+    for component in (
+        *data.get("components_gateways", []),
+        *data.get("components_batteries", []),
+    ):
+        if part_name := component.get("part_name"):
+            models.add(part_name)
     if models:
         energysite.device["model"] = ", ".join(sorted(models))
 
-    # Add software version
-    if version := energysite.info_coordinator.data.get("version"):
+    if version := data.get("version"):
         energysite.device["sw_version"] = version
 
-    # Create the energy site device regardless of it having entities
-    # This is so users with a Wall Connector but without a Powerwall can make service calls
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id, **energysite.device
     )
 
-    # Register listener to update device sw_version when it changes
     entry.async_on_unload(
         energysite.info_coordinator.async_add_listener(
             create_energy_info_listener(
@@ -418,7 +414,6 @@ async def async_setup_stream(
         f"Prefer typed for {vehicle.vin}",
     )
 
-    # Register listener to update device sw_version when streaming updates
     entry.async_on_unload(
         vehicle.stream_vehicle.listen_Version(
             create_vehicle_streaming_listener(hass, vehicle.vin)
