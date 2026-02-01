@@ -24,6 +24,8 @@ from homeassistant.components.ntfy.notify import (
     ATTR_PRIORITY,
     ATTR_SEQUENCE_ID,
     ATTR_TAGS,
+    SERVICE_CLEAR,
+    SERVICE_DELETE,
     SERVICE_PUBLISH,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -171,10 +173,20 @@ async def test_send_message_validation_errors(
         )
 
 
+@pytest.mark.parametrize(
+    ("service", "call_method"),
+    [
+        (SERVICE_PUBLISH, "publish"),
+        (SERVICE_CLEAR, "clear"),
+        (SERVICE_DELETE, "delete"),
+    ],
+)
 async def test_send_message_reauth_flow(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_aiontfy: AsyncMock,
+    service: str,
+    call_method,
 ) -> None:
     """Test unauthorized exception initiates reauth flow."""
 
@@ -184,19 +196,15 @@ async def test_send_message_reauth_flow(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_aiontfy.publish.side_effect = (
+    getattr(mock_aiontfy, call_method).side_effect = (
         NtfyUnauthorizedAuthenticationError(40101, 401, "unauthorized"),
     )
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PUBLISH,
-            {
-                ATTR_ENTITY_ID: "notify.mytopic",
-                ATTR_MESSAGE: "triggered",
-                ATTR_TITLE: "test",
-            },
+            service,
+            {ATTR_ENTITY_ID: "notify.mytopic", ATTR_SEQUENCE_ID: "Mc3otamDNcpJ"},
             blocking=True,
         )
 
@@ -210,3 +218,129 @@ async def test_send_message_reauth_flow(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == config_entry.entry_id
+
+
+async def test_ntfy_clear(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+) -> None:
+    """Test dismiss a ntfy message via ntfy.clear action."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CLEAR,
+        {
+            ATTR_ENTITY_ID: "notify.mytopic",
+            ATTR_SEQUENCE_ID: "Mc3otamDNcpJ",
+        },
+        blocking=True,
+    )
+
+    mock_aiontfy.clear.assert_called_once_with("mytopic", "Mc3otamDNcpJ")
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        NtfyException,
+        NtfyUnauthorizedAuthenticationError(40101, 401, "unauthorized"),
+    ],
+)
+async def test_clear_exception(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+    exception: Exception,
+) -> None:
+    """Test clear message exceptions."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    mock_aiontfy.clear.side_effect = exception
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLEAR,
+            {
+                ATTR_ENTITY_ID: "notify.mytopic",
+                ATTR_SEQUENCE_ID: "Mc3otamDNcpJ",
+            },
+            blocking=True,
+        )
+
+    mock_aiontfy.clear.assert_called_once_with("mytopic", "Mc3otamDNcpJ")
+
+
+async def test_ntfy_delete(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+) -> None:
+    """Test delete a ntfy message via ntfy.delete action."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_DELETE,
+        {
+            ATTR_ENTITY_ID: "notify.mytopic",
+            ATTR_SEQUENCE_ID: "Mc3otamDNcpJ",
+        },
+        blocking=True,
+    )
+
+    mock_aiontfy.delete.assert_called_once_with("mytopic", "Mc3otamDNcpJ")
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        NtfyException,
+        NtfyUnauthorizedAuthenticationError(40101, 401, "unauthorized"),
+    ],
+)
+async def test_delete_exception(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_aiontfy: AsyncMock,
+    exception: Exception,
+) -> None:
+    """Test delete message exceptions."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    mock_aiontfy.delete.side_effect = exception
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DELETE,
+            {
+                ATTR_ENTITY_ID: "notify.mytopic",
+                ATTR_SEQUENCE_ID: "Mc3otamDNcpJ",
+            },
+            blocking=True,
+        )
+
+    mock_aiontfy.delete.assert_called_once_with("mytopic", "Mc3otamDNcpJ")

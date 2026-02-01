@@ -24,7 +24,7 @@ from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES, MEDIA_SOURCE_DATA
 from .error import Unresolvable
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
-MAX_UPLOAD_SIZE = 1024 * 1024 * 10
+MAX_UPLOAD_SIZE = 1024 * 1024 * 20
 LOGGER = logging.getLogger(__name__)
 
 
