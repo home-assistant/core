@@ -450,11 +450,15 @@
               "max": "[%key:component::roborock::entity::select::mop_intensity::state::max%]",
               "max_plus": "Max plus",
               "medium": "[%key:common::state::medium%]",
+              "normal": "Normal",
               "off": "[%key:common::state::off%]",
               "quiet": "Quiet",
+              "quite": "Quiet",
               "silent": "Silent",
               "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]",
               "standard": "[%key:component::roborock::entity::select::mop_mode::state::standard%]",
+              "strong": "Strong",
+              "super": "Super",
               "turbo": "Turbo"
             }
           }

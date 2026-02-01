@@ -110,10 +110,10 @@ def _get_q10_wind_name(data: dict[Any, Any] | B01Props) -> str | None:
     # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
     fan_level = data.get(B01_Q10_DP.FUN_LEVEL)
     if fan_level is not None:
-        # Map YXFanLevel code to SCWindMapping name
+        # Map YXFanLevel code to value (e.g., "quite", "normal", "strong", "max")
         for yx_fan in YXFanLevel:
             if yx_fan.code == fan_level:
-                return yx_fan.name
+                return yx_fan.value
     return None
 
 
@@ -433,9 +433,8 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
         try:
-            await self.coordinator.api.set_fan_speed(
-                SCWindMapping.from_value(fan_speed)
-            )
+            fan_level = SCWindMapping.from_value(fan_speed)
+            await self.coordinator.api.set_fan_speed(fan_level)
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -444,6 +443,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
                     "command": "set_fan_speed",
                 },
             ) from err
+        await self.coordinator.async_refresh()
 
     async def async_send_command(
         self,
@@ -472,11 +472,22 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
         VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.RETURN_HOME
+        | VacuumEntityFeature.FAN_SPEED
+        | VacuumEntityFeature.LOCATE
+        | VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.STATE
         | VacuumEntityFeature.START
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
+    # Q10 uses YXFanLevel: quite, normal, strong, max (not super - returns code 8)
+    _attr_fan_speed_list = [
+        YXFanLevel.QUITE.value,
+        YXFanLevel.NORMAL.value,
+        YXFanLevel.STRONG.value,
+        YXFanLevel.MAX.value,
+        YXFanLevel.SUPER.value,
+    ]
     coordinator: RoborockB01Q10UpdateCoordinator
 
     def __init__(
@@ -498,6 +509,11 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
         if status is not None:
             return Q7_STATE_CODE_TO_STATE.get(status)
         return None
+
+    @property
+    def fan_speed(self) -> str | None:
+        """Return the current fan speed."""
+        return _get_q10_wind_name(self.coordinator.data)
 
     async def async_start(self) -> None:
         """Start the vacuum."""
@@ -563,11 +579,22 @@ class RoborockQ10Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
         )
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
-        """Set vacuum fan speed (not available for Q10)."""
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="command_not_supported",
-        )
+        """Set vacuum fan speed."""
+        try:
+            fan_level = YXFanLevel.from_value(fan_speed)
+            await self.coordinator.api.command.send(
+                command=B01_Q10_DP.FUN_LEVEL,
+                params=fan_level.code,
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "set_fan_speed",
+                },
+            ) from err
+        await self.coordinator.async_refresh()
 
     async def async_send_command(
         self,
