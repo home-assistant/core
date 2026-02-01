@@ -106,7 +106,7 @@ class MusicAssistantPlayerOptionEntity(MusicAssistantEntity):
     async def async_on_update(self) -> None:
         """Handle player updates."""
         if player := self.mass.players.get(self.player_id):
-            for option in player.player_options:
+            for option in player.options:
                 if option.id == self.mass_option_id:
                     self.on_player_option_update(option)
                     break

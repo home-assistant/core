@@ -30,7 +30,7 @@ async def async_setup_entry(
         if player is None:
             return
         entities: list[MusicAssistantPlayerConfigSwitch] = []
-        for player_option in player.player_options:
+        for player_option in player.options:
             if (
                 not player_option.read_only
                 and player_option.type == PlayerOptionType.BOOLEAN
@@ -54,16 +54,12 @@ class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchE
     @catch_musicassistant_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Handle turn on command."""
-        await self.mass.players.set_player_option(
-            self.player_id, self.mass_option_id, True
-        )
+        await self.mass.players.set_option(self.player_id, self.mass_option_id, True)
 
     @catch_musicassistant_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Handle turn on command."""
-        await self.mass.players.set_player_option(
-            self.player_id, self.mass_option_id, False
-        )
+        await self.mass.players.set_option(self.player_id, self.mass_option_id, False)
 
     @property
     def is_on(self) -> bool:

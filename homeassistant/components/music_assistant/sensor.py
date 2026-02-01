@@ -28,7 +28,7 @@ async def async_setup_entry(
         if player is None:
             return
         entities: list[MusicAssistantPlayerConfigSensor] = []
-        for player_option in player.player_options:
+        for player_option in player.options:
             if player_option.read_only:
                 entities.extend(
                     [

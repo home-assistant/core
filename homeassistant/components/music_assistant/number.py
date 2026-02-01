@@ -28,7 +28,7 @@ async def async_setup_entry(
         if player is None:
             return
         entities: list[MusicAssistantPlayerConfigNumber] = []
-        for player_option in player.player_options:
+        for player_option in player.options:
             if (
                 not player_option.read_only
                 and player_option.type == PlayerOptionType.NUMBER
@@ -58,7 +58,7 @@ class MusicAssistantPlayerConfigNumber(MusicAssistantPlayerOptionEntity, NumberE
     @catch_musicassistant_error
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
-        await self.mass.players.set_player_option(
+        await self.mass.players.set_option(
             self.player_id, self.mass_option_id, int(value)
         )
 

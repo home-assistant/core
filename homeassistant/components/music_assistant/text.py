@@ -27,7 +27,7 @@ async def async_setup_entry(
         if player is None:
             return
         entities: list[MusicAssistantPlayerConfigText] = []
-        for player_option in player.player_options:
+        for player_option in player.options:
             if (
                 not player_option.read_only
                 and player_option.type == PlayerOptionType.TEXT
@@ -65,6 +65,4 @@ class MusicAssistantPlayerConfigText(MusicAssistantPlayerOptionEntity, TextEntit
 
     async def async_set_value(self, value: str) -> None:
         """Set text value."""
-        await self.mass.players.set_player_option(
-            self.player_id, self.mass_option_id, value
-        )
+        await self.mass.players.set_option(self.player_id, self.mass_option_id, value)

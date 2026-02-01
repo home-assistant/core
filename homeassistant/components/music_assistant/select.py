@@ -28,10 +28,10 @@ async def async_setup_entry(
         if player is None:
             return
         entities: list[MusicAssistantPlayerConfigSelect] = []
-        for player_option in player.player_options:
+        for player_option in player.options:
             if (
                 not player_option.read_only
-                and player_option.type == PlayerOptionType.CHOICES
+                and player_option.type == PlayerOptionType.OPTIONS
             ):
                 entities.extend(
                     [
@@ -54,9 +54,9 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
     ) -> None:
         """Initialize MusicAssistantPlayerConfigSelect."""
         self._choice_name_id_mapping: dict[str, str] = {}
-        if player_option.choices is not None:
+        if player_option.options is not None:
             self._choice_name_id_mapping = {
-                choice.name: choice.id for choice in player_option.choices
+                choice.name: choice.id for choice in player_option.options
             }
             self._attr_options = list(self._choice_name_id_mapping.keys())
         super().__init__(mass, player_id, player_option)
@@ -86,6 +86,6 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         if _option_id := self._choice_name_id_mapping.get(option):
-            await self.mass.players.set_player_option(
+            await self.mass.players.set_option(
                 self.player_id, self.mass_option_id, _option_id
             )
