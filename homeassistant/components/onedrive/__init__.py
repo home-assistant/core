@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from html import unescape
-from json import loads
+from json import dumps, loads
 import logging
 from typing import cast
 
@@ -117,8 +117,6 @@ async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -
     Version 1: Backup metadata was stored in the backup file's description field.
     Version 2: Backup metadata is stored in a separate .metadata.json file.
     """
-    from json import dumps  # noqa: PLC0415
-
     files = await client.list_drive_items(backup_folder_id)
     for file in files:
         if file.description and '"metadata_version": 1' in (
