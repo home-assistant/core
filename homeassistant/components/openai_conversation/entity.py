@@ -94,6 +94,7 @@ from .const import (
     RECOMMENDED_VERBOSITY,
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
     RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
+    UNSUPPORTED_EXTENDED_CACHE_RETENTION_MODELS,
 )
 
 if TYPE_CHECKING:
@@ -487,8 +488,6 @@ class OpenAIBaseLLMEntity(Entity):
             model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
             input=messages,
             max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-            top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-            temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
             user=chat_log.conversation_id,
             store=False,
             stream=True,
@@ -505,12 +504,23 @@ class OpenAIBaseLLMEntity(Entity):
             }
             model_args["include"] = ["reasoning.encrypted_content"]
 
+        if (
+            not model_args["model"].startswith("gpt-5")
+            or model_args["reasoning"]["effort"] == "none"  # type: ignore[index]
+        ):
+            model_args["top_p"] = options.get(CONF_TOP_P, RECOMMENDED_TOP_P)
+            model_args["temperature"] = options.get(
+                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+            )
+
         if model_args["model"].startswith("gpt-5"):
             model_args["text"] = {
                 "verbosity": options.get(CONF_VERBOSITY, RECOMMENDED_VERBOSITY)
             }
 
-        if model_args["model"].startswith("gpt-5.1"):
+        if not model_args["model"].startswith(
+            tuple(UNSUPPORTED_EXTENDED_CACHE_RETENTION_MODELS)
+        ):
             model_args["prompt_cache_retention"] = "24h"
 
         tools: list[ToolParam] = []

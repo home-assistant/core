@@ -54,6 +54,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -137,6 +138,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -170,6 +172,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
       'original_device_class': None,
@@ -266,6 +269,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -299,6 +303,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
       'original_device_class': None,
@@ -395,6 +400,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -428,6 +434,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
       'original_device_class': None,
@@ -468,6 +475,80 @@
     'last_updated': <ANY>,
     'state': 'on',
   })
+# ---
+# name: test_switch_state[CS158-AF Air Fryer Cooking][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Cooking',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Cooking',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[CS158-AF Air Fryer Cooking][entities]
+  list([
+  ])
+# ---
+# name: test_switch_state[CS158-AF Air Fryer Standby][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Standby',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Standby',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[CS158-AF Air Fryer Standby][entities]
+  list([
+  ])
 # ---
 # name: test_switch_state[Dimmable Light][devices]
   list([
@@ -598,6 +679,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -611,7 +693,54 @@
       'unique_id': '200s-humidifier4321-display',
       'unit_of_measurement': None,
     }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.humidifier_200s_auto_off',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Auto Off',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Auto Off',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'auto_off_config',
+      'unique_id': '200s-humidifier4321-auto_off_config',
+      'unit_of_measurement': None,
+    }),
   ])
+# ---
+# name: test_switch_state[Humidifier 200s][switch.humidifier_200s_auto_off]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humidifier 200s Auto Off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_200s_auto_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
 # ---
 # name: test_switch_state[Humidifier 200s][switch.humidifier_200s_display]
   StateSnapshot({
@@ -681,6 +810,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -714,6 +844,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Child lock',
       'options': dict({
       }),
       'original_device_class': None,
@@ -727,7 +858,54 @@
       'unique_id': '6000s-child_lock',
       'unit_of_measurement': None,
     }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.humidifier_6000s_auto_off',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Auto Off',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Auto Off',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'auto_off_config',
+      'unique_id': '6000s-auto_off_config',
+      'unit_of_measurement': None,
+    }),
   ])
+# ---
+# name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_auto_off]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humidifier 6000s Auto Off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_6000s_auto_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
 # ---
 # name: test_switch_state[Humidifier 6000s][switch.humidifier_6000s_child_lock]
   StateSnapshot({
@@ -810,6 +988,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -823,7 +1002,54 @@
       'unique_id': '600s-humidifier-display',
       'unit_of_measurement': None,
     }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.humidifier_600s_auto_off',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Auto Off',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Auto Off',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'auto_off_config',
+      'unique_id': '600s-humidifier-auto_off_config',
+      'unit_of_measurement': None,
+    }),
   ])
+# ---
+# name: test_switch_state[Humidifier 600S][switch.humidifier_600s_auto_off]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humidifier 600S Auto Off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.humidifier_600s_auto_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
 # ---
 # name: test_switch_state[Humidifier 600S][switch.humidifier_600s_display]
   StateSnapshot({
@@ -893,6 +1119,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': None,
       'options': dict({
       }),
       'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -977,6 +1204,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Display',
       'options': dict({
       }),
       'original_device_class': None,
@@ -1097,6 +1325,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': None,
       'options': dict({
       }),
       'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,

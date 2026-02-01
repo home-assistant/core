@@ -50,8 +50,20 @@
       }
     },
     "sensor": {
+      "audio_issues": {
+        "name": "Audio issues",
+        "state": {
+          "measurement": "issues"
+        }
+      },
       "available_requests": {
         "name": "Available requests"
+      },
+      "closed_issues": {
+        "name": "Closed issues",
+        "state": {
+          "measurement": "issues"
+        }
       },
       "declined_requests": {
         "name": "Declined requests"
@@ -59,17 +71,41 @@
       "movie_requests": {
         "name": "Movie requests"
       },
+      "open_issues": {
+        "name": "Open issues",
+        "state": {
+          "measurement": "issues"
+        }
+      },
       "pending_requests": {
         "name": "Pending requests"
       },
       "processing_requests": {
         "name": "Processing requests"
       },
+      "subtitle_issues": {
+        "name": "Subtitle issues",
+        "state": {
+          "measurement": "issues"
+        }
+      },
+      "total_issues": {
+        "name": "Total issues",
+        "state": {
+          "measurement": "issues"
+        }
+      },
       "total_requests": {
         "name": "Total requests"
       },
       "tv_requests": {
         "name": "TV requests"
+      },
+      "video_issues": {
+        "name": "Video issues",
+        "state": {
+          "measurement": "issues"
+        }
       }
     }
   },

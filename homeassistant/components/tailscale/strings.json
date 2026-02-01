@@ -29,9 +29,6 @@
       "client": {
         "name": "Client"
       },
-      "client_supports_hair_pinning": {
-        "name": "Supports hairpinning"
-      },
       "client_supports_ipv6": {
         "name": "Supports IPv6"
       },

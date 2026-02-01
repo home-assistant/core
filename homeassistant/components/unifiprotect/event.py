@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Any
 
+from uiprotect.data import ModelType
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
 
 from homeassistant.components.event import (
@@ -31,7 +32,6 @@ from .const import (
     VEHICLE_EVENT_DELAY_SECONDS,
 )
 from .data import (
-    Camera,
     EventType,
     ProtectAdoptableDeviceModel,
     ProtectData,
@@ -39,6 +39,8 @@ from .data import (
     UFPConfigEntry,
 )
 from .entity import EventEntityMixin, ProtectDeviceEntity, ProtectEventMixin
+
+PARALLEL_UPDATES = 0
 
 
 # Select best thumbnail
@@ -363,7 +365,6 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         key="doorbell",
         translation_key="doorbell",
         device_class=EventDeviceClass.DOORBELL,
-        icon="mdi:doorbell-video",
         ufp_required_field="feature_flags.is_doorbell",
         ufp_event_obj="last_ring_event",
         event_types=[EVENT_TYPE_DOORBELL_RING],
@@ -372,7 +373,6 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="nfc",
         translation_key="nfc",
-        icon="mdi:nfc",
         ufp_required_field="feature_flags.support_nfc",
         ufp_event_obj="last_nfc_card_scanned_event",
         event_types=[EVENT_TYPE_NFC_SCANNED],
@@ -381,7 +381,6 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="fingerprint",
         translation_key="fingerprint",
-        icon="mdi:fingerprint",
         ufp_required_field="feature_flags.has_fingerprint_sensor",
         ufp_event_obj="last_fingerprint_identified_event",
         event_types=[
@@ -393,7 +392,6 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="vehicle",
         translation_key="vehicle",
-        icon="mdi:car",
         ufp_required_field="feature_flags.has_smart_detect",
         ufp_event_obj="last_smart_detect_event",
         event_types=[EVENT_TYPE_VEHICLE_DETECTED],
@@ -425,7 +423,8 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if device.is_adopted and isinstance(device, Camera):
+        # AiPort inherits from Camera but should not create camera-specific entities
+        if device.is_adopted and device.model is ModelType.CAMERA:
             async_add_entities(_async_event_entities(data, ufp_device=device))
 
     data.async_subscribe_adopt(_add_new_device)

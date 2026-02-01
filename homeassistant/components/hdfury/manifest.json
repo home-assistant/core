@@ -1,0 +1,16 @@
+{
+  "domain": "hdfury",
+  "name": "HDFury",
+  "codeowners": ["@glenndehaan"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hdfury",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "gold",
+  "requirements": ["hdfury==1.4.2"],
+  "zeroconf": [
+    { "name": "diva-*", "type": "_http._tcp.local." },
+    { "name": "vertex2-*", "type": "_http._tcp.local." },
+    { "name": "vrroom-*", "type": "_http._tcp.local." }
+  ]
+}

@@ -72,7 +72,7 @@
       "title": "The blinker fluid is empty and needs to be refilled"
     },
     "special_repair": {
-      "description": "This is a special repair created by a preview feature! This demonstrates how lab features can interact with the Home Assistant repair system. You can disable this by turning off the kitchen sink special repair feature in Settings > System > Labs.",
+      "description": "This is a special repair created by a preview feature! This demonstrates how Labs features can interact with the Home Assistant repair system. You can disable this by turning off the kitchen sink special repair feature in Settings > System > Labs.",
       "title": "Special repair feature preview"
     },
     "transmogrifier_deprecated": {
@@ -109,7 +109,7 @@
   },
   "preview_features": {
     "special_repair": {
-      "description": "Creates a **special repair issue** when enabled.\n\nThis demonstrates how lab features can interact with other Home Assistant integrations.",
+      "description": "Creates a **special repair issue** when enabled.\n\nThis demonstrates how Labs features can interact with other Home Assistant integrations.",
       "disable_confirmation": "This will remove the special repair issue. Don't worry, this is just a demonstration feature.",
       "enable_confirmation": "This will create a special repair issue to demonstrate Labs preview features. This is just an example and won't affect your actual system.",
       "name": "Special repair"

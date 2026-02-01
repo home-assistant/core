@@ -309,12 +309,12 @@
           'type': 'text',
         }),
         dict({
-          'content': '{"success": true, "response": "Lights are off."}',
+          'content': '{"success":true,"response":"Lights are off."}',
           'tool_use_id': 'mock-tool-call-id',
           'type': 'tool_result',
         }),
         dict({
-          'content': '{"success": false, "response": "Not enough milk."}',
+          'content': '{"success":false,"response":"Not enough milk."}',
           'tool_use_id': 'mock-tool-call-id-2',
           'type': 'tool_result',
         }),
@@ -442,6 +442,62 @@
             
             Those are the main headlines making news today.
           ''',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': 'Are you sure?',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'Yes, I am sure!',
+          'type': 'text',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+  ])
+# ---
+# name: test_history_conversion[content6]
+  list([
+    dict({
+      'content': 'What time is it?',
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'Let me check the time for you.',
+          'type': 'text',
+        }),
+        dict({
+          'id': 'mock-tool-call-id',
+          'input': dict({
+          }),
+          'name': 'GetCurrentTime',
+          'type': 'tool_use',
+        }),
+      ]),
+      'role': 'assistant',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'content': '{"speech_slots":{"time":"14:30:00"},"message":"Current time retrieved"}',
+          'tool_use_id': 'mock-tool-call-id',
+          'type': 'tool_result',
+        }),
+      ]),
+      'role': 'user',
+    }),
+    dict({
+      'content': list([
+        dict({
+          'text': 'It is currently 2:30 PM.',
           'type': 'text',
         }),
       ]),

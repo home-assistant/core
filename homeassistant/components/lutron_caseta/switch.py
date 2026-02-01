@@ -98,7 +98,11 @@ class LutronCasetaSmartAwaySwitch(LutronCasetaEntity, SwitchEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
-        self._smartbridge.add_smart_away_subscriber(self._handle_bridge_update)
+        self._smartbridge.add_smart_away_subscriber(self._handle_smart_away_update)
+
+    def _handle_smart_away_update(self, smart_away_state: str | None = None) -> None:
+        """Handle updated smart away state from the bridge."""
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn Smart Away on."""
