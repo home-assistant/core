@@ -72,7 +72,7 @@ async def test_entities_update_over_time(
 
     # Cannot use the evohome fixture here, as need to set dtm first
     #  - some extended state attrs are relative the current time
-    freezer.move_to("2024-07-10T05:30:00Z")  # a Wednesday
+    freezer.move_to("2024-07-10T05:30:00Z")
 
     # stay inside this context to have the mocked RESTful API
     async for _ in setup_evohome(hass, config, install=install):
