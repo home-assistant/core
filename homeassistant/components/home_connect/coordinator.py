@@ -94,7 +94,10 @@ class HomeConnectApplianceData:
 
 
 class HomeConnectRuntimeData:
-    """Class to manage Home Connect's integration runtime data."""
+    """Class to manage Home Connect's integration runtime data.
+
+    It also handles the API server-sent events.
+    """
 
     config_entry: HomeConnectConfigEntry
     appliance_coordinators: dict[str, HomeConnectApplianceCoordinator]
