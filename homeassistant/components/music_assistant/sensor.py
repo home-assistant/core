@@ -6,7 +6,7 @@ from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.player import PlayerOption
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -52,6 +52,9 @@ class MusicAssistantPlayerConfigSensor(MusicAssistantPlayerOptionEntity, SensorE
         """Initialize MusicAssistantPlayerConfigSensor."""
         self.player_config_type = player_option.type
         super().__init__(mass, player_id, player_option)
+
+        # overwrite default of MusicAssistantPlayerOptionEntity
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""

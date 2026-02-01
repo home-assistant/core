@@ -8,6 +8,7 @@ from music_assistant_models.enums import EventType
 from music_assistant_models.event import MassEvent
 from music_assistant_models.player import Player, PlayerOption
 
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -96,6 +97,8 @@ class MusicAssistantPlayerOptionEntity(MusicAssistantEntity):
         self.mass_value = player_option.value
         self.mass_option_id = player_option.id
         super().__init__(mass, player_id)
+
+        self._attr_entity_category = EntityCategory.CONFIG
 
         self.on_player_option_update(player_option)
 
