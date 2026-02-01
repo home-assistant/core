@@ -67,6 +67,9 @@
       }
     },
     "button": {
+      "empty_dustbin": {
+        "name": "Empty dustbin"
+      },
       "reset_air_filter_consumable": {
         "name": "Reset air filter consumable"
       },
