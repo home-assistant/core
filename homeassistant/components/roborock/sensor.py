@@ -160,6 +160,96 @@ def _get_q10_battery(
     return data.get(B01_Q10_DP.BATTERY)
 
 
+def _get_q10_cleaning_time(
+    data: B01Props | dict[Any, Any],
+) -> str | int | float | None:
+    """Get cleaning time from Q10 dict data."""
+    if isinstance(data, B01Props):
+        # Q7 data - B01Props object
+        # Not directly available in Q7 B01Props
+        return None
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    return data.get(B01_Q10_DP.CLEAN_TIME)
+
+
+def _get_q10_total_cleaning_time(
+    data: B01Props | dict[Any, Any],
+) -> str | int | float | None:
+    """Get total cleaning time from Q10 dict data."""
+    if isinstance(data, B01Props):
+        # Q7 data - B01Props object
+        # Not directly available in Q7 B01Props
+        return None
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    return data.get(B01_Q10_DP.TOTAL_CLEAN_TIME)
+
+
+def _get_q10_total_cleaning_count(
+    data: B01Props | dict[Any, Any],
+) -> str | int | float | None:
+    """Get total cleaning count from Q10 dict data."""
+    if isinstance(data, B01Props):
+        # Q7 data - B01Props object
+        # Not directly available in Q7 B01Props
+        return None
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    return data.get(B01_Q10_DP.TOTAL_CLEAN_COUNT)
+
+
+def _get_q10_cleaning_area(
+    data: B01Props | dict[Any, Any],
+) -> str | int | float | None:
+    """Get cleaning area from Q10 dict data."""
+    if isinstance(data, B01Props):
+        # Q7 data - B01Props object
+        # Not directly available in Q7 B01Props
+        return None
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    return data.get(B01_Q10_DP.CLEAN_AREA)
+
+
+def _get_q10_total_cleaning_area(
+    data: B01Props | dict[Any, Any],
+) -> str | int | float | None:
+    """Get total cleaning area from Q10 dict data."""
+    if isinstance(data, B01Props):
+        # Q7 data - B01Props object
+        # Not directly available in Q7 B01Props
+        return None
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    return data.get(B01_Q10_DP.TOTAL_CLEAN_AREA)
+
+
+def _get_q10_clean_percent(
+    data: B01Props | dict[Any, Any],
+) -> str | int | float | None:
+    """Get cleaning progress percentage from Q10 dict data."""
+    if isinstance(data, B01Props):
+        # Q7 data - B01Props object
+        # Not directly available in Q7 B01Props
+        return None
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    return data.get(B01_Q10_DP.CLEAN_PROGESS)
+
+
+def _get_q10_vacuum_error(
+    data: B01Props | dict[Any, Any],
+) -> str | int | float | None:
+    """Get vacuum error from Q10 dict data."""
+    if isinstance(data, B01Props):
+        # Q7 data - B01Props object
+        # Not directly available in Q7 B01Props
+        return None
+    # Q10 data - dict from status.refresh() - uses B01_Q10_DP keys
+    fault_code = data.get(B01_Q10_DP.FAULT)
+    if fault_code is not None:
+        # Return the fault code with proper type casting
+        if isinstance(fault_code, (int, float, str)):
+            return fault_code
+        return str(fault_code)
+    return None
+
+
 def _dock_error_value_fn(state: DeviceState) -> str | None:
     if (
         status := state.status.dock_error_status
@@ -482,6 +572,60 @@ Q7_B01_SENSOR_DESCRIPTIONS = [
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionB01(
+        key="cleaning_time",
+        value_fn=_get_q10_cleaning_time,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        translation_key="cleaning_time",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionB01(
+        key="total_cleaning_time",
+        value_fn=_get_q10_total_cleaning_time,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        device_class=SensorDeviceClass.DURATION,
+        translation_key="total_cleaning_time",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionB01(
+        key="total_cleaning_count",
+        value_fn=_get_q10_total_cleaning_count,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        translation_key="total_cleaning_count",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionB01(
+        key="cleaning_area",
+        value_fn=_get_q10_cleaning_area,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
+        translation_key="cleaning_area",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionB01(
+        key="total_cleaning_area",
+        value_fn=_get_q10_total_cleaning_area,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
+        translation_key="total_cleaning_area",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionB01(
+        key="clean_percent",
+        value_fn=_get_q10_clean_percent,
+        native_unit_of_measurement=PERCENTAGE,
+        translation_key="clean_percent",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescriptionB01(
+        key="vacuum_error",
+        value_fn=_get_q10_vacuum_error,
+        device_class=SensorDeviceClass.ENUM,
+        translation_key="vacuum_error",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=RoborockErrorCode.keys(),
     ),
 ]
 
