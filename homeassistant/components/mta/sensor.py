@@ -100,7 +100,8 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        MTASensor(coordinator, entry, description) for description in SENSOR_DESCRIPTIONS
+        MTASensor(coordinator, entry, description)
+        for description in SENSOR_DESCRIPTIONS
     )
 
 
@@ -141,4 +142,6 @@ class MTASensor(CoordinatorEntity[MTADataUpdateCoordinator], SensorEntity):
         if len(arrivals) <= self.entity_description.arrival_index:
             return None
 
-        return self.entity_description.value_fn(arrivals[self.entity_description.arrival_index])
+        return self.entity_description.value_fn(
+            arrivals[self.entity_description.arrival_index]
+        )

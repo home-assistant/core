@@ -4,13 +4,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 from pymta import MTAFeedError
 
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.components.mta.const import (
     CONF_LINE,
     CONF_STOP_ID,
     CONF_STOP_NAME,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -33,8 +33,7 @@ async def test_form(
 
     # Select line
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_LINE: "1"}
+        result["flow_id"], {CONF_LINE: "1"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "stop"
