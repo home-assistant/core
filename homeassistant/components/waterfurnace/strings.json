@@ -41,13 +41,13 @@
         "name": "Compressor power"
       },
       "entering_water_temp": {
-        "name": "Loop temp"
+        "name": "Loop temperature"
       },
       "fan_power": {
         "name": "Fan power"
       },
       "leaving_air_temp": {
-        "name": "Leaving air"
+        "name": "Leaving air temperature"
       },
       "loop_pump_power": {
         "name": "Loop pump power"
@@ -56,7 +56,7 @@
         "name": "Furnace mode"
       },
       "room_temp": {
-        "name": "Room temp"
+        "name": "Room temperature"
       },
       "total_unit_power": {
         "name": "Total power"
@@ -65,7 +65,7 @@
         "name": "Active setpoint"
       },
       "tstat_humid_setpoint": {
-        "name": "Humidity set point"
+        "name": "Humidity setpoint"
       }
     }
   },
