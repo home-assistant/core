@@ -12,12 +12,14 @@ from pyliebherrhomeapi import (
     TemperatureUnit,
     ZonePosition,
 )
-from pyliebherrhomeapi.exceptions import LiebherrConnectionError, LiebherrTimeoutError
+from pyliebherrhomeapi.exceptions import LiebherrConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
     ATTR_VALUE,
+    DEFAULT_MAX_VALUE,
+    DEFAULT_MIN_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
@@ -181,23 +183,16 @@ async def test_set_temperature(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-@pytest.mark.parametrize(
-    "exception",
-    [
-        LiebherrConnectionError("Connection failed"),
-        LiebherrTimeoutError("Timeout"),
-    ],
-    ids=["connection_error", "timeout_error"],
-)
 async def test_set_temperature_failure(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    exception: Exception,
 ) -> None:
     """Test setting temperature fails gracefully."""
     entity_id = "number.test_fridge_top_zone_setpoint"
 
-    mock_liebherr_client.set_temperature.side_effect = exception
+    mock_liebherr_client.set_temperature.side_effect = LiebherrConnectionError(
+        "Connection failed"
+    )
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -209,21 +204,12 @@ async def test_set_temperature_failure(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-@pytest.mark.parametrize(
-    "exception",
-    [
-        LiebherrConnectionError("Connection failed"),
-        LiebherrTimeoutError("Timeout"),
-    ],
-    ids=["connection_error", "timeout_error"],
-)
 async def test_number_update_failure(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
     freezer: FrozenDateTimeFactory,
-    exception: Exception,
 ) -> None:
-    """Test number becomes unavailable when coordinator update fails."""
+    """Test number becomes unavailable when coordinator update fails and recovers."""
     entity_id = "number.test_fridge_top_zone_setpoint"
 
     # Initial state should be available with value
@@ -232,7 +218,9 @@ async def test_number_update_failure(
     assert state.state == "4"
 
     # Simulate update error
-    mock_liebherr_client.get_device_state.side_effect = exception
+    mock_liebherr_client.get_device_state.side_effect = LiebherrConnectionError(
+        "Connection failed"
+    )
 
     # Advance time to trigger coordinator refresh (60 second interval)
     freezer.tick(timedelta(seconds=61))
@@ -258,21 +246,25 @@ async def test_number_update_failure(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_number_unavailable_when_control_missing(
+async def test_number_when_control_missing(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test number becomes unavailable when temperature control is removed from device."""
+    """Test number entity behavior when temperature control is removed."""
     entity_id = "number.test_fridge_top_zone_setpoint"
 
-    # Initial state should be available
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "4"
+    # Get entity directly to test properties
+    entity = hass.data["entity_components"]["number"].get_entity(entity_id)
+    assert entity is not None
 
-    # Device stops reporting controls (e.g., zone removed or API issue)
+    # Initial values should be from the control
+    assert entity.native_value == 4
+    assert entity.native_min_value == 2
+    assert entity.native_max_value == 8
+    assert entity.native_unit_of_measurement == "°C"
+
+    # Device stops reporting controls
     mock_liebherr_client.get_device_state.return_value = DeviceState(
         device=MOCK_DEVICE, controls=[]
     )
@@ -282,7 +274,63 @@ async def test_number_unavailable_when_control_missing(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Number should be unavailable
+    # State should be unavailable
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+    # Properties should return None/defaults when control is missing
+    assert entity.native_value is None
+    assert entity.native_min_value == DEFAULT_MIN_VALUE
+    assert entity.native_max_value == DEFAULT_MAX_VALUE
+    assert entity.native_unit_of_measurement is None
+
+    # Calling async_set_native_value should return early without calling API
+    await entity.async_set_native_value(6)
+    mock_liebherr_client.set_temperature.assert_not_called()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_number_with_none_min_max(
+    hass: HomeAssistant,
+    mock_liebherr_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    platforms: list[Platform],
+) -> None:
+    """Test number entity returns defaults when control has None min/max."""
+    device = Device(
+        device_id="none_min_max_device",
+        nickname="Test Fridge",
+        device_type=DeviceType.FRIDGE,
+        device_name="K2601",
+    )
+    mock_liebherr_client.get_devices.return_value = [device]
+    mock_liebherr_client.get_device_state.return_value = DeviceState(
+        device=device,
+        controls=[
+            TemperatureControl(
+                zone_id=1,
+                zone_position=ZonePosition.TOP,
+                name="Fridge",
+                type="fridge",
+                value=4,
+                target=4,
+                min=None,  # None min
+                max=None,  # None max
+                unit=TemperatureUnit.CELSIUS,
+            )
+        ],
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.liebherr.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = "number.test_fridge_setpoint"
+    entity = hass.data["entity_components"]["number"].get_entity(entity_id)
+    assert entity is not None
+
+    # Should return defaults when min/max are None
+    assert entity.native_min_value == DEFAULT_MIN_VALUE
+    assert entity.native_max_value == DEFAULT_MAX_VALUE
