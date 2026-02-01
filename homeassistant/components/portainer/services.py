@@ -140,7 +140,7 @@ async def prune_images(call: ServiceCall) -> None:
 
 
 async def pause_container(call: ServiceCall) -> None:
-    """Pause a container in Portainer."""
+    """Pause or unpause a container in Portainer."""
     config_entry = await _extract_config_entry(call)
     coordinator = config_entry.runtime_data
     endpoint_id = await _get_endpoint_id(call, config_entry)
