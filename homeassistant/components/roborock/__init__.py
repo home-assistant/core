@@ -13,6 +13,7 @@ from roborock import (
     RoborockInvalidCredentials,
     RoborockInvalidUserAgreement,
     RoborockNoUserAgreement,
+    RoborockRateLimit,
 )
 from roborock.data import UserData
 from roborock.devices.device import RoborockDevice
@@ -64,6 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         base_url=entry.data[CONF_BASE_URL],
     )
     cache = CacheStore(hass, entry.entry_id)
+    _LOGGER.debug("Creating device manager for %s", user_params.username)
     try:
         device_manager = await create_device_manager(
             user_params,
@@ -79,9 +81,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
                 map_scale=MAP_SCALE,
             ),
             mqtt_session_unauthorized_hook=lambda: entry.async_start_reauth(hass),
-            prefer_cache=True,
+            prefer_cache=False,
         )
+        _LOGGER.debug("Device manager created successfully")
     except RoborockInvalidCredentials as err:
+        _LOGGER.exception("Invalid credentials error: %s", err)
         raise ConfigEntryAuthFailed(
             "Invalid credentials",
             translation_domain=DOMAIN,
@@ -102,10 +106,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_domain=DOMAIN,
             translation_key="mqtt_unauthorized",
         ) from err
+    except RoborockRateLimit as err:
+        _LOGGER.warning("Roborock API rate limit exceeded: %s", err)
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="api_rate_limit",
+        ) from err
     except RoborockException as err:
-        _LOGGER.debug("Failed to get Roborock home data: %s", err)
+        _LOGGER.error("Failed to get Roborock home data: %s", err, exc_info=True)
+        # Check if the error is due to rate limiting
+        error_msg = str(err)
+        if (
+            "Rate limit" in error_msg
+            or "Bucket for item=home_data" in error_msg
+            or "result is None" in error_msg
+            or "no data returned" in error_msg
+            or "API returned no data" in error_msg
+        ):
+            raise ConfigEntryNotReady(
+                "API rate limit exceeded or no data returned",
+                translation_domain=DOMAIN,
+                translation_key="api_rate_limit",
+            ) from err
+        # Check if the error is due to None response (often caused by rate limiting)
+        if (
+            "unexpected type: None" in error_msg
+            or "result was an unexpected type" in error_msg
+        ):
+            raise ConfigEntryNotReady(
+                "API rate limit exceeded or no data returned",
+                translation_domain=DOMAIN,
+                translation_key="api_rate_limit",
+            ) from err
         raise ConfigEntryNotReady(
             "Failed to get Roborock home data",
+            translation_domain=DOMAIN,
+            translation_key="home_data_fail",
+        ) from err
+    except Exception as err:
+        _LOGGER.error(
+            "Unexpected error creating device manager: %s", err, exc_info=True
+        )
+        raise ConfigEntryNotReady(
+            f"Unexpected error: {err}",
             translation_domain=DOMAIN,
             translation_key="home_data_fail",
         ) from err
@@ -118,8 +161,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     )
     entry.async_on_unload(shutdown_roborock)
 
-    devices = await device_manager.get_devices()
-    _LOGGER.debug("Device manager found %d devices", len(devices))
+    _LOGGER.debug("Fetching devices from device manager")
+    try:
+        devices = await device_manager.get_devices()
+        _LOGGER.debug("Device manager found %d devices", len(devices))
+        for device in devices:
+            _LOGGER.debug(
+                "Device: %s (model=%s, pv=%s, fw=%s)",
+                device.name,
+                device.model,
+                getattr(device, "pv", "unknown"),
+                getattr(device, "fw", "unknown"),
+            )
+    except Exception as err:
+        _LOGGER.error("Failed to get devices: %s", err, exc_info=True)
+        raise ConfigEntryNotReady(
+            f"Failed to get devices: {err}",
+            translation_domain=DOMAIN,
+            translation_key="no_coordinators",
+        ) from err
 
     coordinators = await asyncio.gather(
         *build_setup_functions(hass, entry, devices, user_data),

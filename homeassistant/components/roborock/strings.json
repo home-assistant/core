@@ -457,6 +457,9 @@
     }
   },
   "exceptions": {
+    "api_rate_limit": {
+      "message": "API rate limit exceeded. Roborock limits requests to 3 per minute for home data. Please wait a few minutes before retrying."
+    },
     "command_failed": {
       "message": "Error while calling {command}"
     },
