@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Callable, Coroutine
 from dataclasses import dataclass
 from functools import wraps
-from html import unescape
 from json import dumps, loads
 import logging
 from time import time
@@ -18,7 +17,6 @@ from onedrive_personal_sdk.exceptions import (
     HashMismatchError,
     OneDriveException,
 )
-from onedrive_personal_sdk.models.items import ItemUpdate
 from onedrive_personal_sdk.models.upload import FileInfo
 
 from homeassistant.components.backup import (
@@ -38,8 +36,8 @@ _LOGGER = logging.getLogger(__name__)
 MAX_CHUNK_SIZE = 60 * 1024 * 1024  # largest chunk possible, must be <= 60 MiB
 TARGET_CHUNKS = 20
 TIMEOUT = ClientTimeout(connect=10, total=43200)  # 12 hours
-METADATA_VERSION = 2
 CACHE_TTL = 300
+METADATA_FILE_SUFFIX = ".metadata.json"
 
 
 async def async_get_backup_agents(
@@ -185,34 +183,20 @@ class OneDriveBackupAgent(BackupAgent):
                 "Hash validation failed, backup file might be corrupt"
             ) from err
 
-        # store metadata in metadata file
-        description = dumps(backup.as_dict())
-        _LOGGER.debug("Creating metadata: %s", description)
-        metadata_filename = filename.rsplit(".", 1)[0] + ".metadata.json"
+        # store metadata in metadata file (include backup_file_id for reference)
+        metadata = backup.as_dict()
+        metadata["backup_file_id"] = backup_file.id
+        metadata_content = dumps(metadata)
+        _LOGGER.debug("Creating metadata: %s", metadata_content)
+        metadata_filename = filename.rsplit(".", 1)[0] + METADATA_FILE_SUFFIX
         try:
-            metadata_file = await self._client.upload_file(
+            await self._client.upload_file(
                 self._folder_id,
                 metadata_filename,
-                description,
+                metadata_content,
             )
         except OneDriveException:
             await self._client.delete_drive_item(backup_file.id)
-            raise
-
-        # add metadata to the metadata file
-        metadata_description = {
-            "metadata_version": METADATA_VERSION,
-            "backup_id": backup.backup_id,
-            "backup_file_id": backup_file.id,
-        }
-        try:
-            await self._client.update_drive_item(
-                path_or_id=metadata_file.id,
-                data=ItemUpdate(description=dumps(metadata_description)),
-            )
-        except OneDriveException:
-            await self._client.delete_drive_item(backup_file.id)
-            await self._client.delete_drive_item(metadata_file.id)
             raise
         self._cache_expiration = time()
 
@@ -259,27 +243,33 @@ class OneDriveBackupAgent(BackupAgent):
 
         items = await self._client.list_drive_items(self._folder_id)
 
-        async def download_backup_metadata(item_id: str) -> AgentBackup | None:
+        async def download_backup_metadata(
+            item_id: str,
+        ) -> tuple[AgentBackup, str] | None:
             try:
                 metadata_stream = await self._client.download_drive_item(item_id)
             except OneDriveException as err:
                 _LOGGER.warning("Error downloading metadata for %s: %s", item_id, err)
                 return None
+
             metadata_json = loads(await metadata_stream.read())
-            return AgentBackup.from_dict(metadata_json)
+            backup_file_id = metadata_json.pop("backup_file_id", None)
+            if backup_file_id is None:
+                _LOGGER.warning("Metadata file %s missing backup_file_id", item_id)
+                return None
+            return AgentBackup.from_dict(metadata_json), backup_file_id
 
         backups: dict[str, OneDriveBackup] = {}
         for item in items:
-            if item.description and f'"metadata_version": {METADATA_VERSION}' in (
-                metadata_description_json := unescape(item.description)
-            ):
-                backup = await download_backup_metadata(item.id)
-                if backup is None:
+            # Identify metadata files by their file name suffix
+            if item.name and item.name.endswith(METADATA_FILE_SUFFIX):
+                result = await download_backup_metadata(item.id)
+                if result is None:
                     continue
-                metadata_description = loads(metadata_description_json)
+                backup, backup_file_id = result
                 backups[backup.backup_id] = OneDriveBackup(
                     backup=backup,
-                    backup_file_id=metadata_description["backup_file_id"],
+                    backup_file_id=backup_file_id,
                     metadata_file_id=item.id,
                 )
 
