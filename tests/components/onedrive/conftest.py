@@ -189,7 +189,7 @@ def mock_metadata_file() -> File:
         hashes=Hashes(
             quick_xor_hash="hash",
         ),
-        mime_type="application/json",
+        mime_type="application/x-tar",
         created_by=IDENTITY_SET,
     )
 
