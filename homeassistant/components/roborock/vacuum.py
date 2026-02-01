@@ -26,6 +26,7 @@ from .const import (
 )
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
+    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
 )
@@ -91,6 +92,11 @@ async def async_setup_entry(
         RoborockQ7Vacuum(coordinator)
         for coordinator in config_entry.runtime_data.b01
         if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
+    )
+    async_add_entities(
+        RoborockQ7Vacuum(coordinator)
+        for coordinator in config_entry.runtime_data.b01
+        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
     )
     platform = entity_platform.async_get_current_platform()
 

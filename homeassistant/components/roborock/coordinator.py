@@ -13,6 +13,7 @@ from roborock.data import HomeDataScene
 from roborock.devices.device import RoborockDevice
 from roborock.devices.traits.a01 import DyadApi, ZeoApi
 from roborock.devices.traits.b01 import Q7PropertiesApi
+from roborock.devices.traits.b01.q10 import Q10PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.exceptions import RoborockDeviceBusy, RoborockException
 from roborock.roborock_message import (
@@ -564,6 +565,39 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             data = await self.api.query_values(self.request_protocols)
         except RoborockException as ex:
             _LOGGER.debug("Failed to update Q7 data: %s", ex)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_data_fail",
+            ) from ex
+        if data is None:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_data_fail",
+            )
+        return data
+
+
+class RoborockB01Q10UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
+    """Coordinator for B01 Q10 devices."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: RoborockConfigEntry,
+        device: RoborockDevice,
+        api: Q10PropertiesApi,
+    ) -> None:
+        """Initialize."""
+        super().__init__(hass, config_entry, device)
+        self.api = api
+
+    async def _async_update_data(
+        self,
+    ) -> B01Props:
+        try:
+            data = await self.api.status.refresh()
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to update Q10 data: %s", ex)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",

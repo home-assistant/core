@@ -39,6 +39,7 @@ from .const import (
 )
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
+    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockCoordinators,
     RoborockDataUpdateCoordinator,
@@ -81,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
                 map_scale=MAP_SCALE,
             ),
             mqtt_session_unauthorized_hook=lambda: entry.async_start_reauth(hass),
-            prefer_cache=False,
+            prefer_cache=True,
         )
         _LOGGER.debug("Device manager created successfully")
     except RoborockInvalidCredentials as err:
@@ -169,9 +170,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             _LOGGER.debug(
                 "Device: %s (model=%s, pv=%s, fw=%s)",
                 device.name,
-                device.model,
-                getattr(device, "pv", "unknown"),
-                getattr(device, "fw", "unknown"),
+                device.product.model,
+                device.device_info.pv,
+                device.device_info.fv,
             )
     except Exception as err:
         _LOGGER.error("Failed to get devices: %s", err, exc_info=True)
@@ -307,6 +308,12 @@ def build_setup_functions(
             coordinators.append(
                 RoborockB01Q7UpdateCoordinator(
                     hass, entry, device, device.b01_q7_properties
+                )
+            )
+        elif device.b01_q10_properties is not None:
+            coordinators.append(
+                RoborockB01Q10UpdateCoordinator(
+                    hass, entry, device, device.b01_q10_properties
                 )
             )
         else:

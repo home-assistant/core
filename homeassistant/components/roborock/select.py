@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN, MAP_SLEEP
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
+    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
 )
@@ -161,7 +162,10 @@ async def async_setup_entry(
         RoborockB01SelectEntity(coordinator, description, options)
         for coordinator in config_entry.runtime_data.b01
         for description in B01_SELECT_DESCRIPTIONS
-        if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
+        if isinstance(
+            coordinator,
+            (RoborockB01Q7UpdateCoordinator, RoborockB01Q10UpdateCoordinator),
+        )
         if (options := description.options_lambda(coordinator.api)) is not None
     )
 
@@ -170,11 +174,11 @@ class RoborockB01SelectEntity(RoborockCoordinatedEntityB01, SelectEntity):
     """Select entity for Roborock B01 devices."""
 
     entity_description: RoborockB01SelectDescription
-    coordinator: RoborockB01Q7UpdateCoordinator
+    coordinator: RoborockB01Q7UpdateCoordinator | RoborockB01Q10UpdateCoordinator
 
     def __init__(
         self,
-        coordinator: RoborockB01Q7UpdateCoordinator,
+        coordinator: RoborockB01Q7UpdateCoordinator | RoborockB01Q10UpdateCoordinator,
         entity_description: RoborockB01SelectDescription,
         options: list[str],
     ) -> None:
