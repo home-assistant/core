@@ -89,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
         )
 
     entry.async_on_unload(
-        controller.devices_coordinator.async_add_listener(_schedule_cleanup)
+        controller.clients_coordinator.async_add_listener(_schedule_cleanup)
     )
 
     await controller.initialize_first_refresh()
