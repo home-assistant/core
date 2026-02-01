@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components import ssdp
 from homeassistant.components.lyngdorf.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -72,7 +72,7 @@ async def test_manual_flow_already_configured(hass: HomeAssistant) -> None:
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="mp-60:192.168.1.100",
-        data={CONF_HOST: "192.168.1.50", CONF_MAC: None},
+        data={CONF_HOST: "192.168.1.50"},
     )
     existing_entry.add_to_hass(hass)
 

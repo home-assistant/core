@@ -9,7 +9,7 @@ from lyngdorf.const import LyngdorfModel
 import pytest
 
 from homeassistant.components.lyngdorf.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL
+from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -23,13 +23,11 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_HOST: "127.0.0.1",
-            CONF_MAC: "aa:bb:cc:dd:ee:ff",
             CONF_MODEL: "MP-60",
             "manufacturer": "Lyngdorf",
             "serial_number": "123456",
-            "device_id": "aa:bb:cc:dd:ee:ff",
         },
-        unique_id="aa:bb:cc:dd:ee:ff",
+        unique_id="MP-60:127.0.0.1",
     )
 
 

@@ -3,6 +3,12 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
+    "error": {
+      "cannot_connect": "Unable to connect to the device",
+      "timeout_connect": "Connection to the device timed out",
+      "unknown": "Unknown Error",
+      "unsupported_model": "This Lyngdorf model is not supported"
+    },
     "flow_title": "{name}",
     "step": {
       "confirm": {
@@ -13,7 +19,10 @@
           "host": "[%key:common::config_flow::data::host%]",
           "name": "[%key:common::config_flow::data::name%]"
         },
-        "description": "hostname or ip",
+        "data_description": {
+          "host": "Hostname or IP address of the Lyngdorf device",
+          "name": "Name for this device"
+        },
         "title": "Lyngdorf device connection"
       },
       "user": {

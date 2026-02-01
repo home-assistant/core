@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import (
@@ -43,13 +43,10 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self._discoveries: dict[str, SsdpServiceInfo] = {}
         self._location: str | None = None
-        # self._id: str | None = None
         self._device_manufacturer: str | None = None
-        # self._device_type: str | None = None
         self._device_model: str | None = None
         self._device_serial_number: str | None = None
         self._name: str | None = None
-        self._mac: str | None = None
         self._host: str
         self._options: dict[str, Any] = {}
 
@@ -85,7 +82,7 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=data_schema)
 
     async def async_step_manual(self, user_input: FlowInput = None) -> ConfigFlowResult:
-        """Manual URL entry by the user."""
+        """Manual hostname entry by the user."""
         errors = {}
 
         if user_input is not None:
@@ -95,6 +92,8 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 model = await async_find_receiver_model(self._host)
+                if not model:
+                    errors["base"] = "unsupported_model"
             except TimeoutError:
                 errors["base"] = "timeout_connect"
             except ConnectionError:
@@ -104,19 +103,16 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
 
-            if not errors:
-                if not model:
-                    errors["base"] = "unsupported_model"
-                else:
-                    self._device_manufacturer = model.manufacturer
-                    self._device_model = model.model
-                    await self.async_set_unique_id(f"{model.model}:{self._host}")
-                    self._abort_if_unique_id_configured()
-                    return await self._create_entry()
+            if not errors and model:
+                self._device_manufacturer = model.manufacturer
+                self._device_model = model.model
+                await self.async_set_unique_id(f"{model.model}:{self._host}")
+                self._abort_if_unique_id_configured()
+                return await self._create_entry()
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_HOST, default=False): cv.string,
+                vol.Required(CONF_HOST): cv.string,
                 vol.Optional(CONF_NAME, default=DEFAULT_DEVICE_NAME): cv.string,
             }
         )
@@ -132,13 +128,6 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self._async_set_info_from_discovery(discovery_info)
 
-        # Abort if another config entry has the same location or MAC address, in
-        # case the device doesn't have a static and unique UDN (breaking the
-        # UPnP spec).
-        for entry in self._async_current_entries(include_ignore=True):
-            if self._mac and self._mac == entry.data.get(CONF_MAC):
-                return self.async_abort(reason="already_configured")
-
         self.context["title_placeholders"] = {"name": self._name or "Lyngdorf"}
 
         return await self.async_step_confirm()
@@ -147,14 +136,12 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Ignore this config flow."""
-        self._mac = user_input["unique_id"]
-        assert self._mac
-        await self.async_set_unique_id(self._mac, raise_on_progress=False)
+        unique_id = user_input["unique_id"]
+        await self.async_set_unique_id(unique_id, raise_on_progress=False)
 
         return self.async_create_entry(
             title=user_input["title"],
             data={
-                CONF_MAC: self._mac,
                 CONF_MODEL: self._device_model,
                 CONF_MANUFACTURER: self._device_manufacturer,
                 CONF_SERIAL_NUMBER: self._device_serial_number,
@@ -166,9 +153,8 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Rediscover previously ignored devices by their unique_id."""
-        self._mac = user_input["unique_id"]
-        assert self._mac
-        await self.async_set_unique_id(self._mac)
+        unique_id = user_input["unique_id"]
+        await self.async_set_unique_id(unique_id)
 
         self.context["title_placeholders"] = {"name": self._name or "Lyngdorf"}
 
@@ -194,12 +180,7 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             title = self._name or DEFAULT_DEVICE_NAME
 
-        # assert self._mac
-
         data = {
-            # CONF_DEVICE_ID: self._mac,
-            # CONF_TYPE: self._device_type,
-            CONF_MAC: self._mac,
             CONF_MODEL: self._device_model,
             CONF_MANUFACTURER: self._device_manufacturer,
             CONF_SERIAL_NUMBER: self._device_serial_number,
