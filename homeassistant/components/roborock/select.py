@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
-from typing import Any, Protocol, cast
+from typing import Any, Protocol
 
 from roborock import B01Props, CleanTypeMapping
 from roborock.data import RoborockDockDustCollectionModeCode, WaterLevelMapping
@@ -22,7 +22,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN, MAP_SLEEP
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
-    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
 )
@@ -62,7 +61,7 @@ class _EnumOption(Protocol):
 
 
 class _B01SelectApi(Protocol):
-    """Protocol for B01 select API methods used by Q7/Q10."""
+    """Protocol for B01 select API methods used by Q7."""
 
     async def set_water_level(self, level: WaterLevelMapping) -> Any: ...
 
@@ -128,7 +127,7 @@ class RoborockB01SelectDescription(SelectEntityDescription):
     value_fn: Callable[[B01Props | dict], str | None]
     """Function to get the current value of the select entity."""
 
-    options_lambda: Callable[[object], list[str] | None]
+    options_lambda: Callable[[_B01SelectApi], list[str] | None]
     """Function to get all options of the select entity or returns None if not supported."""
 
 
@@ -232,10 +231,7 @@ async def async_setup_entry(
         RoborockB01SelectEntity(coordinator, description, options)
         for coordinator in config_entry.runtime_data.b01
         for description in B01_SELECT_DESCRIPTIONS
-        if isinstance(
-            coordinator,
-            (RoborockB01Q7UpdateCoordinator, RoborockB01Q10UpdateCoordinator),
-        )
+        if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
         if (options := description.options_lambda(coordinator.api)) is not None
     )
 
@@ -244,11 +240,11 @@ class RoborockB01SelectEntity(RoborockCoordinatedEntityB01, SelectEntity):
     """Select entity for Roborock B01 devices."""
 
     entity_description: RoborockB01SelectDescription
-    coordinator: RoborockB01Q7UpdateCoordinator | RoborockB01Q10UpdateCoordinator
+    coordinator: RoborockB01Q7UpdateCoordinator
 
     def __init__(
         self,
-        coordinator: RoborockB01Q7UpdateCoordinator | RoborockB01Q10UpdateCoordinator,
+        coordinator: RoborockB01Q7UpdateCoordinator,
         entity_description: RoborockB01SelectDescription,
         options: list[str],
     ) -> None:
@@ -262,8 +258,7 @@ class RoborockB01SelectEntity(RoborockCoordinatedEntityB01, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         try:
-            api = cast(_B01SelectApi, self.coordinator.api)
-            await self.entity_description.api_fn(api, option)
+            await self.entity_description.api_fn(self.coordinator.api, option)
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
