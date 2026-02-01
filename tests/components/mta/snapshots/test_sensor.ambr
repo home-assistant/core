@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next arrival',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next arrival destination',
     'options': dict({
     }),
     'original_device_class': None,
@@ -117,6 +119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next arrival route',
     'options': dict({
     }),
     'original_device_class': None,
@@ -165,6 +168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Second arrival',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -214,6 +218,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Second arrival destination',
     'options': dict({
     }),
     'original_device_class': None,
@@ -262,6 +267,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Second arrival route',
     'options': dict({
     }),
     'original_device_class': None,
@@ -310,6 +316,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Third arrival',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -359,6 +366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Third arrival destination',
     'options': dict({
     }),
     'original_device_class': None,
@@ -407,6 +415,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Third arrival route',
     'options': dict({
     }),
     'original_device_class': None,
