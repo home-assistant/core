@@ -3,10 +3,12 @@
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
+import logging
 from typing import Any, Protocol
 
 from roborock import B01Props, CleanTypeMapping
 from roborock.data import RoborockDockDustCollectionModeCode, WaterLevelMapping
+from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXCleanType
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.home import HomeTrait
 from roborock.devices.traits.v1.maps import MapsTrait
@@ -22,10 +24,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN, MAP_SLEEP
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
+    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
 )
 from .entity import RoborockCoordinatedEntityB01, RoborockCoordinatedEntityV1
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -106,15 +111,65 @@ def _get_q10_water_level(data: B01Props | dict[Any, Any]) -> str | None:
 
 def _get_q10_cleaning_mode(data: B01Props | dict[Any, Any]) -> str | None:
     """Get cleaning mode from Q10 dict data."""
-    if not isinstance(data, dict):
-        # Q7 data - B01Props object
-        return data.mode.value if data.mode else None
-    # Q10 data - dict from status.refresh()
-    # Cleaning mode is in dps.101 (nested status data)
-    status = data.get("dps", {}).get("101", {})
-    # Looking for mode indicator - typically key 25 in Q10
-    mode = status.get("25")
-    return _map_enum_value(mode, CleanTypeMapping)
+    if isinstance(data, dict):
+        # Q10 data - dict from status.refresh()
+        # The dict has B01_Q10_DP enum keys, look for CLEAN_MODE
+        _LOGGER.debug("Q10 data keys: %s", list(data.keys())[:5])  # Show first 5 keys
+
+        # First try to get CLEAN_MODE using the enum key
+        if B01_Q10_DP.CLEAN_MODE in data:
+            clean_mode_value = data[B01_Q10_DP.CLEAN_MODE]
+            _LOGGER.debug(
+                "Q10 cleaning mode raw value: %s (type=%s)",
+                clean_mode_value,
+                type(clean_mode_value),
+            )
+
+            # The value should be an integer code, use YXCleanType.from_code() to get the enum
+            try:
+                if isinstance(clean_mode_value, int):
+                    mode_enum = YXCleanType.from_code(clean_mode_value)
+                    result = _enum_option_value(mode_enum)
+                    _LOGGER.debug(
+                        "Q10 cleaning mode mapped from code %s: %s",
+                        clean_mode_value,
+                        result,
+                    )
+                    return result
+            except (ValueError, AttributeError) as err:
+                _LOGGER.error(
+                    "Failed to map cleaning mode code %s: %s", clean_mode_value, err
+                )
+
+        # Fallback: try old methods for backwards compatibility
+        clean_mode = data.get(137) or data.get("137")
+        if clean_mode is None:
+            # Try nested in dps structure
+            status = data.get("dps", {})
+            if isinstance(status, dict):
+                clean_mode = status.get(137) or status.get("137")
+                _LOGGER.debug(
+                    "Q10 dps keys: %s", list(status.keys())[:10]
+                )  # Show first 10 keys from dps
+
+        if clean_mode is not None:
+            _LOGGER.debug(
+                "Q10 cleaning mode from fallback: raw_value=%s, mapped=%s",
+                clean_mode,
+                _map_enum_value(clean_mode, YXCleanType),
+            )
+            return _map_enum_value(clean_mode, YXCleanType)
+
+        _LOGGER.debug("Q10 cleaning mode not found in data")
+        return None
+
+    # B01Props object - check if it has mode attribute (Q7/Q10 compatibility)
+    if hasattr(data, "mode") and data.mode:
+        result = data.mode.value
+        _LOGGER.debug("Q10 cleaning mode from B01Props: %s", result)
+        return result
+    _LOGGER.debug("Q10 cleaning mode not found in data: %s", type(data))
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -233,6 +288,11 @@ async def async_setup_entry(
         for description in B01_SELECT_DESCRIPTIONS
         if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
         if (options := description.options_lambda(coordinator.api)) is not None
+    )
+    async_add_entities(
+        RoborockQ10CleanModeSelectEntity(coordinator)
+        for coordinator in config_entry.runtime_data.b01
+        if isinstance(coordinator, RoborockB01Q10UpdateCoordinator)
     )
 
 
@@ -373,3 +433,71 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
         if current_map_info := self._home_trait.current_map_data:
             return current_map_info.name or f"Map {current_map_info.map_flag}"
         return None
+
+
+class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01, SelectEntity):
+    """Select entity for Q10 cleaning mode."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "cleaning_mode"
+    coordinator: RoborockB01Q10UpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: RoborockB01Q10UpdateCoordinator,
+    ) -> None:
+        """Create a select entity for Q10 cleaning mode."""
+        super().__init__(
+            f"cleaning_mode_{coordinator.duid_slug}",
+            coordinator,
+        )
+
+    @property
+    def options(self) -> list[str]:
+        """Return available cleaning modes with translations."""
+        # Return the enum values which will be used as keys for translations
+        # Home Assistant will look for these in entity.select.cleaning_mode.state.{option}
+        return [
+            _enum_option_value(option)
+            for option in YXCleanType
+            if option != YXCleanType.UNKNOWN
+        ]
+
+    @property
+    def current_option(self) -> str | None:
+        """Get the current cleaning mode."""
+        return _get_q10_cleaning_mode(self.coordinator.data)
+
+    async def async_select_option(self, option: str) -> None:
+        """Set the cleaning mode."""
+        _LOGGER.debug("Setting cleaning mode to: %s", option)
+        try:
+            mode = None
+            for clean_mode in YXCleanType:
+                if _enum_option_value(clean_mode) == option:
+                    mode = clean_mode
+                    break
+            if mode is None:
+                _LOGGER.error("Cleaning mode not found for option: %s", option)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="command_failed",
+                    translation_placeholders={"command": "set_clean_mode"},
+                )
+            _LOGGER.debug(
+                "Sending command: set_clean_mode(%s) with code=%s", mode.name, mode.code
+            )
+            await self.coordinator.api.vacuum.set_clean_mode(mode)
+            _LOGGER.debug("Command sent successfully, refreshing coordinator")
+        except RoborockException as err:
+            _LOGGER.error("RoborockException while setting cleaning mode: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"command": "set_clean_mode"},
+            ) from err
+        _LOGGER.debug("Refreshing coordinator data")
+        await self.coordinator.async_refresh()
+        _LOGGER.debug(
+            "Coordinator refresh complete. Current mode: %s", self.current_option
+        )
