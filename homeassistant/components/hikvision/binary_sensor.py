@@ -187,10 +187,8 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
         # Build unique ID (includes sensor_type for uniqueness per sensor)
         self._attr_unique_id = f"{self._data.device_id}_{sensor_type}_{channel}"
 
-        # Set entity name
+        # Set entity name and device class
         self._attr_name = sensor_type
-
-        # Set device class
         self._attr_device_class = DEVICE_CLASS_MAP.get(sensor_type)
 
         # Callback ID for pyhik

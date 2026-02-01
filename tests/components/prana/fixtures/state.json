@@ -1,0 +1,25 @@
+{
+  "extract": {
+    "speed": 1,
+    "is_on": true,
+    "max_speed": 100
+  },
+  "supply": {
+    "speed": 1,
+    "is_on": true,
+    "max_speed": 100
+  },
+  "bounded": {
+    "speed": 1,
+    "is_on": true,
+    "max_speed": 100
+  },
+  "bound": true,
+  "heater": false,
+  "auto": false,
+  "auto_plus": false,
+  "winter": false,
+  "inside_temperature": 217,
+  "humidity": 56,
+  "brightness": 6
+}

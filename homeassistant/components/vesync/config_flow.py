@@ -30,7 +30,7 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @callback
     def _show_form(self, errors: dict[str, str] | None = None) -> ConfigFlowResult:
@@ -45,8 +45,6 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         if not user_input:
             return self._show_form()
@@ -67,6 +65,9 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         except VeSyncError as e:
             _LOGGER.error("VeSync login failed: %s", str(e))
             return self._show_form(errors={"base": "invalid_auth"})
+
+        await self.async_set_unique_id(manager.account_id)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=username,
@@ -107,8 +108,12 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
                     errors={"base": "invalid_auth"},
                 )
 
+            await self.async_set_unique_id(manager.account_id)
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),
+                unique_id=manager.account_id,
                 data_updates={
                     CONF_USERNAME: username,
                     CONF_PASSWORD: password,

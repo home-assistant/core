@@ -1,4 +1,21 @@
 {
+  "conditions": {
+    "is_cooling": {
+      "condition": "mdi:snowflake"
+    },
+    "is_drying": {
+      "condition": "mdi:water-percent"
+    },
+    "is_heating": {
+      "condition": "mdi:fire"
+    },
+    "is_off": {
+      "condition": "mdi:power-off"
+    },
+    "is_on": {
+      "condition": "mdi:power-on"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:thermostat",
