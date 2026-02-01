@@ -104,6 +104,9 @@ async def test_unload_entry_with_disconnect_error(
     receiver.async_connect = AsyncMock()
     receiver.async_disconnect = AsyncMock(side_effect=Exception("Disconnect failed"))
     receiver.name = "Test Receiver"
+    receiver.available_sources = []
+    receiver.available_sound_modes = []
+    receiver.zone_b_available_sources = []
 
     with (
         patch(

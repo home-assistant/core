@@ -48,7 +48,6 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._device_serial_number: str | None = None
         self._name: str | None = None
         self._host: str
-        self._options: dict[str, Any] = {}
 
     async def async_step_user(self, user_input: FlowInput = None) -> ConfigFlowResult:
         """Handle a flow initialized by the user.
@@ -96,7 +95,7 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unsupported_model"
             except TimeoutError:
                 errors["base"] = "timeout_connect"
-            except ConnectionError:
+            except (ConnectionError, OSError):
                 errors["base"] = "cannot_connect"
             except AbortFlow:
                 raise
@@ -188,7 +187,7 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
         # unique_id is already set by calling function (async_step_manual, etc.)
         # Don't overwrite it here
-        return self.async_create_entry(title=title, data=data, options=self._options)
+        return self.async_create_entry(title=title, data=data)
 
     async def _async_set_info_from_discovery(
         self, discovery_info: SsdpServiceInfo, abort_if_configured: bool = True

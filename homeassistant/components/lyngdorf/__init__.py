@@ -36,7 +36,7 @@ async def async_setup_entry(
             raise ConfigEntryNotReady(
                 f"Timeout finding receiver model at {config_entry.data[CONF_HOST]}"
             ) from err
-        except ConnectionError as err:
+        except (ConnectionError, OSError) as err:
             raise ConfigEntryNotReady(
                 f"Failed to find receiver model at {config_entry.data[CONF_HOST]}"
             ) from err
@@ -53,7 +53,7 @@ async def async_setup_entry(
         raise ConfigEntryNotReady(
             f"Timeout connecting to {config_entry.data[CONF_HOST]}"
         ) from err
-    except ConnectionError as err:
+    except (ConnectionError, OSError) as err:
         raise ConfigEntryNotReady(
             f"Failed to connect to {config_entry.data[CONF_HOST]}"
         ) from err

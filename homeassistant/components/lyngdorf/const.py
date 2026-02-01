@@ -1,5 +1,7 @@
 """Constants for the Lyngdorf integration."""
 
+from lyngdorf.const import supported_models
+
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.const import Platform
 
@@ -17,7 +19,10 @@ MANUFACTURER_LYNGDORF = "Lyngdorf"
 
 SUPPORTED_MANUFACTURERS = [MANUFACTURER_LYNGDORF]  # Steinway todo
 
-SUPPORTED_DEVICES = [{"manufacturer": MANUFACTURER_LYNGDORF, "model": "MP-60"}]
+SUPPORTED_DEVICES = [
+    {"manufacturer": model.manufacturer, "model": model.model}
+    for model in supported_models()
+]
 
 NAME_MAIN_ZONE = "Main Zone"
 NAME_ZONE_B = "Zone B"

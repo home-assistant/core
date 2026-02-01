@@ -4,9 +4,9 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "Unable to connect to the device",
-      "timeout_connect": "Connection to the device timed out",
-      "unknown": "Unknown Error",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "unsupported_model": "This Lyngdorf model is not supported"
     },
     "flow_title": "{name}",
@@ -30,7 +30,7 @@
           "name": "[%key:common::config_flow::data::name%]"
         },
         "description": "Choose a device to configure",
-        "title": "Discovered Lyngdorf Devices"
+        "title": "Discovered Lyngdorf devices"
       }
     }
   }
