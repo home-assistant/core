@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper
+from .models import DeviceWrapper, DPCodeBooleanWrapper
 
 BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
     DeviceCategory.HXD: (
@@ -107,7 +107,7 @@ class TuyaButtonEntity(TuyaEntity, ButtonEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: ButtonEntityDescription,
-        dpcode_wrapper: DPCodeBooleanWrapper,
+        dpcode_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init Tuya button."""
         super().__init__(device, device_manager)
@@ -117,4 +117,4 @@ class TuyaButtonEntity(TuyaEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self._async_send_dpcode_update(self._dpcode_wrapper, True)
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, True)

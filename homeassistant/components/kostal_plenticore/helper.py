@@ -31,6 +31,7 @@ class PlenticoreDataFormatter:
         15: "Shutdown",
         16: "ImproperDcVoltage",
         17: "ESB",
+        18: "DcCheck",
     }
 
     EM_STATES = {

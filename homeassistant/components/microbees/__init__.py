@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from http import HTTPStatus
+import logging
 
 import aiohttp
 from microBeesPy import MicroBees
@@ -15,6 +16,8 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from .const import DOMAIN, PLATFORMS
 from .coordinator import MicroBeesUpdateCoordinator
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True, kw_only=True)
 class HomeAssistantMicroBeesData:
@@ -23,6 +26,23 @@ class HomeAssistantMicroBeesData:
     connector: MicroBees
     coordinator: MicroBeesUpdateCoordinator
     session: config_entry_oauth2_flow.OAuth2Session
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate entry."""
+    _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
+
+    if entry.version == 1:
+        # 1 -> 1.2: Unique ID from integer to string
+        if entry.minor_version == 1:
+            minor_version = 2
+            hass.config_entries.async_update_entry(
+                entry, unique_id=str(entry.unique_id), minor_version=minor_version
+            )
+
+    _LOGGER.debug("Migration successful")
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

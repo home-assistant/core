@@ -32,7 +32,6 @@ async def async_setup_entry(
         (
             RoborockMap(
                 config_entry,
-                f"{coord.duid_slug}_map_{map_info.name}",
                 coord,
                 coord.properties_api.home,
                 map_info.map_flag,
@@ -55,13 +54,17 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
     def __init__(
         self,
         config_entry: ConfigEntry,
-        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         home_trait: HomeTrait,
         map_flag: int,
         map_name: str,
     ) -> None:
         """Initialize a Roborock map."""
+        map_name = map_name or f"Map {map_flag}"
+        # Note: Map names are not a valid unique id since they can be changed
+        # in the roborock app. This should be migrated to use map flag for
+        # the unique id.
+        unique_id = f"{coordinator.duid_slug}_map_{map_name}"
         RoborockCoordinatedEntityV1.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
         self.config_entry = config_entry

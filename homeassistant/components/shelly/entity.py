@@ -34,14 +34,14 @@ from .utils import (
 
 
 @callback
-def async_setup_entry_attribute_entities(
+def async_setup_entry_block(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
     sensors: Mapping[tuple[str, str], BlockEntityDescription],
     sensor_class: Callable,
 ) -> None:
-    """Set up entities for attributes."""
+    """Set up block entities."""
     coordinator = config_entry.runtime_data.block
     assert coordinator
     if coordinator.device.initialized:
@@ -150,7 +150,7 @@ def async_setup_entry_rpc(
     sensors: Mapping[str, RpcEntityDescription],
     sensor_class: Callable,
 ) -> None:
-    """Set up entities for RPC sensors."""
+    """Set up RPC entities."""
     coordinator = config_entry.runtime_data.rpc
     assert coordinator
 

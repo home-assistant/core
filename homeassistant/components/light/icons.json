@@ -35,6 +35,12 @@
     }
   },
   "triggers": {
+    "brightness_changed": {
+      "trigger": "mdi:lightbulb-on-50"
+    },
+    "brightness_crossed_threshold": {
+      "trigger": "mdi:lightbulb-on-50"
+    },
     "turned_off": {
       "trigger": "mdi:lightbulb-off"
     },
