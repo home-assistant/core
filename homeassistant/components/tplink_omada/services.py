@@ -1,7 +1,5 @@
 """Services for the TP-Link Omada integration."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from tplink_omada_client.exceptions import OmadaClientException
@@ -21,8 +19,7 @@ ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_MAC = "mac"
 
 
-def _get_controller(call: ServiceCall) -> tuple[OmadaSiteController, ConfigEntry]:
-    """Get the controller and config entry from the service call."""
+def _get_controller(call: ServiceCall) -> OmadaSiteController:
     if call.data.get(ATTR_CONFIG_ENTRY_ID):
         entry = call.hass.config_entries.async_get_entry(
             call.data[ATTR_CONFIG_ENTRY_ID]
@@ -42,7 +39,7 @@ def _get_controller(call: ServiceCall) -> tuple[OmadaSiteController, ConfigEntry
         raise ServiceValidationError(
             "The TP-Link Omada integration is not currently available"
         )
-    return entry.runtime_data, entry
+    return entry.runtime_data
 
 
 SCHEMA_RECONNECT_CLIENT = vol.Schema(
@@ -59,7 +56,7 @@ SCHEMA_RECONNECT_CLIENT = vol.Schema(
 
 async def _handle_reconnect_client(call: ServiceCall) -> None:
     """Handle the service action to force reconnection of a network client."""
-    controller, _ = _get_controller(call)
+    controller = _get_controller(call)
 
     mac: str = call.data[ATTR_MAC]
 
@@ -70,7 +67,7 @@ async def _handle_reconnect_client(call: ServiceCall) -> None:
 
 
 SERVICES = [
-    (SERVICE_RECONNECT_CLIENT, SCHEMA_RECONNECT_CLIENT, _handle_reconnect_client),
+    (SERVICE_RECONNECT_CLIENT, SCHEMA_RECONNECT_CLIENT, _handle_reconnect_client)
 ]
 
 
