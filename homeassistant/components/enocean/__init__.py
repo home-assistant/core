@@ -16,7 +16,7 @@ from .dongle import EnOceanDongle
 type EnOceanConfigEntry = ConfigEntry[EnOceanConfigRuntimeData]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnOceanConfigRuntimeData:
     """Runtime data for EnOcean config entries."""
 
