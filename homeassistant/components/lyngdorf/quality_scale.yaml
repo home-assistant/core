@@ -1,7 +1,7 @@
-# Quality Scale - Bronze
+# Quality Scale - Silver
 #
 # This file documents which quality scale rules are implemented by the Lyngdorf integration.
-# The integration targets the Bronze quality scale tier.
+# The integration targets the Silver quality scale tier.
 
 rules:
   # Bronze tier rules (mandatory for all integrations with quality scale)
@@ -29,3 +29,21 @@ rules:
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
+
+  # Silver tier rules
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options to configure.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Integration does not use authentication.
+  test-coverage: done

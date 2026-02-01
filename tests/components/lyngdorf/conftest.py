@@ -56,6 +56,34 @@ def mock_receiver() -> Generator[MagicMock]:
         receiver.async_connect = AsyncMock()
         receiver.async_disconnect = AsyncMock()
         receiver.name = "Mock Lyngdorf"
+        receiver.register_notification_callback = MagicMock()
+        receiver.un_register_notification_callback = MagicMock()
+        receiver.connected = True
+
+        # Main zone properties
+        receiver.power_on = False
+        receiver.volume = -40.0
+        receiver.mute_enabled = False
+        receiver.audio_information = None
+        receiver.video_information = None
+        receiver.source = None
+        receiver.available_sources = []
+        receiver.sound_mode = None
+        receiver.available_sound_modes = []
+        receiver.volume_up = MagicMock()
+        receiver.volume_down = MagicMock()
+
+        # Zone B properties
+        receiver.zone_b_power_on = False
+        receiver.zone_b_volume = -40.0
+        receiver.zone_b_mute_enabled = False
+        receiver.zone_b_source = None
+        receiver.zone_b_available_sources = []
+        receiver.zone_b_audio_input = None
+        receiver.zone_b_streaming_source = None
+        receiver.zone_b_volume_up = MagicMock()
+        receiver.zone_b_volume_down = MagicMock()
+
         create_mock.return_value = receiver
         yield receiver
 

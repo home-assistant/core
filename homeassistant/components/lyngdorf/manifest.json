@@ -7,8 +7,8 @@
   "documentation": "https://www.home-assistant.io/integrations/lyngdorf",
   "iot_class": "local_push",
   "loggers": ["lyngdorf", "async_upnp_client"],
-  "quality_scale": "bronze",
-  "requirements": ["lyngdorf==0.4.2"],
+  "quality_scale": "silver",
+  "requirements": ["lyngdorf==0.5.0"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 from typing import cast
 
 from lyngdorf.device import Receiver
@@ -14,7 +15,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -32,6 +33,8 @@ ATTR_ROOM_PERFECT_POSITION_LIST = "room_perfect_position_list"
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class MP60Device(MediaPlayerEntity):
@@ -55,14 +58,53 @@ class MP60Device(MediaPlayerEntity):
         self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
         self._attr_name = name
         self._attr_supported_features = features
+        self._attr_available = True
+        self._unavailable_logged: bool = False
 
     async def async_added_to_hass(self) -> None:
         """Notfies us that haas has started."""
-        self._receiver.register_notification_callback(self.async_write_ha_state)
+        self._receiver.register_notification_callback(self._handle_receiver_update)
+        self._update_availability()
+        self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
         """Notfies us that haas is stopping."""
-        self._receiver.un_register_notification_callback(self.async_write_ha_state)
+        self._receiver.un_register_notification_callback(self._handle_receiver_update)
+
+    @callback
+    def _handle_receiver_update(self) -> None:
+        """Handle receiver updates."""
+        self._update_availability()
+        self.async_write_ha_state()
+
+    def _get_is_connected(self) -> bool | None:
+        """Return receiver connection status if available."""
+        for attribute in ("connected", "is_connected"):
+            if (value := getattr(self._receiver, attribute, None)) is not None:
+                return bool(value)
+        return None
+
+    @callback
+    def _update_availability(self) -> None:
+        """Update availability and log transition events."""
+        is_connected = self._get_is_connected()
+        if is_connected is None:
+            return
+
+        if is_connected == self._attr_available:
+            return
+
+        self._attr_available = is_connected
+
+        if not is_connected:
+            if not self._unavailable_logged:
+                _LOGGER.info("Device is unavailable: %s", self.name)
+                self._unavailable_logged = True
+            return
+
+        if self._unavailable_logged:
+            _LOGGER.info("Device is back online: %s", self.name)
+            self._unavailable_logged = False
 
 
 class MP60ZoneBDevice(MP60Device):
