@@ -240,8 +240,14 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
         """Play a piece of media."""
         command = "PlayNow"
         shuffle = kwargs.get("extra", {}).get("shuffle", False)
+        queue = kwargs.get("extra", {}).get("queue", False)
         if bool(shuffle):
             command = "PlayShuffle"
+        elif isinstance(queue, str):
+            if queue.lower() == "next":
+                command = "PlayNext"
+            elif queue.lower() == "last":
+                command = "PlayLast"
         self.coordinator.api_client.jellyfin.remote_play_media(
             self.session_id, [media_id], command
         )
