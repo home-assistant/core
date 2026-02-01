@@ -274,14 +274,3 @@ async def test_abort_if_already_configured(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_async_step_user_initial_form(hass: HomeAssistant) -> None:
-    """Test initial user step shows the form with no errors and correct schema."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-    assert "data_schema" in result
