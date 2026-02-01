@@ -1,4 +1,4 @@
-"""Test GIOS diagnostics."""
+"""Test Met.no diagnostics."""
 
 from syrupy.assertion import SnapshotAssertion
 
