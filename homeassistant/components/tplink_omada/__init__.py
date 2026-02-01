@@ -86,37 +86,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
         raise_on_error=False,
     )
 
-    async def _async_cleanup_devices_task() -> None:
+    async def _async_cleanup_task() -> None:
         await async_cleanup_devices(
             hass,
             config_entry_ids={entry.entry_id},
         )
-
-    @callback
-    def _schedule_device_cleanup() -> None:
-        entry.async_create_background_task(
-            hass,
-            _async_cleanup_devices_task(),
-            "tplink_omada device cleanup",
-        )
-
-    _schedule_device_cleanup()
-
-    entry.async_on_unload(
-        controller.devices_coordinator.async_add_listener(_schedule_device_cleanup)
-    )
-
-    @callback
-    def _handle_device_cleanup_interval(_: object) -> None:
-        _schedule_device_cleanup()
-
-    entry.async_on_unload(
-        async_track_time_interval(
-            hass, _handle_device_cleanup_interval, CLEANUP_INTERVAL
-        )
-    )
-
-    async def _async_cleanup_client_trackers_task() -> None:
         await async_cleanup_client_trackers(
             hass,
             config_entry_ids={entry.entry_id},
@@ -124,29 +98,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
         )
 
     @callback
-    def _schedule_client_tracker_cleanup() -> None:
+    def _schedule_cleanup() -> None:
         entry.async_create_background_task(
             hass,
-            _async_cleanup_client_trackers_task(),
-            "tplink_omada client tracker cleanup",
+            _async_cleanup_task(),
+            "tplink_omada cleanup",
         )
-
-    _schedule_client_tracker_cleanup()
 
     entry.async_on_unload(
-        controller.clients_coordinator.async_add_listener(
-            _schedule_client_tracker_cleanup
-        )
+        controller.devices_coordinator.async_add_listener(_schedule_cleanup)
+    )
+
+    entry.async_on_unload(
+        controller.clients_coordinator.async_add_listener(_schedule_cleanup)
     )
 
     @callback
-    def _handle_client_tracker_cleanup_interval(_: object) -> None:
-        _schedule_client_tracker_cleanup()
+    def _handle_cleanup_interval(_: object) -> None:
+        _schedule_cleanup()
 
     entry.async_on_unload(
-        async_track_time_interval(
-            hass, _handle_client_tracker_cleanup_interval, CLEANUP_INTERVAL
-        )
+        async_track_time_interval(hass, _handle_cleanup_interval, CLEANUP_INTERVAL)
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
