@@ -1,7 +1,9 @@
 """Test the ESPHome Dashboard update platform."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aioesphomeapi import APIConnectionError
 import pytest
 
 from homeassistant.components.esphome_dashboard.const import DOMAIN
@@ -9,6 +11,7 @@ from homeassistant.components.esphome_dashboard.update import (
     ESPHomeDashboardUpdateEntity,
 )
 from homeassistant.components.update import SERVICE_INSTALL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_URL, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -251,29 +254,52 @@ async def test_update_entity_install_success(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",
-        return_value=mock_api,
+    # Mock mDNS port discovery to return None (fall back to default port)
+    mock_discover_port = AsyncMock(return_value=None)
+
+    # Mock direct API client for version query
+    mock_device_info = MagicMock()
+    mock_device_info.esphome_version = "2024.1.0"
+
+    mock_api_client = MagicMock()
+    mock_api_client.connect = AsyncMock()
+    mock_api_client.disconnect = AsyncMock()
+    mock_api_client.device_info = AsyncMock(return_value=mock_device_info)
+
+    with (
+        patch(
+            "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",
+            return_value=mock_api,
+        ),
+        patch(
+            "homeassistant.components.esphome_dashboard.update.APIClient",
+            return_value=mock_api_client,
+        ),
+        patch.object(
+            ESPHomeDashboardUpdateEntity,
+            "_async_discover_device_port",
+            mock_discover_port,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # Entity should have install feature enabled
-    state = hass.states.get("update.test_device_firmware")
-    assert state is not None
-    assert state.state == STATE_ON  # Update available
+        # Entity should have install feature enabled
+        state = hass.states.get("update.test_device_firmware")
+        assert state is not None
+        assert state.state == STATE_ON  # Update available
 
-    # Call install service
-    await hass.services.async_call(
-        "update",
-        SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.test_device_firmware"},
-        blocking=True,
-    )
+        # Call install service
+        await hass.services.async_call(
+            "update",
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.test_device_firmware"},
+            blocking=True,
+        )
 
-    # Verify compile and upload were called
-    mock_api.compile.assert_called_once_with("test_device.yaml")
-    mock_api.upload.assert_called_once_with("test_device.yaml", "192.168.1.50")
+        # Verify compile and upload were called
+        mock_api.compile.assert_called_once_with("test_device.yaml")
+        mock_api.upload.assert_called_once_with("test_device.yaml", "192.168.1.50")
 
 
 async def test_update_entity_no_address_no_install_support(
@@ -477,3 +503,776 @@ async def test_update_entity_install_upload_failure(
             {ATTR_ENTITY_ID: "update.test_device_firmware"},
             blocking=True,
         )
+
+
+async def test_installed_version_fallback_to_dashboard(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test installed_version falls back to dashboard when direct query fails.
+
+    When a device is NOT in the esphome integration and the direct API query
+    fails (device offline, encrypted, etc.), fall back to dashboard's deployed_version.
+    """
+    dashboard_deployed_version = "2023.12.0"
+    dashboard_current_version = "2024.5.0"
+
+    # Create mock dashboard API
+    mock_api = MagicMock()
+    mock_api.request = AsyncMock(return_value=None)
+    mock_api.get_devices = AsyncMock(
+        return_value={
+            "configured": [
+                {
+                    "name": "test_device",
+                    "deployed_version": dashboard_deployed_version,
+                    "current_version": dashboard_current_version,
+                    "configuration": "test_device.yaml",
+                    "address": "192.168.1.50",
+                }
+            ]
+        }
+    )
+
+    # Create esphome_dashboard config entry
+    entry = MockConfigEntry(
+        title="ESPHome Dashboard",
+        domain=DOMAIN,
+        data={CONF_URL: "http://192.168.1.100:6052"},
+        unique_id="http://192.168.1.100:6052",
+    )
+    entry.add_to_hass(hass)
+
+    # Mock the direct API query to fail (device offline/encrypted)
+    mock_api_client = MagicMock()
+    mock_api_client.connect = AsyncMock(
+        side_effect=APIConnectionError("Connection failed")
+    )
+    mock_api_client.disconnect = AsyncMock()
+
+    # Mock mDNS port discovery to return None (fall back to default port)
+    mock_discover_port = AsyncMock(return_value=None)
+
+    with (
+        patch(
+            "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",
+            return_value=mock_api,
+        ),
+        patch(
+            "homeassistant.components.esphome_dashboard.update.APIClient",
+            return_value=mock_api_client,
+        ),
+        patch.object(
+            ESPHomeDashboardUpdateEntity,
+            "_async_discover_device_port",
+            mock_discover_port,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Should fall back to dashboard's deployed_version when query fails
+    state = hass.states.get("update.test_device_firmware")
+    assert state is not None
+    assert state.attributes["installed_version"] == dashboard_deployed_version
+    assert state.attributes["latest_version"] == dashboard_current_version
+
+
+async def test_installed_version_from_direct_api_query(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test installed_version from direct native API query.
+
+    When a device is NOT in the esphome integration, we should query the
+    device directly via the native API to get the actual version.
+    """
+    # The dashboard reports deployed_version as "2023.12.0" but the actual
+    # device (via direct API query) reports version "2024.3.0"
+    dashboard_deployed_version = "2023.12.0"
+    actual_device_version = "2024.3.0"
+    dashboard_current_version = "2024.5.0"
+
+    # Create mock dashboard API
+    mock_api = MagicMock()
+    mock_api.request = AsyncMock(return_value=None)
+    mock_api.get_devices = AsyncMock(
+        return_value={
+            "configured": [
+                {
+                    "name": "test_device",
+                    "deployed_version": dashboard_deployed_version,
+                    "current_version": dashboard_current_version,
+                    "configuration": "test_device.yaml",
+                    "address": "192.168.1.50",
+                }
+            ]
+        }
+    )
+
+    # Create esphome_dashboard config entry
+    entry = MockConfigEntry(
+        title="ESPHome Dashboard",
+        domain=DOMAIN,
+        data={CONF_URL: "http://192.168.1.100:6052"},
+        unique_id="http://192.168.1.100:6052",
+    )
+    entry.add_to_hass(hass)
+
+    # Mock the direct API query
+    mock_device_info = MagicMock()
+    mock_device_info.esphome_version = actual_device_version
+
+    mock_api_client = MagicMock()
+    mock_api_client.connect = AsyncMock()
+    mock_api_client.disconnect = AsyncMock()
+    mock_api_client.device_info = AsyncMock(return_value=mock_device_info)
+
+    # Mock mDNS port discovery to return None (fall back to default port)
+    mock_discover_port = AsyncMock(return_value=None)
+
+    with (
+        patch(
+            "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",
+            return_value=mock_api,
+        ),
+        patch(
+            "homeassistant.components.esphome_dashboard.update.APIClient",
+            return_value=mock_api_client,
+        ),
+        patch.object(
+            ESPHomeDashboardUpdateEntity,
+            "_async_discover_device_port",
+            mock_discover_port,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # The installed_version should be from direct API query (actual device version)
+    # NOT the dashboard's deployed_version
+    state = hass.states.get("update.test_device_firmware")
+    assert state is not None
+    assert state.attributes["installed_version"] == actual_device_version
+    assert state.attributes["latest_version"] == dashboard_current_version
+
+
+async def test_post_ota_version_refresh(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that cached version is refreshed after OTA update.
+
+    When an OTA update is performed via the dashboard, the cached version
+    should be cleared and re-queried from the device.
+    """
+    initial_version = "2024.1.0"
+    updated_version = "2024.5.0"
+
+    # Create mock dashboard API
+    mock_api = MagicMock()
+    mock_api.request = AsyncMock(return_value=None)
+    mock_api.get_devices = AsyncMock(
+        return_value={
+            "configured": [
+                {
+                    "name": "test_device",
+                    "deployed_version": "2023.12.0",  # Stale version
+                    "current_version": updated_version,
+                    "configuration": "test_device.yaml",
+                    "address": "192.168.1.50",
+                }
+            ]
+        }
+    )
+    mock_api.compile = AsyncMock(return_value=True)
+    mock_api.upload = AsyncMock(return_value=True)
+
+    # Create esphome_dashboard config entry
+    entry = MockConfigEntry(
+        title="ESPHome Dashboard",
+        domain=DOMAIN,
+        data={CONF_URL: "http://192.168.1.100:6052"},
+        unique_id="http://192.168.1.100:6052",
+    )
+    entry.add_to_hass(hass)
+
+    # Track calls to the API client
+    query_count = 0
+
+    def create_mock_client(*args, **kwargs):
+        nonlocal query_count
+        mock_device_info = MagicMock()
+        # Return initial version first, then updated version after OTA
+        if query_count == 0:
+            mock_device_info.esphome_version = initial_version
+        else:
+            mock_device_info.esphome_version = updated_version
+        query_count += 1
+
+        mock_client = MagicMock()
+        mock_client.connect = AsyncMock()
+        mock_client.disconnect = AsyncMock()
+        mock_client.device_info = AsyncMock(return_value=mock_device_info)
+        return mock_client
+
+    # Mock mDNS port discovery to return None (fall back to default port)
+    mock_discover_port = AsyncMock(return_value=None)
+
+    with (
+        patch(
+            "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",
+            return_value=mock_api,
+        ),
+        patch(
+            "homeassistant.components.esphome_dashboard.update.APIClient",
+            side_effect=create_mock_client,
+        ),
+        patch.object(
+            ESPHomeDashboardUpdateEntity,
+            "_async_discover_device_port",
+            mock_discover_port,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Initial version from direct query
+        state = hass.states.get("update.test_device_firmware")
+        assert state is not None
+        assert state.attributes["installed_version"] == initial_version
+
+        # Perform OTA update
+        await hass.services.async_call(
+            "update",
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.test_device_firmware"},
+            blocking=True,
+        )
+
+        # Wait for delayed version query (if any)
+        await asyncio.sleep(0.1)
+        await hass.async_block_till_done()
+
+        # After OTA, version should be updated
+        state = hass.states.get("update.test_device_firmware")
+        assert state is not None
+        assert state.attributes["installed_version"] == updated_version
+
+
+async def test_installed_version_from_esphome_integration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test installed_version uses esphome integration version when available.
+
+    When a device is also configured in the esphome integration, the
+    installed_version should come from device_info.esphome_version (the actual
+    device version) instead of the dashboard's deployed_version (which can be stale).
+    """
+    # The dashboard reports deployed_version as "2023.12.0" but the actual
+    # device (via esphome integration) reports version "2024.3.0"
+    dashboard_deployed_version = "2023.12.0"
+    actual_device_version = "2024.3.0"
+    dashboard_current_version = "2024.5.0"  # Available update target
+
+    # Create mock esphome config entry with RuntimeEntryData
+    esphome_entry = MockConfigEntry(
+        domain="esphome",
+        data={
+            "host": "192.168.1.50",
+            "port": 6053,
+            "password": "",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    esphome_entry.add_to_hass(hass)
+
+    # Create mock RuntimeEntryData with device_info containing the actual version
+    mock_device_info = MagicMock()
+    mock_device_info.name = "test_device"
+    mock_device_info.esphome_version = actual_device_version
+
+    mock_entry_data = MagicMock()
+    mock_entry_data.device_info = mock_device_info
+    mock_entry_data.async_subscribe_device_updated = MagicMock(
+        return_value=lambda: None
+    )
+
+    # Attach runtime_data to the entry
+    esphome_entry.runtime_data = mock_entry_data
+
+    # Mark the esphome entry as loaded
+    hass.config_entries._entries[esphome_entry.entry_id] = esphome_entry
+    esphome_entry._async_set_state(hass, ConfigEntryState.LOADED, None)
+
+    # Create mock dashboard API
+    mock_api = MagicMock()
+    mock_api.request = AsyncMock(return_value=None)
+    mock_api.get_devices = AsyncMock(
+        return_value={
+            "configured": [
+                {
+                    "name": "test_device",
+                    "deployed_version": dashboard_deployed_version,
+                    "current_version": dashboard_current_version,
+                    "configuration": "test_device.yaml",
+                    "address": "192.168.1.50",
+                }
+            ]
+        }
+    )
+
+    # Create esphome_dashboard config entry
+    entry = MockConfigEntry(
+        title="ESPHome Dashboard",
+        domain=DOMAIN,
+        data={CONF_URL: "http://192.168.1.100:6052"},
+        unique_id="http://192.168.1.100:6052",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",
+        return_value=mock_api,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # The installed_version should be from esphome integration (actual device version)
+    # NOT the dashboard's deployed_version
+    state = hass.states.get("update.test_device_firmware")
+    assert state is not None
+    assert state.attributes["installed_version"] == actual_device_version
+    assert state.attributes["latest_version"] == dashboard_current_version
+    # Update should be available since actual version != current_version
+    assert state.state == STATE_ON
+
+
+async def test_mdns_port_discovery_success(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test successful mDNS port discovery for native API.
+
+    When a device advertises its port via mDNS, we should use that port
+    instead of the default port.
+    """
+    actual_device_version = "2024.3.0"
+    discovered_port = 6055  # Non-default port
+
+    # Create mock dashboard API
+    mock_api = MagicMock()
+    mock_api.request = AsyncMock(return_value=None)
+    mock_api.get_devices = AsyncMock(
+        return_value={
+            "configured": [
+                {
+                    "name": "test_device",
+                    "deployed_version": "2023.12.0",
+                    "current_version": "2024.5.0",
+                    "configuration": "test_device.yaml",
+                    "address": "192.168.1.50",
+                }
+            ]
+        }
+    )
+
+    # Create esphome_dashboard config entry
+    entry = MockConfigEntry(
+        title="ESPHome Dashboard",
+        domain=DOMAIN,
+        data={CONF_URL: "http://192.168.1.100:6052"},
+        unique_id="http://192.168.1.100:6052",
+    )
+    entry.add_to_hass(hass)
+
+    # Mock the direct API query
+    mock_device_info = MagicMock()
+    mock_device_info.esphome_version = actual_device_version
+
+    mock_api_client = MagicMock()
+    mock_api_client.connect = AsyncMock()
+    mock_api_client.disconnect = AsyncMock()
+    mock_api_client.device_info = AsyncMock(return_value=mock_device_info)
+
+    # Mock mDNS discovery to return a non-default port
+    mock_service_info = MagicMock()
+    mock_service_info.port = discovered_port
+    mock_service_info.async_request = AsyncMock(return_value=True)
+
+    mock_aiozc = MagicMock()
+
+    with (
+        patch(
+            "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",
+            return_value=mock_api,
+        ),
+        patch(
+            "homeassistant.components.esphome_dashboard.update.APIClient",
+            return_value=mock_api_client,
+        ) as mock_api_client_class,
+        patch(
+            "homeassistant.components.esphome_dashboard.update.zeroconf.async_get_async_instance",
+            return_value=mock_aiozc,
+        ),
+        patch(
+            "homeassistant.components.esphome_dashboard.update.AsyncServiceInfo",
+            return_value=mock_service_info,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # The API client should have been created with the discovered port
+    mock_api_client_class.assert_called_with(
+        "192.168.1.50", port=discovered_port, password=""
+    )
+
+    # Version should be from the direct query
+    state = hass.states.get("update.test_device_firmware")
+    assert state is not None
+    assert state.attributes["installed_version"] == actual_device_version
+
+
+async def test_mdns_port_discovery_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test mDNS port discovery failure falls back to default port.
+
+    When mDNS discovery fails (timeout, OS error, etc.), we should fall back
+    to the default ESPHome native API port.
+    """
+    actual_device_version = "2024.3.0"
+
+    # Create mock dashboard API
+    mock_api = MagicMock()
+    mock_api.request = AsyncMock(return_value=None)
+    mock_api.get_devices = AsyncMock(
+        return_value={
+            "configured": [
+                {
+                    "name": "test_device",
+                    "deployed_version": "2023.12.0",
+                    "current_version": "2024.5.0",
+                    "configuration": "test_device.yaml",
+                    "address": "192.168.1.50",
+                }
+            ]
+        }
+    )
+
+    # Create esphome_dashboard config entry
+    entry = MockConfigEntry(
+        title="ESPHome Dashboard",
+        domain=DOMAIN,
+        data={CONF_URL: "http://192.168.1.100:6052"},
+        unique_id="http://192.168.1.100:6052",
+    )
+    entry.add_to_hass(hass)
+
+    # Mock the direct API query
+    mock_device_info = MagicMock()
+    mock_device_info.esphome_version = actual_device_version
+
+    mock_api_client = MagicMock()
+    mock_api_client.connect = AsyncMock()
+    mock_api_client.disconnect = AsyncMock()
+    mock_api_client.device_info = AsyncMock(return_value=mock_device_info)
+
+    # Mock mDNS discovery to raise TimeoutError
+    with (
+        patch(
+            "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",
+            return_value=mock_api,
+        ),
+        patch(
+            "homeassistant.components.esphome_dashboard.update.APIClient",
+            return_value=mock_api_client,
+        ) as mock_api_client_class,
+        patch(
+            "homeassistant.components.esphome_dashboard.update.zeroconf.async_get_async_instance",
+            side_effect=TimeoutError("mDNS timeout"),
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # The API client should have been created with the default port (6053)
+    mock_api_client_class.assert_called_with("192.168.1.50", port=6053, password="")
+
+    # Version should still be from the direct query
+    state = hass.states.get("update.test_device_firmware")
+    assert state is not None
+    assert state.attributes["installed_version"] == actual_device_version
+
+
+async def test_esphome_device_update_callback(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that esphome device update callback triggers state update.
+
+    When the esphome integration reports a device update (e.g., version change),
+    the update entity should update its state.
+    """
+    initial_version = "2024.1.0"
+    updated_version = "2024.5.0"
+
+    # Create mock esphome config entry with RuntimeEntryData
+    esphome_entry = MockConfigEntry(
+        domain="esphome",
+        data={
+            "host": "192.168.1.50",
+            "port": 6053,
+            "password": "",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    esphome_entry.add_to_hass(hass)
+
+    # Create mock device_info that we can update
+    mock_device_info = MagicMock()
+    mock_device_info.name = "test_device"
+    mock_device_info.esphome_version = initial_version
+
+    # Store the callback so we can call it later
+    update_callbacks = []
+
+    def mock_subscribe(callback):
+        update_callbacks.append(callback)
+        return lambda: update_callbacks.remove(callback)
+
+    mock_entry_data = MagicMock()
+    mock_entry_data.device_info = mock_device_info
+    mock_entry_data.async_subscribe_device_updated = mock_subscribe
+
+    # Attach runtime_data to the entry
+    esphome_entry.runtime_data = mock_entry_data
+
+    # Mark the esphome entry as loaded
+    hass.config_entries._entries[esphome_entry.entry_id] = esphome_entry
+    esphome_entry._async_set_state(hass, ConfigEntryState.LOADED, None)
+
+    # Create mock dashboard API
+    mock_api = MagicMock()
+    mock_api.request = AsyncMock(return_value=None)
+    mock_api.get_devices = AsyncMock(
+        return_value={
+            "configured": [
+                {
+                    "name": "test_device",
+                    "deployed_version": "2023.12.0",
+                    "current_version": "2024.6.0",
+                    "configuration": "test_device.yaml",
+                    "address": "192.168.1.50",
+                }
+            ]
+        }
+    )
+
+    # Create esphome_dashboard config entry
+    entry = MockConfigEntry(
+        title="ESPHome Dashboard",
+        domain=DOMAIN,
+        data={CONF_URL: "http://192.168.1.100:6052"},
+        unique_id="http://192.168.1.100:6052",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",
+        return_value=mock_api,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Initial version from esphome integration
+    state = hass.states.get("update.test_device_firmware")
+    assert state is not None
+    assert state.attributes["installed_version"] == initial_version
+
+    # Simulate device update from esphome integration
+    mock_device_info.esphome_version = updated_version
+
+    # Call the update callback
+    assert len(update_callbacks) == 1
+    update_callbacks[0]()
+    await hass.async_block_till_done()
+
+    # Version should now be updated
+    state = hass.states.get("update.test_device_firmware")
+    assert state is not None
+    assert state.attributes["installed_version"] == updated_version
+
+
+async def test_dynamic_esphome_discovery_on_coordinator_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test dynamic esphome integration discovery on coordinator update.
+
+    When the esphome integration loads after esphome_dashboard, the update
+    entity should detect it on the next coordinator update and switch to
+    using the esphome integration version.
+    """
+    dashboard_version = "2023.12.0"
+    esphome_version = "2024.3.0"
+
+    # Create mock dashboard API
+    mock_api = MagicMock()
+    mock_api.request = AsyncMock(return_value=None)
+    mock_api.get_devices = AsyncMock(
+        return_value={
+            "configured": [
+                {
+                    "name": "test_device",
+                    "deployed_version": dashboard_version,
+                    "current_version": "2024.5.0",
+                    "configuration": "test_device.yaml",
+                    # No address - so direct query won't be attempted
+                }
+            ]
+        }
+    )
+
+    # Create esphome_dashboard config entry FIRST (before esphome)
+    entry = MockConfigEntry(
+        title="ESPHome Dashboard",
+        domain=DOMAIN,
+        data={CONF_URL: "http://192.168.1.100:6052"},
+        unique_id="http://192.168.1.100:6052",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",
+        return_value=mock_api,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Initially should use dashboard version (no esphome integration yet)
+    state = hass.states.get("update.test_device_firmware")
+    assert state is not None
+    assert state.attributes["installed_version"] == dashboard_version
+
+    # Now "load" esphome integration
+    esphome_entry = MockConfigEntry(
+        domain="esphome",
+        data={
+            "host": "192.168.1.50",
+            "port": 6053,
+            "password": "",
+        },
+        unique_id="11:22:33:44:55:bb",
+    )
+    esphome_entry.add_to_hass(hass)
+
+    mock_device_info = MagicMock()
+    mock_device_info.name = "test_device"
+    mock_device_info.esphome_version = esphome_version
+
+    mock_entry_data = MagicMock()
+    mock_entry_data.device_info = mock_device_info
+    mock_entry_data.async_subscribe_device_updated = MagicMock(
+        return_value=lambda: None
+    )
+
+    esphome_entry.runtime_data = mock_entry_data
+    hass.config_entries._entries[esphome_entry.entry_id] = esphome_entry
+    esphome_entry._async_set_state(hass, ConfigEntryState.LOADED, None)
+
+    # Trigger coordinator update
+    coordinator = entry.runtime_data.coordinator
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    # Now should use esphome integration version
+    state = hass.states.get("update.test_device_firmware")
+    assert state is not None
+    assert state.attributes["installed_version"] == esphome_version
+
+
+async def test_fetch_device_version_no_address(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test _async_fetch_device_version returns early when no address.
+
+    When a device has no address, _async_fetch_device_version should return
+    early without attempting to query the device. This tests the defensive
+    check by directly calling the method after clearing the address.
+    """
+    # Create mock dashboard API with device that HAS an address initially
+    mock_api = MagicMock()
+    mock_api.request = AsyncMock(return_value=None)
+    mock_api.get_devices = AsyncMock(
+        return_value={
+            "configured": [
+                {
+                    "name": "test_device",
+                    "deployed_version": "2023.12.0",
+                    "current_version": "2024.5.0",
+                    "configuration": "test_device.yaml",
+                    "address": "192.168.1.50",
+                }
+            ]
+        }
+    )
+
+    # Create esphome_dashboard config entry
+    entry = MockConfigEntry(
+        title="ESPHome Dashboard",
+        domain=DOMAIN,
+        data={CONF_URL: "http://192.168.1.100:6052"},
+        unique_id="http://192.168.1.100:6052",
+    )
+    entry.add_to_hass(hass)
+
+    # Mock mDNS port discovery and API client
+    mock_device_info = MagicMock()
+    mock_device_info.esphome_version = "2024.1.0"
+
+    mock_api_client = MagicMock()
+    mock_api_client.connect = AsyncMock()
+    mock_api_client.disconnect = AsyncMock()
+    mock_api_client.device_info = AsyncMock(return_value=mock_device_info)
+
+    mock_discover_port = AsyncMock(return_value=None)
+
+    with (
+        patch(
+            "homeassistant.components.esphome_dashboard.ESPHomeDashboardAPI",
+            return_value=mock_api,
+        ),
+        patch(
+            "homeassistant.components.esphome_dashboard.update.APIClient",
+            return_value=mock_api_client,
+        ) as mock_api_client_class,
+        patch.object(
+            ESPHomeDashboardUpdateEntity,
+            "_async_discover_device_port",
+            mock_discover_port,
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Get the entity
+        entity_id = "update.test_device_firmware"
+        entity: ESPHomeDashboardUpdateEntity = hass.data["update"].get_entity(entity_id)
+        assert entity is not None
+
+        # Reset the mock to track new calls
+        mock_api_client_class.reset_mock()
+
+        # Clear the address to test the defensive check in _async_fetch_device_version
+        entity._address = None
+
+        # Directly call _async_fetch_device_version - should return early
+        await entity._async_fetch_device_version()
+
+        # APIClient should NOT have been called since address is None
+        mock_api_client_class.assert_not_called()

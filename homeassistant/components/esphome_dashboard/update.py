@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+from aioesphomeapi import APIClient, APIConnectionError
 from esphome_dashboard_api import ConfiguredDevice
+from zeroconf.asyncio import AsyncServiceInfo
 
+from homeassistant.components import zeroconf
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -20,7 +24,16 @@ from . import ESPHomeDashboardConfigEntry
 from .const import DOMAIN
 from .coordinator import ESPHomeDashboardCoordinator
 
+if TYPE_CHECKING:
+    from homeassistant.components.esphome import RuntimeEntryData
+
+# ESPHome native API default port (same as esphome.const.DEFAULT_PORT)
+DEFAULT_PORT = 6053
+
 _LOGGER = logging.getLogger(__name__)
+
+# ESPHome mDNS service type for port discovery
+ESPHOME_SERVICE_TYPE = "_esphomelib._tcp.local."
 
 # All entities share a DataUpdateCoordinator, so no parallel updates needed
 PARALLEL_UPDATES = 0
@@ -37,6 +50,24 @@ def _find_esphome_device_mac(hass: HomeAssistant, device_name: str) -> str | Non
             for conn_type, conn_id in device.connections:
                 if conn_type == CONNECTION_NETWORK_MAC:
                     return conn_id
+    return None
+
+
+def _find_esphome_entry_data(
+    hass: HomeAssistant, device_name: str
+) -> RuntimeEntryData | None:
+    """Find RuntimeEntryData for an ESPHome device by name.
+
+    Returns the RuntimeEntryData from a loaded ESPHome config entry if the
+    device name matches. This allows us to get the actual device version
+    instead of relying on the dashboard's potentially stale deployed_version.
+    """
+    for entry in hass.config_entries.async_entries("esphome"):
+        if entry.state != ConfigEntryState.LOADED:
+            continue
+        entry_data: RuntimeEntryData = entry.runtime_data
+        if entry_data.device_info and entry_data.device_info.name == device_name:
+            return entry_data
     return None
 
 
@@ -114,6 +145,12 @@ class ESPHomeDashboardUpdateEntity(
         self._configuration = device_data.get("configuration", f"{device_name}.yaml")
         self._address = device_data.get("address")
 
+        # Version tracking - prefer esphome integration version over dashboard
+        self._esphome_entry_data: RuntimeEntryData | None = None
+        self._cached_device_version: str | None = None
+        self._esphome_unsubscribe: CALLBACK_TYPE | None = None
+        self._dashboard_deployed_version: str | None = None
+
         # Build configuration URL from dashboard URL
         dashboard_url = coordinator.config_entry.data[CONF_URL]
         configuration_url = f"{dashboard_url.rstrip('/')}/"
@@ -136,9 +173,119 @@ class ESPHomeDashboardUpdateEntity(
 
         self._update_attrs(device_data)
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity added to Home Assistant."""
+        await super().async_added_to_hass()
+
+        # Try to find esphome integration entry for this device
+        self._esphome_entry_data = _find_esphome_entry_data(
+            self.hass, self._device_name
+        )
+
+        if self._esphome_entry_data:
+            _LOGGER.debug(
+                "Using version from esphome integration for %s", self._device_name
+            )
+            # Subscribe to device updates for version changes
+            self._esphome_unsubscribe = (
+                self._esphome_entry_data.async_subscribe_device_updated(
+                    self._handle_esphome_device_update
+                )
+            )
+            # Update state immediately with esphome version
+            self.async_write_ha_state()
+        elif self._address:
+            # Not in esphome integration - query device directly
+            self.hass.async_create_task(self._async_fetch_device_version())
+
+    async def _async_discover_device_port(self) -> int | None:
+        """Discover device port via mDNS.
+
+        Returns the native API port advertised by the device, or None if not found.
+        """
+        try:
+            aiozc = await zeroconf.async_get_async_instance(self.hass)
+            service_name = f"{self._device_name}.{ESPHOME_SERVICE_TYPE}"
+
+            info = AsyncServiceInfo(ESPHOME_SERVICE_TYPE, service_name)
+            if await info.async_request(aiozc.zeroconf, timeout=3.0):
+                _LOGGER.debug(
+                    "Discovered port %s for %s via mDNS", info.port, self._device_name
+                )
+                return info.port
+        except (TimeoutError, OSError, AttributeError):
+            # AttributeError can occur if zeroconf is not properly initialized
+            _LOGGER.debug("Failed to discover port for %s via mDNS", self._device_name)
+        return None
+
+    async def _async_query_device_version(self, address: str) -> str | None:
+        """Query device version directly via native API.
+
+        Returns the esphome_version from the device, or None if query fails.
+        """
+        # Discover port via mDNS, fall back to default
+        port = await self._async_discover_device_port()
+        if port is None:
+            port = DEFAULT_PORT
+
+        _LOGGER.debug(
+            "Querying %s directly for version via port %s", self._device_name, port
+        )
+
+        client = APIClient(address, port=port, password="")
+        try:
+            await client.connect(login=False)
+            device_info = await client.device_info()
+        except APIConnectionError:
+            _LOGGER.debug(
+                "Direct query failed for %s, using dashboard version", self._device_name
+            )
+            return None
+        else:
+            return device_info.esphome_version
+        finally:
+            await client.disconnect()
+
+    async def _async_fetch_device_version(self) -> None:
+        """Fetch device version via direct API query and update state."""
+        if not self._address:
+            return
+
+        version = await self._async_query_device_version(self._address)
+        if version:
+            self._cached_device_version = version
+            self.async_write_ha_state()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle entity being removed from Home Assistant."""
+        if self._esphome_unsubscribe:
+            self._esphome_unsubscribe()
+            self._esphome_unsubscribe = None
+
+    @callback
+    def _handle_esphome_device_update(self) -> None:
+        """Handle device update from esphome integration."""
+        self.async_write_ha_state()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        # Re-check for esphome integration if not already linked
+        # (handles case where esphome loads after esphome_dashboard)
+        if not self._esphome_entry_data:
+            entry_data = _find_esphome_entry_data(self.hass, self._device_name)
+            if entry_data:
+                _LOGGER.debug(
+                    "Found esphome integration for %s on coordinator update",
+                    self._device_name,
+                )
+                self._esphome_entry_data = entry_data
+                self._esphome_unsubscribe = entry_data.async_subscribe_device_updated(
+                    self._handle_esphome_device_update
+                )
+                # Clear cached version since esphome has authoritative data
+                self._cached_device_version = None
+
         if self._device_name in self.coordinator.data:
             device_data = self.coordinator.data[self._device_name]
             self._update_attrs(device_data)
@@ -153,13 +300,14 @@ class ESPHomeDashboardUpdateEntity(
         self._attr_available = True
 
         # Get version information from ESPHome Dashboard API:
-        # - deployed_version: firmware version currently running on the device
+        # - deployed_version: firmware version currently running on the device (can be stale)
         # - current_version: version available in the YAML configuration
-        deployed_version = device_data.get("deployed_version")
+        self._dashboard_deployed_version = device_data.get("deployed_version")
         available_version = device_data.get("current_version")
 
-        self._attr_installed_version = deployed_version
-        self._attr_latest_version = available_version or deployed_version
+        self._attr_latest_version = (
+            available_version or self._dashboard_deployed_version
+        )
 
         # Store address for OTA updates
         self._address = device_data.get("address")
@@ -169,6 +317,24 @@ class ESPHomeDashboardUpdateEntity(
             self._attr_supported_features = UpdateEntityFeature.INSTALL
         else:
             self._attr_supported_features = UpdateEntityFeature(0)
+
+    @property
+    def installed_version(self) -> str | None:
+        """Return installed version with priority: esphome > cached > dashboard.
+
+        The ESPHome dashboard's deployed_version can be stale or incorrect.
+        Prefer the actual version from the device when available.
+        """
+        # Priority 1: ESPHome integration (authoritative, live updates)
+        if self._esphome_entry_data and self._esphome_entry_data.device_info:
+            return self._esphome_entry_data.device_info.esphome_version
+
+        # Priority 2: Cached version from direct API query
+        if self._cached_device_version:
+            return self._cached_device_version
+
+        # Priority 3: Fallback to dashboard's deployed_version
+        return self._dashboard_deployed_version
 
     @property
     def available(self) -> bool:
@@ -219,5 +385,13 @@ class ESPHomeDashboardUpdateEntity(
             self._device_name,
         )
 
-        # Refresh coordinator data to get updated version info
+        # Clear cached version to force re-query after OTA
+        self._cached_device_version = None
+
+        # Refresh coordinator data to get updated version info from dashboard
         await self.coordinator.async_request_refresh()
+
+        # If not using esphome integration, re-query device version
+        # (device needs time to reboot after OTA, but we can try immediately)
+        if not self._esphome_entry_data and self._address:
+            await self._async_fetch_device_version()
