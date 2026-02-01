@@ -67,23 +67,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up Liebherr number entities."""
     coordinators = entry.runtime_data
-    entities: list[LiebherrNumber] = []
-
-    for coordinator in coordinators.values():
-        # Get all temperature controls for this device
-        temp_controls = coordinator.data.get_temperature_controls()
-
-        for temp_control in temp_controls.values():
-            entities.extend(
-                LiebherrNumber(
-                    coordinator=coordinator,
-                    zone_id=temp_control.zone_id,
-                    description=description,
-                )
-                for description in NUMBER_TYPES
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        LiebherrNumber(
+            coordinator=coordinator,
+            zone_id=temp_control.zone_id,
+            description=description,
+        )
+        for coordinator in coordinators.values()
+        for temp_control in coordinator.data.get_temperature_controls().values()
+        for description in NUMBER_TYPES
+    )
 
 
 class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
@@ -104,15 +97,10 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
 
         # If device has only one zone, use translation key without zone suffix
         temp_controls = coordinator.data.get_temperature_controls()
-        if len(temp_controls) == 1:
-            self._attr_translation_key = description.translation_key
+        if len(temp_controls) > 1 and (zone_key := self._get_zone_translation_key()):
+            self._attr_translation_key = f"{description.translation_key}_{zone_key}"
         else:
-            # Set translation key based on zone position for multi-zone devices
-            zone_key = self._get_zone_translation_key()
-            if zone_key:
-                self._attr_translation_key = f"{description.translation_key}_{zone_key}"
-            else:
-                self._attr_translation_key = description.translation_key
+            self._attr_translation_key = description.translation_key
 
     @property
     def native_unit_of_measurement(self) -> str | None:

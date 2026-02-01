@@ -55,23 +55,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up Liebherr sensor entities."""
     coordinators = entry.runtime_data
-    entities: list[LiebherrSensor] = []
-
-    for coordinator in coordinators.values():
-        # Get all temperature controls for this device
-        temp_controls = coordinator.data.get_temperature_controls()
-
-        for temp_control in temp_controls.values():
-            entities.extend(
-                LiebherrSensor(
-                    coordinator=coordinator,
-                    zone_id=temp_control.zone_id,
-                    description=description,
-                )
-                for description in SENSOR_TYPES
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        LiebherrSensor(
+            coordinator=coordinator,
+            zone_id=temp_control.zone_id,
+            description=description,
+        )
+        for coordinator in coordinators.values()
+        for temp_control in coordinator.data.get_temperature_controls().values()
+        for description in SENSOR_TYPES
+    )
 
 
 class LiebherrSensor(LiebherrZoneEntity, SensorEntity):
