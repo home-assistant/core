@@ -9,9 +9,7 @@ rules:
       Multiline lambdas should be wrapped in parentheses for readability (e.g. streaming_listener).
       Use chained comparison: "if 1 < x < 100" instead of "if x > 1 and x < 100".
   config-flow: done
-  config-flow-test-coverage:
-    status: todo
-    comment: Use mock_setup_entry fixture instead of inline patch
+  config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
