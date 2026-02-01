@@ -1,5 +1,8 @@
 """Support for EnOcean devices."""
 
+from dataclasses import dataclass
+from typing import Any
+
 from homeassistant_enocean.address import EnOceanDeviceAddress
 from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 from homeassistant_enocean.legacy import combine_hex
@@ -10,15 +13,25 @@ from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.core import _LOGGER, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
 )
 
 type EnOceanConfigEntry = ConfigEntry[EnOceanHomeAssistantGateway]
+
+
+@dataclass
+class EnOceanHassData:
+    """Data stored in hass.data for EnOcean integration."""
+
+    gateway: EnOceanHomeAssistantGateway
+    devices: dict[str, list[dict]]
+    dispatcher_disconnect_handle: Any
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -47,9 +60,12 @@ def store_enocean_yaml_platform_config_in_hass_data(
     hass: HomeAssistant, config: ConfigType
 ) -> None:
     """Store yaml configuration to hass.data for later retrieval during config entry setup."""
-    hass.data.setdefault(DOMAIN, {})
+    hass.data.setdefault(
+        DOMAIN,
+        EnOceanHassData(gateway=None, devices={}, dispatcher_disconnect_handle=None),
+    )
 
-    enocean_devices: dict[str, list[dict]] = hass.data[DOMAIN]
+    devices: dict[str, list[dict]] = hass.data[DOMAIN].devices
 
     for platform in PLATFORMS:
         if platform.value not in config:
@@ -70,8 +86,8 @@ def store_enocean_yaml_platform_config_in_hass_data(
                 if "name" in entry:
                     device_name = entry["name"]
 
-                if enocean_devices.get(eurid.to_string()) is None:
-                    enocean_devices[eurid.to_string()] = []
+                if devices.get(eurid.to_string()) is None:
+                    devices[eurid.to_string()] = []
 
                 device_data = {
                     "platform": platform.value,
@@ -88,13 +104,13 @@ def store_enocean_yaml_platform_config_in_hass_data(
                     if key in entry:
                         device_data[key] = entry[key]
 
-                enocean_devices[eurid.to_string()].append(device_data)
+                devices[eurid.to_string()].append(device_data)
 
             except ValueError:
                 continue
 
     _LOGGER.warning(
-        "Completed storing EnOcean yaml configuration to hass.data: %s", enocean_devices
+        "Completed storing EnOcean yaml configuration to hass.data: %s", devices
     )
 
 
@@ -140,12 +156,18 @@ async def async_setup_entry(
         )
         _LOGGER.info("Starting EnOcean gateway")
         await gateway.start()
-        # gateway.legacy_callback()
+        gateway.legacy_callback = lambda packet: dispatcher_send(
+            hass, SIGNAL_RECEIVE_MESSAGE, packet
+        )
         _LOGGER.info("EnOcean gateway started")
     except Exception as ex:
         raise ConfigEntryError from ex
 
     config_entry.runtime_data = gateway
+    hass.data[DOMAIN].gateway = gateway
+    hass.data[DOMAIN].dispatcher_disconnect_handle = async_dispatcher_connect(
+        hass, SIGNAL_SEND_MESSAGE, gateway.legacy_send_packet
+    )
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
 
