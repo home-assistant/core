@@ -88,8 +88,7 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: LyngdorfConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    if hasattr(config_entry, "runtime_data"):
-        with suppress(Exception):
-            await config_entry.runtime_data.receiver.async_disconnect()
+    with suppress(Exception):
+        await config_entry.runtime_data.receiver.async_disconnect()
 
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
