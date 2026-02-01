@@ -63,9 +63,7 @@ async def _extract_config_entry(service_call: ServiceCall) -> PortainerConfigEnt
 
 
 async def _get_endpoint_id(
-    call: ServiceCall,
-    config_entry: PortainerConfigEntry,
-    container_id: str | None = None,
+    call: ServiceCall, config_entry: PortainerConfigEntry
 ) -> int:
     """Get endpoint data from device ID."""
     device_reg = dr.async_get(call.hass)
