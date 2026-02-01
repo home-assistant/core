@@ -212,19 +212,13 @@ async def async_setup_entry(
     """Set up Compit water heater entities from a config entry."""
 
     coordinator = entry.runtime_data
-    water_heater_entities = []
-
-    for device_id, device in coordinator.connector.all_devices.items():
-        device_definition = DEVICE_DEFINITIONS.get(device.definition.code)
-
-        if not device_definition:
-            continue
-
-        water_heater_entities.append(
+    async_add_entities(
+        [
             CompitWaterHeater(coordinator, device_id, device_definition)
-        )
-
-    async_add_entities(water_heater_entities)
+            for device_id, device in coordinator.connector.all_devices.items()
+            if (device_definition := DEVICE_DEFINITIONS.get(device.definition.code))
+        ]
+    )
 
 
 class CompitWaterHeater(
