@@ -216,9 +216,8 @@ def mock_onedrive_client(
             yield b"backup data"
 
         async def read(self) -> bytes:
-            # Include backup_file_id in metadata content (new format)
-            metadata_with_file_id = {**BACKUP_METADATA, "backup_file_id": "id"}
-            return dumps(metadata_with_file_id).encode()
+            # Metadata contains just the backup metadata (no backup_file_id)
+            return dumps(BACKUP_METADATA).encode()
 
     client.download_drive_item.return_value = MockStreamReader()
     client.get_drive.return_value = mock_drive
