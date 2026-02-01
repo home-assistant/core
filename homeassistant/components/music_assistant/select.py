@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from music_assistant_client import MusicAssistantClient
 from music_assistant_models.player import PlayerOption, PlayerOptionType
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -48,6 +49,18 @@ async def async_setup_entry(
 class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectEntity):
     """Representation of a Number entity to control player provider dependent settings."""
 
+    def __init__(
+        self, mass: MusicAssistantClient, player_id: str, player_option: PlayerOption
+    ) -> None:
+        """Initialize MusicAssistantPlayerConfigSelect."""
+        self._choice_name_id_mapping: dict[str, str] = {}
+        if player_option.choices is not None:
+            self._choice_name_id_mapping = {
+                choice.name: choice.id for choice in player_option.choices
+            }
+            self._attr_options = list(self._choice_name_id_mapping.keys())
+        super().__init__(mass, player_id, player_option)
+
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
         super().on_player_option_update(player_option)
@@ -58,17 +71,21 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
             translation_key=player_option.translation_key or "",
         )
 
-        # self._attr_options = list(capability.options.values())
-        if choices := player_option.choices:
-            self._attr_options = [choice.id for choice in choices]
-
     @property
     def current_option(self) -> str | None:
         """Return current option."""
-        return str(self.mass_value)
+        return next(
+            (
+                option_name
+                for option_name, option_id in self._choice_name_id_mapping.items()
+                if option_id == self.mass_value
+            ),
+            None,
+        )
 
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
-        await self.mass.players.set_player_option(
-            self.player_id, self.mass_option_id, option
-        )
+        if _option_id := self._choice_name_id_mapping.get(option):
+            await self.mass.players.set_player_option(
+                self.player_id, self.mass_option_id, _option_id
+            )
