@@ -236,8 +236,8 @@ BINARY_SENSOR_OPTIONS = {
             "on",
             {"one": "on", "two": "off"},
             {},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             {},
         ),
         (
@@ -268,6 +268,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
             {"start": []},
             {"start": []},
+            {},
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            "sunny",
+            {"one": "sunny", "two": "cloudy"},
+            {},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
             {},
         ),
     ],
@@ -448,8 +458,8 @@ async def test_config_flow(
         (
             "select",
             {"state": "{{ states('select.one') }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
         ),
         (
             "update",
@@ -462,6 +472,12 @@ async def test_config_flow(
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
         ),
     ],
 )
@@ -718,8 +734,8 @@ async def test_config_flow_device(
             {"state": "{{ states('select.two') }}"},
             ["on", "off"],
             {"one": "on", "two": "off"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
             "state",
         ),
         (
@@ -751,6 +767,16 @@ async def test_config_flow_device(
             {"start": []},
             {"start": []},
             "state",
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            {"condition": "{{ states('weather.two') }}"},
+            ["sunny", "cloudy"],
+            {"one": "sunny", "two": "cloudy"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            "condition",
         ),
     ],
 )
@@ -1580,8 +1606,8 @@ async def test_option_flow_sensor_preview_config_entry_removed(
         (
             "select",
             {"state": "{{ states('select.one') }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
-            {"options": "{{ ['off', 'on', 'auto'] }}"},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
+            {"options": "{{ ['off', 'on', 'auto'] }}", "select_option": []},
         ),
         (
             "switch",
@@ -1600,6 +1626,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"state": "{{ states('vacuum.one') }}"},
             {"start": []},
             {"start": []},
+        ),
+        (
+            "weather",
+            {"condition": "{{ states('weather.one') }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
+            {"temperature": "{{ 20 }}", "humidity": "{{ 50 }}"},
         ),
     ],
 )

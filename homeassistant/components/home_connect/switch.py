@@ -7,12 +7,14 @@ from aiohomeconnect.model import OptionKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from .common import setup_home_connect_entry
+from .common import setup_home_connect_entry, should_add_option_entity
 from .const import BSH_POWER_OFF, BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity
@@ -125,12 +127,44 @@ SWITCH_OPTIONS = (
         translation_key="fast_pre_heat",
     ),
     SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_COMMON_SILENT_MODE,
+        translation_key="silent_mode",
+    ),
+    SwitchEntityDescription(
         key=OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE,
         translation_key="i_dos1_active",
     ),
     SwitchEntityDescription(
         key=OptionKey.LAUNDRY_CARE_WASHER_I_DOS_2_ACTIVE,
         translation_key="i_dos2_active",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_INTENSIVE_PLUS,
+        translation_key="intensive_plus",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_LESS_IRONING,
+        translation_key="less_ironing",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_MINI_LOAD,
+        translation_key="mini_load",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_PREWASH,
+        translation_key="prewash",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_RINSE_HOLD,
+        translation_key="rinse_hold",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_SOAK,
+        translation_key="soaking",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_WATER_PLUS,
+        translation_key="water_plus",
     ),
 )
 
@@ -158,12 +192,15 @@ def _get_entities_for_appliance(
 def _get_option_entities_for_appliance(
     entry: HomeConnectConfigEntry,
     appliance: HomeConnectApplianceData,
+    entity_registry: er.EntityRegistry,
 ) -> list[HomeConnectOptionEntity]:
     """Get a list of currently available option entities."""
     return [
         HomeConnectSwitchOptionEntity(entry.runtime_data, appliance, description)
         for description in SWITCH_OPTIONS
-        if description.key in appliance.options
+        if should_add_option_entity(
+            description, appliance, entity_registry, Platform.SWITCH
+        )
     ]
 
 
@@ -174,6 +211,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect switch."""
     setup_home_connect_entry(
+        hass,
         entry,
         _get_entities_for_appliance,
         async_add_entities,

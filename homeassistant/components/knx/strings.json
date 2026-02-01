@@ -154,6 +154,204 @@
     }
   },
   "config_panel": {
+    "dashboard": {
+      "connection_flow": {
+        "description": "Reconfigure KNX connection or import a new KNX keyring file",
+        "title": "Connection settings"
+      },
+      "options_flow": {
+        "description": "Configure integration settings",
+        "title": "Integration options"
+      },
+      "project_upload": {
+        "description": "Import a KNX project file to help configure group addresses and datapoint types",
+        "title": "[%key:component::knx::config_panel::dialogs::project_upload::title%]"
+      }
+    },
+    "dialogs": {
+      "project_upload": {
+        "description": "Details such as group address names, datapoint types, devices and group objects are extracted from your project file. The ETS project file itself and its optional password are not stored.\n\n`.knxproj` files exported by ETS 4, 5 or 6 are supported.",
+        "file_upload_label": "ETS project file",
+        "title": "Import ETS project"
+      }
+    },
+    "dpt": {
+      "options": {
+        "5": "Generic 1-byte unsigned integer",
+        "5_001": "Percent (0 … 100)",
+        "5_003": "Angle",
+        "5_004": "Percent (0 … 255)",
+        "5_005": "Decimal factor",
+        "5_006": "Tariff",
+        "5_010": "Counter (0 … 255)",
+        "6": "Generic 1-byte signed integer",
+        "6_001": "Percent (-128 … 127)",
+        "6_010": "Counter (-128 … 127)",
+        "7": "Generic 2-byte unsigned integer",
+        "7_001": "Counter (0 … 65535)",
+        "7_002": "Time period",
+        "7_003": "Time period (10 ms)",
+        "7_004": "Time period (100 ms)",
+        "7_005": "[%key:component::knx::config_panel::dpt::options::7_002%]",
+        "7_006": "[%key:component::knx::config_panel::dpt::options::7_002%]",
+        "7_007": "[%key:component::knx::config_panel::dpt::options::7_002%]",
+        "7_010": "Interface Object Property",
+        "7_011": "Length",
+        "7_012": "Electrical current",
+        "7_013": "Brightness",
+        "7_600": "Color temperature",
+        "8": "Generic 2-byte signed integer",
+        "8_001": "Counter (-32 768 … 32 767)",
+        "8_002": "Delta time",
+        "8_003": "Delta time (10 ms)",
+        "8_004": "Delta time (100 ms)",
+        "8_005": "[%key:component::knx::config_panel::dpt::options::8_002%]",
+        "8_006": "[%key:component::knx::config_panel::dpt::options::8_002%]",
+        "8_007": "[%key:component::knx::config_panel::dpt::options::8_002%]",
+        "8_010": "Percent (-327.68 … 327.67)",
+        "8_011": "Rotation angle",
+        "8_012": "Length (Altitude)",
+        "9": "Generic 2-byte floating point",
+        "9_001": "Temperature",
+        "9_002": "Temperature difference",
+        "9_003": "Temperature change",
+        "9_004": "Illuminance",
+        "9_005": "Wind speed",
+        "9_006": "Pressure (2-byte)",
+        "9_007": "Humidity",
+        "9_008": "Air quality",
+        "9_009": "Air flow",
+        "9_010": "Time",
+        "9_011": "[%key:component::knx::config_panel::dpt::options::9_010%]",
+        "9_020": "Voltage",
+        "9_021": "Current",
+        "9_022": "Power density",
+        "9_023": "Temperature sensitivity",
+        "9_024": "Power (2-byte)",
+        "9_025": "Volume flow",
+        "9_026": "Rain amount",
+        "9_027": "[%key:component::knx::config_panel::dpt::options::9_001%]",
+        "9_028": "[%key:component::knx::config_panel::dpt::options::9_005%]",
+        "9_029": "Absolute humidity",
+        "9_030": "Concentration",
+        "9_60000": "Enthalpy",
+        "12": "Generic 4-byte unsigned integer",
+        "12_001": "Counter (0 … 4 294 967 295)",
+        "12_100": "Time period (4-byte)",
+        "12_101": "[%key:component::knx::config_panel::dpt::options::12_100%]",
+        "12_102": "[%key:component::knx::config_panel::dpt::options::12_100%]",
+        "12_1200": "Liquid volume",
+        "12_1201": "Volume",
+        "13": "Generic 4-byte signed integer",
+        "13_001": "Counter (-2 147 483 648 … 2 147 483 647)",
+        "13_002": "Flow rate",
+        "13_010": "Active energy",
+        "13_011": "Apparent energy",
+        "13_012": "Reactive energy",
+        "13_013": "[%key:component::knx::config_panel::dpt::options::13_010%]",
+        "13_014": "[%key:component::knx::config_panel::dpt::options::13_011%]",
+        "13_015": "[%key:component::knx::config_panel::dpt::options::13_012%]",
+        "13_016": "[%key:component::knx::config_panel::dpt::options::13_010%]",
+        "13_100": "Operating hours",
+        "13_1200": "Delta liquid volume",
+        "13_1201": "Delta volume",
+        "14": "Generic 4-byte floating point",
+        "14_000": "Acceleration",
+        "14_001": "Angular acceleration",
+        "14_002": "Activation energy",
+        "14_003": "Activity (radioactive)",
+        "14_004": "Amount of substance",
+        "14_005": "Amplitude",
+        "14_006": "Angle",
+        "14_007": "[%key:component::knx::config_panel::dpt::options::14_006%]",
+        "14_008": "Angular momentum",
+        "14_009": "Angular velocity",
+        "14_010": "Area",
+        "14_011": "Capacitance",
+        "14_012": "Charge density (surface)",
+        "14_013": "Charge density (volume)",
+        "14_014": "Compressibility",
+        "14_015": "Conductance",
+        "14_016": "Electrical conductivity",
+        "14_017": "Density",
+        "14_018": "Electric charge",
+        "14_019": "Electric current",
+        "14_020": "Electric current density",
+        "14_021": "Electric dipole moment",
+        "14_022": "Electric displacement",
+        "14_023": "Electric field strength",
+        "14_024": "Electric flux",
+        "14_025": "Electric flux density",
+        "14_026": "Electric polarization",
+        "14_027": "Electric potential",
+        "14_028": "Potential difference",
+        "14_029": "Electromagnetic moment",
+        "14_030": "Electromotive force",
+        "14_031": "Energy",
+        "14_032": "Force",
+        "14_033": "Frequency",
+        "14_034": "Angular frequency",
+        "14_035": "Heat capacity",
+        "14_036": "Heat flow rate",
+        "14_037": "Heat quantity",
+        "14_038": "Impedance",
+        "14_039": "Length",
+        "14_040": "Light quantity",
+        "14_041": "Luminance",
+        "14_042": "Luminous flux",
+        "14_043": "Luminous intensity",
+        "14_044": "Magnetic field strength",
+        "14_045": "Magnetic flux",
+        "14_046": "Magnetic flux density",
+        "14_047": "Magnetic moment",
+        "14_048": "Magnetic polarization",
+        "14_049": "Magnetization",
+        "14_050": "Magnetomotive force",
+        "14_051": "Mass",
+        "14_052": "Mass flux",
+        "14_053": "Momentum",
+        "14_054": "Phase angle",
+        "14_055": "[%key:component::knx::config_panel::dpt::options::14_054%]",
+        "14_056": "Power (4-byte)",
+        "14_057": "Power factor",
+        "14_058": "Pressure (4-byte)",
+        "14_059": "Reactance",
+        "14_060": "Resistance",
+        "14_061": "Resistivity",
+        "14_062": "Self inductance",
+        "14_063": "Solid angle",
+        "14_064": "Sound intensity",
+        "14_065": "Speed",
+        "14_066": "Stress",
+        "14_067": "Surface tension",
+        "14_068": "Common temperature",
+        "14_069": "Absolute temperature",
+        "14_070": "[%key:component::knx::config_panel::dpt::options::9_002%]",
+        "14_071": "Thermal capacity",
+        "14_072": "Thermal conductivity",
+        "14_073": "Thermoelectric power",
+        "14_074": "[%key:component::knx::config_panel::dpt::options::9_010%]",
+        "14_075": "Torque",
+        "14_076": "[%key:component::knx::config_panel::dpt::options::12_1201%]",
+        "14_077": "Volume flux",
+        "14_078": "Weight",
+        "14_079": "Work",
+        "14_080": "Apparent power",
+        "14_1200": "Meter flow",
+        "14_1201": "[%key:component::knx::config_panel::dpt::options::14_1200%]",
+        "16_000": "String (ASCII)",
+        "16_001": "String (Latin-1)",
+        "17_001": "Scene number",
+        "29": "Generic 8-byte signed integer",
+        "29_010": "Active energy (8-byte)",
+        "29_011": "Apparent energy (8-byte)",
+        "29_012": "Reactive energy (8-byte)"
+      },
+      "selector": {
+        "label": "Select a datapoint type",
+        "no_selection": "No DPT selected"
+      }
+    },
     "entities": {
       "create": {
         "_": {
@@ -170,8 +368,16 @@
           },
           "knx": {
             "knx_group_address": {
+              "add_passive_address": "+ Add passive address",
               "dpt": "Datapoint type",
-              "passive_addresses": "Passive addresses",
+              "dpt_incompatible": "DPT {dpt} is incompatible with this field's expected DPTs.",
+              "dpt_no_selection": "No DPT selected",
+              "dpt_select": "Select DPT",
+              "group_address_none_for_dpt": "No group addresses known for expected DPT",
+              "group_address_none_for_filter": "No group addresses known for current filter",
+              "group_address_search": "Search group address",
+              "group_address_unknown": "Unknown group address",
+              "passive_address": "Passive address",
               "send_address": "Send address",
               "state_address": "State address",
               "valid_dpts": "Valid DPTs"
@@ -460,7 +666,45 @@
             }
           }
         },
-        "header": "Create new entity",
+        "fan": {
+          "description": "The KNX fan platform is used as an interface to fan actuators.",
+          "knx": {
+            "ga_oscillation": {
+              "description": "Toggle oscillation of the fan.",
+              "label": "Oscillation"
+            },
+            "ga_switch": {
+              "description": "Group address to turn the fan on/off.",
+              "label": "Switch"
+            },
+            "speed": {
+              "description": "Control the speed of the fan.",
+              "ga_speed": {
+                "description": "Group address to control the current speed of the fan as a percentage value.",
+                "label": "Speed"
+              },
+              "ga_step": {
+                "description": "Group address to control the current speed step.",
+                "label": "Step"
+              },
+              "max_step": {
+                "description": "Number of discrete fan speed steps (Off excluded).",
+                "label": "Fan steps"
+              },
+              "options": {
+                "percentage_mode": {
+                  "description": "Set the fan speed as a percentage value (0-100%).",
+                  "label": "Percentage"
+                },
+                "step_mode": {
+                  "description": "Set the fan speed in discrete steps.",
+                  "label": "Steps"
+                }
+              },
+              "title": "Fan speed"
+            }
+          }
+        },
         "light": {
           "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
           "knx": {
@@ -558,6 +802,48 @@
             }
           }
         },
+        "scene": {
+          "description": "A KNX entity can activate a KNX scene and updates when the scene number is received.",
+          "knx": {
+            "ga_scene": {
+              "description": "Group address to activate a scene.",
+              "label": "Scene"
+            },
+            "scene_number": {
+              "description": "The scene number this entity is associated with.",
+              "label": "Scene number"
+            }
+          }
+        },
+        "sensor": {
+          "description": "Read-only entity for numeric or string datapoints. Temperature, percent etc.",
+          "knx": {
+            "always_callback": {
+              "description": "Write each update to the state machine, even if the data is the same.",
+              "label": "Force update"
+            },
+            "device_class": {
+              "description": "Override the DPTs default device class.",
+              "label": "Device class"
+            },
+            "ga_sensor": {
+              "description": "Group address representing state.",
+              "label": "State"
+            },
+            "section_advanced_options": {
+              "description": "Override default DPT-based sensor attributes.",
+              "title": "Overrides"
+            },
+            "state_class": {
+              "description": "Override the DPTs default state class.",
+              "label": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]"
+            },
+            "unit_of_measurement": {
+              "description": "Override the DPTs default unit of measurement.",
+              "label": "Unit of measurement"
+            }
+          }
+        },
         "switch": {
           "description": "The KNX switch platform is used as an interface to switching actuators.",
           "knx": {
@@ -571,6 +857,23 @@
             }
           }
         },
+        "text": {
+          "description": "The KNX text platform is used as an interface to text objects.",
+          "knx": {
+            "ga_text": {
+              "description": "The group address of the text object.",
+              "label": "Text"
+            },
+            "mode": {
+              "description": "Select how the entity is displayed in Home Assistant.",
+              "label": "[%key:common::config_flow::data::mode%]",
+              "options": {
+                "password": "[%key:common::config_flow::data::password%]",
+                "text": "[%key:component::text::entity_component::_::state_attributes::mode::state::text%]"
+              }
+            }
+          }
+        },
         "time": {
           "description": "The KNX time platform is used as an interface to time objects.",
           "knx": {
@@ -580,11 +883,25 @@
             }
           }
         },
+        "title": "Create KNX entity",
         "type_selection": {
-          "header": "Create KNX entity",
-          "title": "Select entity type"
+          "header": "Select entity type"
         }
-      }
+      },
+      "description": "Add and manage KNX entities",
+      "title": "Entities"
+    },
+    "group_monitor": {
+      "description": "Monitor KNX group communication",
+      "title": "Group monitor"
+    },
+    "info": {
+      "description": "Version information, manage KNX project file",
+      "title": "Information"
+    },
+    "project": {
+      "description": "Inspect imported group addresses",
+      "title": "Project"
     }
   },
   "device_automation": {
@@ -675,6 +992,30 @@
       "message": "Invalid type for `knx.send` service: {type}"
     }
   },
+  "issues": {
+    "data_secure_group_key_issue": {
+      "fix_flow": {
+        "error": {
+          "keyfile_invalid_signature": "[%key:component::knx::config::error::keyfile_invalid_signature%]"
+        },
+        "step": {
+          "secure_knxkeys": {
+            "data": {
+              "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_file%]",
+              "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_password%]"
+            },
+            "data_description": {
+              "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_file%]",
+              "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_password%]"
+            },
+            "description": "Telegrams for group addresses used in Home Assistant could not be decrypted because Data Secure keys are missing or invalid:\n\n{addresses}\n\nTo fix this, update the sending devices configurations via ETS and provide an updated KNX Keyring file. Make sure that the group addresses used in Home Assistant are associated with the interface used by Home Assistant (`{interface}` when the issue last occurred).",
+            "title": "Update KNX Keyring"
+          }
+        }
+      },
+      "title": "KNX Data Secure telegrams can't be decrypted"
+    }
+  },
   "options": {
     "step": {
       "communication_settings": {
@@ -689,6 +1030,79 @@
           "telegram_log_size": "Telegrams to keep in memory for KNX panel group monitor. Maximum: {telegram_log_size_max}"
         },
         "title": "Communication settings"
+      }
+    }
+  },
+  "selector": {
+    "sensor_device_class": {
+      "options": {
+        "absolute_humidity": "[%key:component::sensor::entity_component::absolute_humidity::name%]",
+        "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
+        "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
+        "area": "[%key:component::sensor::entity_component::area::name%]",
+        "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
+        "battery": "[%key:component::sensor::entity_component::battery::name%]",
+        "blood_glucose_concentration": "[%key:component::sensor::entity_component::blood_glucose_concentration::name%]",
+        "carbon_dioxide": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+        "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+        "conductivity": "[%key:component::sensor::entity_component::conductivity::name%]",
+        "current": "[%key:component::sensor::entity_component::current::name%]",
+        "data_rate": "[%key:component::sensor::entity_component::data_rate::name%]",
+        "data_size": "[%key:component::sensor::entity_component::data_size::name%]",
+        "date": "[%key:component::sensor::entity_component::date::name%]",
+        "distance": "[%key:component::sensor::entity_component::distance::name%]",
+        "duration": "[%key:component::sensor::entity_component::duration::name%]",
+        "energy": "[%key:component::sensor::entity_component::energy::name%]",
+        "energy_distance": "[%key:component::sensor::entity_component::energy_distance::name%]",
+        "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
+        "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
+        "gas": "[%key:component::sensor::entity_component::gas::name%]",
+        "humidity": "[%key:component::sensor::entity_component::humidity::name%]",
+        "illuminance": "[%key:component::sensor::entity_component::illuminance::name%]",
+        "irradiance": "[%key:component::sensor::entity_component::irradiance::name%]",
+        "moisture": "[%key:component::sensor::entity_component::moisture::name%]",
+        "monetary": "[%key:component::sensor::entity_component::monetary::name%]",
+        "nitrogen_dioxide": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]",
+        "nitrogen_monoxide": "[%key:component::sensor::entity_component::nitrogen_monoxide::name%]",
+        "nitrous_oxide": "[%key:component::sensor::entity_component::nitrous_oxide::name%]",
+        "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
+        "ph": "[%key:component::sensor::entity_component::ph::name%]",
+        "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
+        "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
+        "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
+        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
+        "power": "[%key:component::sensor::entity_component::power::name%]",
+        "power_factor": "[%key:component::sensor::entity_component::power_factor::name%]",
+        "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
+        "precipitation_intensity": "[%key:component::sensor::entity_component::precipitation_intensity::name%]",
+        "pressure": "[%key:component::sensor::entity_component::pressure::name%]",
+        "reactive_energy": "[%key:component::sensor::entity_component::reactive_energy::name%]",
+        "reactive_power": "[%key:component::sensor::entity_component::reactive_power::name%]",
+        "signal_strength": "[%key:component::sensor::entity_component::signal_strength::name%]",
+        "sound_pressure": "[%key:component::sensor::entity_component::sound_pressure::name%]",
+        "speed": "[%key:component::sensor::entity_component::speed::name%]",
+        "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
+        "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
+        "temperature_delta": "[%key:component::sensor::entity_component::temperature_delta::name%]",
+        "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
+        "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
+        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
+        "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
+        "volume": "[%key:component::sensor::entity_component::volume::name%]",
+        "volume_flow_rate": "[%key:component::sensor::entity_component::volume_flow_rate::name%]",
+        "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
+        "water": "[%key:component::sensor::entity_component::water::name%]",
+        "weight": "[%key:component::sensor::entity_component::weight::name%]",
+        "wind_direction": "[%key:component::sensor::entity_component::wind_direction::name%]",
+        "wind_speed": "[%key:component::sensor::entity_component::wind_speed::name%]"
+      }
+    },
+    "sensor_state_class": {
+      "options": {
+        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
+        "measurement_angle": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement_angle%]",
+        "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
+        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
       }
     }
   },
@@ -719,7 +1133,7 @@
           "name": "[%key:component::knx::services::send::fields::address::name%]"
         },
         "attribute": {
-          "description": "Attribute of the entity that shall be sent to the KNX bus. If not set the state will be sent. Eg. for a light the state is eigther “on” or “off” - with attribute you can expose its “brightness”.",
+          "description": "Attribute of the entity that shall be sent to the KNX bus. If not set, the state will be sent. Eg. for a light the state is either “on” or “off” - with attribute you can expose its “brightness”.",
           "name": "Entity attribute"
         },
         "default": {

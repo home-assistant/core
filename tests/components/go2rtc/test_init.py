@@ -96,7 +96,7 @@ async def _test_setup_and_signaling(
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
     config_entry = config_entries[0]
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     after_setup_fn()
 
     receive_message_callback = Mock(spec_set=WebRTCSendMessage)
@@ -183,7 +183,7 @@ async def _test_setup_and_signaling(
 
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.NOT_LOADED
+        assert config_entry.state is ConfigEntryState.NOT_LOADED
         assert teardown.call_count == 2
 
 
@@ -625,7 +625,7 @@ async def test_setup_with_setup_entry_error(
     await hass.async_block_till_done(wait_background_tasks=True)
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
-    assert config_entries[0].state == ConfigEntryState.SETUP_ERROR
+    assert config_entries[0].state is ConfigEntryState.SETUP_ERROR
     assert expected_log_message in caplog.text
 
 

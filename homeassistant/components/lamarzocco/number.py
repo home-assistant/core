@@ -228,7 +228,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
     LaMarzoccoNumberEntityDescription(
         key="bbw_dose_1",
         translation_key="bbw_dose",
-        translation_placeholders={"dose": "Dose 1"},
+        translation_placeholders={"dose": "1"},
         device_class=NumberDeviceClass.WEIGHT,
         native_unit_of_measurement=UnitOfMass.GRAMS,
         native_step=PRECISION_TENTHS,
@@ -256,12 +256,14 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         supported_fn=(
             lambda coordinator: coordinator.device.dashboard.model_name
             in (ModelName.LINEA_MINI, ModelName.LINEA_MINI_R)
+            and WidgetType.CM_BREW_BY_WEIGHT_DOSES
+            in coordinator.device.dashboard.config
         ),
     ),
     LaMarzoccoNumberEntityDescription(
         key="bbw_dose_2",
         translation_key="bbw_dose",
-        translation_placeholders={"dose": "Dose 2"},
+        translation_placeholders={"dose": "2"},
         device_class=NumberDeviceClass.WEIGHT,
         native_unit_of_measurement=UnitOfMass.GRAMS,
         native_step=PRECISION_TENTHS,
@@ -289,6 +291,8 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         supported_fn=(
             lambda coordinator: coordinator.device.dashboard.model_name
             in (ModelName.LINEA_MINI, ModelName.LINEA_MINI_R)
+            and WidgetType.CM_BREW_BY_WEIGHT_DOSES
+            in coordinator.device.dashboard.config
         ),
     ),
 )

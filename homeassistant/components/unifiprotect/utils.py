@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
+from collections.abc import Callable, Coroutine, Generator, Iterable
 import contextlib
+from functools import wraps
 from pathlib import Path
 import socket
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from aiohttp import CookieJar
 from uiprotect import ProtectApiClient
@@ -18,6 +19,7 @@ from uiprotect.data import (
     LightModeType,
     ProtectAdoptableDeviceModel,
 )
+from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.const import (
     CONF_HOST,
@@ -27,6 +29,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.storage import STORAGE_DIR
 
@@ -34,11 +37,13 @@ from .const import (
     CONF_ALL_UPDATES,
     CONF_OVERRIDE_CHOST,
     DEVICES_FOR_SUBSCRIBE,
+    DOMAIN,
     ModelType,
 )
 
 if TYPE_CHECKING:
     from .data import UFPConfigEntry
+    from .entity import BaseProtectEntity
 
 
 @callback
@@ -99,7 +104,7 @@ def async_get_light_motion_current(obj: Light) -> str:
         obj.light_mode_settings.mode is LightModeType.MOTION
         and obj.light_mode_settings.enable_at is LightModeEnableType.DARK
     ):
-        return f"{LightModeType.MOTION.value}Dark"
+        return f"{LightModeType.MOTION.value}_dark"
     return obj.light_mode_settings.mode.value
 
 
@@ -138,3 +143,31 @@ def get_camera_base_name(channel: CameraChannel) -> str:
         camera_name = f"{channel.name} resolution channel"
 
     return camera_name
+
+
+def async_ufp_instance_command[_EntityT: "BaseProtectEntity", **_P](
+    func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate UniFi Protect entity instance commands to handle exceptions.
+
+    A decorator that wraps the passed in function, catches Protect errors,
+    and re-raises them as HomeAssistantError with translations.
+    """
+
+    @wraps(func)
+    async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except NotAuthorized as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_authorized",
+            ) from err
+        except ClientError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+    return handler

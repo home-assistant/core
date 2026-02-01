@@ -6,9 +6,9 @@ from datetime import timedelta
 from http import HTTPStatus
 import logging
 
-from aiosenz import SENZAPI, Thermostat
 from httpx import HTTPStatusError, RequestError
 import jwt
+from pysenz import SENZAPI, Thermostat
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
