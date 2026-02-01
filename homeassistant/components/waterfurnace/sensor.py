@@ -61,14 +61,14 @@ SENSORS = [
     SensorEntityDescription(
         translation_key="tstat_humid_setpoint",
         key="tstathumidsetpoint",
-        icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="tstatrelativehumidity",
-        icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
