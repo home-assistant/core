@@ -3,14 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from functools import partial
-from ipaddress import IPv6Address, ip_address
-import logging
 from typing import Any, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.profiles.dlna import DmrDevice
-from getmac import get_mac_address
 from lyngdorf.const import LyngdorfModel
 from lyngdorf.device import async_find_receiver_model
 import voluptuous as vol
@@ -18,17 +14,9 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_MODEL,
-    CONF_NAME,
-)
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODEL, CONF_NAME
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MANUFACTURER,
@@ -44,8 +32,6 @@ from .const import (
     DOMAIN,
     SUPPORTED_MANUFACTURERS,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 FlowInput = Mapping[str, Any] | None
 
@@ -137,8 +123,7 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except AbortFlow:
                 raise
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
 
         data_schema = vol.Schema(
@@ -181,8 +166,6 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=user_input["title"],
             data={
-                CONF_DEVICE_ID: self._mac,
-                # CONF_TYPE: self._device_type,
                 CONF_MAC: self._mac,
                 CONF_MODEL: self._device_model,
                 CONF_MANUFACTURER: self._device_manufacturer,
@@ -207,8 +190,6 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: FlowInput = None
     ) -> ConfigFlowResult:
         """Allow the user to confirm adding the device."""
-        _LOGGER.debug("async_step_confirm: %s", user_input)
-
         if user_input is not None:
             return await self._create_entry()
 
@@ -310,37 +291,3 @@ def _is_lyngdorf_device(discovery_info: SsdpServiceInfo) -> bool:
         return True
 
     return False
-
-
-async def _async_get_mac_address(hass: HomeAssistant, host: str) -> str | None:
-    """Get mac address from host name, IPv4 address, or IPv6 address."""
-    # Help mypy, which has trouble with the async_add_executor_job + partial call
-    mac_address: str | None
-    # getmac has trouble using IPv6 addresses as the "hostname" parameter so
-    # assume host is an IP address, then handle the case it's not.
-    try:
-        ip_addr = ip_address(host)
-    except ValueError:
-        mac_address = await hass.async_add_executor_job(
-            partial(get_mac_address, hostname=host)
-        )
-    else:
-        if ip_addr.version == 4:
-            mac_address = await hass.async_add_executor_job(
-                partial(get_mac_address, ip=host)
-            )
-        else:
-            # Drop scope_id from IPv6 address by converting via int
-            ip_addr = IPv6Address(int(ip_addr))
-            mac_address = await hass.async_add_executor_job(
-                partial(get_mac_address, ip6=str(ip_addr))
-            )
-
-    if not mac_address:
-        return None
-
-    return dr.format_mac(mac_address)
-
-
-class ConnectError(HomeAssistantError):
-    """Error occurred when trying to connect to a device."""

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import logging
+from contextlib import suppress
 
 from lyngdorf.const import LyngdorfModel
 from lyngdorf.device import (
@@ -16,39 +16,33 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import CONF_MANUFACTURER, CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
+from .const import CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
 from .models import LyngdorfConfigEntry, LyngdorfRuntimeData
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: LyngdorfConfigEntry
 ) -> bool:
     """Set up Lyngdorf from a config entry."""
-
-    _LOGGER.debug(
-        "Setting up config entry: %s for host (%s)",
-        config_entry.unique_id,
-        config_entry.data[CONF_HOST],
-    )
-
-    # Connect to receiver
-    _LOGGER.debug(
-        "Setting up new connection to (%s):(%s) with ip %s",
-        config_entry.data[CONF_MANUFACTURER],
-        config_entry.data[CONF_MODEL],
-        config_entry.data[CONF_HOST],
-    )
     lyngdorf_model: LyngdorfModel | None = lookup_receiver_model(
         config_entry.data[CONF_MODEL]
     )
     if not lyngdorf_model:
-        lyngdorf_model = await async_find_receiver_model(config_entry.data[CONF_HOST])
+        try:
+            lyngdorf_model = await async_find_receiver_model(
+                config_entry.data[CONF_HOST]
+            )
+        except TimeoutError as err:
+            raise ConfigEntryNotReady(
+                f"Timeout finding receiver model at {config_entry.data[CONF_HOST]}"
+            ) from err
+        except ConnectionError as err:
+            raise ConfigEntryNotReady(
+                f"Failed to find receiver model at {config_entry.data[CONF_HOST]}"
+            ) from err
+
     if not lyngdorf_model:
-        raise ConfigEntryError(
-            f"Unable to connect to unsupported model {config_entry.data[CONF_MODEL]}"
-        )
+        raise ConfigEntryError(f"Unsupported model {config_entry.data[CONF_MODEL]}")
 
     try:
         receiver = await async_create_receiver(
@@ -94,12 +88,8 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: LyngdorfConfigEntry
 ) -> bool:
     """Unload a config entry."""
-
     if hasattr(config_entry, "runtime_data"):
-        try:
+        with suppress(Exception):
             await config_entry.runtime_data.receiver.async_disconnect()
-            _LOGGER.debug("disconnected %s", config_entry.runtime_data.receiver.name)
-        except Exception:
-            _LOGGER.exception("Error disconnecting from receiver")
 
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

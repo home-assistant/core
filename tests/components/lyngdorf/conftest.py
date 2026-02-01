@@ -73,16 +73,6 @@ def mock_find_receiver_model() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_get_mac_address() -> Generator[MagicMock]:
-    """Return a mocked _async_get_mac_address function."""
-    with patch(
-        "homeassistant.components.lyngdorf.config_flow._async_get_mac_address"
-    ) as mac_mock:
-        mac_mock.return_value = "aa:bb:cc:dd:ee:ff"
-        yield mac_mock
-
-
-@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

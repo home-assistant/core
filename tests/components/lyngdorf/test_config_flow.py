@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-@pytest.mark.usefixtures("mock_find_receiver_model", "mock_get_mac_address")
+@pytest.mark.usefixtures("mock_find_receiver_model")
 async def test_user_flow_no_devices(hass: HomeAssistant) -> None:
     """Test user flow when no devices are discovered."""
     with patch.object(ssdp, "async_get_discovery_info_by_st", return_value=[]):
@@ -31,7 +31,7 @@ async def test_user_flow_no_devices(hass: HomeAssistant) -> None:
     assert result["step_id"] == "manual"
 
 
-@pytest.mark.usefixtures("mock_find_receiver_model", "mock_get_mac_address")
+@pytest.mark.usefixtures("mock_find_receiver_model")
 async def test_manual_flow(hass: HomeAssistant) -> None:
     """Test the manual configuration flow."""
     result = await hass.config_entries.flow.async_init(
@@ -65,7 +65,7 @@ async def test_manual_flow(hass: HomeAssistant) -> None:
     assert config_entry.title == "My Lyngdorf"
 
 
-@pytest.mark.usefixtures("mock_find_receiver_model", "mock_get_mac_address")
+@pytest.mark.usefixtures("mock_find_receiver_model")
 async def test_manual_flow_already_configured(hass: HomeAssistant) -> None:
     """Test manual flow when device is already configured."""
     # Create an existing entry
@@ -129,7 +129,7 @@ async def test_manual_flow_unsupported_model(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "unsupported_model"}
 
 
-@pytest.mark.usefixtures("mock_get_mac_address")
+@pytest.mark.usefixtures("mock_find_receiver_model")
 async def test_manual_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test manual flow when cannot connect to receiver."""
     result = await hass.config_entries.flow.async_init(
@@ -160,7 +160,7 @@ async def test_manual_flow_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.usefixtures("mock_get_mac_address")
+@pytest.mark.usefixtures("mock_find_receiver_model")
 async def test_manual_flow_timeout(hass: HomeAssistant) -> None:
     """Test manual flow when connection times out."""
     result = await hass.config_entries.flow.async_init(
