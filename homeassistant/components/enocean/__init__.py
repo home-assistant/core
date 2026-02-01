@@ -199,6 +199,10 @@ async def async_unload_entry(
     if unload_platforms := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):
+        if hass.data[DOMAIN].dispatcher_disconnect_handle:
+            hass.data[DOMAIN].dispatcher_disconnect_handle()
+            hass.data[DOMAIN].dispatcher_disconnect_handle = None
+
         config_entry.runtime_data.stop()
 
     return unload_platforms
