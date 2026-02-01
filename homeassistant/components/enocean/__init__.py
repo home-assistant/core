@@ -1,7 +1,5 @@
 """Support for EnOcean devices."""
 
-from dataclasses import dataclass
-
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -13,15 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN
 from .dongle import EnOceanDongle
 
-type EnOceanConfigEntry = ConfigEntry[EnOceanConfigRuntimeData]
-
-
-@dataclass(frozen=True)
-class EnOceanConfigRuntimeData:
-    """Runtime data for EnOcean config entries."""
-
-    dongle: EnOceanDongle
-
+type EnOceanConfigEntry = ConfigEntry[EnOceanDongle]
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
@@ -54,7 +44,7 @@ async def async_setup_entry(
     """Set up an EnOcean dongle for the given entry."""
     usb_dongle = EnOceanDongle(hass, config_entry.data[CONF_DEVICE])
     await usb_dongle.async_setup()
-    config_entry.runtime_data = EnOceanConfigRuntimeData(usb_dongle)
+    config_entry.runtime_data = usb_dongle
 
     return True
 
@@ -64,7 +54,7 @@ async def async_unload_entry(
 ) -> bool:
     """Unload EnOcean config entry."""
 
-    enocean_dongle = config_entry.runtime_data.dongle
+    enocean_dongle = config_entry.runtime_data
     enocean_dongle.unload()
 
     return True
