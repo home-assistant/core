@@ -674,6 +674,8 @@ class TelegramNotificationService:
             "Error editing message media",
             params[ATTR_MESSAGE_TAG],
             media=media,
+            caption=kwargs.get(ATTR_CAPTION),
+            parse_mode=params[ATTR_PARSER],
             chat_id=chat_id,
             message_id=message_id,
             inline_message_id=inline_message_id,
