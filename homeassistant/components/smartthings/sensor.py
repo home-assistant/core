@@ -98,6 +98,10 @@ ROBOT_CLEANER_MOVEMENT_MAP = {
 }
 
 OVEN_MODE = {
+    "heating": "heating",
+    "grill": "grill",
+    "warming": "warming",
+    "defrosting": "defrosting",
     "Conventional": "conventional",
     "Bake": "bake",
     "BottomHeat": "bottom_heat",
