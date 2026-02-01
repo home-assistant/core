@@ -2,9 +2,10 @@
 
 import asyncio
 from collections.abc import Callable
+from functools import partial
 from typing import Final
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
@@ -26,6 +27,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -74,28 +76,48 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def _get_access_token(oauth_session: OAuth2Session) -> str:
+    """Get a valid access token, refreshing if necessary."""
+    LOGGER.debug(
+        "Token valid: %s, expires_at: %s",
+        oauth_session.valid_token,
+        oauth_session.token.get("expires_at"),
+    )
+    try:
+        await oauth_session.async_ensure_token_valid()
+    except ClientResponseError as err:
+        if err.status == 401:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
+    except (KeyError, TypeError) as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="token_data_malformed",
+        ) from err
+    except ClientError as err:
+        raise ConfigEntryNotReady from err
+    return oauth_session.token[CONF_ACCESS_TOKEN]
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
     session = async_get_clientsession(hass)
 
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="oauth_implementation_not_available",
+        ) from err
     oauth_session = OAuth2Session(hass, entry, implementation)
 
-    async def _get_access_token() -> str:
-        try:
-            await oauth_session.async_ensure_token_valid()
-        except ClientResponseError as e:
-            if e.status == 401:
-                raise ConfigEntryAuthFailed from e
-            raise ConfigEntryNotReady from e
-        token: str = oauth_session.token[CONF_ACCESS_TOKEN]
-        return token
-
     # Create API connection
+    access_token = partial(_get_access_token, oauth_session)
     teslemetry = Teslemetry(
         session=session,
-        access_token=_get_access_token,
+        access_token=access_token,
     )
     try:
         calls = await asyncio.gather(
@@ -135,14 +157,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             # Remove the protobuff 'cached_data' that we do not use to save memory
             product.pop("cached_data", None)
             vin = product["vin"]
-            api = teslemetry.vehicles.create(vin)
-            coordinator = TeslemetryVehicleDataCoordinator(hass, entry, api, product)
+            vehicle = teslemetry.vehicles.create(vin)
+            coordinator = TeslemetryVehicleDataCoordinator(
+                hass, entry, vehicle, product
+            )
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},
                 manufacturer="Tesla",
                 configuration_url="https://teslemetry.com/console",
                 name=product["display_name"],
-                model=api.model,
+                model=vehicle.model,
                 serial_number=vin,
             )
             current_devices.add((DOMAIN, vin))
@@ -151,7 +175,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             if not stream:
                 stream = TeslemetryStream(
                     session,
-                    _get_access_token,
+                    access_token,
                     server=f"{region.lower()}.teslemetry.com",
                     parse_timestamp=True,
                     manual=True,
@@ -167,7 +191,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
             vehicles.append(
                 TeslemetryVehicleData(
-                    api=api,
+                    api=vehicle,
                     config_entry=entry,
                     coordinator=coordinator,
                     poll=poll,
@@ -193,7 +217,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 )
                 continue
 
-            api = teslemetry.energySites.create(site_id)
+            energy_site = teslemetry.energySites.create(site_id)
             device = DeviceInfo(
                 identifiers={(DOMAIN, str(site_id))},
                 manufacturer="Tesla",
@@ -209,7 +233,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
             # Check live status endpoint works before creating its coordinator
             try:
-                live_status = (await api.live_status())["response"]
+                live_status = (await energy_site.live_status())["response"]
             except (InvalidToken, Forbidden, SubscriptionRequired) as e:
                 raise ConfigEntryAuthFailed from e
             except TeslaFleetError as e:
@@ -217,19 +241,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
             energysites.append(
                 TeslemetryEnergyData(
-                    api=api,
+                    api=energy_site,
                     live_coordinator=(
                         TeslemetryEnergySiteLiveCoordinator(
-                            hass, entry, api, live_status
+                            hass, entry, energy_site, live_status
                         )
                         if isinstance(live_status, dict)
                         else None
                     ),
                     info_coordinator=TeslemetryEnergySiteInfoCoordinator(
-                        hass, entry, api, product
+                        hass, entry, energy_site, product
                     ),
                     history_coordinator=(
-                        TeslemetryEnergyHistoryCoordinator(hass, entry, api)
+                        TeslemetryEnergyHistoryCoordinator(hass, entry, energy_site)
                         if powerwall
                         else None
                     ),
@@ -313,9 +337,9 @@ async def async_migrate_entry(
         # Convert legacy access token to OAuth tokens using migrate endpoint
         try:
             data = await Teslemetry(session, access_token).migrate_to_oauth(
-                CLIENT_ID, access_token, hass.config.location_name
+                CLIENT_ID, hass.config.location_name
             )
-        except ClientResponseError as e:
+        except (ClientError, TypeError) as e:
             raise ConfigEntryAuthFailed from e
 
         # Add auth_implementation for OAuth2 flow compatibility

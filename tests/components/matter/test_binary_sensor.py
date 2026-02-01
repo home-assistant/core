@@ -424,7 +424,9 @@ async def test_shutter_problem(
 ) -> None:
     """Test shutter problem."""
     # Eve Shutter default state (ConfigStatus = 9)
-    state = hass.states.get("binary_sensor.eve_shutter_switch_20eci1701_problem")
+    state = hass.states.get(
+        "binary_sensor.eve_shutter_switch_20eci1701_configuration_status"
+    )
     assert state
     assert state.state == "off"
 
@@ -432,7 +434,9 @@ async def test_shutter_problem(
     set_node_attribute(matter_node, 1, 258, 7, 8)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("binary_sensor.eve_shutter_switch_20eci1701_problem")
+    state = hass.states.get(
+        "binary_sensor.eve_shutter_switch_20eci1701_configuration_status"
+    )
     assert state
     assert state.state == "on"
 
