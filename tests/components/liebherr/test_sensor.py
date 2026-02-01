@@ -250,9 +250,3 @@ async def test_sensor_unavailable_when_control_missing(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-    # Verify entity properties return None when control is missing
-    entity = hass.data["entity_components"]["sensor"].get_entity(entity_id)
-    assert entity is not None
-    assert entity.native_value is None
-    assert entity.native_unit_of_measurement is None

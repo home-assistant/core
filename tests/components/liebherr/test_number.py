@@ -162,11 +162,6 @@ async def test_set_temperature(
     """Test setting the temperature."""
     entity_id = "number.test_fridge_top_zone_setpoint"
 
-    # Initial state should be 4
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "4"
-
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -194,7 +189,7 @@ async def test_set_temperature_failure(
         "Connection failed"
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="Failed to set temperature"):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -254,15 +249,13 @@ async def test_number_when_control_missing(
     """Test number entity behavior when temperature control is removed."""
     entity_id = "number.test_fridge_top_zone_setpoint"
 
-    # Get entity directly to test properties
-    entity = hass.data["entity_components"]["number"].get_entity(entity_id)
-    assert entity is not None
-
     # Initial values should be from the control
-    assert entity.native_value == 4
-    assert entity.native_min_value == 2
-    assert entity.native_max_value == 8
-    assert entity.native_unit_of_measurement == "°C"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "4"
+    assert state.attributes["min"] == 2
+    assert state.attributes["max"] == 8
+    assert state.attributes["unit_of_measurement"] == "°C"
 
     # Device stops reporting controls
     mock_liebherr_client.get_device_state.return_value = DeviceState(
@@ -278,16 +271,6 @@ async def test_number_when_control_missing(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-    # Properties should return None/defaults when control is missing
-    assert entity.native_value is None
-    assert entity.native_min_value == DEFAULT_MIN_VALUE
-    assert entity.native_max_value == DEFAULT_MAX_VALUE
-    assert entity.native_unit_of_measurement is None
-
-    # Calling async_set_native_value should return early without calling API
-    await entity.async_set_native_value(6)
-    mock_liebherr_client.set_temperature.assert_not_called()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -328,9 +311,9 @@ async def test_number_with_none_min_max(
         await hass.async_block_till_done()
 
     entity_id = "number.test_fridge_setpoint"
-    entity = hass.data["entity_components"]["number"].get_entity(entity_id)
-    assert entity is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
 
     # Should return defaults when min/max are None
-    assert entity.native_min_value == DEFAULT_MIN_VALUE
-    assert entity.native_max_value == DEFAULT_MAX_VALUE
+    assert state.attributes["min"] == DEFAULT_MIN_VALUE
+    assert state.attributes["max"] == DEFAULT_MAX_VALUE

@@ -18,13 +18,13 @@ from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
-    NumberMode,
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
 from .entity import LiebherrZoneEntity
 
@@ -46,7 +46,6 @@ NUMBER_TYPES: tuple[LiebherrNumberEntityDescription, ...] = (
         key="setpoint_temperature",
         translation_key="setpoint_temperature",
         device_class=NumberDeviceClass.TEMPERATURE,
-        mode=NumberMode.BOX,
         native_step=1,
         value_fn=lambda control: control.target,
         min_fn=lambda control: control.min,
@@ -99,8 +98,6 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
         temp_controls = coordinator.data.get_temperature_controls()
         if len(temp_controls) > 1 and (zone_key := self._get_zone_translation_key()):
             self._attr_translation_key = f"{description.translation_key}_{zone_key}"
-        else:
-            self._attr_translation_key = description.translation_key
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -112,9 +109,10 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the current value."""
-        if (temp_control := self.temperature_control) is None:
-            return None
-        return self.entity_description.value_fn(temp_control)
+        # temperature_control is guaranteed to exist when entity is available
+        return self.entity_description.value_fn(
+            self.temperature_control  # type: ignore[arg-type]
+        )
 
     @property
     def native_min_value(self) -> float:
@@ -141,14 +139,12 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
+        # temperature_control is guaranteed to exist when entity is available
         temp_control = self.temperature_control
-
-        if temp_control is None:
-            return
 
         unit = (
             TemperatureUnit.FAHRENHEIT
-            if temp_control.unit == TemperatureUnit.FAHRENHEIT
+            if temp_control.unit == TemperatureUnit.FAHRENHEIT  # type: ignore[union-attr]
             else TemperatureUnit.CELSIUS
         )
 
@@ -161,7 +157,7 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
             )
         except (LiebherrConnectionError, LiebherrTimeoutError) as err:
             raise HomeAssistantError(
-                translation_domain="liebherr",
+                translation_domain=DOMAIN,
                 translation_key="set_temperature_failed",
             ) from err
 
