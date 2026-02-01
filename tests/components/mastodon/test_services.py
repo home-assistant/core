@@ -7,6 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mastodon.const import (
+    ATTR_ACCOUNT_NAME,
     ATTR_CONTENT_WARNING,
     ATTR_IDEMPOTENCY_KEY,
     ATTR_LANGUAGE,
@@ -40,7 +41,7 @@ async def test_get_account_success(
         SERVICE_GET_ACCOUNT,
         {
             ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-            "account_name": "@trwnh@mastodon.social",
+            ATTR_ACCOUNT_NAME: "@trwnh@mastodon.social",
         },
         blocking=True,
         return_response=True,
@@ -63,7 +64,7 @@ async def test_get_account_failure(
     # Test API error (this is the only error type currently caught by the service)
     mock_mastodon_client.account_lookup.side_effect = MastodonAPIError("API error")
     with pytest.raises(
-        ServiceValidationError,
+        HomeAssistantError,
         match='Unable to get account "@test@mastodon.social"',
     ):
         await hass.services.async_call(
@@ -71,7 +72,7 @@ async def test_get_account_failure(
             SERVICE_GET_ACCOUNT,
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                "account_name": "@test@mastodon.social",
+                ATTR_ACCOUNT_NAME: "@test@mastodon.social",
             },
             blocking=True,
             return_response=True,

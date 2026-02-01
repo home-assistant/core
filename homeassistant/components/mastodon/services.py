@@ -20,6 +20,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import service
 
 from .const import (
+    ATTR_ACCOUNT_NAME,
     ATTR_CONTENT_WARNING,
     ATTR_IDEMPOTENCY_KEY,
     ATTR_LANGUAGE,
@@ -47,7 +48,7 @@ SERVICE_GET_ACCOUNT = "get_account"
 SERVICE_GET_ACCOUNT_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Required("account_name"): str,
+        vol.Required(ATTR_ACCOUNT_NAME): str,
     }
 )
 SERVICE_POST = "post"
@@ -88,14 +89,14 @@ async def _async_get_account(call: ServiceCall) -> ServiceResponse:
     )
     client = entry.runtime_data.client
 
-    account_name: str = call.data["account_name"]
+    account_name: str = call.data[ATTR_ACCOUNT_NAME]
 
     try:
         account: Account = await call.hass.async_add_executor_job(
             partial(client.account_lookup, acct=account_name)
         )
     except MastodonAPIError as err:
-        raise ServiceValidationError(
+        raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="unable_to_get_account",
             translation_placeholders={"account_name": account_name},
