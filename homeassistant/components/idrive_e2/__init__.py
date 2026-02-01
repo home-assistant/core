@@ -7,6 +7,7 @@ from typing import Any, cast
 
 from aiobotocore.client import AioBaseClient as S3Client
 from aiobotocore.session import AioSession
+from aiohttp import ClientError as AiohttpClientError
 from botocore.exceptions import ClientError, ConnectionError
 
 from homeassistant.config_entries import ConfigEntry
@@ -35,7 +36,7 @@ async def _async_safe_client_close(client: S3Client | None) -> None:
     try:
         # Best effort to close the client which doesn't mask the setup exception
         await client.close()
-    except Exception:  # noqa: BLE001
+    except (AiohttpClientError, OSError, RuntimeError):
         _LOGGER.debug("Failed to close aiobotocore client", exc_info=True)
 
 
