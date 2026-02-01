@@ -66,7 +66,6 @@ SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        translation_key="relative_humidity",
         key="tstatrelativehumidity",
         icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,

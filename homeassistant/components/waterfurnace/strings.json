@@ -55,9 +55,6 @@
       "mode": {
         "name": "Furnace mode"
       },
-      "relative_humidity": {
-        "name": "Humidity"
-      },
       "room_temp": {
         "name": "Room temp"
       },
