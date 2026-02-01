@@ -1,7 +1,6 @@
 """Tests for media source of the iCloud integration."""
 
 from base64 import b64encode
-import binascii
 import re
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -1482,9 +1481,37 @@ async def test_view_get_invalid_identifier(
     media_source_view = IcloudMediaSourceView(hass)
 
     # Test with invalid base64
-    with pytest.raises(binascii.Error):  # Should raise decode error
+    with pytest.raises(web.HTTPBadRequest):
         await media_source_view.get(
             MagicMock(),
             "thumb",
             "invalid_base64!",
+        )
+
+
+@patch("homeassistant.components.icloud.media_source._get_photo_asset")
+async def test_view_get_invalid_version(
+    mock_photo_asset, hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the media source view GET method with invalid base64 identifier."""
+    mock_config_entry.add_to_hass(hass)
+    media_source_view = IcloudMediaSourceView(hass)
+    identifier = IcloudMediaSourceIdentifier(
+        config_entry_id=mock_config_entry.unique_id,
+        shared_album=False,
+        album_id="my_album",
+        photo_id="my_photo",
+    )
+
+    ident = b64encode(str(identifier).encode("utf-8")).decode("utf-8")
+
+    photo = MagicMock()
+    photo.versions = {"original": {"url": "http://example.com/original.jpg"}}
+    mock_photo_asset.return_value = photo
+
+    with pytest.raises(web.HTTPNotFound):
+        await media_source_view.get(
+            MagicMock(),
+            "thumb",
+            ident,
         )

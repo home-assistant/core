@@ -1,6 +1,7 @@
 """Expose iCloud photo albums as a media source."""
 
 from base64 import b64decode, b64encode
+import binascii
 from collections import OrderedDict
 from dataclasses import dataclass
 import logging
@@ -26,7 +27,6 @@ from homeassistant.components.media_source import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util.ssl import SSLCipherList
 
 from .account import IcloudAccount
 from .const import DOMAIN
@@ -509,11 +509,7 @@ class IcloudMediaSourceView(HomeAssistantView):
         """Initialize iCloud media source view."""
         super().__init__()
         self._hass = hass
-        self.session = async_get_clientsession(
-            hass,
-            verify_ssl=False,
-            ssl_cipher=SSLCipherList.INSECURE,
-        )
+        self.session = async_get_clientsession(hass)
 
     async def get(
         self,
@@ -523,9 +519,13 @@ class IcloudMediaSourceView(HomeAssistantView):
     ) -> web.StreamResponse:
         """Get the image from iCloud."""
 
-        identifier = IcloudMediaSourceIdentifier.from_identifier(
-            b64decode(image_id).decode("utf-8")
-        )
+        try:
+            identifier = IcloudMediaSourceIdentifier.from_identifier(
+                b64decode(image_id).decode("utf-8")
+            )
+        except (Unresolvable, binascii.Error) as err:
+            _LOGGER.error("Error decoding iCloud media source identifier: %s", err)
+            raise web.HTTPBadRequest from err
 
         photo = await self._hass.async_add_executor_job(
             _get_photo_asset, self._hass, identifier
@@ -534,7 +534,10 @@ class IcloudMediaSourceView(HomeAssistantView):
         if photo is None:
             raise web.HTTPNotFound
 
-        url = photo.versions[version]["url"]
+        url = photo.versions.get(version, {}).get("url")
+        if url is None:
+            raise web.HTTPNotFound
+
         icloud_response = await self.session.get(
             url,
             timeout=ClientTimeout(connect=15, sock_connect=15, sock_read=5, total=None),
