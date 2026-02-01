@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Unable to connect to the device",
+            "timeout_connect": "Connection to the device timed out",
+            "unknown": "Unknown Error",
+            "unsupported_model": "This Lyngdorf model is not supported"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Do you want to start setup?"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "serial_number": "Serial number"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address of the Lyngdorf device",
+                    "name": "Name for this device",
+                    "serial_number": "Serial number reported by the device"
+                },
+                "title": "Lyngdorf device connection"
+            },
+            "user": {
+                "data": {
+                    "name": "Name"
+                },
+                "description": "Choose a device to configure",
+                "title": "Discovered Lyngdorf Devices"
+            }
+        }
+    }
+}

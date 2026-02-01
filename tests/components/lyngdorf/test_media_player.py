@@ -354,7 +354,7 @@ def test_entity_properties_and_attributes(mock_receiver: MagicMock) -> None:
     """Test entity properties and attributes without hass."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="MP-60:127.0.0.1",
+        unique_id="123456",
         data={"host": "127.0.0.1", "model": "MP-60"},
     )
     device_info = DeviceInfo(identifiers={(DOMAIN, "device")})

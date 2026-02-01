@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import ssdp
-from homeassistant.components.lyngdorf.const import DOMAIN
+from homeassistant.components.lyngdorf.const import CONF_SERIAL_NUMBER, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -55,12 +55,13 @@ async def test_manual_flow(hass: HomeAssistant) -> None:
         user_input={
             CONF_HOST: "192.168.1.100",
             CONF_NAME: "My Lyngdorf",
+            CONF_SERIAL_NUMBER: "serial-123",
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = result["result"]
-    assert config_entry.unique_id == "mp-60:192.168.1.100"
+    assert config_entry.unique_id == "serial-123"
     assert config_entry.data[CONF_HOST] == "192.168.1.100"
     assert config_entry.title == "My Lyngdorf"
 
@@ -71,7 +72,7 @@ async def test_manual_flow_already_configured(hass: HomeAssistant) -> None:
     # Create an existing entry
     existing_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="mp-60:192.168.1.100",
+        unique_id="serial-123",
         data={CONF_HOST: "192.168.1.50"},
     )
     existing_entry.add_to_hass(hass)
@@ -92,6 +93,7 @@ async def test_manual_flow_already_configured(hass: HomeAssistant) -> None:
         user_input={
             CONF_HOST: "192.168.1.100",
             CONF_NAME: "My Lyngdorf",
+            CONF_SERIAL_NUMBER: "serial-123",
         },
     )
 
@@ -122,6 +124,7 @@ async def test_manual_flow_unsupported_model(hass: HomeAssistant) -> None:
             user_input={
                 CONF_HOST: "192.168.1.100",
                 CONF_NAME: "My Lyngdorf",
+                CONF_SERIAL_NUMBER: "serial-123",
             },
         )
 

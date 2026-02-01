@@ -27,7 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
             "manufacturer": "Lyngdorf",
             "serial_number": "123456",
         },
-        unique_id="MP-60:127.0.0.1",
+        unique_id="123456",
     )
 
 

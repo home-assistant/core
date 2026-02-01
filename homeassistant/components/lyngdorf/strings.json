@@ -17,11 +17,13 @@
       "manual": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "name": "[%key:common::config_flow::data::name%]",
+          "serial_number": "Serial number"
         },
         "data_description": {
           "host": "Hostname or IP address of the Lyngdorf device",
-          "name": "Name for this device"
+          "name": "Name for this device",
+          "serial_number": "Serial number reported by the device"
         },
         "title": "Lyngdorf device connection"
       },

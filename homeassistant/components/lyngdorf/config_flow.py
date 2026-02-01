@@ -87,6 +87,7 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._name = user_input[CONF_NAME]
+            self._device_serial_number = user_input[CONF_SERIAL_NUMBER].lower()
             model: LyngdorfModel | None = None
 
             try:
@@ -105,7 +106,7 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors and model:
                 self._device_manufacturer = model.manufacturer
                 self._device_model = model.model
-                await self.async_set_unique_id(f"{model.model}:{self._host}")
+                await self.async_set_unique_id(self._device_serial_number)
                 self._abort_if_unique_id_configured()
                 return await self._create_entry()
 
@@ -113,6 +114,7 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_HOST): cv.string,
                 vol.Optional(CONF_NAME, default=DEFAULT_DEVICE_NAME): cv.string,
+                vol.Required(CONF_SERIAL_NUMBER): cv.string,
             }
         )
 
@@ -218,8 +220,8 @@ class LyngdorfFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             or DEFAULT_DEVICE_NAME
         )
 
-        # Use model:host as unique_id to match manual flow
-        unique_id = f"{self._device_model}:{self._host}"
+        # Prefer the device serial number as the unique_id.
+        unique_id = self._device_serial_number or f"{self._device_model}:{self._host}"
         await self.async_set_unique_id(unique_id, raise_on_progress=abort_if_configured)
 
         if abort_if_configured:
