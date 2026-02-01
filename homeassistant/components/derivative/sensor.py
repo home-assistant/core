@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
@@ -240,62 +241,57 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         )
 
     def _derive_and_set_attributes_from_state(self, source_state: State | None) -> None:
-        if source_state:
-            source_class_raw = source_state.attributes.get(ATTR_DEVICE_CLASS)
-            source_class: SensorDeviceClass | None = None
-            if isinstance(source_class_raw, str):
-                try:
-                    source_class = SensorDeviceClass(source_class_raw)
-                except ValueError:
-                    source_class = None
+        if not source_state:
+            return
+
+        source_class_raw = source_state.attributes.get(ATTR_DEVICE_CLASS)
+        source_class: SensorDeviceClass | None = None
+        if isinstance(source_class_raw, str):
+            with contextlib.suppress(ValueError):
+                source_class = SensorDeviceClass(source_class_raw)
+        if self._string_unit_prefix is not None and self._string_unit_time is not None:
+            original_unit = self._attr_native_unit_of_measurement
+            source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             if (
-                self._string_unit_prefix is not None
-                and self._string_unit_time is not None
+                (
+                    source_class
+                    in (SensorDeviceClass.ENERGY, SensorDeviceClass.ENERGY_STORAGE)
+                )
+                and self._string_unit_time == UnitOfTime.HOURS
+                and source_unit
+                and source_unit.endswith("Wh")
             ):
-                original_unit = self._attr_native_unit_of_measurement
-                source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-                if (
-                    (
-                        source_class
-                        in (SensorDeviceClass.ENERGY, SensorDeviceClass.ENERGY_STORAGE)
-                    )
-                    and self._string_unit_time == UnitOfTime.HOURS
-                    and source_unit
-                    and source_unit.endswith("Wh")
-                ):
-                    self._attr_native_unit_of_measurement = (
-                        f"{self._string_unit_prefix}{source_unit[:-1]}"
-                    )
+                self._attr_native_unit_of_measurement = (
+                    f"{self._string_unit_prefix}{source_unit[:-1]}"
+                )
 
-                else:
-                    unit_template = (
-                        f"{self._string_unit_prefix}{{}}/{self._string_unit_time}"
-                    )
-                    self._attr_native_unit_of_measurement = unit_template.format(
-                        "" if source_unit is None else source_unit
-                    )
+            else:
+                unit_template = (
+                    f"{self._string_unit_prefix}{{}}/{self._string_unit_time}"
+                )
+                self._attr_native_unit_of_measurement = unit_template.format(
+                    "" if source_unit is None else source_unit
+                )
 
-                if original_unit != self._attr_native_unit_of_measurement:
-                    _LOGGER.debug(
-                        "%s: Derivative sensor switched UoM from %s to %s, resetting state to 0",
-                        self.entity_id,
-                        original_unit,
-                        self._attr_native_unit_of_measurement,
-                    )
-                    self._state_list = []
-                    self._attr_native_value = round(Decimal(0), self._round_digits)
+            if original_unit != self._attr_native_unit_of_measurement:
+                _LOGGER.debug(
+                    "%s: Derivative sensor switched UoM from %s to %s, resetting state to 0",
+                    self.entity_id,
+                    original_unit,
+                    self._attr_native_unit_of_measurement,
+                )
+                self._state_list = []
+                self._attr_native_value = round(Decimal(0), self._round_digits)
 
-            derived_class: SensorDeviceClass | None = None
-            if source_class:
-                derived_class = DERIVED_CLASS.get(source_class)
+        self._attr_device_class = None
+        if source_class:
+            derived_class = DERIVED_CLASS.get(source_class)
             if (
                 derived_class
                 and self._attr_native_unit_of_measurement
                 in DEVICE_CLASS_UNITS[derived_class]
             ):
                 self._attr_device_class = derived_class
-            else:
-                self._attr_device_class = None
 
     def _calc_derivative_from_state_list(self, current_time: datetime) -> Decimal:
         def calculate_weight(start: datetime, end: datetime, now: datetime) -> float:
