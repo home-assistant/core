@@ -1300,6 +1300,7 @@ RPC_SENSORS: Final = {
         key="input",
         sub_key="xpercent",
         translation_key="analog_value",
+        state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda config, status, key: (
             config[key]["type"] != "analog"
             or config[key]["enable"] is False
