@@ -55,23 +55,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up Liebherr sensor entities."""
     coordinators = entry.runtime_data
-    entities: list[LiebherrSensor] = []
-
-    for coordinator in coordinators.values():
-        # Get all temperature controls for this device
-        temp_controls = coordinator.data.get_temperature_controls()
-
-        for temp_control in temp_controls.values():
-            entities.extend(
-                LiebherrSensor(
-                    coordinator=coordinator,
-                    zone_id=temp_control.zone_id,
-                    description=description,
-                )
-                for description in SENSOR_TYPES
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        LiebherrSensor(
+            coordinator=coordinator,
+            zone_id=temp_control.zone_id,
+            description=description,
+        )
+        for coordinator in coordinators.values()
+        for temp_control in coordinator.data.get_temperature_controls().values()
+        for description in SENSOR_TYPES
+    )
 
 
 class LiebherrSensor(LiebherrZoneEntity, SensorEntity):
@@ -108,9 +101,9 @@ class LiebherrSensor(LiebherrZoneEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the current value."""
-        if (temp_control := self.temperature_control) is None:
-            return None
-        return self.entity_description.value_fn(temp_control)
+        # temperature_control is guaranteed to exist when entity is available
+        assert self.temperature_control is not None
+        return self.entity_description.value_fn(self.temperature_control)
 
     @property
     def available(self) -> bool:

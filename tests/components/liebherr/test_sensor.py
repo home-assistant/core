@@ -1,7 +1,7 @@
 """Test the Liebherr sensor platform."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyliebherrhomeapi import (
@@ -22,7 +22,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.liebherr.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -49,6 +49,7 @@ async def test_single_zone_sensor(
     entity_registry: er.EntityRegistry,
     mock_liebherr_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    platforms: list[Platform],
 ) -> None:
     """Test single zone device uses device name without zone suffix."""
     device = Device(
@@ -73,8 +74,9 @@ async def test_single_zone_sensor(
     )
 
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.liebherr.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -248,9 +250,3 @@ async def test_sensor_unavailable_when_control_missing(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-    # Verify entity properties return None when control is missing
-    entity = hass.data["entity_components"]["sensor"].get_entity(entity_id)
-    assert entity is not None
-    assert entity.native_value is None
-    assert entity.native_unit_of_measurement is None

@@ -36,6 +36,9 @@ MOCK_DEVICE_STATE = DeviceState(
             name="Fridge",
             type="fridge",
             value=5,
+            target=4,
+            min=2,
+            max=8,
             unit=TemperatureUnit.CELSIUS,
         ),
         TemperatureControl(
@@ -44,6 +47,9 @@ MOCK_DEVICE_STATE = DeviceState(
             name="Freezer",
             type="freezer",
             value=-18,
+            target=-18,
+            min=-24,
+            max=-16,
             unit=TemperatureUnit.CELSIUS,
         ),
     ],
@@ -100,11 +106,13 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_liebherr_client: MagicMock,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the Liebherr integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.liebherr.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     return mock_config_entry
