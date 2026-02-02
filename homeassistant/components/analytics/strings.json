@@ -1,0 +1,10 @@
+{
+  "preview_features": {
+    "snapshots": {
+      "description": "This free, open source device database of the Open Home Foundation helps users find useful information about smart home devices used in real installations.\n\nYou can help build it by anonymously sharing data about your devices. Only device-specific details (like model or manufacturer) are shared — never personally identifying information (like the names you assign).\n\nLearn more about the device database and how we process your data in our [Data Use Statement](https://www.openhomefoundation.org/device-database-data-use-statement), which you accept by opting in.",
+      "disable_confirmation": "Your data will no longer be shared with the Open Home Foundation's device database.",
+      "enable_confirmation": "This feature is still in development and may change. The device database is being refined based on user feedback and is not yet complete.",
+      "name": "Device database"
+    }
+  }
+}

@@ -380,7 +380,14 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         self, user_input: dict | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow start."""
-        implementations = await async_get_implementations(self.hass, self.DOMAIN)
+        try:
+            implementations = await async_get_implementations(self.hass, self.DOMAIN)
+        except ImplementationUnavailableError as err:
+            self.logger.error(
+                "No OAuth2 implementations available: %s",
+                ", ".join(str(e) for e in err.args),
+            )
+            return self.async_abort(reason="oauth_implementation_unavailable")
 
         if user_input is not None:
             self.flow_impl = implementations[user_input["implementation"]]
