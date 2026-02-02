@@ -93,7 +93,14 @@ class AuthorizationServer:
 
     authorize_url: str
     token_url: str
-    auth_type: AuthorizationTypes | None = AuthorizationTypes.CLIENT_CREDENTIALS
+
+
+@dataclass
+class DeviceFlowAuthorizationServer:
+    """Represent an OAuth2 Authorization Server that supports Device Flow."""
+
+    authorize_url: str
+    token_url: str
 
 
 class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
@@ -245,11 +252,7 @@ async def _async_provide_implementation(
         ]
 
     authorization_server = await platform.async_get_authorization_server(hass)
-    if authorization_server.auth_type != AuthorizationTypes.CLIENT_CREDENTIALS:
-        raise NotImplementedError(
-            f"Integration '{domain}' authorization server has unsupported"
-            f" auth_type '{authorization_server.auth_type}' for application_credentials"
-        )
+    # Re-add with logic to support Device Flow
 
     return [
         AuthImplementation(hass, auth_domain, credential, authorization_server)
@@ -341,16 +344,9 @@ async def _async_integration_config(hass: HomeAssistant, domain: str) -> dict[st
     # Integrations such as fitbit, gentex_homelink, geocaching and a few others don't implement
     # async_get_authorization_server, so either we default to client_credentials or update the integrations in separate PRs
 
+    # Upon expanding, support for the method async_get_device_flow_authorization_server
     if hasattr(platform, "async_get_authorization_server"):
-        try:
-            auth_server = await platform.async_get_authorization_server(hass)
-            result["auth_type"] = auth_server.auth_type
-        except LookupError:
-            # Some integrations have dynamic authorization servers that
-            # require context to be set before calling
-            # I found that MCP integration does this
-            # Default to client_credentials for now
-            result["auth_type"] = AuthorizationTypes.CLIENT_CREDENTIALS
+        result["auth_type"] = AuthorizationTypes.CLIENT_CREDENTIALS
 
     if hasattr(platform, "async_get_description_placeholders"):
         result[

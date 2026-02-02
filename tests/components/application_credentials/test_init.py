@@ -885,28 +885,3 @@ async def test_websocket_create_strips_whitespace(ws_client: ClientFixture) -> N
             "id": ID,
         }
     ]
-
-
-@pytest.mark.parametrize("config_credential", [DEVELOPER_CREDENTIAL])
-async def test_unsupported_auth_type(
-    hass: HomeAssistant,
-    config_credential: ClientCredential,
-) -> None:
-    """Test platform with unsupported auth type using imported credential."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    hass.config.components.add(TEST_DOMAIN)
-
-    mock_platform_impl = Mock(
-        async_get_authorization_server=AsyncMock(
-            return_value=AuthorizationServer(
-                AUTHORIZE_URL, TOKEN_URL, AuthorizationTypes.DEVICE_FLOW
-            )
-        ),
-    )
-    del mock_platform_impl.async_get_auth_implementation
-    mock_platform(hass, f"{TEST_DOMAIN}.application_credentials", mock_platform_impl)
-
-    with pytest.raises(NotImplementedError, match="unsupported auth_type"):
-        await hass.config_entries.flow.async_init(
-            TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
