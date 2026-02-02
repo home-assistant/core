@@ -1,69 +1,4 @@
 # serializer version: 1
-# name: test_climates[air_purifier][climate.air_purifier-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'hvac_modes': list([
-        <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT: 'heat'>,
-      ]),
-      'max_temp': 30.0,
-      'min_temp': 5.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'climate',
-    'entity_category': None,
-    'entity_id': 'climate.air_purifier',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 385>,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-5-MatterThermostat-513-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_climates[air_purifier][climate.air_purifier-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_temperature': 20.0,
-      'friendly_name': 'Air Purifier',
-      'hvac_modes': list([
-        <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT: 'heat'>,
-      ]),
-      'max_temp': 30.0,
-      'min_temp': 5.0,
-      'supported_features': <ClimateEntityFeature: 385>,
-      'temperature': 20.0,
-    }),
-    'context': <ANY>,
-    'entity_id': 'climate.air_purifier',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_climates[aqara_thermostat_w500][climate.floor_heating_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -393,6 +328,71 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'cool',
+  })
+# ---
+# name: test_climates[mock_air_purifier][climate.mock_air_purifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 5.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.mock_air_purifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-5-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[mock_air_purifier][climate.mock_air_purifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.0,
+      'friendly_name': 'Mock Air Purifier',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 20.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.mock_air_purifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_climates[mock_room_airconditioner][climate.room_airconditioner-entry]

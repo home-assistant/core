@@ -74,7 +74,6 @@ async def integration_fixture(
 
 @pytest.fixture(
     params=[
-        "air_purifier",
         "air_quality_sensor",
         "aqara_door_window_p2",
         "aqara_motion_p2",
@@ -102,6 +101,7 @@ async def integration_fixture(
         "ikea_scroll_wheel",
         "inovelli_vtm30",
         "longan_link_thermostat",
+        "mock_air_purifier",
         "mock_battery_storage",
         "mock_cooktop",
         "mock_dimmable_light",
