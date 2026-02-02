@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.radarr.const import (
     DOMAIN,
@@ -20,6 +21,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_get_queue_service(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the get_queue service."""
     entry = await setup_integration(hass, aioclient_mock)
@@ -32,20 +34,11 @@ async def test_get_queue_service(
         return_response=True,
     )
 
-    assert "movies" in response
-    assert isinstance(response["movies"], dict)
-    # From the fixture, we should have 2 test movies
+    # Explicit assertion for specific behavior
     assert len(response["movies"]) == 2
 
-    # Check that images are included (using TMDB remote URLs)
-    for movie_data in response["movies"].values():
-        assert "images" in movie_data
-        assert isinstance(movie_data["images"], dict)
-        assert "poster" in movie_data["images"]
-        assert movie_data["images"]["poster"].startswith(
-            "https://image.tmdb.org/t/p/original/"
-        )
-        assert movie_data["images"]["poster"].endswith(".jpg")
+    # Snapshot for full structure validation
+    assert response == snapshot
 
 
 async def test_get_queue_service_invalid_entry(
@@ -94,6 +87,7 @@ async def test_get_queue_service_entry_not_loaded(
 async def test_get_movies_service(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the get_movies service."""
     entry = await setup_integration(hass, aioclient_mock)
@@ -106,35 +100,11 @@ async def test_get_movies_service(
         return_response=True,
     )
 
-    assert "movies" in response
-    assert isinstance(response["movies"], dict)
-    # From the fixture, we should have 2 movies
+    # Explicit assertion for specific behavior
     assert len(response["movies"]) == 2
 
-    # Check that the movies have the expected fields
-    assert "The Matrix" in response["movies"]
-    assert "Inception" in response["movies"]
-
-    matrix = response["movies"]["The Matrix"]
-    assert matrix["id"] == 1
-    assert matrix["year"] == 1999
-    assert matrix["has_file"] is True
-    assert matrix["monitored"] is True
-    assert matrix["tmdb_id"] == 603
-    assert matrix["imdb_id"] == "tt0133093"
-
-    # Check that images are included (using TMDB remote URLs)
-    assert "images" in matrix
-    assert isinstance(matrix["images"], dict)
-    assert "poster" in matrix["images"]
-    assert matrix["images"]["poster"].startswith("https://image.tmdb.org/t/p/original/")
-    assert "fanart" in matrix["images"]
-
-    inception = response["movies"]["Inception"]
-    assert inception["id"] == 2
-    assert inception["has_file"] is False
-    assert "images" in inception
-    assert "poster" in inception["images"]
+    # Snapshot for full structure validation
+    assert response == snapshot
 
 
 async def test_get_movies_service_invalid_entry(
