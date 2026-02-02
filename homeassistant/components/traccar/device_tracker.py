@@ -132,7 +132,7 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         )
 
     @property
-    def battery_level(self):
+    def battery_level(self) -> int | None:
         """Return battery value of the device."""
         return self._battery
 
