@@ -1,4 +1,4 @@
-"""Support for Elgato lights."""
+"""Support for Elgato services."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ SERVICE_IDENTIFY = "identify"
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up services for Bring! integration."""
+    """Set up services."""
 
     service.async_register_platform_entity_service(
         hass,
