@@ -102,9 +102,8 @@ class LiebherrSensor(LiebherrZoneEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the current value."""
         # temperature_control is guaranteed to exist when entity is available
-        return self.entity_description.value_fn(
-            self.temperature_control  # type: ignore[arg-type]
-        )
+        assert self.temperature_control is not None
+        return self.entity_description.value_fn(self.temperature_control)
 
     @property
     def available(self) -> bool:

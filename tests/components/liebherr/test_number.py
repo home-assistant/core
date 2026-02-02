@@ -39,7 +39,12 @@ def platforms() -> list[Platform]:
     return [Platform.NUMBER]
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.fixture(autouse=True)
+def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
+    """Make sure all entities are enabled."""
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_numbers(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -50,7 +55,6 @@ async def test_numbers(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_single_zone_number(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -92,7 +96,6 @@ async def test_single_zone_number(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_multi_zone_with_none_position(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -154,7 +157,7 @@ async def test_multi_zone_with_none_position(
     assert zone2_entity.translation_key == "setpoint_temperature_bottom_zone"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_set_temperature(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
@@ -177,7 +180,7 @@ async def test_set_temperature(
     )
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_set_temperature_failure(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
@@ -198,7 +201,7 @@ async def test_set_temperature_failure(
         )
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_number_update_failure(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
@@ -240,7 +243,7 @@ async def test_number_update_failure(
     assert state.state == "4"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_number_when_control_missing(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
@@ -273,7 +276,6 @@ async def test_number_when_control_missing(
     assert state.state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_number_with_none_min_max(
     hass: HomeAssistant,
     mock_liebherr_client: MagicMock,
