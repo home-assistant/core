@@ -33,4 +33,5 @@ CONF_PRESETS = {
     )
 }
 CONF_SENSOR = "target_sensor"
+CONF_KEEP_ALIVE = "keep_alive"
 DEFAULT_TOLERANCE = 0.3

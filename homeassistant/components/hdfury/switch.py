@@ -16,6 +16,8 @@ from .const import DOMAIN
 from .coordinator import HDFuryConfigEntry
 from .entity import HDFuryEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(kw_only=True, frozen=True)
 class HDFurySwitchEntityDescription(SwitchEntityDescription):
@@ -30,6 +32,30 @@ SWITCHES: tuple[HDFurySwitchEntityDescription, ...] = (
         translation_key="autosw",
         entity_category=EntityCategory.CONFIG,
         set_value_fn=lambda client, value: client.set_auto_switch_inputs(value),
+    ),
+    HDFurySwitchEntityDescription(
+        key="cec0en",
+        translation_key="cec0en",
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=lambda client, value: client.set_cec_rx0(value),
+    ),
+    HDFurySwitchEntityDescription(
+        key="cec1en",
+        translation_key="cec1en",
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=lambda client, value: client.set_cec_rx1(value),
+    ),
+    HDFurySwitchEntityDescription(
+        key="cec2en",
+        translation_key="cec2en",
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=lambda client, value: client.set_cec_rx2(value),
+    ),
+    HDFurySwitchEntityDescription(
+        key="cec3en",
+        translation_key="cec3en",
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=lambda client, value: client.set_cec_rx3(value),
     ),
     HDFurySwitchEntityDescription(
         key="htpcmode0",

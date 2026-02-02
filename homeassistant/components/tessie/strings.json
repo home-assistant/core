@@ -360,6 +360,9 @@
           "stopped": "[%key:common::state::stopped%]"
         }
       },
+      "charge_state_energy_remaining": {
+        "name": "Energy remaining"
+      },
       "charge_state_est_battery_range": {
         "name": "Battery range estimate"
       },

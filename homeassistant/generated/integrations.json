@@ -1045,10 +1045,20 @@
     },
     "cloudflare": {
       "name": "Cloudflare",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_push",
-      "single_config_entry": true
+      "integrations": {
+        "cloudflare": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Cloudflare"
+        },
+        "cloudflare_r2": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Cloudflare R2"
+        }
+      }
     },
     "cmus": {
       "name": "cmus",
@@ -1240,12 +1250,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "decora_wifi": {
-      "name": "Leviton Decora Wi-Fi",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "decorquip": {
       "name": "Decorquip Dream",
@@ -2602,6 +2606,13 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "green_planet_energy": {
+      "name": "Green Planet Energy",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
+    },
     "greeneye_monitor": {
       "name": "GreenEye Monitor (GEM)",
       "integration_type": "hub",
@@ -3541,6 +3552,14 @@
     },
     "leviton": {
       "name": "Leviton",
+      "integrations": {
+        "decora_wifi": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "cloud_polling",
+          "name": "Leviton Decora Wi-Fi"
+        }
+      },
       "iot_standards": [
         "zwave"
       ]
@@ -3590,6 +3609,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "liebherr": {
+      "name": "Liebherr",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "lifx": {
       "name": "LIFX",
@@ -4576,6 +4601,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "nrgkick": {
+      "name": "NRGkick",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "nsw_fuel_station": {
       "name": "NSW Fuel Station Price",
       "integration_type": "hub",
@@ -4775,7 +4806,7 @@
       "name": "OpenEVSE",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "openexchangerates": {
       "name": "Open Exchange Rates",
@@ -5191,6 +5222,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "prana": {
+      "name": "Prana",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "private_ble_device": {
       "name": "Private BLE Device",
       "integration_type": "device",
@@ -5251,8 +5288,8 @@
     },
     "proxmoxve": {
       "name": "Proxmox VE",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "proxy": {
@@ -5381,7 +5418,7 @@
           "name": "QNAP"
         },
         "qnap_qsw": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "QNAP QSW"
@@ -5419,7 +5456,7 @@
     },
     "rabbitair": {
       "name": "Rabbit Air",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5444,7 +5481,7 @@
     },
     "radiotherm": {
       "name": "Radio Thermostat",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5458,7 +5495,7 @@
       "name": "Rainforest Automation",
       "integrations": {
         "rainforest_eagle": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Rainforest Eagle"
@@ -5479,7 +5516,7 @@
     },
     "rapt_ble": {
       "name": "RAPT Bluetooth",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5577,7 +5614,7 @@
     },
     "renson": {
       "name": "Renson",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5685,13 +5722,13 @@
     },
     "romy": {
       "name": "ROMY Vacuum Cleaner",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "roomba": {
       "name": "iRobot Roomba and Braava",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -5726,7 +5763,7 @@
     },
     "rova": {
       "name": "ROVA",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5769,13 +5806,13 @@
       "name": "Ruuvi",
       "integrations": {
         "ruuvi_gateway": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Ruuvi Gateway"
         },
         "ruuvitag_ble": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Ruuvi BLE"
@@ -5790,7 +5827,7 @@
     },
     "sabnzbd": {
       "name": "SABnzbd",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5830,7 +5867,7 @@
     },
     "sanix": {
       "name": "Sanix",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5911,7 +5948,7 @@
     },
     "sensirion_ble": {
       "name": "Sensirion BLE",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -7191,6 +7228,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "uhoo": {
+      "name": "uHoo",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "uk_transport": {
       "name": "UK Transport",
       "integration_type": "hub",
@@ -7481,7 +7524,7 @@
     "waterfurnace": {
       "name": "WaterFurnace",
       "integration_type": "device",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "watergate": {
