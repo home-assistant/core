@@ -178,7 +178,8 @@ async def test_using_trendline(
     await setup_component(
         {
             "sample_duration": 10000,
-            "min_gradient": 1,
+            "min_gradient_value": 3600,  # 1 unit/second = 3600 units/hour
+            "min_gradient_time_unit": "hour",
             "max_samples": 25,
             "min_samples": 5,
             "invert": inverted,
@@ -233,7 +234,8 @@ async def test_max_samples(
     await setup_component(
         {
             "max_samples": 3,
-            "min_gradient": -1,
+            "min_gradient_value": -3600,  # -1 unit/second = -3600 units/hour
+            "min_gradient_time_unit": "hour",
         },
     )
 
@@ -341,7 +343,8 @@ async def test_restore_state(
     await setup_component(
         {
             "sample_duration": 10000,
-            "min_gradient": 1,
+            "min_gradient_value": 3600,  # 1 unit/second = 3600 units/hour
+            "min_gradient_time_unit": "hour",
             "max_samples": 25,
             "min_samples": 5,
         },
@@ -453,7 +456,8 @@ async def test_unavailable_source(
     await setup_component(
         {
             "sample_duration": 10000,
-            "min_gradient": 1,
+            "min_gradient_value": 3600,  # 1 unit/second = 3600 units/hour
+            "min_gradient_time_unit": "hour",
             "max_samples": 25,
             "min_samples": 5,
         },
@@ -488,7 +492,8 @@ async def test_invalid_state_handling(
     await setup_component(
         {
             "sample_duration": 10000,
-            "min_gradient": 1,
+            "min_gradient_value": 3600,  # 1 unit/second = 3600 units/hour
+            "min_gradient_time_unit": "hour",
             "max_samples": 25,
             "min_samples": 5,
         },

@@ -13,6 +13,15 @@ from homeassistant.helpers.helper_integration import (
     async_remove_helper_config_entry_from_source_device,
 )
 
+from .const import (
+    CONF_MIN_GRADIENT,
+    CONF_MIN_GRADIENT_TIME_UNIT,
+    CONF_MIN_GRADIENT_VALUE,
+    DEFAULT_MIN_GRADIENT_TIME_UNIT,
+    DEFAULT_MIN_GRADIENT_VALUE,
+    TIME_UNIT_SECONDS,
+)
+
 PLATFORMS = [Platform.BINARY_SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,8 +82,19 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     helper_config_entry_id=config_entry.entry_id,
                     source_device_id=source_device_id,
                 )
+        if config_entry.minor_version < 3:
+            # Migrate min_gradient to min_gradient_value and min_gradient_time_unit
+            if CONF_MIN_GRADIENT in options:
+                old_gradient = float(options.pop(CONF_MIN_GRADIENT))
+                # Convert units/second to units/hour
+                seconds_per_hour = TIME_UNIT_SECONDS["hour"]
+                options[CONF_MIN_GRADIENT_VALUE] = old_gradient * seconds_per_hour
+                options[CONF_MIN_GRADIENT_TIME_UNIT] = DEFAULT_MIN_GRADIENT_TIME_UNIT
+            else:
+                options[CONF_MIN_GRADIENT_VALUE] = DEFAULT_MIN_GRADIENT_VALUE
+                options[CONF_MIN_GRADIENT_TIME_UNIT] = DEFAULT_MIN_GRADIENT_TIME_UNIT
         hass.config_entries.async_update_entry(
-            config_entry, options=options, minor_version=2
+            config_entry, options=options, minor_version=3
         )
 
     _LOGGER.debug(

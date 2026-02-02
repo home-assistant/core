@@ -19,11 +19,13 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from .const import (
     CONF_INVERT,
     CONF_MAX_SAMPLES,
-    CONF_MIN_GRADIENT,
+    CONF_MIN_GRADIENT_TIME_UNIT,
+    CONF_MIN_GRADIENT_VALUE,
     CONF_MIN_SAMPLES,
     CONF_SAMPLE_DURATION,
     DEFAULT_MAX_SAMPLES,
-    DEFAULT_MIN_GRADIENT,
+    DEFAULT_MIN_GRADIENT_TIME_UNIT,
+    DEFAULT_MIN_GRADIENT_VALUE,
     DEFAULT_MIN_SAMPLES,
     DEFAULT_SAMPLE_DURATION,
     DOMAIN,
@@ -68,11 +70,20 @@ async def get_extended_options_schema(handler: SchemaCommonFlowHandler) -> vol.S
                 ),
             ),
             vol.Optional(
-                CONF_MIN_GRADIENT, default=DEFAULT_MIN_GRADIENT
+                CONF_MIN_GRADIENT_VALUE, default=DEFAULT_MIN_GRADIENT_VALUE
             ): selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     step="any",
                     mode=selector.NumberSelectorMode.BOX,
+                ),
+            ),
+            vol.Optional(
+                CONF_MIN_GRADIENT_TIME_UNIT, default=DEFAULT_MIN_GRADIENT_TIME_UNIT
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=["second", "minute", "hour", "day"],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="min_gradient_time_unit",
                 ),
             ),
             vol.Optional(
@@ -101,7 +112,7 @@ CONFIG_SCHEMA = vol.Schema(
 class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Trend."""
 
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     config_flow = {
         "user": SchemaFlowFormStep(schema=CONFIG_SCHEMA, next_step="settings"),
