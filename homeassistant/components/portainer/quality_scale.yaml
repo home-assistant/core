@@ -30,10 +30,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: exempt
-    comment: |
-      No explicit parallel updates are defined.
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
   # Gold
@@ -49,14 +46,8 @@ rules:
       No discovery is implemented, since it's software based.
   docs-data-update: done
   docs-examples: done
-  docs-known-limitations:
-    status: exempt
-    comment: |
-      No known limitations at this time.
-  docs-supported-devices:
-    status: exempt
-    comment: |
-      No specific devices are supported, since it's software based.
+  docs-known-limitations: done
+  docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
