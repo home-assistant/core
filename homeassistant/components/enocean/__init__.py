@@ -156,7 +156,7 @@ async def async_setup_entry(
         )
         _LOGGER.info("Starting EnOcean gateway")
         await gateway.start()
-        gateway.legacy_callback = lambda packet: dispatcher_send(
+        gateway.legacy_handle_packet_callback = lambda packet: dispatcher_send(
             hass, SIGNAL_RECEIVE_MESSAGE, packet
         )
         _LOGGER.info("EnOcean gateway started")
