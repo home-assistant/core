@@ -168,8 +168,13 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
         if hvac_mode == HVACMode.HEAT:
             temperature = self._attr_target_temperature or self._attr_min_temp
             await self._adax_data_handler.set_target_temperature(temperature)
+            self._attr_icon = "mdi:radiator"
         elif hvac_mode == HVACMode.OFF:
             await self._adax_data_handler.set_target_temperature(0)
+            self._attr_icon = "mdi:radiator-off"
+
+        self._attr_hvac_mode = hvac_mode
+        self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -177,20 +182,30 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
             return
         await self._adax_data_handler.set_target_temperature(temperature)
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        self._attr_target_temperature = temperature
+        self._attr_hvac_mode = HVACMode.HEAT
+        self.async_write_ha_state()
+
+    def _update_hvac_attributes(self) -> None:
+        """Update hvac mode, current temperature, and target temperature from coordinator data."""
         if data := self.coordinator.data:
             self._attr_current_temperature = data["current_temperature"]
             self._attr_available = self._attr_current_temperature is not None
             if (target_temp := data["target_temperature"]) == 0:
                 self._attr_hvac_mode = HVACMode.OFF
                 self._attr_icon = "mdi:radiator-off"
-                if target_temp == 0:
-                    self._attr_target_temperature = self._attr_min_temp
             else:
                 self._attr_hvac_mode = HVACMode.HEAT
                 self._attr_icon = "mdi:radiator"
                 self._attr_target_temperature = target_temp
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_hvac_attributes()
         super()._handle_coordinator_update()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._update_hvac_attributes()
