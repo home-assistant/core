@@ -27,7 +27,7 @@
       },
       "user": {
         "data": {
-          "api_key": "[%key:component::co2signal::config::step::reauth_confirm::data::api_key%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "location": "[%key:common::config_flow::data::location%]"
         },
         "description": "Visit the [Electricity Maps app]({register_link}) to request an API key."
