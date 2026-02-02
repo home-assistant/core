@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -80,6 +80,12 @@ class SENZSensor(CoordinatorEntity[SENZDataUpdateCoordinator], SensorEntity):
             name=thermostat.name,
             serial_number=thermostat.serial_number,
         )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._thermostat = self.coordinator.data[self._thermostat.serial_number]
+        self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
