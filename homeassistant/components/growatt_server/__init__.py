@@ -27,7 +27,7 @@ from .const import (
 )
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
 from .models import GrowattRuntimeData
-from .services import async_register_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Growatt Server component."""
     # Register services
-    await async_register_services(hass)
+    async_setup_services(hass)
     return True
 
 
