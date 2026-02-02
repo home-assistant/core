@@ -193,6 +193,17 @@ class MultipleTimersMatchedError(intent.IntentHandleError):
         super().__init__("Multiple timers matched", MULTIPLE_TIMERS_MATCHED_RESPONSE)
 
 
+class NoIntentMatchError(intent.IntentHandleError):
+    """Error when a conversation command does not match any intent."""
+
+    def __init__(self, command: str) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"Intent not recognized: {command}",
+            NO_TIMER_COMMAND_RESPONSE,
+        )
+
+
 class TimersNotSupportedError(intent.IntentHandleError):
     """Error when a timer intent is used from a device that isn't registered to handle timer events."""
 
@@ -201,17 +212,6 @@ class TimersNotSupportedError(intent.IntentHandleError):
         super().__init__(
             f"Device does not support timers: device_id={device_id}",
             NO_TIMER_SUPPORT_RESPONSE,
-        )
-
-
-class NoTimerCommandError(intent.IntentHandleError):
-    """Error when a conversation command does not match any intent."""
-
-    def __init__(self, command: str) -> None:
-        """Initialize error."""
-        super().__init__(
-            f"Timer command was not recognized: {command}",
-            NO_TIMER_COMMAND_RESPONSE,
         )
 
 
@@ -852,7 +852,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
         if conversation_command and not await self._validate_conversation_command(
             intent_obj, conversation_command
         ):
-            raise NoTimerCommandError(conversation_command)
+            raise NoIntentMatchError(conversation_command)
 
         name: str | None = None
         if "name" in slots:
