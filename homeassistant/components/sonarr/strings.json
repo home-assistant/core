@@ -71,7 +71,7 @@
   },
   "services": {
     "get_diskspace": {
-      "description": "Get disk space information for all configured paths.",
+      "description": "Gets disk space information for all configured paths.",
       "fields": {
         "entry_id": {
           "description": "ID of the config entry to use.",
@@ -81,11 +81,11 @@
       "name": "Get disk space"
     },
     "get_episodes": {
-      "description": "Get episodes for a specific series.",
+      "description": "Gets episodes for a specific series.",
       "fields": {
         "entry_id": {
-          "description": "ID of the config entry to use.",
-          "name": "Sonarr entry"
+          "description": "[%key:component::sonarr::services::get_diskspace::fields::entry_id::description%]",
+          "name": "[%key:component::sonarr::services::get_diskspace::fields::entry_id::name%]"
         },
         "season_number": {
           "description": "Optional season number to filter episodes by.",
@@ -99,11 +99,11 @@
       "name": "Get episodes"
     },
     "get_queue": {
-      "description": "Get all episodes currently in the download queue with their progress and details.",
+      "description": "Gets all episodes currently in the download queue with their progress and details.",
       "fields": {
         "entry_id": {
-          "description": "ID of the config entry to use.",
-          "name": "Sonarr entry"
+          "description": "[%key:component::sonarr::services::get_diskspace::fields::entry_id::description%]",
+          "name": "[%key:component::sonarr::services::get_diskspace::fields::entry_id::name%]"
         },
         "max_items": {
           "description": "Maximum number of queue items to return (0 = no limit).",
@@ -113,35 +113,35 @@
       "name": "Get queue"
     },
     "get_series": {
-      "description": "Get all series in Sonarr with their details and statistics.",
+      "description": "Gets all series in Sonarr with their details and statistics.",
       "fields": {
         "entry_id": {
-          "description": "ID of the config entry to use.",
-          "name": "Sonarr entry"
+          "description": "[%key:component::sonarr::services::get_diskspace::fields::entry_id::description%]",
+          "name": "[%key:component::sonarr::services::get_diskspace::fields::entry_id::name%]"
         }
       },
       "name": "Get series"
     },
     "get_upcoming": {
-      "description": "Get upcoming episodes from the calendar.",
+      "description": "Gets upcoming episodes from the calendar.",
       "fields": {
         "days": {
           "description": "Number of days to look ahead for upcoming episodes.",
           "name": "Days"
         },
         "entry_id": {
-          "description": "ID of the config entry to use.",
-          "name": "Sonarr entry"
+          "description": "[%key:component::sonarr::services::get_diskspace::fields::entry_id::description%]",
+          "name": "[%key:component::sonarr::services::get_diskspace::fields::entry_id::name%]"
         }
       },
       "name": "Get upcoming"
     },
     "get_wanted": {
-      "description": "Get wanted/missing episodes that are being searched for.",
+      "description": "Gets wanted/missing episodes that are being searched for.",
       "fields": {
         "entry_id": {
-          "description": "ID of the config entry to use.",
-          "name": "Sonarr entry"
+          "description": "[%key:component::sonarr::services::get_diskspace::fields::entry_id::description%]",
+          "name": "[%key:component::sonarr::services::get_diskspace::fields::entry_id::name%]"
         },
         "max_items": {
           "description": "Maximum number of wanted episodes to return (0 = no limit).",

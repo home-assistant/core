@@ -60,6 +60,19 @@ def sonarr_queue() -> SonarrQueue:
     return SonarrQueue(results)
 
 
+def sonarr_queue_season_pack() -> SonarrQueue:
+    """Generate a response for the queue method with a season pack."""
+    results = json.loads(load_fixture("sonarr/queue_season_pack.json"))
+    return SonarrQueue(results)
+
+
+@pytest.fixture
+def mock_sonarr_season_pack(mock_sonarr: MagicMock) -> MagicMock:
+    """Return a mocked Sonarr client with season pack queue data."""
+    mock_sonarr.async_get_queue.return_value = sonarr_queue_season_pack()
+    return mock_sonarr
+
+
 def sonarr_series() -> list[SonarrSeries]:
     """Generate a response for the series method."""
     results = json.loads(load_fixture("sonarr/series.json"))
