@@ -39,7 +39,9 @@ async def test_light_transition(
         blocking=True,
     )
     # Default brightness is used if not specified (DEFAULT_DIMMER_LEVEL is 50%)
-    light.set_level.assert_called_with(new_level=50.0, fade_time_seconds=2.5)
+    light.set_level.assert_called_with(
+        new_level=pytest.approx(49.803, rel=1e-3), fade_time_seconds=2.5
+    )
 
     # Turn off with transition
     await hass.services.async_call(
@@ -105,7 +107,7 @@ async def test_light_brightness_restore(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    light.set_level.assert_called_with(new_level=50.0)
+    light.set_level.assert_called_with(new_level=pytest.approx(49.803, rel=1e-3))
 
     # Simulate update to 50% (Lutron level 50 -> HA level 127)
     light.last_level.return_value = 50
