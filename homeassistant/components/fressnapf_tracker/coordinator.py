@@ -34,7 +34,7 @@ class FressnapfTrackerDataUpdateCoordinator(DataUpdateCoordinator[Tracker]):
         hass: HomeAssistant,
         config_entry: FressnapfTrackerConfigEntry,
         device: Device,
-        initial_data: Tracker | None = None,
+        initial_data: Tracker,
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -50,8 +50,7 @@ class FressnapfTrackerDataUpdateCoordinator(DataUpdateCoordinator[Tracker]):
             device_token=device.token,
             client=get_async_client(hass),
         )
-        if initial_data is not None:
-            self.data = initial_data
+        self.data = initial_data
 
     async def _async_update_data(self) -> Tracker:
         try:
