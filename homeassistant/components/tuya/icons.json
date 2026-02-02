@@ -383,13 +383,10 @@
     }
   },
   "services": {
-    "get_available_dp_codes": {
-      "service": "mdi:code-braces"
-    },
-    "get_data": {
+    "get_meal_plan_data": {
       "service": "mdi:database-eye"
     },
-    "set_data": {
+    "set_meal_plan_data": {
       "service": "mdi:database-edit"
     }
   }
