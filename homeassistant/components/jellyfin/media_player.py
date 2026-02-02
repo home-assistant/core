@@ -6,6 +6,8 @@ import logging
 from typing import Any
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_EXTRA,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -237,16 +239,22 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
-        """Play a piece of media."""
+        """Play a piece of media.
+        from jellyfin api docs:
+        command (str): When to play. (*PlayNow*, PlayNext, PlayLast, PlayInstantMix, PlayShuffle)
+        """
         command = "PlayNow"
-        shuffle = kwargs.get("extra", {}).get("shuffle", False)
-        queue = kwargs.get("extra", {}).get("queue", False)
+        shuffle = kwargs.get(ATTR_MEDIA_EXTRA, {}).get("shuffle", False)
+        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, None)
         if bool(shuffle):
+            # shuffle takes priority over enqueue
             command = "PlayShuffle"
-        elif isinstance(queue, str):
-            if queue.lower() == "next":
+        elif isinstance(enqueue, str):
+            # skip if the default None is passed
+            # both 'now' and 'replace' will act the same in jellyfin, skip them too
+            if enqueue.lower() == "next":
                 command = "PlayNext"
-            elif queue.lower() == "last":
+            elif enqueue.lower() == "add":
                 command = "PlayLast"
         self.coordinator.api_client.jellyfin.remote_play_media(
             self.session_id, [media_id], command
