@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -192,9 +191,9 @@ async def setup_integration(
     mock_calendar(aioclient_mock, url)
 
     if not skip_entry_setup:
+        # async_setup_entry will automatically trigger async_setup which registers services
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-    assert await async_setup_component(hass, DOMAIN, {})
 
     return entry
 

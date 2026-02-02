@@ -54,7 +54,9 @@ async def test_get_queue_service_invalid_entry(
     # Set up at least one entry so the service gets registered
     await setup_integration(hass, aioclient_mock)
 
-    with pytest.raises(ServiceValidationError, match="integration_not_found"):
+    with pytest.raises(
+        ServiceValidationError, match='Config entry for integration "radarr" not found'
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_QUEUE,
@@ -75,7 +77,9 @@ async def test_get_queue_service_entry_not_loaded(
     # Now create a second entry that isn't loaded
     unloaded_entry = create_entry(hass)
 
-    with pytest.raises(ServiceValidationError, match="not_loaded"):
+    with pytest.raises(
+        ServiceValidationError, match='Config entry "Mock Title" is not loaded'
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_QUEUE,
@@ -139,7 +143,9 @@ async def test_get_movies_service_invalid_entry(
     # Set up at least one entry so the service gets registered
     await setup_integration(hass, aioclient_mock)
 
-    with pytest.raises(ServiceValidationError, match="integration_not_found"):
+    with pytest.raises(
+        ServiceValidationError, match='Config entry for integration "radarr" not found'
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_MOVIES,
@@ -160,7 +166,9 @@ async def test_get_movies_service_entry_not_loaded(
     # Now create a second entry that isn't loaded
     unloaded_entry = create_entry(hass)
 
-    with pytest.raises(ServiceValidationError, match="not_loaded"):
+    with pytest.raises(
+        ServiceValidationError, match='Config entry "Mock Title" is not loaded'
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_MOVIES,
