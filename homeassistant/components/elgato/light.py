@@ -15,13 +15,9 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from .const import SERVICE_IDENTIFY
 from .coordinator import ElgatoConfigEntry, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
 
@@ -36,13 +32,6 @@ async def async_setup_entry(
     """Set up Elgato Light based on a config entry."""
     coordinator = entry.runtime_data
     async_add_entities([ElgatoLight(coordinator)])
-
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_IDENTIFY,
-        None,
-        ElgatoLight.async_identify.__name__,
-    )
 
 
 class ElgatoLight(ElgatoEntity, LightEntity):
