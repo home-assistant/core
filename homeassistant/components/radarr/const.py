@@ -24,4 +24,4 @@ SERVICE_GET_QUEUE: Final = "get_queue"
 
 # Service attributes
 ATTR_MOVIES: Final = "movies"
-CONF_ENTRY_ID: Final = "entry_id"
+ATTR_ENTRY_ID: Final = "entry_id"

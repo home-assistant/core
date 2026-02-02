@@ -1,7 +1,7 @@
 """Define services for the Radarr integration."""
 
 from collections.abc import Awaitable, Callable
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 from aiopyarr import exceptions
 import voluptuous as vol
@@ -13,16 +13,14 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import selector
 
 from .const import (
+    ATTR_ENTRY_ID,
     ATTR_MOVIES,
-    CONF_ENTRY_ID,
     DOMAIN,
     SERVICE_GET_MOVIES,
     SERVICE_GET_QUEUE,
 )
 from .coordinator import RadarrConfigEntry
 from .helpers import format_movies, format_queue
-
-_T = TypeVar("_T")
 
 # Service parameter constants
 CONF_MAX_ITEMS = "max_items"
@@ -32,7 +30,7 @@ DEFAULT_MAX_ITEMS = 0
 
 SERVICE_BASE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(
+        vol.Required(ATTR_ENTRY_ID): selector.ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
     }
@@ -51,7 +49,7 @@ SERVICE_GET_QUEUE_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 
 def _get_config_entry_from_service_data(call: ServiceCall) -> RadarrConfigEntry:
     """Return config entry for entry id."""
-    config_entry_id: str = call.data[CONF_ENTRY_ID]
+    config_entry_id: str = call.data[ATTR_ENTRY_ID]
     if not (entry := call.hass.config_entries.async_get_entry(config_entry_id)):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -67,7 +65,7 @@ def _get_config_entry_from_service_data(call: ServiceCall) -> RadarrConfigEntry:
     return cast(RadarrConfigEntry, entry)
 
 
-async def _handle_api_errors(func: Callable[[], Awaitable[_T]]) -> _T:
+async def _handle_api_errors[_T](func: Callable[[], Awaitable[_T]]) -> _T:
     """Handle API errors and raise HomeAssistantError with user-friendly messages."""
     try:
         return await func()
@@ -121,9 +119,7 @@ async def _async_get_queue(service: ServiceCall) -> dict[str, Any]:
 
     movies = format_queue(queue, base_url)
 
-    return {
-        ATTR_MOVIES: movies,
-    }
+    return {ATTR_MOVIES: movies}
 
 
 @callback

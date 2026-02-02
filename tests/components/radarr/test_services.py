@@ -2,10 +2,12 @@
 
 from unittest.mock import patch
 
+from aiopyarr import ArrAuthenticationException, ArrConnectionException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.radarr.const import (
+    ATTR_ENTRY_ID,
     DOMAIN,
     SERVICE_GET_MOVIES,
     SERVICE_GET_QUEUE,
@@ -29,7 +31,7 @@ async def test_get_queue_service(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_QUEUE,
-        {"entry_id": entry.entry_id},
+        {ATTR_ENTRY_ID: entry.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -39,49 +41,6 @@ async def test_get_queue_service(
 
     # Snapshot for full structure validation
     assert response == snapshot
-
-
-async def test_get_queue_service_invalid_entry(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test get_queue with invalid entry id."""
-    # Set up at least one entry so the service gets registered
-    await setup_integration(hass, aioclient_mock)
-
-    with pytest.raises(
-        ServiceValidationError, match='Config entry for integration "radarr" not found'
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_QUEUE,
-            {"entry_id": "invalid_id"},
-            blocking=True,
-            return_response=True,
-        )
-
-
-async def test_get_queue_service_entry_not_loaded(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test get_queue with entry that's not loaded."""
-    # First set up one entry to register the service
-    await setup_integration(hass, aioclient_mock)
-
-    # Now create a second entry that isn't loaded
-    unloaded_entry = create_entry(hass)
-
-    with pytest.raises(
-        ServiceValidationError, match='Config entry "Mock Title" is not loaded'
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_QUEUE,
-            {"entry_id": unloaded_entry.entry_id},
-            blocking=True,
-            return_response=True,
-        )
 
 
 async def test_get_movies_service(
@@ -95,7 +54,7 @@ async def test_get_movies_service(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_MOVIES,
-        {"entry_id": entry.entry_id},
+        {ATTR_ENTRY_ID: entry.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -107,11 +66,74 @@ async def test_get_movies_service(
     assert response == snapshot
 
 
-async def test_get_movies_service_invalid_entry(
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [(SERVICE_GET_QUEUE, "async_get_queue"), (SERVICE_GET_MOVIES, "async_get_movies")],
+)
+async def test_services_api_connection_error(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    service: str,
+    method: str,
 ) -> None:
-    """Test get_movies with invalid entry id."""
+    """Test services with API connection error."""
+    entry = await setup_integration(hass, aioclient_mock)
+
+    with (
+        patch(
+            f"homeassistant.components.radarr.coordinator.RadarrClient.{method}",
+            side_effect=ArrConnectionException(None, "Connection failed"),
+        ),
+        pytest.raises(HomeAssistantError, match="Failed to connect to Radarr"),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTRY_ID: entry.entry_id},
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [(SERVICE_GET_QUEUE, "async_get_queue"), (SERVICE_GET_MOVIES, "async_get_movies")],
+)
+async def test_get_movies_service_api_auth_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    service: str,
+    method: str,
+) -> None:
+    """Test services with API authentication error."""
+    entry = await setup_integration(hass, aioclient_mock)
+
+    with (
+        patch(
+            f"homeassistant.components.radarr.coordinator.RadarrClient.{method}",
+            side_effect=ArrAuthenticationException(None, "Authentication failed"),
+        ),
+        pytest.raises(HomeAssistantError, match="Authentication failed for Radarr"),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTRY_ID: entry.entry_id},
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "service",
+    [SERVICE_GET_QUEUE, SERVICE_GET_MOVIES],
+)
+async def test_services_invalid_entry(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    service: str,
+) -> None:
+    """Test get_queue with invalid entry id."""
     # Set up at least one entry so the service gets registered
     await setup_integration(hass, aioclient_mock)
 
@@ -120,18 +142,23 @@ async def test_get_movies_service_invalid_entry(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_MOVIES,
-            {"entry_id": "invalid_id"},
+            service,
+            {ATTR_ENTRY_ID: "invalid_id"},
             blocking=True,
             return_response=True,
         )
 
 
-async def test_get_movies_service_entry_not_loaded(
+@pytest.mark.parametrize(
+    "service",
+    [SERVICE_GET_QUEUE, SERVICE_GET_MOVIES],
+)
+async def test_services_entry_not_loaded(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    service: str,
 ) -> None:
-    """Test get_movies with entry that's not loaded."""
+    """Test get_queue with entry that's not loaded."""
     # First set up one entry to register the service
     await setup_integration(hass, aioclient_mock)
 
@@ -143,108 +170,8 @@ async def test_get_movies_service_entry_not_loaded(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_MOVIES,
-            {"entry_id": unloaded_entry.entry_id},
-            blocking=True,
-            return_response=True,
-        )
-
-
-async def test_get_movies_service_api_connection_error(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test get_movies with API connection error."""
-    entry = await setup_integration(hass, aioclient_mock)
-
-    with (
-        patch(
-            "homeassistant.components.radarr.coordinator.RadarrClient.async_get_movies",
-            side_effect=__import__("aiopyarr").exceptions.ArrConnectionException(
-                "Connection failed"
-            ),
-        ),
-        pytest.raises(HomeAssistantError, match="Failed to connect to Radarr"),
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_MOVIES,
-            {"entry_id": entry.entry_id},
-            blocking=True,
-            return_response=True,
-        )
-
-
-async def test_get_movies_service_api_auth_error(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test get_movies with API authentication error."""
-    entry = await setup_integration(hass, aioclient_mock)
-
-    with (
-        patch(
-            "homeassistant.components.radarr.coordinator.RadarrClient.async_get_movies",
-            side_effect=__import__("aiopyarr").exceptions.ArrAuthenticationException(
-                "Authentication failed"
-            ),
-        ),
-        pytest.raises(HomeAssistantError, match="Authentication failed for Radarr"),
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_MOVIES,
-            {"entry_id": entry.entry_id},
-            blocking=True,
-            return_response=True,
-        )
-
-
-async def test_get_queue_service_api_connection_error(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test get_queue with API connection error."""
-    entry = await setup_integration(hass, aioclient_mock)
-
-    with (
-        patch(
-            "homeassistant.components.radarr.coordinator.RadarrClient.async_get_queue",
-            side_effect=__import__("aiopyarr").exceptions.ArrConnectionException(
-                "Connection failed"
-            ),
-        ),
-        pytest.raises(HomeAssistantError, match="Failed to connect to Radarr"),
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_QUEUE,
-            {"entry_id": entry.entry_id},
-            blocking=True,
-            return_response=True,
-        )
-
-
-async def test_get_queue_service_api_auth_error(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test get_queue with API authentication error."""
-    entry = await setup_integration(hass, aioclient_mock)
-
-    with (
-        patch(
-            "homeassistant.components.radarr.coordinator.RadarrClient.async_get_queue",
-            side_effect=__import__("aiopyarr").exceptions.ArrAuthenticationException(
-                "Authentication failed"
-            ),
-        ),
-        pytest.raises(HomeAssistantError, match="Authentication failed for Radarr"),
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_QUEUE,
-            {"entry_id": entry.entry_id},
+            service,
+            {ATTR_ENTRY_ID: unloaded_entry.entry_id},
             blocking=True,
             return_response=True,
         )
