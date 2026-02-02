@@ -1,7 +1,7 @@
 """Tests for intent timers."""
 
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -1470,6 +1470,61 @@ async def test_start_timer_with_conversation_command(
         await hass.async_block_till_done()
         mock_converse.assert_called_once()
         assert mock_converse.call_args.args[1] == test_command
+
+
+async def test_start_timer_with_sentence_trigger_validation(
+    hass: HomeAssistant, init_components
+) -> None:
+    """Test starting a timer with a conversation command validates against sentence triggers."""
+    device_id = "test_device"
+    timer_name = "test timer"
+    test_command = "turn on the lights"
+    agent_id = None  # Default agent
+
+    mock_handle_timer = MagicMock()
+    async_register_timer_handler(hass, device_id, mock_handle_timer)
+
+    # Mock the conversation agent to recognize the command as a sentence trigger
+    with (
+        patch(
+            "homeassistant.components.conversation.async_get_agent"
+        ) as mock_get_agent,
+        patch("homeassistant.components.conversation.default_agent") as mock_agent,
+    ):
+        mock_agent.async_recognize_sentence_trigger = AsyncMock(
+            return_value=conversation.default_agent.SentenceTriggerResult(
+                sentence=test_command, sentence_template="", matched_triggers={}
+            )
+        )
+        mock_agent.async_recognize_intent = AsyncMock(return_value=None)
+        mock_get_agent.return_value = mock_agent
+
+        # Make the mock agent an instance of DefaultAgent
+        mock_agent.DefaultAgent = type(mock_agent)
+
+        result = await intent.async_handle(
+            hass,
+            "test",
+            intent.INTENT_START_TIMER,
+            {
+                "name": {"value": timer_name},
+                "seconds": {"value": 5},
+                "conversation_command": {"value": test_command},
+            },
+            device_id=device_id,
+            conversation_agent_id=agent_id,
+        )
+
+        assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+        # Verify the sentence trigger was checked
+        mock_agent.async_recognize_sentence_trigger.assert_called_once()
+
+        # Verify timer was created with conversation_command
+        timer_manager = hass.data["intent.timer"]
+        assert len(timer_manager.timers) == 1
+        timer = list(timer_manager.timers.values())[0]
+        assert timer.conversation_command == test_command
 
 
 async def test_start_timer_with_invalid_conversation_command(
