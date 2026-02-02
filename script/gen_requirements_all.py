@@ -120,6 +120,9 @@ multidict>=6.0.2
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
+# Brotli 1.2.0 fixes CVE and is required for aiohttp 3.13.3 compatibility
+Brotli>=1.2.0
+
 # ensure pydantic version does not float since it might have breaking changes
 pydantic==2.12.2
 
@@ -214,6 +217,9 @@ gql<4.0.0
 
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
+
+# Fixes detected blocking call to load_default_certs https://github.com/home-assistant/core/issues/157475
+aiomqtt>=2.5.0
 """
 
 GENERATED_MESSAGE = (
@@ -350,6 +356,24 @@ def gather_modules() -> dict[str, list[str]] | None:
     return reqs
 
 
+def gather_entity_platform_requirements() -> set[str]:
+    """Gather all of the requirements from manifests for entity platforms."""
+    config = _get_hassfest_config()
+    integrations = Integration.load_dir(config.core_integrations_path, config)
+    reqs = set()
+    for domain in sorted(integrations):
+        integration = integrations[domain]
+
+        if integration.disabled:
+            continue
+
+        if integration.integration_type != "entity":
+            continue
+
+        reqs.update(gather_recursive_requirements(integration.domain))
+    return reqs
+
+
 def gather_requirements_from_manifests(
     errors: list[str], reqs: dict[str, list[str]]
 ) -> None:
@@ -432,7 +456,12 @@ def requirements_output() -> str:
         "\n",
         "# Home Assistant Core\n",
     ]
-    output.append("\n".join(core_requirements()))
+
+    requirements = set()
+    requirements.update(core_requirements())
+    requirements.update(gather_entity_platform_requirements())
+
+    output.append("\n".join(sorted(requirements, key=lambda key: key.lower())))
     output.append("\n")
 
     return "".join(output)

@@ -1,0 +1,477 @@
+# serializer version: 1
+# name: test_all_selects[select.pool_device_chlorine_dosing_method-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'proportional',
+        'on_off',
+        'timed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pool_device_chlorine_dosing_method',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Chlorine dosing method',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Chlorine dosing method',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cl_type_dosing_method',
+    'unique_id': 'TEST123456789_cl_type_dosing_method',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_selects[select.pool_device_chlorine_dosing_method-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool Device Chlorine dosing method',
+      'options': list([
+        'off',
+        'proportional',
+        'on_off',
+        'timed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pool_device_chlorine_dosing_method',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'timed',
+  })
+# ---
+# name: test_all_selects[select.pool_device_chlorine_dosing_set-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pool_device_chlorine_dosing_set',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Chlorine dosing set',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Chlorine dosing set',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cl_type_dosing_set',
+    'unique_id': 'TEST123456789_cl_type_dosing_set',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_selects[select.pool_device_chlorine_dosing_set-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool Device Chlorine dosing set',
+      'options': list([
+        'low',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pool_device_chlorine_dosing_set',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
+  })
+# ---
+# name: test_all_selects[select.pool_device_flow_rate_unit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+        <UnitOfVolumeFlowRate.LITERS_PER_SECOND: 'L/s'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pool_device_flow_rate_unit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flow rate unit',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flow rate unit',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'flow_rate_unit',
+    'unique_id': 'TEST123456789_flow_rate_unit',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_selects[select.pool_device_flow_rate_unit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool Device Flow rate unit',
+      'options': list([
+        <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+        <UnitOfVolumeFlowRate.LITERS_PER_SECOND: 'L/s'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pool_device_flow_rate_unit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'L/s',
+  })
+# ---
+# name: test_all_selects[select.pool_device_orp_dosing_method-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'proportional',
+        'on_off',
+        'timed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pool_device_orp_dosing_method',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ORP dosing method',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'ORP dosing method',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'orp_type_dosing_method',
+    'unique_id': 'TEST123456789_orp_type_dosing_method',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_selects[select.pool_device_orp_dosing_method-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool Device ORP dosing method',
+      'options': list([
+        'off',
+        'proportional',
+        'on_off',
+        'timed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pool_device_orp_dosing_method',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on_off',
+  })
+# ---
+# name: test_all_selects[select.pool_device_orp_dosing_set-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pool_device_orp_dosing_set',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ORP dosing set',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'ORP dosing set',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'orp_type_dosing_set',
+    'unique_id': 'TEST123456789_orp_type_dosing_set',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_selects[select.pool_device_orp_dosing_set-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool Device ORP dosing set',
+      'options': list([
+        'low',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pool_device_orp_dosing_set',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low',
+  })
+# ---
+# name: test_all_selects[select.pool_device_ph_dosing_method-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'proportional',
+        'on_off',
+        'timed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pool_device_ph_dosing_method',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pH dosing method',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'pH dosing method',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ph_type_dosing_method',
+    'unique_id': 'TEST123456789_ph_type_dosing_method',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_selects[select.pool_device_ph_dosing_method-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool Device pH dosing method',
+      'options': list([
+        'off',
+        'proportional',
+        'on_off',
+        'timed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pool_device_ph_dosing_method',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'proportional',
+  })
+# ---
+# name: test_all_selects[select.pool_device_ph_dosing_set-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'alcalyne',
+        'acid',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pool_device_ph_dosing_set',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'pH dosing set',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'pH dosing set',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ph_type_dosing_set',
+    'unique_id': 'TEST123456789_ph_type_dosing_set',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_selects[select.pool_device_ph_dosing_set-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool Device pH dosing set',
+      'options': list([
+        'alcalyne',
+        'acid',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pool_device_ph_dosing_set',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'acid',
+  })
+# ---
+# name: test_all_selects[select.pool_device_water_meter_unit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        <UnitOfVolume.LITERS: 'L'>,
+        <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pool_device_water_meter_unit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Water meter unit',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Water meter unit',
+    'platform': 'pooldose',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'water_meter_unit',
+    'unique_id': 'TEST123456789_water_meter_unit',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_selects[select.pool_device_water_meter_unit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pool Device Water meter unit',
+      'options': list([
+        <UnitOfVolume.LITERS: 'L'>,
+        <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pool_device_water_meter_unit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'm³',
+  })
+# ---

@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper
+from .models import DeviceWrapper, DPCodeBooleanWrapper
 
 CAMERAS: tuple[DeviceCategory, ...] = (
     DeviceCategory.DGHSXJ,
@@ -70,8 +70,8 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         device: CustomerDevice,
         device_manager: Manager,
         *,
-        motion_detection_switch: DPCodeBooleanWrapper | None = None,
-        recording_status: DPCodeBooleanWrapper | None = None,
+        motion_detection_switch: DeviceWrapper[bool] | None = None,
+        recording_status: DeviceWrapper[bool] | None = None,
     ) -> None:
         """Init Tuya Camera."""
         super().__init__(device, device_manager)
@@ -118,8 +118,8 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
 
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        await self._async_send_dpcode_update(self._motion_detection_switch, True)
+        await self._async_send_wrapper_updates(self._motion_detection_switch, True)
 
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        await self._async_send_dpcode_update(self._motion_detection_switch, False)
+        await self._async_send_wrapper_updates(self._motion_detection_switch, False)

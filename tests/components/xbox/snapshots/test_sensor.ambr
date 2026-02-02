@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Follower',
     'options': dict({
     }),
     'original_device_class': None,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Following',
     'options': dict({
     }),
     'original_device_class': None,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Friends',
     'options': dict({
     }),
     'original_device_class': None,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gamerscore',
     'options': dict({
     }),
     'original_device_class': None,
@@ -216,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'In party',
     'options': dict({
     }),
     'original_device_class': None,
@@ -265,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last online',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -314,6 +320,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Now playing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -376,6 +383,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Party join restrictions',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -429,6 +437,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -477,6 +486,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Follower',
     'options': dict({
     }),
     'original_device_class': None,
@@ -526,6 +536,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Following',
     'options': dict({
     }),
     'original_device_class': None,
@@ -575,6 +586,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Friends',
     'options': dict({
     }),
     'original_device_class': None,
@@ -624,6 +636,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gamerscore',
     'options': dict({
     }),
     'original_device_class': None,
@@ -673,6 +686,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'In party',
     'options': dict({
     }),
     'original_device_class': None,
@@ -722,6 +736,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last online',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -771,6 +786,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Now playing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -790,7 +806,7 @@
     'attributes': ReadOnlyDict({
       'achievements': '2 / 43',
       'developer': 'Mistwalker / Artoon',
-      'entity_picture': 'http://store-images.s-microsoft.com/image/apps.35072.13670972585585116.70570f0d-17aa-4f97-b692-5412fa183673.25a97451-9369-4f6b-b66b-3427913235eb',
+      'entity_picture': 'https://store-images.s-microsoft.com/image/apps.35072.13670972585585116.70570f0d-17aa-4f97-b692-5412fa183673.25a97451-9369-4f6b-b66b-3427913235eb',
       'friendly_name': 'GSR Ae Now playing',
       'gamerscore': '10 / 1000',
       'genres': 'Role Playing',
@@ -834,6 +850,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Party join restrictions',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -887,6 +904,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -935,6 +953,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Follower',
     'options': dict({
     }),
     'original_device_class': None,
@@ -984,6 +1003,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Following',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1033,6 +1053,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Friends',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1082,6 +1103,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gamerscore',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1131,6 +1153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'In party',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1180,6 +1203,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last online',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1229,6 +1253,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Now playing',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1291,6 +1316,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Party join restrictions',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1344,6 +1370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1394,6 +1421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free space - External',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1453,6 +1481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free space - Internal',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1512,6 +1541,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total space - External',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1571,6 +1601,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total space - Internal',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1630,6 +1661,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Free space - Internal',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1689,6 +1721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total space - Internal',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

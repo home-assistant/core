@@ -39,7 +39,6 @@ async def async_setup_entry(
             cookie_jar=CookieJar(quote_cookie=False),
         ),
         refresh_token=entry.data[CONF_ACCESS_TOKEN],
-        account_number=entry.data[CONF_ACCOUNT_NUMBER],
     )
     try:
         await auth.send_refresh_request()
@@ -49,7 +48,7 @@ async def async_setup_entry(
     _aw = AnglianWater(authenticator=auth)
 
     try:
-        await _aw.validate_smart_meter()
+        await _aw.validate_smart_meter(entry.data[CONF_ACCOUNT_NUMBER])
     except SmartMeterUnavailableError as err:
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="smart_meter_unavailable"
