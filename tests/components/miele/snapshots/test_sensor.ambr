@@ -353,6 +353,56 @@
     'state': 'own_program',
   })
 # ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.powerdisk_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.powerdisk_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PowerDisk level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PowerDisk level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_disk_level',
+    'unique_id': 'Dummy_Appliance_5-power_disk_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.powerdisk_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PowerDisk level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.powerdisk_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80.5',
+  })
+# ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1826,6 +1876,56 @@
     'state': 'off',
   })
 # ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.powerdisk_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.powerdisk_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PowerDisk level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PowerDisk level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_disk_level',
+    'unique_id': 'Dummy_Appliance_5-power_disk_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.powerdisk_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PowerDisk level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.powerdisk_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80.5',
+  })
+# ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.rinse_aid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2483,6 +2583,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-18.0',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.powerdisk_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.powerdisk_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PowerDisk level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PowerDisk level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_disk_level',
+    'unique_id': 'Dummy_Appliance_5-power_disk_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.powerdisk_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PowerDisk level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.powerdisk_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80.5',
   })
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.rinse_aid_level-entry]
@@ -3372,6 +3522,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'plate_step_boost',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.powerdisk_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.powerdisk_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PowerDisk level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PowerDisk level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_disk_level',
+    'unique_id': 'Dummy_Appliance_5-power_disk_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.powerdisk_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PowerDisk level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.powerdisk_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80.5',
   })
 # ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.rinse_aid_level-entry]
@@ -4968,6 +5168,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '19.54',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.powerdisk_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.powerdisk_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PowerDisk level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PowerDisk level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_disk_level',
+    'unique_id': 'Dummy_Appliance_5-power_disk_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.powerdisk_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PowerDisk level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.powerdisk_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80.5',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.refrigerator-entry]
@@ -7702,6 +7952,56 @@
     'state': '19.54',
   })
 # ---
+# name: test_sensor_states_api_push[platforms0][sensor.powerdisk_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.powerdisk_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PowerDisk level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PowerDisk level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_disk_level',
+    'unique_id': 'Dummy_Appliance_5-power_disk_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.powerdisk_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PowerDisk level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.powerdisk_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80.5',
+  })
+# ---
 # name: test_sensor_states_api_push[platforms0][sensor.refrigerator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -9136,6 +9436,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.powerdisk_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.powerdisk_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PowerDisk level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PowerDisk level',
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_disk_level',
+    'unique_id': 'Dummy_Appliance_5-power_disk_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.powerdisk_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PowerDisk level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.powerdisk_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80.5',
   })
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.rinse_aid_level-entry]
