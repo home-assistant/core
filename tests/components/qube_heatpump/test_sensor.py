@@ -11,7 +11,7 @@ from python_qube_heatpump.models import QubeState
 
 from homeassistant.components.qube_heatpump.const import CONF_HOST, DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -57,6 +57,16 @@ def sensor_mock_client(mock_qube_state_for_tests: QubeState) -> MagicMock:
     return client
 
 
+def get_entity_id_by_unique_id_suffix(
+    hass: HomeAssistant, entry_unique_id: str, key: str
+) -> str | None:
+    """Get entity_id from entity registry by unique_id suffix."""
+    entity_registry = er.async_get(hass)
+    unique_id = f"{entry_unique_id}-{key}"
+    entity_entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    return entity_entry
+
+
 async def test_sensor_setup(
     hass: HomeAssistant,
     mock_qube_state_for_tests: QubeState,
@@ -81,7 +91,7 @@ async def test_sensor_setup(
         # Assert entity state via core state machine
         states = hass.states.async_all()
         sensor_states = [s for s in states if s.entity_id.startswith("sensor.")]
-        # Should have sensors
+        # Should have sensors (20 regular + 1 status = 21)
         assert len(sensor_states) >= 10
 
 
@@ -106,13 +116,14 @@ async def test_temperature_sensors(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Assert entity state via core state machine
-        states = hass.states.async_all()
-        supply_sensors = [
-            s for s in states if "aanvoertemperatuur" in s.entity_id.lower()
-        ]
-        assert len(supply_sensors) > 0
-        assert float(supply_sensors[0].state) == 45.0
+        # Look up entity by unique_id via entity registry
+        entity_id = get_entity_id_by_unique_id_suffix(
+            hass, entry.unique_id, "temp_supply"
+        )
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert float(state.state) == 45.0
 
 
 async def test_power_sensors(
@@ -136,11 +147,14 @@ async def test_power_sensors(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Assert entity state via core state machine
-        states = hass.states.async_all()
-        power_sensors = [s for s in states if "actueel_vermogen" in s.entity_id.lower()]
-        assert len(power_sensors) > 0
-        assert float(power_sensors[0].state) == 5000.0
+        # Look up entity by unique_id via entity registry
+        entity_id = get_entity_id_by_unique_id_suffix(
+            hass, entry.unique_id, "power_thermic"
+        )
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert float(state.state) == 5000.0
 
 
 async def test_computed_status_sensor(
@@ -164,11 +178,15 @@ async def test_computed_status_sensor(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Assert entity state via core state machine
-        states = hass.states.async_all()
-        status_sensors = [s for s in states if "status" in s.entity_id.lower()]
-        assert len(status_sensors) > 0
-        assert status_sensors[0].state == "1"
+        # Look up entity by unique_id via entity registry
+        entity_id = get_entity_id_by_unique_id_suffix(
+            hass, entry.unique_id, "status_heatpump"
+        )
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        # status_code 1 maps to "alarm" in the implementation
+        assert state.state == "alarm"
 
 
 async def test_device_info(
@@ -222,11 +240,14 @@ async def test_cop_sensor(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Assert entity state via core state machine
-        states = hass.states.async_all()
-        cop_sensors = [s for s in states if "cop" in s.entity_id.lower()]
-        assert len(cop_sensors) > 0
-        assert float(cop_sensors[0].state) == 4.2
+        # Look up entity by unique_id via entity registry
+        entity_id = get_entity_id_by_unique_id_suffix(
+            hass, entry.unique_id, "cop_calc"
+        )
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert float(state.state) == 4.2
 
 
 async def test_flow_rate_sensor(
@@ -250,11 +271,14 @@ async def test_flow_rate_sensor(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Assert entity state via core state machine
-        states = hass.states.async_all()
-        flow_sensors = [s for s in states if "flow" in s.entity_id.lower()]
-        assert len(flow_sensors) > 0
-        assert float(flow_sensors[0].state) == 15.5
+        # Look up entity by unique_id via entity registry
+        entity_id = get_entity_id_by_unique_id_suffix(
+            hass, entry.unique_id, "flow_rate"
+        )
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert float(state.state) == 15.5
 
 
 async def test_sensor_with_none_status_code(hass: HomeAssistant) -> None:
@@ -293,12 +317,12 @@ async def test_sensor_with_none_status_code(hass: HomeAssistant) -> None:
         assert len(states) > 0
 
 
-async def test_standby_sensors(
+async def test_energy_sensors(
     hass: HomeAssistant,
     mock_qube_state_for_tests: QubeState,
     sensor_mock_client: MagicMock,
 ) -> None:
-    """Test standby power and energy sensors exist."""
+    """Test energy sensors exist and have correct values."""
     with patch(
         "homeassistant.components.qube_heatpump.hub.QubeClient",
         return_value=sensor_mock_client,
@@ -314,13 +338,24 @@ async def test_standby_sensors(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Assert entity state via core state machine
-        states = hass.states.async_all()
-        standby_power = [s for s in states if "standby_power" in s.entity_id.lower()]
-        standby_energy = [s for s in states if "standby_energy" in s.entity_id.lower()]
+        # Look up entities by unique_id via entity registry
+        electric_entity_id = get_entity_id_by_unique_id_suffix(
+            hass, entry.unique_id, "energy_total_electric"
+        )
+        thermic_entity_id = get_entity_id_by_unique_id_suffix(
+            hass, entry.unique_id, "energy_total_thermic"
+        )
 
-        assert len(standby_power) > 0
-        assert len(standby_energy) > 0
+        assert electric_entity_id is not None
+        assert thermic_entity_id is not None
+
+        electric_state = hass.states.get(electric_entity_id)
+        thermic_state = hass.states.get(thermic_entity_id)
+
+        assert electric_state is not None
+        assert thermic_state is not None
+        assert float(electric_state.state) == 123.456
+        assert float(thermic_state.state) == 500.0
 
 
 async def test_total_energy_sensor_with_none_data(hass: HomeAssistant) -> None:
@@ -389,12 +424,15 @@ async def test_sensor_coordinator_refresh_updates_values(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Assert initial entity state via core state machine
-        states = hass.states.async_all()
-        supply_sensors = [
-            s for s in states if "aanvoertemperatuur" in s.entity_id.lower()
-        ]
-        assert float(supply_sensors[0].state) == 45.0
+        # Look up entity by unique_id via entity registry
+        entity_id = get_entity_id_by_unique_id_suffix(
+            hass, entry.unique_id, "temp_supply"
+        )
+        assert entity_id is not None
+
+        # Assert initial state
+        state = hass.states.get(entity_id)
+        assert float(state.state) == 45.0
 
         # Update mock data for next fetch
         new_state = QubeState()
@@ -407,9 +445,6 @@ async def test_sensor_coordinator_refresh_updates_values(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-        # Assert updated entity state via core state machine
-        states = hass.states.async_all()
-        supply_sensors = [
-            s for s in states if "aanvoertemperatuur" in s.entity_id.lower()
-        ]
-        assert float(supply_sensors[0].state) == 50.0
+        # Assert updated state
+        state = hass.states.get(entity_id)
+        assert float(state.state) == 50.0

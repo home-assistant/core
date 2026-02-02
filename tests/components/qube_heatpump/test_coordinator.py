@@ -12,8 +12,19 @@ from homeassistant.components.qube_heatpump.const import CONF_HOST, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+def get_entity_id_by_unique_id_suffix(
+    hass: HomeAssistant, entry_unique_id: str, key: str
+) -> str | None:
+    """Get entity_id from entity registry by unique_id suffix."""
+    entity_registry = er.async_get(hass)
+    unique_id = f"{entry_unique_id}-{key}"
+    entity_entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    return entity_entry
 
 
 async def test_coordinator_fetches_data(
@@ -105,6 +116,7 @@ async def test_coordinator_handles_fetch_error(
             domain=DOMAIN,
             data={CONF_HOST: "1.2.3.4"},
             title="Qube Heat Pump",
+            unique_id=f"{DOMAIN}-1.2.3.4-502",
         )
         entry.add_to_hass(hass)
 
@@ -114,13 +126,14 @@ async def test_coordinator_handles_fetch_error(
         # Assert initial state is loaded
         assert entry.state is ConfigEntryState.LOADED
 
-        # Check initial entity state via core state machine
-        states = hass.states.async_all()
-        supply_sensors = [
-            s for s in states if "aanvoertemperatuur" in s.entity_id.lower()
-        ]
-        assert len(supply_sensors) > 0
-        assert float(supply_sensors[0].state) == 45.0
+        # Look up entity by unique_id via entity registry
+        entity_id = get_entity_id_by_unique_id_suffix(
+            hass, entry.unique_id, "temp_supply"
+        )
+        assert entity_id is not None
+        sensor_state = hass.states.get(entity_id)
+        assert sensor_state is not None
+        assert float(sensor_state.state) == 45.0
 
         # Make next fetch fail
         client.get_all_data.side_effect = Exception("Communication error")
