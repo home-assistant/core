@@ -2,10 +2,11 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from enum import IntEnum, StrEnum
+from enum import Enum, IntEnum, StrEnum
 from functools import partial
 
 from pyotgw.vars import (
+    OTGW_DHW_OVRD,
     OTGW_GPIO_A,
     OTGW_GPIO_B,
     OTGW_LED_A,
@@ -30,6 +31,14 @@ from .const import (
     OpenThermDataSource,
 )
 from .entity import OpenThermEntityDescription, OpenThermStatusEntity
+
+
+class OpenThermSelectDHWOvrdMode(StrEnum):
+    """OpenTherm Gateway Hot Water Override modes."""
+
+    OFF = "force_off"
+    ON = "force_on"
+    DISABLED = "override_disabled"
 
 
 class OpenThermSelectGPIOMode(StrEnum):
@@ -61,6 +70,14 @@ class OpenThermSelectLEDMode(StrEnum):
     TX_ERROR_DETECTED = "transmit_error_detected"
     BOILER_MAINTENANCE_REQUIRED = "boiler_maintenance_required"
     RAISED_POWER_MODE_ACTIVE = "raised_power_mode_active"
+
+
+class PyotgwDHWOvrdMode(Enum):
+    """pyotgw Hot Water Override modes."""
+
+    OFF = 0
+    ON = 1
+    DISABLED = "A"
 
 
 class PyotgwGPIOMode(IntEnum):
@@ -105,6 +122,20 @@ def pyotgw_led_mode_to_ha_led_mode(
     )
 
 
+async def set_dhw_ovrd_mode(
+    gw_hub: OpenThermGatewayHub, mode: str
+) -> OpenThermSelectDHWOvrdMode:
+    """Set hot water override mode, return selected option."""
+    value = await gw_hub.gateway.set_hot_water_ovrd(
+        PyotgwDHWOvrdMode[OpenThermSelectDHWOvrdMode(mode).name].value
+    )
+    return (
+        OpenThermSelectDHWOvrdMode[PyotgwDHWOvrdMode(value).name]
+        if value in PyotgwDHWOvrdMode
+        else OpenThermSelectDHWOvrdMode.DISABLED
+    )
+
+
 async def set_gpio_mode(
     gpio_id: str, gw_hub: OpenThermGatewayHub, mode: str
 ) -> OpenThermSelectGPIOMode | None:
@@ -144,6 +175,18 @@ class OpenThermSelectEntityDescription(
 
 
 SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
+    OpenThermSelectEntityDescription(
+        key=OTGW_DHW_OVRD,
+        translation_key="dhw_ovrd_mode",
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
+        options=list(OpenThermSelectDHWOvrdMode),
+        select_action=set_dhw_ovrd_mode,
+        convert_pyotgw_state_to_ha_state=(
+            lambda state: OpenThermSelectDHWOvrdMode[PyotgwDHWOvrdMode(state).name]
+            if state in PyotgwDHWOvrdMode
+            else OpenThermSelectDHWOvrdMode.DISABLED
+        ),
+    ),
     OpenThermSelectEntityDescription(
         key=OTGW_GPIO_A,
         translation_key="gpio_mode_n",
