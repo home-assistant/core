@@ -5,13 +5,10 @@ from datetime import timedelta
 from bond_async import Action, DeviceType
 import pytest
 
-from homeassistant.components.bond.const import (
-    ATTR_POWER_STATE,
-    DOMAIN,
+from homeassistant.components.bond.const import ATTR_POWER_STATE, DOMAIN
+from homeassistant.components.bond.services import (
     SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
     SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
-)
-from homeassistant.components.bond.light import (
     SERVICE_START_DECREASING_BRIGHTNESS,
     SERVICE_START_INCREASING_BRIGHTNESS,
     SERVICE_STOP,
