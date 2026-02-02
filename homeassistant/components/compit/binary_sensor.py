@@ -125,28 +125,19 @@ async def async_setup_entry(
     """Set up Compit binary sensor entities from a config entry."""
 
     coordinator = entry.runtime_data
-    binary_sensor_entities = []
-    for device_id, device in coordinator.connector.all_devices.items():
-        device_definition = DEVICE_DEFINITIONS.get(device.definition.code)
-
-        if not device_definition:
-            continue
-
-        for code, entity_description in device_definition.parameters.items():
-            if coordinator.connector.get_current_value(device_id, code) == NO_SENSOR:
-                continue
-
-            binary_sensor_entities.append(
-                CompitBinarySensor(
-                    coordinator,
-                    device_id,
-                    device_definition.name,
-                    code,
-                    entity_description,
-                )
-            )
-
-    async_add_devices(binary_sensor_entities)
+    async_add_devices(
+        CompitBinarySensor(
+            coordinator,
+            device_id,
+            device_definition.name,
+            code,
+            entity_description,
+        )
+        for device_id, device in coordinator.connector.all_devices.items()
+        if (device_definition := DEVICE_DEFINITIONS.get(device.definition.code))
+        for code, entity_description in device_definition.parameters.items()
+        if coordinator.connector.get_current_value(device_id, code) != NO_SENSOR
+    )
 
 
 class CompitBinarySensor(
