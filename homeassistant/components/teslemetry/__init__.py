@@ -328,7 +328,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) 
         for vehicle in entry.runtime_data.vehicles:
             vehicle.remove_listener()
 
-        # Close the stream connection
         if entry.runtime_data.stream:
             entry.runtime_data.stream.close()
 
