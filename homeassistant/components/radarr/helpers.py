@@ -83,7 +83,7 @@ def format_movie_item(
         "status": movie.status,
         "monitored": movie.monitored,
         "has_file": movie.hasFile,
-        "size_on_disk": getattr(movie, "sizeOnDisk", 0),
+        "size_on_disk": getattr(movie, "sizeOnDisk", None),
     }
 
     # Add path if available
@@ -92,8 +92,8 @@ def format_movie_item(
 
     # Add movie statistics if available
     if statistics := getattr(movie, "statistics", None):
-        result["movie_file_count"] = getattr(statistics, "movieFileCount", 0)
-        result["size_on_disk"] = getattr(statistics, "sizeOnDisk", 0)
+        result["movie_file_count"] = getattr(statistics, "movieFileCount", None)
+        result["size_on_disk"] = getattr(statistics, "sizeOnDisk", None)
 
     # Add movie images if available
     if images := getattr(movie, "images", None):

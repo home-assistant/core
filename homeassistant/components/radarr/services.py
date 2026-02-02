@@ -1,13 +1,15 @@
 """Define services for the Radarr integration."""
 
-from typing import Any, cast
+from collections.abc import Awaitable, Callable
+from typing import Any, TypeVar, cast
 
+from aiopyarr import exceptions
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import selector
 
 from .const import (
@@ -19,6 +21,8 @@ from .const import (
 )
 from .coordinator import RadarrConfigEntry
 from .helpers import format_movies, format_queue
+
+_T = TypeVar("_T")
 
 # Service parameter constants
 CONF_MAX_ITEMS = "max_items"
@@ -63,12 +67,24 @@ def _get_config_entry_from_service_data(call: ServiceCall) -> RadarrConfigEntry:
     return cast(RadarrConfigEntry, entry)
 
 
+async def _handle_api_errors(func: Callable[[], Awaitable[_T]]) -> _T:
+    """Handle API errors and raise HomeAssistantError with user-friendly messages."""
+    try:
+        return await func()
+    except exceptions.ArrAuthenticationException as ex:
+        raise HomeAssistantError("Authentication failed for Radarr") from ex
+    except exceptions.ArrConnectionException as ex:
+        raise HomeAssistantError("Failed to connect to Radarr") from ex
+    except exceptions.ArrException as ex:
+        raise HomeAssistantError(f"Radarr API error: {ex}") from ex
+
+
 async def _async_get_movies(service: ServiceCall) -> dict[str, Any]:
     """Get all Radarr movies."""
     entry = _get_config_entry_from_service_data(service)
 
     api_client = entry.runtime_data.status.api_client
-    movies_list = await api_client.async_get_movies()
+    movies_list = await _handle_api_errors(api_client.async_get_movies)
 
     # Get base URL from config entry for image URLs
     base_url = entry.data[CONF_URL]
@@ -90,10 +106,15 @@ async def _async_get_queue(service: ServiceCall) -> dict[str, Any]:
         page_size = max_items
     else:
         # Get total count first, then fetch all items
-        total = (await api_client.async_get_queue(page_size=1)).totalRecords
+        queue_preview = await _handle_api_errors(
+            lambda: api_client.async_get_queue(page_size=1)
+        )
+        total = queue_preview.totalRecords
         page_size = total if total > 0 else 1
 
-    queue = await api_client.async_get_queue(page_size=page_size, include_movie=True)
+    queue = await _handle_api_errors(
+        lambda: api_client.async_get_queue(page_size=page_size, include_movie=True)
+    )
 
     # Get base URL from config entry for image URLs
     base_url = entry.data[CONF_URL]

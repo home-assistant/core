@@ -78,8 +78,8 @@
       "description": "Get all movies currently in the download queue with their progress and details.",
       "fields": {
         "entry_id": {
-          "description": "ID of the config entry to use.",
-          "name": "Radarr entry"
+          "description": "[%key:component::radarr::services::get_movies::fields::entry_id::description%]",
+          "name": "[%key:component::radarr::services::get_movies::fields::entry_id::name%]"
         },
         "max_items": {
           "description": "Maximum number of queue items to return (0 = no limit).",
