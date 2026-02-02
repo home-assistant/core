@@ -47,7 +47,7 @@ async def test_full_flow_success(
         mock_get_device.return_value = mock_device
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input,
+            user_input
         )
         await hass.async_block_till_done()
 

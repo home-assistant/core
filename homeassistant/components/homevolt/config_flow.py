@@ -58,7 +58,7 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title="Homevolt Local",
+                    title="Homevolt",
                     data={
                         CONF_HOST: host,
                         CONF_PASSWORD: password,
