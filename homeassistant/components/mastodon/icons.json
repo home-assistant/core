@@ -20,8 +20,14 @@
       "following": {
         "default": "mdi:account-multiple"
       },
+      "last_post": {
+        "default": "mdi:message-text-clock"
+      },
       "posts": {
         "default": "mdi:message-text"
+      },
+      "username": {
+        "default": "mdi:account"
       }
     }
   },

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -24,12 +24,6 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -38,16 +32,7 @@ from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .const import (  # noqa: F401
-    _DEPRECATED_STATE_CLEANING,
-    _DEPRECATED_STATE_DOCKED,
-    _DEPRECATED_STATE_ERROR,
-    _DEPRECATED_STATE_RETURNING,
-    DATA_COMPONENT,
-    DOMAIN,
-    VacuumActivity,
-    VacuumEntityFeature,
-)
+from .const import DATA_COMPONENT, DOMAIN, VacuumActivity, VacuumEntityFeature
 from .websocket import async_register_websocket_handlers
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,15 +64,7 @@ DEFAULT_NAME = "Vacuum cleaner robot"
 
 ISSUE_SEGMENTS_CHANGED = "segments_changed"
 
-# These STATE_* constants are deprecated as of Home Assistant 2025.1.
-# Please use the VacuumActivity enum instead.
-_DEPRECATED_STATE_IDLE = DeprecatedConstantEnum(VacuumActivity.IDLE, "2026.1")
-_DEPRECATED_STATE_PAUSED = DeprecatedConstantEnum(VacuumActivity.PAUSED, "2026.1")
-
-_BATTERY_DEPRECATION_IGNORED_PLATFORMS = (
-    "mqtt",
-    "template",
-)
+_BATTERY_DEPRECATION_IGNORED_PLATFORMS = ("template",)
 
 
 # mypy: disallow-any-generics
@@ -212,7 +189,6 @@ class StateVacuumEntity(
     _attr_activity: VacuumActivity | None = None
     _attr_supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
 
-    __vacuum_legacy_state: bool = False
     __vacuum_legacy_battery_level: bool = False
     __vacuum_legacy_battery_icon: bool = False
     __vacuum_legacy_battery_feature: bool = False
@@ -220,10 +196,6 @@ class StateVacuumEntity(
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
-        if any(method in cls.__dict__ for method in ("_attr_state", "state")):
-            # Integrations should use the 'activity' property instead of
-            # setting the state directly.
-            cls.__vacuum_legacy_state = True
         if any(
             method in cls.__dict__
             for method in ("_attr_battery_level", "battery_level")
@@ -239,11 +211,9 @@ class StateVacuumEntity(
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute.
 
-        Deprecation warning if setting state, battery icon or battery level
+        Deprecation warning if setting battery icon or battery level
         attributes directly unless already reported.
         """
-        if name == "_attr_state":
-            self._report_deprecated_activity_handling()
         if name in {"_attr_battery_level", "_attr_battery_icon"}:
             self._report_deprecated_battery_properties(name[6:])
         return super().__setattr__(name, value)
@@ -257,29 +227,10 @@ class StateVacuumEntity(
     ) -> None:
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
-        if self.__vacuum_legacy_state:
-            self._report_deprecated_activity_handling()
         if self.__vacuum_legacy_battery_level:
             self._report_deprecated_battery_properties("battery_level")
         if self.__vacuum_legacy_battery_icon:
             self._report_deprecated_battery_properties("battery_icon")
-
-    @callback
-    def _report_deprecated_activity_handling(self) -> None:
-        """Report on deprecated handling of vacuum state.
-
-        Integrations should implement activity instead of using state directly.
-        """
-        report_usage(
-            "is setting state directly."
-            f" Entity {self.entity_id} ({type(self)}) should implement the 'activity'"
-            " property and return its state using the VacuumActivity enum",
-            core_integration_behavior=ReportBehavior.ERROR,
-            custom_integration_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2026.1",
-            integration_domain=self.platform.platform_name if self.platform else None,
-            exclude_integrations={DOMAIN},
-        )
 
     @callback
     def _report_deprecated_battery_properties(self, property: str) -> None:
@@ -384,12 +335,6 @@ class StateVacuumEntity(
         """Return the state of the vacuum cleaner."""
         if (activity := self.activity) is not None:
             return activity
-        if self._attr_state is not None:
-            # Backwards compatibility for integrations that set state directly
-            # Should be removed in 2026.1
-            if TYPE_CHECKING:
-                assert isinstance(self._attr_state, str)
-            return self._attr_state
         return None
 
     @cached_property
@@ -624,13 +569,3 @@ class Segment:
     id: str
     name: str
     group: str | None = None
-
-
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
