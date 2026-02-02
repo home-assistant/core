@@ -22,7 +22,7 @@
       },
       "reauth_confirm": {
         "data": {
-          "api_key": "API key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "user": {
