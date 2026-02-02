@@ -46,7 +46,7 @@
       "message": "Config entry {entry_title} for integration {domain} is not loaded."
     },
     "service_config_entry_wrong_domain": {
-      "message": "Config entry {entry_title} does not belong to {domain} integration."
+      "message": "Config entry {entry_title} does not belong to integration {domain}."
     },
     "service_does_not_support_response": {
       "message": "An action which does not return responses can't be called with {return_response}."
