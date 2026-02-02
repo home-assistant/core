@@ -178,7 +178,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=vol.Schema(
             {
                 vol.Required("device_id"): str,
-                vol.Required("data"): vol.Any(str),
+                vol.Required("data"): str,
             }
         ),
     )
