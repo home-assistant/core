@@ -1484,13 +1484,10 @@ async def test_start_timer_with_sentence_trigger_validation(
     mock_handle_timer = MagicMock()
     async_register_timer_handler(hass, device_id, mock_handle_timer)
 
-    # Mock the conversation agent to recognize the command as a sentence trigger
-    with (
-        patch(
-            "homeassistant.components.conversation.async_get_agent"
-        ) as mock_get_agent,
-        patch("homeassistant.components.conversation.default_agent") as mock_agent,
-    ):
+    with patch(
+        "homeassistant.components.conversation.async_get_agent"
+    ) as mock_get_agent:
+        mock_agent = MagicMock(spec=conversation.default_agent.DefaultAgent)
         mock_agent.async_recognize_sentence_trigger = AsyncMock(
             return_value=conversation.default_agent.SentenceTriggerResult(
                 sentence=test_command, sentence_template="", matched_triggers={}
@@ -1498,9 +1495,6 @@ async def test_start_timer_with_sentence_trigger_validation(
         )
         mock_agent.async_recognize_intent = AsyncMock(return_value=None)
         mock_get_agent.return_value = mock_agent
-
-        # Make the mock agent an instance of DefaultAgent
-        mock_agent.DefaultAgent = type(mock_agent)
 
         result = await intent.async_handle(
             hass,
