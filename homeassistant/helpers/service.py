@@ -1221,6 +1221,15 @@ def get_service_config_entry(
                 "entry_id": entry_id,
             },
         )
+    if config_entry.domain != domain:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_config_entry_wrong_domain",
+            translation_placeholders={
+                "domain": domain,
+                "entry_title": config_entry.title,
+            },
+        )
     if config_entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError(
             translation_domain=HOMEASSISTANT_DOMAIN,
