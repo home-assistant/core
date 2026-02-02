@@ -14,7 +14,7 @@ PLATFORMS = [Platform.BUTTON, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Alexa Devices component."""
+    """Set up the component."""
     async_setup_services(hass)
     return True
 
