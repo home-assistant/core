@@ -351,710 +351,6 @@
     'state': '255',
   })
 # ---
-# name: test_numbers[dimmable_light][number.mock_dimmable_light_off_transition_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_dimmable_light_off_transition_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Off transition time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Off transition time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[dimmable_light][number.mock_dimmable_light_off_transition_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Dimmable Light Off transition time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_dimmable_light_off_transition_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_numbers[dimmable_light][number.mock_dimmable_light_on_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 255,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_dimmable_light_on_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On level',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On level',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[dimmable_light][number.mock_dimmable_light_on_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Dimmable Light On level',
-      'max': 255,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_dimmable_light_on_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '255',
-  })
-# ---
-# name: test_numbers[dimmable_light][number.mock_dimmable_light_on_off_transition_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_dimmable_light_on_off_transition_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On/Off transition time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On/Off transition time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[dimmable_light][number.mock_dimmable_light_on_off_transition_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Dimmable Light On/Off transition time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_dimmable_light_on_off_transition_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_numbers[dimmable_light][number.mock_dimmable_light_on_transition_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_dimmable_light_on_transition_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On transition time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On transition time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[dimmable_light][number.mock_dimmable_light_on_transition_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Dimmable Light On transition time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_dimmable_light_on_transition_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_numbers[dimmable_plugin_unit][number.dimmable_plugin_unit_on_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 255,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.dimmable_plugin_unit_on_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On level',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On level',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-on_level-8-17',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[dimmable_plugin_unit][number.dimmable_plugin_unit_on_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Dimmable Plugin Unit On level',
-      'max': 255,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.dimmable_plugin_unit_on_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '255',
-  })
-# ---
-# name: test_numbers[dimmable_plugin_unit][number.dimmable_plugin_unit_on_off_transition_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.dimmable_plugin_unit_on_off_transition_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On/Off transition time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On/Off transition time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-on_off_transition_time-8-16',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[dimmable_plugin_unit][number.dimmable_plugin_unit_on_off_transition_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Dimmable Plugin Unit On/Off transition time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.dimmable_plugin_unit_on_off_transition_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.0',
-  })
-# ---
-# name: test_numbers[door_lock][number.mock_door_lock_auto_relock_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_auto_relock_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Auto-relock time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Auto-relock time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'auto_relock_timer',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-AutoRelockTimer-257-35',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[door_lock][number.mock_door_lock_auto_relock_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Auto-relock time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_auto_relock_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '60',
-  })
-# ---
-# name: test_numbers[door_lock][number.mock_door_lock_user_code_temporary_disable_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 255,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_user_code_temporary_disable_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'User code temporary disable time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'User code temporary disable time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[door_lock][number.mock_door_lock_user_code_temporary_disable_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock User code temporary disable time',
-      'max': 255,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_user_code_temporary_disable_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10',
-  })
-# ---
-# name: test_numbers[door_lock][number.mock_door_lock_wrong_code_limit-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 255,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_wrong_code_limit',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Wrong code limit',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Wrong code limit',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wrong_code_entry_limit',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[door_lock][number.mock_door_lock_wrong_code_limit-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Wrong code limit',
-      'max': 255,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_wrong_code_limit',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3',
-  })
-# ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_with_unbolt_auto_relock_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_with_unbolt_auto_relock_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Auto-relock time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Auto-relock time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'auto_relock_timer',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-AutoRelockTimer-257-35',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_with_unbolt_auto_relock_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Auto-relock time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_with_unbolt_auto_relock_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '60',
-  })
-# ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_with_unbolt_user_code_temporary_disable_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 255,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_with_unbolt_user_code_temporary_disable_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'User code temporary disable time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'User code temporary disable time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'user_code_temporary_disable_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_with_unbolt_user_code_temporary_disable_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt User code temporary disable time',
-      'max': 255,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_with_unbolt_user_code_temporary_disable_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10',
-  })
-# ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_with_unbolt_wrong_code_limit-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 255,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_with_unbolt_wrong_code_limit',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Wrong code limit',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Wrong code limit',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wrong_code_entry_limit',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_with_unbolt_wrong_code_limit-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Wrong code limit',
-      'max': 255,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_with_unbolt_wrong_code_limit',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3',
-  })
-# ---
 # name: test_numbers[eve_thermo_v4][number.eve_thermo_20ebp1701_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1820,15 +1116,74 @@
     'state': 'unknown',
   })
 # ---
-# name: test_numbers[microwave_oven][number.microwave_oven_cooking_time-entry]
+# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_off_transition_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 86400,
-      'min': 1,
-      'mode': <NumberMode.SLIDER: 'slider'>,
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_dimmable_light_off_transition_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Off transition time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off transition time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'off_transition_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_off_transition_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Dimmable Light Off transition time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_dimmable_light_off_transition_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
     }),
     'config_entry_id': <ANY>,
@@ -1837,8 +1192,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'number',
-    'entity_category': None,
-    'entity_id': 'number.microwave_oven_cooking_time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_dimmable_light_on_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1846,38 +1201,623 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Cooking time',
+    'object_id_base': 'On level',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cooking time',
+    'original_name': 'On level',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'cook_time',
-    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-MicrowaveOvenControlCookTime-95-0',
+    'translation_key': 'on_level',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Dimmable Light On level',
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_dimmable_light_on_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '255',
+  })
+# ---
+# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_off_transition_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_dimmable_light_on_off_transition_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On/Off transition time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On/Off transition time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_off_transition_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[microwave_oven][number.microwave_oven_cooking_time-state]
+# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_off_transition_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Microwave Oven Cooking time',
-      'max': 86400,
+      'friendly_name': 'Mock Dimmable Light On/Off transition time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_dimmable_light_on_off_transition_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_transition_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_dimmable_light_on_transition_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On transition time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On transition time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_transition_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_dimmable_light][number.mock_dimmable_light_on_transition_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Dimmable Light On transition time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_dimmable_light_on_transition_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_numbers[mock_dimmable_plugin_unit][number.dimmable_plugin_unit_on_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.dimmable_plugin_unit_on_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_level',
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-on_level-8-17',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[mock_dimmable_plugin_unit][number.dimmable_plugin_unit_on_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dimmable Plugin Unit On level',
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.dimmable_plugin_unit_on_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '255',
+  })
+# ---
+# name: test_numbers[mock_dimmable_plugin_unit][number.dimmable_plugin_unit_on_off_transition_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.dimmable_plugin_unit_on_off_transition_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On/Off transition time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On/Off transition time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_off_transition_time',
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_dimmable_plugin_unit][number.dimmable_plugin_unit_on_off_transition_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dimmable Plugin Unit On/Off transition time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.dimmable_plugin_unit_on_off_transition_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_numbers[mock_door_lock][number.mock_door_lock_auto_relock_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_auto_relock_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auto-relock time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto-relock time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_relock_timer',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_door_lock][number.mock_door_lock_auto_relock_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Auto-relock time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_door_lock_auto_relock_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_numbers[mock_door_lock][number.mock_door_lock_user_code_temporary_disable_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
       'min': 1,
-      'mode': <NumberMode.SLIDER: 'slider'>,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_user_code_temporary_disable_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'User code temporary disable time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User code temporary disable time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_code_temporary_disable_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_door_lock][number.mock_door_lock_user_code_temporary_disable_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock User code temporary disable time',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.microwave_oven_cooking_time',
+    'entity_id': 'number.mock_door_lock_user_code_temporary_disable_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '30',
+    'state': '10',
+  })
+# ---
+# name: test_numbers[mock_door_lock][number.mock_door_lock_wrong_code_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_wrong_code_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wrong code limit',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wrong code limit',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wrong_code_entry_limit',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[mock_door_lock][number.mock_door_lock_wrong_code_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Wrong code limit',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_door_lock_wrong_code_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_auto_relock_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_with_unbolt_auto_relock_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auto-relock time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto-relock time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_relock_timer',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_auto_relock_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock with unbolt Auto-relock time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_door_lock_with_unbolt_auto_relock_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_user_code_temporary_disable_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_with_unbolt_user_code_temporary_disable_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'User code temporary disable time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User code temporary disable time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_code_temporary_disable_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_user_code_temporary_disable_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock with unbolt User code temporary disable time',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_door_lock_with_unbolt_user_code_temporary_disable_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_wrong_code_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_with_unbolt_wrong_code_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Wrong code limit',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wrong code limit',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wrong_code_entry_limit',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[mock_door_lock_with_unbolt][number.mock_door_lock_with_unbolt_wrong_code_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock with unbolt Wrong code limit',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_door_lock_with_unbolt_wrong_code_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
   })
 # ---
 # name: test_numbers[mock_lock][number.mock_lock_auto_relock_time-entry]
@@ -2056,7 +1996,67 @@
     'state': '3',
   })
 # ---
-# name: test_numbers[mounted_dimmable_load_control_fixture][number.mock_mounted_dimmable_load_control_on_level-entry]
+# name: test_numbers[mock_microwave_oven][number.mock_microwave_oven_cooking_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 86400,
+      'min': 1,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.mock_microwave_oven_cooking_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cooking time',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Cooking time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cook_time',
+    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-MicrowaveOvenControlCookTime-95-0',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_microwave_oven][number.mock_microwave_oven_cooking_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Mock Microwave Oven Cooking time',
+      'max': 86400,
+      'min': 1,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_microwave_oven_cooking_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_numbers[mock_mounted_dimmable_load_control_fixture][number.mock_mounted_dimmable_load_control_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2097,7 +2097,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[mounted_dimmable_load_control_fixture][number.mock_mounted_dimmable_load_control_on_level-state]
+# name: test_numbers[mock_mounted_dimmable_load_control_fixture][number.mock_mounted_dimmable_load_control_on_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Mounted dimmable load control On level',
@@ -2112,6 +2112,1005 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_off_transition_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_onoffpluginunit_off_transition_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Off transition time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off transition time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'off_transition_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_off_transition_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock OnOffPluginUnit Off transition time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_onoffpluginunit_off_transition_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_onoffpluginunit_on_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_level',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock OnOffPluginUnit On level',
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_onoffpluginunit_on_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '255',
+  })
+# ---
+# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_off_transition_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_onoffpluginunit_on_off_transition_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On/Off transition time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On/Off transition time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_off_transition_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_off_transition_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock OnOffPluginUnit On/Off transition time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_onoffpluginunit_on_off_transition_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_transition_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_onoffpluginunit_on_transition_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On transition time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On transition time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_transition_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_on_off_plugin_unit][number.mock_onoffpluginunit_on_transition_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock OnOffPluginUnit On transition time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_onoffpluginunit_on_transition_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_off_transition_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_onoff_light_off_transition_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Off transition time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off transition time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'off_transition_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_off_transition_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock OnOff Light Off transition time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_onoff_light_off_transition_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_onoff_light_on_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_level',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock OnOff Light On level',
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_onoff_light_on_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '255',
+  })
+# ---
+# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_off_transition_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_onoff_light_on_off_transition_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On/Off transition time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On/Off transition time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_off_transition_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_off_transition_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock OnOff Light On/Off transition time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_onoff_light_on_off_transition_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_transition_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_onoff_light_on_transition_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On transition time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On transition time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_transition_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_onoff_light_alt_name][number.mock_onoff_light_on_transition_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock OnOff Light On transition time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_onoff_light_on_transition_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_numbers[mock_onoff_light_no_name][number.mock_light_off_transition_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_light_off_transition_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Off transition time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off transition time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'off_transition_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_onoff_light_no_name][number.mock_light_off_transition_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Light Off transition time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_light_off_transition_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_light_on_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_level',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Light On level',
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_light_on_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '255',
+  })
+# ---
+# name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_off_transition_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_light_on_off_transition_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On/Off transition time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On/Off transition time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_off_transition_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_off_transition_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Light On/Off transition time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_light_on_off_transition_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_transition_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_light_on_transition_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On transition time',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On transition time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_transition_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_onoff_light_no_name][number.mock_light_on_transition_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Light On transition time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_light_on_transition_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_numbers[mock_oven][number.mock_oven_temperature_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 288.0,
+      'min': 76.0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.mock_oven_temperature_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature setpoint',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature setpoint',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_setpoint',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-TemperatureControlTemperatureSetpoint-86-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_numbers[mock_oven][number.mock_oven_temperature_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Oven Temperature setpoint',
+      'max': 288.0,
+      'min': 76.0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_oven_temperature_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '76.0',
+  })
+# ---
+# name: test_numbers[mock_pump][number.mock_pump_on_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_pump_on_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'On level',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_level',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-on_level-8-17',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[mock_pump][number.mock_pump_on_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Pump On level',
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_pump_on_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_numbers[mock_pump][number.mock_pump_setpoint-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0.5,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.mock_pump_setpoint',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Setpoint',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Setpoint',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pump_setpoint',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-pump_setpoint-8-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_numbers[mock_pump][number.mock_pump_setpoint-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Pump Setpoint',
+      'max': 100,
+      'min': 0.5,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 0.5,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_pump_setpoint',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0',
+  })
+# ---
+# name: test_numbers[mock_speaker][number.mock_speaker_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.mock_speaker_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Volume',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'speaker_setpoint',
+    'unique_id': '00000000000004D2-000000000000006B-MatterNodeDevice-1-speaker_setpoint-8-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_numbers[mock_speaker][number.mock_speaker_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock speaker Volume',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_speaker_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '47',
+  })
+# ---
+# name: test_numbers[mock_valve][number.mock_valve_default_open_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_valve_default_open_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Default open duration',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Default open duration',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'valve_configuration_and_control_default_open_duration',
+    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-ValveConfigurationAndControlDefaultOpenDuration-129-1',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_valve][number.mock_valve_default_open_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Valve Default open duration',
+      'max': 65534,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_valve_default_open_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_numbers[multi_endpoint_light][number.inovelli_led_off_intensity-entry]
@@ -2523,711 +3522,6 @@
     'state': '1.5',
   })
 # ---
-# name: test_numbers[on_off_plugin_unit][number.mock_onoffpluginunit_off_transition_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_onoffpluginunit_off_transition_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Off transition time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Off transition time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[on_off_plugin_unit][number.mock_onoffpluginunit_off_transition_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOffPluginUnit Off transition time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_onoffpluginunit_off_transition_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_numbers[on_off_plugin_unit][number.mock_onoffpluginunit_on_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 255,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_onoffpluginunit_on_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On level',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On level',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[on_off_plugin_unit][number.mock_onoffpluginunit_on_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOffPluginUnit On level',
-      'max': 255,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_onoffpluginunit_on_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '255',
-  })
-# ---
-# name: test_numbers[on_off_plugin_unit][number.mock_onoffpluginunit_on_off_transition_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_onoffpluginunit_on_off_transition_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On/Off transition time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On/Off transition time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[on_off_plugin_unit][number.mock_onoffpluginunit_on_off_transition_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOffPluginUnit On/Off transition time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_onoffpluginunit_on_off_transition_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_numbers[on_off_plugin_unit][number.mock_onoffpluginunit_on_transition_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_onoffpluginunit_on_transition_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On transition time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On transition time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[on_off_plugin_unit][number.mock_onoffpluginunit_on_transition_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOffPluginUnit On transition time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_onoffpluginunit_on_transition_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_numbers[onoff_light_alt_name][number.mock_onoff_light_off_transition_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_onoff_light_off_transition_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Off transition time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Off transition time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[onoff_light_alt_name][number.mock_onoff_light_off_transition_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOff Light Off transition time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_onoff_light_off_transition_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_numbers[onoff_light_alt_name][number.mock_onoff_light_on_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 255,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_onoff_light_on_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On level',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On level',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[onoff_light_alt_name][number.mock_onoff_light_on_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOff Light On level',
-      'max': 255,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_onoff_light_on_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '255',
-  })
-# ---
-# name: test_numbers[onoff_light_alt_name][number.mock_onoff_light_on_off_transition_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_onoff_light_on_off_transition_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On/Off transition time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On/Off transition time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[onoff_light_alt_name][number.mock_onoff_light_on_off_transition_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOff Light On/Off transition time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_onoff_light_on_off_transition_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_numbers[onoff_light_alt_name][number.mock_onoff_light_on_transition_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_onoff_light_on_transition_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On transition time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On transition time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[onoff_light_alt_name][number.mock_onoff_light_on_transition_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOff Light On transition time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_onoff_light_on_transition_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_numbers[onoff_light_no_name][number.mock_light_off_transition_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_light_off_transition_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Off transition time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Off transition time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-off_transition_time-8-19',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[onoff_light_no_name][number.mock_light_off_transition_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Light Off transition time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_light_off_transition_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_numbers[onoff_light_no_name][number.mock_light_on_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 255,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_light_on_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On level',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On level',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_level-8-17',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[onoff_light_no_name][number.mock_light_on_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Light On level',
-      'max': 255,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_light_on_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '255',
-  })
-# ---
-# name: test_numbers[onoff_light_no_name][number.mock_light_on_off_transition_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_light_on_off_transition_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On/Off transition time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On/Off transition time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_off_transition_time-8-16',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[onoff_light_no_name][number.mock_light_on_off_transition_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Light On/Off transition time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_light_on_off_transition_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_numbers[onoff_light_no_name][number.mock_light_on_transition_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_light_on_transition_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On transition time',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On transition time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-on_transition_time-8-18',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[onoff_light_no_name][number.mock_light_on_transition_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Light On transition time',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_light_on_transition_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
 # name: test_numbers[onoff_light_with_levelcontrol_present][number.d215s_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3343,182 +3637,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
-  })
-# ---
-# name: test_numbers[oven][number.mock_oven_temperature_setpoint-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 288.0,
-      'min': 76.0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': None,
-    'entity_id': 'number.mock_oven_temperature_setpoint',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Temperature setpoint',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Temperature setpoint',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'temperature_setpoint',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-TemperatureControlTemperatureSetpoint-86-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_numbers[oven][number.mock_oven_temperature_setpoint-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Oven Temperature setpoint',
-      'max': 288.0,
-      'min': 76.0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1.0,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_oven_temperature_setpoint',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '76.0',
-  })
-# ---
-# name: test_numbers[pump][number.mock_pump_on_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 255,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_pump_on_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'On level',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'On level',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-on_level-8-17',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[pump][number.mock_pump_on_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Pump On level',
-      'max': 255,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_pump_on_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_numbers[pump][number.mock_pump_setpoint-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 100,
-      'min': 0.5,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 0.5,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': None,
-    'entity_id': 'number.mock_pump_setpoint',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Setpoint',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Setpoint',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pump_setpoint',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-pump_setpoint-8-0',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_numbers[pump][number.mock_pump_setpoint-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Pump Setpoint',
-      'max': 100,
-      'min': 0.5,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 0.5,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_pump_setpoint',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100.0',
   })
 # ---
 # name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_auto_relock_time-entry]
@@ -3872,123 +3990,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.0',
-  })
-# ---
-# name: test_numbers[speaker][number.mock_speaker_volume-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': None,
-    'entity_id': 'number.mock_speaker_volume',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Volume',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Volume',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'speaker_setpoint',
-    'unique_id': '00000000000004D2-000000000000006B-MatterNodeDevice-1-speaker_setpoint-8-0',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_numbers[speaker][number.mock_speaker_volume-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock speaker Volume',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.mock_speaker_volume',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '47',
-  })
-# ---
-# name: test_numbers[valve][number.valve_default_open_duration-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.valve_default_open_duration',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Default open duration',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Default open duration',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'valve_configuration_and_control_default_open_duration',
-    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-ValveConfigurationAndControlDefaultOpenDuration-129-1',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[valve][number.valve_default_open_duration-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Valve Default open duration',
-      'max': 65534,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.valve_default_open_duration',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
   })
 # ---

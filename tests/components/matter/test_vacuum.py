@@ -30,7 +30,7 @@ async def test_vacuum(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.VACUUM)
 
 
-@pytest.mark.parametrize("node_fixture", ["vacuum_cleaner"])
+@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
 async def test_vacuum_actions(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -137,7 +137,7 @@ async def test_vacuum_actions(
     matter_client.send_device_command.reset_mock()
 
 
-@pytest.mark.parametrize("node_fixture", ["vacuum_cleaner"])
+@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
 async def test_vacuum_updates(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -241,7 +241,7 @@ async def test_vacuum_updates(
     assert state.state == "error"
 
 
-@pytest.mark.parametrize("node_fixture", ["vacuum_cleaner"])
+@pytest.mark.parametrize("node_fixture", ["mock_vacuum_cleaner"])
 async def test_vacuum_actions_no_supported_run_modes(
     hass: HomeAssistant,
     matter_client: MagicMock,

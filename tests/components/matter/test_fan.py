@@ -150,7 +150,7 @@ async def test_fan_turn_on_with_percentage(
 
 
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
-@pytest.mark.parametrize("node_fixture", ["fan"])
+@pytest.mark.parametrize("node_fixture", ["mock_fan"])
 async def test_fan_turn_on_with_preset_mode(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -322,7 +322,7 @@ async def test_fan_set_direction(
     ("node_fixture", "entity_id", "attributes", "features"),
     [
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {
                 "1/514/65532": 0,
@@ -330,7 +330,7 @@ async def test_fan_set_direction(
             (FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF),
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {
                 "1/514/65532": 1,
@@ -342,7 +342,7 @@ async def test_fan_set_direction(
             ),
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {
                 "1/514/65532": 4,
@@ -354,7 +354,7 @@ async def test_fan_set_direction(
             ),
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {
                 "1/514/65532": 36,
@@ -386,7 +386,7 @@ async def test_fan_supported_features(
     ("node_fixture", "entity_id", "attributes", "preset_modes"),
     [
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {"1/514/1": 0, "1/514/65532": 0},
             [
@@ -396,7 +396,7 @@ async def test_fan_supported_features(
             ],
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {"1/514/1": 1, "1/514/65532": 0},
             [
@@ -405,25 +405,25 @@ async def test_fan_supported_features(
             ],
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {"1/514/1": 2, "1/514/65532": 0},
             ["low", "medium", "high", "auto"],
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {"1/514/1": 4, "1/514/65532": 0},
             ["high", "auto"],
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {"1/514/1": 5, "1/514/65532": 0},
             ["high"],
         ),
         (
-            "fan",
+            "mock_fan",
             "fan.mocked_fan_switch",
             {"1/514/1": 5, "1/514/65532": 8, "1/514/9": 3},
             ["high", "natural_wind", "sleep_wind"],

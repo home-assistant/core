@@ -45,7 +45,7 @@ async def test_binary_sensors(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
 
 
-@pytest.mark.parametrize("node_fixture", ["occupancy_sensor"])
+@pytest.mark.parametrize("node_fixture", ["mock_occupancy_sensor"])
 async def test_occupancy_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -70,7 +70,7 @@ async def test_occupancy_sensor(
     ("node_fixture", "entity_id"),
     [
         ("eve_contact_sensor", "binary_sensor.eve_door_door"),
-        ("leak_sensor", "binary_sensor.water_leak_detector_water_leak"),
+        ("mock_leak_sensor", "binary_sensor.water_leak_detector_water_leak"),
     ],
 )
 async def test_boolean_state_sensors(
@@ -96,7 +96,7 @@ async def test_boolean_state_sensors(
     assert state.state == "off"
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_battery_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -119,7 +119,7 @@ async def test_battery_sensor(
     assert state.state == "on"
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_optional_sensor_from_featuremap(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -220,7 +220,7 @@ async def test_water_heater(
     assert state.state == "on"
 
 
-@pytest.mark.parametrize("node_fixture", ["pump"])
+@pytest.mark.parametrize("node_fixture", ["mock_pump"])
 async def test_pump(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -303,7 +303,7 @@ async def test_dishwasher_alarm(
     assert state.state == "on"
 
 
-@pytest.mark.parametrize("node_fixture", ["valve"])
+@pytest.mark.parametrize("node_fixture", ["mock_valve"])
 async def test_water_valve(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -311,15 +311,15 @@ async def test_water_valve(
 ) -> None:
     """Test valve alarms."""
     # ValveFault default state
-    state = hass.states.get("binary_sensor.valve_general_fault")
+    state = hass.states.get("binary_sensor.mock_valve_general_fault")
     assert state
     assert state.state == "off"
 
-    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    state = hass.states.get("binary_sensor.mock_valve_valve_blocked")
     assert state
     assert state.state == "off"
 
-    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    state = hass.states.get("binary_sensor.mock_valve_valve_leaking")
     assert state
     assert state.state == "off"
 
@@ -327,15 +327,15 @@ async def test_water_valve(
     set_node_attribute(matter_node, 1, 129, 9, 1)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("binary_sensor.valve_general_fault")
+    state = hass.states.get("binary_sensor.mock_valve_general_fault")
     assert state
     assert state.state == "on"
 
-    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    state = hass.states.get("binary_sensor.mock_valve_valve_blocked")
     assert state
     assert state.state == "off"
 
-    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    state = hass.states.get("binary_sensor.mock_valve_valve_leaking")
     assert state
     assert state.state == "off"
 
@@ -343,15 +343,15 @@ async def test_water_valve(
     set_node_attribute(matter_node, 1, 129, 9, 2)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("binary_sensor.valve_general_fault")
+    state = hass.states.get("binary_sensor.mock_valve_general_fault")
     assert state
     assert state.state == "off"
 
-    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    state = hass.states.get("binary_sensor.mock_valve_valve_blocked")
     assert state
     assert state.state == "on"
 
-    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    state = hass.states.get("binary_sensor.mock_valve_valve_leaking")
     assert state
     assert state.state == "off"
 
@@ -359,15 +359,15 @@ async def test_water_valve(
     set_node_attribute(matter_node, 1, 129, 9, 4)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("binary_sensor.valve_general_fault")
+    state = hass.states.get("binary_sensor.mock_valve_general_fault")
     assert state
     assert state.state == "off"
 
-    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    state = hass.states.get("binary_sensor.mock_valve_valve_blocked")
     assert state
     assert state.state == "off"
 
-    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    state = hass.states.get("binary_sensor.mock_valve_valve_leaking")
     assert state
     assert state.state == "on"
 
@@ -375,15 +375,15 @@ async def test_water_valve(
     set_node_attribute(matter_node, 1, 129, 9, 5)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("binary_sensor.valve_general_fault")
+    state = hass.states.get("binary_sensor.mock_valve_general_fault")
     assert state
     assert state.state == "on"
 
-    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    state = hass.states.get("binary_sensor.mock_valve_valve_blocked")
     assert state
     assert state.state == "off"
 
-    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    state = hass.states.get("binary_sensor.mock_valve_valve_leaking")
     assert state
     assert state.state == "on"
 

@@ -1,302 +1,4 @@
 # serializer version: 1
-# name: test_switches[cooktop][switch.mock_cooktop_power_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.mock_cooktop_power_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power (1)',
-    'options': dict({
-    }),
-    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-    'original_icon': None,
-    'original_name': 'Power (1)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'power',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-MatterPowerToggle-6-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[cooktop][switch.mock_cooktop_power_1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Cooktop Power (1)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.mock_cooktop_power_1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_switches[cooktop][switch.mock_cooktop_power_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.mock_cooktop_power_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power (2)',
-    'options': dict({
-    }),
-    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-    'original_icon': None,
-    'original_name': 'Power (2)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'power',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-MatterPowerToggle-6-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[cooktop][switch.mock_cooktop_power_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Cooktop Power (2)',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.mock_cooktop_power_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_switches[door_lock][switch.mock_door_lock-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.mock_door_lock',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterSwitch-6-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[door_lock][switch.mock_door_lock-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Mock Door Lock',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.mock_door_lock',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[door_lock][switch.mock_door_lock_privacy_mode_button-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.mock_door_lock_privacy_mode_button',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Privacy mode button',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Privacy mode button',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'privacy_mode_button',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockEnablePrivacyModeButton-257-43',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[door_lock][switch.mock_door_lock_privacy_mode_button-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Privacy mode button',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.mock_door_lock_privacy_mode_button',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_with_unbolt-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.mock_door_lock_with_unbolt',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterSwitch-6-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_with_unbolt-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Mock Door Lock with unbolt',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.mock_door_lock_with_unbolt',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_with_unbolt_privacy_mode_button-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.mock_door_lock_with_unbolt_privacy_mode_button',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Privacy mode button',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Privacy mode button',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'privacy_mode_button',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockEnablePrivacyModeButton-257-43',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[door_lock_with_unbolt][switch.mock_door_lock_with_unbolt_privacy_mode_button-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Privacy mode button',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.mock_door_lock_with_unbolt_privacy_mode_button',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_switch_bottom-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -695,56 +397,6 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[laundry_dryer][switch.mock_laundrydryer_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.mock_laundrydryer_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power',
-    'options': dict({
-    }),
-    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
-    'original_icon': None,
-    'original_name': 'Power',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'power',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-MatterPowerToggle-6-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[laundry_dryer][switch.mock_laundrydryer_power-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Laundrydryer Power',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.mock_laundrydryer_power',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_switches[longan_link_thermostat][switch.longan_link_hvac-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -793,6 +445,354 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_switches[mock_cooktop][switch.mock_cooktop_power_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_cooktop_power_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power (1)',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Power (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-MatterPowerToggle-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_cooktop][switch.mock_cooktop_power_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Mock Cooktop Power (1)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_cooktop_power_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[mock_cooktop][switch.mock_cooktop_power_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_cooktop_power_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power (2)',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Power (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-MatterPowerToggle-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_cooktop][switch.mock_cooktop_power_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Mock Cooktop Power (2)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_cooktop_power_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switches[mock_door_lock][switch.mock_door_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_door_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterSwitch-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_door_lock][switch.mock_door_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Mock Door Lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_door_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[mock_door_lock][switch.mock_door_lock_privacy_mode_button-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_door_lock_privacy_mode_button',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Privacy mode button',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Privacy mode button',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'privacy_mode_button',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockEnablePrivacyModeButton-257-43',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_door_lock][switch.mock_door_lock_privacy_mode_button-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Privacy mode button',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_door_lock_privacy_mode_button',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[mock_door_lock_with_unbolt][switch.mock_door_lock_with_unbolt-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_door_lock_with_unbolt',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterSwitch-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_door_lock_with_unbolt][switch.mock_door_lock_with_unbolt-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Mock Door Lock with unbolt',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_door_lock_with_unbolt',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[mock_door_lock_with_unbolt][switch.mock_door_lock_with_unbolt_privacy_mode_button-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_door_lock_with_unbolt_privacy_mode_button',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Privacy mode button',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Privacy mode button',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'privacy_mode_button',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockEnablePrivacyModeButton-257-43',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_door_lock_with_unbolt][switch.mock_door_lock_with_unbolt_privacy_mode_button-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock with unbolt Privacy mode button',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_door_lock_with_unbolt_privacy_mode_button',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[mock_laundry_dryer][switch.mock_laundrydryer_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_laundrydryer_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-MatterPowerToggle-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_laundry_dryer][switch.mock_laundrydryer_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Mock Laundrydryer Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_laundrydryer_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_switches[mock_lock][switch.mock_lock_privacy_mode_button-entry]
@@ -844,7 +844,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[on_off_plugin_unit][switch.mock_onoffpluginunit-entry]
+# name: test_switches[mock_on_off_plugin_unit][switch.mock_onoffpluginunit-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -880,7 +880,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[on_off_plugin_unit][switch.mock_onoffpluginunit-state]
+# name: test_switches[mock_on_off_plugin_unit][switch.mock_onoffpluginunit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
@@ -894,7 +894,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[oven][switch.mock_oven_power_3-entry]
+# name: test_switches[mock_oven][switch.mock_oven_power_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -930,7 +930,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[oven][switch.mock_oven_power_3-state]
+# name: test_switches[mock_oven][switch.mock_oven_power_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
@@ -944,7 +944,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[oven][switch.mock_oven_power_4-entry]
+# name: test_switches[mock_oven][switch.mock_oven_power_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -980,7 +980,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[oven][switch.mock_oven_power_4-state]
+# name: test_switches[mock_oven][switch.mock_oven_power_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
@@ -994,7 +994,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[pump][switch.mock_pump_power-entry]
+# name: test_switches[mock_pump][switch.mock_pump_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1030,7 +1030,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[pump][switch.mock_pump_power-state]
+# name: test_switches[mock_pump][switch.mock_pump_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
@@ -1044,7 +1044,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switches[room_airconditioner][switch.room_airconditioner_power-entry]
+# name: test_switches[mock_room_airconditioner][switch.room_airconditioner_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1080,7 +1080,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[room_airconditioner][switch.room_airconditioner_power-state]
+# name: test_switches[mock_room_airconditioner][switch.room_airconditioner_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
@@ -1088,6 +1088,105 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.room_airconditioner_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[mock_speaker][switch.mock_speaker_mute-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_speaker_mute',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mute',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mute',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'speaker_mute',
+    'unique_id': '00000000000004D2-000000000000006B-MatterNodeDevice-1-MatterMuteToggle-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_speaker][switch.mock_speaker_mute-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock speaker Mute',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_speaker_mute',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[mock_switch_unit][switch.mock_switchunit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_switchunit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterSwitch-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[mock_switch_unit][switch.mock_switchunit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Mock SwitchUnit',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_switchunit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1187,105 +1286,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.refrigerator_power',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[speaker][switch.mock_speaker_mute-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.mock_speaker_mute',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Mute',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Mute',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'speaker_mute',
-    'unique_id': '00000000000004D2-000000000000006B-MatterNodeDevice-1-MatterMuteToggle-6-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[speaker][switch.mock_speaker_mute-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock speaker Mute',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.mock_speaker_mute',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_switches[switch_unit][switch.mock_switchunit-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.mock_switchunit',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterSwitch-6-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_switches[switch_unit][switch.mock_switchunit-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Mock SwitchUnit',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.mock_switchunit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

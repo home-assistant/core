@@ -2695,605 +2695,6 @@
     'state': '7.4',
   })
 # ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_active_current-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_battery_storage_active_current',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Active current',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Active current',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'active_current',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_active_current-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Mock Battery Storage Active current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_battery_storage_active_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_appliance_energy_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'offline',
-        'online',
-        'fault',
-        'power_adjust_active',
-        'paused',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_battery_storage_appliance_energy_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Appliance energy state',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Appliance energy state',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'esa_state',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-ESAState-152-2',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_appliance_energy_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Battery Storage Appliance energy state',
-      'options': list([
-        'offline',
-        'online',
-        'fault',
-        'power_adjust_active',
-        'paused',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_battery_storage_appliance_energy_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'online',
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_battery_storage_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-PowerSource-47-12',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Mock Battery Storage Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_battery_storage_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '90',
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_battery_voltage-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_battery_storage_battery_voltage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Battery voltage',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Battery voltage',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_voltage',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_battery_voltage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Mock Battery Storage Battery voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_battery_storage_battery_voltage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '48.0',
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_energy_optimization_opt_out-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'no_opt_out',
-        'local_opt_out',
-        'grid_opt_out',
-        'opt_out',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_battery_storage_energy_optimization_opt_out',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Energy optimization opt-out',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Energy optimization opt-out',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'esa_opt_out_state',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-ESAOptOutState-152-7',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_energy_optimization_opt_out-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Battery Storage Energy optimization opt-out',
-      'options': list([
-        'no_opt_out',
-        'local_opt_out',
-        'grid_opt_out',
-        'opt_out',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_battery_storage_energy_optimization_opt_out',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'no_opt_out',
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_battery_storage_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-ElectricalPowerMeasurementWatt-144-8',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_power-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Mock Battery Storage Power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_battery_storage_power',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_time_remaining-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_battery_storage_time_remaining',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Time remaining',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Time remaining',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_time_remaining',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-PowerSourceBatTimeRemaining-47-13',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_time_remaining-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Mock Battery Storage Time remaining',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_battery_storage_time_remaining',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '120.0',
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_time_to_full_charge-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_battery_storage_time_to_full_charge',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Time to full charge',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Time to full charge',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_time_to_full_charge',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-PowerSourceBatTimeToFullCharge-47-27',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_time_to_full_charge-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Mock Battery Storage Time to full charge',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_battery_storage_time_to_full_charge',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '30.0',
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_voltage-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_battery_storage_voltage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Voltage',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'voltage',
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-ElectricalPowerMeasurementVoltage-144-4',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_voltage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Mock Battery Storage Voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_battery_storage_voltage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[cooktop][sensor.mock_cooktop_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_cooktop_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Temperature',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-TemperatureSensor-1026-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[cooktop][sensor.mock_cooktop_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Mock Cooktop Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_cooktop_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '180.0',
-  })
-# ---
 # name: test_sensors[eberle_ute3000][sensor.connected_thermostat_ute_3000_heating_demand-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5717,321 +5118,6 @@
     'state': 'rainy',
   })
 # ---
-# name: test_sensors[extractor_hood][sensor.mock_extractor_hood_activated_carbon_filter_condition-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_extractor_hood_activated_carbon_filter_condition',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Activated carbon filter condition',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Activated carbon filter condition',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'activated_carbon_filter_condition',
-    'unique_id': '00000000000004D2-0000000000000049-MatterNodeDevice-1-ActivatedCarbonFilterCondition-114-0',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[extractor_hood][sensor.mock_extractor_hood_activated_carbon_filter_condition-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Extractor hood Activated carbon filter condition',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_extractor_hood_activated_carbon_filter_condition',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100',
-  })
-# ---
-# name: test_sensors[extractor_hood][sensor.mock_extractor_hood_hepa_filter_condition-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_extractor_hood_hepa_filter_condition',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'HEPA filter condition',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'HEPA filter condition',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'hepa_filter_condition',
-    'unique_id': '00000000000004D2-0000000000000049-MatterNodeDevice-1-HepaFilterCondition-113-0',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[extractor_hood][sensor.mock_extractor_hood_hepa_filter_condition-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Extractor hood HEPA filter condition',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_extractor_hood_hepa_filter_condition',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100',
-  })
-# ---
-# name: test_sensors[flow_sensor][sensor.mock_flow_sensor_flow-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_flow_sensor_flow',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Flow',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Flow',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'flow',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-FlowSensor-1028-0',
-    'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
-  })
-# ---
-# name: test_sensors[flow_sensor][sensor.mock_flow_sensor_flow-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Flow Sensor Flow',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_flow_sensor_flow',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[generic_switch][sensor.mock_generic_switch_current_switch_position-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_generic_switch_current_switch_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current switch position',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Current switch position',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[generic_switch][sensor.mock_generic_switch_current_switch_position-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Generic Switch Current switch position',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_generic_switch_current_switch_position',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_generic_switch_current_switch_position_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current switch position (1)',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Current switch position (1)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Generic Switch Current switch position (1)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_generic_switch_current_switch_position_1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_generic_switch_current_switch_position_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current switch position (2)',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Current switch position (2)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'switch_current_position',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-2-SwitchCurrentPosition-59-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Generic Switch Current switch position (2)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_generic_switch_current_switch_position_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
 # name: test_sensors[haojai_switch][sensor.hjmt_6b_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6729,60 +5815,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_motion_sensor_time_remaining',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[humidity_sensor][sensor.mock_humidity_sensor_humidity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_humidity_sensor_humidity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Humidity',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Humidity',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-HumiditySensor-1029-0',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[humidity_sensor][sensor.mock_humidity_sensor_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Mock Humidity Sensor Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_humidity_sensor_humidity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -8213,247 +7245,6 @@
     'state': '124.643',
   })
 # ---
-# name: test_sensors[laundry_dryer][sensor.mock_laundrydryer_current_phase-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'pre-soak',
-        'rinse',
-        'spin',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_laundrydryer_current_phase',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current phase',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Current phase',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'current_phase',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateCurrentPhase-96-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[laundry_dryer][sensor.mock_laundrydryer_current_phase-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Laundrydryer Current phase',
-      'options': list([
-        'pre-soak',
-        'rinse',
-        'spin',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_laundrydryer_current_phase',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'pre-soak',
-  })
-# ---
-# name: test_sensors[laundry_dryer][sensor.mock_laundrydryer_operational_error-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'no_error',
-        'unable_to_start_or_resume',
-        'unable_to_complete_operation',
-        'command_invalid_in_state',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_laundrydryer_operational_error',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Operational error',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Operational error',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'operational_error',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateOperationalError-96-5',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[laundry_dryer][sensor.mock_laundrydryer_operational_error-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Laundrydryer Operational error',
-      'options': list([
-        'no_error',
-        'unable_to_start_or_resume',
-        'unable_to_complete_operation',
-        'command_invalid_in_state',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_laundrydryer_operational_error',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'no_error',
-  })
-# ---
-# name: test_sensors[laundry_dryer][sensor.mock_laundrydryer_operational_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'stopped',
-        'running',
-        'paused',
-        'error',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_laundrydryer_operational_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Operational state',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Operational state',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'operational_state',
-    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalState-96-4',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[laundry_dryer][sensor.mock_laundrydryer_operational_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Laundrydryer Operational state',
-      'options': list([
-        'stopped',
-        'running',
-        'paused',
-        'error',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_laundrydryer_operational_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'running',
-  })
-# ---
-# name: test_sensors[light_sensor][sensor.mock_light_sensor_illuminance-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_light_sensor_illuminance',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Illuminance',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
-    'original_icon': None,
-    'original_name': 'Illuminance',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LightSensor-1024-0',
-    'unit_of_measurement': 'lx',
-  })
-# ---
-# name: test_sensors[light_sensor][sensor.mock_light_sensor_illuminance-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'illuminance',
-      'friendly_name': 'Mock Light Sensor Illuminance',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'lx',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_light_sensor_illuminance',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.3',
-  })
-# ---
 # name: test_sensors[longan_link_thermostat][sensor.longan_link_hvac_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -8568,20 +7359,22 @@
     'state': '28.3',
   })
 # ---
-# name: test_sensors[microwave_oven][sensor.microwave_oven_estimated_end_time-entry]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.microwave_oven_estimated_end_time',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_battery_storage_active_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8589,36 +7382,1067 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Estimated end time',
+    'object_id_base': 'Active current',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Estimated end time',
+    'original_name': 'Active current',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'estimated_end_time',
-    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalStateCountdownTime-96-2',
-    'unit_of_measurement': None,
+    'translation_key': 'active_current',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[microwave_oven][sensor.microwave_oven_estimated_end_time-state]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_active_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Microwave Oven Estimated end time',
+      'device_class': 'current',
+      'friendly_name': 'Mock Battery Storage Active current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.microwave_oven_estimated_end_time',
+    'entity_id': 'sensor.mock_battery_storage_active_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-01-01T14:00:30+00:00',
+    'state': '0.0',
   })
 # ---
-# name: test_sensors[microwave_oven][sensor.microwave_oven_operational_error-entry]
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_appliance_energy_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'offline',
+        'online',
+        'fault',
+        'power_adjust_active',
+        'paused',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_battery_storage_appliance_energy_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Appliance energy state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Appliance energy state',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'esa_state',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-ESAState-152-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_appliance_energy_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Battery Storage Appliance energy state',
+      'options': list([
+        'offline',
+        'online',
+        'fault',
+        'power_adjust_active',
+        'paused',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_battery_storage_appliance_energy_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'online',
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_battery_storage_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-PowerSource-47-12',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Mock Battery Storage Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_battery_storage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_battery_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_battery_storage_battery_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Battery voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Battery voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_voltage',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-PowerSourceBatVoltage-47-11',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_battery_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Mock Battery Storage Battery voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_battery_storage_battery_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '48.0',
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_energy_optimization_opt_out-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_opt_out',
+        'local_opt_out',
+        'grid_opt_out',
+        'opt_out',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_battery_storage_energy_optimization_opt_out',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy optimization opt-out',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Energy optimization opt-out',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'esa_opt_out_state',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-ESAOptOutState-152-7',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_energy_optimization_opt_out-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Battery Storage Energy optimization opt-out',
+      'options': list([
+        'no_opt_out',
+        'local_opt_out',
+        'grid_opt_out',
+        'opt_out',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_battery_storage_energy_optimization_opt_out',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_opt_out',
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_battery_storage_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-ElectricalPowerMeasurementWatt-144-8',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Mock Battery Storage Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_battery_storage_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_time_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_battery_storage_time_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Time remaining',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Time remaining',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_time_remaining',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-PowerSourceBatTimeRemaining-47-13',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_time_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Mock Battery Storage Time remaining',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_battery_storage_time_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '120.0',
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_time_to_full_charge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_battery_storage_time_to_full_charge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Time to full charge',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Time to full charge',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_time_to_full_charge',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-PowerSourceBatTimeToFullCharge-47-27',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_time_to_full_charge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Mock Battery Storage Time to full charge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_battery_storage_time_to_full_charge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30.0',
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_battery_storage_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-ElectricalPowerMeasurementVoltage-144-4',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[mock_battery_storage][sensor.mock_battery_storage_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Mock Battery Storage Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_battery_storage_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[mock_cooktop][sensor.mock_cooktop_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_cooktop_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-2-TemperatureSensor-1026-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[mock_cooktop][sensor.mock_cooktop_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Mock Cooktop Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_cooktop_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '180.0',
+  })
+# ---
+# name: test_sensors[mock_extractor_hood][sensor.mock_extractor_hood_activated_carbon_filter_condition-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_extractor_hood_activated_carbon_filter_condition',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Activated carbon filter condition',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Activated carbon filter condition',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'activated_carbon_filter_condition',
+    'unique_id': '00000000000004D2-0000000000000049-MatterNodeDevice-1-ActivatedCarbonFilterCondition-114-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[mock_extractor_hood][sensor.mock_extractor_hood_activated_carbon_filter_condition-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Extractor hood Activated carbon filter condition',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_extractor_hood_activated_carbon_filter_condition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[mock_extractor_hood][sensor.mock_extractor_hood_hepa_filter_condition-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_extractor_hood_hepa_filter_condition',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'HEPA filter condition',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'HEPA filter condition',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hepa_filter_condition',
+    'unique_id': '00000000000004D2-0000000000000049-MatterNodeDevice-1-HepaFilterCondition-113-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[mock_extractor_hood][sensor.mock_extractor_hood_hepa_filter_condition-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Extractor hood HEPA filter condition',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_extractor_hood_hepa_filter_condition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[mock_flow_sensor][sensor.mock_flow_sensor_flow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_flow_sensor_flow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flow',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flow',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'flow',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-FlowSensor-1028-0',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+  })
+# ---
+# name: test_sensors[mock_flow_sensor][sensor.mock_flow_sensor_flow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Flow Sensor Flow',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_flow_sensor_flow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[mock_generic_switch][sensor.mock_generic_switch_current_switch_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current switch position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_generic_switch][sensor.mock_generic_switch_current_switch_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Generic Switch Current switch position',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[mock_generic_switch_multi][sensor.mock_generic_switch_current_switch_position_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current switch position (1)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (1)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_generic_switch_multi][sensor.mock_generic_switch_current_switch_position_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Generic Switch Current switch position (1)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[mock_generic_switch_multi][sensor.mock_generic_switch_current_switch_position_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current switch position (2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Current switch position (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_current_position',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-2-SwitchCurrentPosition-59-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_generic_switch_multi][sensor.mock_generic_switch_current_switch_position_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Generic Switch Current switch position (2)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[mock_humidity_sensor0][sensor.mock_humidity_sensor_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_humidity_sensor_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Humidity',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-HumiditySensor-1029-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[mock_humidity_sensor0][sensor.mock_humidity_sensor_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Mock Humidity Sensor Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_humidity_sensor_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[mock_humidity_sensor1][sensor.mock_humidity_sensor_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_humidity_sensor_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Humidity',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-HumiditySensor-1029-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[mock_humidity_sensor1][sensor.mock_humidity_sensor_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Mock Humidity Sensor Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_humidity_sensor_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[mock_laundry_dryer][sensor.mock_laundrydryer_current_phase-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'pre-soak',
+        'rinse',
+        'spin',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_laundrydryer_current_phase',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current phase',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Current phase',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_phase',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateCurrentPhase-96-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_laundry_dryer][sensor.mock_laundrydryer_current_phase-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Laundrydryer Current phase',
+      'options': list([
+        'pre-soak',
+        'rinse',
+        'spin',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_laundrydryer_current_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'pre-soak',
+  })
+# ---
+# name: test_sensors[mock_laundry_dryer][sensor.mock_laundrydryer_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8638,7 +8462,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.microwave_oven_operational_error',
+    'entity_id': 'sensor.mock_laundrydryer_operational_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8657,15 +8481,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_error',
-    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalStateOperationalError-96-5',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalStateOperationalError-96-5',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[microwave_oven][sensor.microwave_oven_operational_error-state]
+# name: test_sensors[mock_laundry_dryer][sensor.mock_laundrydryer_operational_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Microwave Oven Operational error',
+      'friendly_name': 'Mock Laundrydryer Operational error',
       'options': list([
         'no_error',
         'unable_to_start_or_resume',
@@ -8674,14 +8498,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.microwave_oven_operational_error',
+    'entity_id': 'sensor.mock_laundrydryer_operational_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'no_error',
   })
 # ---
-# name: test_sensors[microwave_oven][sensor.microwave_oven_operational_state-entry]
+# name: test_sensors[mock_laundry_dryer][sensor.mock_laundrydryer_operational_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8701,7 +8525,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.microwave_oven_operational_state',
+    'entity_id': 'sensor.mock_laundrydryer_operational_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8720,15 +8544,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'operational_state',
-    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalState-96-4',
+    'unique_id': '00000000000004D2-0000000000000008-MatterNodeDevice-1-OperationalState-96-4',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[microwave_oven][sensor.microwave_oven_operational_state-state]
+# name: test_sensors[mock_laundry_dryer][sensor.mock_laundrydryer_operational_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Microwave Oven Operational state',
+      'friendly_name': 'Mock Laundrydryer Operational state',
       'options': list([
         'stopped',
         'running',
@@ -8737,11 +8561,65 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.microwave_oven_operational_state',
+    'entity_id': 'sensor.mock_laundrydryer_operational_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'stopped',
+    'state': 'running',
+  })
+# ---
+# name: test_sensors[mock_light_sensor][sensor.mock_light_sensor_illuminance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_light_sensor_illuminance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Illuminance',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_icon': None,
+    'original_name': 'Illuminance',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-LightSensor-1024-0',
+    'unit_of_measurement': 'lx',
+  })
+# ---
+# name: test_sensors[mock_light_sensor][sensor.mock_light_sensor_illuminance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'illuminance',
+      'friendly_name': 'Mock Light Sensor Illuminance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'lx',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_light_sensor_illuminance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.3',
   })
 # ---
 # name: test_sensors[mock_lock][sensor.mock_lock_door_closed_events-entry]
@@ -8846,6 +8724,1116 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
+  })
+# ---
+# name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_estimated_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_microwave_oven_estimated_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Estimated end time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Estimated end time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'estimated_end_time',
+    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalStateCountdownTime-96-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_estimated_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Microwave Oven Estimated end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_microwave_oven_estimated_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T14:00:30+00:00',
+  })
+# ---
+# name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_operational_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_error',
+        'unable_to_start_or_resume',
+        'unable_to_complete_operation',
+        'command_invalid_in_state',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_microwave_oven_operational_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operational error',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operational error',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operational_error',
+    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalStateOperationalError-96-5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_operational_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Microwave Oven Operational error',
+      'options': list([
+        'no_error',
+        'unable_to_start_or_resume',
+        'unable_to_complete_operation',
+        'command_invalid_in_state',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_microwave_oven_operational_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_error',
+  })
+# ---
+# name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_operational_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'stopped',
+        'running',
+        'paused',
+        'error',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_microwave_oven_operational_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operational state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operational state',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operational_state',
+    'unique_id': '00000000000004D2-000000000000009D-MatterNodeDevice-1-OperationalState-96-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_microwave_oven][sensor.mock_microwave_oven_operational_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Microwave Oven Operational state',
+      'options': list([
+        'stopped',
+        'running',
+        'paused',
+        'error',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_microwave_oven_operational_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'stopped',
+  })
+# ---
+# name: test_sensors[mock_oven][sensor.mock_oven_current_phase-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'pre-heating',
+        'pre-heated',
+        'cooling down',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_oven_current_phase',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Current phase',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Current phase',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_phase',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-OvenCavityOperationalStateCurrentPhase-72-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_oven][sensor.mock_oven_current_phase-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Oven Current phase',
+      'options': list([
+        'pre-heating',
+        'pre-heated',
+        'cooling down',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_oven_current_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'pre-heating',
+  })
+# ---
+# name: test_sensors[mock_oven][sensor.mock_oven_operational_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'stopped',
+        'running',
+        'error',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_oven_operational_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operational state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operational state',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operational_state',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-OvenCavityOperationalState-72-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_oven][sensor.mock_oven_operational_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Oven Operational state',
+      'options': list([
+        'stopped',
+        'running',
+        'error',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_oven_operational_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'running',
+  })
+# ---
+# name: test_sensors[mock_oven][sensor.mock_oven_temperature_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_oven_temperature_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature (2)',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature (2)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-TemperatureSensor-1026-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[mock_oven][sensor.mock_oven_temperature_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Mock Oven Temperature (2)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_oven_temperature_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '65.55',
+  })
+# ---
+# name: test_sensors[mock_oven][sensor.mock_oven_temperature_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_oven_temperature_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature (4)',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature (4)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-4-TemperatureSensor-1026-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[mock_oven][sensor.mock_oven_temperature_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Mock Oven Temperature (4)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_oven_temperature_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[mock_pressure_sensor][sensor.mock_pressure_sensor_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_pressure_sensor_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pressure',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Pressure',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PressureSensor-1027-0',
+    'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+  })
+# ---
+# name: test_sensors[mock_pressure_sensor][sensor.mock_pressure_sensor_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Mock Pressure Sensor Pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_pressure_sensor_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[mock_pump][sensor.mock_pump_control_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'constant_speed',
+        'constant_pressure',
+        'proportional_pressure',
+        'constant_flow',
+        'constant_temperature',
+        'automatic',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_pump_control_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Control mode',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Control mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pump_control_mode',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpControlMode-512-33',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_pump][sensor.mock_pump_control_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Pump Control mode',
+      'options': list([
+        'constant_speed',
+        'constant_pressure',
+        'proportional_pressure',
+        'constant_flow',
+        'constant_temperature',
+        'automatic',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_pump_control_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'constant_temperature',
+  })
+# ---
+# name: test_sensors[mock_pump][sensor.mock_pump_flow-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_pump_flow',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Flow',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flow',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'flow',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-FlowSensor-1028-0',
+    'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+  })
+# ---
+# name: test_sensors[mock_pump][sensor.mock_pump_flow-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Pump Flow',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_pump_flow',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.0',
+  })
+# ---
+# name: test_sensors[mock_pump][sensor.mock_pump_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_pump_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pressure',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Pressure',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PressureSensor-1027-0',
+    'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+  })
+# ---
+# name: test_sensors[mock_pump][sensor.mock_pump_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'Mock Pump Pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_pump_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.0',
+  })
+# ---
+# name: test_sensors[mock_pump][sensor.mock_pump_rotation_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_pump_rotation_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Rotation speed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rotation speed',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pump_speed',
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpSpeed-512-20',
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_sensors[mock_pump][sensor.mock_pump_rotation_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Pump Rotation speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'rpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_pump_rotation_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1000',
+  })
+# ---
+# name: test_sensors[mock_pump][sensor.mock_pump_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_pump_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-TemperatureSensor-1026-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[mock_pump][sensor.mock_pump_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Mock Pump Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_pump_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60.0',
+  })
+# ---
+# name: test_sensors[mock_room_airconditioner][sensor.room_airconditioner_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.room_airconditioner_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-2-TemperatureSensor-1026-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[mock_room_airconditioner][sensor.room_airconditioner_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Room AirConditioner Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.room_airconditioner_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_active_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_solar_inverter_active_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Active current',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Active current',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_current',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_active_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Mock solar inverter Active current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_solar_inverter_active_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-3.62',
+  })
+# ---
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_energy_exported-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_solar_inverter_energy_exported',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy exported',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy exported',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_exported',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_energy_exported-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Mock solar inverter Energy exported',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_solar_inverter_energy_exported',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '42.279',
+  })
+# ---
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_solar_inverter_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Power',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementWatt-144-8',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Mock solar inverter Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_solar_inverter_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-850.0',
+  })
+# ---
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_solar_inverter_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voltage',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementVoltage-144-4',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[mock_solar_inverter][sensor.mock_solar_inverter_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Mock solar inverter Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_solar_inverter_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '234.899',
+  })
+# ---
+# name: test_sensors[mock_temperature_sensor][sensor.mock_temperature_sensor_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_temperature_sensor_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TemperatureSensor-1026-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[mock_temperature_sensor][sensor.mock_temperature_sensor_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Mock Temperature Sensor Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_temperature_sensor_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '21.0',
   })
 # ---
 # name: test_sensors[mock_thermostat][sensor.mock_thermostat_heating_demand-entry]
@@ -9012,6 +10000,368 @@
     'state': '18.0',
   })
 # ---
+# name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_estimated_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_vacuum_estimated_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Estimated end time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Estimated end time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'estimated_end_time',
+    'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-ServiceAreaEstimatedEndTime-336-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_estimated_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Vacuum Estimated end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_vacuum_estimated_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-08-29T21:00:00+00:00',
+  })
+# ---
+# name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_operational_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_error',
+        'unable_to_start_or_resume',
+        'unable_to_complete_operation',
+        'command_invalid_in_state',
+        'failed_to_find_charging_dock',
+        'stuck',
+        'dust_bin_missing',
+        'dust_bin_full',
+        'water_tank_empty',
+        'water_tank_missing',
+        'water_tank_lid_open',
+        'mop_cleaning_pad_missing',
+        'low_battery',
+        'cannot_reach_target_area',
+        'dirty_water_tank_full',
+        'dirty_water_tank_missing',
+        'wheels_jammed',
+        'brush_jammed',
+        'navigation_sensor_obscured',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_vacuum_operational_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operational error',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operational error',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operational_error',
+    'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-RvcOperationalStateOperationalError-97-5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_operational_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Vacuum Operational error',
+      'options': list([
+        'no_error',
+        'unable_to_start_or_resume',
+        'unable_to_complete_operation',
+        'command_invalid_in_state',
+        'failed_to_find_charging_dock',
+        'stuck',
+        'dust_bin_missing',
+        'dust_bin_full',
+        'water_tank_empty',
+        'water_tank_missing',
+        'water_tank_lid_open',
+        'mop_cleaning_pad_missing',
+        'low_battery',
+        'cannot_reach_target_area',
+        'dirty_water_tank_full',
+        'dirty_water_tank_missing',
+        'wheels_jammed',
+        'brush_jammed',
+        'navigation_sensor_obscured',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_vacuum_operational_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_error',
+  })
+# ---
+# name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_operational_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'stopped',
+        'running',
+        'paused',
+        'error',
+        'seeking_charger',
+        'charging',
+        'docked',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_vacuum_operational_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operational state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Operational state',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operational_state',
+    'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-RvcOperationalState-97-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_vacuum_cleaner][sensor.mock_vacuum_operational_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Mock Vacuum Operational state',
+      'options': list([
+        'stopped',
+        'running',
+        'paused',
+        'error',
+        'seeking_charger',
+        'charging',
+        'docked',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_vacuum_operational_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'stopped',
+  })
+# ---
+# name: test_sensors[mock_valve][sensor.mock_valve_auto_close_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_valve_auto_close_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Auto-close time',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Auto-close time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_close_time',
+    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-ValveConfigurationAndControlAutoCloseTime-129-2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[mock_valve][sensor.mock_valve_auto_close_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Valve Auto-close time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_valve_auto_close_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_sensors[mock_window_covering_full][sensor.mock_full_window_covering_target_opening_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_full_window_covering_target_opening_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target opening position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Target opening position',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_covering_target_position',
+    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-TargetPositionLiftPercent100ths-258-11',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[mock_window_covering_full][sensor.mock_full_window_covering_target_opening_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Full Window Covering Target opening position',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_full_window_covering_target_opening_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[mock_window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Target opening position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Target opening position',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_covering_target_position',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TargetPositionLiftPercent100ths-258-11',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[mock_window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Longan link WNCV DA01 Target opening position',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
 # name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_config-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -9168,586 +10518,6 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[oven][sensor.mock_oven_current_phase-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'pre-heating',
-        'pre-heated',
-        'cooling down',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_oven_current_phase',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Current phase',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Current phase',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'current_phase',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-OvenCavityOperationalStateCurrentPhase-72-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[oven][sensor.mock_oven_current_phase-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Oven Current phase',
-      'options': list([
-        'pre-heating',
-        'pre-heated',
-        'cooling down',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_oven_current_phase',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'pre-heating',
-  })
-# ---
-# name: test_sensors[oven][sensor.mock_oven_operational_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'stopped',
-        'running',
-        'error',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_oven_operational_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Operational state',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Operational state',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'operational_state',
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-OvenCavityOperationalState-72-4',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[oven][sensor.mock_oven_operational_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Oven Operational state',
-      'options': list([
-        'stopped',
-        'running',
-        'error',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_oven_operational_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'running',
-  })
-# ---
-# name: test_sensors[oven][sensor.mock_oven_temperature_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_oven_temperature_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Temperature (2)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature (2)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-TemperatureSensor-1026-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[oven][sensor.mock_oven_temperature_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Mock Oven Temperature (2)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_oven_temperature_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '65.55',
-  })
-# ---
-# name: test_sensors[oven][sensor.mock_oven_temperature_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_oven_temperature_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Temperature (4)',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature (4)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-4-TemperatureSensor-1026-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[oven][sensor.mock_oven_temperature_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Mock Oven Temperature (4)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_oven_temperature_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[pressure_sensor][sensor.mock_pressure_sensor_pressure-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_pressure_sensor_pressure',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Pressure',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PressureSensor-1027-0',
-    'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
-  })
-# ---
-# name: test_sensors[pressure_sensor][sensor.mock_pressure_sensor_pressure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'Mock Pressure Sensor Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_pressure_sensor_pressure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_sensors[pump][sensor.mock_pump_control_mode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'constant_speed',
-        'constant_pressure',
-        'proportional_pressure',
-        'constant_flow',
-        'constant_temperature',
-        'automatic',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_pump_control_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Control mode',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Control mode',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pump_control_mode',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpControlMode-512-33',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[pump][sensor.mock_pump_control_mode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Pump Control mode',
-      'options': list([
-        'constant_speed',
-        'constant_pressure',
-        'proportional_pressure',
-        'constant_flow',
-        'constant_temperature',
-        'automatic',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_pump_control_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'constant_temperature',
-  })
-# ---
-# name: test_sensors[pump][sensor.mock_pump_flow-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_pump_flow',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Flow',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Flow',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'flow',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-FlowSensor-1028-0',
-    'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
-  })
-# ---
-# name: test_sensors[pump][sensor.mock_pump_flow-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Pump Flow',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_pump_flow',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '5.0',
-  })
-# ---
-# name: test_sensors[pump][sensor.mock_pump_pressure-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_pump_pressure',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Pressure',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PressureSensor-1027-0',
-    'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
-  })
-# ---
-# name: test_sensors[pump][sensor.mock_pump_pressure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'Mock Pump Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_pump_pressure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '10.0',
-  })
-# ---
-# name: test_sensors[pump][sensor.mock_pump_rotation_speed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_pump_rotation_speed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Rotation speed',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Rotation speed',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pump_speed',
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-PumpSpeed-512-20',
-    'unit_of_measurement': 'rpm',
-  })
-# ---
-# name: test_sensors[pump][sensor.mock_pump_rotation_speed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Pump Rotation speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'rpm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_pump_rotation_speed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1000',
-  })
-# ---
-# name: test_sensors[pump][sensor.mock_pump_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_pump_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Temperature',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000003-MatterNodeDevice-1-TemperatureSensor-1026-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[pump][sensor.mock_pump_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Mock Pump Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_pump_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '60.0',
-  })
-# ---
 # name: test_sensors[resideo_x2s_thermostat][sensor.x2s_smart_thermostat_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -9803,63 +10573,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20.55',
-  })
-# ---
-# name: test_sensors[room_airconditioner][sensor.room_airconditioner_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.room_airconditioner_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Temperature',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-2-TemperatureSensor-1026-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[room_airconditioner][sensor.room_airconditioner_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Room AirConditioner Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.room_airconditioner_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
   })
 # ---
 # name: test_sensors[silabs_dishwasher][sensor.dishwasher_effective_current-entry]
@@ -11859,246 +12572,6 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_active_current-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_solar_inverter_active_current',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Active current',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Active current',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'active_current',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_active_current-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Mock solar inverter Active current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_solar_inverter_active_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-3.62',
-  })
-# ---
-# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_energy_exported-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_solar_inverter_energy_exported',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Energy exported',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 3,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy exported',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'energy_exported',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalEnergyMeasurementCumulativeEnergyExported-145-2',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_energy_exported-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Mock solar inverter Energy exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_solar_inverter_energy_exported',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '42.279',
-  })
-# ---
-# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_solar_inverter_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Power',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Power',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementWatt-144-8',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_power-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Mock solar inverter Power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_solar_inverter_power',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-850.0',
-  })
-# ---
-# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_voltage-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_solar_inverter_voltage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Voltage',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'voltage',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementVoltage-144-4',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[solar_inverter][sensor.mock_solar_inverter_voltage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Mock solar inverter Voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_solar_inverter_voltage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '234.899',
-  })
-# ---
 # name: test_sensors[switchbot_k11_plus][sensor.k11_operational_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -12370,425 +12843,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20.9',
-  })
-# ---
-# name: test_sensors[temperature_sensor][sensor.mock_temperature_sensor_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_temperature_sensor_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Temperature',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TemperatureSensor-1026-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[temperature_sensor][sensor.mock_temperature_sensor_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Mock Temperature Sensor Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_temperature_sensor_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '21.0',
-  })
-# ---
-# name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_estimated_end_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_vacuum_estimated_end_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Estimated end time',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Estimated end time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'estimated_end_time',
-    'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-ServiceAreaEstimatedEndTime-336-4',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_estimated_end_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Mock Vacuum Estimated end time',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_vacuum_estimated_end_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-08-29T21:00:00+00:00',
-  })
-# ---
-# name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_operational_error-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'no_error',
-        'unable_to_start_or_resume',
-        'unable_to_complete_operation',
-        'command_invalid_in_state',
-        'failed_to_find_charging_dock',
-        'stuck',
-        'dust_bin_missing',
-        'dust_bin_full',
-        'water_tank_empty',
-        'water_tank_missing',
-        'water_tank_lid_open',
-        'mop_cleaning_pad_missing',
-        'low_battery',
-        'cannot_reach_target_area',
-        'dirty_water_tank_full',
-        'dirty_water_tank_missing',
-        'wheels_jammed',
-        'brush_jammed',
-        'navigation_sensor_obscured',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_vacuum_operational_error',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Operational error',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Operational error',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'operational_error',
-    'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-RvcOperationalStateOperationalError-97-5',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_operational_error-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Vacuum Operational error',
-      'options': list([
-        'no_error',
-        'unable_to_start_or_resume',
-        'unable_to_complete_operation',
-        'command_invalid_in_state',
-        'failed_to_find_charging_dock',
-        'stuck',
-        'dust_bin_missing',
-        'dust_bin_full',
-        'water_tank_empty',
-        'water_tank_missing',
-        'water_tank_lid_open',
-        'mop_cleaning_pad_missing',
-        'low_battery',
-        'cannot_reach_target_area',
-        'dirty_water_tank_full',
-        'dirty_water_tank_missing',
-        'wheels_jammed',
-        'brush_jammed',
-        'navigation_sensor_obscured',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_vacuum_operational_error',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'no_error',
-  })
-# ---
-# name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_operational_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'stopped',
-        'running',
-        'paused',
-        'error',
-        'seeking_charger',
-        'charging',
-        'docked',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_vacuum_operational_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Operational state',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Operational state',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'operational_state',
-    'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-RvcOperationalState-97-4',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_operational_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Vacuum Operational state',
-      'options': list([
-        'stopped',
-        'running',
-        'paused',
-        'error',
-        'seeking_charger',
-        'charging',
-        'docked',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_vacuum_operational_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'stopped',
-  })
-# ---
-# name: test_sensors[valve][sensor.valve_auto_close_time-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.valve_auto_close_time',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Auto-close time',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Auto-close time',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'auto_close_time',
-    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-ValveConfigurationAndControlAutoCloseTime-129-2',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[valve][sensor.valve_auto_close_time-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Valve Auto-close time',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.valve_auto_close_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2025-01-01T00:00:00+00:00',
-  })
-# ---
-# name: test_sensors[window_covering_full][sensor.mock_full_window_covering_target_opening_position-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_full_window_covering_target_opening_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Target opening position',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Target opening position',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'window_covering_target_position',
-    'unique_id': '00000000000004D2-0000000000000032-MatterNodeDevice-1-TargetPositionLiftPercent100ths-258-11',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[window_covering_full][sensor.mock_full_window_covering_target_opening_position-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Full Window Covering Target opening position',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_full_window_covering_target_opening_position',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100',
-  })
-# ---
-# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Target opening position',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Target opening position',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'window_covering_target_position',
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TargetPositionLiftPercent100ths-258-11',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Longan link WNCV DA01 Target opening position',
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100',
   })
 # ---
 # name: test_sensors[yandex_smart_socket][sensor.yndx_00540_current-entry]

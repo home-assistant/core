@@ -42,8 +42,8 @@ async def test_lights(
             "light.mock_color_temperature_light",
             ["color_temp"],
         ),
-        ("dimmable_light", "light.mock_dimmable_light", ["brightness"]),
-        ("onoff_light", "light.mock_onoff_light", ["onoff"]),
+        ("mock_dimmable_light", "light.mock_dimmable_light", ["brightness"]),
+        ("mock_onoff_light", "light.mock_onoff_light", ["onoff"]),
         ("onoff_light_with_levelcontrol_present", "light.d215s", ["onoff"]),
     ],
 )
@@ -119,8 +119,8 @@ async def test_light_turn_on_off(
     [
         ("extended_color_light", "light.mock_extended_color_light"),
         ("color_temperature_light", "light.mock_color_temperature_light"),
-        ("dimmable_light", "light.mock_dimmable_light"),
-        ("dimmable_plugin_unit", "light.dimmable_plugin_unit"),
+        ("mock_dimmable_light", "light.mock_dimmable_light"),
+        ("mock_dimmable_plugin_unit", "light.dimmable_plugin_unit"),
     ],
 )
 async def test_dimmable_light(
