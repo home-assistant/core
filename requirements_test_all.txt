@@ -1066,9 +1066,6 @@ here-transit==1.2.1
 # homeassistant.components.hko
 hko==0.3.2
 
-# homeassistant.components.hko
-hko==0.3.2
-
 # homeassistant.components.hlk_sw16
 hlk-sw16==0.0.9
 
