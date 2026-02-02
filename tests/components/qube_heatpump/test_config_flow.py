@@ -188,7 +188,7 @@ async def test_reconfigure_flow(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
 
 async def test_reconfigure_confirm(
@@ -205,9 +205,15 @@ async def test_reconfigure_confirm(
         },
     )
 
-    with patch(
-        "homeassistant.components.qube_heatpump.config_flow._async_resolve_host",
-        return_value="5.6.7.8",
+    with (
+        patch(
+            "homeassistant.components.qube_heatpump.config_flow._async_resolve_host",
+            return_value="5.6.7.8",
+        ),
+        patch(
+            "homeassistant.components.qube_heatpump.config_flow.asyncio.open_connection",
+            return_value=(AsyncMock(), MagicMock()),
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -216,22 +222,8 @@ async def test_reconfigure_confirm(
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reconfigured"
+    assert result2["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_HOST] == "5.6.7.8"
-
-
-async def test_reconfigure_unknown_entry(hass: HomeAssistant) -> None:
-    """Test reconfigure aborts when entry is unknown."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": "nonexistent_entry",
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown_entry"
 
 
 async def test_reconfigure_duplicate_unique_id(
@@ -271,7 +263,7 @@ async def test_reconfigure_duplicate_unique_id(
 async def test_reconfigure_duplicate_ip(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test reconfigure aborts when new IP conflicts."""
+    """Test reconfigure shows error when new IP conflicts."""
     mock_config_entry.add_to_hass(hass)
 
     entry2 = MockConfigEntry(
@@ -298,8 +290,41 @@ async def test_reconfigure_duplicate_ip(
             {CONF_HOST: "newhost.local", CONF_PORT: 503},
         )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "duplicate_ip"
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"host": "duplicate_ip"}
+
+
+async def test_reconfigure_cannot_connect(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure shows error when cannot connect."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    with (
+        patch(
+            "homeassistant.components.qube_heatpump.config_flow._async_resolve_host",
+            return_value="5.6.7.8",
+        ),
+        patch(
+            "homeassistant.components.qube_heatpump.config_flow.asyncio.open_connection",
+            side_effect=OSError,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "5.6.7.8", CONF_PORT: 502},
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_resolve_host_empty(hass: HomeAssistant) -> None:

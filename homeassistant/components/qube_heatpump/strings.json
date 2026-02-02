@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "Device is already configured.",
-      "duplicate_ip": "Another Qube heat pump is already configured with this IP address."
+      "duplicate_ip": "Another Qube heat pump is already configured with this IP address.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "Failed to connect. Check host and port.",
@@ -18,6 +19,18 @@
         },
         "description": "Enter the heat pump IP or host.",
         "title": "Qube heat pump"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "Enter the IP address or hostname of your Qube heat pump (e.g. 192.168.1.50).",
+          "port": "Modbus TCP port (default: 502)."
+        },
+        "description": "Update the connection settings for your Qube heat pump.",
+        "title": "Reconfigure Qube heat pump"
       }
     }
   },

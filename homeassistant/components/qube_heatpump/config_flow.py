@@ -69,7 +69,6 @@ class QubeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Qube Heat Pump."""
 
     VERSION = 1
-    _reconfig_entry: config_entries.ConfigEntry | None = None
 
     async def _async_has_conflicting_host(
         self, host: str, skip_entry_id: str | None = None
@@ -130,64 +129,57 @@ class QubeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_reconfigure(
-        self, entry_data: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        # Called when reconfigure flow is started; entry may be provided in context or data
-        if entry_data and isinstance(entry_data, dict):
-            eid = entry_data.get("entry_id")
-            if eid:
-                self._reconfig_entry = self.hass.config_entries.async_get_entry(eid)
-        if self._reconfig_entry is None:
-            # Try to get from context
-            eid = (self.context or {}).get("entry_id")
-            if eid:
-                self._reconfig_entry = self.hass.config_entries.async_get_entry(eid)
-        if self._reconfig_entry is None:
-            return self.async_abort(reason="unknown_entry")
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
 
-        # Show form
-        data = self._reconfig_entry.data
-        host = data.get(CONF_HOST)
-        port = data.get(CONF_PORT, DEFAULT_PORT)
+        if user_input is not None:
+            new_host = user_input[CONF_HOST]
+            new_port = user_input[CONF_PORT]
+            new_unique_id = f"{DOMAIN}-{new_host}-{new_port}"
+
+            # Check for duplicate unique_id with other entries
+            for entry in self._async_current_entries():
+                if entry.entry_id == reconfigure_entry.entry_id:
+                    continue
+                if entry.unique_id == new_unique_id:
+                    return self.async_abort(reason="already_configured")
+
+            # Check for conflicting host/IP
+            if await self._async_has_conflicting_host(
+                new_host, skip_entry_id=reconfigure_entry.entry_id
+            ):
+                errors["host"] = "duplicate_ip"
+            else:
+                # Validate connectivity
+                try:
+                    _, writer = await asyncio.wait_for(
+                        asyncio.open_connection(new_host, new_port), timeout=5
+                    )
+                    writer.close()
+                    with contextlib.suppress(Exception):
+                        await writer.wait_closed()
+                except (OSError, TimeoutError):
+                    errors["base"] = "cannot_connect"
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data={CONF_HOST: new_host, CONF_PORT: new_port},
+                    unique_id=new_unique_id,
+                    title=f"Qube Heat Pump ({new_host})",
+                )
+
+        # Show form with current values as defaults
+        data = reconfigure_entry.data
         schema = vol.Schema(
             {
-                vol.Required(CONF_HOST, default=host): str,
-                vol.Required(CONF_PORT, default=port): int,
+                vol.Required(CONF_HOST, default=data.get(CONF_HOST)): str,
+                vol.Required(CONF_PORT, default=data.get(CONF_PORT, DEFAULT_PORT)): int,
             }
         )
-        return self.async_show_form(step_id="reconfigure_confirm", data_schema=schema)
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration confirmation."""
-        if self._reconfig_entry is None:
-            return self.async_abort(reason="unknown_entry")
-        # Update entry data
-        new_host = user_input[CONF_HOST]
-        new_port = user_input[CONF_PORT]
-        new_unique_id = f"{DOMAIN}-{new_host}-{new_port}"
-        for entry in self._async_current_entries():
-            if entry.entry_id == self._reconfig_entry.entry_id:
-                continue
-            if entry.unique_id == new_unique_id:
-                return self.async_abort(reason="already_configured")
-
-        if await self._async_has_conflicting_host(
-            new_host, skip_entry_id=self._reconfig_entry.entry_id
-        ):
-            return self.async_abort(reason="duplicate_ip")
-
-        new = dict(self._reconfig_entry.data)
-        new[CONF_HOST] = new_host
-        new[CONF_PORT] = new_port
-        self.hass.config_entries.async_update_entry(
-            self._reconfig_entry,
-            data=new,
-            title=f"Qube Heat Pump ({new_host})",
-            unique_id=new_unique_id,
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=schema, errors=errors
         )
-        # Reload
-        await self.hass.config_entries.async_reload(self._reconfig_entry.entry_id)
-        return self.async_abort(reason="reconfigured")
