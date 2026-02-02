@@ -103,6 +103,7 @@ _AMBIENT_IDEAL_GAS_MOLAR_VOLUME = (  # m3⋅mol⁻¹
 )
 # Molar masses in g⋅mol⁻¹
 _CARBON_MONOXIDE_MOLAR_MASS = 28.01
+_GLUCOSE_MOLAR_MASS = 180.16
 _NITROGEN_DIOXIDE_MOLAR_MASS = 46.0055
 _NITROGEN_MONOXIDE_MOLAR_MASS = 30.0061
 _OZONE_MOLAR_MASS = 48.00
@@ -229,7 +230,9 @@ class BloodGlucoseConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "blood_glucose_concentration"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: 18,
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER: (
+            _GLUCOSE_MOLAR_MASS / 10
+        ),
         UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER: 1,
     }
     VALID_UNITS = set(UnitOfBloodGlucoseConcentration)

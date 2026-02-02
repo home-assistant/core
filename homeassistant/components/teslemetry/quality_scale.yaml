@@ -9,9 +9,7 @@ rules:
       Multiline lambdas should be wrapped in parentheses for readability (e.g. streaming_listener).
       Use chained comparison: "if 1 < x < 100" instead of "if x > 1 and x < 100".
   config-flow: done
-  config-flow-test-coverage:
-    status: todo
-    comment: Use mock_setup_entry fixture instead of inline patch
+  config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
@@ -75,11 +73,7 @@ rules:
       new TeslemetryVehicleData/TeslemetryEnergyData to runtime_data, then trigger
       entity creation via coordinator listeners in each platform.
   entity-category: done
-  entity-device-class:
-    status: todo
-    comment: |
-      DRIVE_INVERTER_STATES has "unavailable" as a state value which conflicts with HA's
-      unavailable state - shows duplicate in state trigger UI.
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations:
