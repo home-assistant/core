@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
+from .models import DPCodeBooleanWrapper
 
 CAMERAS: tuple[DeviceCategory, ...] = (
     DeviceCategory.DGHSXJ,
@@ -35,7 +36,18 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = manager.device_map[device_id]
             if device.category in CAMERAS:
-                entities.append(TuyaCameraEntity(device, manager))
+                entities.append(
+                    TuyaCameraEntity(
+                        device,
+                        manager,
+                        motion_detection_switch=DPCodeBooleanWrapper.find_dpcode(
+                            device, DPCode.MOTION_SWITCH, prefer_function=True
+                        ),
+                        recording_status=DPCodeBooleanWrapper.find_dpcode(
+                            device, DPCode.RECORD_SWITCH
+                        ),
+                    )
+                )
 
         async_add_entities(entities)
 
@@ -57,21 +69,30 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
+        *,
+        motion_detection_switch: DPCodeBooleanWrapper | None = None,
+        recording_status: DPCodeBooleanWrapper | None = None,
     ) -> None:
         """Init Tuya Camera."""
         super().__init__(device, device_manager)
         CameraEntity.__init__(self)
         self._attr_model = device.product_name
+        self._motion_detection_switch = motion_detection_switch
+        self._recording_status = recording_status
 
     @property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
-        return self.device.status.get(DPCode.RECORD_SWITCH, False)
+        if (status := self._read_wrapper(self._recording_status)) is not None:
+            return status
+        return False
 
     @property
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
-        return self.device.status.get(DPCode.MOTION_SWITCH, False)
+        if (status := self._read_wrapper(self._motion_detection_switch)) is not None:
+            return status
+        return False
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
@@ -95,10 +116,10 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
             height=height,
         )
 
-    def enable_motion_detection(self) -> None:
+    async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        self._send_command([{"code": DPCode.MOTION_SWITCH, "value": True}])
+        await self._async_send_dpcode_update(self._motion_detection_switch, True)
 
-    def disable_motion_detection(self) -> None:
+    async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        self._send_command([{"code": DPCode.MOTION_SWITCH, "value": False}])
+        await self._async_send_dpcode_update(self._motion_detection_switch, False)

@@ -34,7 +34,7 @@ from homeassistant.helpers.target import (
 )
 
 from .const import _ATTR_COLOR_TEMP, ATTR_THEME, DOMAIN
-from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
+from .coordinator import LIFXUpdateCoordinator
 from .util import convert_8_to_16, find_hsbk
 
 if TYPE_CHECKING:
@@ -243,7 +243,7 @@ class LIFXManager:
         """Initialize the manager."""
         self.hass = hass
         self.effects_conductor = aiolifx_effects.Conductor(hass.loop)
-        self.entry_id_to_entity_id: dict[str, str] = {}
+        self.entity_id_to_coordinator: dict[str, LIFXUpdateCoordinator] = {}
 
     @callback
     def async_unload(self) -> None:
@@ -253,15 +253,15 @@ class LIFXManager:
 
     @callback
     def async_register_entity(
-        self, entity_id: str, entry_id: str
+        self, entity_id: str, coordinator: LIFXUpdateCoordinator
     ) -> Callable[[], None]:
         """Register an entity to the config entry id."""
-        self.entry_id_to_entity_id[entry_id] = entity_id
+        self.entity_id_to_coordinator[entity_id] = coordinator
 
         @callback
         def unregister_entity() -> None:
             """Unregister entity when it is being destroyed."""
-            self.entry_id_to_entity_id.pop(entry_id)
+            self.entity_id_to_coordinator.pop(entity_id)
 
         return unregister_entity
 
@@ -499,10 +499,11 @@ class LIFXManager:
         coordinators: list[LIFXUpdateCoordinator] = []
         bulbs: list[Light] = []
 
-        entry: LIFXConfigEntry
-        for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
-            if self.entry_id_to_entity_id[entry.entry_id] in entity_ids:
-                coordinators.append(entry.runtime_data)
-                bulbs.append(entry.runtime_data.device)
+        coordinators = [
+            coordinator
+            for entity_id, coordinator in self.entity_id_to_coordinator.items()
+            if entity_id in entity_ids
+        ]
+        bulbs = [coordinator.device for coordinator in coordinators]
         if start_effect_func := self._effect_dispatch.get(service):
             await start_effect_func(self, bulbs, coordinators, **kwargs)

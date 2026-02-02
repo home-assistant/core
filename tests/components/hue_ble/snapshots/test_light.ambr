@@ -1,0 +1,84 @@
+# serializer version: 1
+# name: test_light[light.hue_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_color_temp_kelvin': 6535,
+      'max_mireds': 454,
+      'min_color_temp_kelvin': 2202,
+      'min_mireds': 153,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.XY: 'xy'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.hue_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'hue_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'AA:BB:CC:DD:EE:FF',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_light[light.hue_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 100,
+      'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
+      'color_temp': 250,
+      'color_temp_kelvin': 4000,
+      'friendly_name': 'Hue Light',
+      'hs_color': tuple(
+        26.812,
+        34.87,
+      ),
+      'max_color_temp_kelvin': 6535,
+      'max_mireds': 454,
+      'min_color_temp_kelvin': 2202,
+      'min_mireds': 153,
+      'rgb_color': tuple(
+        255,
+        206,
+        166,
+      ),
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.XY: 'xy'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+      'xy_color': tuple(
+        0.42,
+        0.365,
+      ),
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.hue_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

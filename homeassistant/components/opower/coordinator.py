@@ -35,6 +35,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import EnergyConverter, VolumeConverter
 
 from .const import CONF_LOGIN_DATA, CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
@@ -149,6 +150,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 name=f"{name_prefix} cost",
                 source=DOMAIN,
                 statistic_id=cost_statistic_id,
+                unit_class=None,
                 unit_of_measurement=None,
             )
             compensation_metadata = StatisticMetaData(
@@ -157,7 +159,13 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 name=f"{name_prefix} compensation",
                 source=DOMAIN,
                 statistic_id=compensation_statistic_id,
+                unit_class=None,
                 unit_of_measurement=None,
+            )
+            consumption_unit_class = (
+                EnergyConverter.UNIT_CLASS
+                if account.meter_type == MeterType.ELEC
+                else VolumeConverter.UNIT_CLASS
             )
             consumption_unit = (
                 UnitOfEnergy.KILO_WATT_HOUR
@@ -170,6 +178,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 name=f"{name_prefix} consumption",
                 source=DOMAIN,
                 statistic_id=consumption_statistic_id,
+                unit_class=consumption_unit_class,
                 unit_of_measurement=consumption_unit,
             )
             return_metadata = StatisticMetaData(
@@ -178,6 +187,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 name=f"{name_prefix} return",
                 source=DOMAIN,
                 statistic_id=return_statistic_id,
+                unit_class=consumption_unit_class,
                 unit_of_measurement=consumption_unit,
             )
 

@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from http import HTTPStatus
 import io
-from types import ModuleType
 from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
 import pytest
@@ -40,11 +39,7 @@ from homeassistant.util import dt as dt_util
 
 from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, mock_turbo_jpeg
 
-from tests.common import (
-    async_fire_time_changed,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
-)
+from tests.common import async_fire_time_changed
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -805,32 +800,6 @@ async def test_use_stream_for_stills(
         mock_stream.async_get_image.assert_called_once()
         assert resp.status == HTTPStatus.OK
         assert await resp.read() == b"stream_keyframe_image"
-
-
-@pytest.mark.parametrize(
-    "module",
-    [camera],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
-
-
-@pytest.mark.parametrize(
-    "enum",
-    list(camera.const.CameraState),
-)
-@pytest.mark.parametrize(
-    "module",
-    [camera],
-)
-def test_deprecated_state_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: camera.const.StreamType,
-    module: ModuleType,
-) -> None:
-    """Test deprecated stream type constants."""
-    import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.10")
 
 
 @pytest.mark.usefixtures("mock_camera")

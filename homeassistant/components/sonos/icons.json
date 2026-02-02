@@ -14,20 +14,20 @@
       }
     },
     "switch": {
-      "loudness": {
-        "default": "mdi:bullhorn-variant"
+      "buttons_enabled": {
+        "default": "mdi:gesture-tap"
       },
-      "surround_mode": {
-        "default": "mdi:music-note-plus"
-      },
-      "night_mode": {
-        "default": "mdi:chat-sleep"
+      "cross_fade": {
+        "default": "mdi:swap-horizontal"
       },
       "dialog_level": {
         "default": "mdi:ear-hearing"
       },
-      "cross_fade": {
-        "default": "mdi:swap-horizontal"
+      "loudness": {
+        "default": "mdi:bullhorn-variant"
+      },
+      "night_mode": {
+        "default": "mdi:chat-sleep"
       },
       "status_light": {
         "default": "mdi:led-on"
@@ -38,23 +38,17 @@
       "surround_enabled": {
         "default": "mdi:surround-sound"
       },
-      "buttons_enabled": {
-        "default": "mdi:gesture-tap"
+      "surround_mode": {
+        "default": "mdi:music-note-plus"
       }
     }
   },
   "services": {
-    "snapshot": {
-      "service": "mdi:camera"
-    },
-    "restore": {
-      "service": "mdi:camera-retake"
-    },
-    "set_sleep_timer": {
-      "service": "mdi:alarm"
-    },
     "clear_sleep_timer": {
       "service": "mdi:alarm-off"
+    },
+    "get_queue": {
+      "service": "mdi:queue-first-in-last-out"
     },
     "play_queue": {
       "service": "mdi:play"
@@ -62,11 +56,17 @@
     "remove_from_queue": {
       "service": "mdi:playlist-remove"
     },
-    "update_alarm": {
+    "restore": {
+      "service": "mdi:camera-retake"
+    },
+    "set_sleep_timer": {
       "service": "mdi:alarm"
     },
-    "get_queue": {
-      "service": "mdi:queue-first-in-last-out"
+    "snapshot": {
+      "service": "mdi:camera"
+    },
+    "update_alarm": {
+      "service": "mdi:alarm"
     }
   }
 }

@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "is_arrival_delayed": {
+        "default": "mdi:bell-alert-outline"
+      },
+      "is_departure_delayed": {
+        "default": "mdi:bell-alert-outline"
+      },
+      "is_going": {
+        "default": "mdi:bell-cancel-outline"
+      }
+    }
+  }
+}

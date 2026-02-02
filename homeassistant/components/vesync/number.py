@@ -46,7 +46,7 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
         mode=NumberMode.SLIDER,
         exists_fn=is_humidifier,
         set_value_fn=lambda device, value: device.set_mist_level(value),
-        value_fn=lambda device: device.state.mist_level,
+        value_fn=lambda device: device.state.mist_virtual_level,
     )
 ]
 

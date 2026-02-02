@@ -374,7 +374,7 @@ async def test_storage_dashboards(
     assert response["success"]
     assert response["result"] == []
 
-    # Add a wrong dashboard
+    # Add a wrong dashboard (no hyphen)
     await client.send_json(
         {
             "id": 6,
@@ -484,16 +484,36 @@ async def test_storage_dashboards(
     assert response["result"][0]["show_in_sidebar"] is False
     assert response["result"][0]["require_admin"] is False
 
-    # Add dashboard with existing url path
+    # Add a wrong dashboard (missing title)
     await client.send_json(
-        {"id": 14, "type": "lovelace/dashboards/create", "url_path": "created-url-path"}
+        {
+            "id": 14,
+            "type": "lovelace/dashboards/create",
+            "url_path": "path",
+        }
     )
     response = await client.receive_json()
     assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+
+    # Add dashboard with existing url path
+    await client.send_json(
+        {
+            "id": 15,
+            "type": "lovelace/dashboards/create",
+            "url_path": "created-url-path",
+            "title": "Another title",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "home_assistant_error"
+    assert response["error"]["translation_key"] == "url_already_exists"
+    assert response["error"]["translation_placeholders"]["url"] == "created-url-path"
 
     # Delete dashboards
     await client.send_json(
-        {"id": 15, "type": "lovelace/dashboards/delete", "dashboard_id": dashboard_id}
+        {"id": 16, "type": "lovelace/dashboards/delete", "dashboard_id": dashboard_id}
     )
     response = await client.receive_json()
     assert response["success"]

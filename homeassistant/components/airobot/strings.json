@@ -1,0 +1,44 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "dhcp_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The thermostat password."
+        },
+        "description": "Airobot thermostat {device_id} discovered at {host}. Enter the password to complete setup. Find the password in the thermostat settings menu under Connectivity → Mobile app."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Airobot thermostat.",
+          "password": "The thermostat password.",
+          "username": "The thermostat Device ID (e.g., T01XXXXXX)."
+        },
+        "description": "Enter your Airobot thermostat connection details. Find the Device ID and password in the thermostat settings menu under Connectivity → Mobile app."
+      }
+    }
+  },
+  "exceptions": {
+    "set_preset_mode_failed": {
+      "message": "Failed to set preset mode to {preset_mode}."
+    },
+    "set_temperature_failed": {
+      "message": "Failed to set temperature to {temperature}."
+    }
+  }
+}

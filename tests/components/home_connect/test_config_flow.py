@@ -10,7 +10,7 @@ import pytest
 
 from homeassistant import config_entries, setup
 from homeassistant.components.home_connect.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, ConfigFlowContext
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
@@ -104,7 +104,7 @@ async def test_full_flow(
     assert await setup.async_setup_component(hass, "home_connect", {})
 
     result = await hass.config_entries.flow.async_init(
-        "home_connect", context={"source": config_entries.SOURCE_USER}
+        "home_connect", context=ConfigFlowContext(source=config_entries.SOURCE_USER)
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -159,7 +159,7 @@ async def test_prevent_reconfiguring_same_account(
     assert await setup.async_setup_component(hass, "home_connect", {})
 
     result = await hass.config_entries.flow.async_init(
-        "home_connect", context={"source": config_entries.SOURCE_USER}
+        "home_connect", context=ConfigFlowContext(source=config_entries.SOURCE_USER)
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -312,7 +312,7 @@ async def test_zeroconf_flow(
     assert await setup.async_setup_component(hass, "home_connect", {})
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
+        DOMAIN, context=ConfigFlowContext(source=config_entries.SOURCE_ZEROCONF)
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -375,7 +375,7 @@ async def test_zeroconf_flow_already_setup(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
+        context=ConfigFlowContext(source=config_entries.SOURCE_ZEROCONF),
         data=DHCP_DISCOVERY[0],
     )
     assert result["type"] is FlowResultType.ABORT
@@ -393,7 +393,9 @@ async def test_dhcp_flow(
     """Test DHCP discovery."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_discovery
+        DOMAIN,
+        context=ConfigFlowContext(source=config_entries.SOURCE_DHCP),
+        data=dhcp_discovery,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -452,7 +454,9 @@ async def test_dhcp_flow_already_setup(
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY[0]
+        DOMAIN,
+        context=ConfigFlowContext(source=config_entries.SOURCE_DHCP),
+        data=DHCP_DISCOVERY[0],
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -499,7 +503,9 @@ async def test_dhcp_flow_complete_device_information(
     assert device.connections == set()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_discovery
+        DOMAIN,
+        context=ConfigFlowContext(source=config_entries.SOURCE_DHCP),
+        data=dhcp_discovery,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

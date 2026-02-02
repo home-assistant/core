@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.assist_pipeline.repair_flows import (
+from homeassistant.components.assist_pipeline.repair_flows import (  # pylint: disable=hass-component-root-import
     AssistInProgressDeprecatedRepairFlow,
 )
 from homeassistant.components.repairs import RepairsFlow

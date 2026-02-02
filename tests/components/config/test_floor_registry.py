@@ -1,6 +1,7 @@
 """Test floor registry API."""
 
 from datetime import datetime
+from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -275,3 +276,100 @@ async def test_update_with_name_already_in_use(
         == "The name Second floor (secondfloor) is already in use"
     )
     assert len(floor_registry.floors) == 2
+
+
+async def test_reorder_floors(
+    client: MockHAClientWebSocket, floor_registry: fr.FloorRegistry
+) -> None:
+    """Test reorder floors."""
+    floor1 = floor_registry.async_create("First floor")
+    floor2 = floor_registry.async_create("Second floor")
+    floor3 = floor_registry.async_create("Third floor")
+
+    await client.send_json_auto_id({"type": "config/floor_registry/list"})
+    msg = await client.receive_json()
+    assert [floor["floor_id"] for floor in msg["result"]] == [
+        floor1.floor_id,
+        floor2.floor_id,
+        floor3.floor_id,
+    ]
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/floor_registry/reorder",
+            "floor_ids": [floor3.floor_id, floor1.floor_id, floor2.floor_id],
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json_auto_id({"type": "config/floor_registry/list"})
+    msg = await client.receive_json()
+    assert [floor["floor_id"] for floor in msg["result"]] == [
+        floor3.floor_id,
+        floor1.floor_id,
+        floor2.floor_id,
+    ]
+
+
+async def test_reorder_floors_invalid_floor_ids(
+    client: MockHAClientWebSocket, floor_registry: fr.FloorRegistry
+) -> None:
+    """Test reorder with invalid floor IDs."""
+    floor1 = floor_registry.async_create("First floor")
+    floor_registry.async_create("Second floor")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/floor_registry/reorder",
+            "floor_ids": [floor1.floor_id],
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
+    assert "must contain all existing floor IDs" in msg["error"]["message"]
+
+
+async def test_reorder_floors_with_nonexistent_id(
+    client: MockHAClientWebSocket, floor_registry: fr.FloorRegistry
+) -> None:
+    """Test reorder with nonexistent floor ID."""
+    floor1 = floor_registry.async_create("First floor")
+    floor2 = floor_registry.async_create("Second floor")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/floor_registry/reorder",
+            "floor_ids": [floor1.floor_id, floor2.floor_id, "nonexistent"],
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
+
+
+async def test_reorder_floors_persistence(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    floor_registry: fr.FloorRegistry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test that floor reordering is persisted."""
+    floor1 = floor_registry.async_create("First floor")
+    floor2 = floor_registry.async_create("Second floor")
+    floor3 = floor_registry.async_create("Third floor")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/floor_registry/reorder",
+            "floor_ids": [floor2.floor_id, floor3.floor_id, floor1.floor_id],
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await hass.async_block_till_done()
+
+    floor_ids = [floor.floor_id for floor in floor_registry.async_list_floors()]
+    assert floor_ids == [floor2.floor_id, floor3.floor_id, floor1.floor_id]

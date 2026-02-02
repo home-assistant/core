@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import astuple, dataclass
 import logging
 import string
@@ -43,6 +43,18 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
+
+# Alias water_heater constants to avoid name clashes with similarly named climate constants
+from homeassistant.components.water_heater import (
+    ATTR_AWAY_MODE as WATER_HEATER_ATTR_AWAY_MODE,
+    ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
+    ATTR_MAX_TEMP as WATER_HEATER_ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP as WATER_HEATER_ATTR_MIN_TEMP,
+    ATTR_OPERATION_LIST as WATER_HEATER_ATTR_OPERATION_LIST,
+    ATTR_OPERATION_MODE as WATER_HEATER_ATTR_OPERATION_MODE,
+    ATTR_TARGET_TEMP_HIGH as WATER_HEATER_ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW as WATER_HEATER_ATTR_TARGET_TEMP_LOW,
+)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
@@ -403,7 +415,7 @@ class PrometheusMetrics:
             )
         return labels | extra_labels
 
-    def _battery(self, state: State) -> None:
+    def _battery_metric(self, state: State) -> None:
         if (battery_level := state.attributes.get(ATTR_BATTERY_LEVEL)) is None:
             return
 
@@ -419,29 +431,82 @@ class PrometheusMetrics:
             self._labels(state),
         ).set(value)
 
-    def _handle_binary_sensor(self, state: State) -> None:
-        if (value := self.state_as_number(state)) is None:
+    def _temperature_metric(
+        self, state: State, attr: str, metric_name: str, metric_description: str
+    ) -> None:
+        if (temp := state.attributes.get(attr)) is None:
+            return
+
+        if self._climate_units == UnitOfTemperature.FAHRENHEIT:
+            temp = TemperatureConverter.convert(
+                temp, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
+            )
+        self._metric(
+            metric_name,
+            prometheus_client.Gauge,
+            metric_description,
+            self._labels(state),
+        ).set(temp)
+
+    def _bool_metric(
+        self,
+        state: State,
+        attr: str,
+        metric_name: str,
+        metric_description: str,
+        true_values: set[Any] | None = None,
+    ) -> None:
+        value = state.attributes.get(attr)
+        if value is None:
+            return
+
+        result = bool(value) if true_values is None else value in true_values
+        self._metric(
+            metric_name,
+            prometheus_client.Gauge,
+            metric_description,
+            self._labels(state),
+        ).set(float(result))
+
+    def _float_metric(
+        self,
+        state: State,
+        attr: str,
+        metric_name: str,
+        metric_description: str,
+    ) -> None:
+        value = state.attributes.get(attr)
+        if value is None:
             return
 
         self._metric(
-            "binary_sensor_state",
+            metric_name,
             prometheus_client.Gauge,
-            "State of the binary sensor (0/1)",
+            metric_description,
             self._labels(state),
-        ).set(value)
+        ).set(float(value))
 
-    def _handle_input_boolean(self, state: State) -> None:
-        if (value := self.state_as_number(state)) is None:
+    def _enum_metric(
+        self,
+        state: State,
+        current_value: Any | None,
+        values: Sequence[str] | None,
+        metric_name: str,
+        metric_description: str,
+        enum_label_name: str,
+    ) -> None:
+        if current_value is None or values is None:
             return
 
-        self._metric(
-            "input_boolean_state",
-            prometheus_client.Gauge,
-            "State of the input boolean (0/1)",
-            self._labels(state),
-        ).set(value)
+        for value in values:
+            self._metric(
+                metric_name,
+                prometheus_client.Gauge,
+                metric_description,
+                self._labels(state, {enum_label_name: value}),
+            ).set(float(value == current_value))
 
-    def _numeric_handler(self, state: State, domain: str, title: str) -> None:
+    def _numeric_metric(self, state: State, domain: str, title: str) -> None:
         if (value := self.state_as_number(state)) is None:
             return
 
@@ -470,62 +535,48 @@ class PrometheusMetrics:
 
         metric.set(value)
 
+    def _handle_binary_sensor(self, state: State) -> None:
+        self._numeric_metric(state, "binary_sensor", "binary boolean")
+
+    def _handle_input_boolean(self, state: State) -> None:
+        self._numeric_metric(state, "input_boolean", "input boolean")
+
     def _handle_input_number(self, state: State) -> None:
-        self._numeric_handler(state, "input_number", "input number")
+        self._numeric_metric(state, "input_number", "input number")
 
     def _handle_number(self, state: State) -> None:
-        self._numeric_handler(state, "number", "number")
+        self._numeric_metric(state, "number", "number")
 
     def _handle_device_tracker(self, state: State) -> None:
-        if (value := self.state_as_number(state)) is None:
-            return
-
-        self._metric(
-            "device_tracker_state",
-            prometheus_client.Gauge,
-            "State of the device tracker (0/1)",
-            self._labels(state),
-        ).set(value)
+        self._numeric_metric(state, "device_tracker", "device tracker")
 
     def _handle_person(self, state: State) -> None:
-        if (value := self.state_as_number(state)) is None:
-            return
+        self._numeric_metric(state, "person", "person")
 
-        self._metric(
-            "person_state",
-            prometheus_client.Gauge,
-            "State of the person (0/1)",
-            self._labels(state),
-        ).set(value)
+    def _handle_lock(self, state: State) -> None:
+        self._numeric_metric(state, "lock", "lock")
 
     def _handle_cover(self, state: State) -> None:
-        cover_states = [STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING]
-        for cover_state in cover_states:
-            metric = self._metric(
-                "cover_state",
-                prometheus_client.Gauge,
-                "State of the cover (0/1)",
-                self._labels(state, {"state": cover_state}),
-            )
-            metric.set(float(cover_state == state.state))
-
-        position = state.attributes.get(ATTR_CURRENT_POSITION)
-        if position is not None:
-            self._metric(
-                "cover_position",
-                prometheus_client.Gauge,
-                "Position of the cover (0-100)",
-                self._labels(state),
-            ).set(float(position))
-
-        tilt_position = state.attributes.get(ATTR_CURRENT_TILT_POSITION)
-        if tilt_position is not None:
-            self._metric(
-                "cover_tilt_position",
-                prometheus_client.Gauge,
-                "Tilt Position of the cover (0-100)",
-                self._labels(state),
-            ).set(float(tilt_position))
+        self._enum_metric(
+            state,
+            state.state,
+            [STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING],
+            "cover_state",
+            "State of the cover (0/1)",
+            "state",
+        )
+        self._float_metric(
+            state,
+            ATTR_CURRENT_POSITION,
+            "cover_position",
+            "Position of the cover (0-100)",
+        )
+        self._float_metric(
+            state,
+            ATTR_CURRENT_TILT_POSITION,
+            "cover_tilt_position",
+            "Tilt Position of the cover (0-100)",
+        )
 
     def _handle_light(self, state: State) -> None:
         if (value := self.state_as_number(state)) is None:
@@ -543,130 +594,212 @@ class PrometheusMetrics:
             self._labels(state),
         ).set(value)
 
-    def _handle_lock(self, state: State) -> None:
-        if (value := self.state_as_number(state)) is None:
-            return
-
-        self._metric(
-            "lock_state",
-            prometheus_client.Gauge,
-            "State of the lock (0/1)",
-            self._labels(state),
-        ).set(value)
-
-    def _handle_climate_temp(
-        self, state: State, attr: str, metric_name: str, metric_description: str
-    ) -> None:
-        if (temp := state.attributes.get(attr)) is None:
-            return
-
-        if self._climate_units == UnitOfTemperature.FAHRENHEIT:
-            temp = TemperatureConverter.convert(
-                temp, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS
-            )
-        self._metric(
-            metric_name,
-            prometheus_client.Gauge,
-            metric_description,
-            self._labels(state),
-        ).set(temp)
-
     def _handle_climate(self, state: State) -> None:
-        self._handle_climate_temp(
+        self._temperature_metric(
             state,
             ATTR_TEMPERATURE,
             "climate_target_temperature_celsius",
             "Target temperature in degrees Celsius",
         )
-        self._handle_climate_temp(
+        self._temperature_metric(
             state,
             ATTR_TARGET_TEMP_HIGH,
             "climate_target_temperature_high_celsius",
             "Target high temperature in degrees Celsius",
         )
-        self._handle_climate_temp(
+        self._temperature_metric(
             state,
             ATTR_TARGET_TEMP_LOW,
             "climate_target_temperature_low_celsius",
             "Target low temperature in degrees Celsius",
         )
-        self._handle_climate_temp(
+        self._temperature_metric(
             state,
             ATTR_CURRENT_TEMPERATURE,
             "climate_current_temperature_celsius",
             "Current temperature in degrees Celsius",
         )
 
-        if current_action := state.attributes.get(ATTR_HVAC_ACTION):
-            for action in HVACAction:
-                self._metric(
-                    "climate_action",
-                    prometheus_client.Gauge,
-                    "HVAC action",
-                    self._labels(state, {"action": action.value}),
-                ).set(float(action == current_action))
-
-        current_mode = state.state
-        available_modes = state.attributes.get(ATTR_HVAC_MODES)
-        if current_mode and available_modes:
-            for mode in available_modes:
-                self._metric(
-                    "climate_mode",
-                    prometheus_client.Gauge,
-                    "HVAC mode",
-                    self._labels(state, {"mode": mode}),
-                ).set(float(mode == current_mode))
-
-        preset_mode = state.attributes.get(ATTR_PRESET_MODE)
-        available_preset_modes = state.attributes.get(ATTR_PRESET_MODES)
-        if preset_mode and available_preset_modes:
-            for mode in available_preset_modes:
-                self._metric(
-                    "climate_preset_mode",
-                    prometheus_client.Gauge,
-                    "Preset mode enum",
-                    self._labels(state, {"mode": mode}),
-                ).set(float(mode == preset_mode))
-
-        fan_mode = state.attributes.get(ATTR_FAN_MODE)
-        available_fan_modes = state.attributes.get(ATTR_FAN_MODES)
-        if fan_mode and available_fan_modes:
-            for mode in available_fan_modes:
-                self._metric(
-                    "climate_fan_mode",
-                    prometheus_client.Gauge,
-                    "Fan mode enum",
-                    self._labels(state, {"mode": mode}),
-                ).set(float(mode == fan_mode))
+        self._enum_metric(
+            state,
+            (
+                (attr := state.attributes.get(ATTR_HVAC_ACTION))
+                and getattr(attr, "value", attr)
+            ),
+            [action.value for action in HVACAction],
+            "climate_action",
+            "HVAC action",
+            "action",
+        )
+        self._enum_metric(
+            state,
+            state.state,
+            state.attributes.get(ATTR_HVAC_MODES),
+            "climate_mode",
+            "HVAC mode",
+            "mode",
+        )
+        self._enum_metric(
+            state,
+            state.attributes.get(ATTR_PRESET_MODE),
+            state.attributes.get(ATTR_PRESET_MODES),
+            "climate_preset_mode",
+            "Preset mode enum",
+            "mode",
+        )
+        self._enum_metric(
+            state,
+            state.attributes.get(ATTR_FAN_MODE),
+            state.attributes.get(ATTR_FAN_MODES),
+            "climate_fan_mode",
+            "Fan mode enum",
+            "mode",
+        )
 
     def _handle_humidifier(self, state: State) -> None:
-        humidifier_target_humidity_percent = state.attributes.get(ATTR_HUMIDITY)
-        if humidifier_target_humidity_percent:
-            self._metric(
-                "humidifier_target_humidity_percent",
-                prometheus_client.Gauge,
-                "Target Relative Humidity",
-                self._labels(state),
-            ).set(humidifier_target_humidity_percent)
+        self._numeric_metric(state, "humidifier", "humidifier")
 
-        if (value := self.state_as_number(state)) is not None:
-            self._metric(
-                "humidifier_state",
-                prometheus_client.Gauge,
-                "State of the humidifier (0/1)",
-                self._labels(state),
-            ).set(value)
+        self._float_metric(
+            state,
+            ATTR_HUMIDITY,
+            "humidifier_target_humidity_percent",
+            "Target Relative Humidity",
+        )
 
-        current_mode = state.attributes.get(ATTR_MODE)
-        available_modes = state.attributes.get(ATTR_AVAILABLE_MODES)
-        if current_mode and available_modes:
-            for mode in available_modes:
-                self._metric(
-                    "humidifier_mode",
-                    prometheus_client.Gauge,
-                    "Humidifier Mode",
-                    self._labels(state, {"mode": mode}),
-                ).set(float(mode == current_mode))
+        self._enum_metric(
+            state,
+            state.attributes.get(ATTR_MODE),
+            state.attributes.get(ATTR_AVAILABLE_MODES),
+            "humidifier_mode",
+            "Humidifier Mode",
+            "mode",
+        )
+
+    def _handle_water_heater(self, state: State) -> None:
+        # Temperatures
+        self._temperature_metric(
+            state,
+            ATTR_TEMPERATURE,
+            "water_heater_temperature_celsius",
+            "Target temperature in degrees Celsius",
+        )
+        self._temperature_metric(
+            state,
+            WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
+            "water_heater_current_temperature_celsius",
+            "Target temperature in degrees Celsius",
+        )
+        self._temperature_metric(
+            state,
+            WATER_HEATER_ATTR_TARGET_TEMP_HIGH,
+            "water_heater_target_temperature_high_celsius",
+            "Target high temperature in degrees Celsius",
+        )
+        self._temperature_metric(
+            state,
+            WATER_HEATER_ATTR_TARGET_TEMP_LOW,
+            "water_heater_target_temperature_low_celsius",
+            "Target low temperature in degrees Celsius",
+        )
+        self._temperature_metric(
+            state,
+            WATER_HEATER_ATTR_MIN_TEMP,
+            "water_heater_min_temperature_celsius",
+            "Minimum allowed temperature in degrees Celsius",
+        )
+        self._temperature_metric(
+            state,
+            WATER_HEATER_ATTR_MAX_TEMP,
+            "water_heater_max_temperature_celsius",
+            "Maximum allowed temperature in degrees Celsius",
+        )
+        self._enum_metric(
+            state,
+            state.attributes.get(WATER_HEATER_ATTR_OPERATION_MODE) or state.state,
+            state.attributes.get(WATER_HEATER_ATTR_OPERATION_LIST),
+            "water_heater_operation_mode",
+            "Water heater operation mode",
+            "mode",
+        )
+
+        # Away mode bool
+        self._bool_metric(
+            state,
+            WATER_HEATER_ATTR_AWAY_MODE,
+            "water_heater_away_mode",
+            "Whether away mode is on (0/1)",
+            {STATE_ON},
+        )
+
+    def _handle_switch(self, state: State) -> None:
+        self._numeric_metric(state, "switch", "switch")
+        self._handle_attributes(state)
+
+    def _handle_fan(self, state: State) -> None:
+        self._numeric_metric(state, "fan", "fan")
+        self._float_metric(
+            state, ATTR_PERCENTAGE, "fan_speed_percent", "Fan speed percent (0-100)"
+        )
+        self._bool_metric(
+            state,
+            ATTR_OSCILLATING,
+            "fan_is_oscillating",
+            "Whether the fan is oscillating (0/1)",
+        )
+
+        self._enum_metric(
+            state,
+            state.attributes.get(ATTR_PRESET_MODE),
+            state.attributes.get(ATTR_PRESET_MODES),
+            "fan_preset_mode",
+            "Fan preset mode enum",
+            "mode",
+        )
+
+        fan_direction = state.attributes.get(ATTR_DIRECTION)
+        if fan_direction in {DIRECTION_FORWARD, DIRECTION_REVERSE}:
+            self._bool_metric(
+                state,
+                ATTR_DIRECTION,
+                "fan_direction_reversed",
+                "Fan direction reversed (bool)",
+                {DIRECTION_REVERSE},
+            )
+
+    def _handle_zwave(self, state: State) -> None:
+        self._battery_metric(state)
+
+    def _handle_automation(self, state: State) -> None:
+        self._metric(
+            "automation_triggered_count",
+            prometheus_client.Counter,
+            "Count of times an automation has been triggered",
+            self._labels(state),
+        ).inc()
+
+    def _handle_counter(self, state: State) -> None:
+        if (value := self.state_as_number(state)) is None:
+            return
+
+        self._metric(
+            "counter_value",
+            prometheus_client.Gauge,
+            "Value of counter entities",
+            self._labels(state),
+        ).set(value)
+
+    def _handle_update(self, state: State) -> None:
+        self._numeric_metric(state, "update", "update")
+
+    def _handle_alarm_control_panel(self, state: State) -> None:
+        self._enum_metric(
+            state,
+            state.state,
+            [alarm_state.value for alarm_state in AlarmControlPanelState],
+            "alarm_control_panel_state",
+            "State of the alarm control panel (0/1)",
+            "state",
+        )
 
     def _handle_sensor(self, state: State) -> None:
         unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
@@ -695,7 +828,7 @@ class PrometheusMetrics:
                 self._labels(state),
             ).set(value)
 
-        self._battery(state)
+        self._battery_metric(state)
 
     def _sensor_default_metric(self, state: State, unit: str | None) -> str | None:
         """Get default metric."""
@@ -753,109 +886,6 @@ class PrometheusMetrics:
         default = default.replace("\u03bc", "\u00b5")
         default = default.lower()
         return units.get(unit, default)
-
-    def _handle_switch(self, state: State) -> None:
-        if (value := self.state_as_number(state)) is not None:
-            self._metric(
-                "switch_state",
-                prometheus_client.Gauge,
-                "State of the switch (0/1)",
-                self._labels(state),
-            ).set(value)
-
-        self._handle_attributes(state)
-
-    def _handle_fan(self, state: State) -> None:
-        if (value := self.state_as_number(state)) is not None:
-            self._metric(
-                "fan_state",
-                prometheus_client.Gauge,
-                "State of the fan (0/1)",
-                self._labels(state),
-            ).set(value)
-
-        fan_speed_percent = state.attributes.get(ATTR_PERCENTAGE)
-        if fan_speed_percent is not None:
-            self._metric(
-                "fan_speed_percent",
-                prometheus_client.Gauge,
-                "Fan speed percent (0-100)",
-                self._labels(state),
-            ).set(float(fan_speed_percent))
-
-        fan_is_oscillating = state.attributes.get(ATTR_OSCILLATING)
-        if fan_is_oscillating is not None:
-            self._metric(
-                "fan_is_oscillating",
-                prometheus_client.Gauge,
-                "Whether the fan is oscillating (0/1)",
-                self._labels(state),
-            ).set(float(fan_is_oscillating))
-
-        fan_preset_mode = state.attributes.get(ATTR_PRESET_MODE)
-        available_modes = state.attributes.get(ATTR_PRESET_MODES)
-        if fan_preset_mode and available_modes:
-            for mode in available_modes:
-                self._metric(
-                    "fan_preset_mode",
-                    prometheus_client.Gauge,
-                    "Fan preset mode enum",
-                    self._labels(state, {"mode": mode}),
-                ).set(float(mode == fan_preset_mode))
-
-        fan_direction = state.attributes.get(ATTR_DIRECTION)
-        if fan_direction in {DIRECTION_FORWARD, DIRECTION_REVERSE}:
-            self._metric(
-                "fan_direction_reversed",
-                prometheus_client.Gauge,
-                "Fan direction reversed (bool)",
-                self._labels(state),
-            ).set(float(fan_direction == DIRECTION_REVERSE))
-
-    def _handle_zwave(self, state: State) -> None:
-        self._battery(state)
-
-    def _handle_automation(self, state: State) -> None:
-        self._metric(
-            "automation_triggered_count",
-            prometheus_client.Counter,
-            "Count of times an automation has been triggered",
-            self._labels(state),
-        ).inc()
-
-    def _handle_counter(self, state: State) -> None:
-        if (value := self.state_as_number(state)) is None:
-            return
-
-        self._metric(
-            "counter_value",
-            prometheus_client.Gauge,
-            "Value of counter entities",
-            self._labels(state),
-        ).set(value)
-
-    def _handle_update(self, state: State) -> None:
-        if (value := self.state_as_number(state)) is None:
-            return
-
-        self._metric(
-            "update_state",
-            prometheus_client.Gauge,
-            "Update state, indicating if an update is available (0/1)",
-            self._labels(state),
-        ).set(value)
-
-    def _handle_alarm_control_panel(self, state: State) -> None:
-        current_state = state.state
-
-        if current_state:
-            for alarm_state in AlarmControlPanelState:
-                self._metric(
-                    "alarm_control_panel_state",
-                    prometheus_client.Gauge,
-                    "State of the alarm control panel (0/1)",
-                    self._labels(state, {"state": alarm_state.value}),
-                ).set(float(alarm_state.value == current_state))
 
 
 class PrometheusView(HomeAssistantView):

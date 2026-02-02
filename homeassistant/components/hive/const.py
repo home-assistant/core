@@ -11,7 +11,6 @@ CONFIG_ENTRY_VERSION = 1
 DEFAULT_NAME = "Hive"
 DOMAIN = "hive"
 PLATFORMS = [
-    Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.LIGHT,
@@ -20,7 +19,6 @@ PLATFORMS = [
     Platform.WATER_HEATER,
 ]
 PLATFORM_LOOKUP = {
-    Platform.ALARM_CONTROL_PANEL: "alarm_control_panel",
     Platform.BINARY_SENSOR: "binary_sensor",
     Platform.CLIMATE: "climate",
     Platform.LIGHT: "light",

@@ -727,7 +727,7 @@ async def test_setup_hass(
             ),
         )
 
-    assert "Waiting on integrations to complete setup" not in caplog.text
+    assert "Waiting for integrations to complete setup" not in caplog.text
 
     assert "browser" in hass.config.components
     assert "recovery_mode" not in hass.config.components
@@ -790,7 +790,7 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
             ),
         )
 
-    assert "Waiting on integrations to complete setup" in caplog.text
+    assert "Waiting for integrations to complete setup" in caplog.text
 
 
 async def test_setup_hass_invalid_yaml(

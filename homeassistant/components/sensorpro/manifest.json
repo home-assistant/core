@@ -3,14 +3,14 @@
   "name": "SensorPro",
   "bluetooth": [
     {
-      "manufacturer_id": 43605,
+      "connectable": false,
       "manufacturer_data_start": [1, 1, 164, 193],
-      "connectable": false
+      "manufacturer_id": 43605
     },
     {
-      "manufacturer_id": 43605,
+      "connectable": false,
       "manufacturer_data_start": [1, 5, 164, 193],
-      "connectable": false
+      "manufacturer_id": 43605
     }
   ],
   "codeowners": ["@bdraco"],

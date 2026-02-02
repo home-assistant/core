@@ -530,7 +530,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
-    # Haven't seen at devices yet
     Capability.ILLUMINANCE_MEASUREMENT: {
         Attribute.ILLUMINANCE: [
             SmartThingsSensorEntityDescription(
@@ -842,7 +841,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # Haven't seen at devices yet
     Capability.SIGNAL_STRENGTH: {
         Attribute.LQI: [
             SmartThingsSensorEntityDescription(
@@ -1001,7 +999,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
-    # Haven't seen at devices yet
     Capability.TVOC_MEASUREMENT: {
         Attribute.TVOC_LEVEL: [
             SmartThingsSensorEntityDescription(
@@ -1012,7 +1009,6 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # Haven't seen at devices yet
     Capability.ULTRAVIOLET_INDEX: {
         Attribute.ULTRAVIOLET_INDEX: [
             SmartThingsSensorEntityDescription(
@@ -1058,6 +1054,10 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="washer_machine_state",
                 options=WASHER_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
+                component_fn=lambda component: component == "sub",
+                component_translation_key={
+                    "sub": "washer_sub_machine_state",
+                },
             )
         ],
         Attribute.WASHER_JOB_STATE: [
@@ -1084,6 +1084,10 @@ CAPABILITY_TO_SENSORS: dict[
                 ],
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=lambda value: JOB_STATE_MAP.get(value, value),
+                component_fn=lambda component: component == "sub",
+                component_translation_key={
+                    "sub": "washer_sub_job_state",
+                },
             )
         ],
         Attribute.COMPLETION_TIME: [
@@ -1092,6 +1096,10 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
                 value_fn=dt_util.parse_datetime,
+                component_fn=lambda component: component == "sub",
+                component_translation_key={
+                    "sub": "washer_sub_completion_time",
+                },
             )
         ],
     },
@@ -1151,8 +1159,11 @@ async def async_setup_entry(
                                 )
                                 and (
                                     not description.exists_fn
-                                    or description.exists_fn(
-                                        device.status[MAIN][capability][attribute]
+                                    or (
+                                        component == MAIN
+                                        and description.exists_fn(
+                                            device.status[MAIN][capability][attribute]
+                                        )
                                     )
                                 )
                                 and (

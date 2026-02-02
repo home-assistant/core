@@ -251,3 +251,43 @@ async def test_number_error(
             blocking=True,
         )
     assert exc_info.value.translation_key == "number_exception"
+
+
+@pytest.mark.parametrize("device_fixture", [ModelName.GS3_AV])
+async def test_steam_temperature(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test steam temperature number."""
+
+    await async_init_integration(hass, mock_config_entry)
+    serial_number = mock_lamarzocco.serial_number
+    entity_id = f"number.{serial_number}_steam_target_temperature"
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state == snapshot
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry
+    assert entry.device_id
+    assert entry == snapshot
+
+    # service call
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_VALUE: 128.3,
+        },
+        blocking=True,
+    )
+
+    mock_lamarzocco.set_steam_target_temperature.assert_called_once_with(
+        temperature=128.3,
+    )

@@ -113,6 +113,86 @@ async def test_unload(hass: HomeAssistant, ufp: MockUFPFixture, light: Light) ->
     assert ufp.api.async_disconnect_ws.called
 
 
+async def test_remove_entry(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
+    """Test removal of unifiprotect entry clears session."""
+
+    await init_entry(hass, ufp, [])
+    assert ufp.entry.state is ConfigEntryState.LOADED
+
+    # Mock clear_session method
+    ufp.api.clear_session = AsyncMock()
+
+    await hass.config_entries.async_remove(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify clear_session was called
+    assert ufp.api.clear_session.called
+
+
+async def test_remove_entry_not_loaded(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """Test removal of unloaded unifiprotect entry still clears session."""
+
+    # Add entry but don't load it
+    ufp.entry.add_to_hass(hass)
+
+    # Mock clear_session method
+    ufp.api.clear_session = AsyncMock()
+
+    with patch(
+        "homeassistant.components.unifiprotect.async_create_api_client",
+        return_value=ufp.api,
+    ):
+        await hass.config_entries.async_remove(ufp.entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify clear_session was called even though entry wasn't loaded
+    assert ufp.api.clear_session.called
+
+
+async def test_remove_entry_clear_session_fails(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """Test removal succeeds even when clear_session fails."""
+    await init_entry(hass, ufp, [])
+    assert ufp.entry.state is ConfigEntryState.LOADED
+
+    # Mock clear_session to raise an exception
+    ufp.api.clear_session = AsyncMock(side_effect=PermissionError("Permission denied"))
+
+    # Should not raise - removal should succeed
+    await hass.config_entries.async_remove(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify clear_session was attempted
+    assert ufp.api.clear_session.called
+
+
+async def test_remove_entry_not_loaded_clear_session_fails(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """Test removal succeeds when not loaded and clear_session fails."""
+    # Don't initialize the integration - entry is not loaded
+    ufp.entry.add_to_hass(hass)
+    assert ufp.entry.state is not ConfigEntryState.LOADED
+
+    # Mock clear_session to raise an exception for the temporary client
+    with patch(
+        "homeassistant.components.unifiprotect.async_create_api_client"
+    ) as mock_create:
+        mock_api = Mock(spec=ProtectApiClient)
+        mock_api.clear_session = AsyncMock(side_effect=OSError("Read-only file system"))
+        mock_create.return_value = mock_api
+
+        # Should not raise - removal should succeed
+        await hass.config_entries.async_remove(ufp.entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Verify clear_session was attempted
+        assert mock_api.clear_session.called
+
+
 async def test_setup_too_old(
     hass: HomeAssistant, ufp: MockUFPFixture, old_nvr: NVR
 ) -> None:

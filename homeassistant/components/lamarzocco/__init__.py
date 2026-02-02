@@ -15,16 +15,20 @@ from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.util import InstallationKey, generate_installation_key
 
-from homeassistant.components.bluetooth import async_discovered_service_info
+from homeassistant.components.bluetooth import (
+    async_ble_device_from_address,
+    async_discovered_service_info,
+)
 from homeassistant.const import (
     CONF_MAC,
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
     Platform,
     __version__,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -99,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     # initialize Bluetooth
     bluetooth_client: LaMarzoccoBluetoothClient | None = None
     if entry.options.get(CONF_USE_BLUETOOTH, True) and (
-        token := settings.ble_auth_token
+        token := (entry.data.get(CONF_TOKEN) or settings.ble_auth_token)
     ):
         if CONF_MAC not in entry.data:
             for discovery_info in async_discovered_service_info(hass):
@@ -108,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                     and name.startswith(BT_MODEL_PREFIXES)
                     and name.split("_")[1] == serial
                 ):
-                    _LOGGER.debug("Found Bluetooth device, configuring with Bluetooth")
+                    _LOGGER.info("Found lamarzocco Bluetooth device, adding to entry")
                     # found a device, add MAC address to config entry
                     hass.config_entries.async_update_entry(
                         entry,
@@ -118,22 +122,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                         },
                     )
 
-        if not entry.data[CONF_TOKEN]:
-            # update the token in the config entry
-            hass.config_entries.async_update_entry(
-                entry,
-                data={
-                    **entry.data,
-                    CONF_TOKEN: token,
-                },
-            )
-
         if CONF_MAC in entry.data:
-            _LOGGER.debug("Initializing Bluetooth device")
-            bluetooth_client = LaMarzoccoBluetoothClient(
-                address_or_ble_device=entry.data[CONF_MAC],
-                ble_token=token,
-            )
+            ble_device = async_ble_device_from_address(hass, entry.data[CONF_MAC])
+            if ble_device:
+                _LOGGER.info("Setting up lamarzocco with Bluetooth")
+                bluetooth_client = LaMarzoccoBluetoothClient(
+                    ble_device=ble_device,
+                    ble_token=token,
+                )
+
+                async def disconnect_bluetooth(_: Event) -> None:
+                    """Stop push updates when hass stops."""
+                    await bluetooth_client.disconnect()
+
+                entry.async_on_unload(
+                    hass.bus.async_listen_once(
+                        EVENT_HOMEASSISTANT_STOP, disconnect_bluetooth
+                    )
+                )
+                entry.async_on_unload(bluetooth_client.disconnect)
+            else:
+                _LOGGER.info(
+                    "Bluetooth device not found during lamarzocco setup, continuing with cloud only"
+                )
 
     device = LaMarzoccoMachine(
         serial_number=entry.unique_id,

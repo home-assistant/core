@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:lightbulb-off"
+    },
+    "is_on": {
+      "condition": "mdi:lightbulb-on"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:lightbulb",
@@ -24,6 +32,14 @@
     },
     "turn_on": {
       "service": "mdi:lightbulb-on"
+    }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:lightbulb-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:lightbulb-on"
     }
   }
 }

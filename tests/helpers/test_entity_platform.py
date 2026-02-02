@@ -40,6 +40,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -1639,10 +1640,20 @@ async def test_platforms_sharing_services(hass: HomeAssistant) -> None:
     def handle_service(entity, data):
         entities.append(entity)
 
-    entity_platform1.async_register_entity_service("hello", {}, handle_service)
-    entity_platform2.async_register_entity_service(
-        "hello", {}, Mock(side_effect=AssertionError("Should not be called"))
+    entity_platform1.async_register_entity_service(
+        "hello", {}, handle_service, description_placeholders={"drink": "beer"}
     )
+    entity_platform2.async_register_entity_service(
+        "hello",
+        {},
+        Mock(side_effect=AssertionError("Should not be called")),
+        description_placeholders={"drink": "milk"},
+    )
+
+    descriptions = await async_get_all_descriptions(hass)
+    assert descriptions["mock_platform"]["hello"]["description_placeholders"] == {
+        "drink": "beer"
+    }
 
     await hass.services.async_call(
         "mock_platform", "hello", {"entity_id": "all"}, blocking=True

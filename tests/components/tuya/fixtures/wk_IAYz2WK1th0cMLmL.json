@@ -10,9 +10,9 @@
   "online": true,
   "sub": false,
   "time_zone": "+01:00",
-  "active_time": "2018-12-04T17:50:07+00:00",
-  "create_time": "2018-12-04T17:50:07+00:00",
-  "update_time": "2025-09-03T07:44:16+00:00",
+  "active_time": "2022-11-15T08:35:43+00:00",
+  "create_time": "2022-11-15T08:35:43+00:00",
+  "update_time": "2022-11-15T08:35:43+00:00",
   "function": {
     "switch": {
       "type": "Boolean",
@@ -22,6 +22,16 @@
       "type": "Boolean",
       "value": {}
     },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 10,
+        "max": 70,
+        "scale": 1,
+        "step": 5
+      }
+    },
     "eco": {
       "type": "Boolean",
       "value": {}
@@ -35,26 +45,14 @@
         "scale": 0,
         "step": 5
       }
+    }
+  },
+  "status_range": {
+    "eco": {
+      "type": "Boolean",
+      "value": {}
     },
-    "Mode": {
-      "type": "Enum",
-      "value": {
-        "range": ["0", "1"]
-      }
-    },
-    "program": {
-      "type": "Raw",
-      "value": {
-        "maxlen": 128
-      }
-    },
-    "tempSwitch": {
-      "type": "Enum",
-      "value": {
-        "range": ["0", "1"]
-      }
-    },
-    "TempSet": {
+    "temp_set": {
       "type": "Integer",
       "value": {
         "unit": "\u2103",
@@ -63,12 +61,6 @@
         "scale": 1,
         "step": 5
       }
-    }
-  },
-  "status_range": {
-    "eco": {
-      "type": "Boolean",
-      "value": {}
     },
     "switch": {
       "type": "Boolean",
@@ -87,43 +79,14 @@
         "scale": 0,
         "step": 5
       }
-    },
-    "floorTemp": {
-      "type": "Integer",
-      "value": {
-        "max": 198,
-        "min": 0,
-        "scale": 0,
-        "step": 5,
-        "unit": "\u2103"
-      }
-    },
-    "floortempFunction": {
-      "type": "Boolean",
-      "value": {}
-    },
-    "TempSet": {
-      "type": "Integer",
-      "value": {
-        "unit": "\u2103",
-        "min": 10,
-        "max": 70,
-        "scale": 1,
-        "step": 5
-      }
     }
   },
   "status": {
-    "switch": false,
-    "upper_temp": 55,
-    "eco": true,
-    "child_lock": false,
-    "Mode": 1,
-    "program": "DwYoDwceHhQoORceOhceOxceAAkoAAoeHhQoORceOhceOxceAAkoAAoeHhQoORceOhceOxce",
-    "floorTemp": 0,
-    "tempSwitch": 0,
-    "floortempFunction": true,
-    "TempSet": 41
+    "switch": true,
+    "temp_set": 46,
+    "upper_temp": 45,
+    "eco": false,
+    "child_lock": true
   },
   "set_up": true,
   "support_local": true

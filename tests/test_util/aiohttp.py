@@ -221,8 +221,8 @@ class AiohttpClientMockResponse:
 
         if (
             self._url.scheme != url.scheme
-            or self._url.host != url.host
-            or self._url.path != url.path
+            or self._url.raw_host != url.raw_host
+            or self._url.raw_path != url.raw_path
         ):
             return False
 

@@ -1,0 +1,92 @@
+{
+  "forecastHours": [
+    {
+      "interval": {
+        "startTime": "2025-02-05T23:00:00Z",
+        "endTime": "2025-02-06T00:00:00Z"
+      },
+      "displayDateTime": {
+        "year": 2025,
+        "month": 2,
+        "day": 5,
+        "hours": 15,
+        "utcOffset": "-28800s"
+      },
+      "isDaytime": true,
+      "weatherCondition": {
+        "iconBaseUri": "https://maps.gstatic.com/weather/v1/sunny",
+        "description": {
+          "text": "Sunny",
+          "languageCode": "en"
+        },
+        "type": "CLEAR"
+      },
+      "temperature": {
+        "degrees": 12.7,
+        "unit": "CELSIUS"
+      },
+      "feelsLikeTemperature": {
+        "degrees": 12,
+        "unit": "CELSIUS"
+      },
+      "dewPoint": {
+        "degrees": 2.7,
+        "unit": "CELSIUS"
+      },
+      "heatIndex": {
+        "degrees": 12.7,
+        "unit": "CELSIUS"
+      },
+      "windChill": {
+        "degrees": 12,
+        "unit": "CELSIUS"
+      },
+      "wetBulbTemperature": {
+        "degrees": 7.7,
+        "unit": "CELSIUS"
+      },
+      "relativeHumidity": 51,
+      "uvIndex": 1,
+      "precipitation": {
+        "probability": {
+          "percent": 0,
+          "type": "RAIN"
+        },
+        "qpf": {
+          "quantity": 0,
+          "unit": "MILLIMETERS"
+        }
+      },
+      "thunderstormProbability": 0,
+      "airPressure": {
+        "meanSeaLevelMillibars": 1019.13
+      },
+      "wind": {
+        "direction": {
+          "degrees": 335,
+          "cardinal": "NORTH_NORTHWEST"
+        },
+        "speed": {
+          "value": 10,
+          "unit": "KILOMETERS_PER_HOUR"
+        },
+        "gust": {
+          "value": 19,
+          "unit": "KILOMETERS_PER_HOUR"
+        }
+      },
+      "visibility": {
+        "distance": 16,
+        "unit": "KILOMETERS"
+      },
+      "cloudCover": 0,
+      "iceThickness": {
+        "thickness": 0,
+        "unit": "MILLIMETERS"
+      }
+    }
+  ],
+  "timeZone": {
+    "id": "America/Los_Angeles"
+  }
+}

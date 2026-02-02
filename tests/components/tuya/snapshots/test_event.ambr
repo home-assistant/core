@@ -1,4 +1,26 @@
 # serializer version: 1
+# name: test_alarm_message_event[event.intercom_doorbell_message-alarm_message-eyJzb21lIjogImpzb24iLCAicmFuZG9tIjogImRhdGEifQ==-sp_csr2fqitalj5o0tq]
+  ReadOnlyDict({
+    'device_class': 'doorbell',
+    'event_type': 'triggered',
+    'event_types': list([
+      'triggered',
+    ]),
+    'friendly_name': 'Intercom Doorbell message',
+    'message': '{"some": "json", "random": "data"}',
+  })
+# ---
+# name: test_alarm_message_event[event.intercom_doorbell_picture-doorbell_pic-aHR0cHM6Ly9zb21lLXBpY3R1cmUtdXJsLmNvbS9pbWFnZS5qcGc=-sp_csr2fqitalj5o0tq]
+  ReadOnlyDict({
+    'device_class': 'doorbell',
+    'event_type': 'triggered',
+    'event_types': list([
+      'triggered',
+    ]),
+    'friendly_name': 'Intercom Doorbell picture',
+    'message': 'https://some-picture-url.com/image.jpg',
+  })
+# ---
 # name: test_platform_setup_and_discovery[event.bathroom_smart_switch_button_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -43,7 +65,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      'event_type': 'click',
       'event_types': list([
         'click',
         'press',
@@ -55,7 +77,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2023-11-01T12:14:15.000+00:00',
   })
 # ---
 # name: test_platform_setup_and_discovery[event.bathroom_smart_switch_button_2-entry]
@@ -102,7 +124,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      'event_type': 'click',
       'event_types': list([
         'click',
         'press',
@@ -114,7 +136,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2023-11-01T12:14:15.000+00:00',
   })
 # ---
 # name: test_platform_setup_and_discovery[event.bouton_tempo_exterieur_button_1-entry]
@@ -162,7 +184,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      'event_type': 'press',
       'event_types': list([
         'click',
         'double_click',
@@ -175,6 +197,470 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2023-11-01T12:14:15.000+00:00',
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.burocam_doorbell_message-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'triggered',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.burocam_doorbell_message',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_icon': None,
+    'original_name': 'Doorbell message',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'doorbell_message',
+    'unique_id': 'tuya.svjjuwykgijjedurpsalarm_message',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.burocam_doorbell_message-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'doorbell',
+      'event_type': 'triggered',
+      'event_types': list([
+        'triggered',
+      ]),
+      'friendly_name': 'Bürocam Doorbell message',
+      'message': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.burocam_doorbell_message',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-11-01T12:14:15.000+00:00',
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.c9_doorbell_message-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'triggered',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.c9_doorbell_message',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_icon': None,
+    'original_name': 'Doorbell message',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'doorbell_message',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsalarm_message',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.c9_doorbell_message-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'doorbell',
+      'event_type': 'triggered',
+      'event_types': list([
+        'triggered',
+      ]),
+      'friendly_name': 'C9 Doorbell message',
+      'message': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.c9_doorbell_message',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-11-01T12:14:15.000+00:00',
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.c9_doorbell_picture-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'triggered',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.c9_doorbell_picture',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_icon': None,
+    'original_name': 'Doorbell picture',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'doorbell_picture',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsdoorbell_pic',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.c9_doorbell_picture-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'doorbell',
+      'event_type': 'triggered',
+      'event_types': list([
+        'triggered',
+      ]),
+      'friendly_name': 'C9 Doorbell picture',
+      'message': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.c9_doorbell_picture',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-11-01T12:14:15.000+00:00',
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.garage_camera_doorbell_message-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'triggered',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.garage_camera_doorbell_message',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_icon': None,
+    'original_name': 'Doorbell message',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'doorbell_message',
+    'unique_id': 'tuya.53fnjncm3jywuaznpsalarm_message',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.garage_camera_doorbell_message-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'doorbell',
+      'event_type': 'triggered',
+      'event_types': list([
+        'triggered',
+      ]),
+      'friendly_name': 'Garage Camera Doorbell message',
+      'message': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.garage_camera_doorbell_message',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-11-01T12:14:15.000+00:00',
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.intercom_doorbell_message-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'triggered',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.intercom_doorbell_message',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_icon': None,
+    'original_name': 'Doorbell message',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'doorbell_message',
+    'unique_id': 'tuya.qt0o5jlatiqf2rscpsalarm_message',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.intercom_doorbell_message-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'doorbell',
+      'event_type': 'triggered',
+      'event_types': list([
+        'triggered',
+      ]),
+      'friendly_name': 'Intercom Doorbell message',
+      'message': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.intercom_doorbell_message',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-11-01T12:14:15.000+00:00',
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.intercom_doorbell_picture-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'triggered',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.intercom_doorbell_picture',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_icon': None,
+    'original_name': 'Doorbell picture',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'doorbell_picture',
+    'unique_id': 'tuya.qt0o5jlatiqf2rscpsdoorbell_pic',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.intercom_doorbell_picture-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'doorbell',
+      'event_type': 'triggered',
+      'event_types': list([
+        'triggered',
+      ]),
+      'friendly_name': 'Intercom Doorbell picture',
+      'message': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.intercom_doorbell_picture',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-11-01T12:14:15.000+00:00',
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.mirilla_puerta_doorbell_message-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'triggered',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.mirilla_puerta_doorbell_message',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_icon': None,
+    'original_name': 'Doorbell message',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'doorbell_message',
+    'unique_id': 'tuya.i6xywcsymer1kmb6psalarm_message',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.mirilla_puerta_doorbell_message-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'doorbell',
+      'event_type': 'triggered',
+      'event_types': list([
+        'triggered',
+      ]),
+      'friendly_name': 'Mirilla puerta Doorbell message',
+      'message': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.mirilla_puerta_doorbell_message',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-11-01T12:14:15.000+00:00',
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.mirilla_puerta_doorbell_picture-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'triggered',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.mirilla_puerta_doorbell_picture',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.DOORBELL: 'doorbell'>,
+    'original_icon': None,
+    'original_name': 'Doorbell picture',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'doorbell_picture',
+    'unique_id': 'tuya.i6xywcsymer1kmb6psdoorbell_pic',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[event.mirilla_puerta_doorbell_picture-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'doorbell',
+      'event_type': 'triggered',
+      'event_types': list([
+        'triggered',
+      ]),
+      'friendly_name': 'Mirilla puerta Doorbell picture',
+      'message': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.mirilla_puerta_doorbell_picture',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-11-01T12:14:15.000+00:00',
   })
 # ---

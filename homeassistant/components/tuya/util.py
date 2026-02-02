@@ -6,7 +6,17 @@ from tuya_sharing import CustomerDevice
 
 from homeassistant.exceptions import ServiceValidationError
 
-from .const import DOMAIN, DPCode
+from .const import DOMAIN, DPCode, DPType
+
+_DPTYPE_MAPPING: dict[str, DPType] = {
+    "bitmap": DPType.BITMAP,
+    "bool": DPType.BOOLEAN,
+    "enum": DPType.ENUM,
+    "json": DPType.JSON,
+    "raw": DPType.RAW,
+    "string": DPType.STRING,
+    "value": DPType.INTEGER,
+}
 
 
 def get_dpcode(
@@ -30,6 +40,16 @@ def get_dpcode(
             return dpcode
 
     return None
+
+
+def parse_dptype(dptype: str) -> DPType | None:
+    """Parse DPType from device DPCode information."""
+    try:
+        return DPType(dptype)
+    except ValueError:
+        # Sometimes, we get ill-formed DPTypes from the cloud,
+        # this fixes them and maps them to the correct DPType.
+        return _DPTYPE_MAPPING.get(dptype)
 
 
 def remap_value(

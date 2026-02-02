@@ -1,38 +1,38 @@
 {
   "entity": {
     "sensor": {
+      "billing_cycle_length": {
+        "default": "mdi:calendar-range"
+      },
+      "billing_cycle_remaining": {
+        "default": "mdi:calendar-clock"
+      },
       "data_used": {
         "default": "mdi:network"
       },
       "downloaded": {
         "default": "mdi:download-network"
       },
-      "uploaded": {
-        "default": "mdi:upload-network"
-      },
-      "national_calls": {
-        "default": "mdi:phone"
+      "international_calls": {
+        "default": "mdi:phone-plus"
       },
       "mobile_calls": {
         "default": "mdi:phone"
       },
-      "international_calls": {
-        "default": "mdi:phone-plus"
-      },
-      "sms_sent": {
-        "default": "mdi:message-processing"
-      },
-      "voicemail_calls": {
+      "national_calls": {
         "default": "mdi:phone"
       },
       "other_calls": {
         "default": "mdi:phone"
       },
-      "billing_cycle_length": {
-        "default": "mdi:calendar-range"
+      "sms_sent": {
+        "default": "mdi:message-processing"
       },
-      "billing_cycle_remaining": {
-        "default": "mdi:calendar-clock"
+      "uploaded": {
+        "default": "mdi:upload-network"
+      },
+      "voicemail_calls": {
+        "default": "mdi:phone"
       }
     }
   }

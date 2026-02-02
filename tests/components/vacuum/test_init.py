@@ -54,25 +54,6 @@ def test_all(module: ModuleType) -> None:
 
 
 @pytest.mark.parametrize(
-    ("enum", "constant_prefix"), _create_tuples(vacuum.VacuumEntityFeature, "SUPPORT_")
-)
-@pytest.mark.parametrize(
-    "module",
-    [vacuum],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: Enum,
-    constant_prefix: str,
-    module: ModuleType,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, module, enum, constant_prefix, "2025.10"
-    )
-
-
-@pytest.mark.parametrize(
     ("enum", "constant_prefix"), _create_tuples(vacuum.VacuumActivity, "STATE_")
 )
 @pytest.mark.parametrize(

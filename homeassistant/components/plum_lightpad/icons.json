@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "light": {
-      "glow_ring": {
-        "default": "mdi:crop-portrait"
-      }
-    }
-  }
-}

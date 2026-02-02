@@ -86,12 +86,43 @@ OPERATIONAL_STATE_MAP = {
     clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
 }
 
+OPERATIONAL_STATE_ERROR_MAP = {
+    # enum with known Error state values which we can translate
+    clusters.OperationalState.Enums.ErrorStateEnum.kNoError: "no_error",
+    clusters.OperationalState.Enums.ErrorStateEnum.kUnableToStartOrResume: "unable_to_start_or_resume",
+    clusters.OperationalState.Enums.ErrorStateEnum.kUnableToCompleteOperation: "unable_to_complete_operation",
+    clusters.OperationalState.Enums.ErrorStateEnum.kCommandInvalidInState: "command_invalid_in_state",
+}
+
 RVC_OPERATIONAL_STATE_MAP = {
     # enum with known Operation state values which we can translate
     **OPERATIONAL_STATE_MAP,
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kSeekingCharger: "seeking_charger",
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kCharging: "charging",
     clusters.RvcOperationalState.Enums.OperationalStateEnum.kDocked: "docked",
+}
+
+RVC_OPERATIONAL_STATE_ERROR_MAP = {
+    # enum with known Error state values which we can translate
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kNoError: "no_error",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kUnableToStartOrResume: "unable_to_start_or_resume",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kUnableToCompleteOperation: "unable_to_complete_operation",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kCommandInvalidInState: "command_invalid_in_state",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kFailedToFindChargingDock: "failed_to_find_charging_dock",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kStuck: "stuck",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kDustBinMissing: "dust_bin_missing",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kDustBinFull: "dust_bin_full",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kWaterTankEmpty: "water_tank_empty",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kWaterTankMissing: "water_tank_missing",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kWaterTankLidOpen: "water_tank_lid_open",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kMopCleaningPadMissing: "mop_cleaning_pad_missing",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kLowBattery: "low_battery",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kCannotReachTargetArea: "cannot_reach_target_area",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kDirtyWaterTankFull: "dirty_water_tank_full",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kDirtyWaterTankMissing: "dirty_water_tank_missing",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kWheelsJammed: "wheels_jammed",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kBrushJammed: "brush_jammed",
+    clusters.RvcOperationalState.Enums.ErrorStateEnum.kNavigationSensorObscured: "navigation_sensor_obscured",
 }
 
 BOOST_STATE_MAP = {
@@ -152,6 +183,7 @@ PUMP_CONTROL_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kUnknownEnumValue: None,
 }
 
+HUMIDITY_SCALING_FACTOR = 100
 TEMPERATURE_SCALING_FACTOR = 100
 
 
@@ -165,7 +197,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.SENSOR, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterSensorEntityDescription(SensorEntityDescription, MatterEntityDescription):
     """Describe Matter sensor entities."""
 
@@ -308,7 +340,7 @@ DISCOVERY_SCHEMAS = [
             key="TemperatureSensor",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
-            device_to_ha=lambda x: x / 100,
+            device_to_ha=lambda x: x / TEMPERATURE_SCALING_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
@@ -344,13 +376,14 @@ DISCOVERY_SCHEMAS = [
             key="HumiditySensor",
             native_unit_of_measurement=PERCENTAGE,
             device_class=SensorDeviceClass.HUMIDITY,
-            device_to_ha=lambda x: x / 100,
+            device_to_ha=lambda x: x / HUMIDITY_SCALING_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
         required_attributes=(
             clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue,
         ),
+        allow_multi=True,  # also used for climate entity
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1101,6 +1134,19 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="OperationalStateOperationalError",
+            translation_key="operational_error",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(OPERATIONAL_STATE_ERROR_MAP.values()),
+            device_to_ha=lambda x: OPERATIONAL_STATE_ERROR_MAP.get(x.errorStateID),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.OperationalState.Attributes.OperationalError,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
         entity_description=MatterListSensorEntityDescription(
             key="RvcOperationalStateCurrentPhase",
             translation_key="current_phase",
@@ -1135,13 +1181,26 @@ DISCOVERY_SCHEMAS = [
             key="ThermostatLocalTemperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
-            device_to_ha=lambda x: x / 100,
+            device_to_ha=lambda x: x / TEMPERATURE_SCALING_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),
         device_type=(device_types.Thermostat,),
         allow_multi=True,  # also used for climate entity
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThermostatPIHeatingDemand",
+            translation_key="pi_heating_demand",
+            native_unit_of_measurement=PERCENTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.Thermostat.Attributes.PIHeatingDemand,),
+        device_type=(device_types.Thermostat,),
+        featuremap_contains=clusters.Thermostat.Bitmaps.Feature.kHeating,
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -1178,6 +1237,19 @@ DISCOVERY_SCHEMAS = [
         allow_multi=True,  # also used for vacuum entity
         # don't discover this entry if the supported state list is empty
         secondary_value_is_not=[],
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="RvcOperationalStateOperationalError",
+            translation_key="operational_error",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            options=list(RVC_OPERATIONAL_STATE_ERROR_MAP.values()),
+            device_to_ha=lambda x: RVC_OPERATIONAL_STATE_ERROR_MAP.get(x.errorStateID),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.RvcOperationalState.Attributes.OperationalError,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,

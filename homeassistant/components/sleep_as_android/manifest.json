@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["webhook"],
   "documentation": "https://www.home-assistant.io/integrations/sleep_as_android",
+  "integration_type": "service",
   "iot_class": "local_push",
   "quality_scale": "platinum"
 }
