@@ -376,6 +376,20 @@
       },
       "name": "Clear lock user code"
     },
+    "get_lock_usercode": {
+      "description": "Gets user codes from a lock.",
+      "fields": {
+        "code_slot": {
+          "description": "Code slot to get code from. If not specified, all code slots are returned.",
+          "name": "Code slot"
+        },
+        "refresh": {
+          "description": "Whether to poll the lock for fresh data instead of using cached values. Only supported when querying a single code slot.",
+          "name": "Refresh"
+        }
+      },
+      "name": "Get lock user code"
+    },
     "invoke_cc_api": {
       "description": "Calls a Command Class API on a node. Some Command Classes can't be fully controlled via the `set_value` action and require direct calls to the Command Class API.",
       "fields": {

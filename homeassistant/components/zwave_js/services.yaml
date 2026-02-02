@@ -12,6 +12,23 @@ clear_lock_usercode:
       selector:
         text:
 
+get_lock_usercode:
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
+  fields:
+    code_slot:
+      required: false
+      example: 1
+      selector:
+        text:
+    refresh:
+      required: false
+      default: false
+      selector:
+        boolean:
+
 set_lock_usercode:
   target:
     entity:
