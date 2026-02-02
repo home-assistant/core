@@ -231,7 +231,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     @callback
     def _update_values(self) -> None:
         """Set base values from underlying lights of a group."""
-        supported_color_modes: set[ColorMode | str] = set()
+        supported_color_modes: set[ColorMode] = set()
         lights_with_color_support = 0
         lights_with_color_temp_support = 0
         lights_with_dimming_support = 0
