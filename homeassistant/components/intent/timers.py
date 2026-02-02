@@ -910,7 +910,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
             device_id=intent_obj.device_id,
             satellite_id=intent_obj.satellite_id,
             language=intent_obj.language,
-            agent_id=intent_obj.conversation_agent_id,
+            agent_id=intent_obj.conversation_agent_id or "timer_command_validation",
         )
 
         # check for sentence trigger
