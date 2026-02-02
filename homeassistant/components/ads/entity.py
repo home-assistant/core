@@ -31,7 +31,8 @@ class AdsEntity(Entity):
         self._ads_hub = ads_hub
         self._ads_var = ads_var
         self._event: asyncio.Event | None = None
-        self._attr_unique_id = unique_id or ads_var
+        if unique_id is not None:
+            self._attr_unique_id = unique_id
         self._attr_name = name
 
     async def async_initialize_device(
