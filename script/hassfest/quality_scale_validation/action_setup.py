@@ -54,7 +54,7 @@ def validate(
         async_setup_entry := _get_setup_entry_function(module)
     ) and _calls_service_registration(async_setup_entry):
         errors.append(
-            f"Integration registers services in {module_file} async_setup_entry"
+            f"Integration registers services in {module_file} (async_setup_entry)"
         )
 
     for platform in Platform:
