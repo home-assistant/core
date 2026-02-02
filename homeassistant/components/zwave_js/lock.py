@@ -26,12 +26,7 @@ from zwave_js_server.util.lock import (
 )
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity, LockState
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -43,12 +38,10 @@ from .const import (
     ATTR_HOLD_AND_RELEASE_TIME,
     ATTR_LOCK_TIMEOUT,
     ATTR_OPERATION_TYPE,
-    ATTR_REFRESH,
     ATTR_TWIST_ASSIST,
     DOMAIN,
     LOGGER,
     SERVICE_CLEAR_LOCK_USERCODE,
-    SERVICE_GET_LOCK_USERCODE,
     SERVICE_SET_LOCK_CONFIGURATION,
     SERVICE_SET_LOCK_USERCODE,
 )
@@ -104,16 +97,6 @@ async def async_setup_entry(
             vol.Required(ATTR_USERCODE): cv.string,
         },
         "async_set_lock_usercode",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_GET_LOCK_USERCODE,
-        {
-            vol.Optional(ATTR_CODE_SLOT): vol.Coerce(int),
-            vol.Optional(ATTR_REFRESH, default=False): cv.boolean,
-        },
-        "async_get_lock_usercode",
-        supports_response=SupportsResponse.ONLY,
     )
 
     platform.async_register_entity_service(
