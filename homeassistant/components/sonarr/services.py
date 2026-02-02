@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from typing import Any, TypeVar, cast
+from typing import Any, cast
 
 from aiopyarr import exceptions
 import voluptuous as vol
@@ -16,9 +16,9 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_DISKS,
+    ATTR_ENTRY_ID,
     ATTR_EPISODES,
     ATTR_SHOWS,
-    CONF_ENTRY_ID,
     DEFAULT_UPCOMING_DAYS,
     DOMAIN,
     SERVICE_GET_DISKSPACE,
@@ -38,8 +38,6 @@ from .helpers import (
     format_wanted,
 )
 
-_T = TypeVar("_T")
-
 # Service parameter constants
 CONF_DAYS = "days"
 CONF_MAX_ITEMS = "max_items"
@@ -51,7 +49,7 @@ DEFAULT_MAX_ITEMS = 0
 
 SERVICE_BASE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(
+        vol.Required(ATTR_ENTRY_ID): selector.ConfigEntrySelector(
             {"integration": DOMAIN}
         ),
     }
@@ -95,7 +93,7 @@ SERVICE_GET_WANTED_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 
 def _get_config_entry_from_service_data(call: ServiceCall) -> SonarrConfigEntry:
     """Return config entry for entry id."""
-    config_entry_id: str = call.data[CONF_ENTRY_ID]
+    config_entry_id: str = call.data[ATTR_ENTRY_ID]
     if not (entry := call.hass.config_entries.async_get_entry(config_entry_id)):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -111,7 +109,7 @@ def _get_config_entry_from_service_data(call: ServiceCall) -> SonarrConfigEntry:
     return cast(SonarrConfigEntry, entry)
 
 
-async def _handle_api_errors(func: Callable[[], Awaitable[_T]]) -> _T:
+async def _handle_api_errors[_T](func: Callable[[], Awaitable[_T]]) -> _T:
     """Handle API errors and raise HomeAssistantError with user-friendly messages."""
     try:
         return await func()

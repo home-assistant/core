@@ -8,9 +8,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sonarr.const import (
     ATTR_DISKS,
+    ATTR_ENTRY_ID,
     ATTR_EPISODES,
     ATTR_SHOWS,
-    CONF_ENTRY_ID,
     DOMAIN,
     SERVICE_GET_DISKSPACE,
     SERVICE_GET_EPISODES,
@@ -26,10 +26,20 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from tests.common import MockConfigEntry
 
 
-async def test_service_config_entry_not_loaded_state(
+@pytest.mark.parametrize(
+    "service",
+    [
+        SERVICE_GET_SERIES,
+        SERVICE_GET_QUEUE,
+        SERVICE_GET_DISKSPACE,
+        SERVICE_GET_UPCOMING,
+        SERVICE_GET_WANTED,
+    ],
+)
+async def test_services_config_entry_not_loaded_state(
     hass: HomeAssistant,
-    mock_sonarr: MagicMock,
     mock_config_entry: MockConfigEntry,
+    service: str,
 ) -> None:
     """Test service call when config entry is in failed state."""
     mock_config_entry.add_to_hass(hass)
@@ -39,23 +49,34 @@ async def test_service_config_entry_not_loaded_state(
     with pytest.raises(ServiceValidationError, match="service_not_found"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_SERIES,
-            {CONF_ENTRY_ID: mock_config_entry.entry_id},
+            service,
+            {ATTR_ENTRY_ID: mock_config_entry.entry_id},
             blocking=True,
             return_response=True,
         )
 
 
-async def test_service_integration_not_found(
+@pytest.mark.parametrize(
+    "service",
+    [
+        SERVICE_GET_SERIES,
+        SERVICE_GET_QUEUE,
+        SERVICE_GET_DISKSPACE,
+        SERVICE_GET_UPCOMING,
+        SERVICE_GET_WANTED,
+    ],
+)
+async def test_services_integration_not_found(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    service: str,
 ) -> None:
     """Test service call with non-existent config entry."""
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_SERIES,
-            {CONF_ENTRY_ID: "non_existent_entry_id"},
+            service,
+            {ATTR_ENTRY_ID: "non_existent_entry_id"},
             blocking=True,
             return_response=True,
         )
@@ -72,7 +93,7 @@ async def test_service_get_series(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_SERIES,
-        {CONF_ENTRY_ID: init_integration.entry_id},
+        {ATTR_ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -93,7 +114,7 @@ async def test_service_get_queue(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_QUEUE,
-        {CONF_ENTRY_ID: init_integration.entry_id},
+        {ATTR_ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -105,9 +126,20 @@ async def test_service_get_queue(
     assert response == snapshot
 
 
-async def test_service_entry_not_loaded(
+@pytest.mark.parametrize(
+    "service",
+    [
+        SERVICE_GET_SERIES,
+        SERVICE_GET_QUEUE,
+        SERVICE_GET_DISKSPACE,
+        SERVICE_GET_UPCOMING,
+        SERVICE_GET_WANTED,
+    ],
+)
+async def test_services_entry_not_loaded(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    service: str,
 ) -> None:
     """Test services with unloaded config entry."""
     # Unload the entry
@@ -117,19 +149,8 @@ async def test_service_entry_not_loaded(
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_SERIES,
-            {CONF_ENTRY_ID: init_integration.entry_id},
-            blocking=True,
-            return_response=True,
-        )
-
-    assert exc_info.value.translation_key == "not_loaded"
-
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_QUEUE,
-            {CONF_ENTRY_ID: init_integration.entry_id},
+            service,
+            {ATTR_ENTRY_ID: init_integration.entry_id},
             blocking=True,
             return_response=True,
         )
@@ -158,7 +179,7 @@ async def test_service_get_queue_empty(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_QUEUE,
-        {CONF_ENTRY_ID: init_integration.entry_id},
+        {ATTR_ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -179,7 +200,7 @@ async def test_service_get_diskspace(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_DISKSPACE,
-        {CONF_ENTRY_ID: init_integration.entry_id},
+        {ATTR_ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -228,7 +249,7 @@ async def test_service_get_diskspace_multiple_drives(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_DISKSPACE,
-        {CONF_ENTRY_ID: init_integration.entry_id},
+        {ATTR_ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -273,7 +294,7 @@ async def test_service_get_upcoming(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_UPCOMING,
-        {CONF_ENTRY_ID: init_integration.entry_id},
+        {ATTR_ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -294,7 +315,7 @@ async def test_service_get_wanted(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_WANTED,
-        {CONF_ENTRY_ID: init_integration.entry_id},
+        {ATTR_ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -315,7 +336,7 @@ async def test_service_get_episodes(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_EPISODES,
-        {CONF_ENTRY_ID: init_integration.entry_id, "series_id": 105},
+        {ATTR_ENTRY_ID: init_integration.entry_id, "series_id": 105},
         blocking=True,
         return_response=True,
     )
@@ -336,7 +357,7 @@ async def test_service_get_episodes_with_season_filter(
         DOMAIN,
         SERVICE_GET_EPISODES,
         {
-            CONF_ENTRY_ID: init_integration.entry_id,
+            ATTR_ENTRY_ID: init_integration.entry_id,
             "series_id": 105,
             "season_number": 1,
         },
@@ -452,7 +473,7 @@ async def test_service_get_queue_image_fallback(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_QUEUE,
-        {CONF_ENTRY_ID: init_integration.entry_id},
+        {ATTR_ENTRY_ID: init_integration.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -492,7 +513,7 @@ async def test_service_get_queue_season_pack(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_QUEUE,
-        {CONF_ENTRY_ID: mock_config_entry.entry_id},
+        {ATTR_ENTRY_ID: mock_config_entry.entry_id},
         blocking=True,
         return_response=True,
     )
@@ -522,43 +543,67 @@ async def test_service_get_queue_season_pack(
     assert season_pack["quality"] == "Bluray-1080p"
 
 
-async def test_service_get_series_api_connection_error(
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [
+        (SERVICE_GET_SERIES, "async_get_series"),
+        (SERVICE_GET_QUEUE, "async_get_queue"),
+        (SERVICE_GET_DISKSPACE, "async_get_diskspace"),
+        (SERVICE_GET_UPCOMING, "async_get_calendar"),
+        (SERVICE_GET_WANTED, "async_get_wanted"),
+    ],
+)
+async def test_services_api_connection_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_sonarr: MagicMock,
+    service: str,
+    method: str,
 ) -> None:
-    """Test get_series service with API connection error."""
+    """Test services with API connection error."""
     # Configure the mock to raise an exception
-    mock_sonarr.async_get_series.side_effect = __import__(
+    getattr(mock_sonarr, method).side_effect = __import__(
         "aiopyarr"
     ).exceptions.ArrConnectionException("Connection failed")
 
     with pytest.raises(HomeAssistantError, match="Failed to connect to Sonarr"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_SERIES,
-            {CONF_ENTRY_ID: init_integration.entry_id},
+            service,
+            {ATTR_ENTRY_ID: init_integration.entry_id},
             blocking=True,
             return_response=True,
         )
 
 
-async def test_service_get_series_api_auth_error(
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [
+        (SERVICE_GET_SERIES, "async_get_series"),
+        (SERVICE_GET_QUEUE, "async_get_queue"),
+        (SERVICE_GET_DISKSPACE, "async_get_diskspace"),
+        (SERVICE_GET_UPCOMING, "async_get_calendar"),
+        (SERVICE_GET_WANTED, "async_get_wanted"),
+    ],
+)
+async def test_services_api_auth_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_sonarr: MagicMock,
+    service: str,
+    method: str,
 ) -> None:
-    """Test get_series service with API authentication error."""
+    """Test services with API authentication error."""
     # Configure the mock to raise an exception
-    mock_sonarr.async_get_series.side_effect = __import__(
+    getattr(mock_sonarr, method).side_effect = __import__(
         "aiopyarr"
     ).exceptions.ArrAuthenticationException("Authentication failed")
 
     with pytest.raises(HomeAssistantError, match="Authentication failed for Sonarr"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_GET_SERIES,
-            {CONF_ENTRY_ID: init_integration.entry_id},
+            service,
+            {ATTR_ENTRY_ID: init_integration.entry_id},
             blocking=True,
             return_response=True,
         )
