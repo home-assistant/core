@@ -387,7 +387,7 @@ async def test_model_list(
         },
         {
             "label": "Claude Haiku 3.5",
-            "value": "claude-3-5-haiku-latest",
+            "value": "claude-3-5-haiku-20241022",
         },
         {
             "label": "Claude Haiku 3",
@@ -500,7 +500,7 @@ async def test_model_list_error(
                     CONF_LLM_HASS_API: [],
                 },
                 {
-                    CONF_CHAT_MODEL: "claude-3-5-haiku-latest",
+                    CONF_CHAT_MODEL: "claude-3-5-haiku-20241022",
                     CONF_TEMPERATURE: 1.0,
                 },
                 {
@@ -513,7 +513,7 @@ async def test_model_list_error(
                 CONF_RECOMMENDED: False,
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 1.0,
-                CONF_CHAT_MODEL: "claude-3-5-haiku-latest",
+                CONF_CHAT_MODEL: "claude-3-5-haiku-20241022",
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 10,
@@ -581,6 +581,7 @@ async def test_model_list_error(
                 CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: DEFAULT[CONF_CHAT_MODEL],
                 CONF_MAX_TOKENS: DEFAULT[CONF_MAX_TOKENS],
+                CONF_THINKING_BUDGET: 0,
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_MAX_USES: 5,
                 CONF_WEB_SEARCH_USER_LOCATION: False,
