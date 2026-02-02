@@ -1532,10 +1532,6 @@ ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
     ),
-    SensorEntityDescription(
-        key="version",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
 )
 
 ENERGY_HISTORY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = tuple(

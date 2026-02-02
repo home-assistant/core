@@ -41,7 +41,7 @@ from .coordinator import (
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
-from .helpers import flatten
+from .helpers import async_update_device_sw_version, flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 from .services import async_setup_services
 
@@ -161,13 +161,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             coordinator = TeslemetryVehicleDataCoordinator(
                 hass, entry, vehicle, product
             )
+            firmware = vehicle_metadata[vin].get("firmware")
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},
                 manufacturer="Tesla",
                 configuration_url="https://teslemetry.com/console",
                 name=product["display_name"],
                 model=vehicle.model,
+                model_id=vin[3],
                 serial_number=vin,
+                sw_version=firmware,
             )
             current_devices.add((DOMAIN, vin))
 
@@ -185,7 +188,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 create_handle_vehicle_stream(vin, coordinator),
                 {"vin": vin},
             )
-            firmware = vehicle_metadata[vin].get("firmware", "Unknown")
             stream_vehicle = stream.get_vehicle(vin)
             poll = vehicle_metadata[vin].get("polling", False)
 
@@ -276,23 +278,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         ),
     )
 
-    # Add energy device models
-    for energysite in energysites:
-        models = set()
-        for gateway in energysite.info_coordinator.data.get("components_gateways", []):
-            if gateway.get("part_name"):
-                models.add(gateway["part_name"])
-        for battery in energysite.info_coordinator.data.get("components_batteries", []):
-            if battery.get("part_name"):
-                models.add(battery["part_name"])
-        if models:
-            energysite.device["model"] = ", ".join(sorted(models))
+    # Register listeners for polling vehicle sw_version updates
+    for vehicle_data in vehicles:
+        if vehicle_data.poll:
+            entry.async_on_unload(
+                vehicle_data.coordinator.async_add_listener(
+                    create_vehicle_polling_listener(
+                        hass, vehicle_data.vin, vehicle_data.coordinator
+                    )
+                )
+            )
 
-        # Create the energy site device regardless of it having entities
-        # This is so users with a Wall Connector but without a Powerwall can still make service calls
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id, **energysite.device
-        )
+    # Setup energy devices with models, versions, and listeners
+    for energysite in energysites:
+        async_setup_energy_device(hass, entry, energysite, device_registry)
 
     # Remove devices that are no longer present
     for device_entry in dr.async_entries_for_config_entry(
@@ -369,6 +368,40 @@ def create_handle_vehicle_stream(vin: str, coordinator) -> Callable[[dict], None
     return handle_vehicle_stream
 
 
+def async_setup_energy_device(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    energysite: TeslemetryEnergyData,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Set up energy device with models, versions, and listeners."""
+    data = energysite.info_coordinator.data
+    models = set()
+    for component in (
+        *data.get("components_gateways", []),
+        *data.get("components_batteries", []),
+    ):
+        if part_name := component.get("part_name"):
+            models.add(part_name)
+    if models:
+        energysite.device["model"] = ", ".join(sorted(models))
+
+    if version := data.get("version"):
+        energysite.device["sw_version"] = version
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, **energysite.device
+    )
+
+    entry.async_on_unload(
+        energysite.info_coordinator.async_add_listener(
+            create_energy_info_listener(
+                hass, energysite.id, energysite.info_coordinator
+            )
+        )
+    )
+
+
 async def async_setup_stream(
     hass: HomeAssistant, entry: TeslemetryConfigEntry, vehicle: TeslemetryVehicleData
 ):
@@ -380,3 +413,54 @@ async def async_setup_stream(
         vehicle.stream_vehicle.prefer_typed(True),
         f"Prefer typed for {vehicle.vin}",
     )
+
+    entry.async_on_unload(
+        vehicle.stream_vehicle.listen_Version(
+            create_vehicle_streaming_listener(hass, vehicle.vin)
+        )
+    )
+
+
+def create_vehicle_streaming_listener(
+    hass: HomeAssistant, vin: str
+) -> Callable[[str | None], None]:
+    """Create a listener for vehicle streaming version updates."""
+
+    def handle_version(value: str | None) -> None:
+        """Handle version update from stream."""
+        if value is not None:
+            # Remove build from version (e.g., "2024.44.25 abc123" -> "2024.44.25")
+            sw_version = value.split(" ")[0]
+            async_update_device_sw_version(hass, vin, sw_version)
+
+    return handle_version
+
+
+def create_vehicle_polling_listener(
+    hass: HomeAssistant, vin: str, coordinator: TeslemetryVehicleDataCoordinator
+) -> Callable[[], None]:
+    """Create a listener for vehicle polling coordinator updates."""
+
+    def handle_update() -> None:
+        """Handle coordinator update."""
+        if version := coordinator.data.get("vehicle_state_car_version"):
+            # Remove build from version (e.g., "2024.44.25 abc123" -> "2024.44.25")
+            sw_version = version.split(" ")[0]
+            async_update_device_sw_version(hass, vin, sw_version)
+
+    return handle_update
+
+
+def create_energy_info_listener(
+    hass: HomeAssistant,
+    site_id: int,
+    coordinator: TeslemetryEnergySiteInfoCoordinator,
+) -> Callable[[], None]:
+    """Create a listener for energy site info coordinator updates."""
+
+    def handle_update() -> None:
+        """Handle coordinator update."""
+        if version := coordinator.data.get("version"):
+            async_update_device_sw_version(hass, str(site_id), version)
+
+    return handle_update
