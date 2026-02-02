@@ -655,7 +655,7 @@ colorlog==6.10.1
 colorthief==0.2.1
 
 # homeassistant.components.compit
-compit-inext-api==0.6.0
+compit-inext-api==0.7.0
 
 # homeassistant.components.concord232
 concord232==0.15.1
@@ -1134,7 +1134,7 @@ imeon_inverter_api==0.4.0
 imgw_pib==2.0.1
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.11
+incomfort-client==0.6.12
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -1877,7 +1877,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.meteoclimatic
-pymeteoclimatic==0.1.0
+pymeteoclimatic==0.1.1
 
 # homeassistant.components.assist_pipeline
 pymicro-vad==1.0.1
@@ -2187,7 +2187,7 @@ python-pooldose==0.8.2
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==4.8.0
+python-roborock==4.12.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.46
@@ -2672,7 +2672,7 @@ wallbox==0.9.0
 watchdog==6.0.0
 
 # homeassistant.components.waterfurnace
-waterfurnace==1.4.0
+waterfurnace==1.5.1
 
 # homeassistant.components.watergate
 watergate-local-api==2025.1.0
