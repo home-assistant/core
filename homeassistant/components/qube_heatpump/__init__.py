@@ -5,7 +5,7 @@ from __future__ import annotations
 import contextlib
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import issue_registry as ir
@@ -23,10 +23,6 @@ class QubeData:
     hub: QubeHub
     coordinator: QubeCoordinator
     version: str
-    tariff_tracker: Any | None = None
-    thermic_tariff_tracker: Any | None = None
-    daily_tariff_tracker: Any | None = None
-    daily_thermic_tariff_tracker: Any | None = None
 
 
 type QubeConfigEntry = ConfigEntry[QubeData]

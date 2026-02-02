@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import socket
 
 from python_qube_heatpump import QubeClient
 from python_qube_heatpump.models import QubeState
@@ -57,19 +58,22 @@ class QubeHub:
 
     async def async_resolve_ip(self) -> None:
         """Resolve the host to a concrete IP address for diagnostics."""
-        # The library client doesn't expose resolve_ip yet, assuming it handles connection internally
-        # or we might need to add it to the library if diagnostics depend on it.
-        # For now, we can skip or implement locally if critical.
-        # Given the library abstraction, we might assume client handles this.
-        # However, the library 'client.py' we generated doesn't have resolve_ip.
-        # We'll rely on the client's internal handling or just not expose it for now if not needed.
+        try:
+            # Run DNS resolution in executor to avoid blocking
+            result = await self._hass.async_add_executor_job(
+                socket.gethostbyname, self.client.host
+            )
+            self._resolved_ip = result
+        except (OSError, socket.gaierror):
+            # If resolution fails, use the original host
+            self._resolved_ip = self.client.host
 
     async def async_connect(self) -> None:
         """Connect to the Modbus server."""
         now = asyncio.get_running_loop().time()
         if now < self._next_connect_ok_at:
             # We are in backoff
-            pass
+            return
 
         connected = await self.client.connect()
         if not connected:
