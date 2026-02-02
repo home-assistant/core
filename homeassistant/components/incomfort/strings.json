@@ -90,6 +90,7 @@
           "boiler_int": "Boiler internal",
           "buffer": "Buffer",
           "central_heating": "Central heating",
+          "central_heating_low": "Central heating low",
           "central_heating_rf": "Central heating rf",
           "cv_temperature_too_high_e1": "Temperature too high",
           "flame_detection_fault_e6": "Flame detection fault",
