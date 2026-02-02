@@ -199,7 +199,9 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         """Get the usercode at index X on the lock."""
         if code_slot is None and refresh:
             raise ServiceValidationError(
-                "The refresh option is only supported when querying a single code slot"
+                "The refresh option is only supported when querying a single code slot",
+                translation_domain=DOMAIN,
+                translation_key="get_lock_usercode_only_refresh_single",
             )
         if code_slot is not None:
             return await self._async_get_single_usercode(code_slot, refresh)

@@ -291,6 +291,11 @@
       }
     }
   },
+  "exceptions": {
+    "get_lock_usercode_only_refresh_single": {
+      "message": "The refresh option is only supported when querying a single code slot"
+    }
+  },
   "issues": {
     "device_config_file_changed": {
       "fix_flow": {
