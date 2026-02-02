@@ -5,8 +5,11 @@ from datetime import timedelta
 from bond_async import Action, DeviceType
 import pytest
 
-from homeassistant.components.bond.const import ATTR_POWER_STATE, DOMAIN
-from homeassistant.components.bond.services import SERVICE_SET_POWER_TRACKED_STATE
+from homeassistant.components.bond.const import DOMAIN
+from homeassistant.components.bond.services import (
+    ATTR_POWER_STATE,
+    SERVICE_SET_POWER_TRACKED_STATE,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant

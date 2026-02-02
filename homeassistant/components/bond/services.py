@@ -10,13 +10,19 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, service
 
-from .const import ATTR_POWER_STATE, DOMAIN
+from .const import DOMAIN
 
+ATTR_POWER_STATE = "power_state"
+
+# Fan
 SERVICE_SET_FAN_SPEED_TRACKED_STATE = "set_fan_speed_tracked_state"
+
+# Switch
 SERVICE_SET_POWER_TRACKED_STATE = "set_switch_power_tracked_state"
+
+# Light
 SERVICE_SET_LIGHT_POWER_TRACKED_STATE = "set_light_power_tracked_state"
 SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE = "set_light_brightness_tracked_state"
-
 SERVICE_START_INCREASING_BRIGHTNESS = "start_increasing_brightness"
 SERVICE_START_DECREASING_BRIGHTNESS = "start_decreasing_brightness"
 SERVICE_STOP = "stop"
