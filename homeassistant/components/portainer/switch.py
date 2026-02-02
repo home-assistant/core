@@ -37,6 +37,9 @@ class PortainerSwitchEntityDescription(SwitchEntityDescription):
     turn_off_fn: Callable[[str, Portainer, int, str], Coroutine[Any, Any, None]]
 
 
+PARALLEL_UPDATES = 1
+
+
 async def perform_action(
     action: str, portainer: Portainer, endpoint_id: int, container_id: str
 ) -> None:
