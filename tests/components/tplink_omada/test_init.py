@@ -60,12 +60,16 @@ async def test_setup_entry_login_failed_raises_configentryauthfailed(
     assert mock_config_entry.state == entry_state
 
 
-async def test_missing_devices_removed_at_startup(
+async def test_automatic_missing_device_cleanup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_omada_client: MagicMock,
 ) -> None:
-    """Test missing devices are removed at startup."""
+    """Test missing devices are removed on coordinator data refresh.
+
+    This validates the cleanup mechanism that runs during coordinator refresh,
+    which is triggered during initial setup.
+    """
     mock_config_entry = MockConfigEntry(
         title="Test Omada Controller",
         domain=DOMAIN,
@@ -85,17 +89,21 @@ async def test_missing_devices_removed_at_startup(
     assert device_registry.async_get(device_entry.id) == device_entry
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert device_registry.async_get(device_entry.id) is None
 
 
-async def test_missing_client_trackers_removed_at_startup(
+async def test_automatic_missing_client_cleanup(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test missing client trackers are removed at startup."""
+    """Test missing client trackers are removed on coordinator data refresh.
+
+    This validates the cleanup mechanism that runs during coordinator refresh,
+    which is triggered during initial setup.
+    """
 
     mock_config_entry = MockConfigEntry(
         title="Test Omada Controller",

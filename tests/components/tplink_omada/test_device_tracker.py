@@ -16,7 +16,6 @@ from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-UPDATE_INTERVAL = timedelta(seconds=10)
 POLL_INTERVAL = timedelta(seconds=POLL_CLIENTS + 10)
 
 MOCK_ENTRY_DATA = {
@@ -43,8 +42,7 @@ async def init_integration(
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     return mock_config_entry
 
@@ -114,28 +112,3 @@ async def _setup_client_disconnect(
 
     mock_omada_site_client.get_connected_clients.reset_mock()
     mock_omada_site_client.get_connected_clients.side_effect = get_filtered_clients
-
-
-async def test_automatic_stale_tracker_cleanup(
-    hass: HomeAssistant,
-    mock_omada_clients_only_site_client: MagicMock,
-    init_integration: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Verify that stale client tracker entities are removed automatically."""
-
-    unknown = entity_registry.async_get_or_create(
-        domain="device_tracker",
-        platform=DOMAIN,
-        unique_id="scanner_Default_11-11-11-11-11-11",
-        config_entry=init_integration,
-    )
-
-    assert entity_registry.async_get(unknown.entity_id)
-
-    # Trigger coordinator refresh to run cleanup
-    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert mock_omada_clients_only_site_client.get_known_clients.call_count >= 2
-    assert entity_registry.async_get(unknown.entity_id) is None
