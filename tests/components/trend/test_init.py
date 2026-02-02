@@ -456,7 +456,6 @@ async def test_migration_from_future_version(
 
 async def test_migration_1_2_to_1_3(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migration from v1.2 to v1.3 converts min_gradient to new format."""
     # Old config entry with min_gradient in units per second
