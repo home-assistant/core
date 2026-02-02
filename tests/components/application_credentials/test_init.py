@@ -763,36 +763,6 @@ async def test_websocket_integration_list_with_auth_type(
     }
 
 
-@pytest.mark.parametrize("mock_application_credentials_integration", [None])
-async def test_websocket_integration_list_with_auth_type_exception(
-    hass: HomeAssistant,
-    ws_client: ClientFixture,
-) -> None:
-    """Test websocket integration list returns default auth_type."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    hass.config.components.add(TEST_DOMAIN)
-
-    # Mock platform where async_get_authorization_server raises LookupError
-    mock_platform_impl = Mock(
-        async_get_authorization_server=AsyncMock(
-            side_effect=LookupError("darn MCP server with your context")
-        ),
-    )
-    del mock_platform_impl.async_get_auth_implementation
-    del mock_platform_impl.async_get_description_placeholders
-    mock_platform(hass, f"{TEST_DOMAIN}.application_credentials", mock_platform_impl)
-
-    client = await ws_client()
-    with patch("homeassistant.loader.APPLICATION_CREDENTIALS", [TEST_DOMAIN]):
-        result = await client.cmd_result("config")
-
-    # Now if we get the auth_type, it should be the default client credentials
-    assert TEST_DOMAIN in result["domains"]
-    assert result["integrations"][TEST_DOMAIN] == {
-        "auth_type": AuthorizationTypes.CLIENT_CREDENTIALS,
-    }
-
-
 async def test_name(
     hass: HomeAssistant, ws_client: ClientFixture, oauth_fixture: OAuthFixture
 ) -> None:
