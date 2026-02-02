@@ -24,11 +24,11 @@ from homeassistant.components.zwave_js.const import (
     ATTR_OPERATION_TYPE,
     ATTR_REFRESH,
     DOMAIN,
+    SERVICE_GET_LOCK_USERCODE,
 )
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.components.zwave_js.lock import (
     SERVICE_CLEAR_LOCK_USERCODE,
-    SERVICE_GET_LOCK_USERCODE,
     SERVICE_SET_LOCK_CONFIGURATION,
     SERVICE_SET_LOCK_USERCODE,
 )

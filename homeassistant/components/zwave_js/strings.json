@@ -292,8 +292,14 @@
     }
   },
   "exceptions": {
+    "get_lock_usercode_failed": {
+      "message": "Unable to get lock usercode on lock `{entity_id}` code slot `{code_slot}`: {error}"
+    },
     "get_lock_usercode_only_refresh_single": {
       "message": "The refresh option is only supported when querying a single code slot"
+    },
+    "get_lock_usercodes_failed": {
+      "message": "Unable to get lock usercodes on lock `{entity_id}`: {error}"
     }
   },
   "issues": {

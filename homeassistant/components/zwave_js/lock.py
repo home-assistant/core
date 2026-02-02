@@ -200,8 +200,13 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
                 slot = get_usercode(self.info.node, code_slot)
         except BaseZwaveJSServerError as err:
             raise HomeAssistantError(
-                f"Unable to get lock usercode on lock {self.entity_id} code_slot "
-                f"{code_slot}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="get_lock_usercode_failed",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "code_slot": str(code_slot),
+                    "error": str(err),
+                },
             ) from err
         return {
             str(code_slot): {
@@ -216,7 +221,12 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
             slots = get_usercodes(self.info.node)
         except BaseZwaveJSServerError as err:
             raise HomeAssistantError(
-                f"Unable to get lock usercodes on lock {self.entity_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="get_lock_usercodes_failed",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "error": str(err),
+                },
             ) from err
         return {
             str(slot["code_slot"]): {
