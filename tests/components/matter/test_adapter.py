@@ -21,9 +21,9 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("node_fixture", "name"),
     [
-        ("onoff_light", "Mock OnOff Light"),
-        ("onoff_light_alt_name", "Mock OnOff Light"),
-        ("onoff_light_no_name", "Mock Light"),
+        ("mock_onoff_light", "Mock OnOff Light"),
+        ("mock_onoff_light_alt_name", "Mock OnOff Light"),
+        ("mock_onoff_light_no_name", "Mock Light"),
     ],
 )
 async def test_device_registry_single_node_device(
@@ -52,7 +52,7 @@ async def test_device_registry_single_node_device(
 
 
 @pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["on_off_plugin_unit"])
+@pytest.mark.parametrize("node_fixture", ["mock_on_off_plugin_unit"])
 async def test_device_registry_single_node_device_alt(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -133,7 +133,7 @@ async def test_node_added_subscription(
     )
 
     node_added_callback = matter_client.subscribe_events.call_args.kwargs["callback"]
-    node = create_node_from_fixture("onoff_light")
+    node = create_node_from_fixture("mock_onoff_light")
 
     entity_state = hass.states.get("light.mock_onoff_light")
     assert not entity_state
@@ -187,8 +187,8 @@ async def test_bad_node_not_crash_integration(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that a bad node does not crash the integration."""
-    good_node = create_node_from_fixture("onoff_light")
-    bad_node = create_node_from_fixture("onoff_light")
+    good_node = create_node_from_fixture("mock_onoff_light")
+    bad_node = create_node_from_fixture("mock_onoff_light")
     del bad_node.endpoints[0].node
     matter_client.get_nodes.return_value = [good_node, bad_node]
     config_entry = MockConfigEntry(

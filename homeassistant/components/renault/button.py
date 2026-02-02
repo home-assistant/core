@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RenaultConfigEntry
 from .entity import RenaultEntity
+from .renault_vehicle import RenaultVehicleProxy
 
 # Coordinator is used to centralize the data updates
 # but renault servers are unreliable and it's safer to queue action calls
@@ -23,7 +24,7 @@ class RenaultButtonEntityDescription(ButtonEntityDescription):
     """Class describing Renault button entities."""
 
     async_press: Callable[[RenaultButtonEntity], Coroutine[Any, Any, Any]]
-    requires_electricity: bool = False
+    is_supported: Callable[[RenaultVehicleProxy], bool]
 
 
 async def async_setup_entry(
@@ -36,7 +37,7 @@ async def async_setup_entry(
         RenaultButtonEntity(vehicle, description)
         for vehicle in config_entry.runtime_data.vehicles.values()
         for description in BUTTON_TYPES
-        if not description.requires_electricity or vehicle.details.uses_electricity()
+        if description.is_supported(vehicle)
     ]
     async_add_entities(entities)
 
@@ -55,18 +56,27 @@ BUTTON_TYPES: tuple[RenaultButtonEntityDescription, ...] = (
     RenaultButtonEntityDescription(
         async_press=lambda x: x.vehicle.set_ac_start(21, None),
         key="start_air_conditioner",
+        is_supported=lambda vehicle: (
+            vehicle.details.supports_endpoint("actions/hvac-start")
+        ),
         translation_key="start_air_conditioner",
     ),
     RenaultButtonEntityDescription(
         async_press=lambda x: x.vehicle.set_charge_start(),
         key="start_charge",
-        requires_electricity=True,
+        is_supported=lambda vehicle: (
+            vehicle.details.supports_endpoint("actions/charge-start")
+            and vehicle.details.uses_electricity()
+        ),
         translation_key="start_charge",
     ),
     RenaultButtonEntityDescription(
         async_press=lambda x: x.vehicle.set_charge_stop(),
         key="stop_charge",
-        requires_electricity=True,
+        is_supported=lambda vehicle: (
+            vehicle.details.supports_endpoint("actions/charge-stop")
+            and vehicle.details.uses_electricity()
+        ),
         translation_key="stop_charge",
     ),
 )

@@ -29,6 +29,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CO2 automatic baseline duration',
     'options': dict({
     }),
     'original_device_class': None,
@@ -90,6 +91,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Configuration source',
     'options': dict({
     }),
     'original_device_class': None,
@@ -147,6 +149,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display PM standard',
     'options': dict({
     }),
     'original_device_class': None,
@@ -204,6 +207,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display temperature unit',
     'options': dict({
     }),
     'original_device_class': None,
@@ -262,6 +266,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED bar mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -323,6 +328,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NOx index learning offset',
     'options': dict({
     }),
     'original_device_class': None,
@@ -386,6 +392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VOC index learning offset',
     'options': dict({
     }),
     'original_device_class': None,
@@ -450,6 +457,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CO2 automatic baseline duration',
     'options': dict({
     }),
     'original_device_class': None,
@@ -511,6 +519,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Configuration source',
     'options': dict({
     }),
     'original_device_class': None,
@@ -571,6 +580,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'NOx index learning offset',
     'options': dict({
     }),
     'original_device_class': None,
@@ -634,6 +644,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VOC index learning offset',
     'options': dict({
     }),
     'original_device_class': None,
