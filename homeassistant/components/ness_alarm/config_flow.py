@@ -235,7 +235,7 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return OptionsFlow(config_entry)
 
 
-class OptionsFlow(config_entries.OptionsFlow):
+class NessOptionsFlow(OptionsFlow):
     """Handle options flow for Ness Alarm."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
