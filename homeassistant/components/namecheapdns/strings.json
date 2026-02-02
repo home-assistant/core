@@ -2,14 +2,26 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "update_failed": "Updating DNS failed"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:component::namecheapdns::config::step::user::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::namecheapdns::config::step::user::data_description::password%]"
+        },
+        "description": "[%key:component::namecheapdns::config::step::reconfigure::description%]",
+        "title": "Re-authenticate {name}"
+      },
       "reconfigure": {
         "data": {
           "password": "[%key:component::namecheapdns::config::step::user::data::password%]"
@@ -17,11 +29,12 @@
         "data_description": {
           "password": "[%key:component::namecheapdns::config::step::user::data_description::password%]"
         },
+        "description": "You can find the Dynamic DNS password in your Namecheap account under [Domain List > {domain} > Manage > Advanced DNS > Dynamic DNS]({account_panel}).",
         "title": "Re-configure {name}"
       },
       "user": {
         "data": {
-          "domain": "[%key:common::config_flow::data::username%]",
+          "domain": "Domain",
           "host": "[%key:common::config_flow::data::host%]",
           "password": "Dynamic DNS password"
         },
@@ -35,6 +48,9 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication for Namecheap DynamicDNS domain {domain} failed"
+    },
     "connection_error": {
       "message": "Updating Namecheap DynamicDNS domain {domain} failed due to a connection error"
     },
