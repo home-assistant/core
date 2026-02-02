@@ -16,7 +16,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BASE_PATH,
@@ -26,7 +28,6 @@ from .const import (
     DEFAULT_WANTED_MAX_ITEMS,
     DOMAIN,
     LOGGER,
-    SERVICE_GET_SERIES,
 )
 from .coordinator import (
     CalendarDataUpdateCoordinator,
@@ -43,6 +44,14 @@ from .coordinator import (
 from .services import async_setup_services
 
 PLATFORMS = [Platform.SENSOR]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Sonarr integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SonarrConfigEntry) -> bool:
@@ -96,10 +105,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SonarrConfigEntry) -> bo
         coordinator.system_version = _version
     entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Register services (only register once for the domain)
-    if not hass.services.has_service(DOMAIN, SERVICE_GET_SERIES):
-        async_setup_services(hass)
 
     return True
 

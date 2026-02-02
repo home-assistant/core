@@ -1,14 +1,16 @@
 """Define services for the Sonarr integration."""
 
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
+from aiopyarr import exceptions
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import selector
 from homeassistant.util import dt as dt_util
 
@@ -35,6 +37,8 @@ from .helpers import (
     format_upcoming,
     format_wanted,
 )
+
+_T = TypeVar("_T")
 
 # Service parameter constants
 CONF_DAYS = "days"
@@ -107,12 +111,24 @@ def _get_config_entry_from_service_data(call: ServiceCall) -> SonarrConfigEntry:
     return cast(SonarrConfigEntry, entry)
 
 
+async def _handle_api_errors(func: Callable[[], Awaitable[_T]]) -> _T:
+    """Handle API errors and raise HomeAssistantError with user-friendly messages."""
+    try:
+        return await func()
+    except exceptions.ArrAuthenticationException as ex:
+        raise HomeAssistantError("Authentication failed for Sonarr") from ex
+    except exceptions.ArrConnectionException as ex:
+        raise HomeAssistantError("Failed to connect to Sonarr") from ex
+    except exceptions.ArrException as ex:
+        raise HomeAssistantError(f"Sonarr API error: {ex}") from ex
+
+
 async def _async_get_series(service: ServiceCall) -> dict[str, Any]:
     """Get all Sonarr series."""
     entry = _get_config_entry_from_service_data(service)
 
     api_client = entry.runtime_data.status.api_client
-    series_list = await api_client.async_get_series()
+    series_list = await _handle_api_errors(api_client.async_get_series)
 
     base_url = entry.data[CONF_URL]
     shows = format_series(cast(list, series_list), base_url)
@@ -127,7 +143,9 @@ async def _async_get_episodes(service: ServiceCall) -> dict[str, Any]:
     season_number: int | None = service.data.get(CONF_SEASON_NUMBER)
 
     api_client = entry.runtime_data.status.api_client
-    episodes = await api_client.async_get_episodes(series_id, series=True)
+    episodes = await _handle_api_errors(
+        lambda: api_client.async_get_episodes(series_id, series=True)
+    )
 
     formatted_episodes = format_episodes(cast(list, episodes), season_number)
 
@@ -142,8 +160,10 @@ async def _async_get_queue(service: ServiceCall) -> dict[str, Any]:
     api_client = entry.runtime_data.status.api_client
     # 0 means no limit - use a large page size to get all items
     page_size = max_items if max_items > 0 else 10000
-    queue = await api_client.async_get_queue(
-        page_size=page_size, include_series=True, include_episode=True
+    queue = await _handle_api_errors(
+        lambda: api_client.async_get_queue(
+            page_size=page_size, include_series=True, include_episode=True
+        )
     )
 
     base_url = entry.data[CONF_URL]
@@ -157,7 +177,7 @@ async def _async_get_diskspace(service: ServiceCall) -> dict[str, Any]:
     entry = _get_config_entry_from_service_data(service)
 
     api_client = entry.runtime_data.status.api_client
-    disks = await api_client.async_get_diskspace()
+    disks = await _handle_api_errors(api_client.async_get_diskspace)
 
     return {ATTR_DISKS: format_diskspace(disks)}
 
@@ -173,8 +193,10 @@ async def _async_get_upcoming(service: ServiceCall) -> dict[str, Any]:
     start = dt_util.as_utc(local)
     end = start + timedelta(days=days)
 
-    calendar = await api_client.async_get_calendar(
-        start_date=start, end_date=end, include_series=True
+    calendar = await _handle_api_errors(
+        lambda: api_client.async_get_calendar(
+            start_date=start, end_date=end, include_series=True
+        )
     )
 
     base_url = entry.data[CONF_URL]
@@ -191,7 +213,9 @@ async def _async_get_wanted(service: ServiceCall) -> dict[str, Any]:
     api_client = entry.runtime_data.status.api_client
     # 0 means no limit - use a large page size to get all items
     page_size = max_items if max_items > 0 else 10000
-    wanted = await api_client.async_get_wanted(page_size=page_size, include_series=True)
+    wanted = await _handle_api_errors(
+        lambda: api_client.async_get_wanted(page_size=page_size, include_series=True)
+    )
 
     base_url = entry.data[CONF_URL]
     episodes = format_wanted(wanted, base_url)

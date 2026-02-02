@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from aiopyarr import Diskspace, SonarrQueue
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sonarr.const import (
     ATTR_DISKS,
@@ -20,7 +21,7 @@ from homeassistant.components.sonarr.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from tests.common import MockConfigEntry
 
@@ -65,6 +66,7 @@ async def test_service_integration_not_found(
 async def test_service_get_series(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test get_series service."""
     response = await hass.services.async_call(
@@ -75,38 +77,17 @@ async def test_service_get_series(
         return_response=True,
     )
 
-    assert response is not None
-    assert ATTR_SHOWS in response
-    shows = response[ATTR_SHOWS]
-    assert isinstance(shows, dict)
-    assert len(shows) == 1
+    # Explicit assertion for specific behavior
+    assert len(response[ATTR_SHOWS]) == 1
 
-    # Check the series data structure
-    andy_griffith = shows["The Andy Griffith Show"]
-    assert andy_griffith["id"] == 105
-    assert andy_griffith["year"] == 1960
-    assert andy_griffith["tvdb_id"] == 77754
-    assert andy_griffith["imdb_id"] == "tt0053479"
-    assert andy_griffith["status"] == "ended"
-    assert andy_griffith["monitored"] is True
-
-    # Check episode statistics
-    assert andy_griffith["episode_file_count"] == 0
-    assert andy_griffith["episode_count"] == 0
-    assert andy_griffith["episodes_info"] == "0/0 Episodes"
-
-    # Check images
-    assert "images" in andy_griffith
-    assert "fanart" in andy_griffith["images"]
-    assert "banner" in andy_griffith["images"]
-    assert "poster" in andy_griffith["images"]
-    # Should use remoteUrl from fixture
-    assert andy_griffith["images"]["fanart"].startswith("https://artworks.thetvdb.com")
+    # Snapshot for full structure validation
+    assert response == snapshot
 
 
 async def test_service_get_queue(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test get_queue service."""
     response = await hass.services.async_call(
@@ -117,38 +98,11 @@ async def test_service_get_queue(
         return_response=True,
     )
 
-    assert response is not None
-    assert ATTR_SHOWS in response
-    shows = response[ATTR_SHOWS]
-    assert isinstance(shows, dict)
-    assert len(shows) == 1
+    # Explicit assertion for specific behavior
+    assert len(response[ATTR_SHOWS]) == 1
 
-    # Check the queue item data structure
-    queue_item = shows["The.Andy.Griffith.Show.S01E01.x264-GROUP"]
-    assert queue_item["id"] == 1503378561
-    # Note: seriesId and episodeId may not be at top level in all API responses
-    assert queue_item["series_id"] is None  # Not in fixture at top level
-    assert queue_item["episode_id"] is None  # Not in fixture at top level
-    assert queue_item["title"] == "The Andy Griffith Show"
-    assert queue_item["download_title"] == "The.Andy.Griffith.Show.S01E01.x264-GROUP"
-    assert queue_item["season_number"] is None  # Not in fixture at top level
-    assert queue_item["episode_number"] == 1  # From episode object
-    assert queue_item["episode_title"] == "The New Housekeeper"  # From episode object
-    # Episode identifier requires season_number which is None
-    assert "episode_identifier" not in queue_item
-    assert queue_item["progress"] == "100.00%"
-    assert queue_item["size"] == 4472186820
-    assert queue_item["size_left"] == 0
-    assert queue_item["status"] == "Downloading"
-    assert "usenet" in queue_item["protocol"].lower()  # Protocol enum string
-    assert queue_item["quality"] == "SD"
-
-    # Check images from series
-    assert "images" in queue_item
-    assert len(queue_item["images"]) == 3
-    assert "fanart" in queue_item["images"]
-    assert "banner" in queue_item["images"]
-    assert "poster" in queue_item["images"]
+    # Snapshot for full structure validation
+    assert response == snapshot
 
 
 async def test_service_entry_not_loaded(
@@ -219,6 +173,7 @@ async def test_service_get_queue_empty(
 async def test_service_get_diskspace(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test get_diskspace service."""
     response = await hass.services.async_call(
@@ -229,23 +184,11 @@ async def test_service_get_diskspace(
         return_response=True,
     )
 
-    assert response is not None
-    assert ATTR_DISKS in response
-    disks = response[ATTR_DISKS]
-    assert isinstance(disks, dict)
-    assert len(disks) == 1
+    # Explicit assertion for specific behavior
+    assert len(response[ATTR_DISKS]) == 1
 
-    # Check the disk data structure (from diskspace.json fixture)
-    disk = disks["C:\\"]
-    assert disk["path"] == "C:\\"
-    assert disk["label"] == ""
-    assert disk["free_space_bytes"] == 282500067328
-    assert disk["total_space_bytes"] == 499738734592
-    # Check calculated values
-    assert disk["free_space_gb"] == round(282500067328 / (1024**3), 2)
-    assert disk["total_space_gb"] == round(499738734592 / (1024**3), 2)
-    assert "used_space_gb" in disk
-    assert "usage_percent" in disk
+    # Snapshot for full structure validation
+    assert response == snapshot
 
 
 async def test_service_get_diskspace_multiple_drives(
@@ -324,6 +267,7 @@ async def test_service_get_diskspace_multiple_drives(
 async def test_service_get_upcoming(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test get_upcoming service."""
     response = await hass.services.async_call(
@@ -334,42 +278,17 @@ async def test_service_get_upcoming(
         return_response=True,
     )
 
-    assert response is not None
-    assert ATTR_EPISODES in response
-    episodes = response[ATTR_EPISODES]
-    assert isinstance(episodes, dict)
-    assert len(episodes) == 1
+    # Explicit assertion for specific behavior
+    assert len(response[ATTR_EPISODES]) == 1
 
-    # Check the upcoming episode data structure (from calendar.json fixture)
-    episode = episodes["Bob's Burgers S04E11"]
-    assert episode["id"] == 14402
-    assert episode["series_id"] == 3
-    assert episode["season_number"] == 4
-    assert episode["episode_number"] == 11
-    assert episode["episode_identifier"] == "S04E11"
-    assert episode["title"] == "Easy Com-mercial, Easy Go-mercial"
-    assert "2014-01-26" in episode["air_date"]  # May include time component
-    assert episode["has_file"] is False
-    assert episode["monitored"] is True
-
-    # Check series information
-    assert episode["series_title"] == "Bob's Burgers"
-    assert episode["series_year"] == 2011
-    assert episode["series_tvdb_id"] == 194031
-    assert episode["series_imdb_id"] == "tt1561755"
-    assert episode["series_status"] == "continuing"
-    assert episode["network"] == "FOX"
-
-    # Check images
-    assert "images" in episode
-    assert "fanart" in episode["images"]
-    assert "banner" in episode["images"]
-    assert "poster" in episode["images"]
+    # Snapshot for full structure validation
+    assert response == snapshot
 
 
 async def test_service_get_wanted(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test get_wanted service."""
     response = await hass.services.async_call(
@@ -380,51 +299,17 @@ async def test_service_get_wanted(
         return_response=True,
     )
 
-    assert response is not None
-    assert ATTR_EPISODES in response
-    episodes = response[ATTR_EPISODES]
-    assert isinstance(episodes, dict)
-    assert len(episodes) == 2
+    # Explicit assertion for specific behavior
+    assert len(response[ATTR_EPISODES]) == 2
 
-    # Check the wanted episode data structure (from wanted-missing.json fixture)
-    # First episode - Bob's Burgers
-    bobs_burgers = episodes["Bob's Burgers S04E11"]
-    assert bobs_burgers["id"] == 14402
-    assert bobs_burgers["series_id"] == 3
-    assert bobs_burgers["season_number"] == 4
-    assert bobs_burgers["episode_number"] == 11
-    assert bobs_burgers["episode_identifier"] == "S04E11"
-    assert bobs_burgers["title"] == "Easy Com-mercial, Easy Go-mercial"
-    assert bobs_burgers["has_file"] is False
-    assert bobs_burgers["monitored"] is True
-
-    # Check series information
-    assert bobs_burgers["series_title"] == "Bob's Burgers"
-    assert bobs_burgers["series_year"] == 2011
-    assert bobs_burgers["series_tvdb_id"] == 194031
-
-    # Check images
-    assert "images" in bobs_burgers
-    assert "fanart" in bobs_burgers["images"]
-    assert "banner" in bobs_burgers["images"]
-    assert "poster" in bobs_burgers["images"]
-
-    # Second episode - Andy Griffith Show
-    andy_griffith = episodes["The Andy Griffith Show S01E01"]
-    assert andy_griffith["id"] == 889
-    assert andy_griffith["series_id"] == 17
-    assert andy_griffith["season_number"] == 1
-    assert andy_griffith["episode_number"] == 1
-    assert andy_griffith["episode_identifier"] == "S01E01"
-    assert andy_griffith["title"] == "The New Housekeeper"
-    assert andy_griffith["series_title"] == "The Andy Griffith Show"
-    assert andy_griffith["series_year"] == 1960
-    assert andy_griffith["series_tvdb_id"] == 77754
+    # Snapshot for full structure validation
+    assert response == snapshot
 
 
 async def test_service_get_episodes(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test get_episodes service."""
     response = await hass.services.async_call(
@@ -435,38 +320,11 @@ async def test_service_get_episodes(
         return_response=True,
     )
 
-    assert response is not None
-    assert ATTR_EPISODES in response
-    episodes = response[ATTR_EPISODES]
-    assert isinstance(episodes, dict)
-    assert len(episodes) == 3
+    # Explicit assertion for specific behavior
+    assert len(response[ATTR_EPISODES]) == 3
 
-    # Check the first episode
-    ep1 = episodes["S01E01"]
-    assert ep1["id"] == 1001
-    assert ep1["series_id"] == 105
-    assert ep1["tvdb_id"] == 123456
-    assert ep1["season_number"] == 1
-    assert ep1["episode_number"] == 1
-    assert ep1["episode_identifier"] == "S01E01"
-    assert ep1["title"] == "The New Housekeeper"
-    assert "1960-10-03" in ep1["air_date"]
-    assert ep1["has_file"] is False
-    assert ep1["monitored"] is True
-    assert ep1["runtime"] == 25
-    assert "overview" in ep1
-
-    # Check an episode with a file
-    ep2 = episodes["S01E02"]
-    assert ep2["id"] == 1002
-    assert ep2["has_file"] is True
-    assert ep2["episode_file_id"] == 5001
-
-    # Check an episode with finale_type
-    ep3 = episodes["S02E01"]
-    assert ep3["id"] == 1003
-    assert ep3["season_number"] == 2
-    assert ep3["finale_type"] == "season"
+    # Snapshot for full structure validation
+    assert response == snapshot
 
 
 async def test_service_get_episodes_with_season_filter(
@@ -662,3 +520,45 @@ async def test_service_get_queue_season_pack(
     assert season_pack["size"] == 84429221268
     assert season_pack["status"] == "paused"
     assert season_pack["quality"] == "Bluray-1080p"
+
+
+async def test_service_get_series_api_connection_error(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_sonarr: MagicMock,
+) -> None:
+    """Test get_series service with API connection error."""
+    # Configure the mock to raise an exception
+    mock_sonarr.async_get_series.side_effect = __import__(
+        "aiopyarr"
+    ).exceptions.ArrConnectionException("Connection failed")
+
+    with pytest.raises(HomeAssistantError, match="Failed to connect to Sonarr"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_SERIES,
+            {CONF_ENTRY_ID: init_integration.entry_id},
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_service_get_series_api_auth_error(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_sonarr: MagicMock,
+) -> None:
+    """Test get_series service with API authentication error."""
+    # Configure the mock to raise an exception
+    mock_sonarr.async_get_series.side_effect = __import__(
+        "aiopyarr"
+    ).exceptions.ArrAuthenticationException("Authentication failed")
+
+    with pytest.raises(HomeAssistantError, match="Authentication failed for Sonarr"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_SERIES,
+            {CONF_ENTRY_ID: init_integration.entry_id},
+            blocking=True,
+            return_response=True,
+        )

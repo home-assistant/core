@@ -176,13 +176,17 @@ def format_series(
 
         # Add episode statistics if available (like the sensor shows)
         if statistics := getattr(series, "statistics", None):
-            episode_file_count = getattr(statistics, "episodeFileCount", 0)
-            episode_count = getattr(statistics, "episodeCount", 0)
+            episode_file_count = getattr(statistics, "episodeFileCount", None)
+            episode_count = getattr(statistics, "episodeCount", None)
             formatted_shows[series_title]["episode_file_count"] = episode_file_count
             formatted_shows[series_title]["episode_count"] = episode_count
-            formatted_shows[series_title]["episodes_info"] = (
-                f"{episode_file_count}/{episode_count} Episodes"
-            )
+            # Only format episodes_info if we have valid data
+            if episode_file_count is not None and episode_count is not None:
+                formatted_shows[series_title]["episodes_info"] = (
+                    f"{episode_file_count}/{episode_count} Episodes"
+                )
+            else:
+                formatted_shows[series_title]["episodes_info"] = None
 
         # Add series images if available
         if images := getattr(series, "images", None):
@@ -354,8 +358,8 @@ def format_episode(episode: SonarrEpisode) -> dict[str, Any]:
         "air_date_utc": str(getattr(episode, "airDateUtc", None)),
         "has_file": getattr(episode, "hasFile", False),
         "monitored": getattr(episode, "monitored", False),
-        "runtime": getattr(episode, "runtime", 0),
-        "episode_file_id": getattr(episode, "episodeFileId", 0),
+        "runtime": getattr(episode, "runtime", None),
+        "episode_file_id": getattr(episode, "episodeFileId", None),
     }
 
     # Add overview if available (not always present)
