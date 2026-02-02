@@ -45,12 +45,12 @@ async def async_setup_entry(
     )
 
 
-def to_lutron_level(level: int) -> float:
+def to_lutron_level(level):
     """Convert the given Home Assistant light level (0-255) to Lutron (0.0-100.0)."""
     return float((level * 100) / 255)
 
 
-def to_hass_level(level: float) -> int:
+def to_hass_level(level):
     """Convert the given Lutron (0.0-100.0) light level to Home Assistant (0-255)."""
     return int((level * 255) / 100)
 
@@ -90,7 +90,7 @@ class LutronLight(LutronDevice, LightEntity):
             else:
                 brightness = self._prev_brightness
             self._prev_brightness = brightness
-            args = {"new_level": to_lutron_level(int(brightness))}
+            args = {"new_level": to_lutron_level(brightness)}
             if ATTR_TRANSITION in kwargs:
                 args["fade_time_seconds"] = kwargs[ATTR_TRANSITION]
             self._lutron_device.set_level(**args)
