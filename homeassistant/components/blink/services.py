@@ -9,7 +9,6 @@ from homeassistant.const import (
     ATTR_CONFIG_ENTRY_ID,
     CONF_FILE_PATH,
     CONF_FILENAME,
-    CONF_NAME,
     CONF_PIN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -22,17 +21,10 @@ SERVICE_RECORD = "record"
 SERVICE_TRIGGER = "trigger_camera"
 SERVICE_SAVE_VIDEO = "save_video"
 SERVICE_SAVE_RECENT_CLIPS = "save_recent_clips"
-SERVICE_SEND_PIN = "send_pin"
 
-SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema(
-    {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_FILENAME): cv.string}
-)
-SERVICE_SAVE_RECENT_CLIPS_SCHEMA = vol.Schema(
-    {vol.Required(CONF_NAME): cv.string, vol.Required(CONF_FILE_PATH): cv.string}
-)
 
 # Deprecated
-SERVICE_SEND_PIN_SCHEMA = vol.Schema({vol.Optional(CONF_PIN): cv.string})
+SERVICE_SEND_PIN = "send_pin"
 SERVICE_SEND_PIN_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY_ID): vol.All(cv.ensure_list, [cv.string]),
