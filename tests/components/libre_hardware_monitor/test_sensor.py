@@ -10,6 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 from librehardwaremonitor_api import (
     LibreHardwareMonitorConnectionError,
     LibreHardwareMonitorNoDevicesError,
+    LibreHardwareMonitorUnauthorizedError,
 )
 from librehardwaremonitor_api.model import (
     DeviceId,
@@ -23,6 +24,7 @@ from homeassistant.components.libre_hardware_monitor.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -83,6 +85,51 @@ async def test_sensors_go_unavailable_in_case_of_error_and_recover_after_success
     assert all(state.state != STATE_UNAVAILABLE for state in recovered_states)
 
 
+async def test_sensor_invalid_auth_after_update(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid auth after sensor update."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_lhm_client.get_data.side_effect = LibreHardwareMonitorUnauthorizedError
+
+    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert "Authentication against LibreHardwareMonitor instance failed" in caplog.text
+
+    unavailable_states = hass.states.async_all()
+    assert all(state.state == STATE_UNAVAILABLE for state in unavailable_states)
+
+
+async def test_sensor_invalid_auth_during_startup(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid auth in initial sensor update during integration startup."""
+    mock_lhm_client.get_data.side_effect = LibreHardwareMonitorUnauthorizedError
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "Authentication against LibreHardwareMonitor instance failed" in caplog.text
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.reason == "Authentication failed"
+
+    unavailable_states = hass.states.async_all()
+    assert all(state.state == STATE_UNAVAILABLE for state in unavailable_states)
+
+
 async def test_sensors_are_updated(
     hass: HomeAssistant,
     mock_lhm_client: AsyncMock,
@@ -92,7 +139,7 @@ async def test_sensors_are_updated(
     """Test sensors are updated with properly formatted values."""
     await init_integration(hass, mock_config_entry)
 
-    entity_id = "sensor.amd_ryzen_7_7800x3d_package_temperature"
+    entity_id = "sensor.gaming_pc_amd_ryzen_7_7800x3d_package_temperature"
     state = hass.states.get(entity_id)
 
     assert state
@@ -128,7 +175,7 @@ async def test_sensor_state_is_unknown_when_no_sensor_data_is_provided(
     """Test sensor state is unknown when sensor data is missing."""
     await init_integration(hass, mock_config_entry)
 
-    entity_id = "sensor.amd_ryzen_7_7800x3d_package_temperature"
+    entity_id = "sensor.gaming_pc_amd_ryzen_7_7800x3d_package_temperature"
 
     state = hass.states.get(entity_id)
 
@@ -200,6 +247,7 @@ async def _mock_orphaned_device(
     previous_data = mock_lhm_client.get_data.return_value
 
     mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
+        computer_name=mock_lhm_client.get_data.return_value.computer_name,
         main_device_ids_and_names=MappingProxyType(
             {
                 device_id: name
@@ -230,6 +278,7 @@ async def test_integration_does_not_log_new_devices_on_first_refresh(
 ) -> None:
     """Test that initial data update does not cause warning about new devices."""
     mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
+        computer_name=mock_lhm_client.get_data.return_value.computer_name,
         main_device_ids_and_names=MappingProxyType(
             {
                 **mock_lhm_client.get_data.return_value.main_device_ids_and_names,

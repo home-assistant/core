@@ -335,20 +335,18 @@ def _get_config_intents(config: ConfigType, hass_config_path: str) -> dict[str, 
     """Return config intents."""
     intents = config.get(DOMAIN, {}).get("intents", {})
     return {
-        "intents": {
-            intent_name: {
-                "data": [
-                    {
-                        "sentences": sentences,
-                        "metadata": {
-                            METADATA_CUSTOM_SENTENCE: True,
-                            METADATA_CUSTOM_FILE: hass_config_path,
-                        },
-                    }
-                ]
-            }
-            for intent_name, sentences in intents.items()
+        intent_name: {
+            "data": [
+                {
+                    "sentences": sentences,
+                    "metadata": {
+                        METADATA_CUSTOM_SENTENCE: True,
+                        METADATA_CUSTOM_FILE: hass_config_path,
+                    },
+                }
+            ]
         }
+        for intent_name, sentences in intents.items()
     }
 
 

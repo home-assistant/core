@@ -13,11 +13,6 @@ from aioshelly.ble.manufacturer_data import (
     has_rpc_over_ble,
     parse_shelly_manufacturer_data,
 )
-from aioshelly.ble.provisioning import (
-    async_provision_wifi,
-    async_scan_wifi_networks,
-    ble_rpc_device,
-)
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
 from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
@@ -30,6 +25,7 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice
+from aioshelly.rpc_device.models import ShellyWiFiNetwork
 from aioshelly.zeroconf import async_discover_devices, async_lookup_device_by_name
 from bleak.backends.device import BLEDevice
 import voluptuous as vol
@@ -116,31 +112,6 @@ BLE_SCANNER_OPTIONS = [
 INTERNAL_WIFI_AP_IP = "192.168.33.1"
 MANUAL_ENTRY_STRING = "manual"
 DISCOVERY_SOURCES = {SOURCE_BLUETOOTH, SOURCE_ZEROCONF}
-
-
-async def async_get_ip_from_ble(ble_device: BLEDevice) -> str | None:
-    """Get device IP address via BLE after WiFi provisioning.
-
-    Args:
-        ble_device: BLE device to query
-
-    Returns:
-        IP address string if available, None otherwise
-
-    """
-    try:
-        async with ble_rpc_device(ble_device) as device:
-            await device.update_status()
-            if (
-                (wifi := device.status.get("wifi"))
-                and isinstance(wifi, dict)
-                and (ip := wifi.get("sta_ip"))
-            ):
-                return cast(str, ip)
-            return None
-    except (DeviceConnectionError, RpcCallError) as err:
-        LOGGER.debug("Failed to get IP via BLE: %s", err)
-        return None
 
 
 # BLE provisioning flow steps that are in the finishing state
@@ -244,13 +215,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     device_info: dict[str, Any] = {}
     ble_device: BLEDevice | None = None
     device_name: str = ""
-    wifi_networks: list[dict[str, Any]] = []
+    wifi_networks: list[ShellyWiFiNetwork] = []
     selected_ssid: str = ""
     _provision_task: asyncio.Task | None = None
     _provision_result: ConfigFlowResult | None = None
     disable_ap_after_provision: bool = True
     disable_ble_rpc_after_provision: bool = True
     _discovered_devices: dict[str, DiscoveredDeviceZeroconf | DiscoveredDeviceBluetooth]
+    _ble_rpc_device: RpcDevice | None = None
 
     @staticmethod
     def _get_name_from_mac_and_ble_model(
@@ -298,6 +270,81 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         device_name = self._get_name_from_mac_and_ble_model(mac, parsed)
 
         return mac, device_name
+
+    async def _async_ensure_ble_connected(self) -> RpcDevice:
+        """Ensure BLE RPC device is connected, reconnecting if needed.
+
+        Maintains a persistent BLE connection across config flow steps to avoid
+        the overhead of reconnecting between WiFi scan and provisioning steps.
+
+        Returns:
+            Connected RpcDevice instance
+
+        Raises:
+            DeviceConnectionError: If connection fails
+            RpcCallError: If ping fails after connection
+
+        """
+        if TYPE_CHECKING:
+            assert self.ble_device is not None
+
+        if self._ble_rpc_device is not None and self._ble_rpc_device.connected:
+            # Ping to verify connection is still alive
+            try:
+                await self._ble_rpc_device.update_status()
+            except (DeviceConnectionError, RpcCallError):
+                # Connection dropped, need to reconnect
+                LOGGER.debug("BLE connection lost, reconnecting")
+                await self._async_disconnect_ble()
+            else:
+                return self._ble_rpc_device
+
+        # Create new connection
+        LOGGER.debug("Creating new BLE RPC connection to %s", self.ble_device.address)
+        options = ConnectionOptions(ble_device=self.ble_device)
+        device = await RpcDevice.create(
+            aiohttp_session=None, ws_context=None, ip_or_options=options
+        )
+        try:
+            await device.initialize()
+        except (DeviceConnectionError, RpcCallError):
+            await device.shutdown()
+            raise
+        self._ble_rpc_device = device
+        return self._ble_rpc_device
+
+    async def _async_disconnect_ble(self) -> None:
+        """Disconnect and cleanup BLE RPC device."""
+        if self._ble_rpc_device is not None:
+            try:
+                await self._ble_rpc_device.shutdown()
+            except Exception:  # noqa: BLE001
+                LOGGER.debug("Error during BLE shutdown", exc_info=True)
+            finally:
+                self._ble_rpc_device = None
+
+    async def _async_get_ip_from_ble(self) -> str | None:
+        """Get device IP address via BLE after WiFi provisioning.
+
+        Uses the persistent BLE connection to get the device's sta_ip from status.
+
+        Returns:
+            IP address string if available, None otherwise
+
+        """
+        try:
+            device = await self._async_ensure_ble_connected()
+        except (DeviceConnectionError, RpcCallError) as err:
+            LOGGER.debug("Failed to get IP via BLE: %s", err)
+            return None
+
+        if (
+            (wifi := device.status.get("wifi"))
+            and isinstance(wifi, dict)
+            and (ip := wifi.get("sta_ip"))
+        ):
+            return cast(str, ip)
+        return None
 
     async def _async_discover_zeroconf_devices(
         self,
@@ -736,20 +783,21 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
             return await self.async_step_do_provision({"password": password})
 
-        # Scan for WiFi networks via BLE
-        if TYPE_CHECKING:
-            assert self.ble_device is not None
+        # Scan for WiFi networks via BLE using persistent connection
         try:
-            self.wifi_networks = await async_scan_wifi_networks(self.ble_device)
+            device = await self._async_ensure_ble_connected()
+            self.wifi_networks = await device.wifi_scan()
         except (DeviceConnectionError, RpcCallError) as err:
             LOGGER.debug("Failed to scan WiFi networks via BLE: %s", err)
             # "Writing is not permitted" error means device rejects BLE writes
             # and BLE provisioning is disabled - user must use Shelly app
             if "not permitted" in str(err):
+                await self._async_disconnect_ble()
                 return self.async_abort(reason="ble_not_permitted")
             return await self.async_step_wifi_scan_failed()
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception during WiFi scan")
+            await self._async_disconnect_ble()
             return self.async_abort(reason="unknown")
 
         # Sort by RSSI (strongest signal first - higher/less negative values first)
@@ -870,17 +918,21 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         Returns the flow result to be stored in self._provision_result, or None if failed.
         """
-        # Provision WiFi via BLE
-        if TYPE_CHECKING:
-            assert self.ble_device is not None
+        # Provision WiFi via BLE using persistent connection
         try:
-            await async_provision_wifi(self.ble_device, self.selected_ssid, password)
+            device = await self._async_ensure_ble_connected()
+            await device.wifi_setconfig(
+                sta_ssid=self.selected_ssid,
+                sta_password=password,
+                sta_enable=True,
+            )
         except (DeviceConnectionError, RpcCallError) as err:
             LOGGER.debug("Failed to provision WiFi via BLE: %s", err)
             # BLE connection/communication failed - allow retry from network selection
             return None
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception during WiFi provisioning")
+            await self._async_disconnect_ble()
             return self.async_abort(reason="unknown")
 
         LOGGER.debug(
@@ -918,7 +970,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.debug(
                     "Active lookup failed, trying to get IP address via BLE as fallback"
                 )
-                if ip := await async_get_ip_from_ble(self.ble_device):
+                if ip := await self._async_get_ip_from_ble():
                     LOGGER.debug("Got IP %s from BLE, using it", ip)
                     state.host = ip
                     state.port = DEFAULT_HTTP_PORT
@@ -995,12 +1047,17 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert mac is not None
 
-        async with self._async_provision_context(mac) as state:
-            self._provision_result = (
-                await self._async_provision_wifi_and_wait_for_zeroconf(
-                    mac, password, state
+        try:
+            async with self._async_provision_context(mac) as state:
+                self._provision_result = (
+                    await self._async_provision_wifi_and_wait_for_zeroconf(
+                        mac, password, state
+                    )
                 )
-            )
+        finally:
+            # Always disconnect BLE after provisioning attempt completes
+            # We either succeeded (and will use IP now) or failed (and user will retry)
+            await self._async_disconnect_ble()
 
     async def async_step_do_provision(
         self, user_input: dict[str, Any] | None = None
@@ -1218,6 +1275,17 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_get_info(self, host: str, port: int) -> dict[str, Any]:
         """Get info from shelly device."""
         return await get_info(async_get_clientsession(self.hass), host, port=port)
+
+    @callback
+    def async_remove(self) -> None:
+        """Handle flow removal - cleanup BLE connection."""
+        super().async_remove()
+        if self._ble_rpc_device is not None:
+            # Schedule cleanup as background task since async_remove is sync
+            self.hass.async_create_background_task(
+                self._async_disconnect_ble(),
+                name="shelly_config_flow_ble_cleanup",
+            )
 
     @staticmethod
     @callback

@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
@@ -231,8 +231,9 @@ async def test_climate_unavailable_on_update_failure(
     )
 
     # Advance time to trigger coordinator update (30 second interval)
-    freezer.tick(timedelta(seconds=35))
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Entity should now be unavailable
     state = hass.states.get("climate.test_thermostat")

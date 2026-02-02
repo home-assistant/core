@@ -56,6 +56,9 @@
       "boost_state": {
         "name": "Boost state"
       },
+      "config_status_operational": {
+        "name": "Configuration status"
+      },
       "dishwasher_alarm_inflow": {
         "name": "Inflow alarm"
       },
@@ -88,6 +91,15 @@
       },
       "test_in_progress": {
         "name": "Test in progress"
+      },
+      "thermostat_remote_sensing_local_temperature": {
+        "name": "Local temperature remote sensing"
+      },
+      "thermostat_remote_sensing_occupancy": {
+        "name": "Occupancy remote sensing"
+      },
+      "thermostat_remote_sensing_outdoor_temperature": {
+        "name": "Outdoor temperature remote sensing"
       },
       "valve_fault_blocked": {
         "name": "Valve blocked"
@@ -208,6 +220,9 @@
       "led_indicator_intensity_on": {
         "name": "LED on intensity"
       },
+      "occupied_setback": {
+        "name": "Occupied setback"
+      },
       "off_transition_time": {
         "name": "Off transition time"
       },
@@ -222,6 +237,9 @@
       },
       "pump_setpoint": {
         "name": "Setpoint"
+      },
+      "speaker_setpoint": {
+        "name": "Volume"
       },
       "temperature_offset": {
         "name": "Temperature offset"
