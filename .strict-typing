@@ -389,6 +389,7 @@ homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
 homeassistant.components.open_router.*
 homeassistant.components.openai_conversation.*
+homeassistant.components.openevse.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
 homeassistant.components.openuv.*
