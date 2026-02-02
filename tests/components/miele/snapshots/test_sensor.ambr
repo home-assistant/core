@@ -93,6 +93,162 @@
     'state': 'in_use',
   })
 # ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.coffee_system_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-descaling_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Coffee system',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffee_system_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.coffee_system_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'degreasing_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-degreasing_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Coffee system',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffee_system_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_4-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.coffee_system_4',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk_cleaning_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-milk_cleaning_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_4-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Coffee system',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.coffee_system_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_coffee_system_sensor_states[platforms0-coffee_system.json][sensor.coffee_system_program-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1876,6 +2032,159 @@
     'state': 'off',
   })
 # ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_dummyappliance_coffeesystem_degreasing_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_degreasing_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'degreasing_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-degreasing_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_dummyappliance_coffeesystem_degreasing_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_degreasing_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_dummyappliance_coffeesystem_descaling_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_descaling_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-descaling_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_dummyappliance_coffeesystem_descaling_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_descaling_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk_cleaning_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-milk_cleaning_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_fan_hob_sensor_states[platforms0-fan_devices.json][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2583,6 +2892,159 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-18.0',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_dummyappliance_coffeesystem_degreasing_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_degreasing_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'degreasing_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-degreasing_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_dummyappliance_coffeesystem_degreasing_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_degreasing_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_dummyappliance_coffeesystem_descaling_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_descaling_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-descaling_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_dummyappliance_coffeesystem_descaling_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_descaling_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk_cleaning_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-milk_cleaning_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
   })
 # ---
 # name: test_fridge_freezer_sensor_states[platforms0-fridge_freezer.json][sensor.powerdisk_level-entry]
@@ -3524,6 +3986,159 @@
     'state': 'plate_step_boost',
   })
 # ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_dummyappliance_coffeesystem_degreasing_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_degreasing_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'degreasing_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-degreasing_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_dummyappliance_coffeesystem_degreasing_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_degreasing_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_dummyappliance_coffeesystem_descaling_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_descaling_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-descaling_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_dummyappliance_coffeesystem_descaling_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_descaling_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk_cleaning_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-milk_cleaning_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_hob_sensor_states[platforms0-hob.json][sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_hob_sensor_states[platforms0-hob.json][sensor.powerdisk_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4117,6 +4732,159 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.miele_dummyappliance_coffeesystem_degreasing_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_degreasing_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'degreasing_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-degreasing_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.miele_dummyappliance_coffeesystem_degreasing_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_degreasing_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.miele_dummyappliance_coffeesystem_descaling_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_descaling_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-descaling_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.miele_dummyappliance_coffeesystem_descaling_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_descaling_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk_cleaning_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-milk_cleaning_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[platforms0][sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven-entry]
@@ -6901,6 +7669,159 @@
     'state': 'off',
   })
 # ---
+# name: test_sensor_states_api_push[platforms0][sensor.miele_dummyappliance_coffeesystem_degreasing_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_degreasing_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'degreasing_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-degreasing_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.miele_dummyappliance_coffeesystem_degreasing_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_degreasing_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.miele_dummyappliance_coffeesystem_descaling_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_descaling_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-descaling_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.miele_dummyappliance_coffeesystem_descaling_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_descaling_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk_cleaning_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-milk_cleaning_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states_api_push[platforms0][sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_sensor_states_api_push[platforms0][sensor.oven-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -9436,6 +10357,159 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_dummyappliance_coffeesystem_degreasing_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_degreasing_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'degreasing_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-degreasing_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_dummyappliance_coffeesystem_degreasing_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_degreasing_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_dummyappliance_coffeesystem_descaling_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_descaling_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'descaling_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-descaling_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_dummyappliance_coffeesystem_descaling_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_descaling_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'miele',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'milk_cleaning_counter',
+    'unique_id': 'DummyAppliance_CoffeeSystem-milk_cleaning_counter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.miele_dummyappliance_coffeesystem_milk_cleaning_counter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
   })
 # ---
 # name: test_vacuum_sensor_states[platforms0-vacuum_device.json][sensor.powerdisk_level-entry]
