@@ -193,7 +193,7 @@ class MultipleTimersMatchedError(intent.IntentHandleError):
         super().__init__("Multiple timers matched", MULTIPLE_TIMERS_MATCHED_RESPONSE)
 
 
-class NoIntentMatchError(intent.IntentHandleError):
+class NoTimerCommandError(intent.IntentHandleError):
     """Error when a conversation command does not match any intent."""
 
     def __init__(self, command: str) -> None:
@@ -852,7 +852,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
         if conversation_command and not await self._validate_conversation_command(
             intent_obj, conversation_command
         ):
-            raise NoIntentMatchError(conversation_command)
+            raise NoTimerCommandError(conversation_command)
 
         name: str | None = None
         if "name" in slots:

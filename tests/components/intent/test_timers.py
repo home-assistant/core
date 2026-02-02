@@ -9,7 +9,7 @@ from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent.timers import (
     MultipleTimersMatchedError,
-    NoIntentMatchError,
+    NoTimerCommandError,
     TimerEventType,
     TimerInfo,
     TimerManager,
@@ -1539,7 +1539,7 @@ async def test_start_timer_with_invalid_conversation_command(
     mock_handle_timer = MagicMock()
     async_register_timer_handler(hass, device_id, mock_handle_timer)
 
-    with pytest.raises(NoIntentMatchError):
+    with pytest.raises(NoTimerCommandError):
         await intent.async_handle(
             hass,
             "test",
