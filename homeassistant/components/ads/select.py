@@ -9,7 +9,7 @@ from homeassistant.components.select import (
     PLATFORM_SCHEMA as SELECT_PLATFORM_SCHEMA,
     SelectEntity,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,6 +28,7 @@ PLATFORM_SCHEMA = SELECT_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -44,8 +45,9 @@ def setup_platform(
     ads_var: str = config[CONF_ADS_VAR]
     name: str = config[CONF_NAME]
     options: list[str] = config[CONF_OPTIONS]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
-    entity = AdsSelect(ads_hub, ads_var, name, options)
+    entity = AdsSelect(ads_hub, ads_var, name, options, unique_id)
 
     add_entities([entity])
 
@@ -59,9 +61,10 @@ class AdsSelect(AdsEntity, SelectEntity):
         ads_var: str,
         name: str,
         options: list[str],
+        unique_id: str | None,
     ) -> None:
         """Initialize the AdsSelect entity."""
-        super().__init__(ads_hub, name, ads_var)
+        super().__init__(ads_hub, name, ads_var, unique_id)
         self._attr_options = options
         self._attr_current_option = None
 

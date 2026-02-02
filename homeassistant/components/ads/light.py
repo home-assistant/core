@@ -13,7 +13,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -32,6 +32,7 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_ADS_VAR_BRIGHTNESS): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -48,8 +49,11 @@ def setup_platform(
     ads_var_enable: str = config[CONF_ADS_VAR]
     ads_var_brightness: str | None = config.get(CONF_ADS_VAR_BRIGHTNESS)
     name: str = config[CONF_NAME]
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
-    add_entities([AdsLight(ads_hub, ads_var_enable, ads_var_brightness, name)])
+    add_entities(
+        [AdsLight(ads_hub, ads_var_enable, ads_var_brightness, name, unique_id)]
+    )
 
 
 class AdsLight(AdsEntity, LightEntity):
@@ -61,9 +65,10 @@ class AdsLight(AdsEntity, LightEntity):
         ads_var_enable: str,
         ads_var_brightness: str | None,
         name: str,
+        unique_id: str | None,
     ) -> None:
         """Initialize AdsLight entity."""
-        super().__init__(ads_hub, name, ads_var_enable)
+        super().__init__(ads_hub, name, ads_var_enable, unique_id)
         self._state_dict[STATE_KEY_BRIGHTNESS] = None
         self._ads_var_brightness = ads_var_brightness
         if ads_var_brightness is not None:

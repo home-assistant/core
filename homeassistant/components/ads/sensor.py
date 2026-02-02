@@ -13,7 +13,12 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -53,6 +58,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -73,6 +79,7 @@ def setup_platform(
     device_class: SensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
     state_class: SensorStateClass | None = config.get(CONF_STATE_CLASS)
     unit_of_measurement: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
     entity = AdsSensor(
         ads_hub,
@@ -83,6 +90,7 @@ def setup_platform(
         device_class,
         state_class,
         unit_of_measurement,
+        unique_id,
     )
 
     add_entities([entity])
@@ -101,9 +109,10 @@ class AdsSensor(AdsEntity, SensorEntity):
         device_class: SensorDeviceClass | None,
         state_class: SensorStateClass | None,
         unit_of_measurement: str | None,
+        unique_id: str | None,
     ) -> None:
         """Initialize AdsSensor entity."""
-        super().__init__(ads_hub, name, ads_var)
+        super().__init__(ads_hub, name, ads_var, unique_id)
         self._ads_type = ads_type
         self._factor = factor
         self._attr_device_class = device_class

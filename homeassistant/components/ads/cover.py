@@ -15,7 +15,7 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -45,6 +45,7 @@ PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ADS_VAR_STOP): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -66,6 +67,7 @@ def setup_platform(
     ads_var_stop: str | None = config.get(CONF_ADS_VAR_STOP)
     name: str = config[CONF_NAME]
     device_class: CoverDeviceClass | None = config.get(CONF_DEVICE_CLASS)
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
     add_entities(
         [
@@ -79,6 +81,7 @@ def setup_platform(
                 ads_var_stop,
                 name,
                 device_class,
+                unique_id,
             )
         ]
     )
@@ -98,9 +101,10 @@ class AdsCover(AdsEntity, CoverEntity):
         ads_var_stop: str | None,
         name: str,
         device_class: CoverDeviceClass | None,
+        unique_id: str | None,
     ) -> None:
         """Initialize AdsCover entity."""
-        super().__init__(ads_hub, name, ads_var_is_closed)
+        super().__init__(ads_hub, name, ads_var_is_closed, unique_id)
         if self._attr_unique_id is None:
             if ads_var_position is not None:
                 self._attr_unique_id = ads_var_position

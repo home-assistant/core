@@ -12,7 +12,7 @@ from homeassistant.components.valve import (
     ValveEntity,
     ValveEntityFeature,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -29,6 +29,7 @@ PLATFORM_SCHEMA = VALVE_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): VALVE_DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -45,8 +46,9 @@ def setup_platform(
     ads_var: str = config[CONF_ADS_VAR]
     name: str = config[CONF_NAME]
     device_class: ValveDeviceClass | None = config.get(CONF_DEVICE_CLASS)
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
-    entity = AdsValve(ads_hub, ads_var, name, device_class)
+    entity = AdsValve(ads_hub, ads_var, name, device_class, unique_id)
 
     add_entities([entity])
 
@@ -62,9 +64,10 @@ class AdsValve(AdsEntity, ValveEntity):
         ads_var: str,
         name: str,
         device_class: ValveDeviceClass | None,
+        unique_id: str | None,
     ) -> None:
         """Initialize AdsValve entity."""
-        super().__init__(ads_hub, name, ads_var)
+        super().__init__(ads_hub, name, ads_var, unique_id)
         self._attr_device_class = device_class
         self._attr_reports_position = False
         self._attr_is_closed = True

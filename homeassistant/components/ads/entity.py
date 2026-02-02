@@ -18,14 +18,20 @@ class AdsEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, ads_hub: AdsHub, name: str, ads_var: str) -> None:
+    def __init__(
+        self,
+        ads_hub: AdsHub,
+        name: str,
+        ads_var: str,
+        unique_id: str | None = None,
+    ) -> None:
         """Initialize ADS binary sensor."""
         self._state_dict: dict[str, Any] = {}
         self._state_dict[STATE_KEY_STATE] = None
         self._ads_hub = ads_hub
         self._ads_var = ads_var
         self._event: asyncio.Event | None = None
-        self._attr_unique_id = ads_var
+        self._attr_unique_id = unique_id or ads_var
         self._attr_name = name
 
     async def async_initialize_device(

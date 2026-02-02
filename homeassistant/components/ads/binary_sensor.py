@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,6 +27,7 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -43,8 +44,9 @@ def setup_platform(
     ads_var: str = config[CONF_ADS_VAR]
     name: str = config[CONF_NAME]
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
+    unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
-    ads_sensor = AdsBinarySensor(ads_hub, name, ads_var, device_class)
+    ads_sensor = AdsBinarySensor(ads_hub, name, ads_var, device_class, unique_id)
     add_entities([ads_sensor])
 
 
@@ -57,9 +59,10 @@ class AdsBinarySensor(AdsEntity, BinarySensorEntity):
         name: str,
         ads_var: str,
         device_class: BinarySensorDeviceClass | None,
+        unique_id: str | None,
     ) -> None:
         """Initialize ADS binary sensor."""
-        super().__init__(ads_hub, name, ads_var)
+        super().__init__(ads_hub, name, ads_var, unique_id)
         self._attr_device_class = device_class or BinarySensorDeviceClass.MOVING
 
     async def async_added_to_hass(self) -> None:
