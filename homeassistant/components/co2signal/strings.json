@@ -17,7 +17,7 @@
       },
       "country": {
         "data": {
-          "country_code": "Zone Key"
+          "country_code": "Zone key"
         }
       },
       "reauth_confirm": {
@@ -40,7 +40,7 @@
         "name": "CO2 intensity",
         "state_attributes": {
           "country_code": {
-            "name": "Zone Key"
+            "name": "Zone key"
           }
         }
       },
