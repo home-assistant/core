@@ -130,19 +130,19 @@ class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[Health]]):
 
 
 class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
-    """Movies update coordinator."""
+    """Movies count update coordinator."""
 
     async def _fetch_data(self) -> int:
-        """Fetch the movies data."""
+        """Fetch the total count of movies in Radarr."""
         return len(cast(list[RadarrMovie], await self.api_client.async_get_movies()))
 
 
-class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator):
-    """Queue update coordinator."""
+class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
+    """Queue count update coordinator."""
 
     async def _fetch_data(self) -> int:
-        """Fetch the movies in queue."""
-        # page_size=1 is sufficient since we only need totalRecords count
+        """Fetch the number of movies in the download queue."""
+        # page_size=1 is sufficient since we only need the totalRecords count
         return (await self.api_client.async_get_queue(page_size=1)).totalRecords
 
 
