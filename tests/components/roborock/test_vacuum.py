@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 from vacuum_map_parser_base.map_data import Point
 
 from homeassistant.components.roborock import DOMAIN
-from homeassistant.components.roborock.const import (
+from homeassistant.components.roborock.services import (
     GET_MAPS_SERVICE_NAME,
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,

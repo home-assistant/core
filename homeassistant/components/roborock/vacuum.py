@@ -6,24 +6,17 @@ from typing import Any
 from roborock.data import RoborockStateCode, SCWindMapping, WorkStatusMapping
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    GET_MAPS_SERVICE_NAME,
-    GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-    SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
-)
+from .const import DOMAIN
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockConfigEntry,
@@ -91,33 +84,6 @@ async def async_setup_entry(
         RoborockQ7Vacuum(coordinator)
         for coordinator in config_entry.runtime_data.b01
         if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
-    )
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        GET_MAPS_SERVICE_NAME,
-        None,
-        RoborockVacuum.get_maps.__name__,
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    platform.async_register_entity_service(
-        GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
-        None,
-        RoborockVacuum.get_vacuum_current_position.__name__,
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    platform.async_register_entity_service(
-        SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
-        cv.make_entity_service_schema(
-            {
-                vol.Required("x"): vol.Coerce(int),
-                vol.Required("y"): vol.Coerce(int),
-            },
-        ),
-        RoborockVacuum.async_set_vacuum_goto_position.__name__,
-        supports_response=SupportsResponse.NONE,
     )
 
 
