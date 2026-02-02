@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
-
 import pytest
 from tuya_sharing import CustomerDevice, Manager
 
+from homeassistant.components.tuya import Service
 from homeassistant.components.tuya.const import DOMAIN
-from homeassistant.components.tuya.service import async_register_services
+from homeassistant.components.tuya.service import _get_tuya_device
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import initialize_entry
@@ -18,59 +17,75 @@ from . import initialize_entry
 from tests.common import MockConfigEntry
 
 
+def find_device_id(mock_device: CustomerDevice, hass: HomeAssistant) -> str:
+    """Helper to find the Home Assistant device registry ID for a mock Tuya device."""
+    tuya_device_id = mock_device.id
+    device_registry = dr.async_get(hass)
+
+    for entry in device_registry.devices.values():
+        if (DOMAIN, tuya_device_id) in entry.identifiers:
+            return entry.id
+
+    raise ValueError(f"Device with Tuya ID {tuya_device_id} not found in registry")
+
+
 @pytest.mark.parametrize("mock_device_code", ["cwwsq_wfkzyy0evslzsmoi"])
-async def test_get_data_success(
+async def test_get_meal_plan_data(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
-    """Test get_meal_plan_data service returns device status."""
+    """Test GET_MEAL_PLAN_DATA normal and error cases using real device registry."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-    await async_register_services(hass)
+    device_id = find_device_id(mock_device, hass)
 
-    with patch(
-        "homeassistant.components.tuya.service._get_tuya_device",
-        return_value=(mock_device, mock_manager),
-    ):
-        result = await hass.services.async_call(
-            DOMAIN,
-            "get_meal_plan_data",
-            {"device_id": mock_device.id},
-            blocking=True,
-            return_response=True,
-        )
+    # Normal case
+    result = await hass.services.async_call(
+        DOMAIN,
+        Service.GET_MEAL_PLAN_DATA,
+        {"device_id": device_id},
+        blocking=True,
+        return_response=True,
+    )
     assert result["data"] == mock_device.status["meal_plan"]
 
+    # Error case: no meal_plan in device status
+    mock_device.status.pop("meal_plan", None)
+    with pytest.raises(
+        ServiceValidationError, match="does not have data for meal_plan"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            Service.GET_MEAL_PLAN_DATA,
+            {"device_id": device_id},
+            blocking=True,
+            return_response=True,
+        )
+
 
 @pytest.mark.parametrize("mock_device_code", ["cwwsq_wfkzyy0evslzsmoi"])
-async def test_set_data_success(
+async def test_set_meal_plan_data(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
-    """Test set_meal_plan_data service sends command."""
+    """Test SET_MEAL_PLAN_DATA normal and error cases using real device registry."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-    await async_register_services(hass)
+    device_id = find_device_id(mock_device, hass)
 
-    with patch(
-        "homeassistant.components.tuya.service._get_tuya_device",
-        return_value=(mock_device, mock_manager),
-    ):
-        result = await hass.services.async_call(
-            DOMAIN,
-            "set_meal_plan_data",
-            {
-                "device_id": mock_device.id,
-                "data": "fwQAAgB/BgABAH8JAAIBfwwAAQB/DwACAX8VAAIBfxcAAQAIEgABAQ==",
-            },
-            blocking=True,
-            return_response=True,
-        )
-
-    assert result["success"] is True
-    assert result["value"] == "fwQAAgB/BgABAH8JAAIBfwwAAQB/DwACAX8VAAIBfxcAAQAIEgABAQ=="
+    # Normal case
+    await hass.services.async_call(
+        DOMAIN,
+        Service.SET_MEAL_PLAN_DATA,
+        {
+            "device_id": device_id,
+            "data": "fwQAAgB/BgABAH8JAAIBfwwAAQB/DwACAX8VAAIBfxcAAQAIEgABAQ==",
+        },
+        blocking=True,
+    )
+    # We use mock_device.id since this is sent to the manager
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id,
         [
@@ -81,78 +96,18 @@ async def test_set_data_success(
         ],
     )
 
-
-@pytest.mark.parametrize("mock_device_code", ["cwwsq_wfkzyy0evslzsmoi"])
-@pytest.mark.parametrize(
-    "data_value",
-    [
-        "string_value",
-    ],
-)
-async def test_set_data_various_data_types(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    data_value,
-) -> None:
-    """Test set_data service with various data types."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-    await async_register_services(hass)
-
-    with patch(
-        "homeassistant.components.tuya.service._get_tuya_device",
-        return_value=(mock_device, mock_manager),
-    ):
-        result = await hass.services.async_call(
+    # Error case: unsupported meal_plan function
+    mock_device.function = []
+    with pytest.raises(ServiceValidationError, match="does not support meal_plan"):
+        await hass.services.async_call(
             DOMAIN,
-            "set_meal_plan_data",
-            {"device_id": mock_device.id, "data": data_value},
+            Service.SET_MEAL_PLAN_DATA,
+            {
+                "device_id": device_id,
+                "data": "fwQAAgB/BgABAH8JAAIBfwwAAQB/DwACAX8VAAIBfxcAAQAIEgABAQ==",
+            },
             blocking=True,
-            return_response=True,
         )
-
-    assert result["value"] == data_value
-
-
-@pytest.mark.parametrize("mock_device_code", ["cwwsq_wfkzyy0evslzsmoi"])
-async def test_services_with_actual_device_lookup(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-) -> None:
-    """Test services with actual _get_tuya_device implementation."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-    await async_register_services(hass)
-
-    # Get the device ID from the device registry
-    device_registry = dr.async_get(hass)
-    device = list(device_registry.devices.values())[0]
-
-    # Test get_data
-    result = await hass.services.async_call(
-        DOMAIN,
-        "get_meal_plan_data",
-        {"device_id": device.id},
-        blocking=True,
-        return_response=True,
-    )
-    assert result["data"] == mock_device.status["meal_plan"]
-
-    # Test set_data
-    result = await hass.services.async_call(
-        DOMAIN,
-        "set_meal_plan_data",
-        {
-            "device_id": device.id,
-            "data": "fwQAAgB/BgABAH8JAAIBfwwAAQB/DwACAX8VAAIBfxcAAQAIEgABAQ==",
-        },
-        blocking=True,
-        return_response=True,
-    )
-    assert result["success"] is True
-    mock_manager.send_commands.assert_called_once()
 
 
 @pytest.mark.parametrize("mock_device_code", ["cwwsq_wfkzyy0evslzsmoi"])
@@ -164,44 +119,26 @@ async def test_get_tuya_device_error_cases(
 ) -> None:
     """Test _get_tuya_device error handling paths."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-    await async_register_services(hass)
 
-    with pytest.raises(HomeAssistantError, match="Device .* not found"):
-        await hass.services.async_call(
-            DOMAIN,
-            "get_meal_plan_data",
-            {"device_id": "invalid_device_id"},
-            blocking=True,
-            return_response=True,
-        )
+    # Case 1: Device ID not found
+    with pytest.raises(ServiceValidationError, match="Device .* not found"):
+        _get_tuya_device(hass, "invalid_device_id")
 
-    # Test: device is not a Tuya device
+    # Case 2: Device exists but is not a Tuya device
     device_registry = dr.async_get(hass)
     non_tuya_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("other_domain", "some_id")},
         name="Non-Tuya Device",
     )
-    with pytest.raises(HomeAssistantError, match="is not a Tuya device"):
-        await hass.services.async_call(
-            DOMAIN,
-            "get_meal_plan_data",
-            {"device_id": non_tuya_device.id},
-            blocking=True,
-            return_response=True,
-        )
+    with pytest.raises(ServiceValidationError, match="is not a Tuya device"):
+        _get_tuya_device(hass, non_tuya_device.id)
 
-    # Test: Tuya device not in config entry
+    # Case 3: Tuya device exists in registry but not in manager.device_map
     tuya_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "unknown_tuya_id")},
         name="Unknown Tuya Device",
     )
-    with pytest.raises(HomeAssistantError, match="Tuya device .* not found"):
-        await hass.services.async_call(
-            DOMAIN,
-            "get_meal_plan_data",
-            {"device_id": tuya_device.id},
-            blocking=True,
-            return_response=True,
-        )
+    with pytest.raises(ServiceValidationError, match="Tuya device .* not found"):
+        _get_tuya_device(hass, tuya_device.id)
