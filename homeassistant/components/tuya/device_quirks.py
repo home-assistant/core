@@ -24,6 +24,27 @@ DEFAULT_PROFILE_DEVICES = {
     "wfkzyy0evslzsmoi",
 }
 
+DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+
+def days_bitmap_to_names(entry: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Convert bitmap integer to list of day names."""
+    for item in entry:
+        bitmask = item.get("days", 0)
+        item["days"] = [DAYS[i] for i in range(7) if bitmask & (1 << i)]
+    return entry
+
+
+def days_names_to_bitmap(entry: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Convert list of day names to bitmap integer."""
+    for item in entry:
+        bitmask = 0
+        for day in item.get("days", []):
+            if day in DAYS:
+                bitmask |= 1 << DAYS.index(day)
+        item["days"] = bitmask
+    return entry
+
 
 def create_day_transformer(mapping: list[tuple]):
     """mapping: list of (internal_bit, device_bit)."""
