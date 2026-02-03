@@ -1,17 +1,4 @@
-"""Test fixtures for Teslemetry component.
-
-Test naming conventions:
-- `test_*`: Standard tests using default VEHICLE_DATA and METADATA fixtures
-- `test_*_alt`: Tests using VEHICLE_DATA_ALT fixture data to verify entity
-  behavior with alternative vehicle state values (different charge levels,
-  door states, climate settings, etc.)
-- `test_*_noscope`: Tests using METADATA_NOSCOPE fixture data to verify
-  behavior with limited API scopes (only openid, offline_access, and
-  vehicle_device_data scopes available). This tests graceful handling when
-  the user hasn't granted full API permissions.
-- `test_*_streaming`: Tests that verify real-time streaming updates from
-  the Teslemetry websocket connection and state restoration after reload.
-"""
+"""Test fixtures for Teslemetry component."""
 
 from __future__ import annotations
 
