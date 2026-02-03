@@ -143,9 +143,11 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 continue
 
             try:
-                containers = await self.portainer.get_containers(endpoint.id)
-                docker_version = await self.portainer.docker_version(endpoint.id)
-                docker_info = await self.portainer.docker_info(endpoint.id)
+                containers, docker_version, docker_info = await asyncio.gather(
+                    self.portainer.get_containers(endpoint.id),
+                    self.portainer.docker_version(endpoint.id),
+                    self.portainer.docker_info(endpoint.id),
+                )
 
                 prev_endpoint = self.data.get(endpoint.id) if self.data else None
                 container_map: dict[str, PortainerContainerData] = {}
