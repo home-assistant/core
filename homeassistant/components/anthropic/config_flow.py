@@ -92,6 +92,40 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     await client.models.list(timeout=10.0)
 
 
+async def get_model_list(client: anthropic.AsyncAnthropic) -> list[SelectOptionDict]:
+    """Get list of available models."""
+    try:
+        models = (await client.models.list()).data
+    except anthropic.AnthropicError:
+        models = []
+    _LOGGER.debug("Available models: %s", models)
+    model_options: list[SelectOptionDict] = []
+    short_form = re.compile(r"[^\d]-\d$")
+    for model_info in models:
+        # Resolve alias from versioned model name:
+        model_alias = (
+            model_info.id[:-9]
+            if model_info.id
+            not in (
+                "claude-3-haiku-20240307",
+                "claude-3-5-haiku-20241022",
+                "claude-3-opus-20240229",
+            )
+            else model_info.id
+        )
+        if short_form.search(model_alias):
+            model_alias += "-0"
+        if model_alias.endswith(("haiku", "opus", "sonnet")):
+            model_alias += "-latest"
+        model_options.append(
+            SelectOptionDict(
+                label=model_info.display_name,
+                value=model_alias,
+            )
+        )
+    return model_options
+
+
 class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Anthropic."""
 
@@ -401,42 +435,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 
     async def _get_model_list(self) -> list[SelectOptionDict]:
         """Get list of available models."""
-        try:
-            client = await self.hass.async_add_executor_job(
-                partial(
-                    anthropic.AsyncAnthropic,
-                    api_key=self._get_entry().data[CONF_API_KEY],
-                )
+        client = await self.hass.async_add_executor_job(
+            partial(
+                anthropic.AsyncAnthropic,
+                api_key=self._get_entry().data[CONF_API_KEY],
             )
-            models = (await client.models.list()).data
-        except anthropic.AnthropicError:
-            models = []
-        _LOGGER.debug("Available models: %s", models)
-        model_options: list[SelectOptionDict] = []
-        short_form = re.compile(r"[^\d]-\d$")
-        for model_info in models:
-            # Resolve alias from versioned model name:
-            model_alias = (
-                model_info.id[:-9]
-                if model_info.id
-                not in (
-                    "claude-3-haiku-20240307",
-                    "claude-3-5-haiku-20241022",
-                    "claude-3-opus-20240229",
-                )
-                else model_info.id
-            )
-            if short_form.search(model_alias):
-                model_alias += "-0"
-            if model_alias.endswith(("haiku", "opus", "sonnet")):
-                model_alias += "-latest"
-            model_options.append(
-                SelectOptionDict(
-                    label=model_info.display_name,
-                    value=model_alias,
-                )
-            )
-        return model_options
+        )
+        return await get_model_list(client)
 
     async def _get_location_data(self) -> dict[str, str]:
         """Get approximate location data of the user."""
