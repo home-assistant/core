@@ -115,6 +115,38 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_configured"
 
 
+async def test_reauth_flow_updates_entry(hass: HomeAssistant) -> None:
+    """Test reauthentication flow updates the entry."""
+    entry = MockConfigEntry(domain=lmstudio.DOMAIN, data=TEST_USER_DATA)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        lmstudio.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.lmstudio.config_flow.LMStudioClient.async_list_models",
+        return_value=[{"key": "test-model"}],
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_URL: TEST_USER_DATA[CONF_URL],
+                CONF_API_KEY: TEST_USER_DATA[CONF_API_KEY],
+            },
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+
+
 async def test_subentry_reconfigure(
     hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
@@ -146,6 +178,23 @@ async def test_subentry_reconfigure(
     assert subentry.data[const.CONF_PROMPT] == "test prompt"
     assert subentry.data[const.CONF_MAX_HISTORY] == 7.0
     assert subentry.data[const.CONF_TEMPERATURE] == 0.7
+
+
+async def test_subentry_cannot_connect(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test subentry setup aborts on connection errors."""
+    with patch(
+        "homeassistant.components.lmstudio.config_flow.LMStudioClient.async_list_models",
+        side_effect=LMStudioConnectionError("offline"),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (mock_config_entry.entry_id, "conversation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_create_new_conversation_subentry(

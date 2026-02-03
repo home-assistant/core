@@ -32,18 +32,20 @@ rules:
     status: exempt
     comment: No actions are implemented.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
-  entity-unavailable:
-    status: exempt
-    comment: The integration only provides stateless entities.
+  docs-configuration-parameters:
+    status: todo
+    comment: Needs documentation updates in the home-assistant.io repo.
+  docs-installation-parameters:
+    status: todo
+    comment: Needs documentation updates in the home-assistant.io repo.
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
+  log-when-unavailable: done
+  parallel-updates:
     status: exempt
-    comment: The integration only provides stateless entities.
-  parallel-updates: todo
+    comment: The integration does not use parallel entity updates.
   reauthentication-flow: done
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done

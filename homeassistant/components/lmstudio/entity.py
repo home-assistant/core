@@ -47,6 +47,7 @@ class LMStudioBaseLLMEntity(Entity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_available = True
 
     def __init__(self, entry: LMStudioConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
@@ -117,11 +118,19 @@ class LMStudioBaseLLMEntity(Entity):
                 pass
         except LMStudioAuthError as err:
             raise HomeAssistantError("Your authentication failed") from err
-        except (LMStudioConnectionError, LMStudioResponseError) as err:
+        except LMStudioConnectionError as err:
+            self._handle_unavailable(err)
             _LOGGER.error("Unexpected error talking to server: %s", err)
             raise HomeAssistantError(
                 f"Sorry, your request could not reach the server: {err}"
             ) from err
+        except LMStudioResponseError as err:
+            _LOGGER.error("Unexpected error talking to server: %s", err)
+            raise HomeAssistantError(
+                f"Sorry, your request could not reach the server: {err}"
+            ) from err
+        else:
+            self._handle_recovered()
 
     @staticmethod
     def _get_system_prompt(chat_log: conversation.ChatLog) -> str:
@@ -132,6 +141,24 @@ class LMStudioBaseLLMEntity(Entity):
         if isinstance(first, conversation.SystemContent) and first.content:
             return first.content
         return ""
+
+    def _handle_unavailable(self, err: Exception) -> None:
+        """Log and mark the server as unavailable."""
+        if not self.entry.runtime_data.unavailable_logged:
+            _LOGGER.info("The server is unavailable: %s", err)
+            self.entry.runtime_data.unavailable_logged = True
+        if self._attr_available:
+            self._attr_available = False
+            self.async_write_ha_state()
+
+    def _handle_recovered(self) -> None:
+        """Log and mark the server as recovered."""
+        if self.entry.runtime_data.unavailable_logged:
+            _LOGGER.info("The server is back online")
+            self.entry.runtime_data.unavailable_logged = False
+        if not self._attr_available:
+            self._attr_available = True
+            self.async_write_ha_state()
 
     @staticmethod
     def _normalize_system_prompt(system_prompt: str) -> str:

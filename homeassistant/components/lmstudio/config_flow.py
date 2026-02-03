@@ -111,6 +111,9 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
                         STEP_USER_DATA_SCHEMA, user_input
                     ),
                     errors=errors,
+                    description_placeholders={
+                        "default_url": "http://localhost:1234",
+                    },
                 )
 
             user_input[CONF_URL] = url
@@ -161,7 +164,11 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm reauth details."""
         if user_input is None:
             return self.async_show_form(
-                step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="reauth_confirm",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                description_placeholders={
+                    "default_url": "http://localhost:1234",
+                },
             )
 
         return await self.async_step_user(user_input)

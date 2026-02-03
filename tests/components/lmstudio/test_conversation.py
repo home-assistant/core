@@ -1,13 +1,18 @@
 """Tests for the LM Studio conversation integration."""
 
 from collections.abc import AsyncGenerator
+import logging
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import conversation
-from homeassistant.components.lmstudio.client import LMStudioStreamEvent
+from homeassistant.components.lmstudio.client import (
+    LMStudioConnectionError,
+    LMStudioStreamEvent,
+)
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
 
@@ -103,3 +108,56 @@ async def test_previous_response_id_used(
     assert payloads[1]["previous_response_id"] == "resp-1"
     assert payloads[1]["input"] == "test message 2"
     assert "You are helpful." in payloads[0]["system_prompt"]
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_unavailable_logging_and_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test logging and availability when the server is unavailable and recovers."""
+    caplog.set_level(logging.INFO)
+
+    async def fail_stream(
+        self, payload: dict[str, Any]
+    ) -> AsyncGenerator[LMStudioStreamEvent]:
+        if payload.get("_force_yield"):
+            yield  # pragma: no cover - ensures async generator
+        raise LMStudioConnectionError("offline")
+
+    with patch(
+        "homeassistant.components.lmstudio.client.LMStudioClient.async_stream_chat",
+        new=fail_stream,
+    ):
+        await conversation.async_converse(
+            hass,
+            "test message",
+            "conversation-id",
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+
+    assert "The server is unavailable" in caplog.text
+    state = hass.states.get("conversation.lm_studio_conversation")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    caplog.clear()
+
+    with patch(
+        "homeassistant.components.lmstudio.client.LMStudioClient.async_stream_chat",
+        new=_stream_chat,
+    ):
+        await conversation.async_converse(
+            hass,
+            "test message 2",
+            "conversation-id",
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+
+    assert "The server is back online" in caplog.text
+    state = hass.states.get("conversation.lm_studio_conversation")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
