@@ -15,15 +15,14 @@ from voluptuous.error import MultipleInvalid
 
 from homeassistant import exceptions
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.components.sharkiq import DOMAIN
+from homeassistant.components.sharkiq.const import ATTR_ROOMS, DOMAIN
+from homeassistant.components.sharkiq.services import SERVICE_CLEAN_ROOM
 from homeassistant.components.sharkiq.vacuum import (
     ATTR_ERROR_CODE,
     ATTR_ERROR_MSG,
     ATTR_LOW_LIGHT,
     ATTR_RECHARGE_RESUME,
-    ATTR_ROOMS,
     FAN_SPEEDS_MAP,
-    SERVICE_CLEAN_ROOM,
 )
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
