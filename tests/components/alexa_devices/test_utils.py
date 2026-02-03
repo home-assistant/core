@@ -7,6 +7,7 @@ from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
 import pytest
 
 from homeassistant.components.alexa_devices.const import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.core import HomeAssistant
@@ -129,6 +130,45 @@ async def test_alexa_dnd_group_removal(
     mock_amazon_devices_client.get_devices_data.return_value[
         TEST_DEVICE_1_SN
     ].device_family = SPEAKER_GROUP_FAMILY
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.states.get(entity.entity_id)
+
+
+async def test_alexa_unsupported_notification_sensor_removal(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test notification sensors are removed from devices that do not support them."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, mock_config_entry.entry_id)},
+        name=mock_config_entry.title,
+        manufacturer="Amazon",
+        model=SPEAKER_GROUP_MODEL,
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
+    entity = entity_registry.async_get_or_create(
+        DOMAIN,
+        SENSOR_DOMAIN,
+        unique_id=f"{TEST_DEVICE_1_SN}-Timer",
+        device_id=device.id,
+        config_entry=mock_config_entry,
+        has_entity_name=True,
+    )
+
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_DEVICE_1_SN
+    ].notifications_supported = False
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
