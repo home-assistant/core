@@ -781,7 +781,7 @@ def _warn_chat_id_migration(service: ServiceCall) -> set[int]:
         service.hass,
         DOMAIN,
         f"migrate_chat_ids_in_target_{service_call_origin}_{service.service}",
-        breaks_in_ha_version="2026.7.0",
+        breaks_in_ha_version="2026.9.0",
         is_fixable=True,
         is_persistent=True,
         severity=ir.IssueSeverity.WARNING,
