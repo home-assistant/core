@@ -684,6 +684,8 @@ class WeatherExtraStoredData(ExtraStoredData):
             ("last_wind_gust_speed", (float, int)),
             ("last_wind_speed", (float, int)),
         ):
+            # This is needed to safeguard against previous restore data that has strings
+            # instead of floats or ints.
             if key not in restored or (
                 (value := restored[key]) is not None and not isinstance(value, vtypes)
             ):
