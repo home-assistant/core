@@ -49,6 +49,8 @@
       "import_failed": "Failed to import configuration",
       "wrong_account": "You must use the same account that was originally configured",
       "reauth_successful": "Re-authentication was successful"
+    }
+  },
   "selector": {
     "send_message_data": {
       "fields": {

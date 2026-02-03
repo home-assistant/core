@@ -685,6 +685,7 @@ class MatrixBot:
         """Close the Matrix client."""
         if self._client is not None:
             await self._client.close()
+
     async def handle_send_reaction(self, service: ServiceCall) -> None:
         """Handle the react service."""
         await self._send_reaction(
