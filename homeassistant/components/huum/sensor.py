@@ -30,7 +30,6 @@ class HuumTemperatureSensor(HuumBaseEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_translation_key = "temperature"
 
     def __init__(self, coordinator: HuumDataUpdateCoordinator) -> None:
         """Initialize the temperature sensor."""
