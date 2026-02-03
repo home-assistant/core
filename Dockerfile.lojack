@@ -1,0 +1,29 @@
+# Custom Home Assistant image with LoJack integration
+FROM ghcr.io/home-assistant/home-assistant:stable
+
+LABEL maintainer="@devinslick"
+LABEL description="Home Assistant with LoJack custom component"
+
+# Install the lojack-api dependency
+RUN pip3 install --no-cache-dir lojack-api==0.6.3
+
+# Copy the lojack custom component
+COPY homeassistant/components/lojack /usr/src/homeassistant/homeassistant/components/lojack
+
+# Ensure proper permissions
+RUN chmod -R 755 /usr/src/homeassistant/homeassistant/components/lojack
+
+# Register lojack in Home Assistant's generated files (under 'integration' key)
+RUN python3 -c "\
+import json; \
+f = open('/usr/src/homeassistant/homeassistant/generated/integrations.json', 'r'); \
+data = json.load(f); \
+f.close(); \
+data['integration']['lojack'] = {'name': 'LoJack', 'integration_type': 'hub', 'config_flow': True, 'iot_class': 'cloud_polling', 'quality_scale': 'bronze'}; \
+f = open('/usr/src/homeassistant/homeassistant/generated/integrations.json', 'w'); \
+json.dump(data, f); \
+f.close(); \
+print('Added lojack to integrations.json')"
+
+# Add lojack to config_flows.py (8 spaces indentation to match the list)
+RUN sed -i '/"local_todo",/a\        "lojack",' /usr/src/homeassistant/homeassistant/generated/config_flows.py

@@ -13,9 +13,8 @@ This document provides step-by-step instructions for real-world testing of the L
 
 ```bash
 # Clone the repository (if not already done)
-git clone https://github.com/devinslick/homeassistant-core-with-lojack.git
-cd homeassistant-core-with-lojack
-git checkout claude/add-lojack-integration-kurS4
+git clone https://github.com/homeassistant/core.git
+cd core
 
 # Create virtual environment
 python3 -m venv venv
