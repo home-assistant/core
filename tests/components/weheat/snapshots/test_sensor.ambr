@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'offline',
         'standby',
         'water_check',
         'heating',
@@ -32,6 +33,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -52,6 +54,7 @@
       'device_class': 'enum',
       'friendly_name': 'Test Model',
       'options': list([
+        'offline',
         'standby',
         'water_check',
         'heating',
@@ -94,6 +97,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Central heating inlet temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -150,6 +154,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Central heating pump flow',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -206,6 +211,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor speed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -258,6 +264,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Compressor usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -310,6 +317,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'COP',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -364,6 +372,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Current room temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -420,6 +429,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW bottom temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -476,6 +486,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW pump flow',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -532,6 +543,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW top temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -588,6 +600,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electricity used',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -644,6 +657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Input power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -700,6 +714,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Output power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -756,6 +771,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outside temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -812,6 +828,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room temperature setpoint',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -868,6 +885,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total energy output',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -924,6 +942,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water inlet temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -980,6 +999,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water outlet temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1036,6 +1056,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

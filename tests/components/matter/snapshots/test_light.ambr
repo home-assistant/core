@@ -28,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -80,122 +81,6 @@
     'state': 'on',
   })
 # ---
-# name: test_lights[dimmable_light][light.mock_dimmable_light-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'light',
-    'entity_category': None,
-    'entity_id': 'light.mock_dimmable_light',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <LightEntityFeature: 32>,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_lights[dimmable_light][light.mock_dimmable_light-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'brightness': 51,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'Mock Dimmable Light',
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
-      ]),
-      'supported_features': <LightEntityFeature: 32>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'light.mock_dimmable_light',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_lights[dimmable_plugin_unit][light.dimmable_plugin_unit-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'light',
-    'entity_category': None,
-    'entity_id': 'light.dimmable_plugin_unit',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <LightEntityFeature: 32>,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterLight-6-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_lights[dimmable_plugin_unit][light.dimmable_plugin_unit-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'brightness': 255,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'Dimmable Plugin Unit',
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
-      ]),
-      'supported_features': <LightEntityFeature: 32>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'light.dimmable_plugin_unit',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_lights[extended_color_light][light.mock_extended_color_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -227,6 +112,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -312,6 +198,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light (RGB Indicator)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -356,63 +243,7 @@
     'state': 'off',
   })
 # ---
-# name: test_lights[mounted_dimmable_load_control_fixture][light.mock_mounted_dimmable_load_control-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'light',
-    'entity_category': None,
-    'entity_id': 'light.mock_mounted_dimmable_load_control',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <LightEntityFeature: 32>,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000000E-MatterNodeDevice-1-MatterLight-6-0',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_lights[mounted_dimmable_load_control_fixture][light.mock_mounted_dimmable_load_control-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Mounted dimmable load control',
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
-      ]),
-      'supported_features': <LightEntityFeature: 32>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'light.mock_mounted_dimmable_load_control',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_lights[multi_endpoint_light][light.inovelli_light_1-entry]
+# name: test_lights[inovelli_vtm31][light.inovelli_light_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -437,6 +268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light (1)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -451,7 +283,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[multi_endpoint_light][light.inovelli_light_1-state]
+# name: test_lights[inovelli_vtm31][light.inovelli_light_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -470,7 +302,7 @@
     'state': 'off',
   })
 # ---
-# name: test_lights[multi_endpoint_light][light.inovelli_light_6-entry]
+# name: test_lights[inovelli_vtm31][light.inovelli_light_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -501,6 +333,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light (6)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -515,7 +348,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[multi_endpoint_light][light.inovelli_light_6-state]
+# name: test_lights[inovelli_vtm31][light.inovelli_light_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -545,7 +378,182 @@
     'state': 'off',
   })
 # ---
-# name: test_lights[onoff_light][light.mock_onoff_light-entry]
+# name: test_lights[mock_dimmable_light][light.mock_dimmable_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.mock_dimmable_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LightEntityFeature: 32>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-MatterLight-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_lights[mock_dimmable_light][light.mock_dimmable_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 51,
+      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'Mock Dimmable Light',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 32>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.mock_dimmable_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_lights[mock_dimmable_plugin_unit][light.dimmable_plugin_unit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.dimmable_plugin_unit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LightEntityFeature: 32>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000024-MatterNodeDevice-1-MatterLight-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_lights[mock_dimmable_plugin_unit][light.dimmable_plugin_unit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 255,
+      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'Dimmable Plugin Unit',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 32>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.dimmable_plugin_unit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_lights[mock_mounted_dimmable_load_control_fixture][light.mock_mounted_dimmable_load_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.mock_mounted_dimmable_load_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <LightEntityFeature: 32>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000000E-MatterNodeDevice-1-MatterLight-6-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_lights[mock_mounted_dimmable_load_control_fixture][light.mock_mounted_dimmable_load_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Mounted dimmable load control',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 32>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.mock_mounted_dimmable_load_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_lights[mock_onoff_light][light.mock_onoff_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -570,6 +578,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -584,7 +593,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[onoff_light][light.mock_onoff_light-state]
+# name: test_lights[mock_onoff_light][light.mock_onoff_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': <ColorMode.ONOFF: 'onoff'>,
@@ -602,7 +611,7 @@
     'state': 'on',
   })
 # ---
-# name: test_lights[onoff_light_alt_name][light.mock_onoff_light-entry]
+# name: test_lights[mock_onoff_light_alt_name][light.mock_onoff_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -633,6 +642,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -647,7 +657,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[onoff_light_alt_name][light.mock_onoff_light-state]
+# name: test_lights[mock_onoff_light_alt_name][light.mock_onoff_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -677,7 +687,7 @@
     'state': 'on',
   })
 # ---
-# name: test_lights[onoff_light_no_name][light.mock_light-entry]
+# name: test_lights[mock_onoff_light_no_name][light.mock_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -708,6 +718,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -722,7 +733,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_lights[onoff_light_no_name][light.mock_light-state]
+# name: test_lights[mock_onoff_light_no_name][light.mock_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -777,6 +788,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
