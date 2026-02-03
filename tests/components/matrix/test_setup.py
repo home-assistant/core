@@ -113,21 +113,21 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
         },
         unique_id="@testuser:example.com",
     )
+    config_entry.add_to_hass(hass)
 
     with (
         patch("homeassistant.components.matrix.MatrixBot") as mock_bot_class,
     ):
         mock_bot = Mock()
-        mock_bot.api.login.return_value = AsyncMock()
-        mock_bot.api.sync.return_value = AsyncMock()
         mock_bot_class.return_value = mock_bot
 
         result = await async_setup_entry(hass, config_entry)
 
         assert result is True
         mock_bot_class.assert_called_once()
-
-
+        # async_setup_entry should store the bot in runtime_data and hass.data
+        assert config_entry.runtime_data is mock_bot
+        assert hass.data[DOMAIN] is mock_bot
 async def test_async_unload_entry(hass: HomeAssistant) -> None:
     """Test unloading a config entry."""
     # Setup a matrix bot in runtime_data
