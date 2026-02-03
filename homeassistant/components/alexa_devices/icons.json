@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "sensor": {
+      "volatile_organic_compounds": {
+        "default": "mdi:molecule"
+      }
+    }
+  },
   "services": {
     "send_sound": {
       "service": "mdi:cast-audio"

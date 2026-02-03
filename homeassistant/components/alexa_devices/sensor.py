@@ -111,8 +111,6 @@ SENSORS: Final = (
         key="VOC",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:molecule",
-        name="Volatile Organic Compounds",
         translation_key="volatile_organic_compounds",
     ),
     AmazonSensorEntityDescription(
