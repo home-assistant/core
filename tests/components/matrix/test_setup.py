@@ -96,9 +96,9 @@ async def test_async_setup_with_existing_config_entry(hass: HomeAssistant) -> No
         assert result is True
         # Should not create import flow since config entry exists
         mock_flow_init.assert_not_called()
-        # Config entry setup still initializes the MatrixBot
-        mock_matrix_bot.assert_called_once()
-        mock_setup_services.assert_called_once()
+        # async_setup should not initialize MatrixBot or services when entry exists
+        mock_matrix_bot.assert_not_called()
+        mock_setup_services.assert_not_called()
 
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:
@@ -113,21 +113,21 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
         },
         unique_id="@testuser:example.com",
     )
+    config_entry.add_to_hass(hass)
 
     with (
         patch("homeassistant.components.matrix.MatrixBot") as mock_bot_class,
     ):
         mock_bot = Mock()
-        mock_bot.api.login.return_value = AsyncMock()
-        mock_bot.api.sync.return_value = AsyncMock()
         mock_bot_class.return_value = mock_bot
 
         result = await async_setup_entry(hass, config_entry)
 
         assert result is True
         mock_bot_class.assert_called_once()
-
-
+        # async_setup_entry should store the bot in runtime_data and hass.data
+        assert config_entry.runtime_data is mock_bot
+        assert hass.data[DOMAIN] is mock_bot
 async def test_async_unload_entry(hass: HomeAssistant) -> None:
     """Test unloading a config entry."""
     # Setup a matrix bot in runtime_data
