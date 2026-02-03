@@ -6,7 +6,6 @@ import logging
 from typing import Any, cast
 
 from roonapi import split_media_path
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     BrowseMedia,
@@ -19,7 +18,6 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -33,10 +31,6 @@ from .const import DOMAIN
 from .media_browser import browse_media
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_TRANSFER = "transfer"
-
-ATTR_TRANSFER = "transfer_id"
 
 REPEAT_MODE_MAPPING_TO_HA = {
     "loop": RepeatMode.ALL,
@@ -57,14 +51,6 @@ async def async_setup_entry(
     """Set up Roon MediaPlayer from Config Entry."""
     roon_server = hass.data[DOMAIN][config_entry.entry_id]
     media_players = set()
-
-    # Register entity services
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_TRANSFER,
-        {vol.Required(ATTR_TRANSFER): cv.entity_id},
-        "async_transfer",
-    )
 
     @callback
     def async_update_media_player(player_data):
