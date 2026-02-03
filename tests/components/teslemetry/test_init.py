@@ -649,6 +649,26 @@ async def test_live_status_generic_error(
         assert entry.state is ConfigEntryState.LOADED
 
 
+async def test_missing_token_data(hass: HomeAssistant) -> None:
+    """Test that missing token data in config entry triggers auth failure."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        unique_id=UNIQUE_ID,
+        data={
+            "auth_implementation": DOMAIN,
+            # token is intentionally missing
+        },
+    )
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry is not None
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
 async def test_vehicle_streaming_version_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
