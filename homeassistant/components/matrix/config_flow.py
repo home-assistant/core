@@ -14,13 +14,13 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_HOMESERVER, DOMAIN
+from .const import CONF_HOMESERVER, DEFAULT_HOMESERVER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOMESERVER): cv.string,
+        vol.Required(CONF_HOMESERVER, default=DEFAULT_HOMESERVER): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
@@ -35,20 +35,20 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         user=data[CONF_USERNAME],
         ssl=data[CONF_VERIFY_SSL],
     )
+    try:
+        login_response = await client.login(data[CONF_PASSWORD])
+        if isinstance(login_response, LoginError):
+            raise ConnectionError
 
-    login_response = await client.login(data[CONF_PASSWORD])
-    if isinstance(login_response, LoginError):
+        # Get user info to validate connection
+        whoami_response = await client.whoami()
+        if hasattr(whoami_response, "user_id"):
+            user_id = whoami_response.user_id
+        else:
+            user_id = data[CONF_USERNAME]
+    finally:
         await client.close()
-        raise ConnectionError
 
-    # Get user info to validate connection
-    whoami_response = await client.whoami()
-    if hasattr(whoami_response, "user_id"):
-        user_id = whoami_response.user_id
-    else:
-        user_id = data[CONF_USERNAME]
-
-    await client.close()
     return {"title": user_id, "user_id": user_id}
 
 
