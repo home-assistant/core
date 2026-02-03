@@ -55,7 +55,7 @@ async def test_entry_setup_unload(
     matter_client: MagicMock,
 ) -> None:
     """Test the integration set up and unload."""
-    node = create_node_from_fixture("onoff_light")
+    node = create_node_from_fixture("mock_onoff_light")
     matter_client.get_nodes.return_value = [node]
     matter_client.get_node.return_value = node
     entry = MockConfigEntry(domain="matter", data={"url": "ws://localhost:5580/ws"})
@@ -608,7 +608,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to stop the Matter Server add-on" in caplog.text
+    assert "Failed to stop the Matter Server app" in caplog.text
     stop_addon.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
@@ -632,7 +632,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to create a backup of the Matter Server add-on" in caplog.text
+    assert "Failed to create a backup of the Matter Server app" in caplog.text
     create_backup.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
@@ -657,7 +657,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_args == call("core_matter_server")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to uninstall the Matter Server add-on" in caplog.text
+    assert "Failed to uninstall the Matter Server app" in caplog.text
 
 
 async def test_remove_config_entry_device(

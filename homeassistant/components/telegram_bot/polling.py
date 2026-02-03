@@ -9,6 +9,7 @@ from telegram.ext import ApplicationBuilder, CallbackContext, TypeHandler
 from homeassistant.core import HomeAssistant
 
 from .bot import BaseTelegramBot, TelegramBotConfigEntry
+from .helpers import get_base_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +83,12 @@ class PollBot(BaseTelegramBot):
                 error_callback=lambda error: error_callback(self.bot, error, None)
             )
         await self.application.start()
-        _LOGGER.info("[%s %s] Started polling", self.bot.username, self.bot.id)
+        _LOGGER.info(
+            "[%s %s] Started polling at %s",
+            self.bot.username,
+            self.bot.id,
+            get_base_url(self.bot),
+        )
 
     async def stop_polling(self) -> None:
         """Stop the polling task."""
