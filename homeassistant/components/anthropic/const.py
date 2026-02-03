@@ -23,7 +23,7 @@ CONF_WEB_SEARCH_COUNTRY = "country"
 CONF_WEB_SEARCH_TIMEZONE = "timezone"
 
 DEFAULT = {
-    CONF_CHAT_MODEL: "claude-3-5-haiku-latest",
+    CONF_CHAT_MODEL: "claude-haiku-4-5",
     CONF_MAX_TOKENS: 3000,
     CONF_TEMPERATURE: 1.0,
     CONF_THINKING_BUDGET: 0,
