@@ -59,10 +59,12 @@ async def test_async_setup_with_yaml_creates_import_flow(hass: HomeAssistant) ->
                 "username": "@user:example.com",
                 "password": "password",
                 "verify_ssl": True,
+                "rooms": ["#test:example.com"],
+                "commands": [{"word": "hello", "name": "test_command"}],
             },
         )
-        mock_matrix_bot.assert_called_once()
-        mock_setup_services.assert_called_once()
+        mock_matrix_bot.assert_not_called()
+        mock_setup_services.assert_not_called()
 
 
 async def test_async_setup_with_existing_config_entry(hass: HomeAssistant) -> None:
@@ -94,10 +96,9 @@ async def test_async_setup_with_existing_config_entry(hass: HomeAssistant) -> No
         assert result is True
         # Should not create import flow since config entry exists
         mock_flow_init.assert_not_called()
-        # Should still set up both YAML and config entry bots
-        assert mock_matrix_bot.call_count >= 1
-        # Services get set up twice - once for YAML, once for config entry
-        assert mock_setup_services.call_count >= 1
+        # Should not set up from YAML when config entry exists
+        mock_matrix_bot.assert_not_called()
+        mock_setup_services.assert_not_called()
 
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:

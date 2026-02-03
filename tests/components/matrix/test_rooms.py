@@ -9,7 +9,9 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_CONFIG_DATA, TEST_BAD_ROOM, TEST_JOINABLE_ROOMS
+from tests.common import MockConfigEntry
+
+from .conftest import MOCK_CONFIG_DATA, TEST_BAD_ROOM, TEST_JOINABLE_ROOMS, TEST_MXID
 
 
 async def test_join(
@@ -20,7 +22,16 @@ async def test_join(
     mock_allowed_path,
 ) -> None:
     """Test joining configured rooms."""
-    assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG_DATA)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_DATA[DOMAIN],
+        unique_id=TEST_MXID,
+        title=TEST_MXID,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
     assert await async_setup_component(hass, NOTIFY_DOMAIN, MOCK_CONFIG_DATA)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done(wait_background_tasks=True)

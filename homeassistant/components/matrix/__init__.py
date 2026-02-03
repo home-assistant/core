@@ -8,7 +8,7 @@ import logging
 import mimetypes
 import os
 import re
-from typing import Final, NewType, Required, TypedDict
+from typing import Any, Final, NewType, Required, TypedDict
 
 import aiofiles.os
 from nio import AsyncClient, Event, MatrixRoom
@@ -136,6 +136,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if not existing_entries:
         # No existing config entry, create one from YAML
+        commands: list[dict[str, Any]] = []
+        for command in config[CONF_COMMANDS]:
+            serialized_command = dict(command)
+            if (
+                (expression := serialized_command.get(CONF_EXPRESSION)) is not None
+                and isinstance(expression, re.Pattern)
+            ):
+                serialized_command[CONF_EXPRESSION] = expression.pattern
+            commands.append(serialized_command)
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -145,40 +154,43 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     CONF_USERNAME: config[CONF_USERNAME],
                     CONF_PASSWORD: config[CONF_PASSWORD],
                     CONF_VERIFY_SSL: config[CONF_VERIFY_SSL],
+                    CONF_ROOMS: list(config[CONF_ROOMS]),
+                    CONF_COMMANDS: commands,
                 },
             )
         )
-
-    # Still set up the YAML config for backward compatibility
-    hass.data[DOMAIN] = MatrixBot(
-        hass,
-        os.path.join(hass.config.path(), SESSION_FILE),
-        config[CONF_HOMESERVER],
-        config[CONF_VERIFY_SSL],
-        config[CONF_USERNAME],
-        config[CONF_PASSWORD],
-        config[CONF_ROOMS],
-        config[CONF_COMMANDS],
-    )
-
-    async_setup_services(hass)
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Matrix from a config entry."""
-    # For config entry setup, we'll use minimal configuration
-    # Users can add rooms and commands via services or future UI
+    raw_commands: list[dict[str, Any]] = entry.data.get(CONF_COMMANDS, [])
+    commands: list[ConfigCommand] = []
+    for command in raw_commands:
+        try:
+            commands.append(COMMAND_SCHEMA(command))
+        except vol.Invalid as err:
+            _LOGGER.warning("Skipping invalid command in config entry: %s", err)
+
+    raw_rooms = entry.data.get(CONF_ROOMS, [])
+    try:
+        rooms: list[RoomAnyID] = vol.All(
+            cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
+        )(raw_rooms)
+    except vol.Invalid as err:
+        _LOGGER.warning("Invalid rooms in config entry %s: %s", entry.entry_id, err)
+        rooms = []
+
     matrix_bot = MatrixBot(
         hass,
         os.path.join(hass.config.path(), f".matrix_{entry.entry_id}.conf"),
         entry.data[CONF_HOMESERVER],
-        entry.data[CONF_VERIFY_SSL],
+        entry.data.get(CONF_VERIFY_SSL, True),
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
-        [],  # No rooms configured initially
-        [],  # No commands configured initially
+        rooms,
+        commands,
     )
 
     # Store in runtime_data for quality scale compliance

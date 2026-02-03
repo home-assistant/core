@@ -53,6 +53,8 @@ async def _handle_send_message(call: ServiceCall) -> None:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the Matrix bot component."""
+    if hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE):
+        return
 
     hass.services.async_register(
         DOMAIN,

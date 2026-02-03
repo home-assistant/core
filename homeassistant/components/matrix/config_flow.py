@@ -171,5 +171,6 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "username": self.reauth_entry.data[CONF_USERNAME],
                 "homeserver": self.reauth_entry.data[CONF_HOMESERVER],
+                "name": self.reauth_entry.title,
             },
         )
