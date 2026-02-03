@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from hass_splunk import SplunkPayloadError
+import pytest
 
 from homeassistant.components.splunk import DATA_FILTER
 from homeassistant.components.splunk.const import CONF_FILTER, DOMAIN
@@ -40,61 +41,34 @@ async def test_setup_entry_success(
     assert mock_hass_splunk.queue.call_count == 1
 
 
-async def test_setup_entry_connection_error(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        (False, ConfigEntryState.SETUP_RETRY),
+        (ClientConnectionError("Connection failed"), ConfigEntryState.SETUP_RETRY),
+        (TimeoutError(), ConfigEntryState.SETUP_RETRY),
+        ([True, False], ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_setup_entry_error(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: bool | Exception | list[bool],
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test setup with connection error results in retry state."""
+    """Test setup with various errors results in appropriate states."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_hass_splunk.check.return_value = False
+    if isinstance(side_effect, bool):
+        mock_hass_splunk.check.return_value = side_effect
+    else:
+        mock_hass_splunk.check.side_effect = side_effect
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_entry_auth_error(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test setup with auth error results in setup error state."""
-    mock_config_entry.add_to_hass(hass)
-
-    # Connectivity ok, but token check fails
-    mock_hass_splunk.check.side_effect = [True, False]
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_setup_entry_client_connection_error(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test setup with ClientConnectionError results in retry state."""
-    mock_config_entry.add_to_hass(hass)
-
-    mock_hass_splunk.check.side_effect = ClientConnectionError("Connection failed")
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_entry_timeout_error(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test setup with timeout results in retry state."""
-    mock_config_entry.add_to_hass(hass)
-
-    mock_hass_splunk.check.side_effect = TimeoutError()
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state
 
 
 async def test_unload_entry(
@@ -286,10 +260,26 @@ async def test_event_listener_unauthorized(
     assert flows[0]["context"]["source"] == "reauth"
 
 
-async def test_event_listener_connection_error(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
+@pytest.mark.parametrize(
+    "error",
+    [
+        ClientConnectionError("Connection failed"),
+        TimeoutError(),
+        ClientResponseError(
+            request_info=MagicMock(),
+            history=(),
+            status=500,
+            message="Internal Server Error",
+        ),
+    ],
+)
+async def test_event_listener_error_handling(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    error: Exception,
 ) -> None:
-    """Test event listener handles connection errors gracefully."""
+    """Test event listener handles various errors gracefully."""
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -299,55 +289,8 @@ async def test_event_listener_connection_error(
     hass.states.async_set("sensor.test", "123")
     await hass.async_block_till_done()
 
-    # Simulate connection error when sending event
-    mock_hass_splunk.queue.side_effect = ClientConnectionError("Connection failed")
-
-    # Change the state to trigger an event - should not raise
-    hass.states.async_set("sensor.test", "456")
-    await hass.async_block_till_done()
-
-
-async def test_event_listener_timeout(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test event listener handles timeouts gracefully."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Create a real state first
-    hass.states.async_set("sensor.test", "123")
-    await hass.async_block_till_done()
-
-    # Simulate timeout when sending event
-    mock_hass_splunk.queue.side_effect = TimeoutError()
-
-    # Change the state to trigger an event - should not raise
-    hass.states.async_set("sensor.test", "456")
-    await hass.async_block_till_done()
-
-
-async def test_event_listener_response_error(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test event listener handles response errors gracefully."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Create a real state first
-    hass.states.async_set("sensor.test", "123")
-    await hass.async_block_till_done()
-
-    # Simulate response error when sending event
-    mock_hass_splunk.queue.side_effect = ClientResponseError(
-        request_info=MagicMock(),
-        history=(),
-        status=500,
-        message="Internal Server Error",
-    )
+    # Simulate error when sending event
+    mock_hass_splunk.queue.side_effect = error
 
     # Change the state to trigger an event - should not raise
     hass.states.async_set("sensor.test", "456")
