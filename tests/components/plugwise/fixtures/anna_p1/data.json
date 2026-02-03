@@ -1,0 +1,104 @@
+{
+  "1e5e55b958ac445583602f767cb45942": {
+    "active_preset": "home",
+    "available_schedules": ["Thermostat schedule", "off"],
+    "climate_mode": "heat",
+    "control_state": "idle",
+    "dev_class": "thermostat",
+    "firmware": "2018-02-08T11:15:53+01:00",
+    "hardware": "6539-1301-500",
+    "location": "5b13651d79c4454684fd268850b1bff8",
+    "model": "ThermoTouch",
+    "name": "Anna",
+    "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+    "select_schedule": "off",
+    "sensors": {
+      "illuminance": 2.0,
+      "setpoint": 19.0,
+      "temperature": 19.4
+    },
+    "temperature_offset": {
+      "lower_bound": -2.0,
+      "resolution": 0.1,
+      "setpoint": 0.0,
+      "upper_bound": 2.0
+    },
+    "thermostat": {
+      "lower_bound": 4.0,
+      "resolution": 0.1,
+      "setpoint": 19.0,
+      "upper_bound": 30.0
+    },
+    "vendor": "Plugwise"
+  },
+  "36b937e44ad145bab165fa0fe99d742d": {
+    "available": true,
+    "binary_sensors": {
+      "dhw_state": false,
+      "flame_state": false,
+      "heating_state": false
+    },
+    "dev_class": "heater_central",
+    "location": "da7be222ab3b420c927f3e49fade0304",
+    "model": "Generic heater",
+    "model_id": "HR24",
+    "name": "OpenTherm",
+    "sensors": {
+      "intended_boiler_temperature": 0.0,
+      "modulation_level": 0.0,
+      "water_pressure": 6.0,
+      "water_temperature": 35.0
+    },
+    "switches": {
+      "dhw_cm_switch": true
+    },
+    "vendor": "Intergas"
+  },
+  "53130847be2f436cb946b78dedb9053a": {
+    "binary_sensors": {
+      "plugwise_notification": false
+    },
+    "dev_class": "gateway",
+    "firmware": "4.4.4",
+    "hardware": "AME Smile 2.0 board",
+    "location": "da7be222ab3b420c927f3e49fade0304",
+    "mac_address": "C493000ABCD",
+    "model": "Gateway",
+    "model_id": "smile_thermo",
+    "name": "Smile Anna P1",
+    "notifications": {},
+    "sensors": {
+      "outdoor_temperature": 11.8
+    },
+    "vendor": "Plugwise"
+  },
+  "da7be222ab3b420c927f3e49fade0304": {
+    "available": true,
+    "dev_class": "smartmeter",
+    "location": "da7be222ab3b420c927f3e49fade0304",
+    "model": "2MS212 SMR5.5",
+    "name": "P1",
+    "sensors": {
+      "electricity_consumed_off_peak_cumulative": 618.001,
+      "electricity_consumed_off_peak_interval": 7,
+      "electricity_consumed_off_peak_point": 393,
+      "electricity_consumed_peak_cumulative": 576.014,
+      "electricity_consumed_peak_interval": 0,
+      "electricity_consumed_peak_point": 0,
+      "electricity_phase_one_consumed": 393,
+      "electricity_phase_one_produced": 0,
+      "electricity_produced_off_peak_cumulative": 246.504,
+      "electricity_produced_off_peak_interval": 0,
+      "electricity_produced_off_peak_point": 0,
+      "electricity_produced_peak_cumulative": 709.442,
+      "electricity_produced_peak_interval": 0,
+      "electricity_produced_peak_point": 0,
+      "gas_consumed_cumulative": 25.37,
+      "gas_consumed_interval": 0.01,
+      "net_electricity_cumulative": 238.069,
+      "net_electricity_point": 393,
+      "voltage_phase_one": 234.6
+    },
+    "vendor": "SAGEM"
+  }
+}

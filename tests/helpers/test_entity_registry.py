@@ -142,6 +142,7 @@ def test_get_or_create_updates_data(
         id=orig_entry.id,
         modified_at=created,
         name=None,
+        object_id_base=None,
         options=None,
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
@@ -173,9 +174,11 @@ def test_get_or_create_updates_data(
         entity_category=EntityCategory.DIAGNOSTIC,
         has_entity_name=False,
         hidden_by=er.RegistryEntryHider.USER,
+        object_id_base="updated-name",
         original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
+        suggested_object_id="suggested",
         supported_features=10,
         translation_key="updated-translation_key",
         unit_of_measurement="updated-unit_of_measurement",
@@ -201,11 +204,12 @@ def test_get_or_create_updates_data(
         id=orig_entry.id,
         modified_at=modified,
         name=None,
+        object_id_base="updated-name",
         options=None,
         original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
-        suggested_object_id=None,
+        suggested_object_id="suggested",
         supported_features=10,
         translation_key="updated-translation_key",
         unit_of_measurement="updated-unit_of_measurement",
@@ -226,9 +230,11 @@ def test_get_or_create_updates_data(
         entity_category=None,
         has_entity_name=None,
         hidden_by=None,
+        object_id_base=None,
         original_device_class=None,
         original_icon=None,
         original_name=None,
+        suggested_object_id=None,
         supported_features=None,
         translation_key=None,
         unit_of_measurement=None,
@@ -254,6 +260,7 @@ def test_get_or_create_updates_data(
         id=orig_entry.id,
         modified_at=modified,
         name=None,
+        object_id_base=None,
         options=None,
         original_device_class=None,
         original_icon=None,
@@ -419,25 +426,25 @@ async def test_loading_saving_data(
     assert new_entry2.unit_of_measurement == "initial-unit_of_measurement"
 
 
-def test_generate_entity_considers_registered_entities(
+def test_get_available_entity_id_considers_registered_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that we don't create entity id that are already registered."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     assert entry.entity_id == "light.hue_1234"
     assert (
-        entity_registry.async_generate_entity_id("light", "hue_1234")
+        entity_registry.async_get_available_entity_id("light", "hue_1234")
         == "light.hue_1234_2"
     )
 
 
-def test_generate_entity_considers_existing_entities(
+def test_get_available_entity_id_considers_existing_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test that we don't create entity id that currently exists."""
     hass.states.async_set("light.kitchen", "on")
     assert (
-        entity_registry.async_generate_entity_id("light", "kitchen")
+        entity_registry.async_get_available_entity_id("light", "kitchen")
         == "light.kitchen_2"
     )
 
@@ -537,7 +544,6 @@ async def test_load_bad_data(
                 {
                     "aliases": [],
                     "area_id": None,
-                    "calculated_object_id": None,
                     "capabilities": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -555,6 +561,7 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
+                    "object_id_base": None,
                     "options": None,
                     "original_device_class": None,
                     "original_icon": None,
@@ -570,7 +577,6 @@ async def test_load_bad_data(
                 {
                     "aliases": [],
                     "area_id": None,
-                    "calculated_object_id": None,
                     "capabilities": None,
                     "categories": {},
                     "config_entry_id": None,
@@ -588,6 +594,7 @@ async def test_load_bad_data(
                     "labels": [],
                     "modified_at": "2024-02-14T12:00:00.900075+00:00",
                     "name": None,
+                    "object_id_base": None,
                     "options": None,
                     "original_device_class": None,
                     "original_icon": None,
@@ -997,6 +1004,7 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "object_id_base": None,
                     "options": {},
                     "original_device_class": "best_class",
                     "original_icon": None,
@@ -1190,6 +1198,7 @@ async def test_migration_1_11(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "object_id_base": None,
                     "options": {},
                     "original_device_class": "best_class",
                     "original_icon": None,
@@ -1274,7 +1283,7 @@ async def test_migration_1_18(
                     "options": {},
                     "original_device_class": "best_class",
                     "original_icon": None,
-                    "original_name": None,
+                    "original_name": "Test Entity",
                     "platform": "super_platform",
                     "previous_unique_id": None,
                     "suggested_object_id": None,
@@ -1354,10 +1363,11 @@ async def test_migration_1_18(
                     "labels": [],
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name": None,
+                    "object_id_base": "Test Entity",
                     "options": {},
                     "original_device_class": "best_class",
                     "original_icon": None,
-                    "original_name": None,
+                    "original_name": "Test Entity",
                     "platform": "super_platform",
                     "previous_unique_id": None,
                     "suggested_object_id": None,
@@ -1462,9 +1472,56 @@ async def test_update_entity_unique_id_conflict(
     )
 
 
-async def test_update_entity_entity_id(entity_registry: er.EntityRegistry) -> None:
-    """Test entity's entity_id is updated."""
+async def test_update_entity_entity_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test entity's entity_id is updated for entity with a restored state."""
+    hass.set_state(CoreState.not_running)
+
+    mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
+    mock_config.add_to_hass(hass)
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=mock_config
+    )
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+    assert (
+        entity_registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
+    )
+    state = hass.states.get(entry.entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+    assert state.attributes == {"restored": True, "supported_features": 0}
+
+    new_entity_id = "light.blah"
+    assert new_entity_id != entry.entity_id
+    with patch.object(entity_registry, "async_schedule_save") as mock_schedule_save:
+        updated_entry = entity_registry.async_update_entity(
+            entry.entity_id, new_entity_id=new_entity_id
+        )
+    assert updated_entry != entry
+    assert updated_entry.entity_id == new_entity_id
+    assert mock_schedule_save.call_count == 1
+
+    assert entity_registry.async_get(entry.entity_id) is None
+    assert entity_registry.async_get(new_entity_id) is not None
+
+    # The restored state should be removed
+    old_state = hass.states.get(entry.entity_id)
+    assert old_state is None
+
+    # The new entity should have an unavailable initial state
+    new_state = hass.states.get(new_entity_id)
+    assert new_state is not None
+    assert new_state.state == "unavailable"
+
+
+async def test_update_entity_entity_id_without_state(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity's entity_id is updated for entity without a state."""
     entry = entity_registry.async_get_or_create("light", "hue", "5678")
+
     assert (
         entity_registry.async_get_entity_id("light", "hue", "5678") == entry.entity_id
     )
@@ -1664,6 +1721,7 @@ async def test_update_entity_disabled_by(
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        object_id_base="original_name_1",
         original_device_class="device_class_1",
         original_icon="original_icon_1",
         original_name="original_name_1",
@@ -1703,6 +1761,7 @@ async def test_update_entity_disabled_by(
         labels=set(),
         modified_at=utcnow(),
         name=None,
+        object_id_base="original_name_1",
         options={"test_domain": {"key1": "value1"}},
         original_device_class="device_class_1",
         original_icon="original_icon_1",
@@ -1757,6 +1816,7 @@ async def test_update_entity_disabled_by_2(
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        object_id_base="original_name_1",
         original_device_class="device_class_1",
         original_icon="original_icon_1",
         original_name="original_name_1",
@@ -1798,6 +1858,7 @@ async def test_update_entity_disabled_by_2(
         labels=set(),
         modified_at=utcnow(),
         name=None,
+        object_id_base="original_name_1",
         options={"test_domain": {"key1": "value1"}},
         original_device_class="device_class_1",
         original_icon="original_icon_1",
@@ -2691,7 +2752,7 @@ async def test_entity_max_length_exceeded(
     )
 
     with pytest.raises(MaxLengthExceeded) as exc_info:
-        entity_registry.async_generate_entity_id(long_domain_name, "sensor")
+        entity_registry.async_get_available_entity_id(long_domain_name, "sensor")
 
     assert exc_info.value.property_name == "domain"
     assert exc_info.value.max_length == 64
@@ -2705,13 +2766,19 @@ async def test_entity_max_length_exceeded(
         "1234567890123456789012345678901234567"
     )
 
-    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
+    new_id = entity_registry.async_get_available_entity_id(
+        "sensor", long_entity_id_name
+    )
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7]
     hass.states.async_reserve(new_id)
-    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
+    new_id = entity_registry.async_get_available_entity_id(
+        "sensor", long_entity_id_name
+    )
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_2"
     hass.states.async_reserve(new_id)
-    new_id = entity_registry.async_generate_entity_id("sensor", long_entity_id_name)
+    new_id = entity_registry.async_get_available_entity_id(
+        "sensor", long_entity_id_name
+    )
     assert new_id == "sensor." + long_entity_id_name[: 255 - 7 - 2] + "_3"
 
 
@@ -3148,6 +3215,7 @@ async def test_restore_entity(
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        object_id_base="original_name_1",
         original_device_class="device_class_1",
         original_icon="original_icon_1",
         original_name="original_name_1",
@@ -3209,6 +3277,7 @@ async def test_restore_entity(
         get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
         has_entity_name=False,
         hidden_by=None,
+        object_id_base="original_name_2",
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
@@ -3256,6 +3325,7 @@ async def test_restore_entity(
         labels={"label1", "label2"},
         modified_at=utcnow(),
         name="Test Friendly Name",
+        object_id_base="original_name_2",
         options={"options_domain": {"key": "value"}, "test_domain": {"key1": "value1"}},
         original_device_class="device_class_2",
         original_icon="original_icon_2",
@@ -3414,6 +3484,7 @@ async def test_restore_migrated_entity_disabled_by(
         get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
         has_entity_name=False,
         hidden_by=None,
+        object_id_base="original_name_2",
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
@@ -3450,6 +3521,7 @@ async def test_restore_migrated_entity_disabled_by(
         labels=set(),
         modified_at=utcnow(),
         name=None,
+        object_id_base="original_name_2",
         options={"test_domain": {"key1": "value1"}},
         original_device_class="device_class_2",
         original_icon="original_icon_2",
@@ -3504,6 +3576,7 @@ async def test_restore_migrated_entity_hidden_by(
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        object_id_base="original_name_1",
         original_device_class="device_class_1",
         original_icon="original_icon_1",
         original_name="original_name_1",
@@ -3536,6 +3609,7 @@ async def test_restore_migrated_entity_hidden_by(
         get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
         has_entity_name=False,
         hidden_by=entity_hidden_by,
+        object_id_base="original_name_2",
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
@@ -3572,6 +3646,7 @@ async def test_restore_migrated_entity_hidden_by(
         labels=set(),
         modified_at=utcnow(),
         name=None,
+        object_id_base="original_name_2",
         options={"test_domain": {"key1": "value1"}},
         original_device_class="device_class_2",
         original_icon="original_icon_2",
@@ -3617,6 +3692,7 @@ async def test_restore_migrated_entity_initial_options(
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        object_id_base="original_name_1",
         original_device_class="device_class_1",
         original_icon="original_icon_1",
         original_name="original_name_1",
@@ -3649,6 +3725,7 @@ async def test_restore_migrated_entity_initial_options(
         get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
         has_entity_name=False,
         hidden_by=None,
+        object_id_base="original_name_2",
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
@@ -3685,6 +3762,7 @@ async def test_restore_migrated_entity_initial_options(
         labels=set(),
         modified_at=utcnow(),
         name=None,
+        object_id_base="original_name_2",
         options={"test_domain": {"key2": "value2"}},
         original_device_class="device_class_2",
         original_icon="original_icon_2",
@@ -3806,6 +3884,7 @@ async def test_restore_entity_disabled_by(
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        object_id_base="original_name_1",
         original_device_class="device_class_1",
         original_icon="original_icon_1",
         original_name="original_name_1",
@@ -3833,6 +3912,7 @@ async def test_restore_entity_disabled_by(
         get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
         has_entity_name=False,
         hidden_by=None,
+        object_id_base="original_name_2",
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
@@ -3869,6 +3949,7 @@ async def test_restore_entity_disabled_by(
         labels=set(),
         modified_at=utcnow(),
         name=None,
+        object_id_base="original_name_2",
         options={"test_domain": {"key1": "value1"}},
         original_device_class="device_class_2",
         original_icon="original_icon_2",
@@ -3932,6 +4013,7 @@ async def test_restore_entity_disabled_by_2(
         get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
         has_entity_name=True,
         hidden_by=er.RegistryEntryHider.INTEGRATION,
+        object_id_base="original_name_1",
         original_device_class="device_class_1",
         original_icon="original_icon_1",
         original_name="original_name_1",
@@ -3959,6 +4041,7 @@ async def test_restore_entity_disabled_by_2(
         get_initial_options=lambda: {"test_domain": {"key2": "value2"}},
         has_entity_name=False,
         hidden_by=None,
+        object_id_base="original_name_2",
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
@@ -3995,6 +4078,7 @@ async def test_restore_entity_disabled_by_2(
         labels=set(),
         modified_at=utcnow(),
         name=None,
+        object_id_base="original_name_2",
         options={"test_domain": {"key1": "value1"}},
         original_device_class="device_class_2",
         original_icon="original_icon_2",

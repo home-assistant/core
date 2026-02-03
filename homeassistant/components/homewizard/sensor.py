@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Final
 
+from homewizard_energy.const import Model
 from homewizard_energy.models import CombinedModels, ExternalDevice
 
 from homeassistant.components.sensor import (
@@ -36,6 +37,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
+from homeassistant.util.variance import ignore_variance
 
 from .const import DOMAIN
 from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
@@ -66,14 +68,12 @@ def to_percentage(value: float | None) -> float | None:
     return value * 100 if value is not None else None
 
 
-def time_to_datetime(value: int | None) -> datetime | None:
-    """Convert seconds to datetime when value is not None."""
-    return (
-        utcnow().replace(microsecond=0) - timedelta(seconds=value)
-        if value is not None
-        else None
-    )
+def uptime_to_datetime(value: int) -> datetime:
+    """Convert seconds to datetime timestamp."""
+    return utcnow().replace(microsecond=0) - timedelta(seconds=value)
 
+
+uptime_to_stable_datetime = ignore_variance(uptime_to_datetime, timedelta(minutes=5))
 
 SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     HomeWizardSensorEntityDescription(
@@ -159,7 +159,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         has_fn=lambda data: data.measurement.energy_import_kwh is not None,
-        value_fn=lambda data: data.measurement.energy_import_kwh,
+        value_fn=lambda data: data.measurement.energy_import_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t1_kwh",
@@ -173,7 +173,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
             data.measurement.energy_import_t1_kwh is not None
             and data.measurement.energy_export_t2_kwh is not None
         ),
-        value_fn=lambda data: data.measurement.energy_import_t1_kwh,
+        value_fn=lambda data: data.measurement.energy_import_t1_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t2_kwh",
@@ -183,7 +183,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         has_fn=lambda data: data.measurement.energy_import_t2_kwh is not None,
-        value_fn=lambda data: data.measurement.energy_import_t2_kwh,
+        value_fn=lambda data: data.measurement.energy_import_t2_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t3_kwh",
@@ -193,7 +193,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         has_fn=lambda data: data.measurement.energy_import_t3_kwh is not None,
-        value_fn=lambda data: data.measurement.energy_import_t3_kwh,
+        value_fn=lambda data: data.measurement.energy_import_t3_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_t4_kwh",
@@ -203,7 +203,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         has_fn=lambda data: data.measurement.energy_import_t4_kwh is not None,
-        value_fn=lambda data: data.measurement.energy_import_t4_kwh,
+        value_fn=lambda data: data.measurement.energy_import_t4_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_kwh",
@@ -213,7 +213,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         has_fn=lambda data: data.measurement.energy_export_kwh is not None,
         enabled_fn=lambda data: data.measurement.energy_export_kwh != 0,
-        value_fn=lambda data: data.measurement.energy_export_kwh,
+        value_fn=lambda data: data.measurement.energy_export_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t1_kwh",
@@ -228,7 +228,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
             and data.measurement.energy_export_t2_kwh is not None
         ),
         enabled_fn=lambda data: data.measurement.energy_export_t1_kwh != 0,
-        value_fn=lambda data: data.measurement.energy_export_t1_kwh,
+        value_fn=lambda data: data.measurement.energy_export_t1_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t2_kwh",
@@ -239,7 +239,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         has_fn=lambda data: data.measurement.energy_export_t2_kwh is not None,
         enabled_fn=lambda data: data.measurement.energy_export_t2_kwh != 0,
-        value_fn=lambda data: data.measurement.energy_export_t2_kwh,
+        value_fn=lambda data: data.measurement.energy_export_t2_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t3_kwh",
@@ -250,7 +250,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         has_fn=lambda data: data.measurement.energy_export_t3_kwh is not None,
         enabled_fn=lambda data: data.measurement.energy_export_t3_kwh != 0,
-        value_fn=lambda data: data.measurement.energy_export_t3_kwh,
+        value_fn=lambda data: data.measurement.energy_export_t3_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_export_t4_kwh",
@@ -261,7 +261,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         has_fn=lambda data: data.measurement.energy_export_t4_kwh is not None,
         enabled_fn=lambda data: data.measurement.energy_export_t4_kwh != 0,
-        value_fn=lambda data: data.measurement.energy_export_t4_kwh,
+        value_fn=lambda data: data.measurement.energy_export_t4_kwh or None,
     ),
     HomeWizardSensorEntityDescription(
         key="active_power_w",
@@ -647,7 +647,11 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
             lambda data: data.system is not None and data.system.uptime_s is not None
         ),
         value_fn=(
-            lambda data: time_to_datetime(data.system.uptime_s) if data.system else None
+            lambda data: (
+                uptime_to_stable_datetime(data.system.uptime_s)
+                if data.system is not None and data.system.uptime_s is not None
+                else None
+            )
         ),
     ),
 )
@@ -700,6 +704,44 @@ async def async_setup_entry(
         for description in SENSORS
         if description.has_fn(entry.runtime_data.data)
     ]
+    # Add optional production power sensor for supported energy monitoring devices
+    # or plug-in battery
+    if entry.runtime_data.data.device.product_type in (
+        Model.ENERGY_SOCKET,
+        Model.ENERGY_METER_1_PHASE,
+        Model.ENERGY_METER_3_PHASE,
+        Model.ENERGY_METER_EASTRON_SDM230,
+        Model.ENERGY_METER_EASTRON_SDM630,
+        Model.BATTERY,
+    ):
+        active_prodution_power_sensor_description = HomeWizardSensorEntityDescription(
+            key="active_production_power_w",
+            translation_key="active_production_power_w",
+            native_unit_of_measurement=UnitOfPower.WATT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=0,
+            entity_registry_enabled_default=(
+                entry.runtime_data.data.device.product_type == Model.BATTERY
+                or (
+                    (
+                        total_export
+                        := entry.runtime_data.data.measurement.energy_export_kwh
+                    )
+                    is not None
+                    and total_export > 0
+                )
+            ),
+            has_fn=lambda x: True,
+            value_fn=lambda data: power_w * -1
+            if (power_w := data.measurement.power_w)
+            else power_w,
+        )
+        entities.append(
+            HomeWizardSensorEntity(
+                entry.runtime_data, active_prodution_power_sensor_description
+            )
+        )
 
     # Initialize external devices
     measurement = entry.runtime_data.data.measurement

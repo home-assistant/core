@@ -49,26 +49,66 @@
       "import_failed": "Failed to import configuration",
       "wrong_account": "You must use the same account that was originally configured",
       "reauth_successful": "Re-authentication was successful"
+  "selector": {
+    "send_message_data": {
+      "fields": {
+        "format": {
+          "description": "Format of the message, either 'text' or 'html'.",
+          "name": "Message format"
+        },
+        "images": {
+          "description": "One or more image paths to attach to the message.",
+          "name": "Images"
+        },
+        "thread_id": {
+          "description": "An optional parent message ID to thread this message under.",
+          "name": "Thread ID"
+        }
+      }
+    },
+    "send_message_data_format": {
+      "options": {
+        "html": "HTML",
+        "text": "Plain text"
+      }
     }
   },
   "services": {
+    "react": {
+      "description": "Sends a reaction to a message.",
+      "fields": {
+        "message_id": {
+          "description": "The ID of the message to react to.",
+          "name": "Message ID"
+        },
+        "reaction": {
+          "description": "The reaction to send.",
+          "name": "Reaction"
+        },
+        "room": {
+          "description": "The room to send the reaction to.",
+          "name": "Room"
+        }
+      },
+      "name": "React"
+    },
     "send_message": {
-      "name": "Send message",
       "description": "Sends message to target room(s).",
       "fields": {
+        "data": {
+          "description": "Extended information of notification.",
+          "name": "Data"
+        },
         "message": {
-          "name": "Message",
-          "description": "The message to be sent."
+          "description": "The message to be sent.",
+          "name": "Message"
         },
         "target": {
-          "name": "Target",
-          "description": "A list of room(s) to send the message to."
-        },
-        "data": {
-          "name": "Data",
-          "description": "Extended information of notification. Supports list of images. Supports message format. Optional."
+          "description": "A list of room(s) to send the message to.",
+          "name": "Target"
         }
-      }
+      },
+      "name": "Send message"
     }
   }
 }

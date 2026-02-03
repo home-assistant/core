@@ -5,13 +5,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.backup import async_post_backup, async_pre_backup
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 
-async def test_async_pre_backup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("recorder_mock")
+async def test_async_pre_backup(hass: HomeAssistant) -> None:
     """Test pre backup."""
     with patch(
         "homeassistant.components.recorder.core.Recorder.lock_database"
@@ -36,8 +36,8 @@ RAISES_HASS_NOT_RUNNING = pytest.raises(
         (CoreState.stopping, RAISES_HASS_NOT_RUNNING, 0),
     ],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_async_pre_backup_core_state(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     core_state: CoreState,
     expected_result: AbstractContextManager,
@@ -55,9 +55,8 @@ async def test_async_pre_backup_core_state(
     assert len(lock_mock.mock_calls) == lock_calls
 
 
-async def test_async_pre_backup_with_timeout(
-    recorder_mock: Recorder, hass: HomeAssistant
-) -> None:
+@pytest.mark.usefixtures("recorder_mock")
+async def test_async_pre_backup_with_timeout(hass: HomeAssistant) -> None:
     """Test pre backup with timeout."""
     with (
         patch(
@@ -70,9 +69,8 @@ async def test_async_pre_backup_with_timeout(
     assert lock_mock.called
 
 
-async def test_async_pre_backup_with_migration(
-    recorder_mock: Recorder, hass: HomeAssistant
-) -> None:
+@pytest.mark.usefixtures("recorder_mock")
+async def test_async_pre_backup_with_migration(hass: HomeAssistant) -> None:
     """Test pre backup with migration."""
     with (
         patch(
@@ -88,7 +86,8 @@ async def test_async_pre_backup_with_migration(
     assert not lock_mock.called
 
 
-async def test_async_post_backup(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("recorder_mock")
+async def test_async_post_backup(hass: HomeAssistant) -> None:
     """Test post backup."""
     with patch(
         "homeassistant.components.recorder.core.Recorder.unlock_database"
@@ -97,9 +96,8 @@ async def test_async_post_backup(recorder_mock: Recorder, hass: HomeAssistant) -
     assert unlock_mock.called
 
 
-async def test_async_post_backup_failure(
-    recorder_mock: Recorder, hass: HomeAssistant
-) -> None:
+@pytest.mark.usefixtures("recorder_mock")
+async def test_async_post_backup_failure(hass: HomeAssistant) -> None:
     """Test post backup failure."""
     with (
         patch(

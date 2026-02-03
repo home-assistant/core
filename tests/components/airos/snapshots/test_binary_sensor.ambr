@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHCP client',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -30,7 +31,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dhcp_client',
-    'unique_id': '03aa0d0b40fed0a47088293584ef5432_dhcp_client',
+    'unique_id': '01:23:45:67:89:AB_dhcp_client',
     'unit_of_measurement': None,
   })
 # ---
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHCP server',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -79,7 +81,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dhcp_server',
-    'unique_id': '03aa0d0b40fed0a47088293584ef5432_dhcp_server',
+    'unique_id': '01:23:45:67:89:AB_dhcp_server',
     'unit_of_measurement': None,
   })
 # ---
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHCPv6 server',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -128,7 +131,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dhcp6_server',
-    'unique_id': '03aa0d0b40fed0a47088293584ef5432_dhcp6_server',
+    'unique_id': '01:23:45:67:89:AB_dhcp6_server',
     'unit_of_measurement': None,
   })
 # ---
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Port forwarding',
     'options': dict({
     }),
     'original_device_class': None,
@@ -177,7 +181,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'port_forwarding',
-    'unique_id': '03aa0d0b40fed0a47088293584ef5432_portfw',
+    'unique_id': '01:23:45:67:89:AB_portfw',
     'unit_of_measurement': None,
   })
 # ---
@@ -215,6 +219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'PPPoE link',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -225,7 +230,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pppoe',
-    'unique_id': '03aa0d0b40fed0a47088293584ef5432_pppoe',
+    'unique_id': '01:23:45:67:89:AB_pppoe',
     'unit_of_measurement': None,
   })
 # ---

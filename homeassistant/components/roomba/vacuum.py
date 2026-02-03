@@ -403,11 +403,16 @@ class BraavaJet(IRobotVacuum):
         detected_pad = state.get("detectedPad")
         mop_ready = state.get("mopReady", {})
         lid_closed = mop_ready.get("lidClosed")
-        tank_present = mop_ready.get("tankPresent")
+        tank_present = mop_ready.get("tankPresent") or state.get("tankPresent")
         tank_level = state.get("tankLvl")
         state_attrs[ATTR_DETECTED_PAD] = detected_pad
         state_attrs[ATTR_LID_CLOSED] = lid_closed
         state_attrs[ATTR_TANK_PRESENT] = tank_present
         state_attrs[ATTR_TANK_LEVEL] = tank_level
+        bin_raw_state = state.get("bin", {})
+        if bin_raw_state.get("present") is not None:
+            state_attrs[ATTR_BIN_PRESENT] = bin_raw_state.get("present")
+        if bin_raw_state.get("full") is not None:
+            state_attrs[ATTR_BIN_FULL] = bin_raw_state.get("full")
 
         return state_attrs

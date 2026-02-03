@@ -49,6 +49,14 @@ class JewishCalendarEntity(CoordinatorEntity[JewishCalendarUpdateCoordinator]):
             self._update_unsub = None
         return await super().async_will_remove_from_hass()
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # When coordinator updates (e.g., from tests forcing refresh or midnight update),
+        # reschedule our entity-specific updates
+        self._schedule_update()
+        super()._handle_coordinator_update()
+
     @abstractmethod
     def _update_times(self, zmanim: Zmanim) -> list[dt.datetime | None]:
         """Return a list of times to update the sensor."""

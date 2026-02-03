@@ -464,6 +464,11 @@ ZEROCONF = {
             "domain": "daikin",
         },
     ],
+    "_droplet._tcp.local.": [
+        {
+            "domain": "droplet",
+        },
+    ],
     "_dvl-deviceapi._tcp.local.": [
         {
             "domain": "devolo_home_control",
@@ -577,8 +582,24 @@ ZEROCONF = {
             "name": "eheimdigital._http._tcp.local.",
         },
         {
+            "domain": "hdfury",
+            "name": "diva-*",
+        },
+        {
+            "domain": "hdfury",
+            "name": "vertex2-*",
+        },
+        {
+            "domain": "hdfury",
+            "name": "vrroom-*",
+        },
+        {
             "domain": "lektrico",
             "name": "lektrico*",
+        },
+        {
+            "domain": "liebherr",
+            "name": "liebherr*",
         },
         {
             "domain": "loqed",
@@ -765,6 +786,11 @@ ZEROCONF = {
             "domain": "nanoleaf",
         },
     ],
+    "_nrgkick._tcp.local.": [
+        {
+            "domain": "nrgkick",
+        },
+    ],
     "_nut._tcp.local.": [
         {
             "domain": "nut",
@@ -773,6 +799,11 @@ ZEROCONF = {
     "_octoprint._tcp.local.": [
         {
             "domain": "octoprint",
+        },
+    ],
+    "_openevse._tcp.local.": [
+        {
+            "domain": "openevse",
         },
     ],
     "_owserver._tcp.local.": [
@@ -803,6 +834,11 @@ ZEROCONF = {
     "_powerview._tcp.local.": [
         {
             "domain": "hunterdouglas_powerview",
+        },
+    ],
+    "_prana._tcp.local.": [
+        {
+            "domain": "prana",
         },
     ],
     "_printer._tcp.local.": [

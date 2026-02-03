@@ -1,7 +1,7 @@
 """The Homee select platform."""
 
 from pyHomee.const import AttributeType
-from pyHomee.model import HomeeAttribute
+from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -10,6 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
 from .entity import HomeeEntity
+from .helpers import setup_homee_platform
 
 PARALLEL_UPDATES = 0
 
@@ -27,19 +28,28 @@ SELECT_DESCRIPTIONS: dict[AttributeType, SelectEntityDescription] = {
 }
 
 
+async def add_select_entities(
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
+) -> None:
+    """Add homee select entities."""
+    async_add_entities(
+        HomeeSelect(attribute, config_entry, SELECT_DESCRIPTIONS[attribute.type])
+        for node in nodes
+        for attribute in node.attributes
+        if attribute.type in SELECT_DESCRIPTIONS and attribute.editable
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the select component."""
+    """Add the homee platform for the select component."""
 
-    async_add_entities(
-        HomeeSelect(attribute, config_entry, SELECT_DESCRIPTIONS[attribute.type])
-        for node in config_entry.runtime_data.nodes
-        for attribute in node.attributes
-        if attribute.type in SELECT_DESCRIPTIONS and attribute.editable
-    )
+    await setup_homee_platform(add_select_entities, async_add_entities, config_entry)
 
 
 class HomeeSelect(HomeeEntity, SelectEntity):

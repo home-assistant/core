@@ -79,6 +79,7 @@ NO_IOT_CLASS = [
     "history",
     "homeassistant",
     "homeassistant_alerts",
+    "homeassistant_connect_zbt2",
     "homeassistant_green",
     "homeassistant_hardware",
     "homeassistant_sky_connect",
@@ -114,6 +115,7 @@ NO_IOT_CLASS = [
     "tag",
     "timer",
     "trace",
+    "web_rtc",
     "webhook",
     "websocket_api",
     "zone",
@@ -278,6 +280,17 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
         vol.Optional("single_config_entry"): bool,
+        vol.Optional("preview_features"): vol.Schema(
+            {
+                cv.slug: vol.Schema(
+                    {
+                        vol.Optional("feedback_url"): vol.Url(),
+                        vol.Optional("learn_more_url"): vol.Url(),
+                        vol.Optional("report_issue_url"): vol.Url(),
+                    }
+                )
+            }
+        ),
     }
 )
 
@@ -414,7 +427,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config.action == "generate" and manifests_resorted:
         subprocess.run(
             [
-                "pre-commit",
+                "prek",
                 "run",
                 "--hook-stage",
                 "manual",

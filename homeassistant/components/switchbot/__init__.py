@@ -5,6 +5,7 @@ import logging
 import switchbot
 
 from homeassistant.components import bluetooth
+from homeassistant.components.sensor import ConfigType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -16,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
     CONF_ENCRYPTION_KEY,
@@ -30,6 +31,10 @@ from .const import (
     SupportedModels,
 )
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 PLATFORMS_BY_TYPE = {
     SupportedModels.BULB.value: [Platform.SENSOR, Platform.LIGHT],
@@ -46,6 +51,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.HYGROMETER_CO2.value: [Platform.SENSOR],
     SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.PRESENCE_SENSOR.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.HUMIDIFIER.value: [Platform.HUMIDIFIER, Platform.SENSOR],
     SupportedModels.LOCK.value: [
         Platform.BINARY_SENSOR,
@@ -74,11 +80,13 @@ PLATFORMS_BY_TYPE = {
     ],
     SupportedModels.HUBMINI_MATTER.value: [Platform.SENSOR],
     SupportedModels.CIRCULATOR_FAN.value: [Platform.FAN, Platform.SENSOR],
-    SupportedModels.K20_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.S10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.S20_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_PRO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_PRO_COMBO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.K11_PLUS_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.K20_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.HUB3.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
     SupportedModels.LOCK_LITE.value: [
         Platform.BINARY_SENSOR,
@@ -95,6 +103,23 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.EVAPORATIVE_HUMIDIFIER: [Platform.HUMIDIFIER, Platform.SENSOR],
     SupportedModels.FLOOR_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.STRIP_LIGHT_3.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.RGBICWW_FLOOR_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.RGBICWW_STRIP_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.PLUG_MINI_EU.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.RELAY_SWITCH_2PM.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.GARAGE_DOOR_OPENER.value: [Platform.COVER, Platform.SENSOR],
+    SupportedModels.CLIMATE_PANEL.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
+    SupportedModels.SMART_THERMOSTAT_RADIATOR.value: [
+        Platform.CLIMATE,
+        Platform.SENSOR,
+    ],
+    SupportedModels.ART_FRAME.value: [
+        Platform.SENSOR,
+        Platform.BINARY_SENSOR,
+        Platform.BUTTON,
+    ],
+    SupportedModels.KEYPAD_VISION.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
+    SupportedModels.KEYPAD_VISION_PRO.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -111,11 +136,13 @@ CLASS_BY_DEVICE = {
     SupportedModels.RELAY_SWITCH_1.value: switchbot.SwitchbotRelaySwitch,
     SupportedModels.ROLLER_SHADE.value: switchbot.SwitchbotRollerShade,
     SupportedModels.CIRCULATOR_FAN.value: switchbot.SwitchbotFan,
-    SupportedModels.K20_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.S10_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.S20_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K10_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K10_PRO_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K10_PRO_COMBO_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.K11_PLUS_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.K20_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.LOCK_LITE.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_ULTRA.value: switchbot.SwitchbotLock,
     SupportedModels.AIR_PURIFIER.value: switchbot.SwitchbotAirPurifier,
@@ -123,10 +150,25 @@ CLASS_BY_DEVICE = {
     SupportedModels.EVAPORATIVE_HUMIDIFIER: switchbot.SwitchbotEvaporativeHumidifier,
     SupportedModels.FLOOR_LAMP.value: switchbot.SwitchbotStripLight3,
     SupportedModels.STRIP_LIGHT_3.value: switchbot.SwitchbotStripLight3,
+    SupportedModels.RGBICWW_FLOOR_LAMP.value: switchbot.SwitchbotRgbicLight,
+    SupportedModels.RGBICWW_STRIP_LIGHT.value: switchbot.SwitchbotRgbicLight,
+    SupportedModels.PLUG_MINI_EU.value: switchbot.SwitchbotRelaySwitch,
+    SupportedModels.RELAY_SWITCH_2PM.value: switchbot.SwitchbotRelaySwitch2PM,
+    SupportedModels.GARAGE_DOOR_OPENER.value: switchbot.SwitchbotGarageDoorOpener,
+    SupportedModels.SMART_THERMOSTAT_RADIATOR.value: switchbot.SwitchbotSmartThermostatRadiator,
+    SupportedModels.ART_FRAME.value: switchbot.SwitchbotArtFrame,
+    SupportedModels.KEYPAD_VISION.value: switchbot.SwitchbotKeypadVision,
+    SupportedModels.KEYPAD_VISION_PRO.value: switchbot.SwitchbotKeypadVision,
 }
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Switchbot Devices component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> bool:

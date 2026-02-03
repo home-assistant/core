@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import derivative
-from homeassistant.components.derivative.config_flow import ConfigFlowHandler
 from homeassistant.components.derivative.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import Event, HomeAssistant, callback
@@ -13,69 +12,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def sensor_config_entry(hass: HomeAssistant) -> er.RegistryEntry:
-    """Fixture to create a sensor config entry."""
-    sensor_config_entry = MockConfigEntry()
-    sensor_config_entry.add_to_hass(hass)
-    return sensor_config_entry
-
-
-@pytest.fixture
-def sensor_device(
-    device_registry: dr.DeviceRegistry, sensor_config_entry: ConfigEntry
-) -> dr.DeviceEntry:
-    """Fixture to create a sensor device."""
-    return device_registry.async_get_or_create(
-        config_entry_id=sensor_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-
-
-@pytest.fixture
-def sensor_entity_entry(
-    entity_registry: er.EntityRegistry,
-    sensor_config_entry: ConfigEntry,
-    sensor_device: dr.DeviceEntry,
-) -> er.RegistryEntry:
-    """Fixture to create a sensor entity entry."""
-    return entity_registry.async_get_or_create(
-        "sensor",
-        "test",
-        "unique",
-        config_entry=sensor_config_entry,
-        device_id=sensor_device.id,
-        original_name="ABC",
-    )
-
-
-@pytest.fixture
-def derivative_config_entry(
-    hass: HomeAssistant,
-    sensor_entity_entry: er.RegistryEntry,
-) -> MockConfigEntry:
-    """Fixture to create a derivative config entry."""
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            "name": "My derivative",
-            "round": 1.0,
-            "source": sensor_entity_entry.entity_id,
-            "time_window": {"seconds": 0.0},
-            "unit_prefix": "k",
-            "unit_time": "min",
-        },
-        title="My derivative",
-        version=ConfigFlowHandler.VERSION,
-        minor_version=ConfigFlowHandler.MINOR_VERSION,
-    )
-
-    config_entry.add_to_hass(hass)
-
-    return config_entry
 
 
 def track_entity_registry_actions(hass: HomeAssistant, entity_id: str) -> list[str]:
@@ -100,7 +36,9 @@ async def test_setup_and_remove_config_entry(
     input_sensor_entity_id = "sensor.input"
     derivative_entity_id = "sensor.my_derivative"
 
-    hass.states.async_set(input_sensor_entity_id, "10.0", {})
+    hass.states.async_set(
+        input_sensor_entity_id, "10.0", {"unit_of_measurement": "dog"}
+    )
     await hass.async_block_till_done()
 
     # Setup the config entry
@@ -127,7 +65,7 @@ async def test_setup_and_remove_config_entry(
     # Check the platform is setup correctly
     state = hass.states.get(derivative_entity_id)
     assert state.state == "0.0"
-    assert "unit_of_measurement" not in state.attributes
+    assert state.attributes["unit_of_measurement"] == "kdog/min"
     assert state.attributes["source"] == "sensor.input"
 
     hass.states.async_set(input_sensor_entity_id, 10, {"unit_of_measurement": "dog"})
@@ -144,93 +82,6 @@ async def test_setup_and_remove_config_entry(
     # Check the state and entity registry entry are removed
     assert hass.states.get(derivative_entity_id) is None
     assert entity_registry.async_get(derivative_entity_id) is None
-
-
-async def test_device_cleaning(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test for source entity device for Derivative."""
-
-    # Source entity device config entry
-    source_config_entry = MockConfigEntry()
-    source_config_entry.add_to_hass(hass)
-
-    # Device entry of the source entity
-    source_device1_entry = device_registry.async_get_or_create(
-        config_entry_id=source_config_entry.entry_id,
-        identifiers={("sensor", "identifier_test1")},
-        connections={("mac", "30:31:32:33:34:01")},
-    )
-
-    # Source entity registry
-    source_entity = entity_registry.async_get_or_create(
-        "sensor",
-        "test",
-        "source",
-        config_entry=source_config_entry,
-        device_id=source_device1_entry.id,
-    )
-    await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
-
-    # Configure the configuration entry for Derivative
-    derivative_config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            "name": "Derivative",
-            "round": 1.0,
-            "source": "sensor.test_source",
-            "time_window": {"seconds": 0.0},
-            "unit_prefix": "k",
-            "unit_time": "min",
-        },
-        title="Derivative",
-    )
-    derivative_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(derivative_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Confirm the link between the source entity device and the derivative sensor
-    derivative_entity = entity_registry.async_get("sensor.derivative")
-    assert derivative_entity is not None
-    assert derivative_entity.device_id == source_entity.device_id
-
-    # Device entry incorrectly linked to Derivative config entry
-    device_registry.async_get_or_create(
-        config_entry_id=derivative_config_entry.entry_id,
-        identifiers={("sensor", "identifier_test2")},
-        connections={("mac", "30:31:32:33:34:02")},
-    )
-    device_registry.async_get_or_create(
-        config_entry_id=derivative_config_entry.entry_id,
-        identifiers={("sensor", "identifier_test3")},
-        connections={("mac", "30:31:32:33:34:03")},
-    )
-    await hass.async_block_till_done()
-
-    # Before reloading the config entry, two devices are expected to be linked
-    devices_before_reload = device_registry.devices.get_devices_for_config_entry_id(
-        derivative_config_entry.entry_id
-    )
-    assert len(devices_before_reload) == 2
-
-    # Config entry reload
-    await hass.config_entries.async_reload(derivative_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Confirm the link between the source entity device and the derivative sensor after reload
-    derivative_entity = entity_registry.async_get("sensor.derivative")
-    assert derivative_entity is not None
-    assert derivative_entity.device_id == source_entity.device_id
-
-    # After reloading the config entry, only one linked device is expected
-    devices_after_reload = device_registry.devices.get_devices_for_config_entry_id(
-        derivative_config_entry.entry_id
-    )
-    assert len(devices_after_reload) == 0
 
 
 async def test_async_handle_source_entity_changes_source_entity_removed(

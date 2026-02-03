@@ -18,6 +18,7 @@ get_torrents:
             - "all"
             - "seeding"
             - "started"
+            - "errored"
 get_all_torrents:
   fields:
     torrent_filter:
@@ -33,3 +34,4 @@ get_all_torrents:
             - "all"
             - "seeding"
             - "started"
+            - "errored"

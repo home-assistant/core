@@ -46,7 +46,7 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     event_bus.notify(LifeSpanEvent(LifeSpan.FILTER, 56, 40 * 60))
     event_bus.notify(LifeSpanEvent(LifeSpan.SIDE_BRUSH, 40, 20 * 60))
     event_bus.notify(ErrorEvent(0, "NoError: Robot is operational"))
-    event_bus.notify(station.StationEvent(station.State.EMPTYING))
+    event_bus.notify(station.StationEvent(station.State.EMPTYING_DUSTBIN))
     await block_till_done(hass, event_bus)
 
 
@@ -104,9 +104,9 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
                 "sensor.dusty_station_state",
                 "sensor.dusty_main_brush_lifespan",
                 "sensor.dusty_filter_lifespan",
+                "sensor.dusty_round_mop_lifespan",
                 "sensor.dusty_side_brush_lifespan",
                 "sensor.dusty_unit_care_lifespan",
-                "sensor.dusty_round_mop_lifespan",
                 "sensor.dusty_error",
             ],
         ),

@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-@pytest.mark.freeze_time("2024-11-05T10:00:00+00:00")
+@pytest.mark.freeze_time("2025-10-01T10:00:00+00:00")
 async def test_unload_entry(hass: HomeAssistant, get_client: NordPoolClient) -> None:
     """Test load and unload an entry."""
     entry = MockConfigEntry(
@@ -79,7 +79,7 @@ async def test_initial_startup_fails(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.freeze_time("2024-11-05T10:00:00+00:00")
+@pytest.mark.freeze_time("2025-10-01T10:00:00+00:00")
 async def test_reconfigure_cleans_up_device(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -115,7 +115,7 @@ async def test_reconfigure_cleans_up_device(
         "GET",
         url=API + "/DayAheadPrices",
         params={
-            "date": "2024-11-04",
+            "date": "2025-09-30",
             "market": "DayAhead",
             "deliveryArea": "NL",
             "currency": "EUR",
@@ -126,7 +126,7 @@ async def test_reconfigure_cleans_up_device(
         "GET",
         url=API + "/DayAheadPrices",
         params={
-            "date": "2024-11-05",
+            "date": "2025-10-01",
             "market": "DayAhead",
             "deliveryArea": "NL",
             "currency": "EUR",
@@ -137,7 +137,7 @@ async def test_reconfigure_cleans_up_device(
         "GET",
         url=API + "/DayAheadPrices",
         params={
-            "date": "2024-11-06",
+            "date": "2025-10-02",
             "market": "DayAhead",
             "deliveryArea": "NL",
             "currency": "EUR",

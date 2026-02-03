@@ -252,6 +252,7 @@ class FanGroup(GroupEntity, FanEntity):
     @callback
     def async_update_group_state(self) -> None:
         """Update state and attributes."""
+        self._update_assumed_state_from_members()
 
         states = [
             state

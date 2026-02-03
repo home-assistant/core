@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, TypeVar
-
-T = TypeVar("T", dict[str, Any], list[Any], None)
+from typing import Any
 
 TRANSLATION_MAP = {
     "wan_rx": "sensor_rx_bytes",
@@ -36,7 +34,7 @@ def clean_dict(raw: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in raw.items() if v is not None or k.endswith("state")}
 
 
-def translate_to_legacy(raw: T) -> T:
+def translate_to_legacy[T: (dict[str, Any], list[Any], None)](raw: T) -> T:
     """Translate raw data to legacy format for dicts and lists."""
 
     if raw is None:

@@ -30,6 +30,7 @@ from homeassistant.components.matrix import (
     CONF_COMMANDS,
     CONF_EXPRESSION,
     CONF_HOMESERVER,
+    CONF_REACTION,
     CONF_ROOMS,
     CONF_WORD,
     EVENT_MATRIX_COMMAND,
@@ -153,6 +154,10 @@ MOCK_CONFIG_DATA = {
                 CONF_NAME: "ExpressionTriggerEventName",
             },
             {
+                CONF_REACTION: "😄",
+                CONF_NAME: "ReactionTriggerEventName",
+            },
+            {
                 CONF_WORD: "WordTriggerSubset",
                 CONF_NAME: "WordTriggerSubsetEventName",
                 CONF_ROOMS: [TEST_ROOM_B_ALIAS, TEST_ROOM_C_ID],
@@ -237,6 +242,30 @@ MOCK_EXPRESSION_COMMANDS = {
             "rooms": [TEST_ROOM_B_ID, TEST_ROOM_C_ID],
         },
     ],
+}
+
+MOCK_REACTION_COMMANDS = {
+    TEST_ROOM_A_ID: {
+        "😄": {
+            "reaction": "😄",
+            "name": "ReactionTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        }
+    },
+    TEST_ROOM_B_ID: {
+        "😄": {
+            "reaction": "😄",
+            "name": "ReactionTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+    },
+    TEST_ROOM_C_ID: {
+        "😄": {
+            "reaction": "😄",
+            "name": "ReactionTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+    },
 }
 
 

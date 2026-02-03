@@ -1,9 +1,12 @@
 """Test ZHA analog output."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import call, patch
 
 import pytest
+from zigpy.device import Device
 from zigpy.profiles import zha
+from zigpy.typing import UNDEFINED
 from zigpy.zcl.clusters import general
 import zigpy.zcl.foundation as zcl_f
 
@@ -39,7 +42,11 @@ def number_platform_only():
         yield
 
 
-async def test_number(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
+async def test_number(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
     """Test ZHA number platform."""
 
     await setup_zha()
@@ -116,7 +123,7 @@ async def test_number(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None
             blocking=True,
         )
         assert cluster.write_attributes.mock_calls == [
-            call({"present_value": 30.0}, manufacturer=None)
+            call({"present_value": 30.0}, manufacturer=UNDEFINED)
         ]
         cluster.PLUGGED_ATTR_READS["present_value"] = 30.0
 

@@ -6,7 +6,7 @@ from typing import Any
 
 from subarulink.const import LATITUDE, LONGITUDE, TIMESTAMP
 
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback

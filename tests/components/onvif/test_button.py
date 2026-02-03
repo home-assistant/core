@@ -60,7 +60,7 @@ async def test_set_dateandtime_button(
 
 async def test_set_dateandtime_button_press(hass: HomeAssistant) -> None:
     """Test SetDateAndTime button press."""
-    _, camera, device = await setup_onvif_integration(hass)
+    _, _camera, device = await setup_onvif_integration(hass)
     device.async_manually_set_date_and_time = AsyncMock(return_value=True)
 
     await hass.services.async_call(

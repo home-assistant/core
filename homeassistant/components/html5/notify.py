@@ -9,6 +9,7 @@ from http import HTTPStatus
 import json
 import logging
 import time
+from typing import Any
 from urllib.parse import urlparse
 import uuid
 
@@ -451,7 +452,7 @@ class HTML5NotificationService(BaseNotificationService):
         """
         await self.hass.async_add_executor_job(partial(self.dismiss, **kwargs))
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         tag = str(uuid.uuid4())
         payload = {

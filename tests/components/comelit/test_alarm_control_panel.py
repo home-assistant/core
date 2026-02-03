@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock
 
-from aiocomelit.api import AlarmDataObject, ComelitVedoAreaObject, ComelitVedoZoneObject
-from aiocomelit.const import AlarmAreaState, AlarmZoneState
+from aiocomelit.api import ComelitVedoAreaObject
+from aiocomelit.const import ALARM_AREA, ALARM_ZONE, AlarmAreaState
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -21,7 +21,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .const import VEDO_PIN
+from .const import VEDO_PIN, ZONE0
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -55,8 +55,8 @@ async def test_entity_availability(
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == AlarmControlPanelState.DISARMED
 
-    vedo_query = AlarmDataObject(
-        alarm_areas={
+    vedo_query = {
+        ALARM_AREA: {
             0: ComelitVedoAreaObject(
                 index=0,
                 name="Area0",
@@ -73,16 +73,10 @@ async def test_entity_availability(
                 human_status=human_status,
             )
         },
-        alarm_zones={
-            0: ComelitVedoZoneObject(
-                index=0,
-                name="Zone0",
-                status_api="0x000",
-                status=0,
-                human_status=AlarmZoneState.REST,
-            )
+        ALARM_ZONE: {
+            0: ZONE0,
         },
-    )
+    }
 
     mock_vedo.get_all_areas_and_zones.return_value = vedo_query
 

@@ -30,18 +30,21 @@ from homeassistant.components.media_player import (
     SERVICE_UNJOIN,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.music_assistant.const import DOMAIN
-from homeassistant.components.music_assistant.media_player import (
+from homeassistant.components.music_assistant.const import (
     ATTR_ALBUM,
     ATTR_ANNOUNCE_VOLUME,
     ATTR_ARTIST,
     ATTR_AUTO_PLAY,
     ATTR_MEDIA_ID,
     ATTR_MEDIA_TYPE,
+    ATTR_PRE_ANNOUNCE_URL,
     ATTR_RADIO_MODE,
     ATTR_SOURCE_PLAYER,
     ATTR_URL,
     ATTR_USE_PRE_ANNOUNCE,
+    DOMAIN,
+)
+from homeassistant.components.music_assistant.services import (
     SERVICE_GET_QUEUE,
     SERVICE_PLAY_ANNOUNCEMENT,
     SERVICE_PLAY_MEDIA_ADVANCED,
@@ -527,6 +530,7 @@ async def test_media_player_play_announcement_action(
             ATTR_ENTITY_ID: entity_id,
             ATTR_URL: "http://blah.com/announcement.mp3",
             ATTR_USE_PRE_ANNOUNCE: True,
+            ATTR_PRE_ANNOUNCE_URL: "http://blah.com/chime.mp3",
             ATTR_ANNOUNCE_VOLUME: 50,
         },
         blocking=True,
@@ -536,8 +540,9 @@ async def test_media_player_play_announcement_action(
         "players/cmd/play_announcement",
         player_id=mass_player_id,
         url="http://blah.com/announcement.mp3",
-        use_pre_announce=True,
+        pre_announce=True,
         volume_level=50,
+        pre_announce_url="http://blah.com/chime.mp3",
     )
 
 

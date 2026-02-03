@@ -324,6 +324,7 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
         translation_key="sps30_pm4",
         suggested_display_precision=0,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM4,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda sensors: sensors.sps30_p4,
     ),

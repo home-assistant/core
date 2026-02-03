@@ -44,6 +44,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -65,13 +66,14 @@
       'attribution': 'Data provided by OpenWeatherMap',
       'cloud_coverage': 75,
       'dew_point': 4.0,
-      'friendly_name': 'openweathermap',
+      'friendly_name': 'OpenWeatherMap',
       'humidity': 82,
       'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       'pressure': 1000.0,
       'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
       'temperature': 6.8,
       'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+      'visibility': 10.0,
       'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
       'wind_bearing': 199,
       'wind_gust_speed': 42.52,
@@ -107,6 +109,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -128,7 +131,7 @@
       'attribution': 'Data provided by OpenWeatherMap',
       'cloud_coverage': 75,
       'dew_point': 4.0,
-      'friendly_name': 'openweathermap',
+      'friendly_name': 'OpenWeatherMap',
       'humidity': 82,
       'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       'pressure': 1000.0,
@@ -136,6 +139,7 @@
       'supported_features': <WeatherEntityFeature: 2>,
       'temperature': 6.8,
       'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+      'visibility': 10.0,
       'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
       'wind_bearing': 199,
       'wind_gust_speed': 42.52,
@@ -171,6 +175,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -192,7 +197,7 @@
       'attribution': 'Data provided by OpenWeatherMap',
       'cloud_coverage': 75,
       'dew_point': 4.0,
-      'friendly_name': 'openweathermap',
+      'friendly_name': 'OpenWeatherMap',
       'humidity': 82,
       'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       'pressure': 1000.0,
@@ -200,6 +205,7 @@
       'supported_features': <WeatherEntityFeature: 3>,
       'temperature': 6.8,
       'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+      'visibility': 10.0,
       'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
       'wind_bearing': 199,
       'wind_gust_speed': 42.52,

@@ -9,8 +9,8 @@
       "registered_devices": true
     },
     {
-      "macaddress": "001E0C*",
-      "hostname": "my[45]50*"
+      "hostname": "my[45]50*",
+      "macaddress": "001E0C*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/steamist",

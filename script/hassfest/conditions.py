@@ -38,6 +38,7 @@ FIELD_SCHEMA = vol.Schema(
 CONDITION_SCHEMA = vol.Any(
     vol.Schema(
         {
+            vol.Optional("target"): selector.TargetSelector.CONFIG_SCHEMA,
             vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
         }
     ),

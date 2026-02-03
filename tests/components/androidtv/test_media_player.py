@@ -21,7 +21,7 @@ from homeassistant.components.androidtv.const import (
     DEFAULT_PORT,
     DOMAIN,
 )
-from homeassistant.components.androidtv.media_player import (
+from homeassistant.components.androidtv.services import (
     ATTR_DEVICE_PATH,
     ATTR_LOCAL_PATH,
     SERVICE_ADB_COMMAND,
