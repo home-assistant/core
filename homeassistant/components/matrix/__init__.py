@@ -208,8 +208,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bo
     else:
         hass.data[DOMAIN] = {entry.entry_id: matrix_bot}
 
+    async_setup_services(hass)
 
-    if hass.is_running:
+    if hass.is_running and asyncio.iscoroutinefunction(matrix_bot.async_start):
         hass.async_create_background_task(
             matrix_bot.async_start(),
             name=f"{matrix_bot.__class__.__name__}: start for '{matrix_bot._mx_id}'",
