@@ -46,7 +46,10 @@ async def async_setup_entry(
         raise PlatformNotReady from exception
 
     server_id = syncthing.server_id
-    folder_entities = [
+
+    entities: list[SensorEntity] = []
+
+    entities.extend(
         FolderSensor(
             syncthing,
             server_id,
@@ -55,10 +58,9 @@ async def async_setup_entry(
             version["version"],
         )
         for folder in config["folders"]
-    ]
-    async_add_entities(folder_entities)
+    )
 
-    device_entities = [
+    entities.extend(
         DeviceSensor(
             syncthing,
             server_id,
@@ -67,9 +69,9 @@ async def async_setup_entry(
             version["version"],
         )
         for device in config["devices"]
-    ]
+    )
 
-    async_add_entities(device_entities)
+    async_add_entities(entities)
 
 
 class FolderSensor(SensorEntity):
@@ -115,17 +117,17 @@ class FolderSensor(SensorEntity):
         version: str,
     ) -> None:
         """Initialize the sensor."""
-        self._syncthing: SyncthingClient = syncthing
-        self._server_id: str = server_id
-        self._folder_id: str = folder_id
-        self._folder_label: str = folder_label
+        self._syncthing = syncthing
+        self._server_id = server_id
+        self._folder_id = folder_id
+        self._folder_label = folder_label
         self._state: dict[str, Any] | None = None
         self._unsub_timer: CALLBACK_TYPE | None = None
 
-        self._short_server_id: str = server_id.split("-")[0]
-        self._attr_name: str = f"{self._short_server_id} {folder_id} {folder_label}"
-        self._attr_unique_id: str = f"{self._short_server_id}-{folder_id}"
-        self._attr_device_info: DeviceInfo = DeviceInfo(
+        self._short_server_id = server_id.split("-")[0]
+        self._attr_name = f"{self._short_server_id} {folder_id} {folder_label}"
+        self._attr_unique_id = f"{self._short_server_id}-{folder_id}"
+        self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self._server_id)},
             manufacturer="Syncthing Team",
@@ -134,9 +136,9 @@ class FolderSensor(SensorEntity):
         )
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        return self._state["state"] if self._state else "unknown"
+        return self._state["state"] if self._state else None
 
     @property
     def available(self) -> bool:
@@ -319,20 +321,20 @@ class DeviceSensor(SensorEntity):
         version: str,
     ) -> None:
         """Initialize the sensor."""
-        self._syncthing: SyncthingClient = syncthing
-        self._server_id: str = server_id
-        self._device_id: str = device_id
-        self._device_label: str = device_label
+        self._syncthing = syncthing
+        self._server_id = server_id
+        self._device_id = device_id
+        self._device_label = device_label
         self._state: dict[str, Any] | None = None
         self._unsub_timer: CALLBACK_TYPE | None = None
 
-        self._short_server_id: str = server_id.split("-")[0]
-        self._short_device_id: str = device_id.split("-")[0]
-        self._attr_name: str = (
+        self._short_server_id = server_id.split("-")[0]
+        self._short_device_id = device_id.split("-")[0]
+        self._attr_name = (
             f"{self._short_server_id} {self._short_device_id} {device_label}"
         )
-        self._attr_unique_id: str = f"{self._short_server_id}-{device_id}"
-        self._attr_device_info: DeviceInfo = DeviceInfo(
+        self._attr_unique_id = f"{self._short_server_id}-{device_id}"
+        self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self._server_id)},
             manufacturer="Syncthing Team",
@@ -341,9 +343,9 @@ class DeviceSensor(SensorEntity):
         )
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        return self._state["state"] if self._state else "unknown"
+        return self._state["state"] if self._state else None
 
     @property
     def available(self) -> bool:
