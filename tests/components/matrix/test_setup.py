@@ -96,9 +96,9 @@ async def test_async_setup_with_existing_config_entry(hass: HomeAssistant) -> No
         assert result is True
         # Should not create import flow since config entry exists
         mock_flow_init.assert_not_called()
-        # Config entry setup still initializes the MatrixBot
-        mock_matrix_bot.assert_called_once()
-        mock_setup_services.assert_called_once()
+        # async_setup should not initialize MatrixBot or services when entry exists
+        mock_matrix_bot.assert_not_called()
+        mock_setup_services.assert_not_called()
 
 
 async def test_async_setup_entry(hass: HomeAssistant) -> None:
