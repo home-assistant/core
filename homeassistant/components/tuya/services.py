@@ -139,7 +139,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         async_set_meal_plan_data,
         schema=vol.Schema(
             {
-                vol.Required("device_id"): str,
+                vol.Required(ATTR_DEVICE_ID): str,
                 vol.Required("data"): vol.All(
                     list,
                     [FEEDING_ENTRY_SCHEMA],
