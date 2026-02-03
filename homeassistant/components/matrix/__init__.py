@@ -205,7 +205,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.runtime_data = matrix_bot
     hass.data[DOMAIN] = matrix_bot
 
-    async_setup_services(hass)
     return True
 
 
