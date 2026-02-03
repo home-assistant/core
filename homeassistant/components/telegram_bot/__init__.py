@@ -100,6 +100,10 @@ from .const import (
     CONF_CONFIG_ENTRY_ID,
     DEFAULT_API_ENDPOINT,
     DOMAIN,
+    PARSER_HTML,
+    PARSER_MD,
+    PARSER_MD2,
+    PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
@@ -128,13 +132,18 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+ATTR_PARSER_SCHEMA = vol.All(
+    cv.string,
+    vol.In([PARSER_HTML, PARSER_MD, PARSER_MD2, PARSER_PLAIN_TEXT]),
+)
+
 BASE_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(ATTR_PARSER): cv.string,
+        vol.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
         vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
         vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
         vol.Optional(ATTR_RESIZE_KEYBOARD): cv.boolean,
@@ -253,7 +262,7 @@ SERVICE_SCHEMA_EDIT_MESSAGE = vol.All(
                 cv.positive_int, vol.All(cv.string, "last")
             ),
             vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
-            vol.Optional(ATTR_PARSER): cv.string,
+            vol.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
             vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
             vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
         }
@@ -271,6 +280,7 @@ SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.All(
             ),
             vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
             vol.Optional(ATTR_CAPTION): cv.string,
+            vol.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
             vol.Required(ATTR_MEDIA_TYPE): vol.In(
                 (
                     str(InputMediaType.ANIMATION),
@@ -299,6 +309,7 @@ SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
             cv.positive_int, vol.All(cv.string, "last")
         ),
         vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
+        vol.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
         vol.Required(ATTR_CAPTION): cv.string,
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
     }
