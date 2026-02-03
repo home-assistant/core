@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, cast
@@ -844,7 +844,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     @asynccontextmanager
     async def _async_provision_context(
         self, mac: str
-    ) -> AsyncIterator[ProvisioningState]:
+    ) -> AsyncGenerator[ProvisioningState]:
         """Context manager to register and cleanup provisioning state."""
         state = ProvisioningState()
         provisioning_registry = async_get_provisioning_registry(self.hass)
