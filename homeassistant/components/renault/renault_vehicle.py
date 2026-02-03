@@ -222,12 +222,12 @@ class RenaultVehicleProxy:
         return await self._vehicle.set_charge_schedules(schedules)
 
     @with_error_wrapping
-    async def start_horn(self) -> dict[str, Any]:
+    async def sound_horn(self) -> dict[str, Any]:
         """Start vehicle horn."""
         return await self._vehicle.start_horn()
 
     @with_error_wrapping
-    async def start_lights(self) -> dict[str, Any]:
+    async def flash_lights(self) -> dict[str, Any]:
         """Start vehicle lights."""
         return await self._vehicle.start_lights()
 

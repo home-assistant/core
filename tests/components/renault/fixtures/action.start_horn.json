@@ -1,6 +1,0 @@
-{
-  "data": {
-    "type": "HornLights",
-    "attributes": { "action": "start", "target": "horn" }
-  }
-}
