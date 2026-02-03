@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -105,6 +106,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SonarrConfigEntry) -> bo
         coordinator.system_version = _version
     entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Create repair issue for deprecated sensor attributes
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_sensor_attributes",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_sensor_attributes",
+    )
 
     return True
 
