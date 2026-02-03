@@ -17,11 +17,16 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_WS_PORT
+from .const import CONF_WS_PORT, DOMAIN
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 type KodiConfigEntry = ConfigEntry[KodiRuntimeData]
@@ -33,6 +38,12 @@ class KodiRuntimeData:
 
     connection: KodiHTTPConnection | KodiWSConnection
     kodi: Kodi
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: KodiConfigEntry) -> bool:
