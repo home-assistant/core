@@ -141,7 +141,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 self._all_region_codes_sorted = swap_key_value(
-                    await nina.getAllRegionalCodes()
+                    await nina.get_all_regional_codes()
                 )
             except ApiError:
                 return self.async_abort(reason="no_fetch")
@@ -221,7 +221,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
             try:
                 self._all_region_codes_sorted = swap_key_value(
-                    await nina.getAllRegionalCodes()
+                    await nina.get_all_regional_codes()
                 )
             except ApiError:
                 return self.async_abort(reason="no_fetch")
@@ -256,7 +256,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     if slot_id > user_input[CONF_MESSAGE_SLOTS]
                 ]
 
-                removed_entites_area = [
+                removed_entities_area = [
                     f"{cfg_region}-{slot_id}"
                     for slot_id in range(1, self.data[CONF_MESSAGE_SLOTS] + 1)
                     for cfg_region in self.data[CONF_REGIONS]
@@ -265,7 +265,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
                 for entry in entries:
                     for entity_uid in list(
-                        set(removed_entities_slots + removed_entites_area)
+                        set(removed_entities_slots + removed_entities_area)
                     ):
                         if entry.unique_id == entity_uid:
                             entity_registry.async_remove(entry.entity_id)

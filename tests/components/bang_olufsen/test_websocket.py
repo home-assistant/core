@@ -130,7 +130,7 @@ async def test_on_remote_control_already_added(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Check device and API call count
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 1
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (remote and button events and media_player)
@@ -149,7 +149,7 @@ async def test_on_remote_control_already_added(
     await hass.async_block_till_done()
 
     # Check device and API call count (triggered once by the WebSocket notification)
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 2
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 4
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (remote and button events and media_player)
@@ -176,7 +176,7 @@ async def test_on_remote_control_paired(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Check device and API call count
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 1
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (button and remote events and media_player)
@@ -217,7 +217,7 @@ async def test_on_remote_control_paired(
     await hass.async_block_till_done()
 
     # Check device and API call count
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 8
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
     assert device_registry.async_get_device(
         {(DOMAIN, f"66666666_{TEST_SERIAL_NUMBER}")}
@@ -257,7 +257,7 @@ async def test_on_remote_control_unpaired(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Check device and API call count
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 1
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (button and remote events and media_player)
@@ -280,7 +280,7 @@ async def test_on_remote_control_unpaired(
     await hass.async_block_till_done()
 
     # Check device and API call count
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 6
     assert (
         device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)}) is None
     )

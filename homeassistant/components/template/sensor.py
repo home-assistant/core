@@ -323,3 +323,4 @@ class TriggerSensorEntity(TriggerEntity, AbstractTemplateSensor):
 
         rendered = self._rendered.get(CONF_STATE)
         self._handle_state(rendered)
+        self.async_write_ha_state()
