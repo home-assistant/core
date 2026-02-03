@@ -36,7 +36,6 @@ async def test_user_flow_success(
             CONF_NAME: "Test Splunk",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "splunk.example.com:8088"
@@ -160,7 +159,6 @@ async def test_import_flow_success(
             CONF_NAME: "Imported Splunk",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "splunk.example.com:8088"
@@ -281,9 +279,8 @@ async def test_reauth_flow_success(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_TOKEN: "new-token-456"}
+        {CONF_TOKEN: "new-token-456"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -325,7 +322,6 @@ async def test_reauth_flow_invalid_auth(
         result["flow_id"],
         {CONF_TOKEN: "new-valid-token"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
