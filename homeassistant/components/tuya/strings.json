@@ -1122,7 +1122,7 @@
       "name": "Not a Tuya device"
     },
     "get_meal_plan_data": {
-      "description": "Retrieve meal_plan data from a Tuya device.",
+      "description": "Retrieves meal_plan data from a Tuya device.",
       "fields": {
         "device_id": {
           "description": "The Tuya device.",
