@@ -62,6 +62,12 @@ METADATA = {
             "name": "Home Assistant",
         }
     },
+    "energy_sites": {
+        "123456": {
+            "access": True,
+            "name": "Energy Site",
+        }
+    },
 }
 METADATA_LEGACY = {
     "uid": UNIQUE_ID,
@@ -88,6 +94,12 @@ METADATA_LEGACY = {
             "name": "Home Assistant",
         }
     },
+    "energy_sites": {
+        "123456": {
+            "access": True,
+            "name": "Energy Site",
+        }
+    },
 }
 METADATA_NOSCOPE = {
     "uid": UNIQUE_ID,
@@ -102,6 +114,12 @@ METADATA_NOSCOPE = {
             "discounted": True,
             "fleet_telemetry": "unknown",
             "name": "Home Assistant",
+        }
+    },
+    "energy_sites": {
+        "123456": {
+            "access": True,
+            "name": "Energy Site",
         }
     },
 }
