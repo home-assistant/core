@@ -638,7 +638,7 @@ def _build_targets(
     """Builds a list of targets from the service parameters.
 
     Each target is a tuple of (config_entry, chat_id, notify_entity_id).
-    The config_entry identiffies the bot to use for the service call.
+    The config_entry identifies the bot to use for the service call.
     The chat_id or notify_entity_id identifies the recipient of the message.
     """
 
