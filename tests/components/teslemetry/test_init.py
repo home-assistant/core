@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
+    Forbidden,
     InvalidResponse,
     InvalidToken,
     RateLimited,
@@ -800,3 +801,119 @@ async def test_energy_site_version_update(
     device = device_registry.async_get_device(identifiers={(DOMAIN, site_id)})
     assert device is not None
     assert device.sw_version == "24.1.0 abc123"
+
+
+# Exception translation tests
+
+
+async def test_live_status_auth_failed_forbidden(
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+) -> None:
+    """Test Forbidden exception during live_status triggers auth failure."""
+    mock_live_status.side_effect = Forbidden
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_coordinator_update_failed_generic_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_live_status: AsyncMock,
+) -> None:
+    """Test TeslaFleetError during coordinator refresh raises UpdateFailed."""
+    call_count = 0
+
+    def live_status_side_effect():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return deepcopy(LIVE_STATUS)
+        raise TeslaFleetError
+
+    mock_live_status.side_effect = live_status_side_effect
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    # Trigger coordinator refresh
+    freezer.tick(ENERGY_LIVE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Entry stays loaded - UpdateFailed doesn't break the entry
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_energy_history_invalid_data(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+) -> None:
+    """Test invalid data from energy history raises UpdateFailed."""
+    call_count = 0
+
+    def energy_history_side_effect(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return ENERGY_HISTORY
+        # Return invalid data (missing time_series)
+        return {"response": {}}
+
+    mock_energy_history.side_effect = energy_history_side_effect
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    # Trigger coordinator refresh
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Entry stays loaded - UpdateFailed doesn't break the entry
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_energy_history_auth_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+) -> None:
+    """Test InvalidToken during energy history refresh triggers reauth."""
+    # Energy history coordinator doesn't do first_refresh during setup,
+    # so first call is on the first scheduled refresh
+    mock_energy_history.side_effect = InvalidToken
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    # Trigger coordinator refresh - this will be the first energy_history call
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Entry stays loaded but reauth flow should be triggered
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_energy_history_generic_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_history: AsyncMock,
+) -> None:
+    """Test TeslaFleetError during energy history refresh raises UpdateFailed."""
+    # Energy history coordinator doesn't do first_refresh during setup,
+    # so first call is on the first scheduled refresh
+    mock_energy_history.side_effect = TeslaFleetError
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    # Trigger coordinator refresh - this will be the first energy_history call
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Entry stays loaded - UpdateFailed doesn't break the entry
+    assert entry.state is ConfigEntryState.LOADED
