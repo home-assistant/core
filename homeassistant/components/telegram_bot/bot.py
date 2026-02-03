@@ -94,6 +94,7 @@ from .const import (
     ATTR_USER_ID,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     DOMAIN,
@@ -306,24 +307,6 @@ class TelegramNotificationService:
         self.hass = hass
         self._last_message_id: dict[int, int] = {}
 
-    def _get_allowed_chat_ids(self) -> list[int]:
-        allowed_chat_ids: list[int] = [
-            subentry.data[CONF_CHAT_ID] for subentry in self.config.subentries.values()
-        ]
-
-        if not allowed_chat_ids:
-            bot_name: str = self.config.title
-            raise ServiceValidationError(
-                "No allowed chat IDs found for bot",
-                translation_domain=DOMAIN,
-                translation_key="missing_allowed_chat_ids",
-                translation_placeholders={
-                    "bot_name": bot_name,
-                },
-            )
-
-        return allowed_chat_ids
-
     def _get_msg_ids(
         self, msg_data: dict[str, Any], chat_id: int
     ) -> tuple[Any | None, int | None]:
@@ -354,7 +337,9 @@ class TelegramNotificationService:
         :param target: optional list of integers ([12234, -12345])
         :return list of chat_id targets (integers)
         """
-        allowed_chat_ids: list[int] = self._get_allowed_chat_ids()
+        allowed_chat_ids: list[int] = [
+            subentry.data[CONF_CHAT_ID] for subentry in self.config.subentries.values()
+        ]
 
         if target is None:
             return [allowed_chat_ids[0]]
@@ -482,7 +467,7 @@ class TelegramNotificationService:
         *args_msg: Any,
         context: Context | None = None,
         **kwargs_msg: Any,
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Sends a message to each of the targets.
 
         If there is only 1 targtet, an error is raised if the send fails.
@@ -491,7 +476,7 @@ class TelegramNotificationService:
         :return: dict with chat_id keys and message_id values for successful sends
         """
         chat_ids = self.get_target_chat_ids(kwargs_msg.pop(ATTR_TARGET, None))
-        msg_ids = {}
+        msg_ids: dict[str, JsonValueType] = {}
         for chat_id in chat_ids:
             _LOGGER.debug("%s to chat ID %s", func_send.__name__, chat_id)
 
@@ -512,7 +497,7 @@ class TelegramNotificationService:
                 **kwargs_msg,
             )
             if response:
-                msg_ids[chat_id] = response.id
+                msg_ids[str(chat_id)] = response.id
 
         return msg_ids
 
@@ -579,7 +564,7 @@ class TelegramNotificationService:
         target: Any = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a message to one or multiple pre-allowed chat IDs."""
         title = kwargs.get(ATTR_TITLE)
         text = f"{title}\n{message}" if title else message
@@ -673,6 +658,8 @@ class TelegramNotificationService:
             "Error editing message media",
             params[ATTR_MESSAGE_TAG],
             media=media,
+            caption=kwargs.get(ATTR_CAPTION),
+            parse_mode=params[ATTR_PARSER],
             chat_id=chat_id,
             message_id=message_id,
             inline_message_id=inline_message_id,
@@ -777,9 +764,9 @@ class TelegramNotificationService:
         target: Any = None,
         context: Context | None = None,
         **kwargs: Any,
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a chat action to pre-allowed chat IDs."""
-        result = {}
+        result: dict[str, JsonValueType] = {}
         for chat_id in self.get_target_chat_ids(target):
             _LOGGER.debug("Send action %s in chat ID %s", chat_action, chat_id)
             is_successful = await self._send_msg(
@@ -791,7 +778,7 @@ class TelegramNotificationService:
                 message_thread_id=kwargs.get(ATTR_MESSAGE_THREAD_ID),
                 context=context,
             )
-            result[chat_id] = is_successful
+            result[str(chat_id)] = is_successful
         return result
 
     async def send_file(
@@ -799,7 +786,7 @@ class TelegramNotificationService:
         file_type: str,
         context: Context | None = None,
         **kwargs: Any,
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a photo, sticker, video, or document."""
         params = self._get_msg_kwargs(kwargs)
         file_content = await load_data(
@@ -919,7 +906,7 @@ class TelegramNotificationService:
         self,
         context: Context | None = None,
         **kwargs: Any,
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a sticker from a telegram sticker pack."""
         params = self._get_msg_kwargs(kwargs)
         stickerid = kwargs.get(ATTR_STICKER_ID)
@@ -947,7 +934,7 @@ class TelegramNotificationService:
         target: Any = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a location."""
         latitude = float(latitude)
         longitude = float(longitude)
@@ -975,7 +962,7 @@ class TelegramNotificationService:
         target: Any = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
-    ) -> dict[int, int]:
+    ) -> dict[str, JsonValueType]:
         """Send a poll."""
         params = self._get_msg_kwargs(kwargs)
         openperiod = kwargs.get(ATTR_OPEN_PERIOD)
@@ -1099,15 +1086,24 @@ class TelegramNotificationService:
 
 def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:
     """Initialize telegram bot with proxy support."""
-    api_key: str = p_config[CONF_API_KEY]
-    proxy_url: str | None = p_config.get(CONF_PROXY_URL)
 
+    api_key: str = p_config[CONF_API_KEY]
+
+    proxy_url: str | None = p_config.get(CONF_PROXY_URL)
     if proxy_url is not None:
         proxy = httpx.Proxy(proxy_url)
         request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
     else:
         request = HTTPXRequest(connection_pool_size=8)
-    return Bot(token=api_key, request=request)
+
+    base_url: str = p_config[CONF_API_ENDPOINT]
+
+    return Bot(
+        token=api_key,
+        base_url=f"{base_url}/bot",
+        base_file_url=f"{base_url}/file/bot",
+        request=request,
+    )
 
 
 async def load_data(

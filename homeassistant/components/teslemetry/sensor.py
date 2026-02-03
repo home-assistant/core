@@ -72,7 +72,7 @@ CHARGE_STATES = {
 }
 
 DRIVE_INVERTER_STATES = {
-    "Unavailable": "unavailable",
+    "Unavailable": "not_available",
     "Standby": "standby",
     "Fault": "fault",
     "Abort": "abort",
@@ -1531,10 +1531,6 @@ ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
-    ),
-    SensorEntityDescription(
-        key="version",
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
