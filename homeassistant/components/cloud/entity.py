@@ -462,9 +462,9 @@ class BaseCloudLLMEntity(Entity):
 
             last_message = cast(dict[str, Any], messages[-1])
             assert (
-                last_message.get("type") == "message"
-                and last_message.get("role") == "user"
-                and isinstance(last_message.get("content"), str)
+                last_message["type"] == "message"
+                and last_message["role"] == "user"
+                and isinstance(last_message["content"], str)
             )
             last_message["content"] = [
                 {"type": "input_text", "text": last_message["content"]},
