@@ -47,6 +47,12 @@
     }
   },
   "exceptions": {
+    "bms_com_fail": {
+      "message": "BMS communication failed: {err_msg}"
+    },
+    "bms_timeout": {
+      "message": "BMS communication timed out."
+    },
     "device_not_found": {
       "message": "Could not find BMS ({MAC}) via Bluetooth."
     },

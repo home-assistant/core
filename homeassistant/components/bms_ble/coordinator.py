@@ -24,6 +24,8 @@ from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
     """Update coordinator for a battery management system."""
 
+    _LOW_RSSI: Final[int] = -75  # dBm considered low signal strength
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -74,10 +76,10 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
         return service_info.rssi if service_info else None
 
     def _rssi_msg(self) -> str:
-        """Return check RSSI message if below -75dBm."""
+        """Return check RSSI message if below _LOW_RSSI dBm."""
         return (
             f", check signal strength ({self.rssi} dBm)"
-            if self.rssi and self.rssi < -75
+            if self.rssi and self.rssi < self._LOW_RSSI
             else ""
         )
 
@@ -142,7 +144,9 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
             LOGGER.debug(
                 "%s: BMS communication timed out%s", self.name, self._rssi_msg()
             )
-            raise TimeoutError("BMS communication timed out") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key=("bms_timeout")
+            ) from err
         except (BleakError, EOFError) as err:
             LOGGER.debug(
                 "%s: BMS communication failed%s: %s (%s)",
@@ -152,7 +156,11 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
                 type(err).__name__,
             )
             raise UpdateFailed(
-                f"BMS communication failed{self._rssi_msg()}: {err!s} ({type(err).__name__})"
+                translation_domain=DOMAIN,
+                translation_key=("bms_com_fail"),
+                translation_placeholders={
+                    "err_msg": f"{err!s} ({type(err).__name__})",
+                },
             ) from err
         finally:
             self._link_q.extend(
