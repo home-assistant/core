@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.splunk.const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -239,15 +239,7 @@ async def test_reauth_flow_success(
     """Test successful reauth flow."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-            "unique_id": mock_config_entry.unique_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -268,15 +260,7 @@ async def test_reauth_flow_invalid_auth(
     """Test reauth flow with invalid token and recovery."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-            "unique_id": mock_config_entry.unique_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     # Mock token check failure
     mock_hass_splunk.check.side_effect = [True, False]
