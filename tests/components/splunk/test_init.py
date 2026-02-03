@@ -88,37 +88,23 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_yaml_import_without_filter(hass: HomeAssistant) -> None:
+async def test_yaml_import_without_filter(
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
     """Test YAML configuration without filter triggers import."""
-    with (
-        patch(
-            "homeassistant.components.splunk.hass_splunk", autospec=True
-        ) as mock_client_class,
-        patch(
-            "homeassistant.components.splunk.config_flow.hass_splunk", autospec=True
-        ) as mock_config_flow_client_class,
-        patch("homeassistant.components.splunk.async_setup_entry", return_value=True),
-    ):
-        mock_client = MagicMock()
-        mock_client.check = AsyncMock(return_value=True)
-        mock_client.queue = AsyncMock()
-
-        mock_client_class.return_value = mock_client
-        mock_config_flow_client_class.return_value = mock_client
-
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    CONF_TOKEN: "test-token",
-                    CONF_HOST: "localhost",
-                    CONF_PORT: 8088,
-                    CONF_SSL: False,
-                }
-            },
-        )
-        await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_TOKEN: "test-token",
+                CONF_HOST: "localhost",
+                CONF_PORT: 8088,
+                CONF_SSL: False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     # Verify import flow was triggered
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -130,40 +116,26 @@ async def test_yaml_import_without_filter(hass: HomeAssistant) -> None:
     assert hass.data[DATA_FILTER].empty_filter
 
 
-async def test_yaml_with_filter(hass: HomeAssistant) -> None:
+async def test_yaml_with_filter(
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
     """Test YAML configuration with filter stores filter and triggers import."""
-    with (
-        patch(
-            "homeassistant.components.splunk.hass_splunk", autospec=True
-        ) as mock_client_class,
-        patch(
-            "homeassistant.components.splunk.config_flow.hass_splunk", autospec=True
-        ) as mock_config_flow_client_class,
-        patch("homeassistant.components.splunk.async_setup_entry", return_value=True),
-    ):
-        mock_client = MagicMock()
-        mock_client.check = AsyncMock(return_value=True)
-        mock_client.queue = AsyncMock()
-
-        mock_client_class.return_value = mock_client
-        mock_config_flow_client_class.return_value = mock_client
-
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    CONF_TOKEN: "test-token",
-                    CONF_HOST: "localhost",
-                    CONF_PORT: 8088,
-                    CONF_SSL: False,
-                    CONF_FILTER: {
-                        "include_domains": ["sensor"],
-                    },
-                }
-            },
-        )
-        await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_TOKEN: "test-token",
+                CONF_HOST: "localhost",
+                CONF_PORT: 8088,
+                CONF_SSL: False,
+                CONF_FILTER: {
+                    "include_domains": ["sensor"],
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     # Verify import flow was triggered (now imports even with filter)
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -344,38 +316,22 @@ async def test_yaml_filter_only_no_deprecation_issue(hass: HomeAssistant) -> Non
 
 
 async def test_yaml_with_connection_creates_deprecation_issue(
-    hass: HomeAssistant,
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test YAML with connection settings creates deprecation issue."""
-    with (
-        patch(
-            "homeassistant.components.splunk.hass_splunk", autospec=True
-        ) as mock_client_class,
-        patch(
-            "homeassistant.components.splunk.config_flow.hass_splunk", autospec=True
-        ) as mock_config_flow_client_class,
-        patch("homeassistant.components.splunk.async_setup_entry", return_value=True),
-    ):
-        mock_client = MagicMock()
-        mock_client.check = AsyncMock(return_value=True)
-        mock_client.queue = AsyncMock()
-
-        mock_client_class.return_value = mock_client
-        mock_config_flow_client_class.return_value = mock_client
-
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    CONF_TOKEN: "test-token",
-                    CONF_HOST: "localhost",
-                    CONF_PORT: 8088,
-                    CONF_SSL: False,
-                }
-            },
-        )
-        await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_TOKEN: "test-token",
+                CONF_HOST: "localhost",
+                CONF_PORT: 8088,
+                CONF_SSL: False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     # Verify import flow was triggered
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -435,51 +391,28 @@ async def test_yaml_import_error_creates_specific_issue(hass: HomeAssistant) -> 
 
 async def test_yaml_import_already_configured_creates_deprecation_issue(
     hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test YAML import when already configured still creates deprecation issue."""
-    # First set up an existing config entry before YAML import
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="localhost:8088",
-        data={
-            CONF_TOKEN: "existing-token",
-            CONF_HOST: "localhost",
-            CONF_PORT: 8088,
-            CONF_SSL: False,
-        },
-    )
+    # Add existing config entry before YAML import
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.splunk.hass_splunk", autospec=True
-        ) as mock_client_class,
-        patch(
-            "homeassistant.components.splunk.config_flow.hass_splunk", autospec=True
-        ) as mock_config_flow_client_class,
-        patch("homeassistant.components.splunk.async_setup_entry", return_value=True),
-    ):
-        mock_client = MagicMock()
-        mock_client.check = AsyncMock(return_value=True)
-        mock_client.queue = AsyncMock()
-
-        mock_client_class.return_value = mock_client
-        mock_config_flow_client_class.return_value = mock_client
-
-        # Set up component with YAML - should see existing entry and abort with single_instance_allowed
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                DOMAIN: {
-                    CONF_TOKEN: "test-token",
-                    CONF_HOST: "localhost",
-                    CONF_PORT: 8088,
-                    CONF_SSL: False,
-                }
-            },
-        )
-        await hass.async_block_till_done()
+    # Set up component with YAML - should see existing entry and abort with single_instance_allowed
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_TOKEN: "test-token",
+                CONF_HOST: "localhost",
+                CONF_PORT: 8088,
+                CONF_SSL: False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     # Verify deprecation issue was still created (single_instance_allowed is ok)
     issue_registry = ir.async_get(hass)
