@@ -6,10 +6,10 @@ from unittest.mock import AsyncMock
 from bring_api import BringNotificationType, BringRequestException
 import pytest
 
-from homeassistant.components.bring.const import (
+from homeassistant.components.bring.const import DOMAIN
+from homeassistant.components.bring.services import (
     ATTR_ITEM_NAME,
     ATTR_NOTIFICATION_TYPE,
-    DOMAIN,
     SERVICE_PUSH_NOTIFICATION,
 )
 from homeassistant.config_entries import ConfigEntryState

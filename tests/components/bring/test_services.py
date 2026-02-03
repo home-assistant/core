@@ -11,9 +11,9 @@ from bring_api import (
 )
 import pytest
 
-from homeassistant.components.bring.const import (
+from homeassistant.components.bring.const import DOMAIN
+from homeassistant.components.bring.services import (
     ATTR_REACTION,
-    DOMAIN,
     SERVICE_ACTIVITY_STREAM_REACTION,
 )
 from homeassistant.config_entries import ConfigEntryState

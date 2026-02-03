@@ -1,6 +1,5 @@
 """Actions for Bring! integration."""
 
-import logging
 from typing import TYPE_CHECKING
 
 from bring_api import (
@@ -13,22 +12,28 @@ from bring_api import (
 import voluptuous as vol
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
-
-from .const import (
-    ATTR_ACTIVITY,
-    ATTR_REACTION,
-    ATTR_RECEIVER,
-    DOMAIN,
-    SERVICE_ACTIVITY_STREAM_REACTION,
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    service,
 )
+
+from .const import DOMAIN
 from .coordinator import BringConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
+ATTR_ACTIVITY = "uuid"
+ATTR_ITEM_NAME = "item"
+ATTR_NOTIFICATION_TYPE = "message"
+ATTR_REACTION = "reaction"
+ATTR_RECEIVER = "publicUserUuid"
+
+SERVICE_PUSH_NOTIFICATION = "send_message"
+SERVICE_ACTIVITY_STREAM_REACTION = "send_reaction"
 
 SERVICE_ACTIVITY_STREAM_REACTION_SCHEMA = vol.Schema(
     {
@@ -54,6 +59,7 @@ def get_config_entry(hass: HomeAssistant, entry_id: str) -> BringConfigEntry:
     return entry
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Bring! integration."""
 
@@ -107,4 +113,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_ACTIVITY_STREAM_REACTION,
         async_send_activity_stream_reaction,
         SERVICE_ACTIVITY_STREAM_REACTION_SCHEMA,
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_PUSH_NOTIFICATION,
+        entity_domain=TODO_DOMAIN,
+        schema={
+            vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
+                vol.Upper, vol.Coerce(BringNotificationType)
+            ),
+            vol.Optional(ATTR_ITEM_NAME): cv.string,
+        },
+        func="async_send_message",
     )
