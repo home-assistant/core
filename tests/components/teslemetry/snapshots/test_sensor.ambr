@@ -5229,27 +5229,3 @@
     'state': 'disconnected',
   })
 # ---
-# name: test_sensors_streaming[sensor.teslemetry_credits-state]
-  '1980'
-# ---
-# name: test_sensors_streaming[sensor.test_battery_level-state]
-  '90'
-# ---
-# name: test_sensors_streaming[sensor.test_charge_cable-state]
-  'unknown'
-# ---
-# name: test_sensors_streaming[sensor.test_charge_energy_added-state]
-  '10'
-# ---
-# name: test_sensors_streaming[sensor.test_charger_power-state]
-  '2'
-# ---
-# name: test_sensors_streaming[sensor.test_charging-state]
-  'charging'
-# ---
-# name: test_sensors_streaming[sensor.test_time_to_arrival-state]
-  'unknown'
-# ---
-# name: test_sensors_streaming[sensor.test_time_to_full_charge-state]
-  'unknown'
-# ---

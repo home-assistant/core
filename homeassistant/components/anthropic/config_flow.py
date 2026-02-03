@@ -419,7 +419,11 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             model_alias = (
                 model_info.id[:-9]
                 if model_info.id
-                not in ("claude-3-haiku-20240307", "claude-3-opus-20240229")
+                not in (
+                    "claude-3-haiku-20240307",
+                    "claude-3-5-haiku-20241022",
+                    "claude-3-opus-20240229",
+                )
                 else model_info.id
             )
             if short_form.search(model_alias):

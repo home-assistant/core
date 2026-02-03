@@ -206,6 +206,17 @@ async def test_prepare_chat_for_generation_appends_attachments(
     assert response["messages"] is messages
     mock_prepare_files_for_prompt.assert_awaited_once_with([attachment])
 
+    # Verify that files are actually added to the last user message
+    last_message = messages[-1]
+    assert last_message["type"] == "message"
+    assert last_message["role"] == "user"
+    assert isinstance(last_message["content"], list)
+    assert last_message["content"][0] == {
+        "type": "input_text",
+        "text": "Describe the door",
+    }
+    assert last_message["content"][1] == files[0]
+
 
 async def test_prepare_chat_for_generation_passes_messages_through(
     hass: HomeAssistant, cloud_entity: BaseCloudLLMEntity
