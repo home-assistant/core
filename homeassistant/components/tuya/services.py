@@ -8,6 +8,7 @@ from typing import Any
 from tuya_sharing import CustomerDevice, Manager
 import voluptuous as vol
 
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
