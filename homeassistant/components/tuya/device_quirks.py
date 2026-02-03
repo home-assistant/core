@@ -73,6 +73,18 @@ def create_day_transformer(mapping: list[tuple]):
     return {"encode": encode_entry, "decode": decode_entry}
 
 
+class AbstractMealPlanSerializer:
+    """Abstract meal plan serializer."""
+
+    def get_meal_data(self, device):
+        """Get meal plan data."""
+        raise NotImplementedError
+
+    def get_meal_plan_update_commands(self, device, data):
+        """Get meal plan update commands."""
+        raise NotImplementedError
+
+
 class TemplateEncoder:
     """Encoder/decoder for templated meal plan data."""
 
@@ -117,63 +129,75 @@ class TemplateEncoder:
         return entry
 
 
-class Base64Encoder:
+class Base64Encoder(AbstractMealPlanSerializer):
     """Encoder/decoder for Base64 meal plan data."""
 
-    def __init__(self, device: CustomerDevice, profile: dict[str, Any]) -> None:
+    def __init__(self, profile: dict[str, Any]) -> None:
         """Initialize Base64Encoder."""
         template = profile.get("template")
         if not template:
             raise ValueError("Profile must define template")
-        self.device = device
+
         self.encoder = TemplateEncoder(template, profile)
 
-    def get_meal_plan_commands(
-        self, data: list[dict[str, Any]]
+    def encode(self, data: list[dict[str, Any]]) -> str:
+        """Encode meal plan data to Base64 string."""
+        converted_data = days_names_to_bitmap(data)
+        hex_str = self.encoder.encode(converted_data)
+        payload_bytes = bytes(
+            int(hex_str[i : i + 2], 16) for i in range(0, len(hex_str), 2)
+        )
+        return base64.b64encode(payload_bytes).decode("utf-8")
+
+    def decode(self, data: str) -> list[dict[str, Any]]:
+        """Decode Base64 string to meal plan data."""
+        hex_str = "".join(f"{byte:02x}" for byte in base64.b64decode(data))
+        return days_bitmap_to_names(self.encoder.decode(hex_str))
+
+    def get_meal_plan_update_commands(
+        self, device: CustomerDevice, data: list[dict[str, Any]]
     ) -> list[dict[str, Any]]:
         """Encode meal plan data to Base64 string."""
 
-        if "meal_plan" not in self.device.function:
+        if "meal_plan" not in device.function:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="device_not_support_meal_plan",
+                translation_key="device_not_support_meal_plan_function",
                 translation_placeholders={
-                    "device_id": self.device.id,
+                    "device_id": device.id,
                 },
             )
-
-        converted_data = days_names_to_bitmap(data)
-        hex_str = self.encoder.encode(converted_data)
-        v = bytes(int(hex_str[i : i + 2], 16) for i in range(0, len(hex_str), 2))
 
         return [
             {
                 "code": "meal_plan",
-                "value": v,
+                "value": self.encode(data),
             }
         ]
 
-    def get_meal_data(self) -> dict[str, list[dict[str, Any]]]:
+    def get_meal_data(self, device: CustomerDevice) -> dict[str, list[dict[str, Any]]]:
         """Decode Base64 string to meal plan data."""
 
-        b64_data = self.device.status.get("meal_plan")
+        b64_data = device.status.get("meal_plan")
         if b64_data is None:
             raise ServiceValidationError(
-                f"Device {self.device.name} does not have data for meal_plan. "
+                translation_domain=DOMAIN,
+                translation_key="device_not_support_meal_plan_status",
+                translation_placeholders={
+                    "device_id": device.id,
+                },
             )
 
         if not b64_data or b64_data.lower() == "unknown":
             raise ValueError("Invalid Base64 meal plan data")
-        hex_str = "".join(f"{byte:02x}" for byte in base64.b64decode(b64_data))
-        return {"data": days_bitmap_to_names(self.encoder.decode(hex_str))}
+        return {"data": self.decode(b64_data)}
 
 
-def get_meal_plan_serializer(device: CustomerDevice):
+def get_meal_plan_serializer(device: CustomerDevice) -> AbstractMealPlanSerializer:
     """Get the profile string for a given device."""
 
     if device.product_id in DEFAULT_PROFILE_DEVICES:
         return Base64Encoder(
-            device,
             {
                 "template": TEMPLATE_FULL,
                 "encode": create_day_transformer(DAY_MAPPING)["encode"],

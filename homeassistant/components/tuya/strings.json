@@ -1096,6 +1096,12 @@
   "exceptions": {
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
+    },
+    "device_not_support_meal_plan_function": {
+      "message": "Feeder with ID {device_id} does not support meal plan functionality."
+    },
+    "device_not_support_meal_plan_status": {
+      "message": "Feeder with ID {device_id} does not support `meal plan` status."
     }
   },
   "issues": {
@@ -1113,10 +1119,7 @@
       "description": "Feeder with ID {device_id} could not be found.",
       "name": "Device not found"
     },
-    "device_not_support_meal_plan": {
-      "description": "Feeder with ID {device_id} does not support meal plan functionality.",
-      "name": "Meal plan not supported"
-    },
+
     "device_not_tuya_device": {
       "description": "Device with ID {device_id} is not a Tuya Feeder.",
       "name": "Not a Tuya device"
@@ -1131,6 +1134,7 @@
       },
       "name": "Get Feeder `meal plan` data"
     },
+
     "set_meal_plan_data": {
       "description": "Sets data for `meal plan` on a Tuya Feeder.",
       "fields": {

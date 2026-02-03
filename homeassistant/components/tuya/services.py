@@ -14,11 +14,11 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
-from .device_quirks import get_meal_plan_serializer
+from .device_quirks import DAYS, get_meal_plan_serializer
 
 FEEDING_ENTRY_SCHEMA = vol.Schema(
     {
-        vol.Optional("days"): [vol.All(int, vol.Range(min=0, max=6))],
+        vol.Optional("days"): [vol.In(DAYS)],
         vol.Required("hour"): int,
         vol.Required("minute"): int,
         vol.Required("portion"): int,
@@ -87,13 +87,13 @@ async def async_get_meal_plan_data(call: ServiceCall) -> dict[str, Any]:
     if not (serializer := get_meal_plan_serializer(device)):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="device_missing_serializer",
+            translation_key="device_not_support_meal_plan_status",
             translation_placeholders={
                 "device_id": device.id,
             },
         )
 
-    return serializer.get_meal_data()
+    return serializer.get_meal_data(device)
 
 
 async def async_set_meal_plan_data(call: ServiceCall) -> None:
@@ -103,7 +103,7 @@ async def async_set_meal_plan_data(call: ServiceCall) -> None:
     if not (serializer := get_meal_plan_serializer(device)):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="device_missing_serializer",
+            translation_key="device_not_support_meal_plan_function",
             translation_placeholders={
                 "device_id": device.id,
             },
@@ -112,7 +112,7 @@ async def async_set_meal_plan_data(call: ServiceCall) -> None:
     await call.hass.async_add_executor_job(
         manager.send_commands,
         device.id,
-        serializer.get_meal_plan_commands(call.data["data"]),
+        serializer.get_meal_plan_update_commands(device, call.data["data"]),
     )
 
 
