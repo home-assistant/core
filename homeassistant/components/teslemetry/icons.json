@@ -173,7 +173,6 @@
         "default": "mdi:ev-plug-ccs2"
       }
     },
-
     "device_tracker": {
       "location": {
         "default": "mdi:map-marker"
@@ -194,6 +193,38 @@
       },
       "vehicle_state_speed_limit_mode_active": {
         "default": "mdi:car-speed-limiter"
+      }
+    },
+    "number": {
+      "backup_reserve_percent": {
+        "default": "mdi:battery-alert",
+        "range": {
+          "6": "mdi:battery-10",
+          "15": "mdi:battery-20",
+          "25": "mdi:battery-30",
+          "35": "mdi:battery-40",
+          "45": "mdi:battery-50",
+          "55": "mdi:battery-60",
+          "65": "mdi:battery-70",
+          "75": "mdi:battery-80",
+          "85": "mdi:battery-90",
+          "95": "mdi:battery"
+        }
+      },
+      "off_grid_vehicle_charging_reserve_percent": {
+        "default": "mdi:battery-alert",
+        "range": {
+          "6": "mdi:battery-10",
+          "15": "mdi:battery-20",
+          "25": "mdi:battery-30",
+          "35": "mdi:battery-40",
+          "45": "mdi:battery-50",
+          "55": "mdi:battery-60",
+          "65": "mdi:battery-70",
+          "75": "mdi:battery-80",
+          "85": "mdi:battery-90",
+          "95": "mdi:battery"
+        }
       }
     },
     "select": {
