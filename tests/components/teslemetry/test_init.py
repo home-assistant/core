@@ -668,6 +668,7 @@ async def test_missing_token_data(hass: HomeAssistant) -> None:
     assert entry is not None
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
+
 async def test_vehicle_streaming_version_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
