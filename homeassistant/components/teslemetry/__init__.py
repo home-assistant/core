@@ -161,7 +161,9 @@ def _setup_dynamic_discovery(
             )
             hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
-    metadata_coordinator.async_add_listener(_handle_metadata_update)
+    entry.async_on_unload(
+        metadata_coordinator.async_add_listener(_handle_metadata_update)
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
