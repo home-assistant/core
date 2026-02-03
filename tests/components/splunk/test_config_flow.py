@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.splunk.const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -58,7 +58,7 @@ async def test_user_flow_cannot_connect(
 ) -> None:
     """Test user flow with connection error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     # Mock connectivity check failure
@@ -84,7 +84,7 @@ async def test_user_flow_invalid_auth(
 ) -> None:
     """Test user flow with invalid authentication."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     # Mock connectivity ok but token check fails
@@ -110,7 +110,7 @@ async def test_user_flow_unexpected_error(
 ) -> None:
     """Test user flow with unexpected error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     mock_hass_splunk.check.side_effect = Exception("Unexpected error")
@@ -151,7 +151,7 @@ async def test_import_flow_success(
     """Test successful import flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
+        context={"source": SOURCE_IMPORT},
         data={
             CONF_TOKEN: "test-token-123",
             CONF_HOST: "splunk.example.com",
@@ -181,7 +181,7 @@ async def test_import_flow_cannot_connect(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
+        context={"source": SOURCE_IMPORT},
         data={
             CONF_TOKEN: "test-token-123",
             CONF_HOST: "invalid-host",
@@ -204,7 +204,7 @@ async def test_import_flow_invalid_auth(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
+        context={"source": SOURCE_IMPORT},
         data={
             CONF_TOKEN: "bad-token",
             CONF_HOST: "splunk.example.com",
@@ -225,7 +225,7 @@ async def test_import_flow_unknown_error(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
+        context={"source": SOURCE_IMPORT},
         data={
             CONF_TOKEN: "test-token",
             CONF_HOST: "splunk.example.com",
@@ -247,7 +247,7 @@ async def test_import_flow_already_configured(
     # With single_config_entry in manifest, import should abort immediately
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
+        context={"source": SOURCE_IMPORT},
         data={
             CONF_TOKEN: "test-token-123",
             CONF_HOST: DEFAULT_HOST,
@@ -269,7 +269,7 @@ async def test_reauth_flow_success(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
-            "source": config_entries.SOURCE_REAUTH,
+            "source": SOURCE_REAUTH,
             "entry_id": mock_config_entry.entry_id,
             "unique_id": mock_config_entry.unique_id,
         },
@@ -299,7 +299,7 @@ async def test_reauth_flow_invalid_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
-            "source": config_entries.SOURCE_REAUTH,
+            "source": SOURCE_REAUTH,
             "entry_id": mock_config_entry.entry_id,
             "unique_id": mock_config_entry.unique_id,
         },
