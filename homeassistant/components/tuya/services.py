@@ -81,7 +81,7 @@ def _get_tuya_device(
 
 async def async_get_meal_plan_data(call: ServiceCall) -> dict[str, Any]:
     """Handle get_meal_plan_data service call."""
-    device, _ = _get_tuya_device(call.hass, call.data["device_id"])
+    device, _ = _get_tuya_device(call.hass, call.data[ATTR_DEVICE_ID])
 
     data = device.status.get("meal_plan")
     if data is None:
