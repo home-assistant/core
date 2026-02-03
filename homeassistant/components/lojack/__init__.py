@@ -1,132 +1,142 @@
 """The LoJack integration for Home Assistant."""
+
 from __future__ import annotations
 
-import logging
-from datetime import timedelta, datetime
-from typing import TYPE_CHECKING, Any
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from email.utils import parsedate_to_datetime
+from typing import Any
+
+from lojack_api import ApiError, AuthenticationError, LoJackClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from lojack_api import LoJackClient, AuthenticationError, ApiError
+from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN, LOGGER
 
-from .const import (
-    DATA_ASSETS,
-    DATA_CLIENT,
-    DATA_COORDINATOR,
-    DEFAULT_POLL_INTERVAL,
-    MIN_POLL_INTERVAL,
-    MAX_POLL_INTERVAL,
-    DOMAIN,
-)
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+]
 
-if TYPE_CHECKING:
-    from lojack_api import LoJackClient
-
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORMS_LIST: list[Platform] = [Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.BINARY_SENSOR]
+# Rate limit bounds
+MIN_UPDATE_INTERVAL = timedelta(minutes=1)
+MAX_UPDATE_INTERVAL = timedelta(minutes=60)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass
+class LoJackVehicleData:
+    """Data class for vehicle data."""
+
+    device_id: str
+    name: str | None
+    vin: str | None
+    make: str | None
+    model: str | None
+    year: str | None
+    license_plate: str | None
+    odometer: float | None
+    latitude: float | None
+    longitude: float | None
+    accuracy: float | None
+    address: dict[str, Any] | str | None
+    speed: float | None
+    heading: float | None
+    battery_voltage: float | None
+    timestamp: datetime | str | None
+
+
+@dataclass
+class LoJackData:
+    """Data class for LoJack runtime data."""
+
+    client: LoJackClient
+    coordinator: LoJackCoordinator
+
+
+type LoJackConfigEntry = ConfigEntry[LoJackData]
+
+
+def _safe_float(value: Any) -> float | None:
+    """Safely convert a value to float."""
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bool:
     """Set up LoJack from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
 
     try:
-        client = await _authenticate(hass, username, password)
+        client = await LoJackClient.create(username, password)
     except AuthenticationError as err:
         raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
     except ApiError as err:
-        raise ConfigEntryAuthFailed(f"API error: {err}") from err
+        raise ConfigEntryNotReady(f"API error during setup: {err}") from err
     except Exception as err:
-        _LOGGER.error("Failed to authenticate with LoJack: %s", err)
-        raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+        LOGGER.error("Failed to authenticate with LoJack: %s", err)
+        raise ConfigEntryNotReady(f"Connection failed: {err}") from err
 
-    # Create the data update coordinator
-    coordinator = LoJackDataUpdateCoordinator(hass, client, entry)
-
-    # Fetch initial data
+    coordinator = LoJackCoordinator(hass, client, entry)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CLIENT: client,
-        DATA_COORDINATOR: coordinator,
-    }
+    entry.runtime_data = LoJackData(client=client, coordinator=coordinator)
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS_LIST)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LoJackConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS_LIST)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        data = hass.data[DOMAIN].pop(entry.entry_id)
-        client: LoJackClient = data[DATA_CLIENT]
-        await client.close()
+        try:
+            await entry.runtime_data.client.close()
+        except Exception:  # noqa: BLE001 - Cleanup during unload should not fail
+            LOGGER.debug("Error closing LoJack client during unload")
 
     return unload_ok
 
 
-async def _authenticate(hass: HomeAssistant, username: str, password: str) -> "LoJackClient":
-    """Authenticate with LoJack and return an async LoJackClient."""
-    from lojack_api import LoJackClient
-
-    # v0.5.0 API: create(username, password)
-    client = await LoJackClient.create(username, password)
-    return client
-
-
-async def _refresh_token(hass: HomeAssistant, username: str, password: str) -> "LoJackClient":
-    """Refresh the authentication by creating a new client."""
-    return await _authenticate(hass, username, password)
-
-
-class LoJackDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class LoJackCoordinator(DataUpdateCoordinator[dict[str, LoJackVehicleData]]):
     """Class to manage fetching LoJack data."""
+
+    config_entry: LoJackConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        client: "LoJackClient",
-        entry: ConfigEntry,
+        client: LoJackClient,
+        entry: LoJackConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
-        self.entry = entry
         self._username = entry.data[CONF_USERNAME]
         self._password = entry.data[CONF_PASSWORD]
-
-        # Configure default update interval from entry options
-        default_minutes = entry.options.get("poll_interval", DEFAULT_POLL_INTERVAL)
-        self._default_update_interval = timedelta(minutes=default_minutes)
-        self._min_update_interval = timedelta(minutes=MIN_POLL_INTERVAL)
-        self._max_update_interval = timedelta(minutes=MAX_POLL_INTERVAL)
+        self._default_update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
+        self._last_rate_limit: datetime | None = None
 
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name=DOMAIN,
             update_interval=self._default_update_interval,
+            config_entry=entry,
         )
 
-        # track when we last hit rate limits to avoid rapid flips
-        self._last_rate_limit: datetime | None = None
-
     def _extract_retry_after(self, err: Exception) -> int | None:
-        """Try to extract Retry-After seconds from an exception or its response headers."""
-        # Lazy import for parsing
-        from email.utils import parsedate_to_datetime
-
-        # Common places headers might be stored on wrapped exceptions
+        """Extract Retry-After seconds from an exception or its response headers."""
         headers = getattr(err, "headers", None)
         if not headers:
             resp = getattr(err, "response", None)
@@ -137,188 +147,135 @@ class LoJackDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             val = headers.get("Retry-After")
             if val is None:
                 return None
-            # Retry-After may be seconds or HTTP-date
             try:
                 return int(val)
-            except Exception:
+            except (ValueError, TypeError):
                 try:
                     retry_dt = parsedate_to_datetime(val)
-                    # parsedate_to_datetime returns aware datetime when possible
-                    now = datetime.utcnow()
-                    if retry_dt.tzinfo is not None:
-                        retry_dt = retry_dt.astimezone(tz=None).replace(tzinfo=None)
+                    now = datetime.now(tz=UTC)
+                    # Make sure retry_dt is timezone-aware for comparison
+                    if retry_dt.tzinfo is None:
+                        retry_dt = retry_dt.replace(tzinfo=UTC)
                     secs = int((retry_dt - now).total_seconds())
                     return max(0, secs)
-                except Exception:
+                except (ValueError, TypeError):
                     return None
+        return None
 
+    def _handle_rate_limit(self, err: Exception) -> None:
+        """Handle rate limiting by adjusting update interval."""
+        self._last_rate_limit = datetime.now(tz=UTC)
+        retry_after = self._extract_retry_after(err)
 
-    async def _async_update_data(self) -> dict[str, Any]:
+        if retry_after:
+            new_interval = timedelta(seconds=retry_after)
+            LOGGER.warning(
+                "LoJack API rate limited: respecting Retry-After=%s seconds",
+                retry_after,
+            )
+        else:
+            new_interval = min(self.update_interval * 2, MAX_UPDATE_INTERVAL)
+            LOGGER.warning(
+                "LoJack API rate limited: increasing update interval to %s",
+                new_interval,
+            )
+
+        # Enforce bounds
+        new_interval = max(new_interval, MIN_UPDATE_INTERVAL)
+        new_interval = min(new_interval, MAX_UPDATE_INTERVAL)
+
+        self.update_interval = new_interval
+
+    def _is_rate_limited(self, err: Exception) -> bool:
+        """Check if an exception indicates rate limiting."""
+        if getattr(err, "status", None) == 429:
+            return True
+        err_str = str(err)
+        return "429" in err_str or "Too Many Requests" in err_str
+
+    async def _async_update_data(self) -> dict[str, LoJackVehicleData]:
         """Fetch data from LoJack API."""
         try:
             devices = await self.client.list_devices()
-
-            assets_data: dict[str, Any] = {}
-
-            for device in devices:
-                device_id = getattr(device, "id", None)
-                if not device_id:
-                    continue
-
-                # Try to get latest location
-                try:
-                    location = await device.get_location()
-                except Exception:
-                    location = None
-
-                asset: dict[str, Any] = {
-                    "id": device_id,
-                    "name": getattr(device, "name", None),
-                    "vin": getattr(device, "vin", None),
-                    "make": getattr(device, "make", None),
-                    "model": getattr(device, "model", None),
-                    "year": getattr(device, "year", None),
-                    "licensePlate": getattr(device, "license_plate", None),
-                    "odometer": getattr(device, "odometer", None),
-                }
-
-                if location:
-                    coords = None
-                    if getattr(location, "latitude", None) is not None and getattr(location, "longitude", None) is not None:
-                        coords = {
-                            "latitude": getattr(location, "latitude", None),
-                            "longitude": getattr(location, "longitude", None),
-                        }
-
-                    # Get raw location data for debugging
-                    raw_data = getattr(location, "raw", None)
-                    accuracy_val = getattr(location, "accuracy", None)
-                    speed_val = getattr(location, "speed", None)
-                    battery_voltage_val = getattr(location, "battery_voltage", None)
-                    timestamp_val = getattr(location, "timestamp", None)
-
-                    # Log all location attributes for debugging data freshness and accuracy
-                    _LOGGER.debug(
-                        "Location data for device %s: lat=%s, lon=%s, accuracy=%s, speed=%s, "
-                        "battery_voltage=%s, timestamp=%s, heading=%s",
-                        device_id,
-                        getattr(location, "latitude", None),
-                        getattr(location, "longitude", None),
-                        accuracy_val,
-                        speed_val,
-                        battery_voltage_val,
-                        timestamp_val,
-                        getattr(location, "heading", None),
-                    )
-                    # Log raw data separately at a more verbose level to help debug accuracy/staleness issues
-                    if raw_data:
-                        _LOGGER.debug(
-                            "Raw location data for device %s: %s",
-                            device_id,
-                            raw_data,
-                        )
-
-                    asset_location: dict[str, Any] = {
-                        "coordinates": coords,
-                        "accuracy": accuracy_val,
-                        "address": getattr(location, "address", None),
-                        "timestamp": timestamp_val,
-                        "speed": speed_val,
-                        "heading": getattr(location, "heading", None),
-                        "battery_voltage": battery_voltage_val,
-                        "raw": raw_data,
-                    }
-
-                    asset["location"] = asset_location
-
-                assets_data[str(device_id)] = asset
-
-            return {DATA_ASSETS: assets_data}
-        except AuthenticationError as err:
-            _LOGGER.info("Token expired, refreshing...")
+        except AuthenticationError:
+            LOGGER.info("Token expired, refreshing...")
             try:
-                self.client = await _refresh_token(self.hass, self._username, self._password)
-                # After reauth, restore default polling interval
+                self.client = await LoJackClient.create(self._username, self._password)
                 self.update_interval = self._default_update_interval
-                return await self._async_update_data()
+                devices = await self.client.list_devices()
             except Exception as refresh_err:
                 raise ConfigEntryAuthFailed(
                     f"Failed to refresh token: {refresh_err}"
                 ) from refresh_err
-
         except ApiError as err:
-            # Detect rate limit responses (429) and adapt polling interval
-            retry_after = self._extract_retry_after(err)
-            is_rate_limited = False
-            if getattr(err, "status", None) == 429 or "429" in str(err) or "Too Many Requests" in str(err):
-                is_rate_limited = True
-
-            if is_rate_limited:
-                self._last_rate_limit = datetime.utcnow()
-                if retry_after:
-                    new_interval = timedelta(seconds=retry_after)
-                    _LOGGER.warning(
-                        "LoJack API rate limited: respecting Retry-After=%s seconds; setting update interval to %s",
-                        retry_after,
-                        new_interval,
-                    )
-                else:
-                    # Exponential backoff (double up to max)
-                    new_interval = min(self.update_interval * 2, self._max_update_interval)
-                    _LOGGER.warning(
-                        "LoJack API rate limited: increasing update interval to %s",
-                        new_interval,
-                    )
-
-                # Enforce reasonable bounds
-                if new_interval < self._min_update_interval:
-                    new_interval = self._min_update_interval
-                if new_interval > self._max_update_interval:
-                    new_interval = self._max_update_interval
-
-                self.update_interval = new_interval
+            if self._is_rate_limited(err):
+                self._handle_rate_limit(err)
                 raise UpdateFailed(f"Rate limited by LoJack API: {err}") from err
-
-            # Non-rate-limit API errors are treated as update failures
             raise UpdateFailed(f"Error fetching LoJack data: {err}") from err
-
         except Exception as err:
-            # Also detect generic rate-limit indications in unexpected exceptions
-            retry_after = self._extract_retry_after(err)
-            if getattr(err, "status", None) == 429 or "429" in str(err) or "Too Many Requests" in str(err) or retry_after:
-                self._last_rate_limit = datetime.utcnow()
-                if retry_after:
-                    new_interval = timedelta(seconds=retry_after)
-                    _LOGGER.warning(
-                        "LoJack API rate limited (generic exception): respecting Retry-After=%s seconds; setting update interval to %s",
-                        retry_after,
-                        new_interval,
-                    )
-                else:
-                    new_interval = min(self.update_interval * 2, self._max_update_interval)
-                    _LOGGER.warning(
-                        "LoJack API rate limited (generic exception): increasing update interval to %s",
-                        new_interval,
-                    )
-
-                if new_interval < self._min_update_interval:
-                    new_interval = self._min_update_interval
-                if new_interval > self._max_update_interval:
-                    new_interval = self._max_update_interval
-
-                self.update_interval = new_interval
+            if self._is_rate_limited(err):
+                self._handle_rate_limit(err)
                 raise UpdateFailed(f"Rate limited by LoJack API: {err}") from err
-
-            if "401" in str(err) or "unauthorized" in str(err).lower():
-                _LOGGER.info("Token expired, refreshing...")
-                try:
-                    self.client = await _refresh_token(self.hass, self._username, self._password)
-                    # After successful refresh, restore default polling interval
-                    self.update_interval = self._default_update_interval
-                    return await self._async_update_data()
-                except Exception as refresh_err:
-                    raise ConfigEntryAuthFailed(
-                        f"Failed to refresh token: {refresh_err}"
-                    ) from refresh_err
-
             raise UpdateFailed(f"Error fetching LoJack data: {err}") from err
+
+        vehicles_data: dict[str, LoJackVehicleData] = {}
+
+        for device in devices:
+            device_id = getattr(device, "id", None)
+            if not device_id:
+                continue
+
+            # Get latest location
+            try:
+                location = await device.get_location()
+            except Exception:  # noqa: BLE001 - Location fetch can fail for many reasons
+                location = None
+
+            # Build vehicle data
+            vehicle = LoJackVehicleData(
+                device_id=str(device_id),
+                name=getattr(device, "name", None),
+                vin=getattr(device, "vin", None),
+                make=getattr(device, "make", None),
+                model=getattr(device, "model", None),
+                year=str(getattr(device, "year", "") or ""),
+                license_plate=getattr(device, "license_plate", None),
+                odometer=_safe_float(getattr(device, "odometer", None)),
+                latitude=_safe_float(getattr(location, "latitude", None))
+                if location
+                else None,
+                longitude=_safe_float(getattr(location, "longitude", None))
+                if location
+                else None,
+                accuracy=_safe_float(getattr(location, "accuracy", None))
+                if location
+                else None,
+                address=getattr(location, "address", None) if location else None,
+                speed=_safe_float(getattr(location, "speed", None))
+                if location
+                else None,
+                heading=_safe_float(getattr(location, "heading", None))
+                if location
+                else None,
+                battery_voltage=_safe_float(getattr(location, "battery_voltage", None))
+                if location
+                else None,
+                timestamp=getattr(location, "timestamp", None) if location else None,
+            )
+
+            vehicles_data[str(device_id)] = vehicle
+
+            LOGGER.debug(
+                "Location data for device %s: lat=%s, lon=%s, accuracy=%s, speed=%s, "
+                "battery_voltage=%s, timestamp=%s, heading=%s",
+                device_id,
+                vehicle.latitude,
+                vehicle.longitude,
+                vehicle.accuracy,
+                vehicle.speed,
+                vehicle.battery_voltage,
+                vehicle.timestamp,
+                vehicle.heading,
+            )
+
+        return vehicles_data
