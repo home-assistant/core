@@ -1,34 +1,16 @@
 """Constants for the LoJack integration."""
 
-DOMAIN = "lojack"
+from __future__ import annotations
 
-# Platforms
-PLATFORMS = ["device_tracker", "sensor", "binary_sensor"]
+import logging
+from typing import Final
 
-# Polling intervals (in minutes)
-DEFAULT_POLL_INTERVAL = 5
-MIN_POLL_INTERVAL = 1
-MAX_POLL_INTERVAL = 720
+DOMAIN: Final = "lojack"
 
-# Data keys
-DATA_CLIENT = "client"
-DATA_COORDINATOR = "coordinator"
-DATA_ASSETS = "assets"
+LOGGER = logging.getLogger(__package__)
 
-# Attribute keys
-ATTR_BATTERY_VOLTAGE = "battery_voltage"
-ATTR_SPEED = "speed"
-ATTR_ODOMETER = "odometer"
-ATTR_HEADING = "heading"
-ATTR_LAST_UPDATED = "last_updated"
-ATTR_VIN = "vin"
-ATTR_MAKE = "make"
-ATTR_MODEL = "model"
-ATTR_YEAR = "year"
-ATTR_COLOR = "color"
-ATTR_LICENSE_PLATE = "license_plate"
-ATTR_ADDRESS = "address"
-ATTR_GPS_ACCURACY = "gps_accuracy"
+# Default polling interval in minutes
+DEFAULT_UPDATE_INTERVAL: Final = 5
 
 # Thresholds
-MOVEMENT_SPEED_THRESHOLD = 0.5  # mph - minimum speed to consider vehicle as moving
+MOVEMENT_SPEED_THRESHOLD: Final = 0.5  # mph - minimum speed to consider vehicle as moving
