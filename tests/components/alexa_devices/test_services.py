@@ -186,6 +186,62 @@ async def test_invalid_parameters(
     assert exc_info.value.translation_placeholders == translation_placeholders
 
 
+@pytest.mark.parametrize(
+    ("info_skill", "device_id", "translation_key", "translation_placeholders"),
+    [
+        (
+            "alexa_joke",
+            "fake_device_id",
+            "invalid_device_id",
+            {"device_id": "fake_device_id"},
+        ),
+        (
+            "wrong_info_skill_name",
+            TEST_DEVICE_1_ID,
+            "invalid_info_skill_value",
+            {
+                "info_skill": "wrong_info_skill_name",
+            },
+        ),
+    ],
+)
+async def test_invalid_info_skillparameters(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    info_skill: str,
+    device_id: str,
+    translation_key: str,
+    translation_placeholders: dict[str, str],
+) -> None:
+    """Test invalid info skill service parameters."""
+
+    device_entry = dr.DeviceEntry(
+        id=TEST_DEVICE_1_ID, identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    )
+    mock_device_registry(
+        hass,
+        {device_entry.id: device_entry},
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    # Call Service
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_INFO_SKILL,
+            {
+                ATTR_INFO_SKILL: info_skill,
+                ATTR_DEVICE_ID: device_id,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.translation_placeholders == translation_placeholders
+
+
 async def test_config_entry_not_loaded(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
