@@ -26,33 +26,12 @@ import json; \
 f = open('/usr/src/homeassistant/homeassistant/generated/integrations.json', 'r'); \
 data = json.load(f); \
 f.close(); \
-data['integration']['lojack'] = {\"quality_scale\":\"bronze\",\"integration_type\":\"hub\",\"name\":\"LoJack\",\"iot_class\":\"cloud_polling\",\"config_flow\":true}; \
+data['integration']['lojack'] = {\"quality_scale\":\"bronze\",\"integration_type\":\"hub\",\"name\":\"LoJack\",\"iot_class\":\"cloud_polling\",\"config_flow\":True}; \
 f = open('/usr/src/homeassistant/homeassistant/generated/integrations.json', 'w'); \
 json.dump(data, f); \
 f.close(); \
 print('Added lojack to integrations.json')"
 
-# Add lojack to config_flows.py
-RUN python3 -c "\
-import re; \
-f = open('/usr/src/homeassistant/homeassistant/generated/config_flows.py', 'r'); \
-content = f.read(); \
-f.close(); \
-# Find the integration list and add lojack in alphabetical order
-lines = content.split('\n'); \
-new_lines = []; \
-added = False; \
-in_integration = False; \
-for line in lines: \
-    if '\"integration\": [' in line: \
-        in_integration = True; \
-    if in_integration and not added: \
-        stripped = line.strip().strip(',').strip('\"'); \
-        if stripped > 'lojack' and stripped and stripped[0].isalpha(): \
-            new_lines.append('        \"lojack\",'); \
-            added = True; \
-    new_lines.append(line); \
-f = open('/usr/src/homeassistant/homeassistant/generated/config_flows.py', 'w'); \
-f.write('\n'.join(new_lines)); \
-f.close(); \
-print('Added lojack to config_flows.py')"
+# Add lojack to config_flows.py (insert after local_todo alphabetically)
+RUN sed -i '/"local_todo",/a\        "lojack",' /usr/src/homeassistant/homeassistant/generated/config_flows.py && \
+    echo "Added lojack to config_flows.py"

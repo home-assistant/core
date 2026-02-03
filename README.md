@@ -199,17 +199,18 @@ Both produce equivalent images - the generated version demonstrates the script's
 
 ## Publishing to Docker Hub
 
-After building locally, you can push to your own Docker Hub repository:
+After building locally, you can push to Docker Hub repository:
+Replace with your own user and repository information, as needed:
 
 ```bash
 # Tag with your username
-docker tag homeassistant-lojack:latest YOUR_USERNAME/homeassistant-lojack:latest
+docker tag homeassistant-lojack:latest devinslick/homeassistant-lojack:latest
 
-# Login to Docker Hub
+# Login to Docker Hub if you aren't already
 docker login
 
 # Push the image
-docker push YOUR_USERNAME/homeassistant-lojack:latest
+docker push devinslick/homeassistant-lojack:latest
 ```
 
 ## Testing the Integration

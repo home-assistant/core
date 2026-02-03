@@ -107,7 +107,8 @@ $integrationData = @{
 if ($qualityScale) {
     $integrationData.quality_scale = $qualityScale
 }
-$integrationJson = ($integrationData | ConvertTo-Json -Compress).Replace('"', '\"')
+# Convert to JSON, escape quotes, and fix booleans for Python (true->True, false->False)
+$integrationJson = ($integrationData | ConvertTo-Json -Compress).Replace('"', '\"').Replace(':true', ':True').Replace(':false', ':False')
 
 $integrationsJsonCmd = @"
 
@@ -127,34 +128,24 @@ print('Added $domain to integrations.json')"
 # Build config_flows.py update command (only if config_flow is enabled)
 $configFlowCmd = ""
 if ($hasConfigFlow) {
-    # Find the right insertion point alphabetically
-    # We'll insert after an entry that comes before this domain alphabetically
+    # Find an insertion point - use a known integration that comes before this domain alphabetically
+    # Common integrations that exist in all HA versions, sorted: local_calendar, local_file, local_todo, logger, logbook
+    # For most integrations starting with 'l' or later, 'local_todo' is a safe insertion point
+    # For earlier letters, we use 'input_boolean' or 'homeassistant'
+    $insertAfter = "local_todo"
+    if ($domain -lt "local_todo") {
+        if ($domain -lt "input_boolean") {
+            $insertAfter = "homeassistant"
+        } else {
+            $insertAfter = "input_boolean"
+        }
+    }
+
     $configFlowCmd = @"
 
-# Add $domain to config_flows.py
-RUN python3 -c "\
-import re; \
-f = open('/usr/src/homeassistant/homeassistant/generated/config_flows.py', 'r'); \
-content = f.read(); \
-f.close(); \
-# Find the integration list and add $domain in alphabetical order
-lines = content.split('\n'); \
-new_lines = []; \
-added = False; \
-in_integration = False; \
-for line in lines: \
-    if '\"integration\": [' in line: \
-        in_integration = True; \
-    if in_integration and not added: \
-        stripped = line.strip().strip(',').strip('\"'); \
-        if stripped > '$domain' and stripped and stripped[0].isalpha(): \
-            new_lines.append('        \"$domain\",'); \
-            added = True; \
-    new_lines.append(line); \
-f = open('/usr/src/homeassistant/homeassistant/generated/config_flows.py', 'w'); \
-f.write('\n'.join(new_lines)); \
-f.close(); \
-print('Added $domain to config_flows.py')"
+# Add $domain to config_flows.py (insert after $insertAfter alphabetically)
+RUN sed -i '/\"$insertAfter\",/a\        \"$domain\",' /usr/src/homeassistant/homeassistant/generated/config_flows.py && \
+    echo "Added $domain to config_flows.py"
 "@
 }
 
