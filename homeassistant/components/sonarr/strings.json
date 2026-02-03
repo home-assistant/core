@@ -59,6 +59,12 @@
       "message": "Config entry \"{target}\" is not loaded."
     }
   },
+  "issues": {
+    "deprecated_sensor_attributes": {
+      "description": "The Sonarr sensor attributes are deprecated and will be removed in a future version. Please migrate to using the new service calls instead:\n\n- `sonarr.get_series` - Replaces the series sensor attributes\n- `sonarr.get_queue` - Replaces the queue sensor attributes\n- `sonarr.get_diskspace` - Replaces the diskspace sensor attributes\n- `sonarr.get_upcoming` - Replaces the upcoming sensor attributes\n- `sonarr.get_wanted` - Replaces the wanted sensor attributes",
+      "title": "Sensor attributes are deprecated"
+    }
+  },
   "options": {
     "step": {
       "init": {
