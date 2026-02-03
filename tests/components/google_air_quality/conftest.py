@@ -43,6 +43,33 @@ def mock_subentries() -> list[ConfigSubentryDataWithId]:
             data={
                 CONF_LATITUDE: 10.1,
                 CONF_LONGITUDE: 20.1,
+                "custom_local_aqi_options": {
+                    "country": "DE",
+                    "custom_laqi": "deu_lubw",
+                    "enable_custom_laqi": True,
+                },
+            },
+            subentry_type="location",
+            title="Home",
+            subentry_id="home-subentry-id",
+            unique_id=None,
+        )
+    ]
+
+
+@pytest.fixture
+def mock_subentries_with_custom_laqi() -> list[ConfigSubentryDataWithId]:
+    """Fixture for subentries."""
+    return [
+        ConfigSubentryDataWithId(
+            data={
+                CONF_LATITUDE: 10.1,
+                CONF_LONGITUDE: 20.1,
+                "custom_local_aqi_options": {
+                    "country": "DE",
+                    "custom_laqi": "deu_lubw",
+                    "enable_custom_laqi": True,
+                },
             },
             subentry_type="location",
             title="Home",
@@ -62,14 +89,35 @@ def mock_config_entry(
         title=DOMAIN,
         data={CONF_API_KEY: "test-api-key", CONF_REFERRER: None},
         entry_id="123456789",
-        subentries_data=[*mock_subentries],
+        subentries_data=mock_subentries,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_with_custom_laqi(
+    hass: HomeAssistant,
+    mock_subentries_with_custom_laqi: list[ConfigSubentryDataWithId],
+) -> MockConfigEntry:
+    """Fixture for a config and a subentry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=DOMAIN,
+        data={CONF_API_KEY: "test-api-key", CONF_REFERRER: None},
+        entry_id="123456789",
+        subentries_data=[*mock_subentries_with_custom_laqi],
     )
 
 
 @pytest.fixture(name="mock_api")
-def mock_client_api() -> Generator[Mock]:
-    """Set up fake Google Air Quality API responses from fixtures."""
-    responses = load_json_object_fixture("air_quality_data.json", DOMAIN)
+def mock_client_api(request: pytest.FixtureRequest) -> Generator[Mock]:
+    """Set up fake Google Air Quality API responses from fixtures.
+
+    If a test parametrizes this fixture (indirect), the param is treated as
+    the fixture filename under tests/fixtures/<DOMAIN>/.
+    """
+    filename = request.param if hasattr(request, "param") else "air_quality_data.json"
+    responses = load_json_object_fixture(filename, DOMAIN)
+
     with (
         patch(
             "homeassistant.components.google_air_quality.GoogleAirQualityApi",
@@ -81,8 +129,9 @@ def mock_client_api() -> Generator[Mock]:
         ),
     ):
         api = mock_api.return_value
-        api.async_get_current_conditions.return_value = (
-            AirQualityCurrentConditionsData.from_dict(responses)
+        # ensure async mock for coroutine usage
+        api.async_get_current_conditions = AsyncMock(
+            return_value=AirQualityCurrentConditionsData.from_dict(responses)
         )
 
         yield api

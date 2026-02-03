@@ -68,14 +68,14 @@ async def _validate_input(
     description_placeholders: dict[str, str],
 ) -> bool:
     try:
-        if user_input[CUSTOM_LOCAL_AQI_OPTIONS]["enable_custom_laqi"]:
+        if user_input.get(CUSTOM_LOCAL_AQI_OPTIONS, {}).get("enable_custom_laqi"):
             await api.async_get_current_conditions(
                 lat=user_input[CONF_LOCATION][CONF_LATITUDE],
                 lon=user_input[CONF_LOCATION][CONF_LONGITUDE],
                 region_code=user_input[CUSTOM_LOCAL_AQI_OPTIONS]["country"],
                 custom_local_aqi=user_input[CUSTOM_LOCAL_AQI_OPTIONS]["custom_laqi"],
             )
-        if not user_input[CUSTOM_LOCAL_AQI_OPTIONS]["enable_custom_laqi"]:
+        if not user_input.get(CUSTOM_LOCAL_AQI_OPTIONS, {}).get("enable_custom_laqi"):
             await api.async_get_current_conditions(
                 lat=user_input[CONF_LOCATION][CONF_LATITUDE],
                 lon=user_input[CONF_LOCATION][CONF_LONGITUDE],
@@ -247,7 +247,9 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                 )
             if await _validate_input(user_input, api, errors, description_placeholders):
                 data = user_input[CONF_LOCATION]
-                data[CUSTOM_LOCAL_AQI_OPTIONS] = user_input[CUSTOM_LOCAL_AQI_OPTIONS]
+                custom_opts = user_input.get(CUSTOM_LOCAL_AQI_OPTIONS)
+                if custom_opts and custom_opts.get("enable_custom_laqi"):
+                    data[CUSTOM_LOCAL_AQI_OPTIONS] = custom_opts
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data=data,
