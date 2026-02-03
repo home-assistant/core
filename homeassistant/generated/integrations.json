@@ -2718,6 +2718,13 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "heiman": {
+      "name": "Heiman",
+      "iot_standards": [
+        "matter",
+        "zigbee"
+      ]
+    },
     "heiwa": {
       "name": "Heiwa",
       "integration_type": "virtual",
