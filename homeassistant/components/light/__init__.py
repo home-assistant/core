@@ -32,6 +32,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 from homeassistant.util import color as color_util
@@ -928,7 +929,17 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             # For historical reason when both Mired and Kelvin were supported,
             # integrations may have set this explicitly to None.
             # Fallback to DEFAULT to ensure compatibility.
-            return DEFAULT_MIN_KELVIN  # type: ignore[unreachable]
+            report_usage(  # type: ignore[unreachable]
+                "is explicitly setting `_attr_min_color_temp_kelvin` to `None`, when "
+                "it should be setting a valid integer, possibly DEFAULT_MIN_KELVIN ",
+                breaks_in_ha_version="2026.8",
+                core_behavior=ReportBehavior.LOG,
+                integration_domain=self.platform.platform_name
+                if self.platform
+                else None,
+                exclude_integrations={DOMAIN},
+            )
+            return DEFAULT_MIN_KELVIN
         return self._attr_min_color_temp_kelvin
 
     @property
@@ -938,7 +949,17 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             # For historical reason when both Mired and Kelvin were supported,
             # integrations may have set this explicitly to None.
             # Fallback to DEFAULT to ensure compatibility.
-            return DEFAULT_MAX_KELVIN  # type: ignore[unreachable]
+            report_usage(  # type: ignore[unreachable]
+                "is explicitly setting `_attr_max_color_temp_kelvin` to `None`, when "
+                "it should be setting a valid integer, possibly DEFAULT_MAX_KELVIN ",
+                breaks_in_ha_version="2026.8",
+                core_behavior=ReportBehavior.LOG,
+                integration_domain=self.platform.platform_name
+                if self.platform
+                else None,
+                exclude_integrations={DOMAIN},
+            )
+            return DEFAULT_MAX_KELVIN
         return self._attr_max_color_temp_kelvin
 
     @cached_property

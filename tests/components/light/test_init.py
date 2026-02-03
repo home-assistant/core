@@ -2814,6 +2814,66 @@ def test_report_invalid_color_modes(
 
 
 @pytest.mark.parametrize(
+    ("attributes", "expected_warnings", "expected_values"),
+    [
+        (
+            {
+                "_attr_min_color_temp_kelvin": 3000,
+                "_attr_max_color_temp_kelvin": 5000,
+            },
+            {"min": False, "max": False},
+            # Just highlighting that the attributes match the
+            # kelvin values
+            (3000, 5000),
+        ),
+        (
+            {
+                "_attr_min_color_temp_kelvin": None,
+                "_attr_max_color_temp_kelvin": None,
+            },
+            {"min": True, "max": True},
+            (2000, 6535),
+        ),
+        (
+            {},
+            {"min": False, "max": False},
+            (2000, 6535),
+        ),
+    ],
+    ids=["explicit_kelvin", "explicit_none", "default_kelvin"],
+)
+def test_missing_kelvin_property_warnings(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    attributes: dict[str, int | None],
+    expected_warnings: dict[str, bool],
+    expected_values: tuple[int, int | None, int],
+) -> None:
+    """Test missing kelvin properties."""
+
+    class MockLightEntityEntity(light.LightEntity):
+        _attr_color_mode = light.ColorMode.COLOR_TEMP
+        _attr_is_on = True
+        _attr_supported_features = light.LightEntityFeature.EFFECT
+        _attr_supported_color_modes = {light.ColorMode.COLOR_TEMP}
+        platform = MockEntityPlatform(hass, platform_name="test")
+
+    entity = MockLightEntityEntity()
+    for k, v in attributes.items():
+        setattr(entity, k, v)
+
+    state = entity._async_calculate_state()
+    for warning, expected in expected_warnings.items():
+        assert (
+            f"is explicitly setting `_attr_{warning}_color_temp_kelvin` to `None`"
+            in caplog.text
+        ) is expected, f"Expected {expected} for '{warning}'"
+
+    assert state.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN] == expected_values[0]
+    assert state.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN] == expected_values[1]
+
+
+@pytest.mark.parametrize(
     "module",
     [light],
 )
