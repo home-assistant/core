@@ -483,6 +483,7 @@ class StateVacuumEntity(
             issue_id,
             data={
                 "entry_id": self.registry_entry.id,
+                "entity_id": self.entity_id,
             },
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
