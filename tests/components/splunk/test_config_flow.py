@@ -20,7 +20,7 @@ async def test_user_flow_success(
 ) -> None:
     """Test successful user flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -138,7 +138,7 @@ async def test_user_flow_already_configured(
 
     # With single_config_entry in manifest, flow should abort immediately
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -237,7 +237,7 @@ async def test_reauth_flow_success(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_TOKEN: "new-token-456"},
+        {CONF_TOKEN: "new-token-456"}
     )
     await hass.async_block_till_done()
 
