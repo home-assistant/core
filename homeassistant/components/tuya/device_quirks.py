@@ -141,7 +141,7 @@ class Base64Encoder:
         return self.encoder.decode(hex_str)
 
 
-def serializer(device: CustomerDevice):
+def get_meal_plan_serializer(device: CustomerDevice):
     """Get the profile string for a given device."""
 
     if device.product_id in DEFAULT_PROFILE_DEVICES:
