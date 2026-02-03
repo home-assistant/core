@@ -401,11 +401,13 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
 
                 await self.get_appliance_data()
             except TooManyRequestsError as err:
-                _LOGGER.debug(
-                    "Rate limit exceeded on initial fetch: %s",
+                delay = err.retry_after or API_DEFAULT_RETRY_AFTER
+                _LOGGER.warning(
+                    "Rate limit exceeded, retrying in %s seconds: %s",
+                    delay,
                     err,
                 )
-                await asyncio_sleep(err.retry_after or API_DEFAULT_RETRY_AFTER)
+                await asyncio_sleep(delay)
             except UnauthorizedError as error:
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,

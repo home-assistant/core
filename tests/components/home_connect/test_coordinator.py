@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
+import re
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -23,6 +24,7 @@ from aiohomeconnect.model.error import (
     HomeConnectApiError,
     HomeConnectError,
     HomeConnectRequestError,
+    TooManyRequestsError,
     UnauthorizedError,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -802,12 +804,38 @@ async def test_coordinator_disabling_updates_for_appliance_is_gone_after_entry_r
 
 
 @pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(
+    ("side_effect", "log_level", "string_in_log"),
+    [
+        (
+            UnauthorizedError("unauthorized-mocked-error"),
+            "ERROR",
+            r".*unauthorized-mocked-error.*",
+        ),
+        (
+            HomeConnectError("mocked-error"),
+            "ERROR",
+            r".*mocked-error.*",
+        ),
+        (
+            [
+                TooManyRequestsError("rate-limit-error", retry_after=0.1),
+                Exception("error-to-stop-retryiung"),
+            ],
+            "WARNING",
+            r"Rate limit exceeded, retrying in 0.1 seconds.*rate-limit-error",
+        ),
+    ],
+)
 async def test_auth_error_while_updating_appliance(
     hass: HomeAssistant,
     client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     caplog: pytest.LogCaptureFixture,
+    side_effect: HomeConnectError | list[Exception],
+    log_level: str,
+    string_in_log: str,
 ) -> None:
     """Test that auth error is informed through the logs."""
     entity_id = "switch.dishwasher_power"
@@ -816,9 +844,7 @@ async def test_auth_error_while_updating_appliance(
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(entity_id)
 
-    client.get_specific_appliance = AsyncMock(
-        side_effect=UnauthorizedError("unauthorized-mocked-error")
-    )
+    client.get_specific_appliance = AsyncMock(side_effect=side_effect)
 
     await async_setup_component(hass, HA_DOMAIN, {})
     caplog.clear()
@@ -830,7 +856,6 @@ async def test_auth_error_while_updating_appliance(
     )
 
     assert any(
-        record.levelname == "ERROR"
-        and "unauthorized-mocked-error" in record.getMessage()
+        record.levelname == log_level and re.search(string_in_log, record.message)
         for record in caplog.records
     )
