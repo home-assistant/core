@@ -84,11 +84,7 @@ rules:
       range-based icons in icons.json. Affects backup_reserve_percent and
       off_grid_vehicle_charging_reserve_percent entities. Remove the dynamic
       icon assignment and add range-based icon entries to icons.json.
-  reconfiguration-flow:
-    status: todo
-    comment: |
-      Reconfiguring has value even with OAuth - allows user to trigger reauth themselves
-      (e.g. after logging out of all devices).
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No issues to repair
