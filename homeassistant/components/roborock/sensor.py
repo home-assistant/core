@@ -391,15 +391,6 @@ Q7_B01_SENSOR_DESCRIPTIONS = [
         translation_key="mop_life_time_left",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    RoborockSensorDescriptionB01(
-        key="total_cleaning_time",
-        value_fn=lambda data: data.real_clean_time,
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
-        translation_key="total_cleaning_time",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
 ]
 
 
