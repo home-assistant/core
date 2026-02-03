@@ -65,18 +65,19 @@ async def test_base_station_migration(
 
 
 @pytest.mark.parametrize(
-    ("exc", "expected_exception"),
+    ("exc", "expected_exception", "should_cancel_task"),
     [
-        (InvalidCredentialsError, ConfigEntryAuthFailed),
-        (RequestError, UpdateFailed),
-        (EndpointUnavailableError, None),
-        (SimplipyError, UpdateFailed),
+        (InvalidCredentialsError, ConfigEntryAuthFailed, True),
+        (RequestError, UpdateFailed, True),
+        (EndpointUnavailableError, None, False),
+        (SimplipyError, UpdateFailed, False),
     ],
 )
-async def test_system_exceptions_via_coordinator(
+async def test_coordinator_exceptions_and_websocket_behavior(
     simplisafe_manager: SimpliSafe,
     exc: type[SimplipyError],
     expected_exception: type[HomeAssistantError],
+    should_cancel_task: bool,
 ) -> None:
     """Test that exceptions propagate to the coordinator."""
     manager: SimpliSafe = simplisafe_manager
@@ -102,3 +103,33 @@ async def test_system_exceptions_via_coordinator(
     else:
         assert not coordinator.last_update_success
         assert isinstance(coordinator.last_exception, expected_exception)
+
+    task_after = manager._websocket_task
+    if should_cancel_task:
+        assert task_after is None or task_after.done() or task_after.cancelled()
+    else:
+        assert task_after is not None and not task_after.done()
+
+    if should_cancel_task:
+        # Save the task before we patch async_update to succeed
+        task_before_restart = manager._websocket_task
+
+        # Patch async_update to succeed for the next refresh
+        async def succeed_update(*args, **kwargs):
+            return None
+
+        for system in manager.systems.values():
+            system.async_update = AsyncMock(side_effect=succeed_update)
+
+        # Trigger the next successful coordinator refresh
+        await coordinator.async_refresh()
+        await manager._hass.async_block_till_done()
+
+        # Check that the websocket has restarted
+        task_after_restart = manager._websocket_task
+        assert task_after_restart is not None
+        assert task_after_restart is not task_before_restart
+        assert not task_after_restart.done()
+    else:
+        # For exceptions that don’t cancel the websocket, just assert it’s still running
+        assert task_after is not None and not task_after.done()
