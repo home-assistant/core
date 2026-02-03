@@ -7,8 +7,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.services import (
+    ATTR_INFO_SKILL,
     ATTR_SOUND,
     ATTR_TEXT_COMMAND,
+    SERVICE_INFO_SKILL,
     SERVICE_SOUND_NOTIFICATION,
     SERVICE_TEXT_COMMAND,
 )
@@ -35,6 +37,37 @@ async def test_setup_services(
     assert (services := hass.services.async_services_for_domain(DOMAIN))
     assert SERVICE_TEXT_COMMAND in services
     assert SERVICE_SOUND_NOTIFICATION in services
+    assert SERVICE_INFO_SKILL in services
+
+
+async def test_info_skill_service(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test send sound service."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_DEVICE_1_SN)}
+    )
+    assert device_entry
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_INFO_SKILL,
+        {
+            ATTR_INFO_SKILL: "Alexa.Joke.Play",
+            ATTR_DEVICE_ID: device_entry.id,
+        },
+        blocking=True,
+    )
+
+    assert mock_amazon_devices_client.call_alexa_info_skill.call_count == 1
+    assert mock_amazon_devices_client.call_alexa_info_skill.call_args == snapshot
 
 
 async def test_send_sound_service(
