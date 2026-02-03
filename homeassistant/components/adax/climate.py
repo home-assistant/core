@@ -180,10 +180,10 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        await self._adax_data_handler.set_target_temperature(temperature)
+        if self._attr_hvac_mode == HVACMode.HEAT:
+            await self._adax_data_handler.set_target_temperature(temperature)
 
         self._attr_target_temperature = temperature
-        self._attr_hvac_mode = HVACMode.HEAT
         self.async_write_ha_state()
 
     def _update_hvac_attributes(self) -> None:
