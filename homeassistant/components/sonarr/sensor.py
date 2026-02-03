@@ -20,12 +20,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import SonarrConfigEntry, SonarrDataT, SonarrDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import SonarrDataT, SonarrDataUpdateCoordinator
 from .entity import SonarrEntity
 
 
@@ -86,12 +88,15 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: SonarrConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sonarr sensors based on a config entry."""
+    coordinators: dict[str, SonarrDataUpdateCoordinator[Any]] = hass.data[DOMAIN][
+        entry.entry_id
+    ]
     async_add_entities(
-        SonarrSensor(getattr(entry.runtime_data, coordinator_type), description)
+        SonarrSensor(coordinators[coordinator_type], description)
         for coordinator_type, description in SENSOR_TYPES.items()
     )
 
