@@ -7,8 +7,6 @@ from typing import Any
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import (
-    ATTR_CODE_SLOT,
-    ATTR_USERCODE,
     LOCK_CMD_CLASS_TO_LOCKED_STATE_MAP,
     LOCK_CMD_CLASS_TO_PROPERTY_MAP,
     DoorLockCCConfigurationSetOptions,
@@ -40,9 +38,7 @@ from .const import (
     ATTR_TWIST_ASSIST,
     DOMAIN,
     LOGGER,
-    SERVICE_CLEAR_LOCK_USERCODE,
     SERVICE_SET_LOCK_CONFIGURATION,
-    SERVICE_SET_LOCK_USERCODE,
 )
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
@@ -88,23 +84,6 @@ async def async_setup_entry(
     )
 
     platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SET_LOCK_USERCODE,
-        {
-            vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
-            vol.Required(ATTR_USERCODE): cv.string,
-        },
-        "async_set_lock_usercode",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_CLEAR_LOCK_USERCODE,
-        {
-            vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
-        },
-        "async_clear_lock_usercode",
-    )
 
     platform.async_register_entity_service(
         SERVICE_SET_LOCK_CONFIGURATION,
@@ -170,8 +149,13 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
             await set_usercode(self.info.node, code_slot, usercode)
         except BaseZwaveJSServerError as err:
             raise HomeAssistantError(
-                f"Unable to set lock usercode on lock {self.entity_id} code_slot "
-                f"{code_slot}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="set_lock_usercode_failed",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "code_slot": str(code_slot),
+                    "error": str(err),
+                },
             ) from err
         LOGGER.debug("User code at slot %s on lock %s set", code_slot, self.entity_id)
 
@@ -222,8 +206,13 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
             await clear_usercode(self.info.node, code_slot)
         except BaseZwaveJSServerError as err:
             raise HomeAssistantError(
-                f"Unable to clear lock usercode on lock {self.entity_id} code_slot "
-                f"{code_slot}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="clear_lock_usercode_failed",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "code_slot": str(code_slot),
+                    "error": str(err),
+                },
             ) from err
         LOGGER.debug(
             "User code at slot %s on lock %s cleared", code_slot, self.entity_id

@@ -11,7 +11,7 @@ from typing import Any
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import SET_VALUE_SUCCESS, CommandClass, CommandStatus
-from zwave_js_server.const.command_class.lock import ATTR_CODE_SLOT
+from zwave_js_server.const.command_class.lock import ATTR_CODE_SLOT, ATTR_USERCODE
 from zwave_js_server.const.command_class.notification import NotificationType
 from zwave_js_server.exceptions import FailedZWaveCommand, SetValueFailed
 from zwave_js_server.model.endpoint import Endpoint
@@ -492,6 +492,29 @@ class ZWaveServices:
             },
             func="async_get_lock_usercode",
             supports_response=SupportsResponse.ONLY,
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_SET_LOCK_USERCODE,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+                vol.Required(ATTR_USERCODE): cv.string,
+            },
+            func="async_set_lock_usercode",
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_CLEAR_LOCK_USERCODE,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+            },
+            func="async_clear_lock_usercode",
         )
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:

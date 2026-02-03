@@ -292,8 +292,14 @@
     }
   },
   "exceptions": {
+    "clear_lock_usercode_failed": {
+      "message": "Unable to clear lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
+    },
     "get_lock_usercode_not_found": {
       "message": "Code slot {code_slot} not found on lock {entity_id}"
+    },
+    "set_lock_usercode_failed": {
+      "message": "Unable to set lock usercode on lock {entity_id} code_slot {code_slot}: {error}"
     }
   },
   "issues": {
