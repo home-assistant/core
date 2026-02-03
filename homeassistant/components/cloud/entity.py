@@ -459,8 +459,17 @@ class BaseCloudLLMEntity(Entity):
         last_content: Any = chat_log.content[-1]
         if last_content.role == "user" and last_content.attachments:
             files = await self._async_prepare_files_for_prompt(last_content.attachments)
-            current_content = last_content.content
-            last_content = [*(current_content or []), *files]
+
+            last_message = cast(dict[str, Any], messages[-1])
+            assert (
+                last_message["type"] == "message"
+                and last_message["role"] == "user"
+                and isinstance(last_message["content"], str)
+            )
+            last_message["content"] = [
+                {"type": "input_text", "text": last_message["content"]},
+                *files,
+            ]
 
         tools: list[ToolParam] = []
         tool_choice: str | None = None
