@@ -14,7 +14,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
-from .device_quirks import days_bitmap_to_names, days_names_to_bitmap, serializer
+from .device_quirks import get_meal_plan_serializer
 
 FEEDING_ENTRY_SCHEMA = vol.Schema(
     {
@@ -84,38 +84,36 @@ async def async_get_meal_plan_data(call: ServiceCall) -> dict[str, Any]:
     """Handle get_meal_plan_data service call."""
     device, _ = _get_tuya_device(call.hass, call.data[ATTR_DEVICE_ID])
 
-    data = device.status.get("meal_plan")
-    if data is None:
+    if not (serializer := get_meal_plan_serializer(device)):
         raise ServiceValidationError(
-            f"Device {device.name} does not have data for meal_plan. "
+            translation_domain=DOMAIN,
+            translation_key="device_missing_serializer",
+            translation_placeholders={
+                "device_id": device.id,
+            },
         )
 
-    return {"data": days_bitmap_to_names(serializer(device).decode(data))}
+    return serializer.get_meal_data()
 
 
 async def async_set_meal_plan_data(call: ServiceCall) -> None:
     """Handle set_meal_plan_data service call."""
     device, manager = _get_tuya_device(call.hass, call.data[ATTR_DEVICE_ID])
 
-    # Check if the device has this DP code in its function
-    if "meal_plan" not in device.function:
+    if not (serializer := get_meal_plan_serializer(device)):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="device_not_support_meal_plan",
+            translation_key="device_missing_serializer",
             translation_placeholders={
                 "device_id": device.id,
             },
         )
-    converted_data = days_names_to_bitmap(call.data["data"])
-    commands = [
-        {
-            "code": "meal_plan",
-            "value": serializer(device).encode(converted_data),
-        }
-    ]
 
-    # Send the command using the manager
-    await call.hass.async_add_executor_job(manager.send_commands, device.id, commands)
+    await call.hass.async_add_executor_job(
+        manager.send_commands,
+        device.id,
+        serializer.get_meal_plan_commands(call.data["data"]),
+    )
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:

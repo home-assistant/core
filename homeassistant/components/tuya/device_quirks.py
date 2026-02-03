@@ -120,25 +120,52 @@ class TemplateEncoder:
 class Base64Encoder:
     """Encoder/decoder for Base64 meal plan data."""
 
-    def __init__(self, profile: dict[str, Any]) -> None:
+    def __init__(self, device: CustomerDevice, profile: dict[str, Any]) -> None:
         """Initialize Base64Encoder."""
         template = profile.get("template")
         if not template:
             raise ValueError("Profile must define template")
+        self.device = device
         self.encoder = TemplateEncoder(template, profile)
 
-    def encode(self, data: list[dict[str, Any]]) -> str:
+    def get_meal_plan_commands(
+        self, data: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Encode meal plan data to Base64 string."""
-        hex_str = self.encoder.encode(data)
-        v = bytes(int(hex_str[i : i + 2], 16) for i in range(0, len(hex_str), 2))
-        return base64.b64encode(v).decode()
 
-    def decode(self, b64_data: str) -> list[dict[str, Any]]:
+        if "meal_plan" not in self.device.function:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="device_not_support_meal_plan",
+                translation_placeholders={
+                    "device_id": self.device.id,
+                },
+            )
+
+        converted_data = days_names_to_bitmap(data)
+        hex_str = self.encoder.encode(converted_data)
+        v = bytes(int(hex_str[i : i + 2], 16) for i in range(0, len(hex_str), 2))
+
+        return [
+            {
+                "code": "meal_plan",
+                "value": v,
+            }
+        ]
+
+    def get_meal_data(self) -> dict[str, list[dict[str, Any]]]:
         """Decode Base64 string to meal plan data."""
+
+        b64_data = self.device.status.get("meal_plan")
+        if b64_data is None:
+            raise ServiceValidationError(
+                f"Device {self.device.name} does not have data for meal_plan. "
+            )
+
         if not b64_data or b64_data.lower() == "unknown":
             raise ValueError("Invalid Base64 meal plan data")
         hex_str = "".join(f"{byte:02x}" for byte in base64.b64decode(b64_data))
-        return self.encoder.decode(hex_str)
+        return {"data": days_bitmap_to_names(self.encoder.decode(hex_str))}
 
 
 def get_meal_plan_serializer(device: CustomerDevice):
@@ -146,11 +173,12 @@ def get_meal_plan_serializer(device: CustomerDevice):
 
     if device.product_id in DEFAULT_PROFILE_DEVICES:
         return Base64Encoder(
+            device,
             {
                 "template": TEMPLATE_FULL,
                 "encode": create_day_transformer(DAY_MAPPING)["encode"],
                 "decode": create_day_transformer(DAY_MAPPING)["decode"],
-            }
+            },
         )
     raise ServiceValidationError(
         translation_domain=DOMAIN,

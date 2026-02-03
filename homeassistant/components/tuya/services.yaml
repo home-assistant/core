@@ -17,6 +17,7 @@ set_meal_plan_data:
       required: true
       selector:
         object:
+          description_field: portion
           multiple: true
           fields:
             days:
