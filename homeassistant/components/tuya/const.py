@@ -992,13 +992,6 @@ class DPCode(StrEnum):
     WORK_STATE_E = "work_state_e"
 
 
-class Service(StrEnum):
-    """Tuya services."""
-
-    GET_MEAL_PLAN_DATA = "get_meal_plan_data"
-    SET_MEAL_PLAN_DATA = "set_meal_plan_data"
-
-
 @dataclass
 class UnitOfMeasurement:
     """Describes a unit of measurement."""

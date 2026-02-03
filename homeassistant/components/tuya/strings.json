@@ -1105,6 +1105,22 @@
     }
   },
   "services": {
+    "device_missing_serializer": {
+      "description": "Device with ID {device_id} is missing serializer for meal_plan data.",
+      "name": "Missing serializer"
+    },
+    "device_not_found": {
+      "description": "Device with ID {device_id} could not be found.",
+      "name": "Device not found"
+    },
+    "device_not_support_meal_plan": {
+      "description": "Device with ID {device_id} does not support meal plan functionality.",
+      "name": "Meal plan not supported"
+    },
+    "device_not_tuya_device": {
+      "description": "Device with ID {device_id} is not a Tuya device.",
+      "name": "Not a Tuya device"
+    },
     "get_meal_plan_data": {
       "description": "Retrieve meal_plan data from a Tuya device.",
       "fields": {

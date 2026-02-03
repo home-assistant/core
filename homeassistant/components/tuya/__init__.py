@@ -11,10 +11,9 @@ from tuya_sharing import (
     SharingDeviceListener,
     SharingTokenListener,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -31,9 +30,8 @@ from .const import (
     TUYA_CLIENT_ID,
     TUYA_DISCOVERY_NEW,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
-    Service,
 )
-from .service import async_get_meal_plan_data, async_set_meal_plan_data
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -60,6 +58,13 @@ def _create_manager(entry: TuyaConfigEntry, token_listener: TokenListener) -> Ma
         entry.data[CONF_TOKEN_INFO],
         token_listener,
     )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Tuya Services."""
+    await async_setup_services(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool:
@@ -154,35 +159,6 @@ async def async_remove_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> Non
         entry.data[CONF_TOKEN_INFO],
     )
     await hass.async_add_executor_job(manager.unload)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Tuya Services."""
-
-    hass.services.async_register(
-        DOMAIN,
-        Service.GET_MEAL_PLAN_DATA,
-        async_get_meal_plan_data,
-        schema=vol.Schema(
-            {
-                vol.Required("device_id"): str,
-            }
-        ),
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        Service.SET_MEAL_PLAN_DATA,
-        async_set_meal_plan_data,
-        schema=vol.Schema(
-            {
-                vol.Required("device_id"): str,
-                vol.Required("data"): str,
-            }
-        ),
-    )
-    return True
 
 
 class DeviceListener(SharingDeviceListener):

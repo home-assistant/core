@@ -5,9 +5,8 @@ from __future__ import annotations
 import pytest
 from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.tuya import Service
 from homeassistant.components.tuya.const import DOMAIN
-from homeassistant.components.tuya.service import _get_tuya_device
+from homeassistant.components.tuya.services import Service, _get_tuya_device
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
