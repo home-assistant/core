@@ -73,6 +73,12 @@
       }
     },
     "button": {
+      "flash_lights": {
+        "name": "Flash lights"
+      },
+      "sound_horn": {
+        "name": "Sound horn"
+      },
       "start_air_conditioner": {
         "name": "Start air conditioner"
       },
