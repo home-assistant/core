@@ -417,6 +417,54 @@ async def test_get_lock_usercode(
         }
 
 
+async def test_set_lock_usercode_error(
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    integration,
+) -> None:
+    """Test set lock usercode service error handling."""
+    client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_LOCK_USERCODE,
+            {
+                ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+                ATTR_CODE_SLOT: 1,
+                ATTR_USERCODE: "1234",
+            },
+            blocking=True,
+        )
+
+    assert str(exc_info.value) == (
+        "Unable to set lock usercode on lock "
+        f"{SCHLAGE_BE469_LOCK_ENTITY} code_slot 1: zwave_error: Z-Wave error 1 - test"
+    )
+
+
+async def test_clear_lock_usercode_error(
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    integration,
+) -> None:
+    """Test clear lock usercode service error handling."""
+    client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLEAR_LOCK_USERCODE,
+            {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, ATTR_CODE_SLOT: 1},
+            blocking=True,
+        )
+
+    assert str(exc_info.value) == (
+        "Unable to clear lock usercode on lock "
+        f"{SCHLAGE_BE469_LOCK_ENTITY} code_slot 1: zwave_error: Z-Wave error 1 - test"
+    )
+
+
 async def test_get_lock_usercode_error(
     hass: HomeAssistant,
     client,
