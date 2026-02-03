@@ -33,6 +33,20 @@
     }
   },
   "entity": {
+    "number": {
+      "setpoint_temperature": {
+        "name": "Setpoint"
+      },
+      "setpoint_temperature_bottom_zone": {
+        "name": "Bottom zone setpoint"
+      },
+      "setpoint_temperature_middle_zone": {
+        "name": "Middle zone setpoint"
+      },
+      "setpoint_temperature_top_zone": {
+        "name": "Top zone setpoint"
+      }
+    },
     "sensor": {
       "bottom_zone": {
         "name": "Bottom zone"
@@ -43,6 +57,11 @@
       "top_zone": {
         "name": "Top zone"
       }
+    }
+  },
+  "exceptions": {
+    "set_temperature_failed": {
+      "message": "Failed to set temperature"
     }
   }
 }
