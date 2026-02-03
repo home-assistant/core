@@ -29,8 +29,8 @@ from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.hass_dict import HassKey
 
-from . import device_registry as dr, discovery, entity, entity_registry as er, service
-from .entity_platform import EntityPlatform, async_calculate_suggested_object_id
+from . import discovery, entity, service
+from .entity_platform import EntityPlatform
 from .typing import ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
@@ -56,36 +56,6 @@ async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
         return
 
     await entity_obj.async_update_ha_state(True)
-
-
-@callback
-def async_get_entity_suggested_object_id(
-    hass: HomeAssistant, entity_id: str
-) -> str | None:
-    """Get the suggested object id for an entity.
-
-    Raises HomeAssistantError if the entity is not in the registry or
-    is not backed by an object.
-    """
-    entity_registry = er.async_get(hass)
-    if not (entity_entry := entity_registry.async_get(entity_id)):
-        raise HomeAssistantError(f"Entity {entity_id} is not in the registry.")
-
-    domain = entity_id.partition(".")[0]
-
-    if entity_entry.name:
-        return entity_entry.name
-
-    if entity_entry.suggested_object_id:
-        return entity_entry.suggested_object_id
-
-    entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
-    if not (entity_obj := entity_comp.get_entity(entity_id) if entity_comp else None):
-        raise HomeAssistantError(f"Entity {entity_id} has no object.")
-    device: dr.DeviceEntry | None = None
-    if device_id := entity_entry.device_id:
-        device = dr.async_get(hass).async_get(device_id)
-    return async_calculate_suggested_object_id(entity_obj, device)
 
 
 class EntityComponent[_EntityT: entity.Entity = entity.Entity]:

@@ -6,6 +6,7 @@ import asyncio
 from functools import partial
 from http import HTTPStatus
 import logging
+from typing import Any
 
 import aiohttp
 
@@ -47,7 +48,7 @@ from .util import supports_push
 _LOGGER = logging.getLogger(__name__)
 
 
-def push_registrations(hass):
+def push_registrations(hass: HomeAssistant) -> dict[str, str]:
     """Return a dictionary of push enabled registrations."""
     targets = {}
 
@@ -90,38 +91,32 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MobileAppNotificationService:
     """Get the mobile_app notification service."""
-    service = hass.data[DOMAIN][DATA_NOTIFY] = MobileAppNotificationService(hass)
+    service = hass.data[DOMAIN][DATA_NOTIFY] = MobileAppNotificationService()
     return service
 
 
 class MobileAppNotificationService(BaseNotificationService):
     """Implement the notification service for mobile_app."""
 
-    def __init__(self, hass):
-        """Initialize the service."""
-        self._hass = hass
-
     @property
-    def targets(self):
+    def targets(self) -> dict[str, str]:
         """Return a dictionary of registered targets."""
         return push_registrations(self.hass)
 
-    async def async_send_message(self, message="", **kwargs):
+    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the Lambda APNS gateway."""
         data = {ATTR_MESSAGE: message}
 
         # Remove default title from notifications.
         if (
-            kwargs.get(ATTR_TITLE) is not None
-            and kwargs.get(ATTR_TITLE) != ATTR_TITLE_DEFAULT
-        ):
-            data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
-
+            title_arg := kwargs.get(ATTR_TITLE)
+        ) is not None and title_arg != ATTR_TITLE_DEFAULT:
+            data[ATTR_TITLE] = title_arg
         if not (targets := kwargs.get(ATTR_TARGET)):
             targets = push_registrations(self.hass).values()
 
-        if kwargs.get(ATTR_DATA) is not None:
-            data[ATTR_DATA] = kwargs.get(ATTR_DATA)
+        if (data_arg := kwargs.get(ATTR_DATA)) is not None:
+            data[ATTR_DATA] = data_arg
 
         local_push_channels = self.hass.data[DOMAIN][DATA_PUSH_CHANNEL]
 
@@ -166,7 +161,7 @@ class MobileAppNotificationService(BaseNotificationService):
 
         try:
             async with asyncio.timeout(10):
-                response = await async_get_clientsession(self._hass).post(
+                response = await async_get_clientsession(self.hass).post(
                     push_url, json=target_data
                 )
                 result = await response.json()

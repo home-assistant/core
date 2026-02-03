@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -82,6 +83,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active calories burnt today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -138,6 +140,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Active time today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -198,6 +201,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average heart rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -250,6 +254,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Average respiratory rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -302,6 +307,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Body temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -358,6 +364,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bone mass',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -414,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Breathing disturbances intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -463,6 +471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Calories burnt last workout',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -517,6 +526,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Deep sleep',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -576,6 +586,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Diastolic blood pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -630,6 +641,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance travelled last workout',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -685,6 +697,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Distance travelled today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -740,6 +753,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electrodermal activity feet',
     'options': dict({
     }),
     'original_device_class': None,
@@ -789,6 +803,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electrodermal activity left foot',
     'options': dict({
     }),
     'original_device_class': None,
@@ -838,6 +853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electrodermal activity right foot',
     'options': dict({
     }),
     'original_device_class': None,
@@ -887,6 +903,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elevation change last workout',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -942,6 +959,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Elevation change today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -999,6 +1017,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Extracellular water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1055,6 +1074,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1111,6 +1131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in left arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1167,6 +1188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in left leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1223,6 +1245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in right arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1279,6 +1302,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in right leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1335,6 +1359,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat free mass in torso',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1391,6 +1416,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1447,6 +1473,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in left arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1503,6 +1530,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in left leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1559,6 +1587,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in right arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1615,6 +1644,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in right leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1671,6 +1701,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat mass in torso',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1727,6 +1758,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fat ratio',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1782,6 +1814,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heart pulse',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1834,6 +1867,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Height',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1890,6 +1924,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hydration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1946,6 +1981,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intense activity today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2006,6 +2042,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intracellular water',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2060,6 +2097,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last workout duration',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2116,6 +2154,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last workout intensity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2216,6 +2255,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last workout type',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -2318,6 +2358,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light sleep',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2377,6 +2418,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum heart rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2429,6 +2471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum respiratory rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2481,6 +2524,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum heart rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2533,6 +2577,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum respiratory rate',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2585,6 +2630,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Moderate activity today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2645,6 +2691,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2701,6 +2748,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in left arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2757,6 +2805,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in left leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2813,6 +2862,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in right arm',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2869,6 +2919,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in right leg',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2925,6 +2976,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Muscle mass in torso',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -2979,6 +3031,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pause during last workout',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3037,6 +3090,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pulse wave velocity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3093,6 +3147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'REM sleep',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3152,6 +3207,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Skin temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3208,6 +3264,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep goal',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3267,6 +3324,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sleep score',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3319,6 +3377,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Snoring',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3378,6 +3437,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Snoring episode count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3429,6 +3489,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Soft activity today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3489,6 +3550,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'SpO2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3541,6 +3603,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Step goal',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3593,6 +3656,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steps today',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3646,6 +3710,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Systolic blood pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3702,6 +3767,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3758,6 +3824,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to sleep',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3817,6 +3884,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time to wakeup',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -3876,6 +3944,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total calories burnt today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -3930,6 +3999,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Vascular age',
     'options': dict({
     }),
     'original_device_class': None,
@@ -3978,6 +4048,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Visceral fat index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4028,6 +4099,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'VO2 max',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4080,6 +4152,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wakeup count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -4132,6 +4205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wakeup time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4191,6 +4265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weight',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -4247,6 +4322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weight goal',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
