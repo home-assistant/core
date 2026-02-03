@@ -47,7 +47,7 @@ class VeluxEntity(Entity):
 
     _attr_should_poll = False
     _attr_has_entity_name = True
-    update_callback: Callable[["Node"], Awaitable[None]] | None = None
+    update_callback: Callable[[Node], Awaitable[None]] | None = None
     _attr_available = True
     _unavailable_logged = False
 
