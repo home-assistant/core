@@ -140,24 +140,28 @@ class HomeConnectRuntimeData:
                             appliance_coordinator = self.appliance_coordinators.pop(
                                 event_message.ha_id
                             )
+                            await appliance_coordinator.async_shutdown()
                         else:
                             appliance_coordinator = self.appliance_coordinators[
                                 event_message.ha_id
                             ]
-                        if not appliance_coordinator.data.info.connected:
-                            appliance_coordinator.data.info.connected = True
-                            appliance_coordinator.call_all_event_listeners()
+                            if not appliance_coordinator.data.info.connected:
+                                appliance_coordinator.data.info.connected = True
+                                appliance_coordinator.call_all_event_listeners()
 
                     elif event_message.type == EventType.PAIRED:
-                        appliance_coordinator = self.appliance_coordinators[
-                            event_message.ha_id
-                        ] = HomeConnectApplianceCoordinator(
+                        appliance_coordinator = HomeConnectApplianceCoordinator(
                             self.hass,
-                            self.config_entry,
+                            self.config_entry.entry_id,
                             self.client,
+                            self.global_listeners,
                             await self.client.get_specific_appliance(
                                 event_message_ha_id
                             ),
+                        )
+                        await appliance_coordinator.async_register_shutdown()
+                        self.appliance_coordinators[event_message.ha_id] = (
+                            appliance_coordinator
                         )
 
                     assert appliance_coordinator
@@ -224,37 +228,41 @@ class HomeConnectRuntimeData:
                 name=appliance.name,
                 model=appliance.vib,
             )
-            self.appliance_coordinators[appliance.ha_id] = (
-                HomeConnectApplianceCoordinator(
-                    self.hass,
-                    self.config_entry,
-                    self.client,
-                    appliance,
-                )
+            new_coordinator = HomeConnectApplianceCoordinator(
+                self.hass,
+                self.config_entry.entry_id,
+                self.client,
+                self.global_listeners,
+                appliance,
             )
+            await new_coordinator.async_register_shutdown()
+            self.appliance_coordinators[appliance.ha_id] = new_coordinator
 
 
 class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectApplianceData]):
     """Class to manage fetching Home Connect appliance data."""
 
-    config_entry: HomeConnectConfigEntry
-
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: HomeConnectConfigEntry,
+        config_entry_id: str,
         client: HomeConnectClient,
+        global_listeners: dict[
+            CALLBACK_TYPE, tuple[CALLBACK_TYPE, tuple[EventKey, ...]]
+        ],
         appliance: HomeAppliance,
     ) -> None:
         """Initialize."""
+        self.config_entry_id = config_entry_id
         super().__init__(
             hass,
             _LOGGER,
-            config_entry=config_entry,
-            name=config_entry.entry_id,
+            config_entry=None,
+            name=f"{self.config_entry_id}-{appliance.ha_id}",
         )
         self.client = client
         self.device_registry = dr.async_get(self.hass)
+        self.global_listeners = global_listeners
         self.data = HomeConnectApplianceData.empty(appliance)
         self._execution_tracker: list[float] = []
 
@@ -293,7 +301,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                         for (
                             listener,
                             context,
-                        ) in self.config_entry.runtime_data.global_listeners.values():
+                        ) in self.global_listeners.values():
                             if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED not in context:
                                 listener()
                 self._call_event_listener(event_message)
@@ -340,7 +348,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 for (
                     listener,
                     context,
-                ) in self.config_entry.runtime_data.global_listeners.values():
+                ) in self.global_listeners.values():
                     if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED not in context:
                         listener()
                 self.call_all_event_listeners()
@@ -356,12 +364,12 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 if device:
                     self.device_registry.async_update_device(
                         device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
+                        remove_config_entry_id=self.config_entry_id,
                     )
                 for (
                     listener,
                     context,
-                ) in self.config_entry.runtime_data.global_listeners.values():
+                ) in self.global_listeners.values():
                     assert isinstance(context, tuple)
                     if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED in context:
                         listener()
@@ -416,7 +424,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         for (
             listener,
             context,
-        ) in self.config_entry.runtime_data.global_listeners.values():
+        ) in self.global_listeners.values():
             assert isinstance(context, tuple)
             if EventKey.BSH_COMMON_APPLIANCE_PAIRED in context:
                 listener()
@@ -427,7 +435,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         """Get appliance data."""
         appliance = self.data.info
         self.device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
+            config_entry_id=self.config_entry_id,
             identifiers={(DOMAIN, appliance.ha_id)},
             manufacturer=appliance.brand,
             name=appliance.name,
