@@ -112,7 +112,7 @@
           "name": "[%key:component::sonarr::services::get_diskspace::fields::entry_id::name%]"
         },
         "max_items": {
-          "description": "Maximum number of queue items to return (0 = no limit).",
+          "description": "Maximum number of items to return (0 = no limit).",
           "name": "Max items"
         }
       },
@@ -150,8 +150,8 @@
           "name": "[%key:component::sonarr::services::get_diskspace::fields::entry_id::name%]"
         },
         "max_items": {
-          "description": "Maximum number of wanted episodes to return (0 = no limit).",
-          "name": "Max items"
+          "description": "[%key:component::sonarr::services::get_queue::fields::max_items::description%]",
+          "name": "[%key:component::sonarr::services::get_queue::fields::max_items::name%]"
         }
       },
       "name": "Get wanted"
