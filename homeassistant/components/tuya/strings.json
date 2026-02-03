@@ -1097,11 +1097,21 @@
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
     },
+    "device_missing_serializer": {
+      "message": "Feeder with ID {device_id} is missing serializer for meal plan data."
+    },
+    "device_not_found": {
+      "message": "Feeder with ID {device_id} could not be found."
+    },
+
     "device_not_support_meal_plan_function": {
       "message": "Feeder with ID {device_id} does not support meal plan functionality."
     },
     "device_not_support_meal_plan_status": {
-      "message": "Feeder with ID {device_id} does not support `meal plan` status."
+      "message": "Feeder with ID {device_id} does not support meal plan status."
+    },
+    "device_not_tuya_device": {
+      "message": "Device with ID {device_id} is not a Tuya feeder."
     }
   },
   "issues": {
@@ -1111,43 +1121,30 @@
     }
   },
   "services": {
-    "device_missing_serializer": {
-      "description": "Feeder with ID {device_id} is missing serializer for `meal plan` data.",
-      "name": "Missing serializer"
-    },
-    "device_not_found": {
-      "description": "Feeder with ID {device_id} could not be found.",
-      "name": "Device not found"
-    },
-
-    "device_not_tuya_device": {
-      "description": "Device with ID {device_id} is not a Tuya Feeder.",
-      "name": "Not a Tuya device"
-    },
     "get_meal_plan_data": {
-      "description": "Retrieves `meal plan` data from a Tuya Feeder.",
+      "description": "Retrieves meal plan data from a Tuya feeder.",
       "fields": {
         "device_id": {
-          "description": "The Tuya Feeder.",
+          "description": "The Tuya feeder.",
           "name": "Device"
         }
       },
-      "name": "Get Feeder `meal plan` data"
+      "name": "Get Feeder meal plan data"
     },
 
     "set_meal_plan_data": {
-      "description": "Sets data for `meal plan` on a Tuya Feeder.",
+      "description": "Sets data for meal plan on a Tuya feeder.",
       "fields": {
         "data": {
           "description": "The data to set.",
           "name": "Data"
         },
         "device_id": {
-          "description": "The Tuya Feeder.",
+          "description": "The Tuya feeder.",
           "name": "Device"
         }
       },
-      "name": "Sets Feeder `meal plan` data"
+      "name": "Sets feeder meal plan data"
     }
   }
 }
