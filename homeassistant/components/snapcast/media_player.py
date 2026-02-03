@@ -8,7 +8,6 @@ from typing import Any
 
 from snapcast.control.client import Snapclient
 from snapcast.control.group import Snapgroup
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -21,22 +20,10 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_platform,
-    entity_registry as er,
-)
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_LATENCY,
-    CLIENT_PREFIX,
-    CLIENT_SUFFIX,
-    DOMAIN,
-    SERVICE_RESTORE,
-    SERVICE_SET_LATENCY,
-    SERVICE_SNAPSHOT,
-)
+from .const import CLIENT_PREFIX, CLIENT_SUFFIX, DOMAIN
 from .coordinator import SnapcastUpdateCoordinator
 from .entity import SnapcastCoordinatorEntity
 
@@ -49,19 +36,6 @@ STREAM_STATUS = {
 _LOGGER = logging.getLogger(__name__)
 
 
-def register_services() -> None:
-    """Register snapcast services."""
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(SERVICE_SNAPSHOT, None, "async_snapshot")
-    platform.async_register_entity_service(SERVICE_RESTORE, None, "async_restore")
-    platform.async_register_entity_service(
-        SERVICE_SET_LATENCY,
-        {vol.Required(ATTR_LATENCY): cv.positive_int},
-        "async_set_latency",
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -71,8 +45,6 @@ async def async_setup_entry(
 
     # Fetch coordinator from global data
     coordinator: SnapcastUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-
-    register_services()
 
     _known_client_ids: set[str] = set()
 
