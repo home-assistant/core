@@ -171,7 +171,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bool:
     """Set up Matrix from a config entry."""
     raw_commands: list[dict[str, Any]] = entry.data.get(CONF_COMMANDS, [])
     commands: list[ConfigCommand] = []
@@ -203,19 +203,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Store in runtime_data for quality scale compliance
     entry.runtime_data = matrix_bot
-    hass.data[DOMAIN] = matrix_bot
+    if isinstance(hass.data.get(DOMAIN), dict):
+        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = matrix_bot
+    else:
+        hass.data[DOMAIN] = {entry.entry_id: matrix_bot}
 
     async_setup_services(hass)
+
+    if hass.is_running:
+        hass.async_create_background_task(
+            matrix_bot.async_start(),
+            name=f"{matrix_bot.__class__.__name__}: start for '{matrix_bot._mx_id}'",
+        )
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bool:
     """Unload a config entry."""
-    # Close the MatrixBot stored in runtime_data
-    if hasattr(entry, "runtime_data") and entry.runtime_data:
-        await entry.runtime_data.async_close()
+    if matrix_data := hass.data.get(DOMAIN):
+        if isinstance(matrix_data, dict):
+            matrix_data.pop(entry.entry_id, None)
+            if not matrix_data:
+                hass.data.pop(DOMAIN, None)
+        else:
+            hass.data.pop(DOMAIN, None)
 
-    hass.data.pop(DOMAIN, None)
+    # Close the MatrixBot stored in runtime_data
+    if runtime_data := getattr(entry, "runtime_data", None):
+        await runtime_data.async_close()
+
     return True
 
 
@@ -254,7 +270,10 @@ class MatrixBot:
         self._word_commands: dict[RoomID, dict[WordCommand, ConfigCommand]] = {}
         self._expression_commands: dict[RoomID, list[ConfigCommand]] = {}
         self._reaction_commands: dict[RoomID, dict[ReactionCommand, ConfigCommand]] = {}
+        self._configured_rooms: list[RoomAnyID] = listening_rooms
         self._unparsed_commands = commands
+        self._start_lock = asyncio.Lock()
+        self._started = False
 
         async def stop_client(event: HassEvent) -> None:
             """Run once when Home Assistant stops."""
@@ -265,31 +284,40 @@ class MatrixBot:
 
         async def handle_startup(event: HassEvent) -> None:
             """Run once when Home Assistant finished startup."""
-            self._access_tokens = await self._get_auth_tokens()
-            await self._login()
-            await self._resolve_room_aliases(listening_rooms)
-            self._load_commands(commands)
-            await self._join_rooms()
-
-            # Sync once so that we don't respond to past events.
-            _LOGGER.debug("Starting initial sync for %s", self._mx_id)
-            await self._client.sync(timeout=30_000)
-            _LOGGER.debug("Finished initial sync for %s", self._mx_id)
-
-            self._client.add_event_callback(
-                self._handle_room_message, (ReactionEvent, RoomMessageText)
-            )
-
-            _LOGGER.debug("Starting sync_forever for %s", self._mx_id)
-            self.hass.async_create_background_task(
-                self._client.sync_forever(
-                    timeout=30_000,
-                    loop_sleep_time=1_000,
-                ),  # milliseconds.
-                name=f"{self.__class__.__name__}: sync_forever for '{self._mx_id}'",
-            )
+            await self.async_start()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
+
+    async def async_start(self) -> None:
+        """Start the Matrix client."""
+        async with self._start_lock:
+            if self._started:
+                return
+            self._started = True
+
+        self._access_tokens = await self._get_auth_tokens()
+        await self._login()
+        await self._resolve_room_aliases(self._configured_rooms)
+        self._load_commands(self._unparsed_commands)
+        await self._join_rooms()
+
+        # Sync once so that we don't respond to past events.
+        _LOGGER.debug("Starting initial sync for %s", self._mx_id)
+        await self._client.sync(timeout=30_000)
+        _LOGGER.debug("Finished initial sync for %s", self._mx_id)
+
+        self._client.add_event_callback(
+            self._handle_room_message, (ReactionEvent, RoomMessageText)
+        )
+
+        _LOGGER.debug("Starting sync_forever for %s", self._mx_id)
+        self.hass.async_create_background_task(
+            self._client.sync_forever(
+                timeout=30_000,
+                loop_sleep_time=1_000,
+            ),  # milliseconds.
+            name=f"{self.__class__.__name__}: sync_forever for '{self._mx_id}'",
+        )
 
     def _load_commands(self, commands: list[ConfigCommand]) -> None:
         for command in commands:
@@ -421,14 +449,17 @@ class MatrixBot:
 
     async def _resolve_room_aliases(self, listening_rooms: list[RoomAnyID]) -> None:
         """Resolve any RoomAliases into RoomIDs for the purpose of client interactions."""
-        resolved_rooms = [
-            self.hass.async_create_task(
-                self._resolve_room_alias(room_alias_or_id), eager_start=False
+        if not listening_rooms:
+            return
+
+        resolved_rooms = await asyncio.gather(
+            *(
+                self._resolve_room_alias(room_alias_or_id)
+                for room_alias_or_id in listening_rooms
             )
-            for room_alias_or_id in listening_rooms
-        ]
-        for resolved_room in asyncio.as_completed(resolved_rooms):
-            self._listening_rooms |= await resolved_room
+        )
+        for resolved_room in resolved_rooms:
+            self._listening_rooms |= resolved_room
 
     async def _join_room(self, room_id: RoomID, room_alias_or_id: RoomAnyID) -> None:
         """Join a room or do nothing if already joined."""
@@ -445,13 +476,15 @@ class MatrixBot:
 
     async def _join_rooms(self) -> None:
         """Join the Matrix rooms that we listen for commands in."""
-        rooms = [
-            self.hass.async_create_task(
-                self._join_room(room_id, room_alias_or_id), eager_start=False
+        if not self._listening_rooms:
+            return
+
+        await asyncio.gather(
+            *(
+                self._join_room(room_id, room_alias_or_id)
+                for room_alias_or_id, room_id in self._listening_rooms.items()
             )
-            for room_alias_or_id, room_id in self._listening_rooms.items()
-        ]
-        await asyncio.wait(rooms)
+        )
 
     async def _get_auth_tokens(self) -> JsonObjectType:
         """Read sorted authentication tokens from disk."""
@@ -552,16 +585,18 @@ class MatrixBot:
         self, target_rooms: Sequence[RoomAnyID], message_type: str, content: dict
     ) -> None:
         """Wrap _handle_room_send for multiple target_rooms."""
-        await asyncio.wait(
-            self.hass.async_create_task(
+        if not target_rooms:
+            return
+
+        await asyncio.gather(
+            *(
                 self._handle_room_send(
                     target_room=target_room,
                     message_type=message_type,
                     content=content,
-                ),
-                eager_start=False,
+                )
+                for target_room in target_rooms
             )
-            for target_room in target_rooms
         )
 
     async def _send_image(
@@ -647,16 +682,12 @@ class MatrixBot:
             and (image_paths := data.get(ATTR_IMAGES, []))
             and len(target_rooms) > 0
         ):
-            image_tasks = [
-                self.hass.async_create_task(
-                    self._send_image(
-                        image_path, target_rooms, data.get(ATTR_THREAD_ID)
-                    ),
-                    eager_start=False,
+            await asyncio.gather(
+                *(
+                    self._send_image(image_path, target_rooms, data.get(ATTR_THREAD_ID))
+                    for image_path in image_paths
                 )
-                for image_path in image_paths
-            ]
-            await asyncio.wait(image_tasks)
+            )
 
     async def _send_reaction(
         self, reaction: str, target_room: RoomAnyID, message_id: str
@@ -693,3 +724,6 @@ class MatrixBot:
             service.data[ATTR_ROOM],
             service.data[ATTR_MESSAGE_ID],
         )
+
+
+type MatrixConfigEntry = ConfigEntry[MatrixBot]

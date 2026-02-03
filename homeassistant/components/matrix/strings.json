@@ -79,6 +79,10 @@
     "react": {
       "description": "Sends a reaction to a message.",
       "fields": {
+        "config_entry_id": {
+          "description": "The config entry to use when multiple Matrix accounts are configured.",
+          "name": "Config entry"
+        },
         "message_id": {
           "description": "The ID of the message to react to.",
           "name": "Message ID"
@@ -97,6 +101,10 @@
     "send_message": {
       "description": "Sends message to target room(s).",
       "fields": {
+        "config_entry_id": {
+          "description": "The config entry to use when multiple Matrix accounts are configured.",
+          "name": "Config entry"
+        },
         "data": {
           "description": "Extended information of notification.",
           "name": "Data"

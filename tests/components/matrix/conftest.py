@@ -326,7 +326,9 @@ async def matrix_bot(
 
     # Accessing hass.data in tests is not desirable, but all the tests here
     # currently do this.
-    assert isinstance(matrix_bot := hass.data[DOMAIN], MatrixBot)
+    assert isinstance(
+        matrix_bot := hass.data[DOMAIN][config_entry.entry_id], MatrixBot
+    )
 
     await hass.async_start()
 

@@ -38,7 +38,7 @@ async def test_join(
 
     # Accessing hass.data in tests is not desirable, but all the tests here
     # currently do this.
-    matrix_bot = hass.data[DOMAIN]
+    matrix_bot = hass.data[DOMAIN][config_entry.entry_id]
 
     for room_id in TEST_JOINABLE_ROOMS:
         assert f"Joined or already in room '{room_id}'" in caplog.messages

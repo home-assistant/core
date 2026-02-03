@@ -16,6 +16,8 @@ ATTR_REACTION = "reaction"  # reaction
 ATTR_ROOM = "room"  # room id
 ATTR_MESSAGE_ID = "message_id"  # message id
 
+CONF_CONFIG_ENTRY_ID = "config_entry_id"
+
 CONF_HOMESERVER = "homeserver"
 CONF_ROOMS_REGEX = "^[!|#][^:]*:.*"
 
