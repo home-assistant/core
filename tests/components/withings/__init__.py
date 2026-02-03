@@ -67,8 +67,8 @@ async def setup_integration(
 async def prepare_webhook_setup(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Prepare webhooks are registered by waiting a second."""
-    freezer.tick(timedelta(seconds=1))
+    """Prepare webhooks are registered by waiting for the registration delay."""
+    freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
