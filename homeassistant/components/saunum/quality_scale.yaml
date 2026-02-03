@@ -49,7 +49,7 @@ rules:
     status: exempt
     comment: Device cannot be discovered and the Modbus TCP API does not provide MAC address or other unique network identifiers needed to update connection information.
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
@@ -73,8 +73,8 @@ rules:
     comment: Integration controls a single device; no dynamic device discovery needed.
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession:
     status: exempt
     comment: Integration uses Modbus TCP protocol and does not make HTTP requests.
-  strict-typing: todo
+  strict-typing: done

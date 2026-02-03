@@ -49,8 +49,8 @@ DEFAULT_NAME = "Template Select"
 
 SELECT_COMMON_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_OPTIONS): cv.template,
-        vol.Optional(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
+        vol.Required(ATTR_OPTIONS): cv.template,
+        vol.Required(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_STATE): cv.template,
     }
 )
@@ -209,7 +209,6 @@ class TriggerSelectEntity(TriggerEntity, AbstractTemplateSelect):
         self._process_data()
 
         if not self.available:
-            self.async_write_ha_state()
             return
 
         write_ha_state = False

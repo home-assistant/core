@@ -71,6 +71,7 @@ from .const import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPE_LABEL,
     ATTR_HOME_ID,
+    ATTR_HOME_ID_HEX,
     ATTR_LABEL,
     ATTR_NODE_ID,
     ATTR_PARAMETERS,
@@ -123,6 +124,7 @@ from .helpers import (
     async_disable_server_logging_if_needed,
     async_enable_server_logging_if_needed,
     async_enable_statistics,
+    format_home_id_for_display,
     get_device_id,
     get_device_id_ext,
     get_network_identifier_for_notification,
@@ -840,19 +842,26 @@ class NodeEvents:
         # After ensuring the node is set up in HA, we should check if the node's
         # device config has changed, and if so, issue a repair registry entry for a
         # possible reinterview
-        if not node.is_controller_node and await node.async_has_device_config_changed():
-            device_name = device.name_by_user or device.name or "Unnamed device"
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                f"device_config_file_changed.{device.id}",
-                data={"device_id": device.id, "device_name": device_name},
-                is_fixable=True,
-                is_persistent=False,
-                translation_key="device_config_file_changed",
-                translation_placeholders={"device_name": device_name},
-                severity=IssueSeverity.WARNING,
-            )
+        if not node.is_controller_node:
+            issue_id = f"device_config_file_changed.{device.id}"
+            if await node.async_has_device_config_changed():
+                device_name = device.name_by_user or device.name or "Unnamed device"
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    issue_id,
+                    data={"device_id": device.id, "device_name": device_name},
+                    is_fixable=True,
+                    is_persistent=False,
+                    translation_key="device_config_file_changed",
+                    translation_placeholders={"device_name": device_name},
+                    severity=IssueSeverity.WARNING,
+                )
+            else:
+                # Clear any existing repair issue if the device config is not considered
+                # changed. This can happen when the original issue was created by
+                # an upstream bug, or the change has been reverted.
+                async_delete_issue(self.hass, DOMAIN, issue_id)
 
     async def async_handle_discovery_info(
         self,
@@ -948,6 +957,7 @@ class NodeEvents:
                 ATTR_DOMAIN: DOMAIN,
                 ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: driver.controller.home_id,
+                ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
                 ATTR_ENDPOINT: notification.endpoint,
                 ATTR_DEVICE_ID: device.id,
                 ATTR_COMMAND_CLASS: notification.command_class,
@@ -985,6 +995,7 @@ class NodeEvents:
             ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: notification.node.node_id,
             ATTR_HOME_ID: driver.controller.home_id,
+            ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
             ATTR_ENDPOINT: notification.endpoint_idx,
             ATTR_DEVICE_ID: device.id,
             ATTR_COMMAND_CLASS: notification.command_class,
@@ -1070,6 +1081,7 @@ class NodeEvents:
             {
                 ATTR_NODE_ID: value.node.node_id,
                 ATTR_HOME_ID: driver.controller.home_id,
+                ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
                 ATTR_DEVICE_ID: device.id,
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_COMMAND_CLASS: value.command_class,

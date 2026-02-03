@@ -1,4 +1,21 @@
 {
+  "conditions": {
+    "is_cooling": {
+      "condition": "mdi:snowflake"
+    },
+    "is_drying": {
+      "condition": "mdi:water-percent"
+    },
+    "is_heating": {
+      "condition": "mdi:fire"
+    },
+    "is_off": {
+      "condition": "mdi:power-off"
+    },
+    "is_on": {
+      "condition": "mdi:power-on"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:thermostat",
@@ -98,6 +115,21 @@
     }
   },
   "triggers": {
+    "current_humidity_changed": {
+      "trigger": "mdi:water-percent"
+    },
+    "current_humidity_crossed_threshold": {
+      "trigger": "mdi:water-percent"
+    },
+    "current_temperature_changed": {
+      "trigger": "mdi:thermometer"
+    },
+    "current_temperature_crossed_threshold": {
+      "trigger": "mdi:thermometer"
+    },
+    "hvac_mode_changed": {
+      "trigger": "mdi:thermostat"
+    },
     "started_cooling": {
       "trigger": "mdi:snowflake"
     },
@@ -106,6 +138,18 @@
     },
     "started_heating": {
       "trigger": "mdi:fire"
+    },
+    "target_humidity_changed": {
+      "trigger": "mdi:water-percent"
+    },
+    "target_humidity_crossed_threshold": {
+      "trigger": "mdi:water-percent"
+    },
+    "target_temperature_changed": {
+      "trigger": "mdi:thermometer"
+    },
+    "target_temperature_crossed_threshold": {
+      "trigger": "mdi:thermometer"
     },
     "turned_off": {
       "trigger": "mdi:power-off"

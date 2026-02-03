@@ -33,6 +33,7 @@ from .entity import (
     T,
     async_all_device_entities,
 )
+from .utils import async_ufp_instance_command
 
 ATTR_PREV_MIC = "prev_mic_level"
 ATTR_PREV_RECORD = "prev_record_mode"
@@ -438,10 +439,12 @@ class ProtectBaseSwitch(ProtectIsOnEntity):
 
     entity_description: ProtectSwitchEntityDescription
 
+    @async_ufp_instance_command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.entity_description.ufp_set(self.device, True)
 
+    @async_ufp_instance_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.entity_description.ufp_set(self.device, False)
@@ -500,12 +503,14 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
         if self.entity_id:
             self._update_previous_attr()
 
+    @async_ufp_instance_command
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._previous_mic_level = self.device.mic_volume
         self._previous_record_mode = self.device.recording_settings.mode
         await self.device.set_privacy(True, 0, RecordingMode.NEVER)
 
+    @async_ufp_instance_command
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         extra_state = self.extra_state_attributes or {}
