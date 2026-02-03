@@ -284,7 +284,7 @@
       "name": "Next"
     },
     "media_pause": {
-      "description": "Pauses a media player.",
+      "description": "Pauses playback on a media player.",
       "name": "[%key:common::action::pause%]"
     },
     "media_play": {
