@@ -6,6 +6,86 @@
 
 This repository contains the LoJack vehicle tracking integration being prepared for submission to Home Assistant Core. The integration allows Home Assistant users to track vehicles equipped with LoJack/Spireon devices.
 
+## Repository Architecture
+
+There are two related repositories:
+
+| Repository | Purpose | URL |
+|------------|---------|-----|
+| **homeassistant_lojack** | HACS custom component (primary development) | https://github.com/devinslick/homeassistant_lojack |
+| **homeassistant-core-with-lojack** | Core submission testing (this repo) | Fork of home-assistant/core |
+
+Development happens in the HACS repo (`homeassistant_lojack`), then files are synced to this repo for Core submission testing.
+
+## Syncing from HACS Repo
+
+When the HACS repo is updated, sync the component files to this Core testing repo:
+
+### Quick Sync (Recommended)
+
+```bash
+# Clone or update the HACS repo
+git clone https://github.com/devinslick/homeassistant_lojack.git /tmp/homeassistant_lojack
+# Or if already cloned:
+# git -C /tmp/homeassistant_lojack pull
+
+# Copy component files (from custom_components/lojack to homeassistant/components/lojack)
+cp /tmp/homeassistant_lojack/custom_components/lojack/__init__.py homeassistant/components/lojack/
+cp /tmp/homeassistant_lojack/custom_components/lojack/config_flow.py homeassistant/components/lojack/
+cp /tmp/homeassistant_lojack/custom_components/lojack/const.py homeassistant/components/lojack/
+cp /tmp/homeassistant_lojack/custom_components/lojack/device_tracker.py homeassistant/components/lojack/
+cp /tmp/homeassistant_lojack/custom_components/lojack/sensor.py homeassistant/components/lojack/
+cp /tmp/homeassistant_lojack/custom_components/lojack/binary_sensor.py homeassistant/components/lojack/
+cp /tmp/homeassistant_lojack/custom_components/lojack/strings.json homeassistant/components/lojack/
+```
+
+### Files NOT to Sync
+
+The following files are **Core-specific** and should NOT be overwritten from the HACS repo:
+
+| File | Reason |
+|------|--------|
+| `manifest.json` | Core format differs (no `version`, `issue_tracker`; has `quality_scale`, `loggers`) |
+| `quality_scale.yaml` | Core-only file for quality requirements |
+| `TESTING_INSTRUCTIONS.md` | Testing documentation (Core-specific) |
+| `REQUIREMENTS_CHECKLIST.md` | Core submission checklist |
+
+### Manifest Differences
+
+**HACS manifest** (`homeassistant_lojack`):
+```json
+{
+  "version": "0.6.0",
+  "issue_tracker": "https://github.com/devinslick/homeassistant_lojack/issues",
+  "documentation": "https://github.com/devinslick/homeassistant_lojack",
+  "integration_type": "device"
+}
+```
+
+**Core manifest** (this repo) - DO NOT include `version` or `issue_tracker`:
+```json
+{
+  "documentation": "https://www.home-assistant.io/integrations/lojack",
+  "integration_type": "hub",
+  "quality_scale": "bronze",
+  "loggers": ["lojack_api"]
+}
+```
+
+### After Syncing
+
+1. Run tests to verify compatibility:
+   ```bash
+   pytest tests/components/lojack -v
+   ```
+
+2. Rebuild the Docker test container:
+   ```powershell
+   .\build-lojack-generated.ps1
+   ```
+
+3. Test interactively in the container
+
 ## Test Container
 
 A pre-built test container is available on Docker Hub for easy testing:
