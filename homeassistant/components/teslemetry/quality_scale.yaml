@@ -46,11 +46,7 @@ rules:
       test fixture. Clarify _alt and _noscope fixture purposes. Test error messages in
       test_service_validation_errors.
   # Gold
-  devices:
-    status: todo
-    comment: |
-      Add model id to device info. VIN sensor may be redundant (already serial number in device).
-      Version sensor should be sw_version in device info instead.
+  devices: done
   diagnostics: done
   discovery:
     status: exempt
