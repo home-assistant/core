@@ -1,0 +1,34 @@
+start_session:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: saunum
+    duration:
+      required: false
+      example: 120
+      default: 120
+      selector:
+        number:
+          min: 1
+          max: 720
+          unit_of_measurement: min
+    target_temperature:
+      required: false
+      example: 80
+      default: 80
+      selector:
+        number:
+          min: 40
+          max: 100
+          unit_of_measurement: "°C"
+    fan_duration:
+      required: false
+      example: 10
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 30
+          unit_of_measurement: min
