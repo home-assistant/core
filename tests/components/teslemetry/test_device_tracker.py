@@ -61,7 +61,6 @@ async def test_device_tracker_noscope(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_device_tracker_streaming(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
@@ -90,24 +89,16 @@ async def test_device_tracker_streaming(
     )
     await hass.async_block_till_done()
 
-    # Assert the entities restored their values
-    for entity_id in (
-        "device_tracker.test_location",
-        "device_tracker.test_route",
-        "device_tracker.test_origin",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-state")
+    # Assert the entities have correct state values
+    assert hass.states.get("device_tracker.test_location").state == "not_home"
+    assert hass.states.get("device_tracker.test_route").state == "home"
+    assert hass.states.get("device_tracker.test_origin").state == "unknown"
 
     # Reload the entry
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
     # Assert the entities restored their values
-    for entity_id in (
-        "device_tracker.test_location",
-        "device_tracker.test_route",
-        "device_tracker.test_origin",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-restore")
+    assert hass.states.get("device_tracker.test_location").state == "not_home"
+    assert hass.states.get("device_tracker.test_route").state == "not_home"
+    assert hass.states.get("device_tracker.test_origin").state == "unknown"

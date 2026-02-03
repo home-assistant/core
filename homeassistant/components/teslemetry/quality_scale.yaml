@@ -38,13 +38,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      Discourage snapshot testing for state verification (e.g. test_binary_sensors_connectivity);
-      use concrete assertions instead. Patch devices where they're used. Use entity_registry as
-      test fixture. Clarify _alt and _noscope fixture purposes. Test error messages in
-      test_service_validation_errors.
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: done
