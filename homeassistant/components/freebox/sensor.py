@@ -118,9 +118,13 @@ async def async_setup_entry(
     entities.extend(
         [FreeboxSensor(router, description) for description in CONNECTION_SENSORS]
     )
+
     entities.extend(
-        [FreeboxSensor(router, description) for description in FTTH_SENSORS]
+        FreeboxSensor(router, description)
+        for description in FTTH_SENSORS
+        if router.sensors_connection.get(description.key) is not None
     )
+
     entities.extend(
         [FreeboxCallSensor(router, description) for description in CALL_SENSORS]
     )
@@ -165,8 +169,10 @@ class FreeboxSensor(SensorEntity):
     @callback
     def async_update_state(self) -> None:
         """Update the Freebox sensor."""
-        state = self._router.sensors[self.entity_description.key]
-        if self.native_unit_of_measurement == UnitOfDataRate.KILOBYTES_PER_SECOND:
+        state = self._router.sensors.get(self.entity_description.key)
+        if state is None:
+            self._attr_native_value = None
+        elif self.native_unit_of_measurement == UnitOfDataRate.KILOBYTES_PER_SECOND:
             self._attr_native_value = round(state / 1000, 2)
         else:
             self._attr_native_value = state

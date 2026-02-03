@@ -127,8 +127,7 @@ class FreeboxRouter:
         self.supports_raid = True
         self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
-        self.sensors_connection: dict[str, float] = {}
-        self.sensors_ftth: dict[str, Any] = {}
+        self.sensors_connection: dict[str, float | None] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
@@ -181,8 +180,8 @@ class FreeboxRouter:
         """Update Freebox sensors."""
 
         # Reset FTTH information
-        self.sensors_connection.pop("sfp_pwr_rx", None)
-        self.sensors_connection.pop("sfp_pwr_tx", None)
+        self.sensors_connection["sfp_pwr_rx"] = None
+        self.sensors_connection["sfp_pwr_tx"] = None
 
         # System sensors
         syst_datas: dict[str, Any] = await self._api.system.get_config()
@@ -217,8 +216,8 @@ class FreeboxRouter:
                 else:
                     _LOGGER.warning("Unexpected type for sfp_pwr_tx: %r", sfp_pwr_tx)
         else:
-            self.sensors_connection.pop("sfp_pwr_rx", None)
-            self.sensors_connection.pop("sfp_pwr_tx", None)
+            self.sensors_connection["sfp_pwr_rx"] = None
+            self.sensors_connection["sfp_pwr_tx"] = None
 
         self._attrs = {
             "IPv4": connection_datas.get("ipv4"),
