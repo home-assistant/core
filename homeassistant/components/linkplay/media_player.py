@@ -10,7 +10,6 @@ from linkplay.bridge import LinkPlayBridge
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
 from linkplay.controller import LinkPlayController, LinkPlayMultiroom
 from linkplay.exceptions import LinkPlayRequestException
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -25,7 +24,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -106,15 +104,6 @@ SEEKABLE_FEATURES: MediaPlayerEntityFeature = (
     | MediaPlayerEntityFeature.SEEK
 )
 
-SERVICE_PLAY_PRESET = "play_preset"
-ATTR_PRESET_NUMBER = "preset_number"
-
-SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
-    {
-        vol.Required(ATTR_PRESET_NUMBER): cv.positive_int,
-    }
-)
-
 RETRY_POLL_MAXIMUM = 3
 SCAN_INTERVAL = timedelta(seconds=5)
 PARALLEL_UPDATES = 1
@@ -126,14 +115,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a media player from a config entry."""
-
-    # register services
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_PLAY_PRESET, SERVICE_PLAY_PRESET_SCHEMA, "async_play_preset"
-    )
-
-    # add entities
     async_add_entities([LinkPlayMediaPlayerEntity(entry.runtime_data.bridge)])
 
 
