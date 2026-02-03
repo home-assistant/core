@@ -73,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="model_deprecated",
             )
+            break
 
     return True
 
