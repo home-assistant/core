@@ -10,7 +10,11 @@ from typing import TYPE_CHECKING, Any
 
 from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import ContextType, IssueType, StoreInfo
-from aiohasupervisor.models.mounts import CIFSMountResponse, MountState, NFSMountResponse
+from aiohasupervisor.models.mounts import (
+    CIFSMountResponse,
+    MountState,
+    NFSMountResponse,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
@@ -618,28 +622,34 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         # Find mount failure issues that correspond to mounts that are now active
         for issue in issues_info.issues:
             if (
-                issue.context == ContextType.MOUNT
-                and issue.type == IssueType.MOUNT_FAILED
-                and issue.reference
-                and issue.reference in mounts
+                issue.context != ContextType.MOUNT
+                or issue.type != IssueType.MOUNT_FAILED
+                or not issue.reference
+                or issue.reference not in mounts
             ):
-                mount = mounts[issue.reference]
-                if mount.state == MountState.ACTIVE:
-                    # Mount is now active, try to resolve the issue
-                    try:
-                        await self.supervisor_client.resolution.apply_suggestion(
-                            issue.suggestions[0].uuid
-                        )
-                        _LOGGER.info(
-                            "Automatically resolved mount failure issue for %s",
-                            issue.reference,
-                        )
-                    except SupervisorError as err:
-                        _LOGGER.warning(
-                            "Failed to automatically resolve mount issue for %s: %s",
-                            issue.reference,
-                            err,
-                        )
+                continue
+
+            mount = mounts[issue.reference]
+            if mount.state != MountState.ACTIVE:
+                continue
+
+            # Mount is now active, try to resolve the issue
+            try:
+                await self.supervisor_client.resolution.apply_suggestion(
+                    issue.suggestions[0].uuid
+                )
+            except SupervisorError as err:
+                _LOGGER.warning(
+                    "Failed to automatically resolve mount issue for %s: %s",
+                    issue.reference,
+                    err,
+                )
+                continue
+
+            _LOGGER.info(
+                "Automatically resolved mount failure issue for %s",
+                issue.reference,
+            )
 
     @callback
     def unload(self) -> None:
