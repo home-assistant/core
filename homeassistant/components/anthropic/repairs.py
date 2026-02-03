@@ -101,6 +101,8 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
     def _iter_deprecated_subentries(self) -> Iterator[tuple[str, str]]:
         """Yield entry/subentry pairs that use deprecated models."""
         for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if entry.state is not ConfigEntryState.LOADED:
+                continue
             for subentry in entry.subentries.values():
                 model = subentry.data.get(CONF_CHAT_MODEL)
                 if model and model.startswith(tuple(DEPRECATED_MODELS)):
@@ -225,7 +227,7 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
             return
 
         entry = self.hass.config_entries.async_get_entry(entry_id)
-        if entry is None:
+        if entry is None or entry.state is not ConfigEntryState.LOADED:
             return
 
         changed = False

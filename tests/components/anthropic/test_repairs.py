@@ -37,6 +37,7 @@ def _make_entry(
         subentries_data=subentries_data,
     )
     entry.add_to_hass(hass)
+    object.__setattr__(entry, "state", ConfigEntryState.LOADED)
     entry.runtime_data = MagicMock()
     return entry
 
@@ -246,7 +247,6 @@ async def test_repair_flow_defers_reload_until_entry_done(
             },
         ],
     )
-    object.__setattr__(entry, "state", ConfigEntryState.LOADED)
 
     ir.async_create_issue(
         hass,
