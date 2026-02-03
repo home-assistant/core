@@ -486,39 +486,34 @@ class SimpliSafe:
         assert self._api.websocket
 
         retries = 0
-        try:
-            while True:
-                try:
-                    await self._api.websocket.async_connect()
-                    retries = 0
-                    await self._api.websocket.async_listen()
-                    # Listen returned normally, retry with a short regular delay
-                    LOGGER.debug("Websocket listen returned normally; reconnecting")
-                    await asyncio.sleep(WEBSOCKET_RETRY_DELAY)
-                except WebsocketError as err:
-                    retries += 1
-                    if retries >= WEBSOCKET_RECONNECT_RETRIES:
-                        LOGGER.error(
-                            "Websocket connection failed (%s/%s): %s",
-                            retries,
-                            WEBSOCKET_RECONNECT_RETRIES,
-                            err,
-                        )
-                        return
-
-                    delay = WEBSOCKET_RETRY_DELAY * (2 ** (retries - 1))
-                    LOGGER.debug(
-                        "Websocket error (%s/%s): %s; retrying in %s seconds",
+        while True:
+            try:
+                await self._api.websocket.async_connect()
+                await self._api.websocket.async_listen()
+            except asyncio.CancelledError:
+                await self._api.websocket.async_disconnect()
+                raise
+            except WebsocketError as err:
+                retries += 1
+                if retries >= WEBSOCKET_RECONNECT_RETRIES:
+                    LOGGER.error(
+                        "Websocket connection failed (%s/%s): %s",
                         retries,
                         WEBSOCKET_RECONNECT_RETRIES,
                         err,
-                        delay,
                     )
+                    return
 
-                    await asyncio.sleep(delay)
-        except asyncio.CancelledError:
-            await self._api.websocket.async_disconnect()
-            raise
+                delay = WEBSOCKET_RETRY_DELAY * (2 ** (retries - 1))
+                LOGGER.debug(
+                    "Websocket error (%s/%s): %s; retrying in %s seconds",
+                    retries,
+                    WEBSOCKET_RECONNECT_RETRIES,
+                    err,
+                    delay,
+                )
+
+                await asyncio.sleep(delay)
 
     async def _async_cancel_websocket_loop(self) -> None:
         """Cancel the websocket loop task, if running."""

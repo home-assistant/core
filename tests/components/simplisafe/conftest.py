@@ -181,6 +181,7 @@ def system_v3_fixture(
     system.sensor_data = data_sensor
     system.settings_data = data_settings
     system.generate_device_objects()
+    system.async_update = AsyncMock(return_value=None)
     return system
 
 
@@ -190,20 +191,21 @@ def unique_id_fixture() -> str:
     return USER_ID
 
 
-async def never_return() -> None:
-    """Never returning task to simulate waiting on websocket listen."""
-    while True:
-        try:
-            await asyncio.sleep(0)
-        except asyncio.CancelledError:
-            return
-
-
 @pytest.fixture(name="websocket")
 def websocket_fixture() -> Mock:
     """Define a simplisafe-python websocket object."""
-    return Mock(
+    listen_event = asyncio.Event()
+
+    async def listen_wait_event() -> None:
+        """Dummy websocket listen that waits for an event."""
+        await listen_event.wait()
+
+    ws = Mock(
         async_connect=AsyncMock(),
         async_disconnect=AsyncMock(),
-        async_listen=never_return,
+        async_listen=listen_wait_event,
     )
+
+    # Expose the event so tests can trigger it
+    ws.listen_event = listen_event
+    return ws
