@@ -10,7 +10,8 @@ from homeassistant.components.splunk import DATA_FILTER
 from homeassistant.components.splunk.const import CONF_FILTER, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.setup import async_setup_component
 
@@ -351,3 +352,192 @@ async def test_event_listener_response_error(
     # Change the state to trigger an event - should not raise
     hass.states.async_set("sensor.test", "456")
     await hass.async_block_till_done()
+
+
+async def test_yaml_filter_only_no_deprecation_issue(hass: HomeAssistant) -> None:
+    """Test YAML with only filter does not create deprecation issue."""
+    with patch(
+        "homeassistant.components.splunk.hass_splunk", autospec=True
+    ) as mock_client_class:
+        mock_client = MagicMock()
+        mock_client.check = AsyncMock(return_value=True)
+        mock_client.queue = AsyncMock()
+        mock_client_class.return_value = mock_client
+
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    # Only filter, no connection settings (no token)
+                    CONF_FILTER: {
+                        "include_domains": ["sensor"],
+                    },
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    # Verify no config entry was created (no import)
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 0
+
+    # Verify entity filter is stored in hass.data
+    assert DATA_FILTER in hass.data
+    entity_filter = hass.data[DATA_FILTER]
+    assert not entity_filter.empty_filter
+    assert entity_filter("sensor.test")
+
+    # Verify no deprecation issue was created
+    issue_registry = ir.async_get(hass)
+    issues = issue_registry.issues
+    assert not any(
+        issue_id[0] == DOMAIN and "deprecated" in issue_id[1] for issue_id in issues
+    )
+    assert not any(
+        issue_id[0] == HOMEASSISTANT_DOMAIN and DOMAIN in issue_id[1]
+        for issue_id in issues
+    )
+
+
+async def test_yaml_with_connection_creates_deprecation_issue(
+    hass: HomeAssistant,
+) -> None:
+    """Test YAML with connection settings creates deprecation issue."""
+    with (
+        patch(
+            "homeassistant.components.splunk.hass_splunk", autospec=True
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.splunk.config_flow.hass_splunk", autospec=True
+        ) as mock_config_flow_client_class,
+        patch("homeassistant.components.splunk.async_setup_entry", return_value=True),
+    ):
+        mock_client = MagicMock()
+        mock_client.check = AsyncMock(return_value=True)
+        mock_client.queue = AsyncMock()
+
+        mock_client_class.return_value = mock_client
+        mock_config_flow_client_class.return_value = mock_client
+
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    CONF_TOKEN: "test-token",
+                    CONF_HOST: "localhost",
+                    CONF_PORT: 8088,
+                    CONF_SSL: False,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    # Verify import flow was triggered
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].source == SOURCE_IMPORT
+
+    # Verify deprecation issue was created in homeassistant domain
+    issue_registry = ir.async_get(hass)
+    assert (HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}") in issue_registry.issues
+
+
+async def test_yaml_import_error_creates_specific_issue(hass: HomeAssistant) -> None:
+    """Test YAML import with connection error creates specific issue."""
+    with (
+        patch(
+            "homeassistant.components.splunk.hass_splunk", autospec=True
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.splunk.config_flow.hass_splunk", autospec=True
+        ) as mock_config_flow_client_class,
+    ):
+        mock_client = MagicMock()
+        mock_client.check = AsyncMock(return_value=True)
+        mock_client.queue = AsyncMock()
+        mock_client_class.return_value = mock_client
+
+        # Config flow client fails connectivity check
+        mock_flow_client = MagicMock()
+        mock_flow_client.check = AsyncMock(return_value=False)
+        mock_config_flow_client_class.return_value = mock_flow_client
+
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    CONF_TOKEN: "test-token",
+                    CONF_HOST: "invalid-host",
+                    CONF_PORT: 8088,
+                    CONF_SSL: False,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    # Verify no config entry was created (import failed)
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 0
+
+    # Verify error-specific issue was created
+    issue_registry = ir.async_get(hass)
+    assert (
+        DOMAIN,
+        "deprecated_yaml_import_issue_cannot_connect",
+    ) in issue_registry.issues
+
+
+async def test_yaml_import_already_configured_creates_deprecation_issue(
+    hass: HomeAssistant,
+) -> None:
+    """Test YAML import when already configured still creates deprecation issue."""
+    # First set up an existing config entry before YAML import
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="localhost:8088",
+        data={
+            CONF_TOKEN: "existing-token",
+            CONF_HOST: "localhost",
+            CONF_PORT: 8088,
+            CONF_SSL: False,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.splunk.hass_splunk", autospec=True
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.splunk.config_flow.hass_splunk", autospec=True
+        ) as mock_config_flow_client_class,
+        patch("homeassistant.components.splunk.async_setup_entry", return_value=True),
+    ):
+        mock_client = MagicMock()
+        mock_client.check = AsyncMock(return_value=True)
+        mock_client.queue = AsyncMock()
+
+        mock_client_class.return_value = mock_client
+        mock_config_flow_client_class.return_value = mock_client
+
+        # Set up component with YAML - should see existing entry and abort with single_instance_allowed
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    CONF_TOKEN: "test-token",
+                    CONF_HOST: "localhost",
+                    CONF_PORT: 8088,
+                    CONF_SSL: False,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    # Verify deprecation issue was still created (single_instance_allowed is ok)
+    issue_registry = ir.async_get(hass)
+    assert (HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}") in issue_registry.issues

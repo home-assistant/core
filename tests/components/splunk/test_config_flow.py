@@ -173,10 +173,10 @@ async def test_import_flow_success(
     }
 
 
-async def test_import_flow_invalid_config(
+async def test_import_flow_cannot_connect(
     hass: HomeAssistant, mock_hass_splunk: AsyncMock
 ) -> None:
-    """Test import flow with invalid configuration."""
+    """Test import flow with connection error returns specific error reason."""
     mock_hass_splunk.check.side_effect = [False, True]
 
     result = await hass.config_entries.flow.async_init(
@@ -191,7 +191,51 @@ async def test_import_flow_invalid_config(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_config"
+    # Import now returns specific error reason for deprecation issue creation
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_import_flow_invalid_auth(
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
+) -> None:
+    """Test import flow with invalid auth returns specific error reason."""
+    # Connectivity passes, but token check fails
+    mock_hass_splunk.check.side_effect = [True, False]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_TOKEN: "bad-token",
+            CONF_HOST: "splunk.example.com",
+            CONF_PORT: 8088,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_auth"
+
+
+async def test_import_flow_unknown_error(
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
+) -> None:
+    """Test import flow with unknown error returns specific error reason."""
+    mock_hass_splunk.check.side_effect = Exception("Unexpected error")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            CONF_TOKEN: "test-token",
+            CONF_HOST: "splunk.example.com",
+            CONF_PORT: 8088,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_import_flow_already_configured(

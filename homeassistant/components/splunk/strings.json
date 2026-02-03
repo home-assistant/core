@@ -2,9 +2,12 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_config": "The YAML configuration is invalid and cannot be imported. Please check your configuration.yaml file.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -40,6 +43,20 @@
         "description": "Enter your Splunk HTTP Event Collector (HEC) connection details. You can find the token in your Splunk server under Settings > Data Inputs > HTTP Event Collector.\n\nEntity filtering can be configured in YAML using the `filter` option.",
         "title": "Set up Splunk HTTP Event Collector"
       }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release.\n\nWhile importing your configuration, a connection error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the connection settings from your `{domain}:` configuration and configure the integration via the UI.\n\nNote: Entity filtering via YAML (`filter:`) will continue to work.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release.\n\nWhile importing your configuration, the authentication token was rejected. Please correct your YAML configuration and restart Home Assistant, or remove the connection settings from your `{domain}:` configuration and configure the integration via the UI.\n\nNote: Entity filtering via YAML (`filter:`) will continue to work.",
+      "title": "[%key:component::splunk::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release.\n\nWhile importing your configuration, an unexpected error occurred. Please check your YAML configuration and restart Home Assistant, or remove the connection settings from your `{domain}:` configuration and configure the integration via the UI.\n\nNote: Entity filtering via YAML (`filter:`) will continue to work.",
+      "title": "[%key:component::splunk::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
     }
   }
 }
