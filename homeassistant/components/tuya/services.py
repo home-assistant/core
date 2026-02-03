@@ -94,7 +94,7 @@ async def async_get_meal_plan_data(call: ServiceCall) -> dict[str, Any]:
 
 async def async_set_meal_plan_data(call: ServiceCall) -> None:
     """Handle set_meal_plan_data service call."""
-    device, manager = _get_tuya_device(call.hass, call.data["device_id"])
+    device, manager = _get_tuya_device(call.hass, call.data[ATTR_DEVICE_ID])
 
     # Check if the device has this DP code in its function
     if "meal_plan" not in device.function:
