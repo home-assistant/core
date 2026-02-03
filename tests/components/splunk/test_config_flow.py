@@ -52,16 +52,26 @@ async def test_user_flow_success(
     assert mock_hass_splunk.check.call_count == 2
 
 
-async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        ([False, True], "cannot_connect"),
+        ([True, False], "invalid_auth"),
+        (Exception("Unexpected error"), "unknown"),
+    ],
+)
+async def test_user_flow_error_and_recovery(
+    hass: HomeAssistant,
+    mock_hass_splunk: AsyncMock,
+    side_effect: list[bool] | Exception,
+    error: str,
 ) -> None:
-    """Test user flow with connection error."""
+    """Test user flow errors and recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # Mock connectivity check failure
-    mock_hass_splunk.check.side_effect = [False, True]
+    mock_hass_splunk.check.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -75,44 +85,11 @@ async def test_user_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
-
-async def test_user_flow_invalid_auth(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock
-) -> None:
-    """Test user flow with invalid authentication."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    # Mock connectivity ok but token check fails
-    mock_hass_splunk.check.side_effect = [True, False]
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_TOKEN: "invalid-token",
-            CONF_HOST: "splunk.example.com",
-            CONF_PORT: 8088,
-            CONF_SSL: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_user_flow_unexpected_error(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock
-) -> None:
-    """Test user flow with unexpected error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    mock_hass_splunk.check.side_effect = Exception("Unexpected error")
+    # Test recovery by resetting mock and completing successfully
+    mock_hass_splunk.check.side_effect = None
+    mock_hass_splunk.check.return_value = True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -124,9 +101,7 @@ async def test_user_flow_unexpected_error(
         },
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_already_configured(
