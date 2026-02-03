@@ -286,7 +286,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
                 _LOGGER.debug("battery: %s", battery)
             except (FileNotFoundError, PermissionError) as err:
                 _LOGGER.debug("OS error when accessing battery sensors: %s", err)
-            except (AttributeError, FileNotFoundError):
+            except AttributeError:
                 _LOGGER.debug("OS does not provide battery sensors")
 
         return {
