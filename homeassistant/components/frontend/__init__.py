@@ -7,6 +7,7 @@ from functools import lru_cache, partial
 import logging
 import os
 import pathlib
+import shutil
 from typing import Any, TypedDict
 
 from aiohttp import hdrs, web, web_urldispatcher
@@ -36,6 +37,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.hass_dict import HassKey
 
+from .pr_download import download_pr_artifact
 from .storage import (
     async_setup_frontend_storage,
     async_system_store as async_system_store,
@@ -55,6 +57,10 @@ CONF_EXTRA_MODULE_URL = "extra_module_url"
 CONF_EXTRA_JS_URL_ES5 = "extra_js_url_es5"
 CONF_FRONTEND_REPO = "development_repo"
 CONF_JS_VERSION = "javascript_version"
+CONF_DEVELOPMENT_PR = "development_pr"
+CONF_GITHUB_TOKEN = "github_token"
+
+DEV_ARTIFACTS_DIR = "development_artifacts"
 
 DEFAULT_THEME_COLOR = "#2980b9"
 
@@ -133,6 +139,8 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
+                vol.Inclusive(CONF_DEVELOPMENT_PR, "development_pr"): cv.positive_int,
+                vol.Inclusive(CONF_GITHUB_TOKEN, "development_pr"): cv.string,
                 vol.Optional(CONF_THEMES): vol.All(dict, _validate_themes),
                 vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
                     cv.ensure_list, [cv.string]
@@ -425,6 +433,49 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
     repo_path = conf.get(CONF_FRONTEND_REPO)
+    dev_pr_number = conf.get(CONF_DEVELOPMENT_PR)
+
+    pr_cache_dir = pathlib.Path(hass.config.cache_path(DOMAIN, DEV_ARTIFACTS_DIR))
+    if not dev_pr_number and pr_cache_dir.exists():
+        try:
+            await hass.async_add_executor_job(shutil.rmtree, pr_cache_dir)
+            _LOGGER.debug("Cleaned up frontend development artifacts")
+        except OSError as err:
+            _LOGGER.warning(
+                "Could not clean up frontend development artifacts: %s", err
+            )
+
+    # Priority: development_repo > development_pr > integrated
+    if repo_path and dev_pr_number:
+        _LOGGER.warning(
+            "Both development_repo and development_pr are specified for frontend. "
+            "Using development_repo, remove development_repo to use "
+            "automatic PR download"
+        )
+        dev_pr_number = None
+
+    if dev_pr_number:
+        github_token: str = conf[CONF_GITHUB_TOKEN]
+
+        try:
+            dev_pr_dir = await download_pr_artifact(
+                hass, dev_pr_number, github_token, pr_cache_dir
+            )
+            repo_path = str(dev_pr_dir)
+            _LOGGER.info("Using frontend from PR #%s", dev_pr_number)
+        except HomeAssistantError as err:
+            _LOGGER.error(
+                "Failed to download PR #%s: %s, falling back to the integrated frontend",
+                dev_pr_number,
+                err,
+            )
+        except Exception:  # pylint: disable=broad-exception-caught
+            _LOGGER.exception(
+                "Unexpected error downloading PR #%s, "
+                "falling back to the integrated frontend",
+                dev_pr_number,
+            )
+
     is_dev = repo_path is not None
     root_path = _frontend_root(repo_path)
 

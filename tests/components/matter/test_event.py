@@ -25,7 +25,7 @@ async def test_events(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.EVENT)
 
 
-@pytest.mark.parametrize("node_fixture", ["generic_switch"])
+@pytest.mark.parametrize("node_fixture", ["mock_generic_switch"])
 async def test_generic_switch_node(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -64,7 +64,7 @@ async def test_generic_switch_node(
     assert state.attributes[ATTR_EVENT_TYPE] == "initial_press"
 
 
-@pytest.mark.parametrize("node_fixture", ["generic_switch_multi"])
+@pytest.mark.parametrize("node_fixture", ["mock_generic_switch_multi"])
 async def test_generic_switch_multi_node(
     hass: HomeAssistant,
     matter_client: MagicMock,
