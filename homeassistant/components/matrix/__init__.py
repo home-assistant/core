@@ -212,10 +212,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     # Close the MatrixBot stored in runtime_data
-    if hasattr(entry, "runtime_data") and entry.runtime_data:
-        await entry.runtime_data.async_close()
+    runtime_bot = getattr(entry, "runtime_data", None)
+    if runtime_bot is not None:
+        await runtime_bot.async_close()
 
-    hass.data.pop(DOMAIN, None)
+    # Only remove hass.data[DOMAIN] if it belongs to this entry
+    if hass.data.get(DOMAIN) is runtime_bot:
+        hass.data.pop(DOMAIN, None)
     return True
 
 
