@@ -13,7 +13,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -172,16 +171,31 @@ async def test_setup_without_yaml(hass: HomeAssistant) -> None:
 
 
 async def test_event_listener_with_filter(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_hass_splunk: AsyncMock
 ) -> None:
     """Test event listener respects entity filter from YAML."""
-    # Set up a filter that only allows sensor entities
-    hass.data[DATA_FILTER] = FILTER_SCHEMA({"include_domains": ["sensor"]})
-
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    # Set up via YAML with a filter that only allows sensor entities
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                CONF_TOKEN: "test-token",
+                CONF_HOST: "localhost",
+                CONF_PORT: 8088,
+                CONF_SSL: False,
+                CONF_FILTER: {
+                    "include_domains": ["sensor"],
+                },
+            }
+        },
+    )
     await hass.async_block_till_done()
+
+    # Verify config entry was created
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
 
     # Reset queue call count after startup event
     mock_hass_splunk.queue.reset_mock()
