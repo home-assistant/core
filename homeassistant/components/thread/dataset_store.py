@@ -54,7 +54,7 @@ class DatasetEntry:
         return cast(tlv_parser.Channel, channel).channel
 
     @cached_property
-    def dataset(self) -> dict[MeshcopTLVType, tlv_parser.MeshcopTLVItem]:
+    def dataset(self) -> dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem]:
         """Return the dataset in dict format."""
         return tlv_parser.parse_tlv(self.tlv)
 
