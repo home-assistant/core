@@ -42,7 +42,9 @@ def _raises_exception(integration: Integration) -> bool:
         module = ast_parse_module(module_file)
         for node in ast.walk(module):
             if integration.domain == "telegram_bot":
-                integration.add_warning(f"Checking raises in {module_file}")
+                integration.add_warning(
+                    "quality_scale", f"Checking raises in {module_file}"
+                )
             if (
                 isinstance(node, ast.Raise)
                 and _get_exception_name(node.exc) in _VALID_EXCEPTIONS
