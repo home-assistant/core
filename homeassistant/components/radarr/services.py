@@ -1,7 +1,7 @@
 """Define services for the Radarr integration."""
 
 from collections.abc import Awaitable, Callable
-from typing import Any, cast
+from typing import Any, Final, cast
 
 from aiopyarr import exceptions
 import voluptuous as vol
@@ -12,15 +12,17 @@ from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, cal
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import selector
 
-from .const import (
-    ATTR_ENTRY_ID,
-    ATTR_MOVIES,
-    DOMAIN,
-    SERVICE_GET_MOVIES,
-    SERVICE_GET_QUEUE,
-)
+from .const import DOMAIN
 from .coordinator import RadarrConfigEntry
 from .helpers import format_movies, format_queue
+
+# Service names
+SERVICE_GET_MOVIES: Final = "get_movies"
+SERVICE_GET_QUEUE: Final = "get_queue"
+
+# Service attributes
+ATTR_MOVIES: Final = "movies"
+ATTR_ENTRY_ID: Final = "entry_id"
 
 # Service parameter constants
 CONF_MAX_ITEMS = "max_items"
