@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable, Coroutine
+from functools import wraps
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, Concatenate
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.provider.catalog.models import Image
@@ -89,6 +91,35 @@ async def async_setup_entry(
     add_entities()
 
 
+def exception_handler[**_P, _R](
+    func: Callable[Concatenate[XboxMediaPlayer, _P], Awaitable[_R]],
+) -> Callable[Concatenate[XboxMediaPlayer, _P], Coroutine[Any, Any, _R]]:
+    """Catch Xbox errors."""
+
+    @wraps(func)
+    async def wrapper(
+        self: XboxMediaPlayer,
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> _R:
+        """Catch Xbox errors and raise HomeAssistantError."""
+        try:
+            return await func(self, *args, **kwargs)
+        except TimeoutException as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
+
+    return wrapper
+
+
 class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     """Representation of an Xbox Media Player."""
 
@@ -150,164 +181,71 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
             url = f"http:{url}"
         return url
 
+    @exception_handler
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         try:
             await self.client.smartglass.wake_up(self._console.id)
-        except TimeoutException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_exception",
-            ) from e
-        except (RequestError, HTTPStatusError) as e:
-            if (
-                isinstance(e, HTTPStatusError)
-                and e.response.status_code == HTTPStatus.NOT_FOUND
-            ):
+        except HTTPStatusError as e:
+            if e.response.status_code == HTTPStatus.NOT_FOUND:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="turn_on_failed",
                 ) from e
-            _LOGGER.debug("Xbox exception:", exc_info=True)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="request_exception",
-            ) from e
+            raise
 
+    @exception_handler
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
-        try:
-            await self.client.smartglass.turn_off(self._console.id)
-        except TimeoutException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_exception",
-            ) from e
-        except (RequestError, HTTPStatusError) as e:
-            _LOGGER.debug("Xbox exception:", exc_info=True)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="request_exception",
-            ) from e
+        await self.client.smartglass.turn_off(self._console.id)
 
+    @exception_handler
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
 
-        try:
-            if mute:
-                await self.client.smartglass.mute(self._console.id)
-            else:
-                await self.client.smartglass.unmute(self._console.id)
-        except TimeoutException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_exception",
-            ) from e
-        except (RequestError, HTTPStatusError) as e:
-            _LOGGER.debug("Xbox exception:", exc_info=True)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="request_exception",
-            ) from e
+        if mute:
+            await self.client.smartglass.mute(self._console.id)
+        else:
+            await self.client.smartglass.unmute(self._console.id)
 
         self._attr_is_volume_muted = mute
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
-        try:
-            await self.client.smartglass.volume(self._console.id, VolumeDirection.Up)
-        except TimeoutException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_exception",
-            ) from e
-        except (RequestError, HTTPStatusError) as e:
-            _LOGGER.debug("Xbox exception:", exc_info=True)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="request_exception",
-            ) from e
 
+        await self.client.smartglass.volume(self._console.id, VolumeDirection.Up)
+
+    @exception_handler
     async def async_volume_down(self) -> None:
         """Turn volume down for media player."""
-        try:
-            await self.client.smartglass.volume(self._console.id, VolumeDirection.Down)
-        except TimeoutException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_exception",
-            ) from e
-        except (RequestError, HTTPStatusError) as e:
-            _LOGGER.debug("Xbox exception:", exc_info=True)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="request_exception",
-            ) from e
 
+        await self.client.smartglass.volume(self._console.id, VolumeDirection.Down)
+
+    @exception_handler
     async def async_media_play(self) -> None:
         """Send play command."""
-        try:
-            await self.client.smartglass.play(self._console.id)
-        except TimeoutException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_exception",
-            ) from e
-        except (RequestError, HTTPStatusError) as e:
-            _LOGGER.debug("Xbox exception:", exc_info=True)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="request_exception",
-            ) from e
 
+        await self.client.smartglass.play(self._console.id)
+
+    @exception_handler
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        try:
-            await self.client.smartglass.pause(self._console.id)
-        except TimeoutException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_exception",
-            ) from e
-        except (RequestError, HTTPStatusError) as e:
-            _LOGGER.debug("Xbox exception:", exc_info=True)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="request_exception",
-            ) from e
 
+        await self.client.smartglass.pause(self._console.id)
+
+    @exception_handler
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
-        try:
-            await self.client.smartglass.previous(self._console.id)
-        except TimeoutException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_exception",
-            ) from e
-        except (RequestError, HTTPStatusError) as e:
-            _LOGGER.debug("Xbox exception:", exc_info=True)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="request_exception",
-            ) from e
 
+        await self.client.smartglass.previous(self._console.id)
+
+    @exception_handler
     async def async_media_next_track(self) -> None:
         """Send next track command."""
-        try:
-            await self.client.smartglass.next(self._console.id)
-        except TimeoutException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_exception",
-            ) from e
-        except (RequestError, HTTPStatusError) as e:
-            _LOGGER.debug("Xbox exception:", exc_info=True)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="request_exception",
-            ) from e
+
+        await self.client.smartglass.next(self._console.id)
 
     async def async_browse_media(
         self,
@@ -323,26 +261,16 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
             media_content_id,
         )
 
+    @exception_handler
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Launch an app on the Xbox."""
-        try:
-            if media_id == "Home":
-                await self.client.smartglass.go_home(self._console.id)
 
-            await self.client.smartglass.launch_app(self._console.id, media_id)
-        except TimeoutException as e:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_exception",
-            ) from e
-        except (RequestError, HTTPStatusError) as e:
-            _LOGGER.debug("Xbox exception:", exc_info=True)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="request_exception",
-            ) from e
+        if media_id == "Home":
+            await self.client.smartglass.go_home(self._console.id)
+
+        await self.client.smartglass.launch_app(self._console.id, media_id)
 
 
 def _find_media_image(images: list[Image]) -> Image | None:
