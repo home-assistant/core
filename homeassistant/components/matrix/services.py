@@ -67,11 +67,18 @@ def _match_bots_for_rooms(
 ) -> list[MatrixBot]:
     matches: list[MatrixBot] = []
     for matrix_bot in matrix_data.values():
-        known_rooms = (
-            set(matrix_bot._configured_rooms)
-            | set(matrix_bot._listening_rooms)
-            | set(matrix_bot._listening_rooms.values())
-        )
+        known_rooms: set[str] = set()
+
+        configured_rooms = getattr(matrix_bot, "_configured_rooms", ())
+        if configured_rooms:
+            known_rooms |= set(configured_rooms)
+
+        listening_rooms = getattr(matrix_bot, "_listening_rooms", ())
+        if listening_rooms:
+            if isinstance(listening_rooms, Mapping):
+                known_rooms |= set(listening_rooms) | set(listening_rooms.values())
+            else:
+                known_rooms |= set(listening_rooms)
         if any(room in known_rooms for room in target_rooms):
             matches.append(matrix_bot)
     return matches

@@ -95,9 +95,14 @@ class MatrixConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle import from YAML configuration."""
         try:
             info = await validate_input(self.hass, import_data)
-        except Exception:
-            _LOGGER.exception("Failed to validate imported YAML config")
+        except ConnectionError:
+            _LOGGER.debug("Cannot connect while validating imported YAML config")
             return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception(
+                "Unexpected exception while validating imported YAML config"
+            )
+            return self.async_abort(reason="unknown")
 
         await self.async_set_unique_id(info["user_id"])
         self._abort_if_unique_id_configured()

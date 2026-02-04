@@ -228,8 +228,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> b
             hass.data.pop(DOMAIN, None)
 
     # Close the MatrixBot stored in runtime_data
-    if (runtime_data := getattr(entry, "runtime_data", None)) is not None:
-        await runtime_data.async_close()
+    if entry.runtime_data:
+        await entry.runtime_data.async_close()
 
     return True
 
