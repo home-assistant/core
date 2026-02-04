@@ -102,7 +102,7 @@ async def async_setup_entry(
 
 
 class HisenseClimate(CoordinatorEntity, ClimateEntity):
-    """Hisense AC climate entity."""
+    """Hisense AC Climate entity."""
 
     _attr_has_entity_name = False
     _attr_supported_features = (
