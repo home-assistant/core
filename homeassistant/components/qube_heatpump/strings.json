@@ -12,10 +12,12 @@
     "step": {
       "user": {
         "data": {
-          "host": "Host/IP"
+          "host": "Host/IP",
+          "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
-          "host": "Enter the IP address or hostname of your Qube heat pump (e.g. 192.168.1.50)."
+          "host": "Enter the IP address or hostname of your Qube heat pump (e.g. 192.168.1.50).",
+          "name": "Name for this heat pump (e.g. 'qube 1'). This determines entity IDs."
         },
         "description": "Enter the heat pump IP or host.",
         "title": "Qube heat pump"
@@ -23,11 +25,13 @@
       "reconfigure": {
         "data": {
           "host": "Host",
-          "port": "Port"
+          "port": "Port",
+          "name": "Name"
         },
         "data_description": {
           "host": "Enter the IP address or hostname of your Qube heat pump (e.g. 192.168.1.50).",
-          "port": "Modbus TCP port (default: 502)."
+          "port": "Modbus TCP port (default: 502).",
+          "name": "Name for this heat pump (e.g. 'qube 1'). This determines entity IDs."
         },
         "description": "Update the connection settings for your Qube heat pump.",
         "title": "Reconfigure Qube heat pump"

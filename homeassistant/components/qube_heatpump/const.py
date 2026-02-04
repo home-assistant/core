@@ -4,6 +4,7 @@ DOMAIN = "qube_heatpump"
 PLATFORMS = ["sensor"]
 
 CONF_HOST = "host"
+CONF_NAME = "name"
 CONF_PORT = "port"
 CONF_UNIT_ID = "unit_id"
 

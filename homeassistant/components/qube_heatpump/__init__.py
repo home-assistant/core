@@ -11,7 +11,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.loader import async_get_integration, async_get_loaded_integration
 
-from .const import CONF_HOST, CONF_PORT, CONF_UNIT_ID, DEFAULT_PORT, DOMAIN, PLATFORMS
+from .const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_UNIT_ID,
+    DEFAULT_PORT,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import QubeCoordinator
 from .hub import QubeHub
 
@@ -66,8 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: QubeConfigEntry) -> bool
 
     coordinator = QubeCoordinator(hass, hub, entry)
 
-    # Use entry title for device name (e.g., "Qube Heat Pump (192.168.1.50)")
-    device_name = entry.title or "Qube Heat Pump"
+    # Use configured device name from CONF_NAME, fallback to entry title
+    device_name = entry.data.get(CONF_NAME) or entry.title or "Qube Heat Pump"
 
     entry.runtime_data = QubeData(
         hub=hub,
