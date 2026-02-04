@@ -25,12 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import (
     ATTR_CODE_SLOT,
     ATTR_CREDENTIAL_RULE,
-    ATTR_MAX_CREDENTIALS_PER_USER,
-    ATTR_MAX_PIN_USERS,
-    ATTR_MAX_RFID_USERS,
-    ATTR_MAX_USERS,
     ATTR_PIN_CODE,
-    ATTR_SUPPORTS_USER_MGMT,
     ATTR_USER_INDEX,
     ATTR_USER_NAME,
     ATTR_USER_TYPE,
@@ -451,32 +446,6 @@ class MatterLock(MatterEntity, LockEntity):
         if bool(feature_map & DoorLockFeature.kUnbolt):
             supported_features |= LockEntityFeature.OPEN
         self._attr_supported_features = supported_features
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return entity specific state attributes for lock capabilities."""
-        supports_usr = bool((self._feature_map or 0) & DoorLockFeature.kUser)
-
-        attrs: dict[str, Any] = {
-            ATTR_SUPPORTS_USER_MGMT: supports_usr,
-        }
-
-        # Only include capacity info if USR feature is supported
-        if supports_usr:
-            attrs[ATTR_MAX_USERS] = self.get_matter_attribute_value(
-                clusters.DoorLock.Attributes.NumberOfTotalUsersSupported
-            )
-            attrs[ATTR_MAX_PIN_USERS] = self.get_matter_attribute_value(
-                clusters.DoorLock.Attributes.NumberOfPINUsersSupported
-            )
-            attrs[ATTR_MAX_RFID_USERS] = self.get_matter_attribute_value(
-                clusters.DoorLock.Attributes.NumberOfRFIDUsersSupported
-            )
-            attrs[ATTR_MAX_CREDENTIALS_PER_USER] = self.get_matter_attribute_value(
-                clusters.DoorLock.Attributes.NumberOfCredentialsSupportedPerUser
-            )
-
-        return attrs
 
     # --- Entity service methods ---
 
