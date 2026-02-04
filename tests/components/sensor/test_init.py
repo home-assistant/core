@@ -876,7 +876,7 @@ async def test_unit_translation_key_without_platform_raises(
             UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
             UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
             130,
-            pytest.approx(7.222222),
+            pytest.approx(7.215808),
             "7.2",
             1,
         ),
