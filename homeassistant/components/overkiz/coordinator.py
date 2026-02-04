@@ -192,16 +192,23 @@ async def on_device_removed(
     if not event.device_url:
         return
 
-    base_device_url = event.device_url.split("#")[0]
     registry = dr.async_get(coordinator.hass)
 
-    if registered_device := registry.async_get_device(
-        identifiers={(DOMAIN, base_device_url)}
-    ):
+    # Try to find device by full device URL first (for sub-devices)
+    # then fall back to base URL (for parent devices)
+    registered_device = registry.async_get_device(
+        identifiers={(DOMAIN, event.device_url)}
+    )
+    if not registered_device:
+        base_device_url = event.device_url.split("#")[0]
+        registered_device = registry.async_get_device(
+            identifiers={(DOMAIN, base_device_url)}
+        )
+
+    if registered_device:
         registry.async_remove_device(registered_device.id)
 
-    if event.device_url:
-        del coordinator.devices[event.device_url]
+    del coordinator.devices[event.device_url]
 
 
 @EVENT_HANDLERS.register(EventName.EXECUTION_REGISTERED)
