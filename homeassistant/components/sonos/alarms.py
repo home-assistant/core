@@ -90,20 +90,21 @@ class SonosAlarms(SonosHouseholdCoordinator):
                     soco.player_name,
                     str(err),
                 )
-                return False
-            raise
+            else:
+                _LOGGER.debug(
+                    "Error updating alarms for %s: %s",
+                    soco.player_name,
+                    str(err),
+                )
+            return False  # Catch all exceptions to prevent setup crash
 
         if update_id and self.alarms.last_id < update_id:
-            # Skip updates if latest query result is outdated or lagging
             return False
-
         if (
             self.last_processed_event_id
             and self.alarms.last_id <= self.last_processed_event_id
         ):
-            # Skip updates already processed
             return False
-
         _LOGGER.debug(
             "Updating processed event %s from %s (was %s)",
             self.alarms.last_id,

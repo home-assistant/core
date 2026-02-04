@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.13
+    rev: v0.15.0
     hooks:
       - id: ruff-check
         args:
@@ -30,18 +30,18 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.37.1
+    rev: v1.38.0
     hooks:
       - id: yamllint
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.6.2
+    rev: v3.8.1
     hooks:
       - id: prettier
         additional_dependencies:
           - prettier@3.6.2
           - prettier-plugin-sort-json@4.2.0
   - repo: https://github.com/cdce8p/python-typing-update
-    rev: v0.6.0
+    rev: v0.8.1
     hooks:
       # Run `python-typing-update` hook manually from time to time
       # to update python typing syntax.
