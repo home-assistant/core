@@ -82,26 +82,6 @@ ATTR_COLOR_MODE = "color_mode"
 # List of color modes supported by the light
 ATTR_SUPPORTED_COLOR_MODES = "supported_color_modes"
 
-# These COLOR_MODE_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the LightEntityFeature enum instead.
-_DEPRECATED_COLOR_MODE_UNKNOWN: Final = DeprecatedConstantEnum(
-    ColorMode.UNKNOWN, "2026.1"
-)
-_DEPRECATED_COLOR_MODE_ONOFF: Final = DeprecatedConstantEnum(ColorMode.ONOFF, "2026.1")
-_DEPRECATED_COLOR_MODE_BRIGHTNESS: Final = DeprecatedConstantEnum(
-    ColorMode.BRIGHTNESS, "2026.1"
-)
-_DEPRECATED_COLOR_MODE_COLOR_TEMP: Final = DeprecatedConstantEnum(
-    ColorMode.COLOR_TEMP, "2026.1"
-)
-_DEPRECATED_COLOR_MODE_HS: Final = DeprecatedConstantEnum(ColorMode.HS, "2026.1")
-_DEPRECATED_COLOR_MODE_XY: Final = DeprecatedConstantEnum(ColorMode.XY, "2026.1")
-_DEPRECATED_COLOR_MODE_RGB: Final = DeprecatedConstantEnum(ColorMode.RGB, "2026.1")
-_DEPRECATED_COLOR_MODE_RGBW: Final = DeprecatedConstantEnum(ColorMode.RGBW, "2026.1")
-_DEPRECATED_COLOR_MODE_RGBWW: Final = DeprecatedConstantEnum(ColorMode.RGBWW, "2026.1")
-_DEPRECATED_COLOR_MODE_WHITE: Final = DeprecatedConstantEnum(ColorMode.WHITE, "2026.1")
-
-
 # mypy: disallow-any-generics
 
 

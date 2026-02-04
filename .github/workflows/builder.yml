@@ -235,6 +235,7 @@ jobs:
           build-args: |
             BUILD_FROM=${{ steps.vars.outputs.base_image }}
           tags: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
+          outputs: type=image,push=true,compression=zstd,compression-level=9,force-compression=true,oci-mediatypes=true
           labels: |
             io.hass.arch=${{ matrix.arch }}
             io.hass.version=${{ needs.init.outputs.version }}
