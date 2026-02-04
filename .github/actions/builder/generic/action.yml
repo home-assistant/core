@@ -101,7 +101,7 @@ runs:
         file: ${{ inputs.dockerfile }}
         platforms: ${{ steps.vars.outputs.platform }}
         push: ${{ inputs.push }}
-        cache-from: ${{ steps.cache.outcome == 'success' && "ghcr.io/home-assistant/${{ inputs.arch }}-homeassistant:latest" || '' }}
+        cache-from: ${{ steps.cache.outcome == 'success' && format('ghcr.io/home-assistant/{0}-homeassistant:latest', inputs.arch) || '' }}
         build-args: |
           BUILD_FROM=${{ inputs.base-image }}
         tags: ${{ inputs.tags }}
