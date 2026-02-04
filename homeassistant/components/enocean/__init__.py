@@ -16,11 +16,11 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS, SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
+type EnOceanConfigEntry = ConfigEntry[EnOceanHomeAssistantGateway]
+
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
 )
-
-type EnOceanConfigEntry = ConfigEntry[EnOceanHomeAssistantGateway]
 
 
 @dataclass

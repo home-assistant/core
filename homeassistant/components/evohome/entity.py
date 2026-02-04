@@ -181,7 +181,7 @@ class EvoChild(EvoEntity):
 
         self._device_state_attrs = {
             "activeFaults": self._evo_device.active_faults,
-            "setpoints": self._setpoints,
+            "setpoints": self.setpoints,
         }
 
         super()._handle_coordinator_update()
