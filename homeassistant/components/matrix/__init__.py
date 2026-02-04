@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Sequence
-import inspect
 import logging
 import mimetypes
 import os
@@ -210,7 +209,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bo
 
     async_setup_services(hass)
 
-    if hass.is_running and inspect.iscoroutinefunction(matrix_bot.async_start):
+    if hass.is_running:
         hass.async_create_background_task(
             matrix_bot.async_start(),
             name=f"{matrix_bot.__class__.__name__}: start for '{matrix_bot._mx_id}'",
@@ -229,7 +228,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> b
             hass.data.pop(DOMAIN, None)
 
     # Close the MatrixBot stored in runtime_data
-    if runtime_data := getattr(entry, "runtime_data", None):
+    if (runtime_data := getattr(entry, "runtime_data", None)) is not None:
         await runtime_data.async_close()
 
     return True
@@ -295,15 +294,15 @@ class MatrixBot:
                 return
             self._started = True
 
-        try:
-            self._access_tokens = await self._get_auth_tokens()
-            await self._login()
-            await self._resolve_room_aliases(self._configured_rooms)
-            self._load_commands(self._unparsed_commands)
-            await self._join_rooms()
-        except Exception:
-            self._started = False
-            raise
+            try:
+                self._access_tokens = await self._get_auth_tokens()
+                await self._login()
+                await self._resolve_room_aliases(self._configured_rooms)
+                self._load_commands(self._unparsed_commands)
+                await self._join_rooms()
+            except Exception:
+                self._started = False
+                raise
 
         # Sync once so that we don't respond to past events.
         _LOGGER.debug("Starting initial sync for %s", self._mx_id)

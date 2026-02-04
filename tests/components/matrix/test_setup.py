@@ -121,6 +121,7 @@ async def test_async_setup_entry(hass: HomeAssistant) -> None:
         patch("homeassistant.components.matrix.MatrixBot") as mock_bot_class,
     ):
         mock_bot = Mock()
+        mock_bot.async_start = AsyncMock()
         mock_bot_class.return_value = mock_bot
 
         result = await async_setup_entry(hass, config_entry)

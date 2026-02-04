@@ -93,7 +93,7 @@ def _get_matrix_bot(
         if config_entry := matrix_data.get(config_entry_id):
             return config_entry
         raise ServiceValidationError(
-            f"No Matrix config entry found for {config_entry_id}"
+            "No Matrix config entry found for the provided config entry id"
         )
 
     if len(matrix_data) == 1:
