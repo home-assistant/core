@@ -235,6 +235,32 @@ class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
         return self._name or self.client_id
 
 
+class DeviceFlowImplementation(config_entry_oauth2_flow.DeviceFlowImplementation):
+    """Device flow flow implementation."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        auth_domain: str,
+        credential: ClientCredential,
+        authorization_server: DeviceFlowAuthorizationServer,
+    ) -> None:
+        """Initialize DeviceImplementation."""
+        super().__init__(
+            hass,
+            auth_domain,
+            credential.client_id,
+            authorization_server.authorize_url,
+            authorization_server.token_url,
+        )
+        self._name = credential.name
+
+    @property
+    def name(self) -> str:
+        """Name of the implementation."""
+        return self._name or self.client_id
+
+
 async def _async_provide_implementation(
     hass: HomeAssistant, domain: str
 ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
@@ -251,8 +277,18 @@ async def _async_provide_implementation(
             for auth_domain, credential in credentials.items()
         ]
 
+    if hasattr(platform, "async_get_device_flow_authorization_server"):
+        authorization_server = (
+            await platform.async_get_device_flow_authorization_server(hass)
+        )
+        return [
+            DeviceFlowImplementation(
+                hass, auth_domain, credential, authorization_server
+            )
+            for auth_domain, credential in credentials.items()
+        ]
+
     authorization_server = await platform.async_get_authorization_server(hass)
-    # Re-add with logic to support Device Flow
 
     return [
         AuthImplementation(hass, auth_domain, credential, authorization_server)
@@ -294,6 +330,11 @@ class ApplicationCredentialsProtocol(Protocol):
     ) -> AuthorizationServer:
         """Return authorization server, for the default auth implementation."""
 
+    async def async_get_device_flow_authorization_server(
+        self, hass: HomeAssistant
+    ) -> DeviceFlowAuthorizationServer:
+        """Return authorization server, for device flow auth implementation."""
+
     async def async_get_auth_implementation(
         self, hass: HomeAssistant, auth_domain: str, credential: ClientCredential
     ) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
@@ -323,9 +364,10 @@ async def _get_platform(
             err,
         )
         return None
-    if not hasattr(platform, "async_get_authorization_server") and not hasattr(
-        platform, "async_get_auth_implementation"
-    ):
+    if not (
+        hasattr(platform, "async_get_authorization_server")
+        or hasattr(platform, "async_get_device_flow_authorization_server")
+    ) and not hasattr(platform, "async_get_auth_implementation"):
         raise ValueError(
             f"Integration '{integration_domain}' platform {DOMAIN} did not implement"
             " 'async_get_authorization_server' or 'async_get_auth_implementation'"
@@ -343,10 +385,10 @@ async def _async_integration_config(hass: HomeAssistant, domain: str) -> dict[st
     result: dict[str, Any] = {}
     # Integrations such as fitbit, gentex_homelink, geocaching and a few others don't implement
     # async_get_authorization_server, so either we default to client_credentials or update the integrations in separate PRs
-
-    # Upon expanding, support for the method async_get_device_flow_authorization_server
     if hasattr(platform, "async_get_authorization_server"):
         result["auth_type"] = AuthorizationTypes.CLIENT_CREDENTIALS
+    elif hasattr(platform, "async_get_device_flow_authorization_server"):
+        result["auth_type"] = AuthorizationTypes.DEVICE_FLOW
 
     if hasattr(platform, "async_get_description_placeholders"):
         result[

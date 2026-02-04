@@ -3,33 +3,23 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import TYPE_CHECKING, Any
 
-from aiogithubapi import (
-    GitHubAPI,
-    GitHubDeviceAPI,
-    GitHubException,
-    GitHubLoginDeviceModel,
-    GitHubLoginOauthModel,
-)
-from aiogithubapi.const import OAUTH_USER_LOGIN
+from aiogithubapi import GitHubAPI, GitHubException
 import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
-    ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import (
-    SERVER_SOFTWARE,
-    async_get_clientsession,
-)
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CLIENT_ID, CONF_REPOSITORIES, DEFAULT_REPOSITORIES, DOMAIN, LOGGER
+from .const import CONF_REPOSITORIES, DEFAULT_REPOSITORIES, DOMAIN
 
 
 async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
@@ -93,81 +83,31 @@ async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:
     )
 
 
-class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
+class GitHubConfigFlow(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+):
     """Handle a config flow for GitHub."""
 
-    VERSION = 1
+    DOMAIN = DOMAIN
+
+    VERSION = 1  # Not sure if we need to upgrade this?
+
+    @property
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return logging.getLogger(__name__)
 
     login_task: asyncio.Task | None = None
 
-    def __init__(self) -> None:
-        """Initialize."""
-        self._device: GitHubDeviceAPI | None = None
-        self._login: GitHubLoginOauthModel | None = None
-        self._login_device: GitHubLoginDeviceModel | None = None
-
-    async def async_step_user(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-
-        return await self.async_step_device(user_input)
-
-    async def async_step_device(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> ConfigFlowResult:
-        """Handle device steps."""
-
-        async def _wait_for_login() -> None:
-            if TYPE_CHECKING:
-                # mypy is not aware that we can't get here without having these set already
-                assert self._device is not None
-                assert self._login_device is not None
-
-            response = await self._device.activation(
-                device_code=self._login_device.device_code
-            )
-            self._login = response.data
-
-        if not self._device:
-            self._device = GitHubDeviceAPI(
-                client_id=CLIENT_ID,
-                session=async_get_clientsession(self.hass),
-                client_name=SERVER_SOFTWARE,
-            )
-
-            try:
-                response = await self._device.register()
-                self._login_device = response.data
-            except GitHubException as exception:
-                LOGGER.exception(exception)
-                return self.async_abort(reason="could_not_register")
-
-        if self.login_task is None:
-            self.login_task = self.hass.async_create_task(_wait_for_login())
-
-        if self.login_task.done():
-            if self.login_task.exception():
-                return self.async_show_progress_done(next_step_id="could_not_register")
-            return self.async_show_progress_done(next_step_id="repositories")
-
-        if TYPE_CHECKING:
-            # mypy is not aware that we can't get here without having this set already
-            assert self._login_device is not None
-
-        return self.async_show_progress(
-            step_id="device",
-            progress_action="wait_for_device",
-            description_placeholders={
-                "url": OAUTH_USER_LOGIN,
-                "code": self._login_device.user_code,
-            },
-            progress_task=self.login_task,
+    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
+        """Create an oauth config entry or update existing entry for reauth."""
+        await self.async_set_unique_id(
+            jwt.decode(
+                data["token"]["access_token"], options={"verify_signature": False}
+            )["sub"]
         )
+        self._abort_if_unique_id_configured()
+        return await super().async_oauth_create_entry(data)
 
     async def async_step_repositories(
         self,

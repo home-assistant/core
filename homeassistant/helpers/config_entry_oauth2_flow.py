@@ -13,10 +13,12 @@ import asyncio
 from asyncio import Lock
 import base64
 from collections.abc import Awaitable, Callable
+from datetime import datetime
 import hashlib
 from http import HTTPStatus
 from json import JSONDecodeError
 import logging
+from random import randint
 import secrets
 import time
 from typing import Any, cast
@@ -343,6 +345,135 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
         return encoded.decode("ascii").replace("=", "")
 
 
+class DeviceFlowImplementation(AbstractOAuth2Implementation):
+    """Device Flow OAuth2 implementation (RFC 8628)."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        domain: str,
+        client_id: str,
+        authorize_url: str,
+        token_url: str,
+    ) -> None:
+        """Initialize device flow implementation."""
+        self.hass = hass
+        self._domain = domain
+        self.client_id = client_id
+        self.authorize_url = authorize_url
+        self.token_url = token_url
+
+    @property
+    def name(self) -> str:
+        """Name of the implementation."""
+        return "Local application credentials"
+
+    @property
+    def domain(self) -> str:
+        """Domain providing the implementation."""
+        return self._domain
+
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the device authorization request."""
+        return {}
+
+    @property
+    def extra_token_resolve_data(self) -> dict:
+        """Extra data for the token resolve request."""
+        return {}
+
+    async def async_generate_authorize_url(self) -> str:
+        """Generate a url for the user to authorize."""
+        # Not sure if I need to keep this, but for now I do to be in line with other implementations
+        return str(URL(self.authorize_url))
+
+    def _device_authorization_data(self) -> dict[str, str]:
+        """All form params for the device authorization request."""
+        data: dict[str, str] = {"client_id": self.client_id}
+        data.update(
+            {
+                key: str(value)
+                for key, value in self.extra_authorize_data.items()
+                if value is not None
+            }
+        )
+        return data
+
+    async def async_register_device(self) -> dict:
+        """Register the device and return the device code response."""
+        session = async_get_clientsession(self.hass)
+
+        _LOGGER.debug("Sending device authorization request to %s", self.authorize_url)
+        resp = await session.post(
+            self.authorize_url,
+            data=self._device_authorization_data(),
+            headers={
+                "Accept": "application/json"
+            },  # Enforece JSON response. Github by default returns x-www-form-urlencoded. How flexible should we make this?
+        )
+        if resp.status >= 400:
+            try:
+                error_response = await resp.json()
+            except (ClientError, JSONDecodeError):
+                error_response = {}
+            error_code = error_response.get("error", "unknown")
+            error_description = error_response.get("error_description", "unknown error")
+            _LOGGER.error(
+                "Device authorization request for %s failed (%s): %s",
+                self.domain,
+                error_code,
+                error_description,
+            )
+        resp.raise_for_status()
+        return cast(dict, await resp.json())
+
+    async def async_resolve_external_data(self, external_data: Any) -> dict:
+        """Resolve the authorization code to tokens."""
+        request_data: dict = {
+            "grant_type": "authorization_code",
+            "code": external_data["code"],
+            "redirect_uri": external_data["state"]["redirect_uri"],
+        }
+        request_data.update(self.extra_token_resolve_data)
+        return await self._token_request(request_data)
+
+    async def _async_refresh_token(self, token: dict) -> dict:
+        """Refresh tokens."""
+        new_token = await self._token_request(
+            {
+                "grant_type": "refresh_token",
+                "client_id": self.client_id,
+                "refresh_token": token["refresh_token"],
+            }
+        )
+        return {**token, **new_token}
+
+    async def _token_request(self, data: dict) -> dict:
+        """Make a token request."""
+        session = async_get_clientsession(self.hass)
+
+        data["client_id"] = self.client_id
+
+        _LOGGER.debug("Sending token request to %s", self.token_url)
+        resp = await session.post(self.token_url, data=data)
+        if resp.status >= 400:
+            try:
+                error_response = await resp.json()
+            except (ClientError, JSONDecodeError):
+                error_response = {}
+            error_code = error_response.get("error", "unknown")
+            error_description = error_response.get("error_description", "unknown error")
+            _LOGGER.error(
+                "Token request for %s failed (%s): %s",
+                self.domain,
+                error_code,
+                error_description,
+            )
+        resp.raise_for_status()
+        return cast(dict, await resp.json())
+
+
 class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     """Handle a config flow."""
 
@@ -360,6 +491,8 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
 
         self.external_data: Any = None
         self.flow_impl: AbstractOAuth2Implementation = None  # type: ignore[assignment]
+        self.login_task: asyncio.Task | None = None
+        self.device: dict[str, str] | None = None
 
     @property
     @abstractmethod
@@ -396,6 +529,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         if not implementations:
             if self.DOMAIN in await async_get_application_credentials(self.hass):
                 return self.async_abort(reason="missing_credentials")
+            # TODO: how to handle the default client ID. For now, I just set it manually
             return self.async_abort(reason="missing_configuration")
 
         req = http.current_request.get()
@@ -420,6 +554,10 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Create an entry for auth."""
+        # Branch off to device flow
+        if isinstance(self.flow_impl, DeviceFlowImplementation):
+            return await self.async_step_device()
+
         # Flow has been triggered by external data
         if user_input is not None:
             self.external_data = user_input
@@ -443,6 +581,109 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             )
 
         return self.async_external_step(step_id="auth", url=url)
+
+    async def async_step_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Create an entry for device flow."""
+        try:
+            async with asyncio.timeout(
+                OAUTH_AUTHORIZE_URL_TIMEOUT_SEC
+            ):  # Should we maintain this timeout?
+                # Done so we don't have to enforce abstract methods on the other implementations
+                device = await cast(
+                    DeviceFlowImplementation, self.flow_impl
+                ).async_register_device()
+        except TimeoutError as err:
+            _LOGGER.error("Timeout registering device: %s", err)
+            return self.async_abort(reason="authorize_url_timeout")
+
+        async def _wait_for_login() -> None:
+            """Wait for the user to authorize the device."""
+            while True:
+                if datetime.timestamp(datetime.now()) + device[
+                    "expires_in"
+                ] < datetime.timestamp(datetime.now()):
+                    raise DeviceFlowTimeout
+
+                _LOGGER.info(
+                    "Waiting for %s seconds before polling token endpoint",
+                    device["interval"],
+                )
+
+                data = {
+                    "client_id": self.flow_impl.client_id,
+                    "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+                    "device_code": device["device_code"],
+                }
+
+                try:
+                    async with asyncio.timeout(OAUTH_TOKEN_TIMEOUT_SEC):
+                        session = async_get_clientsession(self.hass)
+                        resp = await session.post(
+                            self.flow_impl.token_url,
+                            data=data,
+                            headers={"Accept": "application/json"},
+                        )  # Again, Github by default returns a form. Need flexibility or standard enforce?
+                        response = await resp.json()
+                        # The RFC describes that the endpoint should return 400 when the user hasn't authorized yet, but some providers (like github....) return 200 with an error key in the response.
+                        _LOGGER.info("response: %s", response)
+                        match response.get("error"):
+                            case "authorization_pending":
+                                _LOGGER.info(
+                                    "User has not authorized device yet. Continue polling"
+                                )
+                                await asyncio.sleep(device["interval"])
+                                continue
+                            case "slow_down":
+                                # See if the API sends a new interval.
+                                # Else, resort back to RFC's suggestion of increasing interval by 5 seconds
+                                device["interval"] = response.get(
+                                    "interval", device["interval"] + 5
+                                )
+                                _LOGGER.info(
+                                    "API asked to slow down. Increasing polling interval to %s",
+                                    device["interval"],
+                                )
+                                await asyncio.sleep(
+                                    device["interval"]
+                                    + randint(1, 5)  # TODO: make this microseconds
+                                )  # Add some jitter to avoid thundering herd
+                                continue
+                            case "access_denied":
+                                raise DeviceFlowError
+                            case "expired_token":
+                                raise DeviceFlowTimeout
+                        break
+                except TimeoutError as err:
+                    _LOGGER.error("Timeout resolving OAuth token: %s", err)
+                    raise DeviceFlowTimeout from err
+                except (ClientResponseError, ClientError) as err:
+                    _LOGGER.error("Error resolving OAuth token: %s", err)
+                    raise DeviceFlowError from err
+            return response
+
+        if self.login_task is None:
+            _LOGGER.info("Starting login task")
+            self.login_task = self.hass.async_create_task(_wait_for_login())
+
+        if self.login_task.done():
+            if self.login_task.exception():
+                if isinstance(self.login_task.exception(), DeviceFlowTimeout):
+                    return self.async_abort(reason="device_flow_timeout")
+                if isinstance(self.login_task.exception(), DeviceFlowError):
+                    return self.async_abort(reason="device_flow_error")
+            return self.async_show_progress_done(next_step_id="repositories")
+
+        return self.async_show_progress(
+            step_id="device",
+            progress_action="wait_for_device",
+            description_placeholders={
+                "url": device["verification_uri"],
+                "code": device["user_code"],
+            },
+            progress_task=self.login_task,
+        )
 
     async def async_step_creation(
         self, user_input: dict[str, Any] | None = None
@@ -754,3 +995,11 @@ def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict[str, Any] | None:
         return jwt.decode(encoded, secret, algorithms=["HS256"])  # type: ignore[no-any-return]
     except jwt.InvalidTokenError:
         return None
+
+
+class DeviceFlowError(HomeAssistantError):
+    """Exception raised for device flow errors."""
+
+
+class DeviceFlowTimeout(DeviceFlowError):
+    """Exception raised when device flow times out."""
