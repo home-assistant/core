@@ -71,16 +71,16 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
             self._attr_native_value = self._value_func(-75, 75)
 
         # Register entity in hass data for access by cover entity
-        if self._attr_unique_id:
-            self.hass.data[DOMAIN][self._attr_unique_id] = self
+        if self._config_entry_id and self._attr_unique_id:
+            self.hass.data[DOMAIN][self._config_entry_id][self._attr_unique_id] = self
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity which will be removed."""
         await super().async_will_remove_from_hass()
 
         # Remove entity from hass data
-        if self._attr_unique_id and self._attr_unique_id in self.hass.data[DOMAIN]:
-            del self.hass.data[DOMAIN][self._attr_unique_id]
+        if self._config_entry_id and self._attr_unique_id:
+            del self.hass.data[DOMAIN][self._config_entry_id][self._attr_unique_id]
 
     async def async_update(self) -> None:
         """Update the entity and learn current rotation."""
@@ -90,11 +90,10 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
         action = self._dest.action(ACTION_DESC.SlatRotate)
         if action is not None:
             rotation = action["rotation"]
-            if rotation is not None:
-                if rotation != action.minValue and rotation != action.maxValue:
-                    self._attr_native_value = self._value_func(
-                        self._attr_native_value, rotation
-                    )
+            if rotation and rotation not in (action.minValue, action.maxValue):
+                self._attr_native_value = self._value_func(
+                    self._attr_native_value, rotation
+                )
 
     @property
     def native_min_value(self) -> float:

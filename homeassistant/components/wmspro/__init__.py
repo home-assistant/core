@@ -62,6 +62,7 @@ async def async_setup_entry(
         raise ConfigEntryNotReady(f"Error while refreshing from {host}") from err
 
     hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(entry.entry_id, {})
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -75,6 +76,9 @@ async def async_unload_entry(
     result = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if result and DOMAIN in hass.data:
-        del hass.data[DOMAIN]
+        if entry.entry_id in hass.data[DOMAIN]:
+            del hass.data[DOMAIN][entry.entry_id]
+        if not hass.data[DOMAIN]:
+            del hass.data[DOMAIN]
 
     return result

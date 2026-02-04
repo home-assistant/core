@@ -200,9 +200,9 @@ class WebControlProSlatRotate(WebControlProSlat):
     def _min_rotation(self) -> float:
         """Return the minimum rotation value."""
         number_unique_id = f"{self._attr_unique_id}-rotation-min"
-        if number_unique_id in self.hass.data[DOMAIN]:
-            number_entity = self.hass.data[DOMAIN][number_unique_id]
-            return number_entity.native_value
+        config_entry_data = self.hass.data[DOMAIN].get(self._config_entry_id, {})
+        if number_unique_id in config_entry_data:
+            return config_entry_data[number_unique_id].native_value
         action = self._dest.action(self._tilt_action_desc)
         return action.minValue
 
@@ -210,8 +210,8 @@ class WebControlProSlatRotate(WebControlProSlat):
     def _max_rotation(self) -> float:
         """Return the maximum rotation value."""
         number_unique_id = f"{self._attr_unique_id}-rotation-max"
-        if number_unique_id in self.hass.data[DOMAIN]:
-            number_entity = self.hass.data[DOMAIN][number_unique_id]
-            return number_entity.native_value
+        config_entry_data = self.hass.data[DOMAIN].get(self._config_entry_id, {})
+        if number_unique_id in config_entry_data:
+            return config_entry_data[number_unique_id].native_value
         action = self._dest.action(self._tilt_action_desc)
         return action.maxValue
