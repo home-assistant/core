@@ -220,6 +220,11 @@ pytest-rerunfailures==16.0.1
 
 # Fixes detected blocking call to load_default_certs https://github.com/home-assistant/core/issues/157475
 aiomqtt>=2.5.0
+
+# auth0-python v5.0 is a major rewrite with breaking changes
+# used by sharkiq==1.5.0
+# https://github.com/auth0/auth0-python/releases/tag/5.0.0
+auth0-python<5.0
 """
 
 GENERATED_MESSAGE = (
