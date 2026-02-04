@@ -40,8 +40,8 @@ habluetooth==5.8.0
 hass-nabucasa==1.12.0
 hassil==3.5.0
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20260128.5
-home-assistant-intents==2026.1.28
+home-assistant-frontend==20260128.6
+home-assistant-intents==2026.2.3
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -231,3 +231,8 @@ pytest-rerunfailures==16.0.1
 
 # Fixes detected blocking call to load_default_certs https://github.com/home-assistant/core/issues/157475
 aiomqtt>=2.5.0
+
+# auth0-python v5.0 is a major rewrite with breaking changes
+# used by sharkiq==1.5.0
+# https://github.com/auth0/auth0-python/releases/tag/5.0.0
+auth0-python<5.0
