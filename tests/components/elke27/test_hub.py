@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from enum import Enum
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from elke27_lib import ArmMode, LinkKeys
@@ -105,12 +106,16 @@ async def test_refresh_and_subscribe_errors(hass: HomeAssistant) -> None:
         "112233445566",
         None,
     )
-    with pytest.raises(Exception):
+    with pytest.raises(HomeAssistantError):
         await hub.refresh_csm()
-    with pytest.raises(Exception):
+    with pytest.raises(HomeAssistantError):
         await hub.refresh_domain_config("zone")
-    with pytest.raises(Exception):
-        hub.subscribe(lambda *_: None)
+
+    def _listener(*_args: Any) -> None:
+        return None
+
+    with pytest.raises(HomeAssistantError):
+        hub.subscribe(_listener)
 
 
 async def test_actions_return_false_when_no_client(hass: HomeAssistant) -> None:
@@ -234,6 +239,7 @@ async def test_subscribe_and_unsubscribe_typed_client(hass: HomeAssistant) -> No
 
 async def test_async_set_output_async_no_on(hass: HomeAssistant) -> None:
     """Verify async_set_output handles coroutine without on parameter."""
+
     async def _async_set(output_id: int, state: bool) -> bool:
         return output_id == 1 and state is True
 
@@ -259,7 +265,9 @@ async def test_zone_bypass_error_none(hass: HomeAssistant) -> None:
         "112233445566",
         None,
     )
-    hub._client = SimpleNamespace(async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None)))
+    hub._client = SimpleNamespace(
+        async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None))
+    )
     assert await hub.async_set_zone_bypass(1, True, pin="1234") is False
 
 
@@ -273,12 +281,16 @@ async def test_arm_area_modes_and_errors(hass: HomeAssistant) -> None:
         "112233445566",
         None,
     )
-    hub._client = SimpleNamespace(async_execute=AsyncMock(return_value=SimpleNamespace(ok=True)))
+    hub._client = SimpleNamespace(
+        async_execute=AsyncMock(return_value=SimpleNamespace(ok=True))
+    )
     assert await hub.async_arm_area(1, ArmMode.ARMED_STAY, "1234") is True
     assert await hub.async_arm_area(1, "ARMED_CUSTOM_BYPASS", "1234") is True
 
-    error = SimpleNamespace(user_message="nope")
-    hub._client = SimpleNamespace(async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=error)))
+    error = RuntimeError("nope")
+    hub._client = SimpleNamespace(
+        async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=error))
+    )
     with pytest.raises(HomeAssistantError, match="nope"):
         await hub.async_arm_area(1, ArmMode.ARMED_AWAY, "1234")
 
@@ -293,7 +305,11 @@ async def test_resubscribe_typed_callbacks(hass: HomeAssistant) -> None:
         "112233445566",
         None,
     )
-    cb = lambda *_: None
+
+    def _cb(*_args: Any) -> None:
+        return None
+
+    cb = _cb
     hub._typed_callbacks = {cb: None}
     client = SimpleNamespace(subscribe_typed=Mock(return_value="token"))
     hub._client = client
@@ -311,8 +327,10 @@ async def test_disarm_pin_and_error_none(hass: HomeAssistant) -> None:
         "112233445566",
         None,
     )
-    hub._client = SimpleNamespace(async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None)))
-    with pytest.raises(Exception, match="PIN required"):
+    hub._client = SimpleNamespace(
+        async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None))
+    )
+    with pytest.raises(Exception, match=r"PIN=.*required to disarm areas"):
         await hub.async_disarm_area(1, None)
     with pytest.raises(HomeAssistantError, match="Code must be numeric"):
         await hub.async_disarm_area(1, "aa")
@@ -344,7 +362,7 @@ async def test_schedule_reconnect_creates_task(hass: HomeAssistant) -> None:
         None,
     )
     task = Mock()
-    hub._hass.async_create_task = Mock(return_value=task)
+    hub._hass.async_create_task = Mock(side_effect=lambda coro: (coro.close(), task)[1])
     hub._schedule_reconnect()
     assert hub._reconnect_task is task
 
@@ -363,7 +381,9 @@ async def test_log_unavailable_skips_when_logged(hass: HomeAssistant) -> None:
     hub._log_unavailable()
 
 
-async def test_reconnect_loop_exception_path(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_reconnect_loop_exception_path(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Verify reconnect loop handles exceptions and delays."""
     hub = Elke27Hub(
         hass,
@@ -373,6 +393,7 @@ async def test_reconnect_loop_exception_path(hass: HomeAssistant, monkeypatch: p
         "112233445566",
         None,
     )
+
     async def _connect_fail():
         hub._stopping = True
         raise RuntimeError("boom")

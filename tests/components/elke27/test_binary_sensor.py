@@ -146,7 +146,7 @@ async def test_binary_sensor_setup_edge_cases(hass: HomeAssistant) -> None:
 
     coordinator.async_set_updated_data(None)
     await async_setup_entry(hass, entry, _add_entities)
-    assert len(entities) == 1
+    assert len(entities) == 3
 
 
 def test_zone_icon_and_attributes() -> None:
