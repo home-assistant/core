@@ -109,5 +109,21 @@
         }
       }
     }
+  },
+  "issues": {
+    "model_deprecated": {
+      "fix_flow": {
+        "step": {
+          "init": {
+            "data": {
+              "chat_model": "[%key:common::generic::model%]"
+            },
+            "description": "You are updating {subentry_name} ({subentry_type}) in {entry_name}. The current model {model} is deprecated. Select a supported model to continue.",
+            "title": "Update model"
+          }
+        }
+      },
+      "title": "Model deprecated"
+    }
   }
 }
