@@ -108,9 +108,10 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
         action = self._dest.action(ACTION_DESC.SlatRotate)
         return self._value_func(0, action.maxValue)
 
-    def set_native_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current min/max value."""
         self._attr_native_value = value
+        self.async_write_ha_state()
 
 
 class WebControlProSlatRotation(WebControlProGenericEntity, NumberEntity):
