@@ -6,9 +6,9 @@ from aiopyarr import ArrAuthenticationException, ArrConnectionException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.radarr.const import (
+from homeassistant.components.radarr.const import DOMAIN
+from homeassistant.components.radarr.services import (
     ATTR_ENTRY_ID,
-    DOMAIN,
     SERVICE_GET_MOVIES,
     SERVICE_GET_QUEUE,
 )

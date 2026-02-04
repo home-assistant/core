@@ -65,7 +65,7 @@
   },
   "services": {
     "get_movies": {
-      "description": "Get all movies in Radarr with their details and status.",
+      "description": "Gets all movies in Radarr with their details and status.",
       "fields": {
         "entry_id": {
           "description": "ID of the config entry to use.",
@@ -75,7 +75,7 @@
       "name": "Get movies"
     },
     "get_queue": {
-      "description": "Get all movies currently in the download queue with their progress and details.",
+      "description": "Gets all movies currently in the download queue with their progress and details.",
       "fields": {
         "entry_id": {
           "description": "[%key:component::radarr::services::get_movies::fields::entry_id::description%]",
