@@ -110,14 +110,14 @@ async def async_unload_entry(
 ) -> bool:
     """Unload EnOcean config entry."""
 
-    if unload_platforms := await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    ):
-        hass_data: EnOceanHassData | None = hass.data.get(DOMAIN)
-        if hass_data and hass_data.dispatcher_disconnect_handle:
-            hass_data.dispatcher_disconnect_handle()
-            hass_data.dispatcher_disconnect_handle = None
+    if not await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
+        return False
 
-        config_entry.runtime_data.stop()
+    config_entry.runtime_data.stop()
 
-    return unload_platforms
+    hass_data: EnOceanHassData | None = hass.data.get(DOMAIN)
+    if hass_data and hass_data.dispatcher_disconnect_handle:
+        hass_data.dispatcher_disconnect_handle()
+        hass_data.dispatcher_disconnect_handle = None
+
+    return True
