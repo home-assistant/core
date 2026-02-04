@@ -93,7 +93,9 @@ async def test_light_pin_required(hass: HomeAssistant) -> None:
     assert len(entities) == 1
 
     light_1 = next(entity for entity in entities if entity._output_id == 1)
-    with pytest.raises(HomeAssistantError, match="PIN required to perform this action."):
+    with pytest.raises(
+        HomeAssistantError, match="PIN required to perform this action."
+    ):
         await light_1.async_turn_on()
 
 
@@ -101,6 +103,7 @@ async def test_light_setup_edge_cases(hass: HomeAssistant) -> None:
     """Verify setup handles missing runtime data and snapshots."""
     entry = MockConfigEntry(domain="elke27", data={CONF_HOST: "192.168.1.62"})
     entry.add_to_hass(hass)
+    entry.runtime_data = None
 
     entities: list[light_module.Elke27OutputLight] = []
 
@@ -123,7 +126,9 @@ def test_light_properties_when_missing() -> None:
     hub = _Hub()
     coordinator = SimpleNamespace(data=None)
     entry = MockConfigEntry(domain="elke27", data={CONF_HOST: "192.168.1.63"})
-    light = light_module.Elke27OutputLight(coordinator, hub, entry, 1, SimpleNamespace())
+    light = light_module.Elke27OutputLight(
+        coordinator, hub, entry, 1, SimpleNamespace()
+    )
     assert light.is_on is None
     hub.is_ready = False
     assert light.available is False

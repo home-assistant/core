@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 import enum
 import json
+from types import MappingProxyType
 
 import pytest
 
@@ -17,8 +18,8 @@ from homeassistant.components.elke27.const import (
     MANUFACTURER_NUMBER,
 )
 from homeassistant.components.elke27.diagnostics import (
-    async_get_config_entry_diagnostics,
     _to_jsonable,
+    async_get_config_entry_diagnostics,
 )
 from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -137,6 +138,7 @@ async def test_diagnostics_redacts_sensitive_data(
 
 def test_to_jsonable_handles_misc_types() -> None:
     """Verify JSON serialization handles miscellaneous types."""
+
     class ExampleEnum(enum.Enum):
         VALUE = 1
 

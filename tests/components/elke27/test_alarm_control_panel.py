@@ -143,7 +143,9 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
     area_1 = next(entity for entity in entities if entity._area_id == 1)
 
     await area_1.async_alarm_arm_away(code="1234")
-    hub.async_arm_area.assert_awaited_once_with(1, alarm_module.ArmMode.ARMED_AWAY, "1234")
+    hub.async_arm_area.assert_awaited_once_with(
+        1, alarm_module.ArmMode.ARMED_AWAY, "1234"
+    )
 
     hub.async_arm_area.reset_mock()
     hub.async_set_zone_bypass.reset_mock()
@@ -157,27 +159,57 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
 
     hub.async_disarm_area.reset_mock()
     hub.async_disarm_area.side_effect = alarm_module.Elke27PinRequiredError
-    with pytest.raises(HomeAssistantError, match="PIN required to perform this action."):
+    with pytest.raises(
+        HomeAssistantError, match="PIN required to perform this action."
+    ):
         await area_1.async_alarm_disarm()
 
 
 def test_area_state_and_ready_status_helpers() -> None:
     """Verify state mapping and ready status display helpers."""
-    assert alarm_module._area_state_to_ha(SimpleNamespace(alarm_active=True)) == "triggered"
-    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="disarmed")) == "disarmed"
-    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="armed stay")) == "armed_home"
-    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="armed night")) == "armed_night"
-    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="armed away")) == "armed_away"
-    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="bypass")) == "armed_custom_bypass"
-    assert alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_AWAY")) == "Ready away"
-    assert alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_STAY")) == "Ready stay"
-    assert alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_NOT")) == "Not ready"
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(alarm_active=True))
+        == "triggered"
+    )
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="disarmed"))
+        == "disarmed"
+    )
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="armed stay"))
+        == "armed_home"
+    )
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="armed night"))
+        == "armed_night"
+    )
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="armed away"))
+        == "armed_away"
+    )
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="bypass"))
+        == "armed_custom_bypass"
+    )
+    assert (
+        alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_AWAY"))
+        == "Ready away"
+    )
+    assert (
+        alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_STAY"))
+        == "Ready stay"
+    )
+    assert (
+        alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_NOT"))
+        == "Not ready"
+    )
 
 
 async def test_area_setup_skips_when_runtime_missing(hass: HomeAssistant) -> None:
     """Verify setup returns when runtime data is missing."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.80"})
     entry.add_to_hass(hass)
+    entry.runtime_data = None
 
     entities: list[alarm_module.Elke27AreaAlarmControlPanel] = []
 
@@ -201,7 +233,10 @@ def test_faulted_zones_helpers() -> None:
     zones = alarm_module._faulted_zones(snapshot)
     assert zones == [(1, "Front Door")]
 
-    assert alarm_module._zone_display_name(SimpleNamespace(zone_id=4, name=None), {}) == "Zone 4"
+    assert (
+        alarm_module._zone_display_name(SimpleNamespace(zone_id=4, name=None), {})
+        == "Zone 4"
+    )
 
 
 def test_normalize_code() -> None:
@@ -238,14 +273,20 @@ async def test_area_properties_when_missing(hass: HomeAssistant) -> None:
     await async_setup_entry(hass, entry, _add_entities)
     assert not entities
 
-    area = alarm_module.Elke27AreaAlarmControlPanel(coordinator, hub, entry, 1, SimpleNamespace(area_id=1))
+    area = alarm_module.Elke27AreaAlarmControlPanel(
+        coordinator, hub, entry, 1, SimpleNamespace(area_id=1)
+    )
     assert area.state is None
     assert area.extra_state_attributes["ready"] is None
     hub.is_ready = False
     assert area.available is False
 
     snapshot = SimpleNamespace(
-        areas=[SimpleNamespace(area_id=1, ready=True, trouble=False, ready_status="RDY_AWAY")],
+        areas=[
+            SimpleNamespace(
+                area_id=1, ready=True, trouble=False, ready_status="RDY_AWAY"
+            )
+        ],
         zones=[SimpleNamespace(zone_id=1, name="Door", open=True, bypassed=False)],
         zone_definitions={},
     )

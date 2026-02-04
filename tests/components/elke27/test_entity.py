@@ -74,11 +74,14 @@ async def test_device_info_and_unique_base(hass: HomeAssistant) -> None:
     coordinator.async_set_updated_data(SimpleNamespace(panel_info=None))
     assert unique_base(hub, coordinator, entry) == "112233"
 
-    entry.unique_id = "entry-unique"
-    entry.data.pop("integration_serial", None)
+    hass.config_entries.async_update_entry(entry, unique_id="entry-unique")
+    hass.config_entries.async_update_entry(
+        entry,
+        data={CONF_HOST: entry.data[CONF_HOST]},
+    )
     assert unique_base(hub, coordinator, entry) == "entry-unique"
 
-    entry.unique_id = None
+    hass.config_entries.async_update_entry(entry, unique_id=None)
     assert unique_base(hub, coordinator, entry) == entry.data[CONF_HOST]
 
 

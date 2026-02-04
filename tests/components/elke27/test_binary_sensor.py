@@ -5,9 +5,9 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Any
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.elke27 import binary_sensor as binary_module
 from homeassistant.components.elke27.binary_sensor import async_setup_entry
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.elke27.const import DOMAIN
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
 from homeassistant.components.elke27.models import Elke27RuntimeData
@@ -60,7 +60,9 @@ async def test_binary_sensor_uses_zone_definitions(hass: HomeAssistant) -> None:
         },
         zone_definitions={
             1: SimpleNamespace(zone_id=1, name="Zone A", definition="UNDEFINED"),
-            2: SimpleNamespace(zone_id=2, name="Zone B", definition="BURG PERIM INST", zone_type="door"),
+            2: SimpleNamespace(
+                zone_id=2, name="Zone B", definition="BURG PERIM INST", zone_type="door"
+            ),
         },
     )
     coordinator.async_set_updated_data(snapshot)
@@ -106,6 +108,7 @@ async def test_binary_sensor_setup_edge_cases(hass: HomeAssistant) -> None:
     """Verify setup handles missing runtime data and snapshots."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.0.2.2"})
     entry.add_to_hass(hass)
+    entry.runtime_data = None
 
     entities: list[Any] = []
 
@@ -115,6 +118,8 @@ async def test_binary_sensor_setup_edge_cases(hass: HomeAssistant) -> None:
     await async_setup_entry(hass, entry, _add_entities)
     assert entities == []
 
+    hub = _Hub()
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
     snapshot = SimpleNamespace(
         zones=[
             SimpleNamespace(zone_id=1, name="Zone A", open=False),
@@ -126,15 +131,13 @@ async def test_binary_sensor_setup_edge_cases(hass: HomeAssistant) -> None:
         },
     )
     coordinator.async_set_updated_data(snapshot)
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
     await async_setup_entry(hass, entry, _add_entities)
     assert len(entities) == 1
 
-    hub = _Hub()
-    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
     coordinator.async_set_updated_data(None)
-    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
     await async_setup_entry(hass, entry, _add_entities)
-    assert entities == []
+    assert len(entities) == 1
 
 
 def test_zone_icon_and_attributes() -> None:
@@ -147,9 +150,7 @@ def test_zone_icon_and_attributes() -> None:
     sensor = binary_module.Elke27ZoneBinarySensor(
         coordinator, hub, entry, 1, zone, zone_def
     )
-    coordinator.data = SimpleNamespace(
-        zones=[zone], zone_definitions={1: zone_def}
-    )
+    coordinator.data = SimpleNamespace(zones=[zone], zone_definitions={1: zone_def})
     assert sensor.icon == "mdi:window-open"
     assert sensor.extra_state_attributes["definition"] == "BURG PERIM INST"
     zone.open = False
