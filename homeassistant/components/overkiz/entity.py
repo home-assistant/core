@@ -60,16 +60,6 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
 
     def generate_device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        # Some devices, such as the Smart Thermostat have several devices
-        # in one physical device, with same device url, terminated by '#' and a number.
-        # In this case, we use the base device url as the device identifier.
-        if self.is_sub_device:
-            # Only return the url of the base device, to inherit device name
-            # and model from parent device.
-            return DeviceInfo(
-                identifiers={(DOMAIN, self.executor.base_device_url)},
-            )
-
         manufacturer = (
             self.executor.select_attribute(OverkizAttribute.CORE_MANUFACTURER)
             or self.executor.select_state(OverkizState.CORE_MANUFACTURER_NAME)
@@ -90,6 +80,20 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             if self.coordinator.areas and self.device.place_oid
             else None
         )
+
+        # Some devices, such as the Smart Thermostat have several devices
+        # in one physical device, with same device url, terminated by '#' and a number.
+        # Sub-devices are linked to the parent device via via_device.
+        if self.is_sub_device:
+            return DeviceInfo(
+                identifiers={(DOMAIN, self.device_url)},
+                name=self.device.label,
+                manufacturer=str(manufacturer),
+                model=str(model),
+                suggested_area=suggested_area,
+                via_device=(DOMAIN, self.executor.base_device_url),
+                configuration_url=self.coordinator.client.server.configuration_url,
+            )
 
         return DeviceInfo(
             identifiers={(DOMAIN, self.executor.base_device_url)},
