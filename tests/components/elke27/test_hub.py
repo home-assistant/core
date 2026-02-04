@@ -451,6 +451,10 @@ def test_event_type_and_connection_state_extra() -> None:
     assert _connection_state(event) is True
     event = SimpleNamespace(connected="no")
     assert _connection_state(event) is None
+    event = SimpleNamespace(event_type="disconnected")
+    assert _connection_state(event) is False
+    event = SimpleNamespace()
+    assert _event_type(event) is None
 
 
 async def test_async_set_output_supports_async_and_sync(

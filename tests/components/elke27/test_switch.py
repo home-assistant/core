@@ -182,3 +182,5 @@ def test_switch_iter_outputs_variants() -> None:
     assert list(switch_module._iter_outputs(snapshot)) == ["x"]
     snapshot.outputs = ["a"]
     assert list(switch_module._iter_outputs(snapshot)) == ["a"]
+    snapshot.outputs = "bad"
+    assert list(switch_module._iter_outputs(snapshot)) == []

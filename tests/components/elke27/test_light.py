@@ -170,3 +170,5 @@ def test_light_iter_outputs_variants() -> None:
     assert list(light_module._iter_outputs(snapshot)) == ["x"]
     snapshot.outputs = ["a"]
     assert list(light_module._iter_outputs(snapshot)) == ["a"]
+    snapshot.outputs = "bad"
+    assert list(light_module._iter_outputs(snapshot)) == []
