@@ -117,7 +117,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
-            address: str = str(user_input[CONF_ADDRESS])
+            address = str(user_input[CONF_ADDRESS])
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             self._disc_dev = self._disc_devs[address]
@@ -127,9 +127,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data={"type": self._disc_dev.type},
             )
 
-        current_addresses: Final[set[str | None]] = self._async_current_ids(
-            include_ignore=False
-        )
+        current_addresses: Final = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(
             self.hass, connectable=True
         ):
