@@ -201,10 +201,13 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             )
             for api in llm.async_get_apis(self.hass)
         ]
-        if (suggested_llm_apis := self.options.get(CONF_LLM_HASS_API)) and isinstance(
-            suggested_llm_apis, str
-        ):
-            self.options[CONF_LLM_HASS_API] = [suggested_llm_apis]
+        if suggested_llm_apis := self.options.get(CONF_LLM_HASS_API):
+            if isinstance(suggested_llm_apis, str):
+                suggested_llm_apis = [suggested_llm_apis]
+            known_apis = {api.id for api in llm.async_get_apis(self.hass)}
+            self.options[CONF_LLM_HASS_API] = [
+                api for api in suggested_llm_apis if api in known_apis
+            ]
 
         step_schema: VolDictType = {}
         errors: dict[str, str] = {}
@@ -416,7 +419,11 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             model_alias = (
                 model_info.id[:-9]
                 if model_info.id
-                not in ("claude-3-haiku-20240307", "claude-3-opus-20240229")
+                not in (
+                    "claude-3-haiku-20240307",
+                    "claude-3-5-haiku-20241022",
+                    "claude-3-opus-20240229",
+                )
                 else model_info.id
             )
             if short_form.search(model_alias):

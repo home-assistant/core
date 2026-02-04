@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 from pylitterbot import Robot
 import pytest
 
-from homeassistant.components.litterrobot.vacuum import SERVICE_SET_SLEEP_MODE
+from homeassistant.components.litterrobot.services import SERVICE_SET_SLEEP_MODE
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_START,
