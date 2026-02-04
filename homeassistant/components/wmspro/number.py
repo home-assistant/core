@@ -91,7 +91,7 @@ class WebControlProSlatRange(WebControlProGenericEntity, RestoreNumber):
         if action is not None:
             rotation = action["rotation"]
             if rotation is not None:
-                if rotation is not action.minValue and rotation is not action.maxValue:
+                if rotation != action.minValue and rotation != action.maxValue:
                     self._attr_native_value = self._value_func(
                         self._attr_native_value, rotation
                     )
