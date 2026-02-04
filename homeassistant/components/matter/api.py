@@ -21,7 +21,6 @@ from .api_base import (
     async_get_node,
     async_handle_failed_command,
 )
-from .api_lock import async_register_lock_api
 
 
 @callback
@@ -36,8 +35,6 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_open_commissioning_window)
     websocket_api.async_register_command(hass, websocket_remove_matter_fabric)
     websocket_api.async_register_command(hass, websocket_interview_node)
-    # Register lock user management commands
-    async_register_lock_api(hass)
 
 
 @websocket_api.require_admin

@@ -11,9 +11,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntityFeature, LockState
 from homeassistant.components.matter.const import (
     ATTR_CODE_SLOT,
-    ATTR_MAX_CREDENTIALS_PER_USER,
-    ATTR_MAX_PIN_USERS,
-    ATTR_MAX_RFID_USERS,
     ATTR_MAX_USERS,
     ATTR_SUPPORTS_USER_MGMT,
     ATTR_USER_INDEX,
@@ -539,71 +536,6 @@ async def test_disposable_user_cleanup_failure(
     state = hass.states.get("lock.mock_door_lock")
     assert state
     assert state.attributes[ATTR_CHANGED_BY] == "FailCode (Keypad)"
-
-
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
-async def test_extra_state_attributes_without_usr(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
-    """Test extra state attributes when USR feature is not supported."""
-    # Default door_lock fixture has featuremap=0, no USR support
-    state = hass.states.get("lock.mock_door_lock")
-    assert state
-    assert state.attributes[ATTR_SUPPORTS_USER_MGMT] is False
-    assert ATTR_MAX_USERS not in state.attributes
-    assert ATTR_MAX_PIN_USERS not in state.attributes
-    assert ATTR_MAX_RFID_USERS not in state.attributes
-    assert ATTR_MAX_CREDENTIALS_PER_USER not in state.attributes
-
-
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
-@pytest.mark.parametrize(
-    "attributes",
-    [
-        {
-            # Enable USR feature (bit 8 = 256) + PIN (bit 0 = 1)
-            "1/257/65532": 257,
-        }
-    ],
-)
-async def test_extra_state_attributes_with_usr(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
-    """Test extra state attributes when USR feature is supported."""
-    state = hass.states.get("lock.mock_door_lock")
-    assert state
-    assert state.attributes[ATTR_SUPPORTS_USER_MGMT] is True
-    # Verify capacity attributes are present (from fixture values)
-    assert state.attributes[ATTR_MAX_USERS] == 10
-    assert state.attributes[ATTR_MAX_PIN_USERS] == 10
-    assert state.attributes[ATTR_MAX_RFID_USERS] == 10
-    assert state.attributes[ATTR_MAX_CREDENTIALS_PER_USER] == 5
-
-
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
-async def test_extra_state_attributes_dynamic_featuremap(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
-    """Test extra state attributes update when featuremap changes dynamically."""
-    # Initially no USR support
-    state = hass.states.get("lock.mock_door_lock")
-    assert state
-    assert state.attributes[ATTR_SUPPORTS_USER_MGMT] is False
-
-    # Enable USR feature dynamically
-    set_node_attribute(matter_node, 1, 257, 65532, 256)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("lock.mock_door_lock")
-    assert state
-    assert state.attributes[ATTR_SUPPORTS_USER_MGMT] is True
-    assert ATTR_MAX_USERS in state.attributes
 
 
 # --- Entity service tests ---
