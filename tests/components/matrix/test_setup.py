@@ -92,11 +92,13 @@ async def test_async_setup_with_existing_config_entry(hass: HomeAssistant) -> No
         mock_matrix_bot.return_value = Mock()
 
         result = await async_setup_component(hass, DOMAIN, TEST_YAML_CONFIG)
+        await hass.async_block_till_done()
 
         assert result is True
         # Should not create import flow since config entry exists
         mock_flow_init.assert_not_called()
-        # Existing config entry should still be set up
+
+        # Config entry should have been set up automatically by async_setup_component
         mock_matrix_bot.assert_called_once()
         mock_setup_services.assert_called_once()
 

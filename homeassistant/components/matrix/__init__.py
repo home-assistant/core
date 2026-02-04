@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Sequence
+import inspect
 import logging
 import mimetypes
 import os
@@ -148,9 +149,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for command in config[CONF_COMMANDS]:
             serialized_command = dict(command)
             if (
-                (expression := serialized_command.get(CONF_EXPRESSION)) is not None
-                and isinstance(expression, re.Pattern)
-            ):
+                expression := serialized_command.get(CONF_EXPRESSION)
+            ) is not None and isinstance(expression, re.Pattern):
                 serialized_command[CONF_EXPRESSION] = expression.pattern
             commands.append(serialized_command)
         hass.async_create_task(
@@ -210,7 +210,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatrixConfigEntry) -> bo
 
     async_setup_services(hass)
 
-    if hass.is_running and asyncio.iscoroutinefunction(matrix_bot.async_start):
+    if hass.is_running and inspect.iscoroutinefunction(matrix_bot.async_start):
         hass.async_create_background_task(
             matrix_bot.async_start(),
             name=f"{matrix_bot.__class__.__name__}: start for '{matrix_bot._mx_id}'",
@@ -295,11 +295,15 @@ class MatrixBot:
                 return
             self._started = True
 
-        self._access_tokens = await self._get_auth_tokens()
-        await self._login()
-        await self._resolve_room_aliases(self._configured_rooms)
-        self._load_commands(self._unparsed_commands)
-        await self._join_rooms()
+        try:
+            self._access_tokens = await self._get_auth_tokens()
+            await self._login()
+            await self._resolve_room_aliases(self._configured_rooms)
+            self._load_commands(self._unparsed_commands)
+            await self._join_rooms()
+        except Exception:
+            self._started = False
+            raise
 
         # Sync once so that we don't respond to past events.
         _LOGGER.debug("Starting initial sync for %s", self._mx_id)

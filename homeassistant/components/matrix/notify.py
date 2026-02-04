@@ -18,13 +18,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import RoomID
-from .const import CONF_CONFIG_ENTRY_ID, DOMAIN, SERVICE_SEND_MESSAGE
+from .const import CONF_CONFIG_ENTRY_ID, CONF_ROOMS_REGEX, DOMAIN, SERVICE_SEND_MESSAGE
 
 CONF_DEFAULT_ROOM = "default_room"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_DEFAULT_ROOM): cv.string,
+        vol.Required(CONF_DEFAULT_ROOM): cv.matches_regex(CONF_ROOMS_REGEX),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
     }
 )

@@ -11,7 +11,7 @@
           "verify_ssl": "Verify SSL certificate"
         },
         "data_description": {
-          "homeserver": "The URL of your Matrix homeserver (e.g. https://matrix.org)",
+          "homeserver": "The URL of your Matrix homeserver",
           "username": "Your Matrix username including the domain (e.g. @user:matrix.org)",
           "password": "Your Matrix account password",
           "verify_ssl": "Whether to verify the SSL certificate of your homeserver"
@@ -31,7 +31,7 @@
           "verify_ssl": "Verify SSL certificate"
         },
         "data_description": {
-          "homeserver": "The URL of your Matrix homeserver (e.g. https://matrix.org)",
+          "homeserver": "The URL of your Matrix homeserver",
           "username": "Your Matrix username including the domain (e.g. @user:matrix.org)",
           "password": "Your Matrix account password",
           "verify_ssl": "Whether to verify the SSL certificate of your homeserver"
