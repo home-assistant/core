@@ -670,23 +670,41 @@ class WeatherExtraStoredData(ExtraStoredData):
     @classmethod
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored event state from a dict."""
-        try:
-            return cls(
-                last_apparent_temperature=restored["last_apparent_temperature"],
-                last_cloud_coverage=restored["last_cloud_coverage"],
-                last_dew_point=restored["last_dew_point"],
-                last_humidity=restored["last_humidity"],
-                last_ozone=restored["last_ozone"],
-                last_pressure=restored["last_pressure"],
-                last_temperature=restored["last_temperature"],
-                last_uv_index=restored["last_uv_index"],
-                last_visibility=restored["last_visibility"],
-                last_wind_bearing=restored["last_wind_bearing"],
-                last_wind_gust_speed=restored["last_wind_gust_speed"],
-                last_wind_speed=restored["last_wind_speed"],
-            )
-        except KeyError:
-            return None
+        for key, vtypes in (
+            ("last_apparent_temperature", (float, int)),
+            ("last_cloud_coverage", (float, int)),
+            ("last_dew_point", (float, int)),
+            ("last_humidity", (float, int)),
+            ("last_ozone", (float, int)),
+            ("last_pressure", (float, int)),
+            ("last_temperature", (float, int)),
+            ("last_uv_index", (float, int)),
+            ("last_visibility", (float, int)),
+            ("last_wind_bearing", (float, int, str)),
+            ("last_wind_gust_speed", (float, int)),
+            ("last_wind_speed", (float, int)),
+        ):
+            # This is needed to safeguard against previous restore data that has strings
+            # instead of floats or ints.
+            if key not in restored or (
+                (value := restored[key]) is not None and not isinstance(value, vtypes)
+            ):
+                return None
+
+        return cls(
+            last_apparent_temperature=restored["last_apparent_temperature"],
+            last_cloud_coverage=restored["last_cloud_coverage"],
+            last_dew_point=restored["last_dew_point"],
+            last_humidity=restored["last_humidity"],
+            last_ozone=restored["last_ozone"],
+            last_pressure=restored["last_pressure"],
+            last_temperature=restored["last_temperature"],
+            last_uv_index=restored["last_uv_index"],
+            last_visibility=restored["last_visibility"],
+            last_wind_bearing=restored["last_wind_bearing"],
+            last_wind_gust_speed=restored["last_wind_gust_speed"],
+            last_wind_speed=restored["last_wind_speed"],
+        )
 
 
 class TriggerWeatherEntity(TriggerEntity, AbstractTemplateWeather, RestoreEntity):
@@ -824,18 +842,18 @@ class TriggerWeatherEntity(TriggerEntity, AbstractTemplateWeather, RestoreEntity
     def extra_restore_state_data(self) -> WeatherExtraStoredData:
         """Return weather specific state data to be restored."""
         return WeatherExtraStoredData(
-            last_apparent_temperature=self._rendered.get(CONF_APPARENT_TEMPERATURE),
-            last_cloud_coverage=self._rendered.get(CONF_CLOUD_COVERAGE),
-            last_dew_point=self._rendered.get(CONF_DEW_POINT),
-            last_humidity=self._rendered.get(CONF_HUMIDITY),
-            last_ozone=self._rendered.get(CONF_OZONE),
-            last_pressure=self._rendered.get(CONF_PRESSURE),
-            last_temperature=self._rendered.get(CONF_TEMPERATURE),
-            last_uv_index=self._rendered.get(CONF_UV_INDEX),
-            last_visibility=self._rendered.get(CONF_VISIBILITY),
-            last_wind_bearing=self._rendered.get(CONF_WIND_BEARING),
-            last_wind_gust_speed=self._rendered.get(CONF_WIND_GUST_SPEED),
-            last_wind_speed=self._rendered.get(CONF_WIND_SPEED),
+            last_apparent_temperature=self.native_apparent_temperature,
+            last_cloud_coverage=self._attr_cloud_coverage,
+            last_dew_point=self.native_dew_point,
+            last_humidity=self.humidity,
+            last_ozone=self.ozone,
+            last_pressure=self.native_pressure,
+            last_temperature=self.native_temperature,
+            last_uv_index=self.uv_index,
+            last_visibility=self.native_visibility,
+            last_wind_bearing=self.wind_bearing,
+            last_wind_gust_speed=self.native_wind_gust_speed,
+            last_wind_speed=self.native_wind_speed,
         )
 
     async def async_get_last_weather_data(self) -> WeatherExtraStoredData | None:
