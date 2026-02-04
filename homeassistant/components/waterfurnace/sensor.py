@@ -146,23 +146,16 @@ class WaterFurnaceSensor(SensorEntity):
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self.client.unit)},
             manufacturer="WaterFurnace",
+            name="WaterFurnace System",
         )
 
-        if self.client.client.devices:
-            for device in self.client.client.devices:
-                if device.gwid == self.client.unit:
-                    if device.description:
-                        # Eg. Series 7
-                        device_info["model"] = device.description
-                    if device.awlabctypedesc:
-                        # Eg. Series 7, 5 Ton
-                        device_info["name"] = device.awlabctypedesc
-
-                    break
-
-        # Fallback name if no information found
-        if "name" not in device_info:
-            device_info["name"] = "WaterFurnace System"
+        if self.client.device_metadata:
+            if self.client.device_metadata.description:
+                # Eg. Series 7
+                device_info["model"] = self.client.device_metadata.description
+            if self.client.device_metadata.awlabctypedesc:
+                # Eg. Series 7, 5 Ton
+                device_info["name"] = self.client.device_metadata.awlabctypedesc
 
         return device_info
 
