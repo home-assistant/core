@@ -27,7 +27,7 @@ TELEGRAM_WEBHOOK_URL = "/api/telegram_webhooks"
 SECRET_TOKEN_LENGTH = 32
 
 
-async def async_setup_platform(
+async def async_setup_bot_platform(
     hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
 ) -> BaseTelegramBot | None:
     """Set up the Telegram webhooks platform."""
