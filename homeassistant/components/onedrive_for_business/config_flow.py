@@ -124,9 +124,8 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                folder = await self.client.create_folder(
-                    "root", user_input[CONF_FOLDER_PATH]
-                )
+                path = str(user_input[CONF_FOLDER_PATH]).lstrip("/")
+                folder = await self.client.create_folder("root", path)
             except OneDriveException:
                 self.logger.debug("Failed to create folder", exc_info=True)
                 errors["base"] = "folder_creation_error"
