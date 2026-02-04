@@ -54,7 +54,6 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         client.update_info = AsyncMock()
         client.close_connection = AsyncMock()
 
-        # Set up sensors and device_metadata directly on client
         client.unique_id = "40580137858664"
         client.sensors = {
             "l1_voltage": Sensor(
