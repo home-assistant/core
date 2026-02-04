@@ -10,7 +10,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.neato.const import NEATO_DOMAIN
+from homeassistant.components.neato.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -37,7 +37,7 @@ async def test_full_flow(
     """Check full flow."""
     assert await setup.async_setup_component(hass, "neato", {})
     await async_import_client_credential(
-        hass, NEATO_DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -79,14 +79,14 @@ async def test_full_flow(
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert len(hass.config_entries.async_entries(NEATO_DOMAIN)) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
 
 
 async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if Neato is already setup."""
     entry = MockConfigEntry(
-        domain=NEATO_DOMAIN,
+        domain=DOMAIN,
         data={"auth_implementation": "neato", "token": {"some": "data"}},
     )
     entry.add_to_hass(hass)
@@ -108,12 +108,12 @@ async def test_reauth(
     """Test initialization of the reauth flow."""
     assert await setup.async_setup_component(hass, "neato", {})
     await async_import_client_credential(
-        hass, NEATO_DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
     )
 
     entry = MockConfigEntry(
         entry_id="my_entry",
-        domain=NEATO_DOMAIN,
+        domain=DOMAIN,
         data={"username": "abcdef", "password": "123456", "vendor": "neato"},
     )
     entry.add_to_hass(hass)
@@ -160,5 +160,5 @@ async def test_reauth(
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert new_entry.state is ConfigEntryState.LOADED
-    assert len(hass.config_entries.async_entries(NEATO_DOMAIN)) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
