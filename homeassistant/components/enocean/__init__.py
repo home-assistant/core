@@ -74,14 +74,18 @@ async def async_setup_entry(
 
     # storage in hass.data is needed for (later) transfer of device setup from yaml to UI
     # it will be removed once this transfer is done and yaml support is removed
-    hass.data.setdefault(
-        DOMAIN,
-        EnOceanHassData(gateway=None, dispatcher_disconnect_handle=None),
-    )
-    hass.data[DOMAIN].gateway = gateway
-    hass.data[DOMAIN].dispatcher_disconnect_handle = async_dispatcher_connect(
-        hass, SIGNAL_SEND_MESSAGE, gateway.legacy_send_packet
-    )
+    if DOMAIN in hass.data:
+        hass.data[DOMAIN].gateway = gateway
+        hass.data[DOMAIN].dispatcher_disconnect_handle = async_dispatcher_connect(
+            hass, SIGNAL_SEND_MESSAGE, gateway.legacy_send_packet
+        )
+    else:
+        hass.data[DOMAIN] = EnOceanHassData(
+            gateway=gateway,
+            dispatcher_disconnect_handle=async_dispatcher_connect(
+                hass, SIGNAL_SEND_MESSAGE, gateway.legacy_send_packet
+            ),
+        )
 
     config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
 
