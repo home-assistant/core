@@ -33,6 +33,11 @@ def _get_exception_name(expression: ast.expr) -> str:
         # Raise namespace.???
         return _get_exception_name(expression.value)
 
+    if isinstance(expression, ast.Subscript):
+        # Raise errors[0][0]
+        # Unable to determine exception name
+        return None
+
     raise TypeError(f"Raise is neither Attribute nor Call nor Name: {type(expression)}")
 
 
