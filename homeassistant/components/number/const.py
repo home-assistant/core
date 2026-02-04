@@ -247,13 +247,13 @@ class NumberDeviceClass(StrEnum):
     NITROGEN_DIOXIDE = "nitrogen_dioxide"
     """Amount of NO2.
 
-    Unit of measurement: `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `μg/m³`
     """
 
     NITROGEN_MONOXIDE = "nitrogen_monoxide"
     """Amount of NO.
 
-    Unit of measurement: `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `μg/m³`
     """
 
     NITROUS_OXIDE = "nitrous_oxide"
@@ -265,7 +265,7 @@ class NumberDeviceClass(StrEnum):
     OZONE = "ozone"
     """Amount of O3.
 
-    Unit of measurement: `μg/m³`
+    Unit of measurement: `ppb` (parts per billion), `μg/m³`
     """
 
     PH = "ph"
@@ -517,10 +517,19 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.ILLUMINANCE: {LIGHT_LUX},
     NumberDeviceClass.IRRADIANCE: set(UnitOfIrradiance),
     NumberDeviceClass.MOISTURE: {PERCENTAGE},
-    NumberDeviceClass.NITROGEN_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    NumberDeviceClass.NITROGEN_MONOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.NITROGEN_DIOXIDE: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
+    NumberDeviceClass.NITROGEN_MONOXIDE: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
     NumberDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
-    NumberDeviceClass.OZONE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.OZONE: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
     NumberDeviceClass.PH: {None},
     NumberDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
@@ -585,7 +594,8 @@ UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
 }
 
 # We translate units that were using using the legacy coding of μ \u00b5
-# to units using recommended coding of μ \u03bc
+# to units using recommended coding of μ \u03bc and
+# we convert alternative accepted units to the preferred unit.
 AMBIGUOUS_UNITS: dict[str | None, str] = {
     "\u00b5Sv/h": "μSv/h",  # aranet: radiation rate
     "\u00b5S/cm": UnitOfConductivity.MICROSIEMENS_PER_CM,
@@ -595,4 +605,9 @@ AMBIGUOUS_UNITS: dict[str | None, str] = {
     "\u00b5mol/s⋅m²": "μmol/s⋅m²",  # fyta: light
     "\u00b5g": UnitOfMass.MICROGRAMS,
     "\u00b5s": UnitOfTime.MICROSECONDS,
+    "mVAr": UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+    "VAr": UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+    "kVAr": UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+    "VArh": UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
+    "kVArh": UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
 }

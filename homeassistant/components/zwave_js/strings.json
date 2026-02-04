@@ -1,13 +1,13 @@
 {
   "config": {
     "abort": {
-      "addon_get_discovery_info_failed": "Failed to get Z-Wave add-on discovery info.",
-      "addon_info_failed": "Failed to get Z-Wave add-on info.",
-      "addon_install_failed": "Failed to install the Z-Wave add-on.",
-      "addon_required": "The Z-Wave migration flow requires the integration to be configured using the Z-Wave Supervisor add-on. If you are using Z-Wave JS UI, please follow our [migration instructions]({zwave_js_ui_migration}).",
+      "addon_get_discovery_info_failed": "Failed to get Z-Wave app discovery info.",
+      "addon_info_failed": "Failed to get Z-Wave app info.",
+      "addon_install_failed": "Failed to install the Z-Wave app.",
+      "addon_required": "The Z-Wave migration flow requires the integration to be configured using the Z-Wave Supervisor app. If you are using Z-Wave JS UI, please follow our [migration instructions]({zwave_js_ui_migration}).",
       "addon_set_config_failed": "Failed to set Z-Wave configuration.",
-      "addon_start_failed": "Failed to start the Z-Wave add-on.",
-      "addon_stop_failed": "Failed to stop the Z-Wave add-on.",
+      "addon_start_failed": "Failed to start the Z-Wave app.",
+      "addon_stop_failed": "Failed to stop the Z-Wave app.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "backup_failed": "Failed to back up network.",
@@ -17,25 +17,25 @@
       "discovery_requires_supervisor": "Discovery requires the Home Assistant Supervisor.",
       "migration_low_sdk_version": "The SDK version of the old adapter is lower than {ok_sdk_version}. This means it's not possible to migrate the non-volatile memory (NVM) of the old adapter to another adapter.\n\nCheck the documentation on the manufacturer support pages of the old adapter, if it's possible to upgrade the firmware of the old adapter to a version that is built with SDK version {ok_sdk_version} or higher.",
       "migration_successful": "Migration successful.",
-      "not_hassio": "ESPHome discovery requires Home Assistant to configure the Z-Wave add-on.",
+      "not_hassio": "ESPHome discovery requires Home Assistant to configure the Z-Wave app.",
       "not_zwave_device": "Discovered device is not a Z-Wave device.",
-      "not_zwave_js_addon": "Discovered add-on is not the official Z-Wave add-on.",
+      "not_zwave_js_addon": "Discovered app is not the official Z-Wave app.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "reset_failed": "Failed to reset adapter.",
       "usb_ports_failed": "Failed to get USB devices."
     },
     "error": {
-      "addon_start_failed": "Failed to start the Z-Wave add-on. Check the configuration.",
+      "addon_start_failed": "Failed to start the Z-Wave app. Check the configuration.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_ws_url": "Invalid websocket URL",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "flow_title": "{name}",
+    "flow_title": "Network {home_id} at {host}:{port}",
     "progress": {
       "backup_nvm": "Please wait while the network backup completes",
       "install_addon": "Installation can take several minutes",
       "restore_nvm": "Please wait while the network restore completes",
-      "start_addon": "Starting add-on"
+      "start_addon": "Starting app"
     },
     "step": {
       "choose_serial_port": {
@@ -65,7 +65,7 @@
           "usb_path": "[%key:common::config_flow::data::usb_path%]"
         },
         "description": "Select your Z-Wave adapter",
-        "title": "Enter the Z-Wave add-on configuration"
+        "title": "Enter the Z-Wave app configuration"
       },
       "configure_security_keys": {
         "data": {
@@ -84,10 +84,10 @@
         "title": "Migrate to a new adapter"
       },
       "hassio_confirm": {
-        "description": "Do you want to set up the Z-Wave integration with the Z-Wave add-on?"
+        "description": "Do you want to set up the Z-Wave integration with the Z-Wave app?"
       },
       "install_addon": {
-        "title": "Installing add-on"
+        "title": "Installing app"
       },
       "installation_type": {
         "description": "In a few steps, we're going to set up your adapter. Home Assistant can automatically install and configure the recommended Z-Wave setup, or you can customize it.",
@@ -127,9 +127,9 @@
       },
       "on_supervisor": {
         "data": {
-          "use_addon": "Use the Z-Wave Supervisor add-on"
+          "use_addon": "Use the Z-Wave Supervisor app"
         },
-        "description": "Do you want to use the Z-Wave Supervisor add-on?",
+        "description": "Do you want to use the Z-Wave Supervisor app?",
         "title": "Select connection method"
       },
       "on_supervisor_reconfigure": {
@@ -167,7 +167,7 @@
         "title": "Z-Wave region"
       },
       "start_addon": {
-        "title": "Configuring add-on"
+        "title": "Configuring app"
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the Z-Wave Server with home ID {home_id} found at {url} to Home Assistant?",
