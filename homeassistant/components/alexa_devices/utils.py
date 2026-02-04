@@ -54,7 +54,7 @@ def alexa_api_call[_T: AmazonEntity, **_P](
 async def async_update_unique_id(
     hass: HomeAssistant,
     coordinator: AmazonDevicesCoordinator,
-    domain: str,
+    platform: str,
     old_key: str,
     new_key: str,
 ) -> None:
@@ -63,7 +63,9 @@ async def async_update_unique_id(
 
     for serial_num in coordinator.data:
         unique_id = f"{serial_num}-{old_key}"
-        if entity_id := entity_registry.async_get_entity_id(domain, DOMAIN, unique_id):
+        if entity_id := entity_registry.async_get_entity_id(
+            DOMAIN, platform, unique_id
+        ):
             _LOGGER.debug("Updating unique_id for %s", entity_id)
             new_unique_id = unique_id.replace(old_key, new_key)
 
@@ -74,12 +76,13 @@ async def async_update_unique_id(
 async def async_remove_dnd_from_virtual_group(
     hass: HomeAssistant,
     coordinator: AmazonDevicesCoordinator,
+    key: str,
 ) -> None:
     """Remove entity DND from virtual group."""
     entity_registry = er.async_get(hass)
 
     for serial_num in coordinator.data:
-        unique_id = f"{serial_num}-do_not_disturb"
+        unique_id = f"{serial_num}-{key}"
         entity_id = entity_registry.async_get_entity_id(
             DOMAIN, SWITCH_DOMAIN, unique_id
         )
@@ -104,7 +107,7 @@ async def async_remove_unsupported_notification_sensors(
         ):
             unique_id = f"{serial_num}-{notification_key}"
             entity_id = entity_registry.async_get_entity_id(
-                domain=SENSOR_DOMAIN, platform=DOMAIN, unique_id=unique_id
+                DOMAIN, SENSOR_DOMAIN, unique_id=unique_id
             )
             is_unsupported = not coordinator.data[serial_num].notifications_supported
 
