@@ -5,10 +5,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 import logging
 from typing import Any
 
-from ns_api import Trip
+from ns_api import Trip, TripStatus
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -49,6 +50,13 @@ def get_departure_time(trip: Trip | None) -> datetime | None:
     return trip.departure_time_actual or trip.departure_time_planned if trip else None
 
 
+def _get_enum_value(enum_member: Enum | str | None) -> str | None:
+    """Get the value of an Enum member or return the string itself."""
+    if enum_member is not None and isinstance(enum_member, Enum):
+        return enum_member.value.lower()
+    return None
+
+
 def _get_time_str(time: datetime | None) -> str | None:
     """Get time as string."""
     return time.strftime("%H:%M") if time else None
@@ -64,11 +72,6 @@ def _get_route(trip: Trip | None) -> list[str]:
     route.extend(part.destination for part in trip_parts)
     return route
 
-
-TRIP_STATUS = {
-    "NORMAL": "normal",
-    "CANCELLED": "cancelled",
-}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -175,8 +178,8 @@ SENSOR_DESCRIPTIONS: tuple[NSSensorEntityDescription, ...] = (
         key="status",
         translation_key="status",
         device_class=SensorDeviceClass.ENUM,
-        options=list(TRIP_STATUS.values()),
-        value_fn=lambda trip: TRIP_STATUS.get(trip.status),
+        options=[status.value.lower() for status in TripStatus],
+        value_fn=lambda trip: _get_enum_value(trip.status) if trip else None,
         entity_registry_enabled_default=False,
     ),
     NSSensorEntityDescription(
@@ -315,7 +318,7 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
         if not first_trip:
             return None
 
-        status = first_trip.status
+        status = _get_enum_value(first_trip.status)
 
         # Static attributes
         return {
@@ -337,7 +340,7 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
             "arrival_platform_planned": first_trip.arrival_platform_planned,
             "arrival_platform_actual": first_trip.arrival_platform_actual,
             "next": _get_time_str(get_departure_time(next_trip)),
-            "status": status.lower() if status else None,
+            "status": status,
             "transfers": first_trip.nr_transfers,
             "route": _get_route(first_trip),
             "remarks": None,
