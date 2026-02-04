@@ -39,7 +39,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         def model(self) -> str:
             """Return BMS type in capital letters, e.g. 'DUMMY BMS'."""
-            return self.type.rsplit(".", 1)[-1].replace("_", " ").upper()
+            return self.type.rsplit(".", 1)[1].replace("_", " ").upper()
 
     def __init__(self) -> None:
         """Initialize the config flow."""
