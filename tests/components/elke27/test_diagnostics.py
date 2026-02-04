@@ -150,3 +150,12 @@ def test_to_jsonable_handles_misc_types() -> None:
     assert value["bytes"] == "616263"
     assert value["set"] == ["a", "b"]
     assert value["enum"] == "VALUE"
+
+
+def test_to_jsonable_handles_none_and_mappingproxy() -> None:
+    """Verify JSON serialization handles None and mapping proxy types."""
+    assert _to_jsonable(None) is None
+    proxy = MappingProxyType({"a": 1})
+    assert _to_jsonable(proxy) == {"a": 1}
+    assert _to_jsonable([1, 2]) == [1, 2]
+    assert _to_jsonable(object()).startswith("<")

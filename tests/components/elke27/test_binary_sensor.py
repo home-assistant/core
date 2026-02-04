@@ -85,3 +85,93 @@ def test_zone_device_class_mapping() -> None:
         binary_module._zone_device_class(zone, definition)
         == BinarySensorDeviceClass.MOTION
     )
+    definition.zone_type = "window"
+    assert (
+        binary_module._zone_device_class(zone, definition)
+        == BinarySensorDeviceClass.WINDOW
+    )
+    definition.zone_type = "door"
+    assert (
+        binary_module._zone_device_class(zone, definition)
+        == BinarySensorDeviceClass.DOOR
+    )
+    definition.zone_type = "other"
+    assert (
+        binary_module._zone_device_class(zone, definition)
+        == BinarySensorDeviceClass.OPENING
+    )
+
+
+async def test_binary_sensor_setup_edge_cases(hass: HomeAssistant) -> None:
+    """Verify setup handles missing runtime data and snapshots."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.0.2.2"})
+    entry.add_to_hass(hass)
+
+    entities: list[Any] = []
+
+    def _add_entities(new_entities: list[Any]) -> None:
+        entities.extend(new_entities)
+
+    await async_setup_entry(hass, entry, _add_entities)
+    assert entities == []
+
+    snapshot = SimpleNamespace(
+        zones=[
+            SimpleNamespace(zone_id=1, name="Zone A", open=False),
+            SimpleNamespace(zone_id=2, name="Zone B", open=False),
+        ],
+        zone_definitions={
+            1: SimpleNamespace(definition="UNDEFINED"),
+            2: SimpleNamespace(definition="BURG PERIM INST", zone_type="door"),
+        },
+    )
+    coordinator.async_set_updated_data(snapshot)
+    await async_setup_entry(hass, entry, _add_entities)
+    assert len(entities) == 1
+
+    hub = _Hub()
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
+    coordinator.async_set_updated_data(None)
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
+    await async_setup_entry(hass, entry, _add_entities)
+    assert entities == []
+
+
+def test_zone_icon_and_attributes() -> None:
+    """Verify icon selection and attributes."""
+    hub = _Hub()
+    coordinator = SimpleNamespace(data=None)
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.0.2.3"})
+    zone = SimpleNamespace(zone_id=1, name="Zone 1", open=True, bypassed=False)
+    zone_def = SimpleNamespace(definition="BURG PERIM INST", zone_type="door")
+    sensor = binary_module.Elke27ZoneBinarySensor(
+        coordinator, hub, entry, 1, zone, zone_def
+    )
+    coordinator.data = SimpleNamespace(
+        zones=[zone], zone_definitions={1: zone_def}
+    )
+    assert sensor.icon == "mdi:window-open"
+    assert sensor.extra_state_attributes["definition"] == "BURG PERIM INST"
+    zone.open = False
+    assert sensor.icon == "mdi:window-closed"
+    zone_def.definition = None
+    assert sensor.icon is None
+
+
+def test_zone_definition_helpers() -> None:
+    """Verify helper functions with missing data."""
+    assert binary_module._zone_definition_entry(None, 1) is None
+    assert binary_module._zone_definition_value({}, None) is None
+    assert binary_module._zone_name(SimpleNamespace(name=None), None) is None
+
+
+def test_zone_missing_state() -> None:
+    """Verify missing zone returns None state and no icon."""
+    hub = _Hub()
+    coordinator = SimpleNamespace(data=None)
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.0.2.4"})
+    sensor = binary_module.Elke27ZoneBinarySensor(
+        coordinator, hub, entry, 1, SimpleNamespace(), None
+    )
+    assert sensor.is_on is None
+    assert sensor.icon is None

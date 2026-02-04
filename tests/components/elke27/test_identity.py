@@ -65,6 +65,54 @@ def test_extract_mac_none_when_missing() -> None:
     assert identity_module._extract_mac(addrs) is None
 
 
+def test_extract_mac_supported_family(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify MAC extraction for supported families."""
+    family = getattr(socket, "AF_PACKET", None) or getattr(socket, "AF_LINK", None)
+    if family is None:
+        pytest.skip("No supported MAC family on this platform")
+    addrs = [type("Addr", (), {"family": family, "address": "aa:bb:cc:dd:ee:ff"})()]
+    assert identity_module._extract_mac(addrs) == "aa:bb:cc:dd:ee:ff"
+
+
+async def test_get_mac_for_source_ip_handles_errors(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify MAC lookup handles psutil errors and missing MACs."""
+    class FakePsutil:
+        def __init__(self, exc: Exception | None = None) -> None:
+            self._exc = exc
+        def net_if_addrs(self):  # type: ignore[no-untyped-def]
+            if self._exc:
+                raise self._exc
+            return {
+                "eth0": [
+                    type("Addr", (), {"address": "1.2.3.4", "family": object()})()
+                ]
+            }
+
+    class FakeWrapper:
+        def __init__(self, exc: Exception | None = None) -> None:
+            self.psutil = FakePsutil(exc)
+
+    monkeypatch.setattr(identity_module.ha_psutil, "PsutilWrapper", lambda: FakeWrapper(OSError()))
+    assert identity_module._get_mac_for_source_ip("1.2.3.4") is None
+
+    monkeypatch.setattr(identity_module.ha_psutil, "PsutilWrapper", lambda: FakeWrapper(None))
+    assert identity_module._get_mac_for_source_ip("1.2.3.4") is None
+
+
+async def test_integration_serial_no_source_ip(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Verify serial generation when source IP is missing."""
+    async def _get_source_ip(*_args, **_kwargs):
+        return None
+
+    monkeypatch.setattr(identity_module.network, "async_get_source_ip", _get_source_ip)
+    serial = await identity_module.async_get_integration_serial(hass, "host")
+    assert len(serial) == identity_module.INTEGRATION_SERIAL_LENGTH
+
+
 def test_normalize_serial_and_identity() -> None:
     """Verify serial normalization and identity payload."""
     assert identity_module._normalize_serial("AA:bb-11") == "aabb11"

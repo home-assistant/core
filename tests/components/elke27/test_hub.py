@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import Enum
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -93,6 +94,84 @@ async def test_connect_wait_ready_false_disconnects(
     client.async_disconnect.assert_awaited_once()
 
 
+async def test_refresh_and_subscribe_errors(hass: HomeAssistant) -> None:
+    """Verify refresh methods and subscribe error when disconnected."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.72",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    with pytest.raises(Exception):
+        await hub.refresh_csm()
+    with pytest.raises(Exception):
+        await hub.refresh_domain_config("zone")
+    with pytest.raises(Exception):
+        hub.subscribe(lambda *_: None)
+
+
+async def test_actions_return_false_when_no_client(hass: HomeAssistant) -> None:
+    """Verify action methods return False when no client is set."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.72",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    assert await hub.async_set_output(1, True) is False
+    assert await hub.async_set_zone_bypass(1, True, pin="1234") is False
+    assert await hub.async_arm_area(1, "ARMED_AWAY", pin="1234") is False
+    assert await hub.async_disarm_area(1, pin="1234") is False
+
+
+async def test_connect_sets_panel_name_and_reconnect_log(hass: HomeAssistant) -> None:
+    """Verify connect discovers panel name and clears unavailable log."""
+    client = AsyncMock()
+    client.async_connect = AsyncMock(return_value=None)
+    client.async_discover = AsyncMock(
+        return_value=[SimpleNamespace(panel_name="Panel X")]
+    )
+    client.wait_ready = AsyncMock(return_value=True)
+    client.async_disconnect = AsyncMock(return_value=None)
+    client.subscribe = Mock(return_value=Mock())
+    client._coerce_identity = lambda identity: identity
+
+    with patch(
+        "homeassistant.components.elke27.hub.Elke27Client",
+        side_effect=_client_factory(client),
+    ):
+        hub = Elke27Hub(
+            hass,
+            "192.168.1.72",
+            2101,
+            LinkKeys("tk", "lk", "lh").to_json(),
+            "112233445566",
+            None,
+        )
+        hub._unavailable_logged = True
+        await hub.async_connect()
+        assert hub.panel_name == "Panel X"
+        assert hub._unavailable_logged is False
+
+
+async def test_hub_properties(hass: HomeAssistant) -> None:
+    """Verify basic hub properties."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.80",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        "Panel",
+    )
+    assert hub.panel_name == "Panel"
+    assert hub.is_ready is False
+
+
 async def test_async_set_output_supports_async_and_sync(
     hass: HomeAssistant,
 ) -> None:
@@ -119,6 +198,13 @@ async def test_async_set_output_supports_async_and_sync(
 
     hub._client = SimpleNamespace(set_output=_sync_set)
     assert await hub.async_set_output(2, False) is False
+
+    def _sync_on(output_id: int, *, on: bool) -> None:
+        assert output_id == 3
+        assert on is True
+
+    hub._client = SimpleNamespace(set_output=_sync_on)
+    assert await hub.async_set_output(3, True) is True
 
 
 async def test_async_set_output_missing_method(
@@ -214,6 +300,26 @@ def test_event_type_and_connection_state() -> None:
         is True
     )
     assert _connection_state(SimpleNamespace(event_type="ready")) is True
+    enum_val = Enum("E", {"READY": "ready"})
+    assert _event_type({"type": enum_val.READY}) == "READY"
+    assert _connection_state({"event_type": None}) is None
+
+
+async def test_disconnect_clears_typed_subscriptions(hass: HomeAssistant) -> None:
+    """Verify typed subscriptions are cleared on disconnect."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.79",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    unsubscribe = Mock()
+    hub._typed_callbacks = {lambda *_: None: unsubscribe}
+    hub._client = SimpleNamespace(async_disconnect=AsyncMock(return_value=None))
+    await hub._async_disconnect()
+    unsubscribe.assert_called_once()
 
 
 async def test_subscribe_typed_and_unsubscribe(hass: HomeAssistant) -> None:
@@ -263,3 +369,37 @@ async def test_handle_connection_event_triggers_reconnect(
     hub._handle_connection_event({"event_type": "ready"})
     await hass.async_block_till_done()
     hub._cancel_reconnect.assert_called_once()
+
+
+async def test_reconnect_scheduling_guards(hass: HomeAssistant) -> None:
+    """Verify reconnect scheduling guards."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.81",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._stopping = True
+    hub._schedule_reconnect()
+    hub._stopping = False
+    hub._reconnect_task = Mock()
+    hub._reconnect_task.done.return_value = False
+    hub._schedule_reconnect()
+
+
+async def test_cancel_reconnect(hass: HomeAssistant) -> None:
+    """Verify cancel reconnect handles task state."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.82",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._cancel_reconnect()
+    hub._reconnect_task = Mock()
+    hub._reconnect_task.done.return_value = False
+    hub._cancel_reconnect()

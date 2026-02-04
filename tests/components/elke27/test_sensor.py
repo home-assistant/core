@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from typing import Any
 
 from homeassistant.components.elke27.const import DOMAIN
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
@@ -55,3 +56,16 @@ async def test_sensor_updates_from_coordinator(hass: HomeAssistant) -> None:
 
     values = {entity.native_value for entity in entities}
     assert {"Panel B", "disconnected"} == values
+
+
+async def test_sensor_setup_missing_runtime(hass: HomeAssistant) -> None:
+    """Verify setup returns when runtime data is missing."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.61"})
+    entry.add_to_hass(hass)
+    entities: list[Any] = []
+
+    def _add_entities(new_entities):
+        entities.extend(new_entities)
+
+    await async_setup_entry(hass, entry, _add_entities)
+    assert entities == []

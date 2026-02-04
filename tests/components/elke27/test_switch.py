@@ -108,3 +108,35 @@ async def test_output_pin_required(hass: HomeAssistant) -> None:
 
     with pytest.raises(HomeAssistantError, match="PIN required to perform this action."):
         await output_1.async_turn_on()
+
+
+async def test_switch_setup_edge_cases(hass: HomeAssistant) -> None:
+    """Verify setup handles missing runtime data and snapshots."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.62"})
+    entry.add_to_hass(hass)
+
+    entities: list[switch_module.Elke27OutputSwitch] = []
+
+    def _add_entities(new_entities):
+        entities.extend(new_entities)
+
+    await async_setup_entry(hass, entry, _add_entities)
+    assert entities == []
+
+    hub = _Hub()
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
+    coordinator.async_set_updated_data(None)
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
+    await async_setup_entry(hass, entry, _add_entities)
+    assert entities == []
+
+
+def test_switch_properties_when_missing() -> None:
+    """Verify properties handle missing output data."""
+    hub = _Hub()
+    coordinator = SimpleNamespace(data=None)
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.63"})
+    output = switch_module.Elke27OutputSwitch(coordinator, hub, entry, 1, SimpleNamespace())
+    assert output.is_on is None
+    hub.is_ready = False
+    assert output.available is False

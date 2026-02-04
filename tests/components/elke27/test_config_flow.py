@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, patch
 from elke27_lib import LinkKeys
 from elke27_lib.errors import (
     Elke27Error,
+    Elke27AuthError,
     Elke27LinkRequiredError,
     Elke27TimeoutError,
     InvalidCredentials,
@@ -25,6 +26,7 @@ from homeassistant.components.elke27.const import (
     DEFAULT_PORT,
     DOMAIN,
 )
+from homeassistant.components.elke27.config_flow import STEP_MANUAL_DATA_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -110,6 +112,10 @@ def test_panel_helpers() -> None:
     assert config_flow._panel_mac({"mac": "ee:ff"}) == "ee:ff"
     assert config_flow._panel_name({"panel_name": "Panel 3"}) == "Panel 3"
     assert config_flow._panel_label(panel) == "Panel (1.2.3.4)"
+    assert config_flow._panel_to_dict(None) == {}
+    assert config_flow._panel_label(SimpleNamespace(host="1.2.3.5")) == "1.2.3.5"
+    assert config_flow._panel_label(SimpleNamespace(name="Only Name")) == "Only Name"
+    assert config_flow._panel_label(SimpleNamespace()) == "Panel"
 
 
 def test_snapshot_to_dict() -> None:
@@ -121,6 +127,144 @@ def test_snapshot_to_dict() -> None:
     data = config_flow._snapshot_to_dict(snapshot)
     assert data["panel_info"]["panel_name"] == "Panel"
     assert data["table_info"]["areas"] == 1
+    assert config_flow._snapshot_to_dict({"a": 1}) == {"a": 1}
+    assert config_flow._snapshot_to_dict(None) == {}
+    class Obj:
+        def __init__(self) -> None:
+            self.value = 1
+            self._hidden = 2
+
+    assert config_flow._snapshot_to_dict(Obj()) == {"value": 1}
+
+
+def test_create_client() -> None:
+    """Verify client factory returns a client instance."""
+    client = config_flow._create_client()
+    assert client is not None
+
+
+async def test_discover_invalid_panel_index(hass: HomeAssistant) -> None:
+    """Test discover step handles invalid panel index."""
+    discovery = SimpleNamespace(panel_host="1.2.3.4", port=DEFAULT_PORT)
+    with patch(
+        "homeassistant.components.elke27.config_flow.AIOELKDiscovery.async_scan",
+        AsyncMock(return_value=[discovery]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "discover"},
+        )
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"panel": "99", "access_code": "1", "passphrase": "2"},
+        )
+        assert result3["errors"]["base"] == "no_panels_found"
+
+
+async def test_discover_missing_host(hass: HomeAssistant) -> None:
+    """Test discover step handles missing host."""
+    discovery = SimpleNamespace(panel_host=None, port=DEFAULT_PORT)
+    with patch(
+        "homeassistant.components.elke27.config_flow.AIOELKDiscovery.async_scan",
+        AsyncMock(return_value=[discovery]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "discover"},
+        )
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"panel": "0", "access_code": "1", "passphrase": "2"},
+        )
+        assert result3["errors"]["base"] == "no_panels_found"
+
+
+async def test_link_and_create_entry_missing_host(hass: HomeAssistant) -> None:
+    """Test link/create returns unknown when host/port missing."""
+    flow = config_flow.Elke27ConfigFlow()
+    flow.hass = hass
+    result = await flow._async_link_and_create_entry(
+        access_code="1",
+        passphrase="2",
+        errors={},
+        step_id="manual",
+        data_schema=STEP_MANUAL_DATA_SCHEMA,
+    )
+    assert result["errors"]["base"] == "unknown"
+
+
+async def test_link_and_create_entry_wait_ready_false(hass: HomeAssistant) -> None:
+    """Test wait_ready false returns cannot_connect."""
+    client = AsyncMock()
+    client.async_link = AsyncMock(return_value=LinkKeys("tk", "lk", "lh"))
+    client.async_connect = AsyncMock(return_value=None)
+    client.wait_ready = AsyncMock(return_value=False)
+    client.async_disconnect = AsyncMock(return_value=None)
+
+    flow = config_flow.Elke27ConfigFlow()
+    flow.hass = hass
+    flow._selected_host = "1.2.3.4"
+    flow._selected_port = DEFAULT_PORT
+
+    with patch(
+        "homeassistant.components.elke27.config_flow._create_client",
+        side_effect=_client_factory([client]),
+    ), patch(
+        "homeassistant.components.elke27.config_flow.async_get_integration_serial",
+        AsyncMock(return_value="112233"),
+    ):
+        result = await flow._async_link_and_create_entry(
+            access_code="1",
+            passphrase="2",
+            errors={},
+            step_id="manual",
+            data_schema=STEP_MANUAL_DATA_SCHEMA,
+        )
+        assert result["errors"]["base"] == "cannot_connect"
+
+
+async def test_create_entry_adds_title_when_missing(hass: HomeAssistant) -> None:
+    """Verify created entry gets a title if missing."""
+    client = AsyncMock()
+    client.async_link = AsyncMock(return_value=LinkKeys("tk", "lk", "lh"))
+    client.async_connect = AsyncMock(return_value=None)
+    client.wait_ready = AsyncMock(return_value=True)
+    client.async_disconnect = AsyncMock(return_value=None)
+    client.snapshot = FakeSnapshot(
+        panel_info=FakePanelInfo(panel_name="Panel", mac="aa", panel_serial="1"),
+        table_info=FakeTableInfo(areas=1, zones=1),
+    )
+
+    flow = config_flow.Elke27ConfigFlow()
+    flow.hass = hass
+    flow._selected_host = "1.2.3.4"
+    flow._selected_port = DEFAULT_PORT
+
+    with patch(
+        "homeassistant.components.elke27.config_flow._create_client",
+        side_effect=_client_factory([client]),
+    ), patch(
+        "homeassistant.components.elke27.config_flow.async_get_integration_serial",
+        AsyncMock(return_value="112233"),
+    ), patch.object(
+        flow,
+        "async_create_entry",
+        return_value={"type": "create_entry", "data": {}},
+    ):
+        result = await flow._async_link_and_create_entry(
+            access_code="1",
+            passphrase="2",
+            errors={},
+            step_id="manual",
+            data_schema=STEP_MANUAL_DATA_SCHEMA,
+        )
+        assert result["title"] == "Panel"
 
 
 def test_imports_without_elkm1_lib(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -591,3 +735,34 @@ async def test_unknown_error_maps_to_unknown(hass: HomeAssistant) -> None:
         assert result3["type"] is FlowResultType.FORM
         assert result3["errors"]["base"] == "unknown"
         client.async_disconnect.assert_awaited_once()
+
+
+async def test_auth_error_maps_to_cannot_connect(hass: HomeAssistant) -> None:
+    """Test auth error maps to cannot_connect."""
+    client = AsyncMock()
+    client.async_link = AsyncMock(side_effect=Elke27AuthError())
+    client.async_disconnect = AsyncMock(return_value=None)
+
+    with patch(
+        "homeassistant.components.elke27.config_flow._create_client",
+        side_effect=_client_factory([client]),
+    ), patch(
+        "homeassistant.components.elke27.config_flow.async_get_integration_serial",
+        AsyncMock(return_value="112233445566"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "manual"},
+        )
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_HOST: "192.168.1.33",
+                "access_code": "1234",
+                "passphrase": "bad-pass",
+            },
+        )
+        assert result3["errors"]["base"] == "cannot_connect"

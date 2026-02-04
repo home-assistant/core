@@ -9,6 +9,7 @@ from homeassistant.components.elke27.entity import (
     build_unique_id,
     device_info_for_entry,
     get_panel_field,
+    sanitize_name,
     unique_base,
 )
 from homeassistant.components.elke27.models import Elke27RuntimeData
@@ -73,7 +74,22 @@ async def test_device_info_and_unique_base(hass: HomeAssistant) -> None:
     coordinator.async_set_updated_data(SimpleNamespace(panel_info=None))
     assert unique_base(hub, coordinator, entry) == "112233"
 
+    entry.unique_id = "entry-unique"
+    entry.data.pop("integration_serial", None)
+    assert unique_base(hub, coordinator, entry) == "entry-unique"
+
+    entry.unique_id = None
+    assert unique_base(hub, coordinator, entry) == entry.data[CONF_HOST]
+
 
 def test_build_unique_id() -> None:
     """Verify unique ID formatting."""
     assert build_unique_id("aa:bb", "zone", 3) == "aa:bb:zone:3"
+
+
+def test_sanitize_and_panel_field() -> None:
+    """Verify sanitize_name and get_panel_field behavior."""
+    assert sanitize_name(None) is None
+    assert get_panel_field(None, None, "name") is None
+    snapshot = SimpleNamespace(panel_info={"model": "E27"})
+    assert get_panel_field(snapshot, None, "model") == "E27"

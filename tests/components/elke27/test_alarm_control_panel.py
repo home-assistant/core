@@ -172,3 +172,82 @@ def test_area_state_and_ready_status_helpers() -> None:
     assert alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_AWAY")) == "Ready away"
     assert alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_STAY")) == "Ready stay"
     assert alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_NOT")) == "Not ready"
+
+
+async def test_area_setup_skips_when_runtime_missing(hass: HomeAssistant) -> None:
+    """Verify setup returns when runtime data is missing."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.80"})
+    entry.add_to_hass(hass)
+
+    entities: list[alarm_module.Elke27AreaAlarmControlPanel] = []
+
+    def _add_entities(new_entities):
+        entities.extend(new_entities)
+
+    await async_setup_entry(hass, entry, _add_entities)
+    assert not entities
+
+
+def test_faulted_zones_helpers() -> None:
+    """Verify faulted zone extraction and naming."""
+    snapshot = SimpleNamespace(
+        zones=[
+            SimpleNamespace(zone_id=1, name="Door", open=True, bypassed=False),
+            SimpleNamespace(zone_id=2, name="Window", open=False, bypassed=False),
+            SimpleNamespace(zone_id=3, name="Garage", open=True, bypassed=True),
+        ],
+        zone_definitions={1: SimpleNamespace(name="Front Door")},
+    )
+    zones = alarm_module._faulted_zones(snapshot)
+    assert zones == [(1, "Front Door")]
+
+    assert alarm_module._zone_display_name(SimpleNamespace(zone_id=4, name=None), {}) == "Zone 4"
+
+
+def test_normalize_code() -> None:
+    """Verify code normalization."""
+    assert alarm_module._normalize_code(None) is None
+    with pytest.raises(HomeAssistantError):
+        alarm_module._normalize_code("12ab")
+
+
+def test_area_iter_helpers() -> None:
+    """Verify area iter helpers handle mappings and lists."""
+    snapshot = SimpleNamespace(areas={1: SimpleNamespace(area_id=1)})
+    assert len(list(alarm_module._iter_areas(snapshot))) == 1
+    assert alarm_module._get_area(snapshot, 1) is not None
+    assert alarm_module._get_area(snapshot, 2) is None
+    snapshot.areas = [SimpleNamespace(area_id=2)]
+    assert alarm_module._get_area(snapshot, 2) is not None
+
+
+async def test_area_properties_when_missing(hass: HomeAssistant) -> None:
+    """Verify properties handle missing area data."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.90"})
+    entry.add_to_hass(hass)
+    hub = _Hub()
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
+    coordinator.async_set_updated_data(SimpleNamespace(areas=[]))
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
+
+    entities: list[alarm_module.Elke27AreaAlarmControlPanel] = []
+
+    def _add_entities(new_entities):
+        entities.extend(new_entities)
+
+    await async_setup_entry(hass, entry, _add_entities)
+    assert not entities
+
+    area = alarm_module.Elke27AreaAlarmControlPanel(coordinator, hub, entry, 1, SimpleNamespace(area_id=1))
+    assert area.state is None
+    assert area.extra_state_attributes["ready"] is None
+    hub.is_ready = False
+    assert area.available is False
+
+    snapshot = SimpleNamespace(
+        areas=[SimpleNamespace(area_id=1, ready=True, trouble=False, ready_status="RDY_AWAY")],
+        zones=[SimpleNamespace(zone_id=1, name="Door", open=True, bypassed=False)],
+        zone_definitions={},
+    )
+    coordinator.async_set_updated_data(snapshot)
+    assert area.extra_state_attributes["ready_status_display"] == "Ready away"

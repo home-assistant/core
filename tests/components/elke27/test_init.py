@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+import sys
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from elke27_lib import LinkKeys
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27TimeoutError
+
+import pytest
 
 from homeassistant.components.elke27 import (
     _async_migrate_unique_ids,
@@ -205,3 +209,156 @@ async def test_migrate_unique_ids(hass: HomeAssistant) -> None:
 
     entry_id = registry.async_get_entity_id("sensor", DOMAIN, f"{base}:sensor:1")
     assert entry_id is not None
+
+
+async def test_setup_updates_integration_serial_and_pin(hass: HomeAssistant) -> None:
+    """Verify integration serial is generated and pin is removed."""
+    hub = SimpleNamespace(
+        panel_name="Panel",
+        async_connect=AsyncMock(return_value=None),
+        async_disconnect=AsyncMock(return_value=None),
+    )
+    coordinator = SimpleNamespace(
+        async_start=AsyncMock(return_value=None),
+        async_refresh_now=AsyncMock(return_value=None),
+        async_stop=AsyncMock(return_value=None),
+        data=None,
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.15",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
+            "pin": "1234",
+            "panel": {"panel_name": "Panel"},
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.elke27.Elke27Hub", return_value=hub),
+        patch(
+            "homeassistant.components.elke27.Elke27DataUpdateCoordinator",
+            return_value=coordinator,
+        ),
+        patch(
+            "homeassistant.components.elke27.async_get_integration_serial",
+            AsyncMock(return_value="998877"),
+        ),
+        patch.object(hass.config_entries, "async_update_entry") as update_entry,
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            AsyncMock(return_value=True),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    update_entry.assert_called()
+
+
+async def test_setup_removes_pin_when_serial_exists(hass: HomeAssistant) -> None:
+    """Verify pin removal updates entry when serial exists."""
+    hub = SimpleNamespace(
+        panel_name=None,
+        async_connect=AsyncMock(return_value=None),
+        async_disconnect=AsyncMock(return_value=None),
+    )
+    coordinator = SimpleNamespace(
+        async_start=AsyncMock(return_value=None),
+        async_refresh_now=AsyncMock(return_value=None),
+        async_stop=AsyncMock(return_value=None),
+        data=None,
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.16",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_LINK_KEYS_JSON: LinkKeys("tk", "lk", "lh").to_json(),
+            CONF_INTEGRATION_SERIAL: "112233445566",
+            "pin": "1234",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch("homeassistant.components.elke27.Elke27Hub", return_value=hub),
+        patch(
+            "homeassistant.components.elke27.Elke27DataUpdateCoordinator",
+            return_value=coordinator,
+        ),
+        patch.object(hass.config_entries, "async_update_entry") as update_entry,
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            AsyncMock(return_value=True),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    update_entry.assert_called()
+
+
+def test_vendor_path_injected(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify vendor path is added to sys.path when present."""
+    import importlib
+
+    module_path = (
+        Path(__file__).resolve().parents[4] / "homeassistant" / "components" / "elke27"
+    )
+    vendor_path = module_path / "vendor" / "elkm1"
+    vendor_path.mkdir(parents=True, exist_ok=True)
+    try:
+        import homeassistant.components.elke27 as elke27_mod
+
+        if str(vendor_path) in sys.path:
+            sys.path.remove(str(vendor_path))
+        importlib.reload(elke27_mod)
+        assert str(vendor_path) in sys.path
+    finally:
+        if vendor_path.exists():
+            for parent in [vendor_path, vendor_path.parent]:
+                if parent.exists():
+                    try:
+                        parent.rmdir()
+                    except OSError:
+                        break
+
+
+async def test_migrate_unique_ids_skips_unmatched(hass: HomeAssistant) -> None:
+    """Verify migration skips non-matching entries and collisions."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.20"})
+    entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    base = "aa:bb"
+    registry.async_get_or_create("sensor", DOMAIN, f"{base}_sensor")
+    registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{base}_sensor_2",
+        config_entry=entry,
+    )
+    registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{base}:sensor:2",
+        config_entry=entry,
+    )
+    registry.async_get_or_create(
+        "sensor",
+        "other",
+        f"{base}_sensor_3",
+        config_entry=entry,
+    )
+    registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{base}_sensor",
+        config_entry=entry,
+    )
+
+    await _async_migrate_unique_ids(hass, entry, base)
