@@ -59,7 +59,7 @@ class FolderSensor(SensorEntity):
     """A Syncthing folder sensor."""
 
     _attr_should_poll = False
-    _attr_translation_key = "syncthing_folder"
+    _attr_translation_key = "syncthing"
 
     STATE_ATTRIBUTES = {
         "errors": "errors",

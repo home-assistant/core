@@ -86,9 +86,9 @@ class SyncthingClient:
         self, hass: HomeAssistant, client: aiosyncthing.Syncthing, server_id: str
     ) -> None:
         """Initialize the client."""
-        self._hass: HomeAssistant = hass
-        self._client: aiosyncthing.Syncthing = client
-        self._server_id: str = server_id
+        self._hass = hass
+        self._client = client
+        self._server_id = server_id
         self._listen_task: Task[None] | None = None
 
     @property
