@@ -304,6 +304,8 @@ class ProgramPhaseCoffeeSystem(MieleEnum, missing_to_none=True):
     second_pre_brewing = 4393
     second_grinding = 4401
     rinse = 4405
+    intermediate_rinsing = 24758
+    automatic_maintenance = 24778
 
 
 class ProgramPhaseRobotVacuumCleaner(MieleEnum, missing_to_none=True):
