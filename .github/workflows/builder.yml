@@ -190,15 +190,6 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - &install_cosign
-        name: Install Cosign
-        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
-        with:
-          cosign-release: "v2.5.3"
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-
       - name: Build variables
         id: vars
         shell: bash
@@ -207,44 +198,17 @@ jobs:
           echo "cache_image=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:latest" >> "$GITHUB_OUTPUT"
           echo "created=$(date --rfc-3339=seconds --utc)" >> "$GITHUB_OUTPUT"
 
-      - name: Verify base image signature
-        run: |
-          cosign verify \
-            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-            --certificate-identity-regexp "https://github.com/home-assistant/docker/.*" \
-            "${{ steps.vars.outputs.base_image }}"
-
-      - name: Verify cache image signature
-        id: cache
-        continue-on-error: true
-        run: |
-          cosign verify \
-            --certificate-oidc-issuer https://token.actions.githubusercontent.com \
-            --certificate-identity-regexp "https://github.com/home-assistant/core/.*" \
-            "${{ steps.vars.outputs.cache_image }}"
-
       - name: Build base image
-        id: build
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        uses: ./.github/actions/builder
         with:
-          context: .
-          file: ./Dockerfile
-          platforms: ${{ steps.vars.outputs.platform }}
-          push: true
-          cache-from: ${{ steps.cache.outcome == 'success' && steps.vars.outputs.cache_image || '' }}
-          build-args: |
-            BUILD_FROM=${{ steps.vars.outputs.base_image }}
-          tags: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
-          outputs: type=image,push=true,compression=zstd,compression-level=9,force-compression=true,oci-mediatypes=true
+          base-image: ${{ steps.vars.outputs.base_image }}
+          cache-image: ${{ steps.vars.outputs.cache_image }}
+          tag: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
           labels: |
             io.hass.arch=${{ matrix.arch }}
             io.hass.version=${{ needs.init.outputs.version }}
             org.opencontainers.image.created=${{ steps.vars.outputs.created }}
             org.opencontainers.image.version=${{ needs.init.outputs.version }}
-
-      - name: Sign image
-        run: |
-          cosign sign --yes "ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}@${{ steps.build.outputs.digest }}"
 
   build_machine:
     name: Build ${{ matrix.machine }} machine core image
@@ -355,7 +319,10 @@ jobs:
       matrix:
         registry: ["ghcr.io/home-assistant", "docker.io/homeassistant"]
     steps:
-      - *install_cosign
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
+        with:
+          cosign-release: "v2.5.3"
 
       - name: Login to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
