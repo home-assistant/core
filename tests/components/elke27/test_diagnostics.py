@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+import enum
 import json
 
 import pytest
@@ -17,6 +18,7 @@ from homeassistant.components.elke27.const import (
 )
 from homeassistant.components.elke27.diagnostics import (
     async_get_config_entry_diagnostics,
+    _to_jsonable,
 )
 from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -131,3 +133,20 @@ async def test_diagnostics_redacts_sensitive_data(
     assert "passphrase" not in json.dumps(diagnostics)
     assert "pin" not in json.dumps(diagnostics)
     assert "link_keys_json" not in json.dumps(diagnostics)
+
+
+def test_to_jsonable_handles_misc_types() -> None:
+    """Verify JSON serialization handles miscellaneous types."""
+    class ExampleEnum(enum.Enum):
+        VALUE = 1
+
+    value = _to_jsonable(
+        {
+            "bytes": b"abc",
+            "set": {"b", "a"},
+            "enum": ExampleEnum.VALUE,
+        }
+    )
+    assert value["bytes"] == "616263"
+    assert value["set"] == ["a", "b"]
+    assert value["enum"] == "VALUE"

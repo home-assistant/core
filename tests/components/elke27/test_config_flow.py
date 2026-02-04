@@ -17,6 +17,7 @@ from elke27_lib.errors import (
 )
 
 from homeassistant import config_entries
+from homeassistant.components.elke27 import config_flow
 from homeassistant.components.elke27.const import (
     CONF_INTEGRATION_SERIAL,
     CONF_LINK_KEYS_JSON,
@@ -55,6 +56,15 @@ class FakeSnapshot:
     table_info: FakeTableInfo
 
 
+@dataclass(frozen=True, slots=True)
+class FakePanel:
+    panel_host: str
+    panel_port: int
+    panel_name: str
+    panel_mac: str
+    panel_model: str
+
+
 def _client_factory(instances: list[AsyncMock]) -> callable:
     iterator = iter(instances)
 
@@ -62,6 +72,51 @@ def _client_factory(instances: list[AsyncMock]) -> callable:
         return next(iterator)
 
     return _factory
+
+
+def test_panel_helpers() -> None:
+    """Verify panel helper conversions."""
+    panel = FakePanel(
+        panel_host="1.2.3.4",
+        panel_port=2101,
+        panel_name="Panel",
+        panel_mac="aa:bb",
+        panel_model="E27",
+    )
+    panel_dict = config_flow._panel_to_dict(panel)
+    assert panel_dict["host"] == "1.2.3.4"
+    assert panel_dict["port"] == 2101
+    assert panel_dict["name"] == "Panel"
+    assert panel_dict["mac"] == "aa:bb"
+    assert panel_dict["model"] == "E27"
+
+    normalized = config_flow._normalize_panel_keys(
+        {
+            "ip": "1.2.3.5",
+            "panel_port": 2102,
+            "panel_name": "Panel 2",
+            "panel_mac": "cc:dd",
+            "panel_model": "E27",
+        }
+    )
+    assert normalized["host"] == "1.2.3.5"
+    assert normalized["port"] == 2102
+    assert normalized["name"] == "Panel 2"
+    assert normalized["mac"] == "cc:dd"
+    assert config_flow._panel_mac({"mac": "ee:ff"}) == "ee:ff"
+    assert config_flow._panel_name({"panel_name": "Panel 3"}) == "Panel 3"
+    assert config_flow._panel_label(panel) == "Panel (1.2.3.4)"
+
+
+def test_snapshot_to_dict() -> None:
+    """Verify snapshot serialization to dict."""
+    snapshot = FakeSnapshot(
+        panel_info=FakePanelInfo(panel_name="Panel", mac="aa:bb", panel_serial="1"),
+        table_info=FakeTableInfo(areas=1, zones=2),
+    )
+    data = config_flow._snapshot_to_dict(snapshot)
+    assert data["panel_info"]["panel_name"] == "Panel"
+    assert data["table_info"]["areas"] == 1
 
 
 def test_imports_without_elkm1_lib(monkeypatch) -> None:

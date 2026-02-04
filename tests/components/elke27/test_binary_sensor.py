@@ -5,7 +5,9 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Any
 
+from homeassistant.components.elke27 import binary_sensor as binary_module
 from homeassistant.components.elke27.binary_sensor import async_setup_entry
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.elke27.const import DOMAIN
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
 from homeassistant.components.elke27.models import Elke27RuntimeData
@@ -73,3 +75,13 @@ async def test_binary_sensor_uses_zone_definitions(hass: HomeAssistant) -> None:
 
     assert len(entities) == 1
     assert entities[0]._attr_name == "Zone B"
+
+
+def test_zone_device_class_mapping() -> None:
+    """Verify zone device class mapping."""
+    zone = SimpleNamespace(zone_id=1, name="Zone")
+    definition = SimpleNamespace(zone_type="motion")
+    assert (
+        binary_module._zone_device_class(zone, definition)
+        == BinarySensorDeviceClass.MOTION
+    )

@@ -159,3 +159,16 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
     hub.async_disarm_area.side_effect = alarm_module.Elke27PinRequiredError
     with pytest.raises(HomeAssistantError, match="PIN required to perform this action."):
         await area_1.async_alarm_disarm()
+
+
+def test_area_state_and_ready_status_helpers() -> None:
+    """Verify state mapping and ready status display helpers."""
+    assert alarm_module._area_state_to_ha(SimpleNamespace(alarm_active=True)) == "triggered"
+    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="disarmed")) == "disarmed"
+    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="armed stay")) == "armed_home"
+    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="armed night")) == "armed_night"
+    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="armed away")) == "armed_away"
+    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="bypass")) == "armed_custom_bypass"
+    assert alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_AWAY")) == "Ready away"
+    assert alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_STAY")) == "Ready stay"
+    assert alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_NOT")) == "Not ready"

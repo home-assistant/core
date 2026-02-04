@@ -6,6 +6,7 @@ import asyncio
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any
+from unittest.mock import AsyncMock
 
 from elke27_lib.events import (
     UNSET_AT,
@@ -16,11 +17,16 @@ from elke27_lib.events import (
     CsmSnapshotUpdated,
     DomainCsmChanged,
     TableCsmChanged,
+    ConnectionStateChanged,
 )
 from elke27_lib.types import CsmSnapshot
 
 from homeassistant.components.elke27.const import DOMAIN
-from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
+from homeassistant.components.elke27.coordinator import (
+    Elke27DataUpdateCoordinator,
+    _is_event,
+    _normalize_domains,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -167,3 +173,49 @@ async def test_csm_change_event_coalesces_refresh(hass: HomeAssistant) -> None:
 
     assert hub.refresh_domains == ["zone"]
     assert coordinator.data.version == 1
+
+
+async def test_connection_state_event_triggers_refresh(
+    hass: HomeAssistant,
+) -> None:
+    """Verify connection state events schedule a refresh."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    hub = _FakeHub(SimpleNamespace(version=1))
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry, debounce_seconds=0)
+
+    await coordinator.async_start()
+    coordinator.async_refresh_now = AsyncMock()
+
+    def _create_task(coro):  # type: ignore[no-untyped-def]
+        return asyncio.create_task(coro)
+
+    hass.async_create_task = _create_task  # type: ignore[assignment]
+
+    event = ConnectionStateChanged(
+        kind=ConnectionStateChanged.KIND,
+        at=UNSET_AT,
+        seq=UNSET_SEQ,
+        classification=UNSET_CLASSIFICATION,
+        route=UNSET_ROUTE,
+        session_id=UNSET_SESSION_ID,
+        connected=True,
+    )
+    coordinator._process_event(event)
+    await hass.async_block_till_done()
+    coordinator.async_refresh_now.assert_awaited_once()
+
+
+def test_is_event_fallback() -> None:
+    """Verify event matching falls back to class name when needed."""
+    class FakeEvent:  # noqa: D401 - simple test helper
+        pass
+
+    event = FakeEvent()
+    assert _is_event(event, None, "FakeEvent")
+
+
+def test_normalize_domains() -> None:
+    """Verify domain normalization helper."""
+    assert _normalize_domains(None) == set()
+    assert _normalize_domains("zone") == {"zone"}
+    assert _normalize_domains(["zone", "area"]) == {"zone", "area"}
