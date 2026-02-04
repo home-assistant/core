@@ -25,18 +25,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 
-from .const import (
-    CONF_INTEGRATION_SERIAL,
-    CONF_LINK_KEYS_JSON,
-    CONF_PANEL,
-    DATA_COORDINATOR,
-    DATA_HUB,
-    DOMAIN,
-)
+from .const import CONF_INTEGRATION_SERIAL, CONF_LINK_KEYS_JSON, CONF_PANEL, DOMAIN
 from .coordinator import Elke27DataUpdateCoordinator
 from .entity import unique_base
 from .hub import Elke27Hub
 from .identity import async_get_integration_serial
+from .models import Elke27RuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,10 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_start()
     await coordinator.async_refresh_now()
     await _async_migrate_unique_ids(hass, entry, unique_base(hub, coordinator, entry))
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        DATA_HUB: hub,
-        DATA_COORDINATOR: coordinator,
-    }
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -104,14 +95,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an Elke27 config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    data = hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+    data: Elke27RuntimeData | None = entry.runtime_data
     if data is not None:
-        coordinator: Elke27DataUpdateCoordinator | None = data.get(DATA_COORDINATOR)
-        hub: Elke27Hub | None = data.get(DATA_HUB)
-        if coordinator is not None:
-            await coordinator.async_stop()
-        if hub is not None:
-            await hub.async_disconnect()
+        await data.coordinator.async_stop()
+        await data.hub.async_disconnect()
     return unload_ok
 
 

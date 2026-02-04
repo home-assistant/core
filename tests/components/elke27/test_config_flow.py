@@ -12,6 +12,7 @@ from elke27_lib import LinkKeys
 from elke27_lib.errors import (
     Elke27LinkRequiredError,
     Elke27TimeoutError,
+    Elke27Error,
     InvalidCredentials,
 )
 
@@ -422,3 +423,102 @@ async def test_relink_missing_link_keys_updates_entry(hass: HomeAssistant) -> No
             "newt", "new", "newh"
         ).to_json()
         link_client.async_disconnect.assert_awaited_once()
+
+
+async def test_manual_flow_aborts_on_duplicate(hass: HomeAssistant) -> None:
+    """Test manual flow aborts if the host/port is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.70", CONF_PORT: DEFAULT_PORT},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "manual"},
+    )
+    assert result2["type"] is FlowResultType.FORM
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_HOST: "192.168.1.70",
+            "access_code": "1234",
+            "passphrase": "test-pass",
+        },
+    )
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "already_configured"
+
+
+async def test_reauth_missing_context_aborts(hass: HomeAssistant) -> None:
+    """Test reauth flow aborts when entry context is missing."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "relink"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"access_code": "1234", "passphrase": "test-pass"},
+    )
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "missing_context"
+
+
+async def test_discovery_no_panels_found(hass: HomeAssistant) -> None:
+    """Test discovery step reports no panels found."""
+    with patch(
+        "homeassistant.components.elke27.config_flow.AIOELKDiscovery.async_scan",
+        AsyncMock(return_value=[]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.MENU
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "discover"},
+        )
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["errors"]["base"] == "no_panels_found"
+
+
+async def test_unknown_error_maps_to_unknown(hass: HomeAssistant) -> None:
+    """Test unknown client errors map to the unknown config flow error."""
+    client = AsyncMock()
+    client.async_link = AsyncMock(side_effect=Elke27Error())
+    client.async_disconnect = AsyncMock(return_value=None)
+
+    with patch(
+        "homeassistant.components.elke27.config_flow._create_client",
+        side_effect=_client_factory([client]),
+    ), patch(
+        "homeassistant.components.elke27.config_flow.async_get_integration_serial",
+        AsyncMock(return_value="112233445566"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"next_step_id": "manual"},
+        )
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_HOST: "192.168.1.32",
+                "access_code": "1234",
+                "passphrase": "bad-pass",
+            },
+        )
+        assert result3["type"] is FlowResultType.FORM
+        assert result3["errors"]["base"] == "unknown"
+        client.async_disconnect.assert_awaited_once()

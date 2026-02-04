@@ -10,8 +10,9 @@ import pytest
 
 from homeassistant.components.elke27 import alarm_control_panel as alarm_module
 from homeassistant.components.elke27.alarm_control_panel import async_setup_entry
-from homeassistant.components.elke27.const import DATA_COORDINATOR, DATA_HUB, DOMAIN
+from homeassistant.components.elke27.const import DOMAIN
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
+from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -59,9 +60,7 @@ async def test_area_entities_and_updates(hass: HomeAssistant) -> None:
         ],
     )
     coordinator.async_set_updated_data(snapshot)
-    hass.data[DOMAIN] = {
-        entry.entry_id: {DATA_HUB: hub, DATA_COORDINATOR: coordinator}
-    }
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
 
     entities: list[alarm_module.Elke27AreaAlarmControlPanel] = []
 
@@ -131,9 +130,7 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
         zone_definitions={},
     )
     coordinator.async_set_updated_data(snapshot)
-    hass.data[DOMAIN] = {
-        entry.entry_id: {DATA_HUB: hub, DATA_COORDINATOR: coordinator}
-    }
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
 
     entities: list[alarm_module.Elke27AreaAlarmControlPanel] = []
 

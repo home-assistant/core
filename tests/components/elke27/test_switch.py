@@ -8,8 +8,9 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.elke27 import switch as switch_module
-from homeassistant.components.elke27.const import DATA_COORDINATOR, DATA_HUB, DOMAIN
+from homeassistant.components.elke27.const import DOMAIN
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
+from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.components.elke27.switch import async_setup_entry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -47,9 +48,7 @@ async def test_output_entities_updates_and_actions(hass: HomeAssistant) -> None:
         zone_definitions={},
     )
     coordinator.async_set_updated_data(snapshot)
-    hass.data[DOMAIN] = {
-        entry.entry_id: {DATA_HUB: hub, DATA_COORDINATOR: coordinator}
-    }
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
 
     entities: list[switch_module.Elke27OutputSwitch] = []
 
@@ -95,9 +94,7 @@ async def test_output_pin_required(hass: HomeAssistant) -> None:
         zone_definitions={},
     )
     coordinator.async_set_updated_data(snapshot)
-    hass.data[DOMAIN] = {
-        entry.entry_id: {DATA_HUB: hub, DATA_COORDINATOR: coordinator}
-    }
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
 
     entities: list[switch_module.Elke27OutputSwitch] = []
 

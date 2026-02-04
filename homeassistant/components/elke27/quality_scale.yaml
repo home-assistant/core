@@ -4,42 +4,28 @@ rules:
     status: exempt
     comment: The integration does not register custom actions.
   appropriate-polling:
-    status: exempt
-    comment: The integration does not poll in Milestone 0.
+    status: done
   brands: done
   common-modules: done
   config-flow: done
-  config-flow-test-coverage:
-    status: exempt
-    comment: Config flow tests will be expanded in a later milestone.
+  config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions:
     status: exempt
     comment: The integration does not register custom actions.
   docs-high-level-description:
-    status: exempt
-    comment: Documentation will be added when the integration is functional.
+    status: todo
   docs-installation-instructions:
-    status: exempt
-    comment: Documentation will be added when the integration is functional.
+    status: todo
   docs-removal-instructions:
-    status: exempt
-    comment: Documentation will be added when the integration is functional.
+    status: todo
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: exempt
-    comment: Runtime data will be migrated to ConfigEntry.runtime_data later.
-  test-before-configure:
-    status: exempt
-    comment: Connection testing will be added in a later milestone.
-  test-before-setup:
-    status: exempt
-    comment: Connection testing will be added in a later milestone.
-  unique-config-entry:
-    status: exempt
-    comment: Unique ID handling will be added in a later milestone.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
 
   # Silver
   action-exceptions:
@@ -52,87 +38,42 @@ rules:
   docs-installation-parameters:
     status: exempt
     comment: The integration has no parameters in Milestone 0.
-  entity-unavailable:
-    status: exempt
-    comment: The integration does not create entities in Milestone 0.
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: exempt
-    comment: The integration does not create entities in Milestone 0.
-  parallel-updates:
-    status: exempt
-    comment: The integration does not create entities in Milestone 0.
-  reauthentication-flow:
-    status: exempt
-    comment: Authentication is not implemented in Milestone 0.
-  test-coverage:
-    status: exempt
-    comment: Full test coverage will be added in a later milestone.
+  log-when-unavailable: done
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage: todo
 
   # Gold
-  devices:
-    status: exempt
-    comment: The integration does not create devices in Milestone 0.
-  diagnostics:
-    status: exempt
-    comment: Diagnostics will be added in a later milestone.
-  discovery:
-    status: exempt
-    comment: Discovery will be added in a later milestone.
-  discovery-update-info:
-    status: exempt
-    comment: Discovery will be added in a later milestone.
+  devices: done
+  diagnostics: done
+  discovery: todo
+  discovery-update-info: todo
   docs-data-update:
-    status: exempt
-    comment: Documentation will be added when the integration is functional.
+    status: todo
   docs-examples:
-    status: exempt
-    comment: Documentation will be added when the integration is functional.
+    status: todo
   docs-known-limitations:
-    status: exempt
-    comment: Documentation will be added when the integration is functional.
+    status: todo
   docs-supported-devices:
-    status: exempt
-    comment: Documentation will be added when the integration is functional.
+    status: todo
   docs-supported-functions:
-    status: exempt
-    comment: Documentation will be added when the integration is functional.
+    status: todo
   docs-troubleshooting:
-    status: exempt
-    comment: Documentation will be added when the integration is functional.
+    status: todo
   docs-use-cases:
-    status: exempt
-    comment: Documentation will be added when the integration is functional.
-  dynamic-devices:
-    status: exempt
-    comment: The integration does not create devices in Milestone 0.
-  entity-category:
-    status: exempt
-    comment: The integration does not create entities in Milestone 0.
-  entity-device-class:
-    status: exempt
-    comment: The integration does not create entities in Milestone 0.
-  entity-disabled-by-default:
-    status: exempt
-    comment: The integration does not create entities in Milestone 0.
-  entity-translations:
-    status: exempt
-    comment: The integration does not create entities in Milestone 0.
-  exception-translations:
-    status: exempt
-    comment: The integration does not raise translated exceptions in Milestone 0.
-  icon-translations:
-    status: exempt
-    comment: The integration does not create entities in Milestone 0.
-  reconfiguration-flow:
-    status: exempt
-    comment: Reconfiguration will be added in a later milestone.
-  repair-issues:
-    status: exempt
-    comment: Repairs will be added in a later milestone.
-  stale-devices:
-    status: exempt
-    comment: The integration does not create devices in Milestone 0.
+    status: todo
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: todo
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices: todo
 
   # Platinum
   async-dependency:

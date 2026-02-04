@@ -15,10 +15,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_COORDINATOR, DATA_HUB, DOMAIN
 from .coordinator import Elke27DataUpdateCoordinator
 from .entity import build_unique_id, device_info_for_entry, sanitize_name, unique_base
 from .hub import Elke27Hub
+from .models import Elke27RuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,9 +29,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Elke27 output lights from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    hub: Elke27Hub = data[DATA_HUB]
-    coordinator: Elke27DataUpdateCoordinator = data[DATA_COORDINATOR]
+    data: Elke27RuntimeData | None = entry.runtime_data
+    if data is None:
+        _LOGGER.debug("Skipping light setup because runtime data is missing")
+        return
+    hub = data.hub
+    coordinator = data.coordinator
     known_ids: set[int] = set()
 
     def _async_add_outputs() -> None:

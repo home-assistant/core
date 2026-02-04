@@ -15,25 +15,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CONF_INTEGRATION_SERIAL,
-    CONF_LINK_KEYS_JSON,
-    DATA_COORDINATOR,
-    DOMAIN,
-    MANUFACTURER_NUMBER,
-)
-from .coordinator import Elke27DataUpdateCoordinator
+from .const import CONF_INTEGRATION_SERIAL, CONF_LINK_KEYS_JSON, MANUFACTURER_NUMBER
+from .models import Elke27RuntimeData
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
-    coordinator: Elke27DataUpdateCoordinator | None = (
-        data.get(DATA_COORDINATOR) if data else None
-    )
-    snapshot = coordinator.data if coordinator is not None else None
+    data: Elke27RuntimeData | None = entry.runtime_data
+    snapshot = data.coordinator.data if data is not None else None
     snapshot_dict = _to_jsonable(snapshot)
     redacted_snapshot = redact_for_diagnostics(snapshot_dict)
 

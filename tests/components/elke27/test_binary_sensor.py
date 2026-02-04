@@ -6,8 +6,9 @@ from types import SimpleNamespace
 from typing import Any
 
 from homeassistant.components.elke27.binary_sensor import async_setup_entry
-from homeassistant.components.elke27.const import DATA_COORDINATOR, DATA_HUB, DOMAIN
+from homeassistant.components.elke27.const import DOMAIN
 from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
+from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -61,9 +62,7 @@ async def test_binary_sensor_uses_zone_definitions(hass: HomeAssistant) -> None:
         },
     )
     coordinator.async_set_updated_data(snapshot)
-    hass.data[DOMAIN] = {
-        entry.entry_id: {DATA_HUB: hub, DATA_COORDINATOR: coordinator}
-    }
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
 
     entities: list[Any] = []
 

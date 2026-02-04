@@ -17,10 +17,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_COORDINATOR, DATA_HUB, DOMAIN
 from .coordinator import Elke27DataUpdateCoordinator
 from .entity import build_unique_id, device_info_for_entry, get_panel_field, unique_base
 from .hub import Elke27Hub
+from .models import Elke27RuntimeData
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -59,9 +59,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Elke27 sensors from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    hub: Elke27Hub = data[DATA_HUB]
-    coordinator: Elke27DataUpdateCoordinator = data[DATA_COORDINATOR]
+    data: Elke27RuntimeData | None = entry.runtime_data
+    if data is None:
+        return
+    hub = data.hub
+    coordinator = data.coordinator
     async_add_entities(
         Elke27Sensor(coordinator, hub, entry, description) for description in SENSORS
     )

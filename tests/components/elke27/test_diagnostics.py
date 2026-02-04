@@ -12,14 +12,13 @@ from homeassistant.components.elke27 import diagnostics as diagnostics_module
 from homeassistant.components.elke27.const import (
     CONF_INTEGRATION_SERIAL,
     CONF_LINK_KEYS_JSON,
-    DATA_COORDINATOR,
-    DATA_HUB,
     DOMAIN,
     MANUFACTURER_NUMBER,
 )
 from homeassistant.components.elke27.diagnostics import (
     async_get_config_entry_diagnostics,
 )
+from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -117,10 +116,7 @@ async def test_diagnostics_redacts_sensitive_data(
 
     coordinator = type("Coordinator", (), {"data": snapshot})()
     hub = object()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        DATA_HUB: hub,
-        DATA_COORDINATOR: coordinator,
-    }
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
 
     diagnostics = await async_get_config_entry_diagnostics(hass, entry)
 

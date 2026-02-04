@@ -11,11 +11,10 @@ import pytest
 from homeassistant.components.elke27.const import (
     CONF_INTEGRATION_SERIAL,
     CONF_LINK_KEYS_JSON,
-    DATA_COORDINATOR,
-    DATA_HUB,
     DEFAULT_PORT,
     DOMAIN,
 )
+from homeassistant.components.elke27.models import Elke27RuntimeData
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -87,7 +86,9 @@ async def test_live_setup_and_snapshot(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    data: Elke27RuntimeData | None = entry.runtime_data
+    assert data is not None
+    coordinator = data.coordinator
     assert coordinator.data is not None
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -126,8 +127,10 @@ async def test_live_zone_bypass_events(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
-    hub = hass.data[DOMAIN][entry.entry_id][DATA_HUB]
+    data: Elke27RuntimeData | None = entry.runtime_data
+    assert data is not None
+    coordinator = data.coordinator
+    hub = data.hub
 
     initial = _get_zone_bypassed(coordinator.data, zone_id)
     if initial is None:
