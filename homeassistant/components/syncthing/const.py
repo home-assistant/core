@@ -16,7 +16,7 @@ SERVER_UNAVAILABLE = "syncthing_server_unavailable"
 SERVER_AVAILABLE = "syncthing_server_available"
 STATE_CHANGED_RECEIVED = "syncthing_state_changed_received"
 
-EVENTS = {
+FOLDER_EVENTS = {
     "FolderSummary": FOLDER_SUMMARY_RECEIVED,
     "StateChanged": STATE_CHANGED_RECEIVED,
     "FolderPaused": FOLDER_PAUSED_RECEIVED,
