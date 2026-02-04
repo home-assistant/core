@@ -152,19 +152,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ) is not None and isinstance(expression, re.Pattern):
                 serialized_command[CONF_EXPRESSION] = expression.pattern
             commands.append(serialized_command)
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_HOMESERVER: config[CONF_HOMESERVER],
-                    CONF_USERNAME: config[CONF_USERNAME],
-                    CONF_PASSWORD: config[CONF_PASSWORD],
-                    CONF_VERIFY_SSL: config[CONF_VERIFY_SSL],
-                    CONF_ROOMS: list(config[CONF_ROOMS]),
-                    CONF_COMMANDS: commands,
-                },
-            )
+        _LOGGER.debug(
+            "Starting Matrix YAML configuration import for user %s",
+            config[CONF_USERNAME],
+        )
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_HOMESERVER: config[CONF_HOMESERVER],
+                CONF_USERNAME: config[CONF_USERNAME],
+                CONF_PASSWORD: config[CONF_PASSWORD],
+                CONF_VERIFY_SSL: config[CONF_VERIFY_SSL],
+                CONF_ROOMS: list(config[CONF_ROOMS]),
+                CONF_COMMANDS: commands,
+            },
         )
 
     return True
