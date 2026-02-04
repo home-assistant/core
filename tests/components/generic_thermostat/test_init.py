@@ -595,7 +595,7 @@ async def test_migration_1_1(
     assert generic_thermostat_entity_entry.device_id == switch_entity_entry.device_id
 
     assert generic_thermostat_config_entry.version == 1
-    assert generic_thermostat_config_entry.minor_version == 2
+    assert generic_thermostat_config_entry.minor_version == 3
 
 
 async def test_migration_from_future_version(
