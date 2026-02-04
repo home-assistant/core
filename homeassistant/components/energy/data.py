@@ -369,22 +369,42 @@ def _grid_ensure_single_sell_price(
     return val
 
 
+def _grid_ensure_at_least_one_stat(
+    val: dict[str, Any],
+) -> dict[str, Any]:
+    """Ensure at least one of import, export, or power is configured."""
+    if (
+        val.get("stat_energy_from") is None
+        and val.get("stat_energy_to") is None
+        and val.get("stat_rate") is None
+        and val.get("power_config") is None
+    ):
+        raise vol.Invalid(
+            "Grid must have at least one of: import meter, export meter, or power sensor"
+        )
+    return val
+
+
 GRID_SOURCE_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required("type"): "grid",
             # Import meter (can be None for export-only grids from legacy migration)
-            vol.Optional("stat_energy_from"): vol.Any(str, None),
+            vol.Optional("stat_energy_from", default=None): vol.Any(str, None),
             # Export meter (optional)
-            vol.Optional("stat_energy_to"): vol.Any(str, None),
+            vol.Optional("stat_energy_to", default=None): vol.Any(str, None),
             # Import cost tracking
-            vol.Optional("stat_cost"): vol.Any(str, None),
-            vol.Optional("entity_energy_price"): vol.Any(str, None),
-            vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+            vol.Optional("stat_cost", default=None): vol.Any(str, None),
+            vol.Optional("entity_energy_price", default=None): vol.Any(str, None),
+            vol.Optional("number_energy_price", default=None): vol.Any(
+                vol.Coerce(float), None
+            ),
             # Export compensation tracking
-            vol.Optional("stat_compensation"): vol.Any(str, None),
-            vol.Optional("entity_energy_price_sell"): vol.Any(str, None),
-            vol.Optional("number_energy_price_sell"): vol.Any(vol.Coerce(float), None),
+            vol.Optional("stat_compensation", default=None): vol.Any(str, None),
+            vol.Optional("entity_energy_price_sell", default=None): vol.Any(str, None),
+            vol.Optional("number_energy_price_sell", default=None): vol.Any(
+                vol.Coerce(float), None
+            ),
             # Power measurement (optional)
             vol.Optional("stat_rate"): str,
             vol.Optional("power_config"): POWER_CONFIG_SCHEMA,
@@ -393,6 +413,7 @@ GRID_SOURCE_SCHEMA = vol.All(
     ),
     _grid_ensure_single_price,
     _grid_ensure_single_sell_price,
+    _grid_ensure_at_least_one_stat,
 )
 SOLAR_SOURCE_SCHEMA = vol.Schema(
     {
@@ -441,6 +462,46 @@ def check_type_limits(value: list[SourceType]) -> list[SourceType]:
     return value
 
 
+def _validate_grid_stat_uniqueness(value: list[SourceType]) -> list[SourceType]:
+    """Validate that grid statistics are unique across all sources."""
+    seen_import: set[str] = set()
+    seen_export: set[str] = set()
+    seen_rate: set[str] = set()
+
+    for source in value:
+        if source.get("type") != "grid":
+            continue
+
+        # Cast to GridSourceType since we've filtered for grid type
+        grid_source: GridSourceType = source  # type: ignore[assignment]
+
+        # Check import meter uniqueness
+        if (stat_from := grid_source.get("stat_energy_from")) is not None:
+            if stat_from in seen_import:
+                raise vol.Invalid(
+                    f"Import meter {stat_from} is used in multiple grid connections"
+                )
+            seen_import.add(stat_from)
+
+        # Check export meter uniqueness
+        if (stat_to := grid_source.get("stat_energy_to")) is not None:
+            if stat_to in seen_export:
+                raise vol.Invalid(
+                    f"Export meter {stat_to} is used in multiple grid connections"
+                )
+            seen_export.add(stat_to)
+
+        # Check power stat uniqueness
+        if (stat_rate := grid_source.get("stat_rate")) is not None:
+            if stat_rate in seen_rate:
+                raise vol.Invalid(
+                    f"Power stat {stat_rate} is used in multiple grid connections"
+                )
+            seen_rate.add(stat_rate)
+
+    return value
+
+
 ENERGY_SOURCE_SCHEMA = vol.All(
     vol.Schema(
         [
@@ -457,6 +518,7 @@ ENERGY_SOURCE_SCHEMA = vol.All(
         ]
     ),
     check_type_limits,
+    _validate_grid_stat_uniqueness,
 )
 
 DEVICE_CONSUMPTION_SCHEMA = vol.Schema(

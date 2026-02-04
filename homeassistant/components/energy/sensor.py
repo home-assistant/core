@@ -223,11 +223,16 @@ class SensorManager:
         if config.get(adapter.total_money_key) is not None:
             return
 
-        key = (adapter.source_type, adapter.flow_type, config[adapter.stat_energy_key])
+        # Skip if the energy stat is not configured (e.g., export-only or power-only grids)
+        stat_energy = config.get(adapter.stat_energy_key)
+        if not stat_energy:
+            return
+
+        key = (adapter.source_type, adapter.flow_type, stat_energy)
 
         # Make sure the right data is there
         # If the entity existed, we don't pop it from to_remove so it's removed
-        if not valid_entity_id(config[adapter.stat_energy_key]) or (
+        if not valid_entity_id(stat_energy) or (
             config.get("entity_energy_price") is None
             and config.get("number_energy_price") is None
         ):

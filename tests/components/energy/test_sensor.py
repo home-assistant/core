@@ -188,32 +188,26 @@ async def test_cost_sensor_price_entity_total_increasing(
     }
 
     energy_data = data.EnergyManager.default_preferences()
-    energy_data["energy_sources"].append(
-        {
-            "type": "grid",
-            "flow_from": [
-                {
-                    "stat_energy_from": "sensor.energy_consumption",
-                    "stat_cost": None,
-                    "entity_energy_price": price_entity,
-                    "number_energy_price": fixed_price,
-                }
-            ]
-            if flow_type == "flow_from"
-            else [],
-            "flow_to": [
-                {
-                    "stat_energy_to": "sensor.energy_production",
-                    "stat_compensation": None,
-                    "entity_energy_price": price_entity,
-                    "number_energy_price": fixed_price,
-                }
-            ]
-            if flow_type == "flow_to"
-            else [],
-            "cost_adjustment_day": 0,
-        }
-    )
+    if flow_type == "flow_from":
+        energy_data["energy_sources"].append(
+            {
+                "type": "grid",
+                "stat_energy_from": "sensor.energy_consumption",
+                "entity_energy_price": price_entity,
+                "number_energy_price": fixed_price,
+                "cost_adjustment_day": 0,
+            }
+        )
+    else:
+        energy_data["energy_sources"].append(
+            {
+                "type": "grid",
+                "stat_energy_to": "sensor.energy_production",
+                "entity_energy_price_sell": price_entity,
+                "number_energy_price_sell": fixed_price,
+                "cost_adjustment_day": 0,
+            }
+        )
 
     hass_storage[data.STORAGE_KEY] = {
         "version": 1,
@@ -282,7 +276,10 @@ async def test_cost_sensor_price_entity_total_increasing(
         await hass.async_block_till_done()
     else:
         energy_data = copy.deepcopy(energy_data)
-        energy_data["energy_sources"][0][flow_type][0]["number_energy_price"] = 2
+        if flow_type == "flow_from":
+            energy_data["energy_sources"][0]["number_energy_price"] = 2
+        else:
+            energy_data["energy_sources"][0]["number_energy_price_sell"] = 2
         client = await hass_ws_client(hass)
         await client.send_json({"id": 5, "type": "energy/save_prefs", **energy_data})
         msg = await client.receive_json()
@@ -401,32 +398,26 @@ async def test_cost_sensor_price_entity_total(
     }
 
     energy_data = data.EnergyManager.default_preferences()
-    energy_data["energy_sources"].append(
-        {
-            "type": "grid",
-            "flow_from": [
-                {
-                    "stat_energy_from": "sensor.energy_consumption",
-                    "stat_cost": None,
-                    "entity_energy_price": price_entity,
-                    "number_energy_price": fixed_price,
-                }
-            ]
-            if flow_type == "flow_from"
-            else [],
-            "flow_to": [
-                {
-                    "stat_energy_to": "sensor.energy_production",
-                    "stat_compensation": None,
-                    "entity_energy_price": price_entity,
-                    "number_energy_price": fixed_price,
-                }
-            ]
-            if flow_type == "flow_to"
-            else [],
-            "cost_adjustment_day": 0,
-        }
-    )
+    if flow_type == "flow_from":
+        energy_data["energy_sources"].append(
+            {
+                "type": "grid",
+                "stat_energy_from": "sensor.energy_consumption",
+                "entity_energy_price": price_entity,
+                "number_energy_price": fixed_price,
+                "cost_adjustment_day": 0,
+            }
+        )
+    else:
+        energy_data["energy_sources"].append(
+            {
+                "type": "grid",
+                "stat_energy_to": "sensor.energy_production",
+                "entity_energy_price_sell": price_entity,
+                "number_energy_price_sell": fixed_price,
+                "cost_adjustment_day": 0,
+            }
+        )
 
     hass_storage[data.STORAGE_KEY] = {
         "version": 1,
@@ -496,7 +487,10 @@ async def test_cost_sensor_price_entity_total(
         await hass.async_block_till_done()
     else:
         energy_data = copy.deepcopy(energy_data)
-        energy_data["energy_sources"][0][flow_type][0]["number_energy_price"] = 2
+        if flow_type == "flow_from":
+            energy_data["energy_sources"][0]["number_energy_price"] = 2
+        else:
+            energy_data["energy_sources"][0]["number_energy_price_sell"] = 2
         client = await hass_ws_client(hass)
         await client.send_json({"id": 5, "type": "energy/save_prefs", **energy_data})
         msg = await client.receive_json()
@@ -616,32 +610,26 @@ async def test_cost_sensor_price_entity_total_no_reset(
     }
 
     energy_data = data.EnergyManager.default_preferences()
-    energy_data["energy_sources"].append(
-        {
-            "type": "grid",
-            "flow_from": [
-                {
-                    "stat_energy_from": "sensor.energy_consumption",
-                    "stat_cost": None,
-                    "entity_energy_price": price_entity,
-                    "number_energy_price": fixed_price,
-                }
-            ]
-            if flow_type == "flow_from"
-            else [],
-            "flow_to": [
-                {
-                    "stat_energy_to": "sensor.energy_production",
-                    "stat_compensation": None,
-                    "entity_energy_price": price_entity,
-                    "number_energy_price": fixed_price,
-                }
-            ]
-            if flow_type == "flow_to"
-            else [],
-            "cost_adjustment_day": 0,
-        }
-    )
+    if flow_type == "flow_from":
+        energy_data["energy_sources"].append(
+            {
+                "type": "grid",
+                "stat_energy_from": "sensor.energy_consumption",
+                "entity_energy_price": price_entity,
+                "number_energy_price": fixed_price,
+                "cost_adjustment_day": 0,
+            }
+        )
+    else:
+        energy_data["energy_sources"].append(
+            {
+                "type": "grid",
+                "stat_energy_to": "sensor.energy_production",
+                "entity_energy_price_sell": price_entity,
+                "number_energy_price_sell": fixed_price,
+                "cost_adjustment_day": 0,
+            }
+        )
 
     hass_storage[data.STORAGE_KEY] = {
         "version": 1,
@@ -710,7 +698,10 @@ async def test_cost_sensor_price_entity_total_no_reset(
         await hass.async_block_till_done()
     else:
         energy_data = copy.deepcopy(energy_data)
-        energy_data["energy_sources"][0][flow_type][0]["number_energy_price"] = 2
+        if flow_type == "flow_from":
+            energy_data["energy_sources"][0]["number_energy_price"] = 2
+        else:
+            energy_data["energy_sources"][0]["number_energy_price_sell"] = 2
         client = await hass_ws_client(hass)
         await client.send_json({"id": 5, "type": "energy/save_prefs", **energy_data})
         msg = await client.receive_json()
@@ -1490,24 +1481,12 @@ async def test_power_sensor_grid_combined(
             "energy_sources": [
                 {
                     "type": "grid",
-                    "flow_from": [
-                        {
-                            "stat_energy_from": "sensor.grid_energy_import",
-                        }
-                    ],
-                    "flow_to": [
-                        {
-                            "stat_energy_to": "sensor.grid_energy_export",
-                        }
-                    ],
-                    "power": [
-                        {
-                            "power_config": {
-                                "stat_rate_from": "sensor.grid_import",
-                                "stat_rate_to": "sensor.grid_export",
-                            }
-                        }
-                    ],
+                    "stat_energy_from": "sensor.grid_energy_import",
+                    "stat_energy_to": "sensor.grid_energy_export",
+                    "power_config": {
+                        "stat_rate_from": "sensor.grid_import",
+                        "stat_rate_to": "sensor.grid_export",
+                    },
                     "cost_adjustment_day": 0,
                 }
             ],
