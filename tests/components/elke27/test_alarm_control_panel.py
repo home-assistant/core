@@ -148,6 +148,18 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
     )
 
     hub.async_arm_area.reset_mock()
+    await area_1.async_alarm_arm_home(code="1234")
+    hub.async_arm_area.assert_awaited_once_with(
+        1, alarm_module.ArmMode.ARMED_STAY, "1234"
+    )
+
+    hub.async_arm_area.reset_mock()
+    await area_1.async_alarm_arm_night(code="1234")
+    hub.async_arm_area.assert_awaited_once_with(
+        1, alarm_module.ArmMode.ARMED_NIGHT, "1234"
+    )
+
+    hub.async_arm_area.reset_mock()
     hub.async_set_zone_bypass.reset_mock()
     await area_1.async_alarm_arm_custom_bypass(code="1234")
     hub.async_set_zone_bypass.assert_awaited_once_with(1, True, pin="1234")
@@ -163,6 +175,20 @@ async def test_area_actions_and_pin_required(hass: HomeAssistant) -> None:
         HomeAssistantError, match="PIN required to perform this action."
     ):
         await area_1.async_alarm_disarm()
+
+    hub.async_set_zone_bypass.reset_mock()
+    hub.async_set_zone_bypass.side_effect = alarm_module.Elke27PinRequiredError
+    with pytest.raises(
+        HomeAssistantError, match="PIN required to perform this action."
+    ):
+        await area_1.async_alarm_arm_custom_bypass(code="1234")
+
+    hub.async_arm_area.reset_mock()
+    hub.async_arm_area.side_effect = alarm_module.Elke27PinRequiredError
+    with pytest.raises(
+        HomeAssistantError, match="PIN required to perform this action."
+    ):
+        await area_1.async_alarm_arm_home(code="1234")
 
 
 def test_area_state_and_ready_status_helpers() -> None:
@@ -192,6 +218,28 @@ def test_area_state_and_ready_status_helpers() -> None:
         == "armed_custom_bypass"
     )
     assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode=ArmMode.DISARMED))
+        == "disarmed"
+    )
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode=ArmMode.ARMED_STAY))
+        == "armed_home"
+    )
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode=ArmMode.ARMED_NIGHT))
+        == "armed_night"
+    )
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode=ArmMode.ARMED_AWAY))
+        == "armed_away"
+    )
+    custom = getattr(ArmMode, "ARMED_CUSTOM_BYPASS", None)
+    if custom is not None:
+        assert (
+            alarm_module._area_state_to_ha(SimpleNamespace(arm_mode=custom))
+            == "armed_custom_bypass"
+        )
+    assert (
         alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_AWAY"))
         == "Ready away"
     )
@@ -203,6 +251,8 @@ def test_area_state_and_ready_status_helpers() -> None:
         alarm_module._ready_status_display(SimpleNamespace(ready_status="RDY_NOT"))
         == "Not ready"
     )
+    assert alarm_module._ready_status_display(SimpleNamespace(ready_status="OTHER")) is None
+    assert alarm_module._ready_status_display(SimpleNamespace(ready_status=None)) is None
 
 
 async def test_area_setup_skips_when_runtime_missing(hass: HomeAssistant) -> None:
@@ -218,6 +268,42 @@ async def test_area_setup_skips_when_runtime_missing(hass: HomeAssistant) -> Non
 
     await async_setup_entry(hass, entry, _add_entities)
     assert not entities
+
+
+async def test_area_setup_snapshot_none(hass: HomeAssistant) -> None:
+    """Verify setup skips when snapshot is None."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.82"})
+    entry.add_to_hass(hass)
+    hub = _Hub()
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
+    coordinator.async_set_updated_data(None)
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
+
+    entities: list[alarm_module.Elke27AreaAlarmControlPanel] = []
+
+    def _add_entities(new_entities):
+        entities.extend(new_entities)
+
+    await async_setup_entry(hass, entry, _add_entities)
+    assert entities == []
+
+
+async def test_area_setup_invalid_area_id(hass: HomeAssistant) -> None:
+    """Verify setup skips non-integer area IDs."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.83"})
+    entry.add_to_hass(hass)
+    hub = _Hub()
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
+    coordinator.async_set_updated_data(SimpleNamespace(areas=[SimpleNamespace(area_id="x")]))
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
+
+    entities: list[alarm_module.Elke27AreaAlarmControlPanel] = []
+
+    def _add_entities(new_entities):
+        entities.extend(new_entities)
+
+    await async_setup_entry(hass, entry, _add_entities)
+    assert entities == []
 
 
 def test_faulted_zones_helpers() -> None:
@@ -237,6 +323,8 @@ def test_faulted_zones_helpers() -> None:
         alarm_module._zone_display_name(SimpleNamespace(zone_id=4, name=None), {})
         == "Zone 4"
     )
+    assert alarm_module._zone_display_name(SimpleNamespace(zone_id=None, name=None), {}) == "Zone"
+    assert alarm_module._zone_display_name(SimpleNamespace(zone_id=None, name=None), {}) == "Zone"
 
 
 def test_normalize_code() -> None:
@@ -254,6 +342,53 @@ def test_area_iter_helpers() -> None:
     assert alarm_module._get_area(snapshot, 2) is None
     snapshot.areas = [SimpleNamespace(area_id=2)]
     assert alarm_module._get_area(snapshot, 2) is not None
+    snapshot.areas = "bad"
+    assert list(alarm_module._iter_areas(snapshot)) == []
+
+
+async def test_area_setup_edge_cases(hass: HomeAssistant) -> None:
+    """Verify setup handles empty and invalid areas."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.81"})
+    entry.add_to_hass(hass)
+    hub = _Hub()
+    coordinator = Elke27DataUpdateCoordinator(hass, hub, entry)
+    coordinator.async_set_updated_data(SimpleNamespace(areas=None))
+    entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
+
+    entities: list[alarm_module.Elke27AreaAlarmControlPanel] = []
+
+    def _add_entities(new_entities):
+        entities.extend(new_entities)
+
+    await async_setup_entry(hass, entry, _add_entities)
+    assert entities == []
+
+    coordinator.async_set_updated_data(
+        SimpleNamespace(areas=[SimpleNamespace(area_id="x")])
+    )
+    await async_setup_entry(hass, entry, _add_entities)
+    assert entities == []
+
+
+def test_area_state_string_modes() -> None:
+    """Verify area state mapping for string values."""
+    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="disarm")) == "disarmed"
+    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="stay")) == "armed_home"
+    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="night")) == "armed_night"
+    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="away")) == "armed_away"
+    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="bypass")) == "armed_custom_bypass"
+
+
+def test_faulted_zones_edge_cases() -> None:
+    """Verify faulted zones handles mappings and bypassed/closed zones."""
+    snapshot = SimpleNamespace(
+        zones={1: SimpleNamespace(zone_id=1, open=False), 2: SimpleNamespace(zone_id=2, open=True, bypassed=True)},
+        zone_definitions={},
+    )
+    assert alarm_module._faulted_zones(snapshot) == []
+
+    snapshot = SimpleNamespace(zones="bad", zone_definitions={})
+    assert alarm_module._faulted_zones(snapshot) == []
 
 
 async def test_area_properties_when_missing(hass: HomeAssistant) -> None:
@@ -292,3 +427,8 @@ async def test_area_properties_when_missing(hass: HomeAssistant) -> None:
     )
     coordinator.async_set_updated_data(snapshot)
     assert area.extra_state_attributes["ready_status_display"] == "Ready away"
+
+
+def test_ready_status_value_mapping() -> None:
+    """Verify ready status value mapping from dict."""
+    assert alarm_module._ready_status_value({"ready_status": "RDY_STAY"}) == "RDY_STAY"

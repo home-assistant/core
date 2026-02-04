@@ -135,6 +135,15 @@ async def test_binary_sensor_setup_edge_cases(hass: HomeAssistant) -> None:
     await async_setup_entry(hass, entry, _add_entities)
     assert len(entities) == 1
 
+    snapshot.zones = []
+    coordinator.async_set_updated_data(snapshot)
+    await async_setup_entry(hass, entry, _add_entities)
+
+    snapshot.zones.append(SimpleNamespace(zone_id="x", name="Bad", open=False))
+    snapshot.zones.append(SimpleNamespace(zone_id=2, name="Dup", open=False))
+    coordinator.async_set_updated_data(snapshot)
+    await async_setup_entry(hass, entry, _add_entities)
+
     coordinator.async_set_updated_data(None)
     await async_setup_entry(hass, entry, _add_entities)
     assert len(entities) == 1
@@ -176,3 +185,19 @@ def test_zone_missing_state() -> None:
     )
     assert sensor.is_on is None
     assert sensor.icon is None
+    assert sensor.extra_state_attributes == {}
+    hub._ready = False
+    assert sensor.available is False
+
+
+def test_zone_is_on_non_bool() -> None:
+    """Verify non-bool open values yield None."""
+    hub = _Hub()
+    coordinator = SimpleNamespace(data=None)
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.0.2.5"})
+    zone = SimpleNamespace(zone_id=1, open="yes")
+    sensor = binary_module.Elke27ZoneBinarySensor(
+        coordinator, hub, entry, 1, zone, None
+    )
+    coordinator.data = SimpleNamespace(zones=[zone])
+    assert sensor.is_on is None

@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 from enum import Enum
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
-from elke27_lib import LinkKeys
+from elke27_lib import ArmMode, LinkKeys
 from elke27_lib.errors import Elke27LinkRequiredError
 import pytest
 
@@ -170,6 +171,225 @@ async def test_hub_properties(hass: HomeAssistant) -> None:
     )
     assert hub.panel_name == "Panel"
     assert hub.is_ready is False
+    hub._client = SimpleNamespace(is_ready=True)
+    assert hub.is_ready is True
+    assert hub.client is hub._client
+
+
+async def test_async_disconnect_cancels_reconnect_task(hass: HomeAssistant) -> None:
+    """Verify async_disconnect cancels reconnect task."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.83",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._reconnect_task = asyncio.create_task(asyncio.sleep(0))
+    await hub.async_disconnect()
+    assert hub._reconnect_task is None
+
+
+async def test_snapshot_and_refresh_paths(hass: HomeAssistant) -> None:
+    """Verify snapshot and refresh paths with client."""
+    client = SimpleNamespace(
+        snapshot="snap",
+        async_refresh_csm=AsyncMock(return_value="ok"),
+        async_refresh_domain_config=AsyncMock(return_value=None),
+    )
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.84",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._client = client
+    assert hub.get_snapshot() == "snap"
+    assert await hub.refresh_csm() == "ok"
+    await hub.refresh_domain_config("zone")
+    client.async_refresh_domain_config.assert_awaited_once_with("zone")
+
+
+async def test_subscribe_and_unsubscribe_typed_client(hass: HomeAssistant) -> None:
+    """Verify subscribe and unsubscribe via client."""
+    client = SimpleNamespace(
+        subscribe=Mock(return_value="token"),
+        unsubscribe_typed=Mock(return_value=True),
+    )
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.85",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._client = client
+    assert hub.subscribe(lambda *_: None) == "token"
+    assert hub.unsubscribe_typed(lambda *_: None) is True
+
+
+async def test_async_set_output_async_no_on(hass: HomeAssistant) -> None:
+    """Verify async_set_output handles coroutine without on parameter."""
+    async def _async_set(output_id: int, state: bool) -> bool:
+        return output_id == 1 and state is True
+
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.86",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._client = SimpleNamespace(async_set_output=_async_set)
+    assert await hub.async_set_output(1, True) is True
+
+
+async def test_zone_bypass_error_none(hass: HomeAssistant) -> None:
+    """Verify zone bypass returns False when error is None."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.87",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._client = SimpleNamespace(async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None)))
+    assert await hub.async_set_zone_bypass(1, True, pin="1234") is False
+
+
+async def test_arm_area_modes_and_errors(hass: HomeAssistant) -> None:
+    """Verify arm modes and error handling."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.88",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._client = SimpleNamespace(async_execute=AsyncMock(return_value=SimpleNamespace(ok=True)))
+    assert await hub.async_arm_area(1, ArmMode.ARMED_STAY, "1234") is True
+    assert await hub.async_arm_area(1, "ARMED_CUSTOM_BYPASS", "1234") is True
+
+    error = SimpleNamespace(user_message="nope")
+    hub._client = SimpleNamespace(async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=error)))
+    with pytest.raises(HomeAssistantError, match="nope"):
+        await hub.async_arm_area(1, ArmMode.ARMED_AWAY, "1234")
+
+
+async def test_resubscribe_typed_callbacks(hass: HomeAssistant) -> None:
+    """Verify resubscribe updates callbacks."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.89",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    cb = lambda *_: None
+    hub._typed_callbacks = {cb: None}
+    client = SimpleNamespace(subscribe_typed=Mock(return_value="token"))
+    hub._client = client
+    hub._resubscribe_typed_callbacks()
+    assert hub._typed_callbacks[cb] == "token"
+
+
+async def test_disarm_pin_and_error_none(hass: HomeAssistant) -> None:
+    """Verify disarm handles pin errors and ok false with no error."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.90",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._client = SimpleNamespace(async_execute=AsyncMock(return_value=SimpleNamespace(ok=False, error=None)))
+    with pytest.raises(Exception, match="PIN required"):
+        await hub.async_disarm_area(1, None)
+    with pytest.raises(HomeAssistantError, match="Code must be numeric"):
+        await hub.async_disarm_area(1, "aa")
+    assert await hub.async_disarm_area(1, "1234") is False
+
+
+async def test_handle_connection_event_no_client(hass: HomeAssistant) -> None:
+    """Verify handle_connection_event returns when no client."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.91",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._client = None
+    hub._handle_connection_event({"event_type": "disconnected"})
+
+
+async def test_schedule_reconnect_creates_task(hass: HomeAssistant) -> None:
+    """Verify reconnect scheduling creates task."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.92",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    task = Mock()
+    hub._hass.async_create_task = Mock(return_value=task)
+    hub._schedule_reconnect()
+    assert hub._reconnect_task is task
+
+
+async def test_log_unavailable_skips_when_logged(hass: HomeAssistant) -> None:
+    """Verify log_unavailable skips when already logged."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.93",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    hub._unavailable_logged = True
+    hub._log_unavailable()
+
+
+async def test_reconnect_loop_exception_path(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify reconnect loop handles exceptions and delays."""
+    hub = Elke27Hub(
+        hass,
+        "192.168.1.94",
+        2101,
+        LinkKeys("tk", "lk", "lh").to_json(),
+        "112233445566",
+        None,
+    )
+    async def _connect_fail():
+        hub._stopping = True
+        raise RuntimeError("boom")
+
+    hub._async_connect = _connect_fail
+    monkeypatch.setattr(asyncio, "sleep", AsyncMock(return_value=None))
+    await hub._async_reconnect_loop()
+
+
+def test_event_type_and_connection_state_extra() -> None:
+    """Verify additional event parsing paths."""
+    assert _connection_state({"event_type": "disconnected"}) is False
+    assert _connection_state({"event_type": "ready"}) is True
+    event = SimpleNamespace(event_type="connection", data={"connected": True})
+    assert _connection_state(event) is True
+    event = SimpleNamespace(event_type="other")
+    assert _connection_state(event) is None
 
 
 async def test_async_set_output_supports_async_and_sync(
