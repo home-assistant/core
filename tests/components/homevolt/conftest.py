@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homevolt import Device, DeviceMetadata, Sensor, SensorType
+from homevolt import DeviceMetadata, Sensor
 import pytest
 
 from homeassistant.components.homevolt.const import DOMAIN
@@ -52,37 +52,33 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         client = homevolt_mock.return_value
         client.base_url = "http://127.0.0.1"
         client.update_info = AsyncMock()
+        client.close_connection = AsyncMock()
 
-        # Create a mock Device with sensors
-        device = MagicMock(spec=Device)
-        device.device_id = "40580137858664"
-        device.sensors = {
-            "L1 Voltage": Sensor(
+        # Set up sensors and device_metadata directly on client
+        client.unique_id = "40580137858664"
+        client.sensors = {
+            "l1_voltage": Sensor(
                 value=234.5,
-                type=SensorType.VOLTAGE,
+                key="l1_voltage",
                 device_identifier="ems_40580137858664",
-                slug="l1_voltage",
             ),
-            "Battery State of Charge": Sensor(
+            "battery_state_of_charge": Sensor(
                 value=80.6,
-                type=SensorType.PERCENTAGE,
+                key="battery_state_of_charge",
                 device_identifier="ems_40580137858664",
-                slug="battery_state_of_charge",
             ),
-            "Power": Sensor(
+            "power": Sensor(
                 value=-12,
-                type=SensorType.POWER,
+                key="power",
                 device_identifier="ems_40580137858664",
-                slug="power",
             ),
         }
-        device.device_metadata = {
+        client.device_metadata = {
             "ems_40580137858664": DeviceMetadata(
                 name="Homevolt EMS",
                 model="EMS-1000",
             ),
         }
-        client.get_device.return_value = device
 
         yield client
 

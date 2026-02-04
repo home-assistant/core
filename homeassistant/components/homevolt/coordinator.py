@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 
 from homevolt import (
-    Device,
     Homevolt,
     HomevoltAuthenticationError,
     HomevoltConnectionError,
@@ -24,7 +23,7 @@ type HomevoltConfigEntry = ConfigEntry[HomevoltDataUpdateCoordinator]
 _LOGGER = logging.getLogger(__name__)
 
 
-class HomevoltDataUpdateCoordinator(DataUpdateCoordinator[Device]):
+class HomevoltDataUpdateCoordinator(DataUpdateCoordinator[Homevolt]):
     """Class to manage fetching Homevolt data."""
 
     config_entry: HomevoltConfigEntry
@@ -45,12 +44,13 @@ class HomevoltDataUpdateCoordinator(DataUpdateCoordinator[Device]):
             config_entry=entry,
         )
 
-    async def _async_update_data(self) -> Device:
+    async def _async_update_data(self) -> Homevolt:
         """Fetch data from the Homevolt API."""
         try:
             await self.client.update_info()
-            return self.client.get_device()
         except HomevoltAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
         except (HomevoltConnectionError, HomevoltError) as err:
             raise UpdateFailed(f"Error communicating with device: {err}") from err
+
+        return self.client

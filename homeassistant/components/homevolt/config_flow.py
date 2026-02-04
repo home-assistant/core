@@ -42,8 +42,6 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             client = Homevolt(host, password, websession=websession)
             try:
                 await client.update_info()
-                device = client.get_device()
-                device_id = device.device_id
             except HomevoltAuthenticationError:
                 errors["base"] = "invalid_auth"
             except HomevoltConnectionError:
@@ -53,7 +51,9 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
                     "Error occurred while connecting to the Homevolt battery"
                 )
                 errors["base"] = "unknown"
-            else:
+
+            if not errors:
+                device_id = client.unique_id
                 await self.async_set_unique_id(device_id)
                 self._abort_if_unique_id_configured()
 

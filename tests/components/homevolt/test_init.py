@@ -21,14 +21,13 @@ async def test_load_unload_entry(
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_remove(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_homevolt_client.close_connection.assert_called_once()
 
 
 async def test_config_entry_not_ready(
@@ -43,7 +42,6 @@ async def test_config_entry_not_ready(
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -60,6 +58,5 @@ async def test_config_entry_auth_failed(
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

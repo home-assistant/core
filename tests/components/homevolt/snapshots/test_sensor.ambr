@@ -33,7 +33,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_state_of_charge',
-    'unique_id': '40580137858664_Battery State of Charge',
+    'unique_id': '40580137858664_battery_state_of_charge',
     'unit_of_measurement': '%',
   })
 # ---
@@ -90,7 +90,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'l1_voltage',
-    'unique_id': '40580137858664_L1 Voltage',
+    'unique_id': '40580137858664_l1_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -147,7 +147,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': '40580137858664_Power',
+    'unique_id': '40580137858664_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from homevolt import HomevoltAuthenticationError, HomevoltConnectionError
 import pytest
@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_full_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_homevolt_client: MagicMock
 ) -> None:
     """Test a complete successful user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -33,27 +33,14 @@ async def test_full_flow_success(
         CONF_PASSWORD: "test-password",
     }
 
-    with (
-        patch(
-            "homeassistant.components.homevolt.config_flow.Homevolt.update_info",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "homeassistant.components.homevolt.config_flow.Homevolt.get_device",
-        ) as mock_get_device,
-    ):
-        mock_device = MagicMock()
-        mock_device.device_id = "40580137858664"
-        mock_get_device.return_value = mock_device
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Homevolt Local"
+    assert result["title"] == "Homevolt"
     assert result["data"] == user_input
+    assert result["result"].unique_id == "40580137858664"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -68,6 +55,7 @@ async def test_full_flow_success(
 async def test_step_user_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
+    mock_homevolt_client: MagicMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -85,48 +73,35 @@ async def test_step_user_errors(
         CONF_PASSWORD: "test-password",
     }
 
-    with patch(
-        "homeassistant.components.homevolt.config_flow.Homevolt.update_info",
-        new_callable=AsyncMock,
-    ) as mock_update_info:
-        mock_update_info.side_effect = exception
+    mock_homevolt_client.update_info.side_effect = exception
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input,
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": expected_error}
 
-    with (
-        patch(
-            "homeassistant.components.homevolt.config_flow.Homevolt.update_info",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "homeassistant.components.homevolt.config_flow.Homevolt.get_device",
-        ) as mock_get_device,
-    ):
-        mock_device = MagicMock()
-        mock_device.device_id = "40580137858664"
-        mock_get_device.return_value = mock_device
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input,
-        )
-        await hass.async_block_till_done()
+    mock_homevolt_client.update_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Homevolt Local"
+    assert result["title"] == "Homevolt"
     assert result["data"] == user_input
+    assert result["result"].unique_id == "40580137858664"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_duplicate_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
+    mock_homevolt_client: MagicMock,
 ) -> None:
     """Test that a duplicate device_id aborts the flow."""
     existing_entry = MockConfigEntry(
@@ -149,22 +124,10 @@ async def test_duplicate_entry(
         CONF_PASSWORD: "test-password",
     }
 
-    with (
-        patch(
-            "homeassistant.components.homevolt.config_flow.Homevolt.update_info",
-            new_callable=AsyncMock,
-        ),
-        patch(
-            "homeassistant.components.homevolt.config_flow.Homevolt.get_device",
-        ) as mock_get_device,
-    ):
-        mock_device = MagicMock()
-        mock_device.device_id = "40580137858664"
-        mock_get_device.return_value = mock_device
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input,
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

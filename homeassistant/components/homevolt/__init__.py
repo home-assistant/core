@@ -33,4 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HomevoltConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if unload_ok:
+        await entry.runtime_data.client.close_connection()
+
+    return unload_ok

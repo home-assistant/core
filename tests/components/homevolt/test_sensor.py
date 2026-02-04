@@ -42,7 +42,7 @@ async def test_sensor_exposes_values_from_coordinator(
     mock_homevolt_client,
 ) -> None:
     """Ensure sensor entities are created and expose values from the coordinator."""
-    unique_id = "40580137858664_L1 Voltage"
+    unique_id = "40580137858664_l1_voltage"
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
     assert entity_id is not None
 
@@ -50,10 +50,9 @@ async def test_sensor_exposes_values_from_coordinator(
     assert state is not None
     assert float(state.state) == 234.5
 
-    mock_homevolt_client.get_device.return_value.sensors["L1 Voltage"].value = 240.1
+    mock_homevolt_client.sensors["l1_voltage"].value = 240.1
     coordinator = mock_config_entry.runtime_data
     await coordinator.async_refresh()
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state is not None
