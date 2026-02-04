@@ -1,0 +1,216 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This Flic button is already configured.",
+      "cannot_connect": "Failed to connect to button at address {address}.",
+      "device_not_found": "Button not found. Make sure it is in range and powered on.",
+      "use_bluetooth_discovery": "Flic buttons are automatically discovered via Bluetooth. Put your button in pairing mode (hold for 7 seconds until LED flashes) and it will appear in discovered devices."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the button. Make sure it is in range and try again.",
+      "invalid_signature": "Invalid button signature during pairing. This may not be a genuine Flic button.",
+      "pairing_failed": "Pairing failed. Please ensure the button is in pairing mode (LED flashing) and try again.",
+      "unknown": "An unexpected error occurred during pairing."
+    },
+    "step": {
+      "bluetooth_confirm": {
+        "description": "Set up {name}?",
+        "title": "Discovered Flic button"
+      },
+      "pair": {
+        "description": "Put the Flic button into pairing mode by holding it for 7 seconds until the LED starts flashing. Then submit this form to complete pairing with {name}.",
+        "title": "Pair with Flic button"
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_subtype": {
+      "big_button": "Big button",
+      "button": "Button",
+      "small_button": "Small button",
+      "twist_button": "Twist button"
+    },
+    "trigger_type": {
+      "click": "{subtype} clicked",
+      "double_click": "{subtype} double clicked",
+      "down": "{subtype} pressed",
+      "duo_dial_changed": "{subtype} dial position changed",
+      "hold": "{subtype} held",
+      "rotate_clockwise": "{subtype} rotated clockwise",
+      "rotate_counter_clockwise": "{subtype} rotated counter-clockwise",
+      "selector_changed": "{subtype} selector changed",
+      "slot_0_changed": "Slot 1 position changed",
+      "slot_10_changed": "Slot 11 position changed",
+      "slot_11_changed": "Slot 12 position changed",
+      "slot_1_changed": "Slot 2 position changed",
+      "slot_2_changed": "Slot 3 position changed",
+      "slot_3_changed": "Slot 4 position changed",
+      "slot_4_changed": "Slot 5 position changed",
+      "slot_5_changed": "Slot 6 position changed",
+      "slot_6_changed": "Slot 7 position changed",
+      "slot_7_changed": "Slot 8 position changed",
+      "slot_8_changed": "Slot 9 position changed",
+      "slot_9_changed": "Slot 10 position changed",
+      "swipe_down": "{subtype} swiped down",
+      "swipe_left": "{subtype} swiped left",
+      "swipe_right": "{subtype} swiped right",
+      "swipe_up": "{subtype} swiped up",
+      "up": "{subtype} released"
+    }
+  },
+  "entity": {
+    "event": {
+      "button": {
+        "name": "Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "Single click",
+              "double_click": "Double click",
+              "down": "Pressed",
+              "hold": "Hold",
+              "up": "Released"
+            }
+          }
+        }
+      },
+      "button_big": {
+        "name": "Big Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "Single click",
+              "double_click": "Double click",
+              "down": "Pressed",
+              "hold": "Hold",
+              "swipe_down": "Swipe down",
+              "swipe_left": "Swipe left",
+              "swipe_right": "Swipe right",
+              "swipe_up": "Swipe up",
+              "up": "Released"
+            }
+          }
+        }
+      },
+      "button_small": {
+        "name": "Small Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "Single click",
+              "double_click": "Double click",
+              "down": "Pressed",
+              "hold": "Hold",
+              "swipe_down": "Swipe down",
+              "swipe_left": "Swipe left",
+              "swipe_right": "Swipe right",
+              "swipe_up": "Swipe up",
+              "up": "Released"
+            }
+          }
+        }
+      },
+      "button_twist": {
+        "name": "Button",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "Single click",
+              "double_click": "Double click",
+              "down": "Pressed",
+              "hold": "Hold",
+              "rotate_clockwise": "Rotated clockwise",
+              "rotate_counter_clockwise": "Rotated counter-clockwise",
+              "selector_changed": "Selector changed",
+              "up": "Released"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "big_dial": {
+        "name": "Big Button Rotate"
+      },
+      "slot_0": {
+        "name": "Slot 1 position"
+      },
+      "slot_1": {
+        "name": "Slot 2 position"
+      },
+      "slot_10": {
+        "name": "Slot 11 position"
+      },
+      "slot_11": {
+        "name": "Slot 12 position"
+      },
+      "slot_2": {
+        "name": "Slot 3 position"
+      },
+      "slot_3": {
+        "name": "Slot 4 position"
+      },
+      "slot_4": {
+        "name": "Slot 5 position"
+      },
+      "slot_5": {
+        "name": "Slot 6 position"
+      },
+      "slot_6": {
+        "name": "Slot 7 position"
+      },
+      "slot_7": {
+        "name": "Slot 8 position"
+      },
+      "slot_8": {
+        "name": "Slot 9 position"
+      },
+      "slot_9": {
+        "name": "Slot 10 position"
+      },
+      "small_dial": {
+        "name": "Small Button Rotate"
+      }
+    },
+    "select": {
+      "selected_slot": {
+        "name": "Selected slot",
+        "state": {
+          "slot_1": "Slot 1",
+          "slot_10": "Slot 10",
+          "slot_11": "Slot 11",
+          "slot_12": "Slot 12",
+          "slot_2": "Slot 2",
+          "slot_3": "Slot 3",
+          "slot_4": "Slot 4",
+          "slot_5": "Slot 5",
+          "slot_6": "Slot 6",
+          "slot_7": "Slot 7",
+          "slot_8": "Slot 8",
+          "slot_9": "Slot 9"
+        }
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "not_twist_device": "Options are only available for Flic Twist devices."
+    },
+    "step": {
+      "init": {
+        "data": {
+          "push_twist_mode": "Push twist mode"
+        },
+        "data_description": {
+          "push_twist_mode": "Controls the behavior when holding the button and twisting. Selector mode enables click and double-click events and shows the selected slot entity."
+        },
+        "title": "Flic Twist options"
+      }
+    }
+  }
+}
