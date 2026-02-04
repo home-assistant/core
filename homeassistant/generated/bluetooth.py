@@ -143,6 +143,16 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "connectable": True,
+        "domain": "flic_button",
+        "service_uuid": "00420000-8f59-4420-870d-84f3b617e493",
+    },
+    {
+        "connectable": True,
+        "domain": "flic_button",
+        "service_uuid": "00c90000-2cbd-4f2a-a725-5ccd960ffb7d",
+    },
+    {
+        "connectable": True,
         "domain": "gardena_bluetooth",
         "manufacturer_id": 1062,
         "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",

@@ -526,6 +526,7 @@ build.json @home-assistant/supervisor
 /tests/components/fjaraskupan/ @elupus
 /homeassistant/components/flexit_bacnet/ @lellky @piotrbulinski
 /tests/components/flexit_bacnet/ @lellky @piotrbulinski
+/homeassistant/components/flic_button/ @https://github.com/50ButtonsEach
 /homeassistant/components/flipr/ @cnico
 /tests/components/flipr/ @cnico
 /homeassistant/components/flo/ @dmulcahey
