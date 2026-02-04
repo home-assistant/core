@@ -88,10 +88,9 @@ def _match_hostname(cert: Certificate, hostname: str) -> bool:
     """
 
     try:
+        # noinspection PyTypeChecker
         san_ext: Extension[SubjectAlternativeName] = (
-            cert.extensions.get_extension_for_oid(  # type: ignore[assignment]
-                ExtensionOID.SUBJECT_ALTERNATIVE_NAME
-            )
+            cert.extensions.get_extension_for_oid(ExtensionOID.SUBJECT_ALTERNATIVE_NAME)  # type: ignore[assignment]
         )
         # noinspection PyTypeChecker
         san_value: SubjectAlternativeName = san_ext.value
