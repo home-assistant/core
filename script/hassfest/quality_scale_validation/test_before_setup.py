@@ -33,9 +33,11 @@ def _get_exception_name(expression: ast.expr) -> str:
         # Raise namespace.???
         return _get_exception_name(expression.value)
 
-    raise AssertionError(
-        f"Raise is neither Attribute nor Call nor Name: {type(expression)}"
-    )
+    if isinstance(expression, ast.Subscript):
+        # Raise raise errors[0][0]
+        return None
+
+    raise TypeError(f"Raise is neither Attribute nor Call nor Name: {type(expression)}")
 
 
 def _raises_exception(integration: Integration) -> bool:
