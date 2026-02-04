@@ -146,7 +146,7 @@ async def test_node_added_subscription(
 
 
 @pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["air_purifier"])
+@pytest.mark.parametrize("node_fixture", ["mock_air_purifier"])
 async def test_device_registry_single_node_composed_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -156,7 +156,7 @@ async def test_device_registry_single_node_composed_device(
 
 
 @pytest.mark.usefixtures("matter_node")
-@pytest.mark.parametrize("node_fixture", ["multi_endpoint_light"])
+@pytest.mark.parametrize("node_fixture", ["inovelli_vtm31"])
 async def test_multi_endpoint_name(hass: HomeAssistant) -> None:
     """Test that the entity name gets postfixed if the device has multiple primary endpoints."""
     entity_state = hass.states.get("light.inovelli_light_1")
