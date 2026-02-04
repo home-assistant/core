@@ -212,6 +212,22 @@ async def test_migrate_unique_ids(hass: HomeAssistant) -> None:
     assert entry_id is not None
 
 
+async def test_migrate_unique_ids_skips_without_suffix(hass: HomeAssistant) -> None:
+    """Verify migration skips IDs without an underscore suffix."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.24"})
+    entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    base = "aa:bb:cc"
+    registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{base}_sensor",
+        config_entry=entry,
+    )
+
+    await _async_migrate_unique_ids(hass, entry, base)
+
+
 async def test_migrate_unique_ids_skips_other_entry(hass: HomeAssistant) -> None:
     """Verify migration skips entries from other config entries."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "192.168.1.22"})

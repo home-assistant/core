@@ -413,6 +413,7 @@ async def test_area_properties_when_missing(hass: HomeAssistant) -> None:
     )
     assert area.state is None
     assert area.extra_state_attributes["ready"] is None
+    assert area.state is None
     hub.is_ready = False
     assert area.available is False
 
@@ -432,3 +433,27 @@ async def test_area_properties_when_missing(hass: HomeAssistant) -> None:
 def test_ready_status_value_mapping() -> None:
     """Verify ready status value mapping from dict."""
     assert alarm_module._ready_status_value({"ready_status": "RDY_STAY"}) == "RDY_STAY"
+
+
+def test_area_custom_bypass_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify custom bypass mode in ArmMode branch."""
+    monkeypatch.setattr(alarm_module, "_custom_bypass_mode", lambda: ArmMode.ARMED_AWAY)
+    assert (
+        alarm_module._area_state_to_ha(SimpleNamespace(arm_mode=ArmMode.ARMED_AWAY))
+        == "armed_custom_bypass"
+    )
+
+
+def test_area_state_unknown_string() -> None:
+    """Verify unknown string defaults to armed_away."""
+    assert alarm_module._area_state_to_ha(SimpleNamespace(arm_mode="unknown")) == "armed_away"
+
+
+def test_faulted_zones_none_and_non_int() -> None:
+    """Verify faulted zones handles None and non-int IDs."""
+    assert alarm_module._faulted_zones(None) == []
+    snapshot = SimpleNamespace(
+        zones=[SimpleNamespace(zone_id="x", open=True, bypassed=False)],
+        zone_definitions={},
+    )
+    assert alarm_module._faulted_zones(snapshot) == []

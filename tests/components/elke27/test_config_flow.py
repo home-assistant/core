@@ -116,6 +116,7 @@ def test_panel_helpers() -> None:
     assert config_flow._panel_label(SimpleNamespace(host="1.2.3.5")) == "1.2.3.5"
     assert config_flow._panel_label(SimpleNamespace(name="Only Name")) == "Only Name"
     assert config_flow._panel_label(SimpleNamespace()) == "Panel"
+    assert config_flow._panel_to_dict({"host": "1.2.3.4"})["host"] == "1.2.3.4"
     assert config_flow._panel_to_dict(FakePanel(
         panel_host="1.2.3.4",
         panel_port=2101,

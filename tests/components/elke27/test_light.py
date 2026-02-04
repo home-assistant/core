@@ -142,6 +142,7 @@ def test_light_properties_when_missing() -> None:
     assert light.is_on is None
     hub.is_ready = False
     assert light.available is False
+    assert light.is_on is None
 
 
 async def test_light_turn_off_pin_required(hass: HomeAssistant) -> None:
@@ -160,3 +161,12 @@ async def test_light_turn_off_pin_required(hass: HomeAssistant) -> None:
         HomeAssistantError, match="PIN required to perform this action."
     ):
         await light.async_turn_off()
+
+
+def test_light_iter_outputs_variants() -> None:
+    """Verify output iteration for mapping and list."""
+    assert list(light_module._iter_outputs({"outputs": {1: "x"}})) == []
+    snapshot = SimpleNamespace(outputs={1: "x"})
+    assert list(light_module._iter_outputs(snapshot)) == ["x"]
+    snapshot.outputs = ["a"]
+    assert list(light_module._iter_outputs(snapshot)) == ["a"]

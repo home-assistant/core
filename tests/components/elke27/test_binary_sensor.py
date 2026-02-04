@@ -188,6 +188,7 @@ def test_zone_missing_state() -> None:
     assert sensor.extra_state_attributes == {}
     hub._ready = False
     assert sensor.available is False
+    assert sensor.is_on is None
 
 
 def test_zone_is_on_non_bool() -> None:
@@ -201,3 +202,9 @@ def test_zone_is_on_non_bool() -> None:
     )
     coordinator.data = SimpleNamespace(zones=[zone])
     assert sensor.is_on is None
+
+
+def test_iter_zones_invalid_type() -> None:
+    """Verify iter_zones handles invalid types."""
+    snapshot = SimpleNamespace(zones="bad")
+    assert binary_module._iter_zones(snapshot) == []

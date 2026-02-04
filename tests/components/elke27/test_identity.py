@@ -135,6 +135,25 @@ def test_get_mac_for_source_ip_matches_mac(monkeypatch: pytest.MonkeyPatch) -> N
     assert identity_module._get_mac_for_source_ip("1.2.3.4") is not None
 
 
+def test_get_mac_for_source_ip_no_match(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Verify MAC lookup returns None when no addresses match."""
+    class Addr:
+        def __init__(self) -> None:
+            self.address = "9.9.9.9"
+            self.family = getattr(socket, "AF_PACKET", None) or getattr(socket, "AF_LINK", None)
+
+    class FakePsutil:
+        def net_if_addrs(self):  # type: ignore[no-untyped-def]
+            return {"eth0": [Addr()]}
+
+    class FakeWrapper:
+        def __init__(self) -> None:
+            self.psutil = FakePsutil()
+
+    monkeypatch.setattr(identity_module.ha_psutil, "PsutilWrapper", FakeWrapper)
+    assert identity_module._get_mac_for_source_ip("1.2.3.4") is None
+
+
 async def test_integration_serial_no_source_ip(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:

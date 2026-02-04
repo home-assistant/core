@@ -155,6 +155,7 @@ def test_switch_properties_when_missing() -> None:
     assert output.is_on is None
     hub.is_ready = False
     assert output.available is False
+    assert output.is_on is None
 
 
 async def test_switch_turn_off_pin_required(hass: HomeAssistant) -> None:
@@ -173,3 +174,11 @@ async def test_switch_turn_off_pin_required(hass: HomeAssistant) -> None:
         HomeAssistantError, match="PIN required to perform this action."
     ):
         await output.async_turn_off()
+
+
+def test_switch_iter_outputs_variants() -> None:
+    """Verify output iteration for mapping and list."""
+    snapshot = SimpleNamespace(outputs={1: "x"})
+    assert list(switch_module._iter_outputs(snapshot)) == ["x"]
+    snapshot.outputs = ["a"]
+    assert list(switch_module._iter_outputs(snapshot)) == ["a"]
