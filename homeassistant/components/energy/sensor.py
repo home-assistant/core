@@ -361,6 +361,17 @@ class EnergyCostSensor(SensorEntity):
 
     This is intended as a fallback for when no specific cost sensor is available for the
     utility.
+
+    Expected config fields (from adapter or export_config wrapper):
+    - stat_energy_key (via adapter): Key to get the energy statistic ID
+    - total_money_key (via adapter): Key to get the existing cost/compensation stat
+    - entity_energy_price: Entity ID providing price per unit (e.g., $/kWh)
+    - number_energy_price: Fixed price per unit
+
+    Note: For grid export compensation, the unified format uses different field names
+    (entity_energy_price_sell, number_energy_price_sell). The _process_grid_export_sensor
+    method in SensorManager creates a wrapper config that maps these to the standard
+    field names (entity_energy_price, number_energy_price) so this class can use them.
     """
 
     _attr_entity_registry_visible_default = False

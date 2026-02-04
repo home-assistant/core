@@ -669,7 +669,12 @@ async def test_grid_migration_more_imports_than_exports(hass: HomeAssistant) -> 
 
 
 async def test_grid_migration_with_power(hass: HomeAssistant) -> None:
-    """Test migration preserves power config on first grid."""
+    """Test migration preserves power config and stat_rate from first grid.
+
+    Note: Migration preserves the original stat_rate value from the legacy power array.
+    The stat_rate regeneration from power_config only happens during async_update()
+    for new data submissions, not during storage migration.
+    """
     old_data = {
         "energy_sources": [
             {
@@ -702,7 +707,12 @@ async def test_grid_migration_with_power(hass: HomeAssistant) -> None:
     assert manager.data is not None
     grid = manager.data["energy_sources"][0]
 
+    # Verify power_config is preserved
     assert grid["power_config"] == {"stat_rate_inverted": "sensor.grid_power"}
+
+    # Migration preserves the original stat_rate value from the legacy power array
+    # (stat_rate regeneration from power_config only happens in async_update)
+    assert grid["stat_rate"] == "sensor.grid_power"
 
 
 async def test_grid_migration_import_only(hass: HomeAssistant) -> None:
