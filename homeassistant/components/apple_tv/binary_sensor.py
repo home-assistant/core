@@ -34,7 +34,9 @@ async def async_setup_entry(
             )
             cb()
 
-    cb = async_dispatcher_connect(hass, SIGNAL_CONNECTED, setup_entities)
+    cb = async_dispatcher_connect(
+        hass, f"{SIGNAL_CONNECTED}_{config_entry.unique_id}", setup_entities
+    )
     config_entry.async_on_unload(cb)
 
 
