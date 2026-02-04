@@ -691,6 +691,7 @@ select = [
   "B018",   # Found useless attribute access. Either assign it to a variable or remove it.
   "B023",   # Function definition does not bind loop variable {name}
   "B024",   # `{name}` is an abstract base class, but it has no abstract methods or properties
+  "B025",   # try-except* block with duplicate exception {name}
   "B026",   # Star-arg unpacking after a keyword argument is strongly discouraged
   "B032",   # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
   "B035",   # Dictionary comprehension uses static key
