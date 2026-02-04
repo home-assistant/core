@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Protocol
+from typing import Protocol, cast
 
 from telegram import Bot
 from telegram.constants import InputMediaType
@@ -409,11 +409,11 @@ class BotPlatformModule(Protocol):
 
     async def async_setup_bot_platform(
         self, hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
-    ) -> type[BaseTelegramBot] | None:
+    ) -> BaseTelegramBot | None:
         """Set up the Telegram bot platform."""
 
 
-MODULES: dict[str, BotPlatformModule] = {
+MODULES = {
     PLATFORM_BROADCAST: broadcast,
     PLATFORM_POLLING: polling,
     PLATFORM_WEBHOOKS: webhooks,
@@ -840,10 +840,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     p_type: str = entry.data[CONF_PLATFORM]
 
     _LOGGER.debug("Setting up %s.%s", DOMAIN, p_type)
+    module = cast(BotPlatformModule, MODULES[p_type])
     try:
-        receiver_service = await MODULES[p_type].async_setup_bot_platform(
-            hass, bot, entry
-        )
+        receiver_service = await module.async_setup_bot_platform(hass, bot, entry)
     except Exception:
         _LOGGER.exception("Error setting up Telegram bot %s", p_type)
         await bot.shutdown()
