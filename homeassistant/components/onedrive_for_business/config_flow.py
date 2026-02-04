@@ -15,7 +15,14 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .const import CONF_FOLDER_ID, CONF_FOLDER_PATH, DOMAIN, OAUTH_SCOPES
+from .application_credentials import tenant_id_context
+from .const import (
+    CONF_FOLDER_ID,
+    CONF_FOLDER_PATH,
+    CONF_TENANT_ID,
+    DOMAIN,
+    OAUTH_SCOPES,
+)
 
 FOLDER_NAME_SCHEMA = vol.Schema({vol.Required(CONF_FOLDER_PATH): str})
 
@@ -41,7 +48,43 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the OneDrive config flow."""
         super().__init__()
-        self.step_data: dict[str, Any] = {}  # will contain "auth_implementation"
+        self._data: dict[str, Any] = {}
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        return await self.async_step_pick_tenant()
+
+    async def async_step_pick_tenant(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Select the tenant id."""
+        if user_input is not None:
+            self._data[CONF_TENANT_ID] = user_input[CONF_TENANT_ID]
+            # Continue with OAuth flow using tenant context
+            with tenant_id_context(user_input[CONF_TENANT_ID]):
+                return await self.async_step_pick_implementation()
+
+        return self.async_show_form(
+            step_id="pick_tenant",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_TENANT_ID): str,
+                }
+            ),
+            description_placeholders={
+                "entra_url": "https://entra.microsoft.com/",
+                "redirect_url": "https://my.home-assistant.io/redirect/oauth",
+            },
+        )
+
+    async def async_step_pick_implementation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the pick implementation step with tenant context."""
+        with tenant_id_context(self._data[CONF_TENANT_ID]):
+            return await super().async_step_pick_implementation(user_input)
 
     async def async_oauth_create_entry(
         self,
@@ -58,6 +101,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         try:
             self.approot = await self.client.get_approot()
+            await self.client.get_drive()
         except OneDriveException:
             self.logger.exception("Failed to connect to OneDrive")
             return self.async_abort(reason="connection_error")
@@ -68,7 +112,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         await self.async_set_unique_id(self.approot.parent_reference.drive_id)
         self._abort_if_unique_id_configured()
 
-        self.step_data = data
+        self._data.update(data)
 
         return await self.async_step_select_folder()
 
@@ -96,7 +140,7 @@ class OneDriveForBusinessConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return self.async_create_entry(
                     title=title,
                     data={
-                        **self.step_data,
+                        **self._data,
                         CONF_FOLDER_ID: folder.id,
                         CONF_FOLDER_PATH: user_input[CONF_FOLDER_PATH],
                     },

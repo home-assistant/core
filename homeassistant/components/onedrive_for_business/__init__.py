@@ -24,7 +24,14 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 
-from .const import CONF_FOLDER_ID, CONF_FOLDER_PATH, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .application_credentials import tenant_id_context
+from .const import (
+    CONF_FOLDER_ID,
+    CONF_FOLDER_PATH,
+    CONF_TENANT_ID,
+    DATA_BACKUP_AGENT_LISTENERS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +91,8 @@ async def _get_onedrive_client(
     hass: HomeAssistant, entry: OneDriveConfigEntry
 ) -> tuple[OneDriveClient, Callable[[], Awaitable[str]]]:
     """Get OneDrive client."""
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    with tenant_id_context(entry.data[CONF_TENANT_ID]):
+        implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
 
     async def get_access_token() -> str:
