@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from .bot import BaseTelegramBot, TelegramBotConfigEntry
 
 
-async def async_setup_platform(
+async def async_setup_bot_platform(
     hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
 ) -> type[BaseTelegramBot] | None:
     """Set up the Telegram broadcast platform."""

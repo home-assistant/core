@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from types import ModuleType
+from typing import Protocol
 
 from telegram import Bot
 from telegram.constants import InputMediaType
@@ -45,7 +45,12 @@ from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util.json import JsonValueType
 
 from . import broadcast, polling, webhooks
-from .bot import TelegramBotConfigEntry, TelegramNotificationService, initialize_bot
+from .bot import (
+    BaseTelegramBot,
+    TelegramBotConfigEntry,
+    TelegramNotificationService,
+    initialize_bot,
+)
 from .const import (
     ATTR_ALLOWS_MULTIPLE_ANSWERS,
     ATTR_AUTHENTICATION,
@@ -399,7 +404,16 @@ SERVICE_MAP: dict[str, VolSchemaType] = {
 }
 
 
-MODULES: dict[str, ModuleType] = {
+class TelegramBotModule(Protocol):
+    """Define the module protocol for telegram bot modules."""
+
+    async def async_setup_bot_platform(
+        self, hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
+    ) -> type[BaseTelegramBot] | None:
+        """Set up the Telegram bot platform."""
+
+
+MODULES: dict[str, TelegramBotModule] = {
     PLATFORM_BROADCAST: broadcast,
     PLATFORM_POLLING: polling,
     PLATFORM_WEBHOOKS: webhooks,
@@ -827,7 +841,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
 
     _LOGGER.debug("Setting up %s.%s", DOMAIN, p_type)
     try:
-        receiver_service = await MODULES[p_type].async_setup_platform(hass, bot, entry)
+        receiver_service = await MODULES[p_type].async_setup_bot_platform(
+            hass, bot, entry
+        )
     except Exception:
         _LOGGER.exception("Error setting up Telegram bot %s", p_type)
         await bot.shutdown()
