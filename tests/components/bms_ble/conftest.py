@@ -149,12 +149,6 @@ def mock_config(
     )
 
 
-@pytest.fixture(params=[TimeoutError, BleakError, EOFError])
-def mock_coordinator_exception(request: pytest.FixtureRequest) -> Exception:
-    """Return possible exceptions for mock BMS update function."""
-    return request.param
-
-
 class MockBMS(BaseBMS):
     """Mock Battery Management System."""
 

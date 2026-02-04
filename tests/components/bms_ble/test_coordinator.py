@@ -5,6 +5,7 @@ import contextlib
 from typing import Final
 
 from aiobmsble import BMSSample
+from bleak.exc import BleakError
 from habluetooth import BluetoothServiceInfoBleak
 import pytest
 
@@ -107,6 +108,9 @@ async def test_nodata(
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "patch_default_bleak_client")
+@pytest.mark.parametrize(
+    "mock_coordinator_exception", [TimeoutError, BleakError, EOFError]
+)
 async def test_update_exception(
     bt_discovery: BluetoothServiceInfoBleak,
     mock_coordinator_exception: Exception,
@@ -123,15 +127,7 @@ async def test_update_exception(
 
     await coordinator.async_refresh()
     assert not coordinator.last_update_success
-    assert isinstance(
-        coordinator.last_exception,
-        (
-            TimeoutError
-            if isinstance(mock_coordinator_exception, type)
-            and issubclass(mock_coordinator_exception, TimeoutError)
-            else UpdateFailed
-        ),
-    )
+    assert isinstance(coordinator.last_exception, UpdateFailed)
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "patch_default_bleak_client")
