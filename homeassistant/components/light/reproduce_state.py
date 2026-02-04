@@ -15,10 +15,8 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import Context, HomeAssistant, State
-from homeassistant.util import color as color_util
 
 from . import (
-    _DEPRECATED_ATTR_COLOR_TEMP,
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
@@ -41,7 +39,6 @@ ATTR_GROUP = [ATTR_BRIGHTNESS, ATTR_EFFECT]
 
 COLOR_GROUP = [
     ATTR_HS_COLOR,
-    _DEPRECATED_ATTR_COLOR_TEMP.value,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
@@ -127,30 +124,13 @@ async def _async_reproduce_state(
             color_mode = state.attributes[ATTR_COLOR_MODE]
             if cm_attr := COLOR_MODE_TO_ATTRIBUTE.get(color_mode):
                 if (cm_attr_state := state.attributes.get(cm_attr.state_attr)) is None:
-                    if (
-                        color_mode != ColorMode.COLOR_TEMP
-                        or (
-                            mireds := state.attributes.get(
-                                _DEPRECATED_ATTR_COLOR_TEMP.value
-                            )
-                        )
-                        is None
-                    ):
-                        _LOGGER.warning(
-                            "Color mode %s specified but attribute %s missing for: %s",
-                            color_mode,
-                            cm_attr.state_attr,
-                            state.entity_id,
-                        )
-                        return
                     _LOGGER.warning(
-                        "Color mode %s specified but attribute %s missing for: %s, "
-                        "using color_temp (mireds) as fallback",
+                        "Color mode %s specified but attribute %s missing for: %s",
                         color_mode,
                         cm_attr.state_attr,
                         state.entity_id,
                     )
-                    cm_attr_state = color_util.color_temperature_mired_to_kelvin(mireds)
+                    return
                 service_data[cm_attr.parameter] = cm_attr_state
         else:
             # Fall back to Choosing the first color that is specified
