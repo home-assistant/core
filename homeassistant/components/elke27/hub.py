@@ -6,11 +6,13 @@ import asyncio
 from collections.abc import Callable
 import contextlib
 from enum import Enum
+from functools import partial
 import inspect
 import logging
 from typing import Any
 
-from elke27_lib import ArmMode, ClientConfig, Elke27Client, LinkKeys
+from elke27_lib import ArmMode, ClientConfig, LinkKeys
+from elke27_lib.client import Elke27Client
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27PinRequiredError
 
 from homeassistant.core import HomeAssistant, callback
@@ -171,33 +173,37 @@ class Elke27Hub:
             raise HomeAssistantError("Client is not connected.")
         await client.async_refresh_domain_config(domain)
 
-    def subscribe(self, callback: Callable[[Any], None]) -> Callable[[], None]:
+    def subscribe(self, listener: Callable[[Any], None]) -> Callable[[], None]:
         """Subscribe to client events."""
         client = self._client
         if client is None:
             raise HomeAssistantError("Client is not connected.")
-        return client.subscribe(callback)
+        return client.subscribe(listener)
 
-    def subscribe_typed(self, callback: Callable[[Any], None]) -> Callable[[], None]:
+    def subscribe_typed(self, listener: Callable[[Any], None]) -> Callable[[], None]:
         """Subscribe to typed client events."""
-        if callback not in self._typed_callbacks:
-            self._typed_callbacks[callback] = None
+        if listener not in self._typed_callbacks:
+            self._typed_callbacks[listener] = None
         client = self._client
         if client is not None:
-            self._typed_callbacks[callback] = client.subscribe_typed(callback)
-        return lambda: self.unsubscribe_typed(callback)
+            self._typed_callbacks[listener] = client.subscribe_typed(listener)
 
-    def unsubscribe_typed(self, callback: Callable[[Any], None]) -> bool:
+        def _remove() -> None:
+            self.unsubscribe_typed(listener)
+
+        return _remove
+
+    def unsubscribe_typed(self, listener: Callable[[Any], None]) -> bool:
         """Unsubscribe from typed client events."""
-        if callback in self._typed_callbacks:
-            unsubscribe = self._typed_callbacks.pop(callback)
+        if listener in self._typed_callbacks:
+            unsubscribe = self._typed_callbacks.pop(listener)
             if unsubscribe is not None:
                 unsubscribe()
             return True
         client = self._client
         if client is None:
             return False
-        return client.unsubscribe_typed(callback)
+        return client.unsubscribe_typed(listener)
 
     async def async_set_output(self, output_id: int, state: bool) -> bool:
         """Request an output state change if supported."""
@@ -216,15 +222,16 @@ class Elke27Hub:
             return False
         params = inspect.signature(method).parameters
         if "on" in params:
-            args = (output_id,)
-            kwargs = {"on": state}
+            if inspect.iscoroutinefunction(method):
+                result = await method(output_id, on=state)
+            else:
+                result = await self._hass.async_add_executor_job(
+                    partial(method, output_id, on=state)
+                )
+        elif inspect.iscoroutinefunction(method):
+            result = await method(output_id, state)
         else:
-            args = (output_id, state)
-            kwargs = {}
-        if inspect.iscoroutinefunction(method):
-            result = await method(*args, **kwargs)
-        else:
-            result = await self._hass.async_add_executor_job(method, *args, **kwargs)
+            result = await self._hass.async_add_executor_job(method, output_id, state)
         return bool(result) if isinstance(result, bool) else True
 
     async def async_set_zone_bypass(
@@ -452,6 +459,26 @@ def _event_type(event: Any) -> str | None:
 
 
 def _connection_state(event: Any) -> bool | None:
+    if isinstance(event, dict):
+        event_type = event.get("event_type") or event.get("type")
+        value = (
+            event_type.value
+            if isinstance(event_type, Enum)
+            else str(event_type).lower()
+            if event_type is not None
+            else None
+        )
+        if value == "connection":
+            data = event.get("data")
+            if isinstance(data, dict):
+                connected = data.get("connected")
+                if isinstance(connected, bool):
+                    return connected
+        if value == "disconnected":
+            return False
+        if value == "ready":
+            return True
+        return None
     if hasattr(event, "event_type"):
         event_type = event.event_type
         value = (

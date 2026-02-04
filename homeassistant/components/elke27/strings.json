@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "already_configured": "This panel is already configured.",
       "missing_context": "Panel details are missing. Restart the flow.",
       "reauth_successful": "Linking was updated successfully."
     },
@@ -12,65 +13,65 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "discover": {
+        "data": {
+          "access_code": "Access code (used for linking, NOT a PIN)",
+          "panel": "Panel",
+          "passphrase": "Passphrase"
+        },
+        "data_description": {
+          "access_code": "The panel access code used during linking. It is not a PIN.",
+          "panel": "Select the panel to add.",
+          "passphrase": "The passphrase used during linking."
+        },
+        "description": "Select a discovered panel and enter the linking credentials.",
+        "title": "Discover panels"
+      },
+      "link": {
+        "data": {
+          "access_code": "Access code (used for linking, NOT a PIN)",
+          "passphrase": "Passphrase"
+        },
+        "data_description": {
+          "access_code": "The panel access code used during linking. It is not a PIN.",
+          "passphrase": "The passphrase used during linking."
+        },
+        "description": "Enter the access code and passphrase to link the panel.",
+        "title": "Link credentials"
+      },
+      "manual": {
+        "data": {
+          "access_code": "Access code (used for linking, NOT a PIN)",
+          "host": "Host",
+          "passphrase": "Passphrase"
+        },
+        "data_description": {
+          "access_code": "The panel access code used during linking. It is not a PIN.",
+          "host": "The panel host name or IP address.",
+          "passphrase": "The passphrase used during linking."
+        },
+        "description": "Enter the host and linking credentials.",
+        "title": "Manual connection"
+      },
+      "relink": {
+        "data": {
+          "access_code": "Access code (used for linking, NOT a PIN)",
+          "passphrase": "Passphrase"
+        },
+        "data_description": {
+          "access_code": "The panel access code used during linking. It is not a PIN.",
+          "passphrase": "The passphrase used during linking."
+        },
+        "description": "Enter the access code and passphrase to relink the panel.",
+        "title": "Relink panel"
+      },
       "user": {
-        "title": "Set up Elk E27 Alarm Panel",
         "description": "Choose how you want to add the panel.",
         "menu_options": {
           "discover": "Discover panels",
           "manual": "Manual setup"
-        }
-      },
-      "discover": {
-        "title": "Discover panels",
-        "description": "Select a discovered panel and enter the linking credentials.",
-        "data": {
-          "panel": "Panel",
-          "access_code": "Access code (used for linking, NOT a PIN)",
-          "passphrase": "Passphrase"
         },
-        "data_description": {
-          "panel": "Select the panel to add.",
-          "access_code": "The panel access code used during linking. It is not a PIN.",
-          "passphrase": "The passphrase used during linking."
-        }
-      },
-      "manual": {
-        "title": "Manual connection",
-        "description": "Enter the host and linking credentials.",
-        "data": {
-          "host": "Host",
-          "access_code": "Access code (used for linking, NOT a PIN)",
-          "passphrase": "Passphrase"
-        },
-        "data_description": {
-          "host": "The panel host name or IP address.",
-          "access_code": "The panel access code used during linking. It is not a PIN.",
-          "passphrase": "The passphrase used during linking."
-        }
-      },
-      "link": {
-        "title": "Link credentials",
-        "description": "Enter the access code and passphrase to link the panel.",
-        "data": {
-          "access_code": "Access code (used for linking, NOT a PIN)",
-          "passphrase": "Passphrase"
-        },
-        "data_description": {
-          "access_code": "The panel access code used during linking. It is not a PIN.",
-          "passphrase": "The passphrase used during linking."
-        }
-      },
-      "relink": {
-        "title": "Relink panel",
-        "description": "Enter the access code and passphrase to relink the panel.",
-        "data": {
-          "access_code": "Access code (used for linking, NOT a PIN)",
-          "passphrase": "Passphrase"
-        },
-        "data_description": {
-          "access_code": "The panel access code used during linking. It is not a PIN.",
-          "passphrase": "The passphrase used during linking."
-        }
+        "title": "Set up Elk E27 Alarm Panel"
       }
     }
   },
@@ -80,17 +81,17 @@
         "name": "Zone"
       }
     },
-    "switch": {
-      "output": {
-        "name": "Output"
-      }
-    },
     "sensor": {
       "panel_name": {
         "name": "Panel Name"
       },
       "panel_ready": {
         "name": "Panel State"
+      }
+    },
+    "switch": {
+      "output": {
+        "name": "Output"
       }
     }
   }

@@ -434,6 +434,8 @@ build.json @home-assistant/supervisor
 /tests/components/elevenlabs/ @sorgfresser
 /homeassistant/components/elgato/ @frenck
 /tests/components/elgato/ @frenck
+/homeassistant/components/elke27/ @mitchmitchell
+/tests/components/elke27/ @mitchmitchell
 /homeassistant/components/elkm1/ @gwww @bdraco
 /tests/components/elkm1/ @gwww @bdraco
 /homeassistant/components/elmax/ @albertogeniola

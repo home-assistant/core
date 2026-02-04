@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
 from homeassistant.components.elke27.entity import (
     build_unique_id,
     device_info_for_entry,
@@ -11,7 +12,6 @@ from homeassistant.components.elke27.entity import (
     unique_base,
 )
 from homeassistant.components.elke27.models import Elke27RuntimeData
-from homeassistant.components.elke27.coordinator import Elke27DataUpdateCoordinator
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -66,8 +66,8 @@ async def test_device_info_and_unique_base(hass: HomeAssistant) -> None:
     entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
 
     device_info = device_info_for_entry(hub, coordinator, entry)
-    assert device_info.name == "Panel A"
-    assert device_info.serial_number == "1234"
+    assert device_info["name"] == "Panel A"
+    assert device_info["serial_number"] == "1234"
     assert unique_base(hub, coordinator, entry) == "aa:bb:cc:dd:ee:ff"
 
     coordinator.async_set_updated_data(SimpleNamespace(panel_info=None))

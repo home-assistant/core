@@ -4,11 +4,9 @@
   "codeowners": ["@mitchmitchell"],
   "config_flow": true,
   "dependencies": ["network"],
-  "documentation": "https://github.com/mitchmitchell/HACS-Elk-E27",
+  "documentation": "https://www.home-assistant.io/integrations/elke27",
   "integration_type": "hub",
   "iot_class": "local_push",
-  "issue_tracker": "https://github.com/mitchmitchell/HACS-Elk-E27/issues",
   "quality_scale": "bronze",
-  "requirements": ["elke27==0.1.2"],
-  "version": "0.1.0"
+  "requirements": ["elke27==0.1.2"]
 }

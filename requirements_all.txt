@@ -871,6 +871,9 @@ elgato==5.1.2
 # homeassistant.components.eliqonline
 eliqonline==1.2.2
 
+# homeassistant.components.elke27
+elke27==0.1.2
+
 # homeassistant.components.elkm1
 elkm1-lib==2.2.13
 

@@ -14,10 +14,10 @@ from elke27_lib.events import (
     UNSET_ROUTE,
     UNSET_SEQ,
     UNSET_SESSION_ID,
+    ConnectionStateChanged,
     CsmSnapshotUpdated,
     DomainCsmChanged,
     TableCsmChanged,
-    ConnectionStateChanged,
 )
 from elke27_lib.types import CsmSnapshot
 
@@ -98,7 +98,7 @@ async def test_domain_csm_change_refreshes_domain(hass: HomeAssistant) -> None:
             classification=UNSET_CLASSIFICATION,
             route=UNSET_ROUTE,
             session_id=UNSET_SESSION_ID,
-            domain="zone",
+            csm_domain="zone",
         )
     )
     await hass.async_block_till_done()
@@ -153,7 +153,7 @@ async def test_csm_change_event_coalesces_refresh(hass: HomeAssistant) -> None:
             classification=UNSET_CLASSIFICATION,
             route=UNSET_ROUTE,
             session_id=UNSET_SESSION_ID,
-            domain="zone",
+            csm_domain="zone",
         )
     )
     hub.emit(
@@ -164,7 +164,7 @@ async def test_csm_change_event_coalesces_refresh(hass: HomeAssistant) -> None:
             classification=UNSET_CLASSIFICATION,
             route=UNSET_ROUTE,
             session_id=UNSET_SESSION_ID,
-            domain="zone",
+            csm_domain="zone",
         )
     )
 
@@ -207,7 +207,8 @@ async def test_connection_state_event_triggers_refresh(
 
 def test_is_event_fallback() -> None:
     """Verify event matching falls back to class name when needed."""
-    class FakeEvent:  # noqa: D401 - simple test helper
+
+    class FakeEvent:
         pass
 
     event = FakeEvent()

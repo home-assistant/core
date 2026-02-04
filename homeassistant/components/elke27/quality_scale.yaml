@@ -14,11 +14,11 @@ rules:
     status: exempt
     comment: The integration does not register custom actions.
   docs-high-level-description:
-    status: todo
+    status: done
   docs-installation-instructions:
-    status: todo
+    status: done
   docs-removal-instructions:
-    status: todo
+    status: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done

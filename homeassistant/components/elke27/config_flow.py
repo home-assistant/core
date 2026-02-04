@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import asdict, is_dataclass
 from typing import Any
 
-from elke27_lib import ClientConfig, Elke27Client, LinkKeys
+from elke27_lib import ClientConfig, LinkKeys
+from elke27_lib.client import Elke27Client
 from elke27_lib.discovery import AIOELKDiscovery
 from elke27_lib.errors import (
     Elke27AuthError,
@@ -154,7 +156,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth for missing or invalid link keys."""
         entry_id = self.context.get("entry_id")
@@ -163,14 +165,18 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             if entry_id is not None
             else None
         )
-        return await self.async_step_relink(user_input)
+        return await self.async_step_relink(None)
 
     async def async_step_relink(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Relink using access code and passphrase."""
         errors: dict[str, str] = {}
-        if user_input is not None:
+        if (
+            user_input is not None
+            and CONF_ACCESS_CODE in user_input
+            and CONF_PASSPHRASE in user_input
+        ):
             entry = self._reauth_entry
             if entry is None:
                 return self.async_abort(reason="missing_context")
@@ -322,9 +328,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_ACCESS_CODE): selector(
                     {"text": {"type": "password"}}
                 ),
-                vol.Required(CONF_PASSPHRASE): selector(
-                    {"text": {"type": "password"}}
-                ),
+                vol.Required(CONF_PASSPHRASE): selector({"text": {"type": "password"}}),
             }
         )
 
@@ -338,7 +342,7 @@ def _panel_to_dict(panel: Any | None) -> dict[str, Any]:
     """Normalize a discovered panel entry into a dict."""
     if panel is None:
         return {}
-    if is_dataclass(panel):
+    if is_dataclass(panel) and not isinstance(panel, type):
         return _normalize_panel_keys(asdict(panel))
     if isinstance(panel, dict):
         return _normalize_panel_keys(dict(panel))
@@ -403,7 +407,7 @@ def _snapshot_to_dict(snapshot: Any) -> dict[str, Any]:
     """Serialize a snapshot to a dict."""
     if snapshot is None:
         return {}
-    if is_dataclass(snapshot):
+    if is_dataclass(snapshot) and not isinstance(snapshot, type):
         return asdict(snapshot)
     if isinstance(snapshot, dict):
         return dict(snapshot)

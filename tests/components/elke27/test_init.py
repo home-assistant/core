@@ -8,7 +8,6 @@ from unittest.mock import AsyncMock, patch
 from elke27_lib import LinkKeys
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27TimeoutError
 
-import pytest
 from homeassistant.components.elke27 import (
     _async_migrate_unique_ids,
     _panel_name_from_entry,
@@ -20,9 +19,9 @@ from homeassistant.components.elke27.const import (
     DOMAIN,
 )
 from homeassistant.components.elke27.models import Elke27RuntimeData
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -62,19 +61,22 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
     async def _async_unload_platforms(*_args, **_kwargs) -> bool:
         return True
 
-    with patch(
-        "homeassistant.components.elke27.Elke27Hub", return_value=hub
-    ), patch(
-        "homeassistant.components.elke27.Elke27DataUpdateCoordinator",
-        return_value=coordinator,
-    ), patch.object(
-        hass.config_entries,
-        "async_forward_entry_setups",
-        _async_forward_entry_setups,
-    ), patch.object(
-        hass.config_entries,
-        "async_unload_platforms",
-        _async_unload_platforms,
+    with (
+        patch("homeassistant.components.elke27.Elke27Hub", return_value=hub),
+        patch(
+            "homeassistant.components.elke27.Elke27DataUpdateCoordinator",
+            return_value=coordinator,
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            _async_forward_entry_setups,
+        ),
+        patch.object(
+            hass.config_entries,
+            "async_unload_platforms",
+            _async_unload_platforms,
+        ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -115,14 +117,16 @@ async def test_setup_transient_error_returns_not_ready(
     async def _async_forward_entry_setups(*_args, **_kwargs) -> bool:
         return True
 
-    with patch(
-        "homeassistant.components.elke27.Elke27Hub", return_value=hub
-    ), patch(
-        "homeassistant.components.elke27.Elke27DataUpdateCoordinator"
-    ) as coordinator_cls, patch.object(
-        hass.config_entries,
-        "async_forward_entry_setups",
-        _async_forward_entry_setups,
+    with (
+        patch("homeassistant.components.elke27.Elke27Hub", return_value=hub),
+        patch(
+            "homeassistant.components.elke27.Elke27DataUpdateCoordinator"
+        ) as coordinator_cls,
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            _async_forward_entry_setups,
+        ),
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -141,8 +145,8 @@ async def test_setup_missing_link_keys_raises_auth_failed(
     )
     entry.add_to_hass(hass)
 
-    with pytest.raises(ConfigEntryAuthFailed):
-        await hass.config_entries.async_setup(entry.entry_id)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_link_required_raises_auth_failed(
@@ -165,13 +169,12 @@ async def test_setup_link_required_raises_auth_failed(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.elke27.Elke27Hub", return_value=hub
-    ), patch(
-        "homeassistant.components.elke27.Elke27DataUpdateCoordinator"
+    with (
+        patch("homeassistant.components.elke27.Elke27Hub", return_value=hub),
+        patch("homeassistant.components.elke27.Elke27DataUpdateCoordinator"),
     ):
-        with pytest.raises(ConfigEntryAuthFailed):
-            await hass.config_entries.async_setup(entry.entry_id)
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 def test_panel_name_from_entry() -> None:
