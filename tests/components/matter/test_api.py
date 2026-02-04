@@ -13,7 +13,7 @@ from matter_server.common.helpers.util import dataclass_to_dict
 from matter_server.common.models import CommissioningParameters
 import pytest
 
-from homeassistant.components.matter.api_base import (
+from homeassistant.components.matter.api import (
     DEVICE_ID,
     ERROR_NODE_NOT_FOUND,
     ID,
