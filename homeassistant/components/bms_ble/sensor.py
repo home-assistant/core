@@ -245,8 +245,8 @@ async def async_setup_entry(
 ) -> None:
     """Add sensors for passed config_entry in Home Assistant."""
 
-    bms: Final[BTBmsCoordinator] = config_entry.runtime_data
-    mac: Final[str] = format_mac(config_entry.unique_id)
+    bms: Final = config_entry.runtime_data
+    mac: Final = format_mac(config_entry.unique_id)
     for descr in SENSOR_TYPES:
         if descr.key == ATTR_RSSI:
             async_add_entities([RSSISensor(bms, descr, mac)])
@@ -291,7 +291,7 @@ class BMSSensor(CoordinatorEntity[BTBmsCoordinator], SensorEntity):
 class RSSISensor(SensorEntity):
     """The Bluetooth RSSI sensor."""
 
-    LIMIT: Final[int] = 127  # limit to +/- this range
+    LIMIT: Final = 127  # limit to +/- this range
     _attr_has_entity_name = True
     _attr_native_value = -LIMIT
 
@@ -303,7 +303,7 @@ class RSSISensor(SensorEntity):
         self._attr_unique_id = f"{DOMAIN}-{unique_id}-{descr.key}"
         self._attr_device_info = bms.device_info
         self.entity_description = descr
-        self._bms: Final[BTBmsCoordinator] = bms
+        self._bms: Final = bms
 
     async def async_update(self) -> None:
         """Update RSSI sensor value."""
@@ -332,7 +332,7 @@ class LQSensor(SensorEntity):
         self._attr_unique_id = f"{DOMAIN}-{unique_id}-{descr.key}"
         self._attr_device_info = bms.device_info
         self.entity_description = descr
-        self._bms: Final[BTBmsCoordinator] = bms
+        self._bms: Final = bms
 
     async def async_update(self) -> None:
         """Update BMS link quality sensor value."""

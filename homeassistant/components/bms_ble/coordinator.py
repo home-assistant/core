@@ -5,7 +5,7 @@ from datetime import timedelta
 from time import monotonic
 from typing import Final
 
-from aiobmsble import BMSInfo, BMSSample
+from aiobmsble import BMSSample
 from aiobmsble.basebms import BaseBMS
 from bleak.backends.device import BLEDevice
 from bleak.exc import BleakError
@@ -24,7 +24,7 @@ from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
     """Update coordinator for a battery management system."""
 
-    _LOW_RSSI: Final[int] = -75  # dBm considered low signal strength
+    _LOW_RSSI: Final = -75  # dBm considered low signal strength
 
     def __init__(
         self,
@@ -42,11 +42,11 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
             always_update=False,  # only update when sensor value has changed
             config_entry=config_entry,
         )
-        self._device: Final[BaseBMS] = bms_device
+        self._device: Final = bms_device
         self._link_q: deque[bool] = deque(
             [False], maxlen=100
         )  # track BMS update issues
-        self._mac: Final[str] = ble_device.address
+        self._mac: Final = ble_device.address
         self._stale: bool = False  # indicates no BMS response for significant time
 
         LOGGER.debug(
@@ -113,7 +113,7 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
         return self._stale
 
     async def _async_setup(self) -> None:
-        bms_info: Final[BMSInfo] = await self._device.device_info()
+        bms_info: Final = await self._device.device_info()
         self.device_info.update(
             DeviceInfo(
                 name=bms_info.get("name") or self.name,
@@ -135,7 +135,7 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
         if self._device_stale():
             await self._device.disconnect(reset=True)
 
-        start: Final[float] = monotonic()
+        start: Final = monotonic()
         try:
             if not (bms_data := await self._device.async_update()):
                 LOGGER.debug("%s: no valid data received", self.name)

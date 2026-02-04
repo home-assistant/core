@@ -71,7 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by Bluetooth discovery."""
         LOGGER.debug("Bluetooth device detected: %s", discovery_info)
 
-        address: Final[str] = discovery_info.address
+        address: Final = discovery_info.address
         await self.async_set_unique_id(address)
         self._abort_if_unique_id_configured()
 
