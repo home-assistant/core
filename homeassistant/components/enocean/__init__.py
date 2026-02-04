@@ -113,9 +113,10 @@ async def async_unload_entry(
     if unload_platforms := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):
-        if hass.data[DOMAIN].dispatcher_disconnect_handle:
-            hass.data[DOMAIN].dispatcher_disconnect_handle()
-            hass.data[DOMAIN].dispatcher_disconnect_handle = None
+        hass_data: EnOceanHassData | None = hass.data.get(DOMAIN)
+        if hass_data and hass_data.dispatcher_disconnect_handle:
+            hass_data.dispatcher_disconnect_handle()
+            hass_data.dispatcher_disconnect_handle = None
 
         config_entry.runtime_data.stop()
 
