@@ -20,7 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     DOMAIN,
-    FOLDER_EVENTS,
+    EVENTS,
     RECONNECT_INTERVAL,
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
@@ -142,10 +142,10 @@ class SyncthingClient:
                 async for event in events.listen():
                     if events.last_seen_id == 0:
                         continue  # skipping historical events from the first batch
-                    if event["type"] not in FOLDER_EVENTS:
+                    if event["type"] not in EVENTS:
                         continue
 
-                    signal_name = FOLDER_EVENTS[event["type"]]
+                    signal_name = EVENTS[event["type"]]
                     folder = event["data"].get("folder") or event["data"]["id"]
                     async_dispatcher_send(
                         self._hass,
