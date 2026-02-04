@@ -133,11 +133,6 @@ class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
 
     @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return super().available and self.device_id in self.coordinator.data
-
-    @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.coordinator.data[self.device_id])
@@ -160,11 +155,6 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
         super().__init__(device_info, coordinator, via_device)
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
-
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return super().available and self.endpoint_id in self.coordinator.data
 
     @property
     def is_on(self) -> bool | None:

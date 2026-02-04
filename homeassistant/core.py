@@ -2412,10 +2412,8 @@ class Service:
 
     __slots__ = [
         "description_placeholders",
-        "domain",
         "job",
         "schema",
-        "service",
         "supports_response",
     ]
 

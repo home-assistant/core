@@ -45,3 +45,4 @@ class MastodonEntity(CoordinatorEntity[MastodonCoordinator]):
         )
 
         self.entity_description = entity_description
+        self.instance = data.runtime_data.instance

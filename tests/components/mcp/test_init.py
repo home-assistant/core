@@ -1,7 +1,7 @@
 """Tests for the Model Context Protocol component."""
 
 import re
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
 from mcp.types import CallToolResult, ListToolsResult, TextContent, Tool
@@ -90,11 +90,88 @@ async def test_mcp_server_failure(
     mock_mcp_client: Mock,
     side_effect: Exception,
 ) -> None:
-    """Test the integration fails to setup if the server fails initialization."""
+    """Test the integration fails to setup if the server fails initialization.
+
+    This tests generic failure types that are independent of transport.
+    """
     mock_mcp_client.side_effect = side_effect
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_mcp_server_http_transport_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_http_streamable_client: AsyncMock,
+) -> None:
+    """Test the integration fails to setup if the HTTP transport fails."""
+    mock_http_streamable_client.side_effect = ExceptionGroup(
+        "Connection error", [httpx.ConnectError("Connection failed")]
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_mcp_server_sse_transport_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_http_streamable_client: AsyncMock,
+    mock_sse_client: AsyncMock,
+) -> None:
+    """Test the integration fails to setup if the SSE transport fails.
+
+    This exercises the case where the HTTP transport fails with method not
+    allowed, indicating an SSE server, then also fails with SSE.
+    """
+    http_405 = httpx.HTTPStatusError(
+        "Method not allowed", request=None, response=httpx.Response(405)
+    )
+    mock_http_streamable_client.side_effect = ExceptionGroup(
+        "Method not allowed", [http_405]
+    )
+
+    mock_sse_client.side_effect = ExceptionGroup(
+        "Connection error", [httpx.ConnectError("Connection failed")]
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_mcp_client_fallback_to_sse_success(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_http_streamable_client: AsyncMock,
+    mock_sse_client: AsyncMock,
+    mock_mcp_client: Mock,
+) -> None:
+    """Test mcp_client falls back to SSE on method not allowed error.
+
+    This exercises the backwards compatibility part of the MCP Transport
+    specification.
+    """
+    http_405 = httpx.HTTPStatusError(
+        "Method not allowed",
+        request=None,  # type: ignore[arg-type]
+        response=httpx.Response(405),
+    )
+    mock_http_streamable_client.side_effect = ExceptionGroup(
+        "Method not allowed", [http_405]
+    )
+
+    # Setup mocks for SSE fallback
+    mock_sse_client.return_value.__aenter__.return_value = ("read", "write")
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[SEARCH_MEMORY_TOOL]
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert mock_http_streamable_client.called
+    assert mock_sse_client.called
 
 
 async def test_mcp_server_authentication_failure(

@@ -405,6 +405,16 @@ CHIME_SELECT_ENTITIES = (
         value=lambda chime: chime.tone_name("package"),
         method=lambda chime, name: chime.set_tone("package", ChimeToneEnum[name].value),
     ),
+    ReolinkChimeSelectEntityDescription(
+        key="pet_tone",
+        cmd_key="GetDingDongCfg",
+        translation_key="pet_tone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in ChimeToneEnum],
+        supported=lambda chime: "dog_cat" in chime.chime_event_types,
+        value=lambda chime: chime.tone_name("dog_cat"),
+        method=lambda chime, name: chime.set_tone("dog_cat", ChimeToneEnum[name].value),
+    ),
 )
 
 

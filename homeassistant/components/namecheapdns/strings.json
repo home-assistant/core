@@ -1,0 +1,67 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "update_failed": "Updating DNS failed"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:component::namecheapdns::config::step::user::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::namecheapdns::config::step::user::data_description::password%]"
+        },
+        "description": "[%key:component::namecheapdns::config::step::reconfigure::description%]",
+        "title": "Re-authenticate {name}"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:component::namecheapdns::config::step::user::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::namecheapdns::config::step::user::data_description::password%]"
+        },
+        "description": "You can find the Dynamic DNS password in your Namecheap account under [Domain List > {domain} > Manage > Advanced DNS > Dynamic DNS]({account_panel}).",
+        "title": "Re-configure {name}"
+      },
+      "user": {
+        "data": {
+          "domain": "Domain",
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "Dynamic DNS password"
+        },
+        "data_description": {
+          "domain": "The domain to update ('example.com')",
+          "host": "The host to update ('home' for home.example.com). Use '@' to update the root domain",
+          "password": "Dynamic DNS password for the domain"
+        },
+        "description": "Enter your Namecheap DynamicDNS domain and password below to configure dynamic DNS updates. You can find the Dynamic DNS password in your [Namecheap account]({account_panel}) under Domain List > Manage > Advanced DNS > Dynamic DNS."
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication for Namecheap DynamicDNS domain {domain} failed"
+    },
+    "connection_error": {
+      "message": "Updating Namecheap DynamicDNS domain {domain} failed due to a connection error"
+    },
+    "update_failed": {
+      "message": "Updating Namecheap DynamicDNS domain {domain} failed"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_error": {
+      "description": "Configuring Namecheap DynamicDNS using YAML is being removed but there was an error when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the Namecheap DynamicDNS YAML configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually.",
+      "title": "The Namecheap DynamicDNS YAML configuration import failed"
+    }
+  }
+}

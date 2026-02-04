@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import socket
+from typing import Any
 from urllib.parse import urlencode
 
 import voluptuous as vol
@@ -73,7 +74,7 @@ class LannouncerNotificationService(BaseNotificationService):
         self._host = host
         self._port = port
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to Lannouncer."""
         data = kwargs.get(ATTR_DATA)
         if data is not None and ATTR_METHOD in data:

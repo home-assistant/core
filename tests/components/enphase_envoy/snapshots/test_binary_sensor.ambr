@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC switch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -117,6 +119,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -166,6 +169,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -215,6 +219,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -264,6 +269,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DC switch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -312,6 +318,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Communicating',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
@@ -361,6 +368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Grid status',
     'options': dict({
     }),
     'original_device_class': None,

@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Absolute pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -83,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -144,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -202,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feels like',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -260,6 +264,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hourly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -321,6 +326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -379,6 +385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irradiance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -435,6 +442,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last rain',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -488,6 +496,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max daily gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -549,6 +558,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -610,6 +620,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -671,6 +682,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -729,6 +741,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -786,6 +799,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -847,6 +861,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -905,6 +920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -966,6 +982,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1027,6 +1044,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Absolute pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1088,6 +1106,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1149,6 +1168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1207,6 +1227,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feels like',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1265,6 +1286,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hourly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1326,6 +1348,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1384,6 +1407,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irradiance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1440,6 +1464,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last rain',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1493,6 +1518,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max daily gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1554,6 +1580,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1615,6 +1642,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1676,6 +1704,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1734,6 +1763,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1791,6 +1821,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1852,6 +1883,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1910,6 +1942,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1971,6 +2004,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2032,6 +2066,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Absolute pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2092,6 +2127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2152,6 +2188,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dew point',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2209,6 +2246,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Feels like',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2266,6 +2304,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hourly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2326,6 +2365,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Humidity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2383,6 +2423,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Irradiance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2440,6 +2481,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max daily gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2500,6 +2542,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Monthly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2560,6 +2603,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Relative pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2620,6 +2664,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2677,6 +2722,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'UV index',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2733,6 +2779,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Weekly rain',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2793,6 +2840,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind direction',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2850,6 +2898,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind gust',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2910,6 +2959,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wind speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

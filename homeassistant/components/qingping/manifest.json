@@ -21,5 +21,5 @@
   "documentation": "https://www.home-assistant.io/integrations/qingping",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["qingping-ble==1.0.1"]
+  "requirements": ["qingping-ble==1.1.0"]
 }

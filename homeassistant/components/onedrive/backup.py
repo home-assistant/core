@@ -3,10 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Coroutine
-from dataclasses import dataclass
 from functools import wraps
-from html import unescape
-from json import dumps, loads
 import logging
 from time import time
 from typing import Any, Concatenate
@@ -18,7 +15,6 @@ from onedrive_personal_sdk.exceptions import (
     HashMismatchError,
     OneDriveException,
 )
-from onedrive_personal_sdk.models.items import ItemUpdate
 from onedrive_personal_sdk.models.upload import FileInfo
 
 from homeassistant.components.backup import (
@@ -30,6 +26,8 @@ from homeassistant.components.backup import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.json import json_dumps
+from homeassistant.util.json import json_loads_object
 
 from .const import CONF_DELETE_PERMANENTLY, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .coordinator import OneDriveConfigEntry
@@ -38,7 +36,6 @@ _LOGGER = logging.getLogger(__name__)
 MAX_CHUNK_SIZE = 60 * 1024 * 1024  # largest chunk possible, must be <= 60 MiB
 TARGET_CHUNKS = 20
 TIMEOUT = ClientTimeout(connect=10, total=43200)  # 12 hours
-METADATA_VERSION = 2
 CACHE_TTL = 300
 
 
@@ -104,13 +101,10 @@ def handle_backup_errors[_R, **P](
     return wrapper
 
 
-@dataclass(kw_only=True)
-class OneDriveBackup:
-    """Define a OneDrive backup."""
-
-    backup: AgentBackup
-    backup_file_id: str
-    metadata_file_id: str
+def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
+    """Return the suggested filenames for the backup and metadata."""
+    base_name = suggested_filename(backup).rsplit(".", 1)[0]
+    return f"{base_name}.tar", f"{base_name}.metadata.json"
 
 
 class OneDriveBackupAgent(BackupAgent):
@@ -129,7 +123,7 @@ class OneDriveBackupAgent(BackupAgent):
         self.name = entry.title
         assert entry.unique_id
         self.unique_id = entry.unique_id
-        self._backup_cache: dict[str, OneDriveBackup] = {}
+        self._cache_backup_metadata: dict[str, AgentBackup] = {}
         self._cache_expiration = time()
 
     @handle_backup_errors
@@ -137,12 +131,11 @@ class OneDriveBackupAgent(BackupAgent):
         self, backup_id: str, **kwargs: Any
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
-        backups = await self._list_cached_backups()
-        if backup_id not in backups:
-            raise BackupNotFound(f"Backup {backup_id} not found")
+        backup = await self._find_backup_by_id(backup_id)
+        backup_filename, _ = suggested_filenames(backup)
 
         stream = await self._client.download_drive_item(
-            backups[backup_id].backup_file_id, timeout=TIMEOUT
+            f"{self._folder_id}:/{backup_filename}:", timeout=TIMEOUT
         )
         return stream.iter_chunked(1024)
 
@@ -155,9 +148,9 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-        filename = suggested_filename(backup)
+        backup_filename, metadata_filename = suggested_filenames(backup)
         file = FileInfo(
-            filename,
+            backup_filename,
             backup.size,
             self._folder_id,
             await open_stream(),
@@ -173,46 +166,39 @@ class OneDriveBackupAgent(BackupAgent):
         upload_chunk_size = max(upload_chunk_size, 320 * 1024)
 
         try:
-            backup_file = await LargeFileUploadClient.upload(
+            await LargeFileUploadClient.upload(
                 self._token_function,
                 file,
                 upload_chunk_size=upload_chunk_size,
                 session=async_get_clientsession(self._hass),
+                smart_chunk_size=True,
             )
         except HashMismatchError as err:
             raise BackupAgentError(
                 "Hash validation failed, backup file might be corrupt"
             ) from err
 
-        # store metadata in metadata file
-        description = dumps(backup.as_dict())
-        _LOGGER.debug("Creating metadata: %s", description)
-        metadata_filename = filename.rsplit(".", 1)[0] + ".metadata.json"
+        _LOGGER.debug("Uploaded backup to %s", backup_filename)
+
+        # Store metadata in separate metadata file (just backup.as_dict(), no extra fields)
+        metadata_content = json_dumps(backup.as_dict())
         try:
-            metadata_file = await self._client.upload_file(
+            await self._client.upload_file(
                 self._folder_id,
                 metadata_filename,
-                description,
+                metadata_content,
             )
         except OneDriveException:
-            await self._client.delete_drive_item(backup_file.id)
+            # Clean up the backup file if metadata upload fails
+            _LOGGER.debug(
+                "Uploading metadata failed, deleting backup file %s", backup_filename
+            )
+            await self._client.delete_drive_item(
+                f"{self._folder_id}:/{backup_filename}:"
+            )
             raise
 
-        # add metadata to the metadata file
-        metadata_description = {
-            "metadata_version": METADATA_VERSION,
-            "backup_id": backup.backup_id,
-            "backup_file_id": backup_file.id,
-        }
-        try:
-            await self._client.update_drive_item(
-                path_or_id=metadata_file.id,
-                data=ItemUpdate(description=dumps(metadata_description)),
-            )
-        except OneDriveException:
-            await self._client.delete_drive_item(backup_file.id)
-            await self._client.delete_drive_item(metadata_file.id)
-            raise
+        _LOGGER.debug("Uploaded metadata file %s", metadata_filename)
         self._cache_expiration = time()
 
     @handle_backup_errors
@@ -222,66 +208,63 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
-        backups = await self._list_cached_backups()
-        if backup_id not in backups:
-            raise BackupNotFound(f"Backup {backup_id} not found")
-
-        backup = backups[backup_id]
+        backup = await self._find_backup_by_id(backup_id)
+        backup_filename, metadata_filename = suggested_filenames(backup)
 
         delete_permanently = self._entry.options.get(CONF_DELETE_PERMANENTLY, False)
 
-        await self._client.delete_drive_item(backup.backup_file_id, delete_permanently)
         await self._client.delete_drive_item(
-            backup.metadata_file_id, delete_permanently
+            f"{self._folder_id}:/{backup_filename}:", delete_permanently
         )
+        await self._client.delete_drive_item(
+            f"{self._folder_id}:/{metadata_filename}:", delete_permanently
+        )
+
+        _LOGGER.debug("Deleted backup %s", backup_filename)
         self._cache_expiration = time()
 
     @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
-        return [
-            backup.backup for backup in (await self._list_cached_backups()).values()
-        ]
+        return list((await self._list_cached_metadata_files()).values())
 
     @handle_backup_errors
     async def async_get_backup(self, backup_id: str, **kwargs: Any) -> AgentBackup:
         """Return a backup."""
-        backups = await self._list_cached_backups()
-        if backup_id not in backups:
-            raise BackupNotFound(f"Backup {backup_id} not found")
-        return backups[backup_id].backup
+        return await self._find_backup_by_id(backup_id)
 
-    async def _list_cached_backups(self) -> dict[str, OneDriveBackup]:
-        """List backups with a cache."""
+    async def _list_cached_metadata_files(self) -> dict[str, AgentBackup]:
+        """List metadata files with a cache."""
         if time() <= self._cache_expiration:
-            return self._backup_cache
+            return self._cache_backup_metadata
 
-        items = await self._client.list_drive_items(self._folder_id)
-
-        async def download_backup_metadata(item_id: str) -> AgentBackup | None:
+        async def _download_metadata(item_id: str) -> AgentBackup | None:
+            """Download metadata file."""
             try:
                 metadata_stream = await self._client.download_drive_item(item_id)
             except OneDriveException as err:
                 _LOGGER.warning("Error downloading metadata for %s: %s", item_id, err)
                 return None
-            metadata_json = loads(await metadata_stream.read())
-            return AgentBackup.from_dict(metadata_json)
 
-        backups: dict[str, OneDriveBackup] = {}
+            return AgentBackup.from_dict(
+                json_loads_object(await metadata_stream.read())
+            )
+
+        items = await self._client.list_drive_items(self._folder_id)
+        metadata_files: dict[str, AgentBackup] = {}
         for item in items:
-            if item.description and f'"metadata_version": {METADATA_VERSION}' in (
-                metadata_description_json := unescape(item.description)
-            ):
-                backup = await download_backup_metadata(item.id)
-                if backup is None:
-                    continue
-                metadata_description = loads(metadata_description_json)
-                backups[backup.backup_id] = OneDriveBackup(
-                    backup=backup,
-                    backup_file_id=metadata_description["backup_file_id"],
-                    metadata_file_id=item.id,
-                )
+            if item.name and item.name.endswith(".metadata.json"):
+                if metadata := await _download_metadata(item.id):
+                    metadata_files[metadata.backup_id] = metadata
 
+        self._cache_backup_metadata = metadata_files
         self._cache_expiration = time() + CACHE_TTL
-        self._backup_cache = backups
-        return backups
+        return self._cache_backup_metadata
+
+    async def _find_backup_by_id(self, backup_id: str) -> AgentBackup:
+        """Find a backup by its backup ID on remote."""
+        metadata_files = await self._list_cached_metadata_files()
+        if backup := metadata_files.get(backup_id):
+            return backup
+
+        raise BackupNotFound(f"Backup {backup_id} not found")

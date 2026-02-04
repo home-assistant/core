@@ -66,7 +66,7 @@ class NINADataUpdateCoordinator(
 
         regions: dict[str, str] = config_entry.data[CONF_REGIONS]
         for region in regions:
-            self._nina.addRegion(region)
+            self._nina.add_region(region)
 
         super().__init__(
             hass,
@@ -151,7 +151,7 @@ class NINADataUpdateCoordinator(
                     raw_warn.sent or "",
                     raw_warn.start or "",
                     raw_warn.expires or "",
-                    raw_warn.isValid(),
+                    raw_warn.is_valid,
                 )
                 warnings_for_regions.append(warning_data)
 

@@ -103,7 +103,7 @@ async def test_ingress_host(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: "http://homeassistant/hassio/ingress/db21ed7f_mealie",
+            CONF_HOST: "http://homeassistant/app/db21ed7f_mealie",
             CONF_API_TOKEN: "token",
         },
     )

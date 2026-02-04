@@ -30,6 +30,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bedroom',
     'options': dict({
     }),
     'original_device_class': None,
@@ -112,6 +113,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ensuite',
     'options': dict({
     }),
     'original_device_class': None,
@@ -196,6 +198,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Guest room',
     'options': dict({
     }),
     'original_device_class': None,
@@ -280,6 +283,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hall',
     'options': dict({
     }),
     'original_device_class': None,
@@ -364,6 +368,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Kitchen',
     'options': dict({
     }),
     'original_device_class': None,
@@ -447,6 +452,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Lounge',
     'options': dict({
     }),
     'original_device_class': None,
@@ -529,6 +535,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Study',
     'options': dict({
     }),
     'original_device_class': None,

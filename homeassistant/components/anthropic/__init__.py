@@ -14,10 +14,18 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_CONVERSATION_NAME, DOMAIN, LOGGER
+from .const import (
+    CONF_CHAT_MODEL,
+    DATA_REPAIR_DEFER_RELOAD,
+    DEFAULT_CONVERSATION_NAME,
+    DEPRECATED_MODELS,
+    DOMAIN,
+    LOGGER,
+)
 
 PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -27,6 +35,7 @@ type AnthropicConfigEntry = ConfigEntry[anthropic.AsyncClient]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Anthropic."""
+    hass.data.setdefault(DOMAIN, {}).setdefault(DATA_REPAIR_DEFER_RELOAD, set())
     await async_migrate_integration(hass)
     return True
 
@@ -50,6 +59,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) ->
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
+    for subentry in entry.subentries.values():
+        if (model := subentry.data.get(CONF_CHAT_MODEL)) and model.startswith(
+            tuple(DEPRECATED_MODELS)
+        ):
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "model_deprecated",
+                is_fixable=True,
+                is_persistent=False,
+                learn_more_url="https://platform.claude.com/docs/en/about-claude/model-deprecations",
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="model_deprecated",
+            )
+            break
+
     return True
 
 
@@ -62,6 +87,11 @@ async def async_update_options(
     hass: HomeAssistant, entry: AnthropicConfigEntry
 ) -> None:
     """Update options."""
+    defer_reload_entries: set[str] = hass.data.setdefault(DOMAIN, {}).setdefault(
+        DATA_REPAIR_DEFER_RELOAD, set()
+    )
+    if entry.entry_id in defer_reload_entries:
+        return
     await hass.config_entries.async_reload(entry.entry_id)
 
 

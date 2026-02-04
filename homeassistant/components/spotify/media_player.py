@@ -35,7 +35,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .browse_media import async_browse_media_internal
-from .const import MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES
+from .const import (
+    MEDIA_PLAYER_PREFIX,
+    MEDIA_TYPE_USER_SAVED_TRACKS,
+    PLAYABLE_MEDIA_TYPES,
+)
 from .coordinator import SpotifyConfigEntry, SpotifyCoordinator
 from .entity import SpotifyEntity
 
@@ -332,7 +336,13 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         if media_type in {MediaType.TRACK, MediaType.EPISODE, MediaType.MUSIC}:
             kwargs["uris"] = [media_id]
         elif media_type in PLAYABLE_MEDIA_TYPES:
-            kwargs["context_uri"] = media_id
+            context_uri = media_id
+
+            if media_type == MEDIA_TYPE_USER_SAVED_TRACKS:
+                user_data = await self.coordinator.client.get_current_user()
+                context_uri = f"spotify:user:{user_data.user_id}:collection"
+
+            kwargs["context_uri"] = context_uri
         else:
             _LOGGER.error("Media type %s is not supported", media_type)
             return

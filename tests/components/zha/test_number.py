@@ -6,6 +6,7 @@ from unittest.mock import call, patch
 import pytest
 from zigpy.device import Device
 from zigpy.profiles import zha
+from zigpy.typing import UNDEFINED
 from zigpy.zcl.clusters import general
 import zigpy.zcl.foundation as zcl_f
 
@@ -122,7 +123,7 @@ async def test_number(
             blocking=True,
         )
         assert cluster.write_attributes.mock_calls == [
-            call({"present_value": 30.0}, manufacturer=None)
+            call({"present_value": 30.0}, manufacturer=UNDEFINED)
         ]
         cluster.PLUGGED_ATTR_READS["present_value"] = 30.0
 

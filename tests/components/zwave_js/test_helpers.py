@@ -12,6 +12,7 @@ from homeassistant.components.zwave_js.helpers import (
     async_get_node_status_sensor_entity_id,
     async_get_nodes_from_area_id,
     async_get_provisioning_entry_from_device_id,
+    format_home_id_for_display,
     get_value_state_schema,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -138,3 +139,18 @@ async def test_async_get_provisioning_entry_from_device_id(
     ):
         result = await async_get_provisioning_entry_from_device_id(hass, device.id)
         assert result == provisioning_entry
+
+
+def test_format_home_id_for_display() -> None:
+    """Test format_home_id_for_display."""
+    # Test with standard home ID
+    assert format_home_id_for_display(3245146787) == "0xc16d02a3"
+
+    # Test with zero
+    assert format_home_id_for_display(0) == "0x00000000"
+
+    # Test with max 32-bit value
+    assert format_home_id_for_display(4294967295) == "0xffffffff"
+
+    # Test with None
+    assert format_home_id_for_display(None) == "Unknown"

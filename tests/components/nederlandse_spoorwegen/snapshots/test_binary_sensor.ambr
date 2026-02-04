@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Arrival delayed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure delayed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Going',
     'options': dict({
     }),
     'original_device_class': None,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Arrival delayed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -216,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Departure delayed',
     'options': dict({
     }),
     'original_device_class': None,
@@ -265,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Going',
     'options': dict({
     }),
     'original_device_class': None,

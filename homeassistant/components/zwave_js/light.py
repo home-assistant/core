@@ -120,7 +120,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         self._supports_rgbw = False
         self._supports_color_temp = False
         self._supports_dimming = False
-        self._color_mode: str | None = None
+        self._color_mode: ColorMode | None = None
         self._hs_color: tuple[float, float] | None = None
         self._rgbw_color: tuple[int, int, int, int] | None = None
         self._color_temp: int | None = None
@@ -226,7 +226,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         return round((cast(int, self.info.primary_value.value) / 99) * 255)
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode | None:
         """Return the color mode of the light."""
         return self._color_mode
 

@@ -29,6 +29,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Residential Thermostat V2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -49,7 +50,7 @@
       'current_humidity': 45,
       'current_temperature': 72,
       'friendly_name': 'Test Controller Residential Thermostat V2',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_action': <HVACAction.OFF: 'off'>,
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,

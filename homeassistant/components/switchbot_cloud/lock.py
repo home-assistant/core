@@ -46,7 +46,7 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
         """Set attributes from coordinator data."""
         if coord_data := self.coordinator.data:
             self._attr_is_locked = coord_data["lockState"] == "locked"
-        if self.__model in LockV2Commands.get_supported_devices():
+        if self.__model != "Smart Lock Lite":
             self._attr_supported_features = LockEntityFeature.OPEN
 
     async def async_lock(self, **kwargs: Any) -> None:

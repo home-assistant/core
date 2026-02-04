@@ -85,7 +85,13 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType, SignalTypeFormat
 
-from . import condition, config_validation as cv, service, template
+from . import (
+    condition,
+    config_validation as cv,
+    service,
+    template,
+    trigger as trigger_helper,
+)
 from .condition import ConditionCheckerTypeOptional, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
@@ -107,7 +113,6 @@ from .trace import (
     trace_stack_top,
     trace_update_result,
 )
-from .trigger import async_initialize_triggers, async_validate_trigger_config
 from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
 
 SCRIPT_MODE_PARALLEL = "parallel"
@@ -319,7 +324,9 @@ async def async_validate_action_config(
         config = await condition.async_validate_condition_config(hass, config)
 
     elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
-        config[CONF_WAIT_FOR_TRIGGER] = await async_validate_trigger_config(
+        config[
+            CONF_WAIT_FOR_TRIGGER
+        ] = await trigger_helper.async_validate_trigger_config(
             hass, config[CONF_WAIT_FOR_TRIGGER]
         )
 
@@ -1232,7 +1239,7 @@ class _ScriptRun:
         def log_cb(level: int, msg: str, **kwargs: Any) -> None:
             self._log(msg, level=level, **kwargs)
 
-        remove_triggers = await async_initialize_triggers(
+        remove_triggers = await trigger_helper.async_initialize_triggers(
             self._hass,
             self._action[CONF_WAIT_FOR_TRIGGER],
             async_done,
@@ -1601,8 +1608,19 @@ class Script:
                 ):
                     _referenced_extract_ids(data, target, referenced)
 
+            elif action == cv.SCRIPT_ACTION_CHECK_CONDITION:
+                referenced |= condition.async_extract_targets(step, target)
+
+            elif action == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
+                for trigger in step[CONF_WAIT_FOR_TRIGGER]:
+                    referenced |= set(
+                        trigger_helper.async_extract_targets(trigger, target)
+                    )
+
             elif action == cv.SCRIPT_ACTION_CHOOSE:
                 for choice in step[CONF_CHOOSE]:
+                    for cond in choice[CONF_CONDITIONS]:
+                        referenced |= condition.async_extract_targets(cond, target)
                     Script._find_referenced_target(
                         target, referenced, choice[CONF_SEQUENCE]
                     )
@@ -1612,6 +1630,8 @@ class Script:
                     )
 
             elif action == cv.SCRIPT_ACTION_IF:
+                for cond in step[CONF_IF]:
+                    referenced |= condition.async_extract_targets(cond, target)
                 Script._find_referenced_target(target, referenced, step[CONF_THEN])
                 if CONF_ELSE in step:
                     Script._find_referenced_target(target, referenced, step[CONF_ELSE])
@@ -1649,6 +1669,10 @@ class Script:
 
             elif action == cv.SCRIPT_ACTION_CHECK_CONDITION:
                 referenced |= condition.async_extract_devices(step)
+
+            elif action == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
+                for trigger in step[CONF_WAIT_FOR_TRIGGER]:
+                    referenced |= set(trigger_helper.async_extract_devices(trigger))
 
             elif action == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
                 referenced.add(step[CONF_DEVICE_ID])
@@ -1700,6 +1724,10 @@ class Script:
 
             elif action == cv.SCRIPT_ACTION_CHECK_CONDITION:
                 referenced |= condition.async_extract_entities(step)
+
+            elif action == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
+                for trigger in step[CONF_WAIT_FOR_TRIGGER]:
+                    referenced |= set(trigger_helper.async_extract_entities(trigger))
 
             elif action == cv.SCRIPT_ACTION_ACTIVATE_SCENE:
                 referenced.add(step[CONF_SCENE])

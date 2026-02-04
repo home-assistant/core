@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water price',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
@@ -71,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Water usage yesterday',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

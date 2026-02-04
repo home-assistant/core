@@ -40,12 +40,13 @@ class PortainerSwitchEntityDescription(SwitchEntityDescription):
 async def perform_action(
     action: str, portainer: Portainer, endpoint_id: int, container_id: str
 ) -> None:
-    """Stop a container."""
+    """Perform an action on a container."""
     try:
-        if action == "start":
-            await portainer.start_container(endpoint_id, container_id)
-        elif action == "stop":
-            await portainer.stop_container(endpoint_id, container_id)
+        match action:
+            case "start":
+                await portainer.start_container(endpoint_id, container_id)
+            case "stop":
+                await portainer.stop_container(endpoint_id, container_id)
     except PortainerAuthenticationError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -137,13 +138,19 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start (turn on) the container."""
         await self.entity_description.turn_on_fn(
-            "start", self.coordinator.portainer, self.endpoint_id, self.device_id
+            "start",
+            self.coordinator.portainer,
+            self.endpoint_id,
+            self.container_data.container.id,
         )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop (turn off) the container."""
         await self.entity_description.turn_off_fn(
-            "stop", self.coordinator.portainer, self.endpoint_id, self.device_id
+            "stop",
+            self.coordinator.portainer,
+            self.endpoint_id,
+            self.container_data.container.id,
         )
         await self.coordinator.async_request_refresh()

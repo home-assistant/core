@@ -1,0 +1,100 @@
+# serializer version: 1
+# name: test_button_entities[button.hdfury_vrroom_02_issue_hotplug-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.hdfury_vrroom_02_issue_hotplug',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Issue hotplug',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Issue hotplug',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'issue_hotplug',
+    'unique_id': '000123456789_issue_hotplug',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities[button.hdfury_vrroom_02_issue_hotplug-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HDFury VRROOM-02 Issue hotplug',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.hdfury_vrroom_02_issue_hotplug',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_button_entities[button.hdfury_vrroom_02_restart-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.hdfury_vrroom_02_restart',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Restart',
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_icon': None,
+    'original_name': 'Restart',
+    'platform': 'hdfury',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '000123456789_reboot',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_button_entities[button.hdfury_vrroom_02_restart-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'restart',
+      'friendly_name': 'HDFury VRROOM-02 Restart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.hdfury_vrroom_02_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

@@ -39,6 +39,7 @@ ECOBEE_MODEL_TO_NAME = {
     "vulcanSmart": "ecobee4 Smart",
     "aresSmart": "ecobee Smart Premium",
     "artemisSmart": "ecobee Smart Enhanced",
+    "attisRetail": "ecobee Smart Thermostat with Voice Control",
 }
 
 PLATFORMS = [

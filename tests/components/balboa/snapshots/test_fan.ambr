@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump 1',
     'options': dict({
     }),
     'original_device_class': None,

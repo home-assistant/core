@@ -15,9 +15,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PointConfigEntry
 from .const import SIGNAL_WEBHOOK
-from .coordinator import PointDataUpdateCoordinator
+from .coordinator import PointConfigEntry, PointDataUpdateCoordinator
 from .entity import MinutPointEntity
 
 _LOGGER = logging.getLogger(__name__)

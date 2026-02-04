@@ -34,6 +34,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Socket 0',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -83,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Socket 1',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -132,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Socket 2',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
@@ -181,6 +184,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Socket 3',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,

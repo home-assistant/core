@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Address',
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -171,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heading',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -223,6 +227,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last update from vehicle',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -272,6 +277,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -325,6 +331,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Remaining range',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -378,6 +385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -431,6 +439,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Address',
     'options': dict({
     }),
     'original_device_class': None,
@@ -479,6 +488,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery voltage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -532,6 +542,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heading',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -584,6 +595,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last update from vehicle',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -633,6 +645,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mileage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -686,6 +699,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Speed',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

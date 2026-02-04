@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discount only',
     'options': dict({
     }),
     'original_device_class': None,
@@ -75,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'List access',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -129,6 +131,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On occasion',
     'options': dict({
     }),
     'original_device_class': None,
@@ -201,6 +204,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Region & language',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -272,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Urgent',
     'options': dict({
     }),
     'original_device_class': None,
@@ -321,6 +326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Discount only',
     'options': dict({
     }),
     'original_device_class': None,
@@ -376,6 +382,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'List access',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -430,6 +437,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'On occasion',
     'options': dict({
     }),
     'original_device_class': None,
@@ -502,6 +510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Region & language',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -573,6 +582,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Urgent',
     'options': dict({
     }),
     'original_device_class': None,

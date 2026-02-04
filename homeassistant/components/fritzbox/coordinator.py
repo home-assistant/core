@@ -87,7 +87,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             self.has_triggers = False
         LOGGER.debug("enable smarthome triggers: %s", self.has_triggers)
 
-        self.configuration_url = self.fritz.get_prefixed_host()
+        self.configuration_url = self.fritz.base_url
 
         await self.async_config_entry_first_refresh()
         self.cleanup_removed_devices(self.data)

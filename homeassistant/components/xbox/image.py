@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import XboxConfigEntry, XboxUpdateCoordinator
+from .coordinator import XboxConfigEntry, XboxPresenceCoordinator
 from .entity import XboxBaseEntity, XboxBaseEntityDescription, profile_pic
 
 PARALLEL_UPDATES = 0
@@ -64,7 +64,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox images."""
-    coordinator = config_entry.runtime_data.status
+    coordinator = config_entry.runtime_data.presence
     if TYPE_CHECKING:
         assert config_entry.unique_id
     async_add_entities(
@@ -95,7 +95,7 @@ class XboxImageEntity(XboxBaseEntity, ImageEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: XboxUpdateCoordinator,
+        coordinator: XboxPresenceCoordinator,
         xuid: str,
         entity_description: XboxImageEntityDescription,
     ) -> None:

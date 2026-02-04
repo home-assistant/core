@@ -111,7 +111,7 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.none_mqtt_sensor",
+            "sensor.mqtt_sensor",
             DEFAULT_SENSOR_NAME,
             None,
             True,
@@ -158,7 +158,7 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.none_humidity",
+            "sensor.humidity",
             "Humidity",
             None,
             True,
@@ -192,7 +192,7 @@ async def test_availability_with_shared_state_topic(
                     }
                 }
             },
-            "sensor.none_mysensor",
+            "sensor.mysensor",
             "MySensor",
             None,
             True,

@@ -1,0 +1,108 @@
+{
+  "entity": {
+    "button": {
+      "issue_hotplug": {
+        "default": "mdi:connection"
+      }
+    },
+    "select": {
+      "opmode": {
+        "default": "mdi:cogs"
+      },
+      "portseltx0": {
+        "default": "mdi:hdmi-port"
+      },
+      "portseltx1": {
+        "default": "mdi:hdmi-port"
+      }
+    },
+    "sensor": {
+      "aud0": {
+        "default": "mdi:audio-input-rca"
+      },
+      "aud1": {
+        "default": "mdi:audio-input-rca"
+      },
+      "audout": {
+        "default": "mdi:television-speaker"
+      },
+      "earcrx": {
+        "default": "mdi:audio-video"
+      },
+      "edida0": {
+        "default": "mdi:format-list-text"
+      },
+      "edida1": {
+        "default": "mdi:format-list-text"
+      },
+      "edida2": {
+        "default": "mdi:format-list-text"
+      },
+      "rx0": {
+        "default": "mdi:video-input-hdmi"
+      },
+      "rx1": {
+        "default": "mdi:video-input-hdmi"
+      },
+      "sink0": {
+        "default": "mdi:television"
+      },
+      "sink1": {
+        "default": "mdi:television"
+      },
+      "sink2": {
+        "default": "mdi:audio-video"
+      },
+      "tx0": {
+        "default": "mdi:cable-data"
+      },
+      "tx1": {
+        "default": "mdi:cable-data"
+      }
+    },
+    "switch": {
+      "autosw": {
+        "default": "mdi:import"
+      },
+      "cec0en": {
+        "default": "mdi:remote-tv"
+      },
+      "cec1en": {
+        "default": "mdi:remote-tv"
+      },
+      "cec2en": {
+        "default": "mdi:remote-tv"
+      },
+      "cec3en": {
+        "default": "mdi:remote-tv"
+      },
+      "htpcmode0": {
+        "default": "mdi:desktop-classic"
+      },
+      "htpcmode1": {
+        "default": "mdi:desktop-classic"
+      },
+      "htpcmode2": {
+        "default": "mdi:desktop-classic"
+      },
+      "htpcmode3": {
+        "default": "mdi:desktop-classic"
+      },
+      "iractive": {
+        "default": "mdi:remote"
+      },
+      "mutetx0": {
+        "default": "mdi:volume-mute"
+      },
+      "mutetx1": {
+        "default": "mdi:volume-mute"
+      },
+      "oled": {
+        "default": "mdi:cellphone-information"
+      },
+      "relay": {
+        "default": "mdi:electric-switch"
+      }
+    }
+  }
+}

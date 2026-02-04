@@ -24,9 +24,9 @@ from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DATA_QUIKSWITCH, DOMAIN
 
-DOMAIN = "qwikswitch"
+_LOGGER = logging.getLogger(__name__)
 
 CONF_DIMMER_ADJUST = "dimmer_adjust"
 CONF_BUTTON_EVENTS = "button_events"
@@ -96,7 +96,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not await qsusb.update_from_devices():
         return False
 
-    hass.data[DOMAIN] = qsusb
+    hass.data[DATA_QUIKSWITCH] = qsusb
 
     comps: dict[Platform, list] = {
         Platform.SWITCH: [],
@@ -168,7 +168,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def async_stop(_):
         """Stop the listener."""
-        hass.data[DOMAIN].stop()
+        hass.data[DATA_QUIKSWITCH].stop()
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, async_stop)
 

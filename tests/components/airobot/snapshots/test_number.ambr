@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hysteresis band',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,

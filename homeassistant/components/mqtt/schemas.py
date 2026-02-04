@@ -73,15 +73,6 @@ SHARED_OPTIONS = [
     CONF_STATE_TOPIC,
 ]
 
-MQTT_ORIGIN_INFO_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_SW_VERSION): cv.string,
-            vol.Optional(CONF_SUPPORT_URL): cv.configuration_url,
-        }
-    ),
-)
 
 _MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {

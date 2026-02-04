@@ -24,6 +24,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ambient light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -81,6 +82,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -138,6 +140,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -195,6 +198,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ambient light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -252,6 +256,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,
@@ -309,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light',
     'options': dict({
     }),
     'original_device_class': None,

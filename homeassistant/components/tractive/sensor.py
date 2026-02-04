@@ -16,7 +16,6 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     PERCENTAGE,
     EntityCategory,
-    UnitOfEnergy,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -25,18 +24,14 @@ from homeassistant.helpers.typing import StateType
 
 from . import Trackables, TractiveClient, TractiveConfigEntry
 from .const import (
-    ATTR_ACTIVITY_LABEL,
-    ATTR_CALORIES,
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
     ATTR_MINUTES_DAY_SLEEP,
     ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_MINUTES_REST,
-    ATTR_SLEEP_LABEL,
     ATTR_TRACKER_STATE,
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_HEALTH_OVERVIEW_UPDATED,
-    TRACKER_WELLNESS_STATUS_UPDATED,
 )
 from .entity import TractiveEntity
 
@@ -127,13 +122,6 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
-        key=ATTR_CALORIES,
-        translation_key="calories",
-        native_unit_of_measurement=UnitOfEnergy.KILO_CALORIE,
-        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
-        state_class=SensorStateClass.TOTAL,
-    ),
-    TractiveSensorEntityDescription(
         key=ATTR_DAILY_GOAL,
         translation_key="daily_goal",
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -152,30 +140,6 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         signal_prefix=TRACKER_HEALTH_OVERVIEW_UPDATED,
         state_class=SensorStateClass.TOTAL,
-    ),
-    TractiveSensorEntityDescription(
-        key=ATTR_SLEEP_LABEL,
-        translation_key="sleep",
-        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
-        value_fn=lambda state: state.lower() if isinstance(state, str) else state,
-        device_class=SensorDeviceClass.ENUM,
-        options=[
-            "good",
-            "low",
-            "ok",
-        ],
-    ),
-    TractiveSensorEntityDescription(
-        key=ATTR_ACTIVITY_LABEL,
-        translation_key="activity",
-        signal_prefix=TRACKER_WELLNESS_STATUS_UPDATED,
-        value_fn=lambda state: state.lower() if isinstance(state, str) else state,
-        device_class=SensorDeviceClass.ENUM,
-        options=[
-            "good",
-            "low",
-            "ok",
-        ],
     ),
 )
 

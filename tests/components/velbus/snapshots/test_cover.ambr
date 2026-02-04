@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CoverName',
     'options': dict({
     }),
     'original_device_class': None,
@@ -70,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CoverNameNoPos',
     'options': dict({
     }),
     'original_device_class': None,

@@ -4,7 +4,7 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock
 
 from onedrive_personal_sdk.exceptions import OneDriveException
-from onedrive_personal_sdk.models.items import AppRoot, Folder, ItemUpdate
+from onedrive_personal_sdk.models.items import AppRoot, ItemUpdate
 import pytest
 
 from homeassistant import config_entries
@@ -139,49 +139,6 @@ async def test_full_flow_with_owner_not_found(
     assert result["data"][CONF_FOLDER_ID] == "my_folder_id"
 
     mock_onedrive_client.reset_mock()
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_folder_already_in_use(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: AsyncMock,
-    mock_onedrive_client: MagicMock,
-    mock_instance_id: AsyncMock,
-    mock_folder: Folder,
-) -> None:
-    """Ensure a folder that is already in use is not allowed."""
-
-    mock_folder.description = "1234"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.FORM
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_FOLDER_NAME: "myFolder"}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_FOLDER_NAME: "folder_already_in_use"}
-
-    # clear error and try again
-    mock_onedrive_client.create_folder.return_value.description = mock_instance_id
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_FOLDER_NAME: "myFolder"}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "John Doe's OneDrive"
-    assert result["result"].unique_id == "mock_drive_id"
-    assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
-    assert result["data"][CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
-    assert result["data"][CONF_FOLDER_NAME] == "myFolder"
-    assert result["data"][CONF_FOLDER_ID] == "my_folder_id"
 
 
 @pytest.mark.usefixtures("current_request_with_host")

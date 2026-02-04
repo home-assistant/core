@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free inodes /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -73,6 +74,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free inodes /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -124,6 +126,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free inodes /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -175,6 +178,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free space /',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -234,6 +238,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free space /media/disk1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -293,6 +298,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk free space /media/disk2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -352,6 +358,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk inode usage /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -404,6 +411,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk inode usage /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -456,6 +464,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk inode usage /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -508,6 +517,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total inodes /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -559,6 +569,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total inodes /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -610,6 +621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total inodes /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -661,6 +673,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total space /',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -720,6 +733,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total space /media/disk1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -779,6 +793,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk total space /media/disk2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -838,6 +853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk usage /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -890,6 +906,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk usage /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -942,6 +959,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk usage /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -994,6 +1012,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used inodes /',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1045,6 +1064,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used inodes /media/disk1',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1096,6 +1116,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used inodes /media/disk2',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1147,6 +1168,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used space /',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1206,6 +1228,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used space /media/disk1',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1265,6 +1288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used space /media/disk2',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1324,6 +1348,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disks free space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1383,6 +1408,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disks total space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1442,6 +1468,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disks used space',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1501,6 +1528,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load (15 min)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1552,6 +1580,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load (1 min)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1603,6 +1632,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Load (5 min)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1654,6 +1684,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1713,6 +1744,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Memory total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1772,6 +1804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Swap free',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1831,6 +1864,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Swap total',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,

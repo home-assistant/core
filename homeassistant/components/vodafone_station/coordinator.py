@@ -54,6 +54,7 @@ class UpdateCoordinatorDataType:
 
     devices: dict[str, VodafoneStationDeviceInfo]
     sensors: dict[str, Any]
+    wifi: dict[str, Any]
 
 
 class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
@@ -137,6 +138,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             await self.api.login()
             raw_data_devices = await self.api.get_devices_data()
             data_sensors = await self.api.get_sensor_data()
+            data_wifi = await self.api.get_wifi_data()
             await self.api.logout()
         except exceptions.CannotAuthenticate as err:
             raise ConfigEntryAuthFailed(
@@ -178,7 +180,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         self.previous_devices = current_devices
 
-        return UpdateCoordinatorDataType(data_devices, data_sensors)
+        return UpdateCoordinatorDataType(data_devices, data_sensors, data_wifi)
 
     @property
     def signal_device_new(self) -> str:

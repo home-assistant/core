@@ -65,6 +65,7 @@ def mock_portainer_client() -> Generator[AsyncMock]:
         )
 
         client.restart_container = AsyncMock(return_value=None)
+        client.images_prune = AsyncMock(return_value=None)
 
         yield client
 

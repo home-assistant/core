@@ -6,7 +6,9 @@ import time
 from unittest.mock import patch
 
 import pytest
-from zha.application.registries import SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE
+from zha.application.platforms.device_tracker import (
+    SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
+)
 from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general

@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Build up index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -74,6 +75,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Drought code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -126,6 +128,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Duff moisture code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -178,6 +181,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fine fuel moisture code',
     'options': dict({
     }),
     'original_device_class': None,
@@ -230,6 +234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fire weather index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -280,6 +285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Frozen precipitation',
     'options': dict({
     }),
     'original_device_class': None,
@@ -339,6 +345,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fuel drying',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -406,6 +413,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'FWI index',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -464,6 +472,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High cloud coverage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -523,6 +532,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Highest grass fire risk',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -583,6 +593,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Initial spread index',
     'options': dict({
     }),
     'original_device_class': None,
@@ -633,6 +644,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Low cloud coverage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -683,6 +695,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Medium cloud coverage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -735,6 +748,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Potential rate of spread',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -800,6 +814,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Precipitation category',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -859,6 +874,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thunder probability',
     'options': dict({
     }),
     'original_device_class': None,
@@ -909,6 +925,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cloud coverage',
     'options': dict({
     }),
     'original_device_class': None,

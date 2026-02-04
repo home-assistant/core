@@ -80,5 +80,11 @@
     "unhandled_trigger_type": {
       "message": "Unhandled trigger type {trigger_type}."
     }
+  },
+  "issues": {
+    "deprecated_implicit_wake_on_lan": {
+      "description": "Implicit Wake-On-LAN is deprecated and will be removed in a future version of Home Assistant. Please create an explicit Wake-On-LAN automation to turn on your TV, targeting MAC address `{mac_address}`.\n\nFor more information, see the [Wake-On-LAN documentation]({wol_documentation_url}).",
+      "title": "Implicit Wake-On-LAN is deprecated"
+    }
   }
 }

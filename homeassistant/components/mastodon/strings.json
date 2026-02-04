@@ -26,6 +26,16 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "bot": { "name": "Bot" },
+      "discoverable": { "name": "Discoverable" },
+      "indexable": { "name": "Indexable" },
+      "limited": { "name": "Limited" },
+      "locked": { "name": "Locked" },
+      "memorial": { "name": "Memorial" },
+      "moved": { "name": "Moved" },
+      "suspended": { "name": "Suspended" }
+    },
     "sensor": {
       "followers": {
         "name": "Followers",
@@ -35,9 +45,26 @@
         "name": "Following",
         "unit_of_measurement": "[%key:component::mastodon::entity::sensor::followers::unit_of_measurement%]"
       },
+      "last_post": {
+        "name": "Last post"
+      },
       "posts": {
         "name": "Posts",
         "unit_of_measurement": "posts"
+      },
+      "username": {
+        "name": "Username",
+        "state_attributes": {
+          "bio": {
+            "name": "Bio"
+          },
+          "created": {
+            "name": "Created"
+          },
+          "display_name": {
+            "name": "Display name"
+          }
+        }
       }
     }
   },

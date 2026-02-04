@@ -41,6 +41,15 @@
   },
   "entity": {
     "binary_sensor": {
+      "clean_box_empty": {
+        "name": "Clean water box"
+      },
+      "clean_fluid_empty": {
+        "name": "Cleaning fluid"
+      },
+      "dirty_box_full": {
+        "name": "Dirty water box"
+      },
       "in_cleaning": {
         "name": "Cleaning"
       },
@@ -77,6 +86,14 @@
       }
     },
     "select": {
+      "cleaning_mode": {
+        "name": "Cleaning mode",
+        "state": {
+          "mop": "Mop only",
+          "vac_and_mop": "Vacuum and mop",
+          "vacuum": "Vacuum only"
+        }
+      },
       "dust_collection_mode": {
         "name": "Empty mode",
         "state": {
@@ -117,6 +134,14 @@
       },
       "selected_map": {
         "name": "Selected map"
+      },
+      "water_flow": {
+        "name": "Water flow",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
+        }
       }
     },
     "sensor": {
@@ -364,6 +389,7 @@
       "zeo_state": {
         "name": "State",
         "state": {
+          "aftercare": "Aftercare",
           "cooling": "Cooling",
           "done": "Done",
           "drying": "Drying",
@@ -372,6 +398,7 @@
           "spinning": "Spinning",
           "standby": "[%key:common::state::standby%]",
           "under_delay_start": "Delayed start",
+          "waiting_for_aftercare": "Waiting for aftercare",
           "washing": "Washing",
           "weighing": "Weighing"
         }

@@ -405,10 +405,12 @@ async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:
                 "name": "My template",
                 "state": "{{ 'on' }}",
                 "options": "{{ ['off', 'on', 'auto'] }}",
+                "select_option": [],
             },
             {
                 "state": "{{ 'on' }}",
                 "options": "{{ ['off', 'on', 'auto'] }}",
+                "select_option": [],
             },
         ),
         (

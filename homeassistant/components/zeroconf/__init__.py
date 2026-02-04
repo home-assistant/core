@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from functools import partial
 from ipaddress import IPv4Address, IPv6Address
 import logging
 import sys
@@ -21,17 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, instance_id
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstant,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.service_info.zeroconf import (
-    ATTR_PROPERTIES_ID as _ATTR_PROPERTIES_ID,
-    ZeroconfServiceInfo as _ZeroconfServiceInfo,
-)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
 from homeassistant.setup import async_when_setup_or_start
@@ -62,13 +51,6 @@ MAX_PROPERTY_VALUE_LEN = 230
 # Dns label max length
 MAX_NAME_LEN = 63
 
-# Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
-_DEPRECATED_ATTR_PROPERTIES_ID = DeprecatedConstant(
-    _ATTR_PROPERTIES_ID,
-    "homeassistant.helpers.service_info.zeroconf.ATTR_PROPERTIES_ID",
-    "2026.2",
-)
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -83,12 +65,6 @@ CONFIG_SCHEMA = vol.Schema(
         )
     },
     extra=vol.ALLOW_EXTRA,
-)
-
-_DEPRECATED_ZeroconfServiceInfo = DeprecatedConstant(
-    _ZeroconfServiceInfo,
-    "homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo",
-    "2026.2",
 )
 
 
@@ -311,11 +287,3 @@ async def _async_get_local_service_info(hass: HomeAssistant) -> AsyncServiceInfo
         port=hass.http.server_port,
         properties=params,
     )
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

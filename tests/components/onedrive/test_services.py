@@ -93,7 +93,7 @@ async def test_upload_service(
 
     assert response
     assert response["files"]
-    assert cast(list[dict[str, Any]], response["files"])[0]["id"] == "id"
+    assert cast(list[dict[str, Any]], response["files"])[0]["id"] == "metadata_id"
 
 
 async def test_upload_service_no_response(

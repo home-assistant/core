@@ -21,6 +21,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
     MediaClass,
+    MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
 )
@@ -423,3 +424,98 @@ async def test_new_client_connected(
 
     state = hass.states.get("media_player.jellyfin_device_five")
     assert state
+
+
+async def test_supports_media_control_fallback(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+) -> None:
+    """Test that SupportsMediaControl enables controls without PlayMediaSource."""
+    # SESSION-UUID-TWO has SupportsMediaControl: true but no PlayMediaSource command
+    state = hass.states.get("media_player.jellyfin_device_two")
+
+    assert state
+    assert state.state == MediaPlayerState.PLAYING
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry
+
+    # Get the entity to check supported features
+    entity = hass.data["entity_components"]["media_player"].get_entity(state.entity_id)
+    features = entity.supported_features
+
+    # Should have basic playback controls
+    assert features & MediaPlayerEntityFeature.PLAY
+    assert features & MediaPlayerEntityFeature.PAUSE
+    assert features & MediaPlayerEntityFeature.STOP
+    assert features & MediaPlayerEntityFeature.SEEK
+    assert features & MediaPlayerEntityFeature.BROWSE_MEDIA
+    assert features & MediaPlayerEntityFeature.PLAY_MEDIA
+
+    # Should also have volume controls since it has VolumeSet, Mute, and Unmute
+    assert features & MediaPlayerEntityFeature.VOLUME_SET
+    assert features & MediaPlayerEntityFeature.VOLUME_MUTE
+
+
+async def test_set_volume_command_alternative(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+) -> None:
+    """Test that SetVolume command (alternative to VolumeSet) enables volume control."""
+    # SESSION-UUID-FOUR has SetVolume instead of VolumeSet
+    state = hass.states.get("media_player.jellyfin_device_four")
+
+    assert state
+
+    # Get the entity to check supported features
+    entity = hass.data["entity_components"]["media_player"].get_entity(state.entity_id)
+    features = entity.supported_features
+
+    # Should have volume control via SetVolume command
+    assert features & MediaPlayerEntityFeature.VOLUME_SET
+
+
+async def test_mute_requires_both_commands(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+) -> None:
+    """Test that VOLUME_MUTE requires both Mute AND Unmute commands."""
+
+    # SESSION-UUID-FIVE has only Mute (no Unmute) - should NOT have VOLUME_MUTE
+    state_five = hass.states.get("media_player.jellyfin_device_five")
+    assert state_five
+
+    entity_five = hass.data["entity_components"]["media_player"].get_entity(
+        state_five.entity_id
+    )
+    features_five = entity_five.supported_features
+
+    # Should NOT have mute feature
+    assert not (features_five & MediaPlayerEntityFeature.VOLUME_MUTE)
+    # But should still have other features
+    assert features_five & MediaPlayerEntityFeature.PLAY
+    assert features_five & MediaPlayerEntityFeature.VOLUME_SET
+
+    # SESSION-UUID-SIX has only Unmute (no Mute) - should NOT have VOLUME_MUTE
+    state_six = hass.states.get("media_player.jellyfin_device_six")
+    assert state_six
+
+    entity_six = hass.data["entity_components"]["media_player"].get_entity(
+        state_six.entity_id
+    )
+    features_six = entity_six.supported_features
+
+    # Should NOT have mute feature
+    assert not (features_six & MediaPlayerEntityFeature.VOLUME_MUTE)
+    # But should still have other features
+    assert features_six & MediaPlayerEntityFeature.PLAY
+    assert features_six & MediaPlayerEntityFeature.VOLUME_SET

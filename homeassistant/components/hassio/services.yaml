@@ -30,6 +30,42 @@ addon_stop:
       selector:
         addon:
 
+app_start:
+  fields:
+    app:
+      required: true
+      example: core_ssh
+      selector:
+        app:
+
+app_restart:
+  fields:
+    app:
+      required: true
+      example: core_ssh
+      selector:
+        app:
+
+app_stdin:
+  fields:
+    app:
+      required: true
+      example: core_ssh
+      selector:
+        app:
+    input:
+      required: true
+      selector:
+        object:
+
+app_stop:
+  fields:
+    app:
+      required: true
+      example: core_ssh
+      selector:
+        app:
+
 host_reboot:
 host_shutdown:
 backup_full:
@@ -64,6 +100,10 @@ backup_partial:
       default: false
       selector:
         boolean:
+    apps:
+      example: ["core_ssh", "core_samba", "core_mosquitto"]
+      selector:
+        object:
     addons:
       example: ["core_ssh", "core_samba", "core_mosquitto"]
       selector:
@@ -111,6 +151,10 @@ restore_partial:
         boolean:
     folders:
       example: ["homeassistant", "share"]
+      selector:
+        object:
+    apps:
+      example: ["core_ssh", "core_samba", "core_mosquitto"]
       selector:
         object:
     addons:

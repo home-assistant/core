@@ -6,6 +6,7 @@ from typing import Any, override
 
 from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
+from eheimdigital.filter import EheimDigitalFilter
 from eheimdigital.heater import EheimDigitalHeater
 from eheimdigital.types import HeaterUnit
 
@@ -21,6 +22,7 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     EntityCategory,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -40,6 +42,34 @@ class EheimDigitalNumberDescription[_DeviceT: EheimDigitalDevice](
     value_fn: Callable[[_DeviceT], float | None]
     set_value_fn: Callable[[_DeviceT, float], Awaitable[None]]
     uom_fn: Callable[[_DeviceT], str] | None = None
+
+
+FILTER_DESCRIPTIONS: tuple[EheimDigitalNumberDescription[EheimDigitalFilter], ...] = (
+    EheimDigitalNumberDescription[EheimDigitalFilter](
+        key="high_pulse_time",
+        translation_key="high_pulse_time",
+        entity_category=EntityCategory.CONFIG,
+        native_step=PRECISION_WHOLE,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=NumberDeviceClass.DURATION,
+        native_min_value=5,
+        native_max_value=200000,
+        value_fn=lambda device: device.high_pulse_time,
+        set_value_fn=lambda device, value: device.set_high_pulse_time(int(value)),
+    ),
+    EheimDigitalNumberDescription[EheimDigitalFilter](
+        key="low_pulse_time",
+        translation_key="low_pulse_time",
+        entity_category=EntityCategory.CONFIG,
+        native_step=PRECISION_WHOLE,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=NumberDeviceClass.DURATION,
+        native_min_value=5,
+        native_max_value=200000,
+        value_fn=lambda device: device.low_pulse_time,
+        set_value_fn=lambda device, value: device.set_low_pulse_time(int(value)),
+    ),
+)
 
 
 CLASSICVARIO_DESCRIPTIONS: tuple[
@@ -144,6 +174,13 @@ async def async_setup_entry(
                         coordinator, device, description
                     )
                     for description in CLASSICVARIO_DESCRIPTIONS
+                )
+            if isinstance(device, EheimDigitalFilter):
+                entities.extend(
+                    EheimDigitalNumber[EheimDigitalFilter](
+                        coordinator, device, description
+                    )
+                    for description in FILTER_DESCRIPTIONS
                 )
             if isinstance(device, EheimDigitalHeater):
                 entities.extend(

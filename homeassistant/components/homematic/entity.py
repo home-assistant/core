@@ -204,7 +204,7 @@ class HMDevice(Entity):
         self._init_data_struct()
 
     @abstractmethod
-    def _init_data_struct(self):
+    def _init_data_struct(self) -> None:
         """Generate a data dictionary from the HomeMatic device metadata."""
 
 

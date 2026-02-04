@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Away extract fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -84,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Away supply fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -143,6 +145,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooker hood extract fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -202,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooker hood supply fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -261,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fireplace extract fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -320,6 +325,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fireplace mode runtime',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -379,6 +385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fireplace supply fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -438,6 +445,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High extract fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -497,6 +505,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'High supply fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -556,6 +565,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Home extract fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
@@ -615,6 +625,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Home supply fan setpoint',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,

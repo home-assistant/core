@@ -79,7 +79,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         self,
         data: TeslaFleetVehicleData,
         side: TeslaFleetClimateSide,
-        scopes: Scope,
+        scopes: list[Scope],
     ) -> None:
         """Initialize the climate."""
 
@@ -219,7 +219,7 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
     def __init__(
         self,
         data: TeslaFleetVehicleData,
-        scopes: Scope,
+        scopes: list[Scope],
     ) -> None:
         """Initialize the cabin overheat climate entity."""
 

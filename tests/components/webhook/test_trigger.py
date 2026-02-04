@@ -12,11 +12,6 @@ from tests.common import async_capture_events
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.fixture(autouse=True)
 async def setup_http(hass: HomeAssistant) -> None:
     """Set up http."""

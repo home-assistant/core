@@ -1,0 +1,173 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "incorrect_device": "The configured device is not the same found on this IP address.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "flow_title": "HDFury ({host})",
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up {host}?"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::hdfury::config::step::user::data_description::host%]"
+        },
+        "description": "Update configuration for {title}."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your HDFury device."
+        },
+        "description": "Set up your HDFury to integrate with Home Assistant."
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "issue_hotplug": {
+        "name": "Issue hotplug"
+      }
+    },
+    "select": {
+      "opmode": {
+        "name": "Operation mode",
+        "state": {
+          "0": "Mode 0 - Splitter TX0/TX1 FRL5 VRR",
+          "1": "Mode 1 - Splitter TX0/TX1 UPSCALE FRL5",
+          "2": "Mode 2 - Matrix TMDS",
+          "3": "Mode 3 - Matrix FRL->TMDS",
+          "4": "Mode 4 - Matrix DOWNSCALE",
+          "5": "Mode 5 - Matrix RX0:FRL5 + RX1-3:TMDS"
+        }
+      },
+      "portseltx0": {
+        "name": "Port select TX0",
+        "state": {
+          "0": "Input 0",
+          "1": "Input 1",
+          "2": "Input 2",
+          "3": "Input 3",
+          "4": "Copy TX1"
+        }
+      },
+      "portseltx1": {
+        "name": "Port select TX1",
+        "state": {
+          "0": "Input 0",
+          "1": "Input 1",
+          "2": "Input 2",
+          "3": "Input 3",
+          "4": "Copy TX0"
+        }
+      }
+    },
+    "sensor": {
+      "aud0": {
+        "name": "Audio TX0"
+      },
+      "aud1": {
+        "name": "Audio TX1"
+      },
+      "audout": {
+        "name": "Audio output"
+      },
+      "earcrx": {
+        "name": "eARC/ARC status"
+      },
+      "edida0": {
+        "name": "EDID TXA0"
+      },
+      "edida1": {
+        "name": "EDID TXA1"
+      },
+      "edida2": {
+        "name": "EDID AUDA"
+      },
+      "rx0": {
+        "name": "Input RX0"
+      },
+      "rx1": {
+        "name": "Input RX1"
+      },
+      "sink0": {
+        "name": "EDID TX0"
+      },
+      "sink1": {
+        "name": "EDID TX1"
+      },
+      "sink2": {
+        "name": "EDID AUD"
+      },
+      "tx0": {
+        "name": "Output TX0"
+      },
+      "tx1": {
+        "name": "Output TX1"
+      }
+    },
+    "switch": {
+      "autosw": {
+        "name": "Auto switch inputs"
+      },
+      "cec0en": {
+        "name": "CEC RX0"
+      },
+      "cec1en": {
+        "name": "CEC RX1"
+      },
+      "cec2en": {
+        "name": "CEC RX2"
+      },
+      "cec3en": {
+        "name": "CEC RX3"
+      },
+      "htpcmode0": {
+        "name": "HTPC mode RX0"
+      },
+      "htpcmode1": {
+        "name": "HTPC mode RX1"
+      },
+      "htpcmode2": {
+        "name": "HTPC mode RX2"
+      },
+      "htpcmode3": {
+        "name": "HTPC mode RX3"
+      },
+      "iractive": {
+        "name": "Infrared"
+      },
+      "mutetx0": {
+        "name": "Mute audio TX0"
+      },
+      "mutetx1": {
+        "name": "Mute audio TX1"
+      },
+      "oled": {
+        "name": "OLED display"
+      },
+      "relay": {
+        "name": "Relay"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with HDFury device"
+    },
+    "tx_state_error": {
+      "message": "An error occurred while validating TX states: {details}"
+    }
+  }
+}

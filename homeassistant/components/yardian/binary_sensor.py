@@ -32,8 +32,8 @@ def _zone_enabled_value(
 ) -> bool | None:
     """Return True if zone is enabled on controller."""
     try:
-        return coordinator.data.zones[zone_id][1] == 1
-    except (IndexError, TypeError):
+        return coordinator.data.zones[zone_id].is_enabled
+    except IndexError:
         return None
 
 

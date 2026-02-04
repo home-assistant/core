@@ -1,0 +1,18 @@
+[
+  {
+    "vmid": 200,
+    "name": "ct-nginx",
+    "status": "running",
+    "maxmem": 1073741824,
+    "mem": 536870912,
+    "cpu": 0.05,
+    "maxdisk": 21474836480,
+    "disk": 1125899906,
+    "uptime": 43200
+  },
+  {
+    "vmid": 201,
+    "name": "ct-backup",
+    "status": "stopped"
+  }
+]

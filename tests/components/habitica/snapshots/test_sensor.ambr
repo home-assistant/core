@@ -27,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Class',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -83,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Constitution',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -140,6 +142,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -193,6 +196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Experience',
     'options': dict({
     }),
     'original_device_class': None,
@@ -243,6 +247,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Health',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -296,6 +301,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intelligence',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -353,6 +359,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last check-in',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -402,6 +409,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -450,6 +458,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mana',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -503,6 +512,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max. mana',
     'options': dict({
     }),
     'original_device_class': None,
@@ -553,6 +563,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -603,6 +614,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Perception',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -660,6 +672,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Strength',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -724,6 +737,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Class',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -780,6 +794,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Constitution',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -837,6 +852,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -891,6 +907,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Eggs',
     'options': dict({
     }),
     'original_device_class': None,
@@ -944,6 +961,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Experience',
     'options': dict({
     }),
     'original_device_class': None,
@@ -994,6 +1012,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gems',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1047,6 +1066,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gold',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1100,6 +1120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Hatching potions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1153,6 +1174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Health',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1206,6 +1228,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Intelligence',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1263,6 +1286,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last check-in',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1312,6 +1336,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1360,6 +1385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mana',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1413,6 +1439,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Max. mana',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1463,6 +1490,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mystic hourglasses',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1516,6 +1544,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next level',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1566,6 +1595,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pending damage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1619,6 +1649,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pending quest items',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1668,6 +1699,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Perception',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1725,6 +1757,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pet food',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1778,6 +1811,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Quest scrolls',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1832,6 +1866,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Boss health',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1885,6 +1920,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Boss health remaining',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1938,6 +1974,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Boss rage',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1991,6 +2028,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Boss rage limit break',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2046,6 +2084,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Collected quest items',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2097,6 +2136,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Group leader',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2145,6 +2185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Member count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2195,6 +2236,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Quest',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2246,6 +2288,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Quest boss',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2294,6 +2337,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Saddles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -2344,6 +2388,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Strength',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,

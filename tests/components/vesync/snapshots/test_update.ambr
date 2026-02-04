@@ -54,6 +54,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -150,6 +151,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -246,6 +248,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -342,6 +345,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -381,6 +385,200 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_update_state[CS158-AF Air Fryer Cooking][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Cooking',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Cooking',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_update_state[CS158-AF Air Fryer Cooking][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'update',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'update.cs158_af_air_fryer_cooking_firmware',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Firmware',
+      'options': dict({
+      }),
+      'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
+      'original_icon': None,
+      'original_name': 'Firmware',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'CS158Cooking',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_update_state[CS158-AF Air Fryer Cooking][update.cs158_af_air_fryer_cooking_firmware]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'device_class': 'firmware',
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Firmware',
+      'in_progress': False,
+      'installed_version': None,
+      'latest_version': None,
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 0>,
+      'title': None,
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.cs158_af_air_fryer_cooking_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_update_state[CS158-AF Air Fryer Standby][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'CS158Standby',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Standby',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_update_state[CS158-AF Air Fryer Standby][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'update',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'update.cs158_af_air_fryer_standby_firmware',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Firmware',
+      'options': dict({
+      }),
+      'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
+      'original_icon': None,
+      'original_name': 'Firmware',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'CS158Standby',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_update_state[CS158-AF Air Fryer Standby][update.cs158_af_air_fryer_standby_firmware]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'device_class': 'firmware',
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/vesync/icon.png',
+      'friendly_name': 'CS158-AF Air Fryer Standby Firmware',
+      'in_progress': False,
+      'installed_version': None,
+      'latest_version': None,
+      'release_summary': None,
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 0>,
+      'title': None,
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.cs158_af_air_fryer_standby_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_update_state[Dimmable Light][devices]
@@ -438,6 +636,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -524,6 +723,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -620,6 +820,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -716,6 +917,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -812,6 +1014,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -908,6 +1111,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1004,6 +1208,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1100,6 +1305,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -1196,6 +1402,7 @@
       'labels': set({
       }),
       'name': None,
+      'object_id_base': 'Firmware',
       'options': dict({
       }),
       'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,

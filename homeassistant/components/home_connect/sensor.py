@@ -115,7 +115,6 @@ SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolume.MILLILITERS,
         device_class=SensorDeviceClass.VOLUME,
-        state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="hot_water_counter",
     ),
     HomeConnectSensorEntityDescription(
@@ -540,6 +539,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect sensor."""
     setup_home_connect_entry(
+        hass,
         entry,
         _get_entities_for_appliance,
         async_add_entities,

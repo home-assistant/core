@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm interval',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -84,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -144,6 +146,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -204,6 +207,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -264,6 +268,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -324,6 +329,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -384,6 +390,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -444,6 +451,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Alarm interval',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
@@ -503,6 +511,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -563,6 +572,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -623,6 +633,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -683,6 +694,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Maximum temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -743,6 +755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Minimum temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -803,6 +816,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,

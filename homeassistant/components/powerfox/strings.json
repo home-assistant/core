@@ -62,6 +62,42 @@
       "energy_usage_low_tariff": {
         "name": "Energy usage low tariff"
       },
+      "gas_avg_consumption_energy_today": {
+        "name": "Avg gas hourly energy - today"
+      },
+      "gas_avg_consumption_today": {
+        "name": "Avg gas hourly consumption - today"
+      },
+      "gas_consumption_energy_today": {
+        "name": "Gas consumption energy - today"
+      },
+      "gas_consumption_today": {
+        "name": "Gas consumption - today"
+      },
+      "gas_cost_today": {
+        "name": "Gas cost - today"
+      },
+      "gas_current_consumption": {
+        "name": "Gas consumption - this hour"
+      },
+      "gas_current_consumption_energy": {
+        "name": "Gas consumption energy - this hour"
+      },
+      "gas_max_consumption_energy_today": {
+        "name": "Max gas hourly energy - today"
+      },
+      "gas_max_consumption_today": {
+        "name": "Max gas hourly consumption - today"
+      },
+      "gas_max_cost_today": {
+        "name": "Max gas hourly cost - today"
+      },
+      "gas_min_consumption_energy_today": {
+        "name": "Min gas hourly energy - today"
+      },
+      "gas_min_consumption_today": {
+        "name": "Min gas hourly consumption - today"
+      },
       "heat_delta_energy": {
         "name": "Delta energy"
       },

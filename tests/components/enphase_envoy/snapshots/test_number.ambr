@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reserve battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -84,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reserve battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -143,6 +145,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutoff battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -201,6 +204,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restore battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -259,6 +263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutoff battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -317,6 +322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restore battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -375,6 +381,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutoff battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
@@ -433,6 +440,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restore battery level',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,

@@ -688,7 +688,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._collecting = None
 
     @property
-    def device_class(self):
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         if self._input_device_class is not None:
             return self._input_device_class
@@ -700,7 +700,7 @@ class UtilityMeterSensor(RestoreSensor):
         return None
 
     @property
-    def state_class(self):
+    def state_class(self) -> SensorStateClass:
         """Return the device class of the sensor."""
         return (
             SensorStateClass.TOTAL

@@ -28,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Backup Manager state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -84,6 +85,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last attempted automatic backup',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -133,6 +135,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last successful automatic backup',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -182,6 +185,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next scheduled automatic backup',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,

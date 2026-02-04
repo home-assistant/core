@@ -25,6 +25,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Light brightness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -82,6 +83,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Plants age',
     'options': dict({
     }),
     'original_device_class': None,

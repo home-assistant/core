@@ -489,6 +489,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
             key="WindowCoveringConfigStatusOperational",
+            translation_key="config_status_operational",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             # unset Operational bit from ConfigStatus bitmap means problem
@@ -528,7 +529,10 @@ DISCOVERY_SCHEMAS = [
             ),
         ),
         entity_class=MatterBinarySensor,
-        required_attributes=(clusters.Thermostat.Attributes.RemoteSensing,),
+        required_attributes=(
+            clusters.Thermostat.Attributes.RemoteSensing,
+            clusters.Thermostat.Attributes.OutdoorTemperature,
+        ),
         allow_multi=True,
     ),
     MatterDiscoverySchema(

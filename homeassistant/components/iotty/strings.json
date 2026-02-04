@@ -8,6 +8,7 @@
       "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "create_entry": {

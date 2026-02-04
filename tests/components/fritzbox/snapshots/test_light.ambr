@@ -29,6 +29,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'fake_name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -112,6 +113,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'fake_name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -190,6 +192,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'fake_name',
     'options': dict({
     }),
     'original_device_class': None,
@@ -248,6 +251,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'fake_name',
     'options': dict({
     }),
     'original_device_class': None,

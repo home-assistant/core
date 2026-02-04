@@ -6,8 +6,10 @@ from telegram import AcceptedGiftTypes, ChatFullInfo, User
 from telegram.constants import AccentColor
 from telegram.error import BadRequest, InvalidToken, NetworkError
 
+from homeassistant.components.telegram_bot.config_flow import DESCRIPTION_PLACEHOLDERS
 from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
+    CONF_API_ENDPOINT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
@@ -24,7 +26,7 @@ from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, pytest
 
 
 async def test_options_flow(
@@ -130,6 +132,7 @@ async def test_reconfigure_flow_webhooks(
         {
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
             SECTION_ADVANCED_SETTINGS: {
+                CONF_API_ENDPOINT: "http://mock_api_endpoint",
                 CONF_PROXY_URL: "https://test",
             },
         },
@@ -192,9 +195,89 @@ async def test_reconfigure_flow_webhooks(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_broadcast_config_entry.data[CONF_URL] == "https://reconfigure"
+    assert (
+        mock_broadcast_config_entry.data[CONF_API_ENDPOINT]
+        == "http://mock_api_endpoint"
+    )
     assert mock_broadcast_config_entry.data[CONF_TRUSTED_NETWORKS] == [
         "149.154.160.0/20"
     ]
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error", "expected_description_placeholders"),
+    [
+        # test case 1: logout fails with network error, then succeeds
+        pytest.param(
+            [NetworkError("mock network error"), True],
+            "telegram_error",
+            {**DESCRIPTION_PLACEHOLDERS, "error_message": "mock network error"},
+        ),
+        # test case 2: logout fails with unsuccessful response, then succeeds
+        pytest.param(
+            [False, True],
+            "bot_logout_failed",
+            DESCRIPTION_PLACEHOLDERS,
+        ),
+    ],
+)
+async def test_reconfigure_flow_logout_failed(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    side_effect: list,
+    expected_error: str,
+    expected_description_placeholders: dict[str, str],
+) -> None:
+    """Test reconfigure flow for with change in API endpoint and logout failed."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await mock_broadcast_config_entry.start_reconfigure_flow(hass)
+    assert result["step_id"] == "reconfigure"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.log_out",
+        AsyncMock(side_effect=side_effect),
+    ):
+        # first logout attempt fails
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PLATFORM: PLATFORM_BROADCAST,
+                SECTION_ADVANCED_SETTINGS: {
+                    CONF_API_ENDPOINT: "http://mock1",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result["step_id"] == "reconfigure"
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": expected_error}
+        assert result["description_placeholders"] == expected_description_placeholders
+
+        # second logout attempt success
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PLATFORM: PLATFORM_BROADCAST,
+                SECTION_ADVANCED_SETTINGS: {
+                    CONF_API_ENDPOINT: "http://mock2",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_broadcast_config_entry.data[CONF_API_ENDPOINT] == "http://mock2"
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
@@ -470,7 +553,9 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     data = {
         CONF_PLATFORM: PLATFORM_BROADCAST,
         CONF_API_KEY: "mock api key",
-        SECTION_ADVANCED_SETTINGS: {},
+        SECTION_ADVANCED_SETTINGS: {
+            CONF_API_ENDPOINT: "http://mock_api_endpoint",
+        },
     }
 
     with patch(

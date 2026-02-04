@@ -54,6 +54,7 @@ from . import media_browser
 from .const import (
     ATTR_QUEUE_POSITION,
     DOMAIN,
+    LONG_SERVICE_TIMEOUT,
     MEDIA_TYPE_DIRECTORY,
     MEDIA_TYPES_TO_SONOS,
     MODELS_LINEIN_AND_TV,
@@ -76,7 +77,6 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-LONG_SERVICE_TIMEOUT = 30.0
 UNJOIN_SERVICE_TIMEOUT = 0.1
 VOLUME_INCREMENT = 2
 

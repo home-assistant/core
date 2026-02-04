@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -68,6 +69,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound effect',
     'options': dict({
     }),
     'original_device_class': None,
@@ -116,6 +118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display lighting',
     'options': dict({
     }),
     'original_device_class': None,
@@ -164,6 +167,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sound effect',
     'options': dict({
     }),
     'original_device_class': None,
@@ -212,6 +216,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -260,6 +265,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sabbath mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -308,6 +314,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cubed ice',
     'options': dict({
     }),
     'original_device_class': None,
@@ -356,6 +363,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power cool',
     'options': dict({
     }),
     'original_device_class': None,
@@ -404,6 +412,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power freeze',
     'options': dict({
     }),
     'original_device_class': None,
@@ -452,6 +461,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sabbath mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -500,6 +510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cubed ice',
     'options': dict({
     }),
     'original_device_class': None,
@@ -548,6 +559,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power cool',
     'options': dict({
     }),
     'original_device_class': None,
@@ -596,6 +608,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power freeze',
     'options': dict({
     }),
     'original_device_class': None,
@@ -644,6 +657,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cubed ice',
     'options': dict({
     }),
     'original_device_class': None,
@@ -692,6 +706,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ice Bites',
     'options': dict({
     }),
     'original_device_class': None,
@@ -740,6 +755,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power cool',
     'options': dict({
     }),
     'original_device_class': None,
@@ -788,6 +804,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power freeze',
     'options': dict({
     }),
     'original_device_class': None,
@@ -836,6 +853,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sabbath mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -884,6 +902,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power cool',
     'options': dict({
     }),
     'original_device_class': None,
@@ -932,6 +951,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -980,6 +1000,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1028,6 +1049,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto Cycle Link',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1076,6 +1098,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Keep fresh mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1124,6 +1147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sanitize',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1172,6 +1196,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrinkle prevent',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1220,6 +1245,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrinkle prevent',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1268,6 +1294,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Wrinkle prevent',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1316,6 +1343,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bubble Soak',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1364,6 +1392,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Bubble Soak',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1412,6 +1441,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1460,6 +1490,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1508,6 +1539,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1556,6 +1588,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1604,6 +1637,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

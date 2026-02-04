@@ -129,9 +129,6 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             except OneDriveException:
                 self.logger.debug("Failed to create folder", exc_info=True)
                 errors["base"] = "folder_creation_error"
-            else:
-                if folder.description and folder.description != instance_id:
-                    errors[CONF_FOLDER_NAME] = "folder_already_in_use"
             if not errors:
                 title = (
                     f"{self.approot.created_by.user.display_name}'s OneDrive"

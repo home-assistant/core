@@ -26,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Gateway mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -87,6 +88,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Regulation mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -150,6 +152,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -211,6 +214,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone profile',
     'options': dict({
     }),
     'original_device_class': None,
@@ -272,6 +276,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -333,6 +338,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Zone profile',
     'options': dict({
     }),
     'original_device_class': None,
@@ -395,6 +401,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -460,6 +467,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -525,6 +533,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,
@@ -590,6 +599,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Thermostat schedule',
     'options': dict({
     }),
     'original_device_class': None,

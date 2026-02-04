@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooker hood mode',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Electric heater',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Fireplace mode',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,

@@ -181,7 +181,7 @@ class GenericHueSensor(GenericHueDevice, entity.Entity):  # pylint: disable=hass
         )
 
     @property
-    def state_class(self):
+    def state_class(self) -> SensorStateClass:
         """Return the state class of this entity, from STATE_CLASSES, if any."""
         return SensorStateClass.MEASUREMENT
 

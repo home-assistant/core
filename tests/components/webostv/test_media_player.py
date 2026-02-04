@@ -188,7 +188,7 @@ async def test_select_source_with_empty_source_list(
     }
     with pytest.raises(
         HomeAssistantError,
-        match=f"Source nonexistent not found in the sources list for {TV_NAME}",
+        match=f"Source nonexistent not found in the sources list for {ENTITY_ID}",
     ):
         await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
 

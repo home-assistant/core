@@ -101,6 +101,7 @@ class GoogleCalendarEntityDescription(CalendarEntityDescription):
     search: str | None
     local_sync: bool
     device_id: str
+    initial_color: str | None = None
     event_type: EventTypeEnum | None = None
 
 
@@ -161,6 +162,7 @@ def _get_entity_descriptions(
             local_sync=local_sync,
             entity_registry_enabled_default=entity_enabled,
             device_id=data[CONF_DEVICE_ID],
+            initial_color=calendar_item.background_color,
         )
         entity_descriptions.append(entity_description)
         _LOGGER.debug(
@@ -359,6 +361,7 @@ class GoogleCalendarEntity(
         if entity_description.entity_id:
             self.entity_id = entity_description.entity_id
         self._attr_unique_id = unique_id
+        self._attr_initial_color = entity_description.initial_color
         if not entity_description.read_only:
             self._attr_supported_features = (
                 CalendarEntityFeature.CREATE_EVENT | CalendarEntityFeature.DELETE_EVENT

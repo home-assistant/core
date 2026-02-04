@@ -152,6 +152,17 @@ def get_evaporators(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
     return []
 
 
+def get_inverters(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
+    """Return the list of inverters."""
+    try:
+        return device.inverters
+    except PyViCareNotSupportedFeatureError:
+        _LOGGER.debug("No inverters found")
+    except AttributeError as error:
+        _LOGGER.debug("No inverters found: %s", error)
+    return []
+
+
 def filter_state(state: str) -> str | None:
     """Return the state if not 'nothing' or 'unknown'."""
     return None if state in ("nothing", "unknown") else state

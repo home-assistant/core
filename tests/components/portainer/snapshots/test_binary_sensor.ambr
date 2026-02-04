@@ -20,6 +20,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -69,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -118,6 +120,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -167,6 +170,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -216,6 +220,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -265,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,

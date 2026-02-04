@@ -236,6 +236,50 @@ async def test_microwave_oven(
     )
 
 
+@pytest.mark.parametrize("node_fixture", ["aqara_thermostat_w500"])
+async def test_thermostat_occupied_setback(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test thermostat occupied setback number entity."""
+
+    entity_id = "number.floor_heating_thermostat_occupied_setback"
+
+    # Initial value comes from 1/513/52 with scale /10 (5 -> 0.5 °C)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.5"
+
+    # Update attribute to 30 (-> 3.0 °C)
+    set_node_attribute(matter_node, 1, 513, 52, 30)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "3.0"
+
+    # Setting value to 2.0 °C writes 20 to OccupiedSetback (scale x10)
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": 2.0,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.Thermostat.Attributes.OccupiedSetback,
+        ),
+        value=20,
+    )
+
+
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
 async def test_lock_attributes(
     hass: HomeAssistant,

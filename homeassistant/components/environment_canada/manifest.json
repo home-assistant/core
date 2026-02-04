@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["env_canada"],
-  "requirements": ["env-canada==0.12.1"]
+  "requirements": ["env-canada==0.12.4"]
 }

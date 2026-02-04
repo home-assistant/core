@@ -937,13 +937,27 @@ async def test_get_version(
     assert msg["result"] == {"version": cur_version}
 
 
-async def test_static_paths(mock_http_client: TestClient) -> None:
+@pytest.mark.parametrize(
+    ("from_url", "to_url", "expected_status"),
+    [
+        ("/.well-known/change-password", "/profile", 302),
+        ("/developer-tools", "/config/developer-tools", 301),
+        ("/developer-tools/yaml", "/config/developer-tools/yaml", 301),
+        ("/developer-tools/state", "/config/developer-tools/state", 301),
+        ("/developer-tools/action", "/config/developer-tools/action", 301),
+        ("/developer-tools/template", "/config/developer-tools/template", 301),
+        ("/developer-tools/event", "/config/developer-tools/event", 301),
+        ("/developer-tools/debug", "/config/developer-tools/debug", 301),
+        ("/shopping-list", "/todo", 301),
+    ],
+)
+async def test_static_paths(
+    mock_http_client: TestClient, from_url: str, to_url: str, expected_status: int
+) -> None:
     """Test static paths."""
-    resp = await mock_http_client.get(
-        "/.well-known/change-password", allow_redirects=False
-    )
-    assert resp.status == 302
-    assert resp.headers["location"] == "/profile"
+    resp = await mock_http_client.get(from_url, allow_redirects=False)
+    assert resp.status == expected_status
+    assert resp.headers["location"] == to_url
 
 
 @pytest.mark.usefixtures("frontend_themes")

@@ -74,7 +74,7 @@ class DiagnosticsData:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Diagnostics from a config entry."""
+    """Set up Diagnostics integration."""
     hass.data[_DIAGNOSTICS_DATA] = DiagnosticsData()
 
     await integration_platform.async_process_integration_platforms(

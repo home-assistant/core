@@ -5,8 +5,10 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.components.advantage_air.sensor import (
-    ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
     ADVANTAGE_AIR_SET_COUNTDOWN_VALUE,
+)
+from homeassistant.components.advantage_air.services import (
+    ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant

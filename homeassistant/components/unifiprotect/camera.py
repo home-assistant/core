@@ -8,6 +8,7 @@ import logging
 from uiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
+    ModelType,
     ProtectAdoptableDeviceModel,
     StateType,
 )
@@ -150,7 +151,8 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if not isinstance(device, UFPCamera):
+        # AiPort inherits from Camera but should not create camera entities
+        if not isinstance(device, UFPCamera) or device.model is ModelType.AIPORT:
             return
         async_add_entities(_async_camera_entities(hass, entry, data, ufp_device=device))
 
@@ -158,6 +160,11 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(hass, data.channels_signal, _add_new_device)
     )
+
+    # Clean up any erroneously created RTSP issues for AI Ports
+    for device in data.get_by_types({ModelType.AIPORT}):
+        ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{device.id}")
+
     async_add_entities(_async_camera_entities(hass, entry, data))
 
 

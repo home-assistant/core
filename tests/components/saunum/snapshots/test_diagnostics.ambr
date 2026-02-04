@@ -33,5 +33,7 @@
       'last_update_success': True,
       'update_interval': '0:01:00',
     }),
+    'options': dict({
+    }),
   })
 # ---

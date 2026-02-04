@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/dnsip",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["aiodns==3.6.1"]
+  "requirements": ["aiodns==4.0.0"]
 }

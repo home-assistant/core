@@ -22,6 +22,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Activity',
     'options': dict({
     }),
     'original_device_class': None,
@@ -73,6 +74,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Amplitude',
     'options': dict({
     }),
     'original_device_class': None,
@@ -125,6 +127,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Period',
     'options': dict({
     }),
     'original_device_class': None,
@@ -177,6 +180,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Swing count',
     'options': dict({
     }),
     'original_device_class': None,

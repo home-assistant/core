@@ -410,7 +410,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return hue_brightness_to_hass(bri)
 
     @property
-    def color_mode(self) -> str:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._fixed_color_mode:
             return self._fixed_color_mode

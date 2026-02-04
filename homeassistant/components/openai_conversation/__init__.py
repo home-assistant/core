@@ -25,6 +25,7 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
     ServiceValidationError,
@@ -96,6 +97,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 response_format="url",
                 n=1,
             )
+        except openai.AuthenticationError as err:
+            entry.async_start_reauth(hass)
+            raise HomeAssistantError("Authentication error") from err
         except openai.OpenAIError as err:
             raise HomeAssistantError(f"Error generating image: {err}") from err
 
@@ -179,7 +183,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         try:
             response: Response = await client.responses.create(**model_args)
-
+        except openai.AuthenticationError as err:
+            entry.async_start_reauth(hass)
+            raise HomeAssistantError("Authentication error") from err
         except openai.OpenAIError as err:
             raise HomeAssistantError(f"Error generating content: {err}") from err
         except FileNotFoundError as err:
@@ -245,8 +251,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
     try:
         await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
     except openai.AuthenticationError as err:
-        LOGGER.error("Invalid API key: %s", err)
-        return False
+        raise ConfigEntryAuthFailed(err) from err
     except openai.OpenAIError as err:
         raise ConfigEntryNotReady(err) from err
 
@@ -259,7 +264,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
     """Unload OpenAI."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
@@ -280,7 +285,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
     if not any(entry.version == 1 for entry in entries):
         return
 
-    api_keys_entries: dict[str, tuple[ConfigEntry, bool]] = {}
+    api_keys_entries: dict[str, tuple[OpenAIConfigEntry, bool]] = {}
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 

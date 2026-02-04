@@ -1,4 +1,21 @@
 {
+  "conditions": {
+    "is_cleaning": {
+      "condition": "mdi:play"
+    },
+    "is_docked": {
+      "condition": "mdi:home-import-outline"
+    },
+    "is_encountering_an_error": {
+      "condition": "mdi:alert-circle-outline"
+    },
+    "is_paused": {
+      "condition": "mdi:pause"
+    },
+    "is_returning": {
+      "condition": "mdi:home-import-outline"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:robot-vacuum"
@@ -44,7 +61,7 @@
   },
   "triggers": {
     "docked": {
-      "trigger": "mdi:home-import-outline"
+      "trigger": "mdi:home-outline"
     },
     "errored": {
       "trigger": "mdi:alert-circle-outline"
@@ -54,6 +71,9 @@
     },
     "started_cleaning": {
       "trigger": "mdi:play"
+    },
+    "started_returning": {
+      "trigger": "mdi:home-import-outline"
     }
   }
 }

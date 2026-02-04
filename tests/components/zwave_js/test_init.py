@@ -1320,7 +1320,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to stop the Z-Wave JS add-on" in caplog.text
+    assert "Failed to stop the Z-Wave JS app" in caplog.text
     stop_addon.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
@@ -1342,7 +1342,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to create a backup of the Z-Wave JS add-on" in caplog.text
+    assert "Failed to create a backup of the Z-Wave JS app" in caplog.text
     create_backup.side_effect = None
     stop_addon.reset_mock()
     create_backup.reset_mock()
@@ -1365,7 +1365,7 @@ async def test_remove_entry(
     assert uninstall_addon.call_args == call("core_zwave_js")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text
+    assert "Failed to uninstall the Z-Wave JS app" in caplog.text
 
 
 @pytest.mark.usefixtures("climate_radio_thermostat_ct100_plus", "lock_schlage_be469")
@@ -2077,18 +2077,18 @@ async def test_identify_event(
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
     assert (
-        "network `Mock Title`, with the home ID `3245146787`"
+        "network `Mock Title`, with the home ID `0xc16d02a3`"
         in notifications[msg_id]["message"]
     )
     async_dismiss(hass, msg_id)
 
     # Test case where config entry title and home ID do match
-    hass.config_entries.async_update_entry(integration, title="3245146787")
+    hass.config_entries.async_update_entry(integration, title="0xc16d02a3")
     client.driver.controller.receive_event(event)
     notifications = async_get_persistent_notifications(hass)
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
-    assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
+    assert "network with the home ID `0xc16d02a3`" in notifications[msg_id]["message"]
 
 
 async def test_server_logging(
@@ -2241,13 +2241,13 @@ async def test_factory_reset_node(
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
     assert (
-        "network `Mock Title`, with the home ID `3245146787`"
+        "network `Mock Title`, with the home ID `0xc16d02a3`"
         in notifications[msg_id]["message"]
     )
     async_dismiss(hass, msg_id)
 
     # Test case where config entry title and home ID do match
-    hass.config_entries.async_update_entry(integration, title="3245146787")
+    hass.config_entries.async_update_entry(integration, title="0xc16d02a3")
     add_event = Event(
         type="node added",
         data={
@@ -2264,7 +2264,7 @@ async def test_factory_reset_node(
     notifications = async_get_persistent_notifications(hass)
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
-    assert "network with the home ID `3245146787`" in notifications[msg_id]["message"]
+    assert "network with the home ID `0xc16d02a3`" in notifications[msg_id]["message"]
 
 
 async def test_entity_available_when_node_dead(

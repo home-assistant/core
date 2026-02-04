@@ -642,6 +642,7 @@ DISCOVERY_SCHEMAS = [
             list_attribute=clusters.DoorLock.Attributes.SupportedOperatingModes,
             device_to_ha=DOOR_LOCK_OPERATING_MODE_MAP.get,
             ha_to_device=DOOR_LOCK_OPERATING_MODE_MAP_REVERSE.get,
+            entity_category=EntityCategory.CONFIG,
         ),
         entity_class=MatterDoorLockOperatingModeSelectEntity,
         required_attributes=(

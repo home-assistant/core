@@ -27,6 +27,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -91,6 +92,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -155,6 +157,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -191,7 +194,7 @@
     'state': 'heat',
   })
 # ---
-# name: test_climates[eve_thermo][climate.eve_thermo-entry]
+# name: test_climates[eve_thermo_v4][climate.eve_thermo_20ebp1701-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -211,7 +214,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.eve_thermo',
+    'entity_id': 'climate.eve_thermo_20ebp1701',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -219,6 +222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -233,11 +237,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[eve_thermo][climate.eve_thermo-state]
+# name: test_climates[eve_thermo_v4][climate.eve_thermo_20ebp1701-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 21.0,
-      'friendly_name': 'Eve Thermo',
+      'friendly_name': 'Eve Thermo 20EBP1701',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -248,7 +252,72 @@
       'temperature': 17.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.eve_thermo',
+    'entity_id': 'climate.eve_thermo_20ebp1701',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_climates[eve_thermo_v5][climate.eve_thermo_20ecd1701-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 10.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.eve_thermo_20ecd1701',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000000C-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[eve_thermo_v5][climate.eve_thermo_20ecd1701-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 16.2,
+      'friendly_name': 'Eve Thermo 20ECD1701',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 10.0,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 17.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.eve_thermo_20ecd1701',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -285,6 +354,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -355,6 +425,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -396,6 +467,75 @@
     'state': 'heat_cool',
   })
 # ---
+# name: test_climates[resideo_x2s_thermostat][climate.x2s_smart_thermostat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_temp': 32.2,
+      'min_temp': 4.4,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.x2s_smart_thermostat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[resideo_x2s_thermostat][climate.x2s_smart_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.6,
+      'friendly_name': 'X2S Smart Thermostat',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_temp': 32.2,
+      'min_temp': 4.4,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'temperature': 21.7,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.x2s_smart_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_climates[room_airconditioner][climate.room_airconditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -428,6 +568,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -496,6 +637,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

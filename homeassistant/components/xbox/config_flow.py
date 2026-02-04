@@ -122,7 +122,7 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
         if config_entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="config_entry_not_loaded")
 
-        client = config_entry.runtime_data.status.client
+        client = config_entry.runtime_data.presence.client
         friends_list = await client.people.get_friends_own()
 
         if user_input is not None:

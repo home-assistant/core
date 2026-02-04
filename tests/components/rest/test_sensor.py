@@ -1317,7 +1317,7 @@ async def test_availability_in_config(
 
     state = hass.states.get("sensor.rest_sensor")
     assert state.state == STATE_UNAVAILABLE
-    assert "friendly_name" not in state.attributes
+    assert state.attributes["friendly_name"] == "rest_sensor"
     assert "icon" not in state.attributes
     assert "entity_picture" not in state.attributes
 

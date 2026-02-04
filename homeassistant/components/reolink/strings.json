@@ -735,6 +735,22 @@
           "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
       },
+      "pet_tone": {
+        "name": "Pet ringtone",
+        "state": {
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "off": "[%key:common::state::off%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
       "play_quick_reply_message": {
         "name": "Play quick reply message"
       },
@@ -802,8 +818,12 @@
       "animal_type": {
         "name": "Animal type",
         "state": {
+          "bear": "Bear",
           "cat": "Cat",
-          "dog": "Dog"
+          "cow": "Cow",
+          "dog": "Dog",
+          "fox": "Fox",
+          "squirrel": "Squirrel"
         }
       },
       "battery_state": {
@@ -834,6 +854,7 @@
       "person_type": {
         "name": "Person type",
         "state": {
+          "child": "Child",
           "man": "Man",
           "woman": "Woman"
         }
@@ -854,7 +875,9 @@
           "motorcycle": "Motorcycle",
           "pickup_truck": "Pickup truck",
           "sedan": "Sedan",
-          "suv": "SUV"
+          "suv": "SUV",
+          "truck": "Truck",
+          "van": "Van"
         }
       },
       "wifi_signal": {
@@ -1012,7 +1035,7 @@
       "title": "Reolink password too long"
     },
     "ssl": {
-      "description": "Global SSL certificate configured in the [configuration.yaml under http]({ssl_link}) while a local HTTP address `{base_url}` is configured under \"Home Assistant URL\" in the [network settings]({network_link}). Therefore, the Reolink device can not reach Home Assistant to push its motion/AI events. Please make sure the local HTTP address is not covered by the SSL certificate, by for instance using [NGINX add-on]({nginx_link}) instead of a globally enforced SSL certificate.",
+      "description": "Global SSL certificate configured in the [configuration.yaml under http]({ssl_link}) while a local HTTP address `{base_url}` is configured under \"Home Assistant URL\" in the [network settings]({network_link}). Therefore, the Reolink device cannot reach Home Assistant to push its motion/AI events. Please make sure the local HTTP address is not covered by the SSL certificate by, for instance, using the [NGINX app for Home Assistant]({nginx_link}) instead of a globally enforced SSL certificate.",
       "title": "Reolink incompatible with global SSL certificate"
     },
     "webhook_url": {

@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.13.0
+    rev: v0.14.13
     hooks:
       - id: ruff-check
         args:
@@ -39,14 +39,14 @@ repos:
       - id: prettier
         additional_dependencies:
           - prettier@3.6.2
-          - prettier-plugin-sort-json@4.1.1
+          - prettier-plugin-sort-json@4.2.0
   - repo: https://github.com/cdce8p/python-typing-update
     rev: v0.6.0
     hooks:
       # Run `python-typing-update` hook manually from time to time
       # to update python typing syntax.
       # Will require manual work, before submitting changes!
-      # pre-commit run --hook-stage manual python-typing-update --all-files
+      # prek run --hook-stage manual python-typing-update --all-files
       - id: python-typing-update
         stages: [manual]
         args:
