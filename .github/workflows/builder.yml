@@ -195,61 +195,47 @@ jobs:
         shell: bash
         run: |
           echo "base_image=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant-base:${{ env.BASE_IMAGE_VERSION }}" >> "$GITHUB_OUTPUT"
-          echo "cache_image=ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:latest" >> "$GITHUB_OUTPUT"
-          echo "created=$(date --rfc-3339=seconds --utc)" >> "$GITHUB_OUTPUT"
 
       - name: Build base image
-        uses: ./.github/actions/builder
+        uses: ./.github/actions/builder/generic
         with:
           base-image: ${{ steps.vars.outputs.base_image }}
-          cache-image: ${{ steps.vars.outputs.cache_image }}
-          tag: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
-          labels: |
-            io.hass.arch=${{ matrix.arch }}
-            io.hass.version=${{ needs.init.outputs.version }}
-            org.opencontainers.image.created=${{ steps.vars.outputs.created }}
-            org.opencontainers.image.version=${{ needs.init.outputs.version }}
+          tags: ghcr.io/home-assistant/${{ matrix.arch }}-homeassistant:${{ needs.init.outputs.version }}
+          arch: ${{ matrix.arch }}
+          version: ${{ needs.init.outputs.version }}
+          dockerfile: ./Dockerfile
+          cosign-base-identity: "https://github.com/home-assistant/docker/.*"
 
   build_machine:
-    name: Build ${{ matrix.machine }} machine core image
+    name: Build ${{ matrix.machine.name }} machine core image
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.machine.arch == 'amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}
     permissions:
       contents: read
       packages: write
       id-token: write
     strategy:
+      fail-fast: false
       matrix:
         machine:
-          - generic-x86-64
-          - intel-nuc
-          - khadas-vim3
-          - odroid-c2
-          - odroid-c4
-          - odroid-m1
-          - odroid-n2
-          - qemuarm-64
-          - qemux86-64
-          - raspberrypi3-64
-          - raspberrypi4-64
-          - raspberrypi5-64
-          - yellow
-          - green
+          - { name: generic-x86-64, arch: amd64 }
+          - { name: intel-nuc, arch: amd64 }
+          - { name: qemux86-64, arch: amd64 }
+          - { name: khadas-vim3, arch: aarch64 }
+          - { name: odroid-c2, arch: aarch64 }
+          - { name: odroid-c4, arch: aarch64 }
+          - { name: odroid-m1, arch: aarch64 }
+          - { name: odroid-n2, arch: aarch64 }
+          - { name: qemuarm-64, arch: aarch64 }
+          - { name: raspberrypi3-64, arch: aarch64 }
+          - { name: raspberrypi4-64, arch: aarch64 }
+          - { name: raspberrypi5-64, arch: aarch64 }
+          - { name: yellow, arch: aarch64 }
+          - { name: green, arch: aarch64 }
     steps:
       - name: Checkout the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Set build additional args
-        run: |
-          # Create general tags
-          if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
-            echo "BUILD_ARGS=--additional-tag dev" >> $GITHUB_ENV
-          elif [[ "${{ needs.init.outputs.version }}" =~ b ]]; then
-            echo "BUILD_ARGS=--additional-tag beta" >> $GITHUB_ENV
-          else
-            echo "BUILD_ARGS=--additional-tag stable" >> $GITHUB_ENV
-          fi
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
@@ -258,15 +244,12 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # home-assistant/builder doesn't support sha pinning
-      - name: Build base image
-        uses: home-assistant/builder@2025.11.0
+      - name: Build machine image
+        uses: ./.github/actions/builder/machine
         with:
-          args: |
-            $BUILD_ARGS \
-            --target /data/machine \
-            --cosign \
-            --machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}"
+          machine: ${{ matrix.machine.name }}
+          version: ${{ needs.init.outputs.version }}
+          arch: ${{ matrix.machine.arch }}
 
   publish_ha:
     name: Publish version files
