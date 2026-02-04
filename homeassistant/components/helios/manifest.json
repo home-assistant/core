@@ -1,0 +1,11 @@
+{
+  "domain": "helios",
+  "name": "Helios",
+  "codeowners": ["@helios-ventilatoren-com"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/helios",
+  "iot_class": "local_polling",
+  "loggers": ["helios_websocket_api"],
+  "quality_scale": "bronze",
+  "requirements": ["helios-websocket-api==1.1.0"]
+}
