@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOMESERVER, default=DEFAULT_HOMESERVER): cv.string,
+        vol.Required(CONF_HOMESERVER, default=DEFAULT_HOMESERVER): cv.url,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
