@@ -45,7 +45,7 @@
     {
       "label": "Ruff",
       "type": "shell",
-      "command": "pre-commit run ruff-check --all-files",
+      "command": "prek run ruff-check --all-files",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -57,9 +57,9 @@
       "problemMatcher": []
     },
     {
-      "label": "Pre-commit",
+      "label": "Prek",
       "type": "shell",
-      "command": "pre-commit run --show-diff-on-failure",
+      "command": "prek run --show-diff-on-failure",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -120,7 +120,7 @@
     {
       "label": "Generate Requirements",
       "type": "shell",
-      "command": "./script/gen_requirements_all.py",
+      "command": "${command:python.interpreterPath} -m script.gen_requirements_all",
       "group": {
         "kind": "build",
         "isDefault": true

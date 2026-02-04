@@ -9,7 +9,6 @@ from typing import Any, Concatenate
 
 import aiohttp
 from async_upnp_client.client import UpnpError
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -22,11 +21,10 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_PIN_INDEX, DOMAIN, SERVICE_INVOKE_PIN
+from .const import DOMAIN
 
 SUPPORT_OPENHOME = (
     MediaPlayerEntityFeature.SELECT_SOURCE
@@ -51,14 +49,6 @@ async def async_setup_entry(
     entity = OpenhomeDevice(device)
 
     async_add_entities([entity])
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_INVOKE_PIN,
-        {vol.Required(ATTR_PIN_INDEX): cv.positive_int},
-        "async_invoke_pin",
-    )
 
 
 type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Awaitable[_R]]

@@ -1,7 +1,31 @@
 {
   "common": {
+    "condition_behavior_description": "How the state should match on the targeted persons.",
+    "condition_behavior_name": "Behavior",
     "trigger_behavior_description": "The behavior of the targeted persons to trigger on.",
     "trigger_behavior_name": "Behavior"
+  },
+  "conditions": {
+    "is_home": {
+      "description": "Tests if one or more persons are home.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::person::common::condition_behavior_description%]",
+          "name": "[%key:component::person::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Person is home"
+    },
+    "is_not_home": {
+      "description": "Tests if one or more persons are not home.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::person::common::condition_behavior_description%]",
+          "name": "[%key:component::person::common::condition_behavior_name%]"
+        }
+      },
+      "name": "Person is not home"
+    }
   },
   "entity_component": {
     "_": {
@@ -30,6 +54,12 @@
     }
   },
   "selector": {
+    "condition_behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",

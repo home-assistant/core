@@ -4,7 +4,9 @@ from typing import Any
 
 from tesla_fleet_api.exceptions import TeslaFleetError
 
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, LOGGER
 
@@ -68,3 +70,14 @@ async def handle_vehicle_command(command) -> Any:
         )
     # Response with result of true
     return result
+
+
+@callback
+def async_update_device_sw_version(
+    hass: HomeAssistant, identifier: str, sw_version: str
+) -> None:
+    """Update the software version in the device registry."""
+    dev_reg = dr.async_get(hass)
+    if device := dev_reg.async_get_device(identifiers={(DOMAIN, identifier)}):
+        if device.sw_version != sw_version:
+            dev_reg.async_update_device(device.id, sw_version=sw_version)
