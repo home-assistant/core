@@ -24,7 +24,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .browse_media import build_item_response
@@ -188,7 +188,7 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
             await self.client.smartglass.wake_up(self._console.id)
         except HTTPStatusError as e:
             if e.response.status_code == HTTPStatus.NOT_FOUND:
-                raise ServiceValidationError(
+                raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="turn_on_failed",
                 ) from e

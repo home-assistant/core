@@ -37,7 +37,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import (
@@ -299,7 +299,7 @@ async def test_media_player_turn_on_failed(
         ),
     )
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_TURN_ON,
