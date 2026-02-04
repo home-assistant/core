@@ -15,7 +15,7 @@ _VALID_EXCEPTIONS = {
 }
 
 
-def _get_exception_name(expression: ast.expr, integration: Integration) -> str:
+def _get_exception_name(expression: ast.expr) -> str:
     """Get the name of the exception being raised."""
     if expression is None:
         # Bare raise
@@ -39,20 +39,20 @@ def _get_exception_name(expression: ast.expr, integration: Integration) -> str:
 def _raises_exception(integration: Integration) -> bool:
     """Check that a valid exception is raised."""
     if integration.domain == "telegram_bot":
-        integration.add_warning(
+        integration.add_error(
             "quality_scale", f"Checking telegram_bot files in path {integration.path}"
         )
-        integration.add_warning(
+        integration.add_error(
             "quality_scale", f"Checking files: {list(integration.path.rglob('*.py'))}"
         )
     for module_file in integration.path.rglob("*.py"):
         if integration.domain == "telegram_bot":
-            integration.add_warning("quality_scale", f"Checking file: {module_file}")
+            integration.add_error("quality_scale", f"Checking file: {module_file}")
         module = ast_parse_module(module_file)
         for node in ast.walk(module):
             if (
                 isinstance(node, ast.Raise)
-                and _get_exception_name(node.exc, integration) in _VALID_EXCEPTIONS
+                and _get_exception_name(node.exc) in _VALID_EXCEPTIONS
             ):
                 return True
 
