@@ -38,7 +38,9 @@ def _get_exception_name(expression: ast.expr) -> str:
         # Unable to determine exception name
         return None
 
-    raise TypeError(f"Raise is neither Attribute nor Call nor Name: {type(expression)}")
+    raise AssertionError(
+        f"Raise is neither Attribute nor Call nor Name: {type(expression)}"
+    )
 
 
 def _raises_exception(integration: Integration) -> bool:
