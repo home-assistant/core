@@ -404,7 +404,7 @@ SERVICE_MAP: dict[str, VolSchemaType] = {
 }
 
 
-class TelegramBotModule(Protocol):
+class BotPlatformModule(Protocol):
     """Define the module protocol for telegram bot modules."""
 
     async def async_setup_bot_platform(
@@ -413,7 +413,7 @@ class TelegramBotModule(Protocol):
         """Set up the Telegram bot platform."""
 
 
-MODULES: dict[str, TelegramBotModule] = {
+MODULES: dict[str, BotPlatformModule] = {
     PLATFORM_BROADCAST: broadcast,
     PLATFORM_POLLING: polling,
     PLATFORM_WEBHOOKS: webhooks,
