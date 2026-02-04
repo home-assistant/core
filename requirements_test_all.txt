@@ -1012,7 +1012,7 @@ greenplanet-energy-api==0.1.4
 gridnet==5.0.1
 
 # homeassistant.components.growatt_server
-growattServer==1.7.1
+growattServer==1.9.0
 
 # homeassistant.components.google_sheets
 gspread==5.5.0
