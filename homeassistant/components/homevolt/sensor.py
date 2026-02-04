@@ -65,16 +65,8 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
     ),
     SensorEntityDescription(
-        key="average_rssi_grid",
-        translation_key="average_rssi_grid",
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="average_rssi_load",
-        translation_key="average_rssi_load",
+        key="average_rssi",
+        translation_key="average_rssi",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
@@ -94,29 +86,15 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
-        key="energy_exported_grid",
-        translation_key="energy_exported_grid",
+        key="energy_exported",
+        translation_key="energy_exported",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
     ),
     SensorEntityDescription(
-        key="energy_exported_load",
-        translation_key="energy_exported_load",
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-    ),
-    SensorEntityDescription(
-        key="energy_imported_grid",
-        translation_key="energy_imported_grid",
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-    ),
-    SensorEntityDescription(
-        key="energy_imported_load",
-        translation_key="energy_imported_load",
+        key="energy_imported",
+        translation_key="energy_imported",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -151,20 +129,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     SensorEntityDescription(
-        key="l1_current_grid",
-        translation_key="l1_current_grid",
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-    ),
-    SensorEntityDescription(
-        key="l1_current_load",
-        translation_key="l1_current_load",
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-    ),
-    SensorEntityDescription(
         key="l1_l2_voltage",
         translation_key="l1_l2_voltage",
         device_class=SensorDeviceClass.VOLTAGE,
@@ -172,15 +136,8 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     SensorEntityDescription(
-        key="l1_power_grid",
-        translation_key="l1_power_grid",
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.WATT,
-    ),
-    SensorEntityDescription(
-        key="l1_power_load",
-        translation_key="l1_power_load",
+        key="l1_power",
+        translation_key="l1_power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -193,36 +150,8 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     SensorEntityDescription(
-        key="l1_voltage_grid",
-        translation_key="l1_voltage_grid",
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-    ),
-    SensorEntityDescription(
-        key="l1_voltage_load",
-        translation_key="l1_voltage_load",
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-    ),
-    SensorEntityDescription(
         key="l2_current",
         translation_key="l2_current",
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-    ),
-    SensorEntityDescription(
-        key="l2_current_grid",
-        translation_key="l2_current_grid",
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-    ),
-    SensorEntityDescription(
-        key="l2_current_load",
-        translation_key="l2_current_load",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -235,15 +164,8 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     SensorEntityDescription(
-        key="l2_power_grid",
-        translation_key="l2_power_grid",
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.WATT,
-    ),
-    SensorEntityDescription(
-        key="l2_power_load",
-        translation_key="l2_power_load",
+        key="l2_power",
+        translation_key="l2_power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -256,36 +178,8 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     SensorEntityDescription(
-        key="l2_voltage_grid",
-        translation_key="l2_voltage_grid",
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-    ),
-    SensorEntityDescription(
-        key="l2_voltage_load",
-        translation_key="l2_voltage_load",
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-    ),
-    SensorEntityDescription(
         key="l3_current",
         translation_key="l3_current",
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-    ),
-    SensorEntityDescription(
-        key="l3_current_grid",
-        translation_key="l3_current_grid",
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-    ),
-    SensorEntityDescription(
-        key="l3_current_load",
-        translation_key="l3_current_load",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -298,15 +192,8 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     SensorEntityDescription(
-        key="l3_power_grid",
-        translation_key="l3_power_grid",
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.WATT,
-    ),
-    SensorEntityDescription(
-        key="l3_power_load",
-        translation_key="l3_power_load",
+        key="l3_power",
+        translation_key="l3_power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -319,20 +206,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     SensorEntityDescription(
-        key="l3_voltage_grid",
-        translation_key="l3_voltage_grid",
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-    ),
-    SensorEntityDescription(
-        key="l3_voltage_load",
-        translation_key="l3_voltage_load",
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-    ),
-    SensorEntityDescription(
         key="power",
         translation_key="power",
         device_class=SensorDeviceClass.POWER,
@@ -340,30 +213,8 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
     ),
     SensorEntityDescription(
-        key="power_grid",
-        translation_key="power_grid",
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.WATT,
-    ),
-    SensorEntityDescription(
-        key="power_load",
-        translation_key="power_load",
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.WATT,
-    ),
-    SensorEntityDescription(
-        key="rssi_grid",
-        translation_key="rssi_grid",
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="rssi_load",
-        translation_key="rssi_load",
+        key="rssi",
+        translation_key="rssi",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
@@ -447,8 +298,8 @@ async def async_setup_entry(
     entities: list[HomevoltSensor] = []
     sensors_by_key = {sensor.key: sensor for sensor in SENSORS}
     for sensor_key, sensor in coordinator.data.sensors.items():
-        if (description := sensors_by_key.get(sensor.key)) is None:
-            _LOGGER.warning("Unsupported sensor '%s' found during setup", sensor.key)
+        if (description := sensors_by_key.get(sensor.type)) is None:
+            _LOGGER.warning("Unsupported sensor '%s' found during setup", sensor)
             continue
         entities.append(
             HomevoltSensor(

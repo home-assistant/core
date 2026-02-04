@@ -59,17 +59,17 @@ def mock_homevolt_client() -> Generator[MagicMock]:
         client.sensors = {
             "l1_voltage": Sensor(
                 value=234.5,
-                key="l1_voltage",
+                type="l1_voltage",
                 device_identifier="ems_40580137858664",
             ),
             "battery_state_of_charge": Sensor(
                 value=80.6,
-                key="battery_state_of_charge",
+                type="battery_state_of_charge",
                 device_identifier="ems_40580137858664",
             ),
             "power": Sensor(
                 value=-12,
-                key="power",
+                type="power",
                 device_identifier="ems_40580137858664",
             ),
         }
