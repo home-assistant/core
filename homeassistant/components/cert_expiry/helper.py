@@ -10,8 +10,10 @@ import certifi.core
 from cryptography.x509 import (
     Certificate,
     DNSName,
+    Extension,
     ExtensionNotFound,
     IPAddress,
+    NameAttribute,
     SubjectAlternativeName,
 )
 from cryptography.x509.oid import ExtensionOID, NameOID
@@ -38,7 +40,7 @@ from .errors import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _build_system_ca_store(store: X509Store):
+def _build_system_ca_store(store: X509Store) -> None:
     ssl_context = get_default_context()
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_REQUIRED
@@ -57,7 +59,7 @@ def _build_system_ca_store(store: X509Store):
 
     # fallback: If certificates can't be found using SSLContext, use certifi
     if system_certs_count == 0:
-        _LOGGER.warning("System store returned 0 certs. Falling back to certifi.")
+        _LOGGER.warning("System store returned 0 certs, falling back to certifi")
         store.load_locations(certifi.where())
 
 
@@ -81,12 +83,15 @@ def _check_name(pattern: str, hostname: str) -> bool:
 def _match_hostname(cert: Certificate, hostname: str) -> bool:
     """Checks if the hostname matches the certificate's SANs or Common Name.
 
-    Supports basic wildcards (*.example.com) by checking whether the base is the same, and it's at the same level.
+    Supports basic wildcards (*.example.com) by checking whether the base is the same,
+    and it's at the same level.
     """
 
     try:
-        san_ext = cert.extensions.get_extension_for_oid(
-            ExtensionOID.SUBJECT_ALTERNATIVE_NAME
+        san_ext: Extension[SubjectAlternativeName] = (
+            cert.extensions.get_extension_for_oid(  # type: ignore[assignment]
+                ExtensionOID.SUBJECT_ALTERNATIVE_NAME
+            )
         )
         # noinspection PyTypeChecker
         san_value: SubjectAlternativeName = san_ext.value
@@ -114,7 +119,9 @@ def _match_hostname(cert: Certificate, hostname: str) -> bool:
         # If no SANs are present, fall through to Common Name
         pass
 
-    common_names = cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
+    common_names: list[NameAttribute[str]] = cert.subject.get_attributes_for_oid(
+        NameOID.COMMON_NAME
+    )  # type: ignore[assignment]
     for cn in common_names:  # noqa: SIM110, else it's less readable
         if _check_name(cn.value, hostname):
             return True
@@ -127,7 +134,9 @@ SYSTEM_CA_STORE = X509Store()
 _build_system_ca_store(SYSTEM_CA_STORE)
 
 
-def verify_cert(cert: Certificate, peer_certs: list[Certificate], hostname: str):
+def verify_cert(
+    cert: Certificate, peer_certs: list[Certificate], hostname: str
+) -> None:
     """Verifies the certificate against the system store."""
 
     openssl_cert = X509.from_cryptography(cert)
@@ -151,7 +160,11 @@ def _get_cert_sync(
 
     try:
         context = SSL.Context(method=SSL.TLS_METHOD)
-        _build_system_ca_store(context.get_cert_store())
+        store = context.get_cert_store()
+        if store is None:
+            raise ValidationFailure("No cert store retrievable from SSL.Context")
+
+        _build_system_ca_store(store)
 
         conn = SSL.Connection(
             context, socket=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -187,7 +200,7 @@ def _get_cert_sync(
             f"No certificate received from server: {hostname}:{port}"
         )
 
-    return cert, peer_certs
+    return cert, peer_certs  # type: ignore[return-value]
 
 
 async def get_cert(
@@ -205,7 +218,7 @@ async def get_cert(
 
 
 def get_cert_expiry_timestamp(
-    cert: Certificate | None,
+    cert: Certificate,
     hostname: str,
     port: int,
 ) -> datetime.datetime:

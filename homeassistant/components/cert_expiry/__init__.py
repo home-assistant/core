@@ -16,9 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -
     host: str = entry.data[CONF_HOST]
     port: int = entry.data[CONF_PORT]
     # Backwards compatibility
-    validate_cert_full: bool = entry.data.get(
-        CONF_VALIDATE_CERT_FULL, True
-    )
+    validate_cert_full: bool = entry.data.get(CONF_VALIDATE_CERT_FULL, True)
 
     coordinator = CertExpiryDataUpdateCoordinator(
         hass, entry, host, port, validate_cert_full
