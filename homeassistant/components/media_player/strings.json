@@ -266,7 +266,7 @@
       "name": "Browse media"
     },
     "clear_playlist": {
-      "description": "Removes all items from the playlist.",
+      "description": "Removes all items from a media player's playlist.",
       "name": "Clear playlist"
     },
     "join": {
