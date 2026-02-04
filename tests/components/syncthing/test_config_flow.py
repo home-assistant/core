@@ -92,9 +92,7 @@ async def test_flow_invalid_auth(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.FORM
-        assert (
-            result["errors"] is not None and result["errors"]["token"] == "invalid_auth"
-        )
+        assert result["errors"]["token"] == "invalid_auth"
 
 
 async def test_flow_cannot_connect(hass: HomeAssistant) -> None:
@@ -108,7 +106,4 @@ async def test_flow_cannot_connect(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.FORM
-        assert (
-            result["errors"] is not None
-            and result["errors"]["base"] == "cannot_connect"
-        )
+        assert result["errors"]["base"] == "cannot_connect"
