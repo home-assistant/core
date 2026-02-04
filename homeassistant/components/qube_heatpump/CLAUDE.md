@@ -60,7 +60,15 @@ Entity IDs use the sensor `key` (vendor_id equivalent) for stable, predictable n
 - `sensor.qube_temp_supply` (not `sensor.qube_supply_temperature_cv`)
 - `sensor.qube_status_heatpump` (not `sensor.qube_heat_pump_status`)
 
-**Implementation:** Each entity sets `_attr_suggested_object_id` to the description key or translation_key.
+**Implementation:** Each entity sets `self.entity_id` directly with the full entity ID string.
+HA extracts the object_id from entity_id before registration. Do NOT use
+`_attr_suggested_object_id` as it is not a valid HA attribute.
+
+```python
+# Use key (vendor_id equivalent) for stable, predictable entity IDs
+label = slugify(device_name) or "qube"
+self.entity_id = f"sensor.{label}_{description.key}"
+```
 
 **Benefits:**
 - Stable: Entity IDs won't change when translations are updated

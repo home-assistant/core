@@ -18,6 +18,7 @@ from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTemperature
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 
@@ -284,7 +285,8 @@ class QubeSensor(CoordinatorEntity, SensorEntity):
         self._device_name = device_name
         self._attr_unique_id = f"{entry.unique_id}-{description.key}"
         # Use key (vendor_id equivalent) for stable, predictable entity IDs
-        self._attr_suggested_object_id = description.key
+        label = slugify(device_name) or "qube"
+        self.entity_id = f"sensor.{label}_{description.key}"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -341,7 +343,8 @@ class QubeStatusSensor(CoordinatorEntity, SensorEntity):
         self._device_name = device_name
         self._attr_unique_id = f"{entry.unique_id}-status_heatpump"
         # Use translation_key for stable, predictable entity IDs
-        self._attr_suggested_object_id = "status_heatpump"
+        label = slugify(device_name) or "qube"
+        self.entity_id = f"sensor.{label}_status_heatpump"
 
     @property
     def device_info(self) -> DeviceInfo:
