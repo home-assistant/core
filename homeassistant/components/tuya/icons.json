@@ -383,10 +383,10 @@
     }
   },
   "services": {
-    "get_meal_plan_data": {
+    "get_feeder_meal_plan": {
       "service": "mdi:database-eye"
     },
-    "set_meal_plan_data": {
+    "set_feeder_meal_plan": {
       "service": "mdi:database-edit"
     }
   }

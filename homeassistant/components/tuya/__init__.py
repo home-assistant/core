@@ -122,7 +122,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     # If the device does not register any entities, the device does not need to subscribe
     # So the subscription is here
     await hass.async_add_executor_job(manager.refresh_mq)
-
     return True
 
 

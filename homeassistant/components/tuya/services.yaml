@@ -1,4 +1,4 @@
-get_meal_plan_data:
+get_feeder_meal_plan:
   fields:
     device_id:
       required: true
@@ -6,7 +6,7 @@ get_meal_plan_data:
         device:
           integration: tuya
 
-set_meal_plan_data:
+set_feeder_meal_plan:
   fields:
     device_id:
       required: true

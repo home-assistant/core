@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.tuya.const import DOMAIN
@@ -112,35 +113,36 @@ def decoded_meal_plan() -> list[dict[str, Any]]:
 
 
 @pytest.mark.parametrize("mock_device_code", ["cwwsq_wfkzyy0evslzsmoi"])
-async def test_get_meal_plan_data(
+async def test_get_feeder_meal_plan(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test GET_MEAL_PLAN_DATA normal and error cases using real device registry."""
+    """Test GET_FEEDER_MEAL_PLAN normal and error cases using real device registry."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
     device_id = find_device_id(mock_device, hass)
 
     # Normal case
     result = await hass.services.async_call(
         DOMAIN,
-        Service.GET_MEAL_PLAN_DATA,
+        Service.GET_FEEDER_MEAL_PLAN,
         {"device_id": device_id},
         blocking=True,
         return_response=True,
     )
-    assert result["data"] == decoded_meal_plan()
+    assert result["data"] == snapshot
 
     # Error case: no meal_plan in device status
     mock_device.status.pop("meal_plan", None)
     with pytest.raises(
-        ServiceValidationError,
-        match="Feeder with ID iomszlsve0yyzkfwqswwc does not support meal plan status",
+        ValueError,
+        match="Invalid Base64 meal plan data",
     ):
         await hass.services.async_call(
             DOMAIN,
-            Service.GET_MEAL_PLAN_DATA,
+            Service.GET_FEEDER_MEAL_PLAN,
             {"device_id": device_id},
             blocking=True,
             return_response=True,
@@ -148,20 +150,20 @@ async def test_get_meal_plan_data(
 
 
 @pytest.mark.parametrize("mock_device_code", ["cwwsq_wfkzyy0evslzsmoi"])
-async def test_set_meal_plan_data(
+async def test_set_feeder_meal_plan(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> None:
-    """Test SET_MEAL_PLAN_DATA normal and error cases using real device registry."""
+    """Test SET_FEEDER_MEAL_PLAN normal and error cases using real device registry."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
     device_id = find_device_id(mock_device, hass)
 
     # Normal case
     await hass.services.async_call(
         DOMAIN,
-        Service.SET_MEAL_PLAN_DATA,
+        Service.SET_FEEDER_MEAL_PLAN,
         {
             "device_id": device_id,
             "data": decoded_meal_plan(),
@@ -171,18 +173,18 @@ async def test_set_meal_plan_data(
     # We use mock_device.id since this is sent to the manager
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id,
-        [{"code": "meal_plan", "value": mock_device.status["meal_plan"]}],
+        [{"code": "meal_plan", "value": "fwkAAQF/CR4BAX8MAAEBfw8AAgF/FQACAQ=="}],
     )
 
     # Error case: unsupported meal_plan function
     mock_device.function = []
     with pytest.raises(
-        ServiceValidationError,
+        ValueError,
         match="Feeder with ID iomszlsve0yyzkfwqswwc does not support meal plan functionality",
     ):
         await hass.services.async_call(
             DOMAIN,
-            Service.SET_MEAL_PLAN_DATA,
+            Service.SET_FEEDER_MEAL_PLAN,
             {
                 "device_id": device_id,
                 "data": decoded_meal_plan(),

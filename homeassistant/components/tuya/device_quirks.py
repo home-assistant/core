@@ -5,10 +5,6 @@ from typing import Any
 
 from tuya_sharing import CustomerDevice
 
-from homeassistant.exceptions import ServiceValidationError
-
-from .const import DOMAIN
-
 # Internal representation of a feeding time entry to keep it easier to tell what we expect.
 FeedingTime = dict[str, int]
 TEMPLATE_FULL = [
@@ -160,14 +156,9 @@ class Base64Encoder(AbstractMealPlanSerializer):
         """Encode meal plan data to Base64 string."""
 
         if "meal_plan" not in device.function:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="device_not_support_meal_plan_function",
-                translation_placeholders={
-                    "device_id": device.id,
-                },
+            raise ValueError(
+                f"Feeder with ID {device.id} does not support meal plan functionality"
             )
-
         return [
             {
                 "code": "meal_plan",
@@ -179,21 +170,14 @@ class Base64Encoder(AbstractMealPlanSerializer):
         """Decode Base64 string to meal plan data."""
 
         b64_data = device.status.get("meal_plan")
-        if b64_data is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="device_not_support_meal_plan_status",
-                translation_placeholders={
-                    "device_id": device.id,
-                },
-            )
-
         if not b64_data or b64_data.lower() == "unknown":
             raise ValueError("Invalid Base64 meal plan data")
         return {"data": self.decode(b64_data)}
 
 
-def get_meal_plan_serializer(device: CustomerDevice) -> AbstractMealPlanSerializer:
+def get_meal_plan_serializer(
+    device: CustomerDevice,
+) -> AbstractMealPlanSerializer | None:
     """Get the profile string for a given device."""
 
     if device.product_id in DEFAULT_PROFILE_DEVICES:
@@ -204,13 +188,4 @@ def get_meal_plan_serializer(device: CustomerDevice) -> AbstractMealPlanSerializ
                 "decode": create_day_transformer(DAY_MAPPING)["decode"],
             },
         )
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="device_missing_serializer",
-        translation_placeholders={"device_id": device.id},
-    )
-
-
-def json_to_meal_data_1(data: str):
-    """Decode meal_plan data from JSON format."""
-    raise NotImplementedError("JSON meal plan decoding not implemented yet.")
+    return None

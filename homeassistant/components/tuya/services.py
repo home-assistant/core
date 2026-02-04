@@ -30,8 +30,8 @@ FEEDING_ENTRY_SCHEMA = vol.Schema(
 class Service(StrEnum):
     """Tuya services."""
 
-    GET_MEAL_PLAN_DATA = "get_meal_plan_data"
-    SET_MEAL_PLAN_DATA = "set_meal_plan_data"
+    GET_FEEDER_MEAL_PLAN = "get_feeder_meal_plan"
+    SET_FEEDER_MEAL_PLAN = "set_feeder_meal_plan"
 
 
 def _get_tuya_device(
@@ -80,8 +80,8 @@ def _get_tuya_device(
     )
 
 
-async def async_get_meal_plan_data(call: ServiceCall) -> dict[str, Any]:
-    """Handle get_meal_plan_data service call."""
+async def async_get_feeder_meal_plan(call: ServiceCall) -> dict[str, Any]:
+    """Handle get_feeder_meal_plan service call."""
     device, _ = _get_tuya_device(call.hass, call.data[ATTR_DEVICE_ID])
 
     if not (serializer := get_meal_plan_serializer(device)):
@@ -96,8 +96,8 @@ async def async_get_meal_plan_data(call: ServiceCall) -> dict[str, Any]:
     return serializer.get_meal_data(device)
 
 
-async def async_set_meal_plan_data(call: ServiceCall) -> None:
-    """Handle set_meal_plan_data service call."""
+async def async_set_feeder_meal_plan(call: ServiceCall) -> None:
+    """Handle set_feeder_meal_plan service call."""
     device, manager = _get_tuya_device(call.hass, call.data[ATTR_DEVICE_ID])
 
     if not (serializer := get_meal_plan_serializer(device)):
@@ -121,8 +121,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        Service.GET_MEAL_PLAN_DATA,
-        async_get_meal_plan_data,
+        Service.GET_FEEDER_MEAL_PLAN,
+        async_get_feeder_meal_plan,
         schema=vol.Schema(
             {
                 vol.Required(ATTR_DEVICE_ID): str,
@@ -133,8 +133,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     hass.services.async_register(
         DOMAIN,
-        Service.SET_MEAL_PLAN_DATA,
-        async_set_meal_plan_data,
+        Service.SET_FEEDER_MEAL_PLAN,
+        async_set_feeder_meal_plan,
         schema=vol.Schema(
             {
                 vol.Required(ATTR_DEVICE_ID): str,

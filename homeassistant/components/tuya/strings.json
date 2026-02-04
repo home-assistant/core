@@ -1097,13 +1097,9 @@
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
     },
-    "device_missing_serializer": {
-      "message": "Feeder with ID {device_id} is missing serializer for meal plan data."
-    },
     "device_not_found": {
       "message": "Feeder with ID {device_id} could not be found."
     },
-
     "device_not_support_meal_plan_function": {
       "message": "Feeder with ID {device_id} does not support meal plan functionality."
     },
@@ -1121,7 +1117,7 @@
     }
   },
   "services": {
-    "get_meal_plan_data": {
+    "get_feeder_meal_plan": {
       "description": "Retrieves meal plan data from a Tuya feeder.",
       "fields": {
         "device_id": {
@@ -1132,7 +1128,7 @@
       "name": "Get Feeder meal plan data"
     },
 
-    "set_meal_plan_data": {
+    "set_feeder_meal_plan": {
       "description": "Sets data for meal plan on a Tuya feeder.",
       "fields": {
         "data": {
