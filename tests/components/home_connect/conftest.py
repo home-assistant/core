@@ -285,10 +285,7 @@ def _get_specific_appliance_side_effect(
     for appliance_ in appliances:
         if appliance_.ha_id == ha_id:
             return appliance_
-    raise HomeConnectApiError(
-        "missing appliance at mock",
-        f"Mock didn't include appliance with id {ha_id}",
-    )
+    pytest.fail(f"Mock didn't include appliance with id {ha_id}")
 
 
 @pytest.fixture(name="client")
