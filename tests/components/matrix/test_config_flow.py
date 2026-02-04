@@ -263,9 +263,7 @@ async def test_validate_input_no_user_id_from_whoami(hass: HomeAssistant) -> Non
         client_instance.login.return_value = login_response
 
         # Mock whoami response without user_id attribute
-        whoami_response = AsyncMock()
-        whoami_response.user_id = None
-        del whoami_response.user_id  # Remove the attribute
+        whoami_response = object()
         client_instance.whoami.return_value = whoami_response
 
         result = await validate_input(hass, TEST_USER_INPUT)
